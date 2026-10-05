@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -11,25 +12,15 @@ import { useMessageCache } from '@/lib/hooks/use-message-cache'
 import { useCallStore } from '@/lib/store/call.store'
 import { applyNicknameSystemMessage } from '@/lib/nicknames'
 import { applyQuickReactionSystemMessage } from '@/lib/quick-reaction'
+import { isMessageFrame, isStompEvent } from '@/lib/realtime/message-frames'
+import { applySharedConversationUpdate } from '@/lib/realtime/conversation-cache'
 import type {
   AiSource,
   AiStreamState,
   CallEvent,
   CallMedia,
   Message,
-  StompEvent,
 } from '@/lib/api/types'
-
-// STOMP events use UPPER_CASE types; regular messages use lowercase types
-const STOMP_EVENT_TYPES = new Set([
-  'MESSAGE_UPDATED', 'MESSAGE_RECALLED', 'MESSAGE_READ', 'REACTION_UPDATED',
-  'PINNED_MESSAGE', 'CONVERSATION_UPDATED',
-  'AI_STREAM_CHUNK', 'AI_STREAM_DONE', 'AI_STREAM_ERROR', 'AI_TOOL_CALL',
-])
-
-function isStompEvent(parsed: Record<string, unknown>): parsed is StompEvent {
-  return typeof parsed.type === 'string' && STOMP_EVENT_TYPES.has(parsed.type)
-}
 
 // Group-call lifecycle events (Track A §3) are keyed by `event`, not `type`.
 const CALL_EVENT_TYPES = new Set(['call.started', 'call.roster', 'call.ended'])
@@ -71,6 +62,7 @@ export function useConversationStomp({
   currentUserId,
 }: UseConversationStompArgs): UseConversationStompResult {
   const t = useTranslations('chat')
+  const router = useRouter()
   const queryClient = useQueryClient()
   // Re-run the STOMP subscribe effect on every (re)connect so a dropped socket
   // is re-subscribed instead of leaving a subscription bound to a dead socket.
@@ -90,15 +82,23 @@ export function useConversationStomp({
     messagesRef.current = messages
   })
 
-  const { patchMessage, markMessageRead, appendMessage, attachAiSources } = useMessageCache(id)
+  const cache = useMessageCache(id)
 
   // Store message-cache callbacks in a ref so the STOMP subscription effect
   // only needs [id, stompConnected] in its dep array. The ref always holds the
   // latest version of each callback so stale-closure bugs are impossible.
-  const msgCallbacksRef = useRef({ patchMessage, markMessageRead, appendMessage, attachAiSources })
+  const msgCallbacksRef = useRef(cache)
   useEffect(() => {
-    msgCallbacksRef.current = { patchMessage, markMessageRead, appendMessage, attachAiSources }
+    msgCallbacksRef.current = cache
   })
+
+  // Removed from this conversation (kicked / left on another device): the chat is
+  // already dropped from the caches — leave the screen instead of a dead thread.
+  const leaveConversation = useCallback(() => {
+    // Same toast id as the user-queue path, so both channels show one toast.
+    toast.info(t('removedFromConversation'), { id: `removed-${id}` })
+    router.replace('/conversations')
+  }, [id, router, t])
 
   // RAG sources from an AI_STREAM_DONE that arrived before the persisted AI
   // message was in the cache — applied to that message on append (rare race).
@@ -138,14 +138,18 @@ export function useConversationStomp({
 
           if (isStompEvent(parsed)) {
             switch (parsed.type) {
-              case 'MESSAGE_UPDATED':
-                msgCallbacksRef.current.patchMessage(parsed.messageId, {
-                  content: parsed.content,
-                  editedAt: parsed.editedAt,
-                })
+              case 'MESSAGE_UPDATED': {
+                // Patch only what the event carries: a pending-action status
+                // update has no `editedAt` (and must not mark the message edited).
+                const patch: Partial<Message> = {}
+                if (typeof parsed.content === 'string') patch.content = parsed.content
+                if (typeof parsed.editedAt === 'string') patch.editedAt = parsed.editedAt
+                if (Array.isArray(parsed.pendingActions)) patch.pendingActions = parsed.pendingActions
+                msgCallbacksRef.current.patchMessage(parsed.messageId, patch)
                 break
+              }
               case 'MESSAGE_RECALLED':
-                msgCallbacksRef.current.patchMessage(parsed.messageId, { recalled: true })
+                msgCallbacksRef.current.recallMessage(parsed.messageId)
                 break
               case 'MESSAGE_READ':
                 msgCallbacksRef.current.markMessageRead(parsed.messageId, parsed.readerId)
@@ -157,14 +161,20 @@ export function useConversationStomp({
                 queryClient.invalidateQueries({ queryKey: ['conversation', id] })
                 break
               case 'CONVERSATION_UPDATED':
-                queryClient.setQueryData(['conversation', id], parsed.conversation)
-                queryClient.invalidateQueries({ queryKey: ['conversations'] })
-                // A participant may have changed their avatar/displayName — refresh
-                // their cached profile so peers see the new avatar (issue 1). The
-                // refetched URL is unique-per-upload so it dodges the HTTP cache.
-                parsed.conversation.participants.forEach((uid) =>
-                  queryClient.invalidateQueries({ queryKey: ['user', uid] }),
-                )
+                // Shared fields only (never my unread / mute / archive state):
+                // MERGE into the cached copies instead of replacing them.
+                if (
+                  applySharedConversationUpdate(queryClient, parsed.conversation, currentUserId) ===
+                  'removed'
+                ) {
+                  leaveConversation()
+                }
+                break
+              case 'KB_STATUS_UPDATE':
+                queryClient.invalidateQueries({ queryKey: ['kb-documents', id] })
+                break
+              case 'AI_ACTION_PENDING':
+                // Rendered from the persisted AI message's pendingActions (F2).
                 break
               case 'AI_STREAM_CHUNK':
                 setAiStream((prev) => ({
@@ -214,6 +224,7 @@ export function useConversationStomp({
                   AI_RATE_LIMITED: t('aiRateLimited'),
                   AI_STREAM_INTERRUPTED: t('aiStreamInterrupted'),
                   AI_UNAVAILABLE: t('aiUnavailable'),
+                  AI_EMPTY_RESPONSE: t('aiEmptyResponse'),
                 }
                 // Only show a mapped, localized message — never the raw backend
                 // error string, which is internal/system text.
@@ -269,10 +280,12 @@ export function useConversationStomp({
                 )
                 break
             }
-          } else {
-            // Regular message (includes AI final message after AI_STREAM_DONE)
-            const msg = parsed as unknown as Message
-            if (msg.type === 'system' && typeof msg.content === 'string') {
+          } else if (isMessageFrame(parsed, id)) {
+            // Regular message (includes AI final message after AI_STREAM_DONE).
+            // Anything else (an unknown event type, a malformed frame) is ignored —
+            // rendering it as a bubble used to crash the whole chat screen.
+            const msg: Message = parsed
+            if (msg.type === 'system') {
               applyNicknameSystemMessage(id, msg.content)
               applyQuickReactionSystemMessage(id, msg.content)
             }
@@ -304,18 +317,22 @@ export function useConversationStomp({
         },
       )
 
-      // Catch-up: pull in messages that arrived while the socket was down (parity
-      // with Flutter chat_provider._catchupMessages, Task 55). We subscribe first
-      // (above) so no live message is missed, then backfill the gap from the
-      // newest message we already hold. `messages` are chronological (oldest →
-      // newest), so the last entry is the freshest. appendMessage de-dupes by id.
+      // Catch-up (parity with Flutter chat_provider._catchupMessages, Task 55).
+      // We subscribe first (above) so no live message is missed, then:
+      //  1. backfill EVERY message newer than the newest one we hold — the
+      //     catch-up endpoint pages 50 at a time, so loop on hasNext + afterId;
+      //  2. re-fetch the latest page so edits / recalls / reactions made while
+      //     the socket was down replace the stale cached copies.
+      // `messages` are chronological (oldest → newest): the last is the freshest.
       const newest = messagesRef.current[messagesRef.current.length - 1]
       if (newest?.createdAt) {
-        chatService
-          .getMessagesSince(id, newest.createdAt)
-          .then((missed) => {
+        Promise.all([
+          chatService.getAllMessagesSince(id, newest.createdAt, newest.id),
+          chatService.getMessages(id).then((page) => page.content),
+        ])
+          .then(([missed, latest]) => {
             if (!active) return
-            for (const m of missed) msgCallbacksRef.current.appendMessage(m)
+            msgCallbacksRef.current.reconcileMessages([...latest, ...missed])
           })
           .catch(() => {
             // Best-effort: a failed catch-up is non-fatal; scrolling/refetch recovers.
@@ -330,7 +347,7 @@ export function useConversationStomp({
       messageSub?.unsubscribe()
       typingSub?.unsubscribe()
     }
-  }, [id, stompConnected, queryClient, currentUserId, t, armAiWatchdog, clearAiStream])
+  }, [id, stompConnected, queryClient, currentUserId, t, armAiWatchdog, clearAiStream, leaveConversation])
 
   // Mark conversation as read on open
   useEffect(() => {

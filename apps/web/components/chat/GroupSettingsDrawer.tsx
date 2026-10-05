@@ -4,11 +4,12 @@
 import { useTranslations } from 'next-intl'
 import {
   UserPlus, Pencil, Check, X, LogOut, Camera, FolderOpen, Images, Bot,
-  Palette, SmilePlus, Users, PenLine,
+  Palette, SmilePlus, Users, PenLine, Globe,
 } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -20,6 +21,7 @@ import { NicknamesModal } from './group/NicknamesModal'
 import { useNicknames } from '@/lib/nicknames'
 import { useGroupSettings } from './use-group-settings'
 import { PinnedMessagesSection } from './PinnedMessagesSection'
+import { isHumanUserId } from '@/lib/hooks/use-display-names'
 import type { Conversation } from '@/lib/api/types'
 import { useRouter } from 'next/navigation'
 
@@ -62,7 +64,12 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
     handleLeaveGroup,
     handleAvatarUpload,
     handlePickQuickReaction,
+    handlePromoteAdmin,
+    handleDemoteAdmin,
+    handleTogglePublic,
   } = useGroupSettings({ conversation, currentUserId, onClose })
+  // The last admin cannot step down (409 LAST_ADMIN_CANNOT_BE_REMOVED).
+  const hasOtherAdmins = conversation.admins.length > 1
 
   const triggerCls = 'hover:no-underline py-2 data-[state=open]:text-primary'
   const itemBtnCls = 'flex items-center gap-3 w-full text-left px-2 py-2.5 hover:bg-muted/50 rounded-lg text-sm transition-colors'
@@ -113,17 +120,27 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
                   {t('groupMembers', { count: conversation.participants.length })}
                 </div>
                 <div className="space-y-1 max-h-48 overflow-y-auto px-1">
-                  {conversation.participants.map((uid) => (
-                    <GroupMemberRow
-                      key={uid}
-                      uid={uid}
-                      isMemberAdmin={conversation.admins.includes(uid)}
-                      canRemove={isAdmin && uid !== currentUserId}
-                      onRemove={() => handleRemoveMember(uid)}
-                      saving={saving}
-                      adminLabel={t('groupAdmin')}
-                    />
-                  ))}
+                  {conversation.participants.map((uid) => {
+                    const memberIsAdmin = conversation.admins.includes(uid)
+                    const isHuman = isHumanUserId(uid)
+                    return (
+                      <GroupMemberRow
+                        key={uid}
+                        uid={uid}
+                        conversationId={conversation.id}
+                        isMemberAdmin={memberIsAdmin}
+                        isSelf={uid === currentUserId}
+                        canRemove={isAdmin && uid !== currentUserId}
+                        onRemove={() => handleRemoveMember(uid)}
+                        canPromote={isAdmin && isHuman && !memberIsAdmin}
+                        canDemote={isAdmin && memberIsAdmin && hasOtherAdmins}
+                        onPromote={() => handlePromoteAdmin(uid)}
+                        onDemote={() => handleDemoteAdmin(uid)}
+                        saving={saving}
+                        adminLabel={t('groupAdmin')}
+                      />
+                    )
+                  })}
                 </div>
 
                 {isAdmin && (
@@ -206,6 +223,21 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
                       <span>{t('renameGroup')}</span>
                     </button>
                   )
+                )}
+                {isAdmin && (
+                  <label className={`${itemBtnCls} cursor-pointer`}>
+                    <Globe className="size-4 text-muted-foreground" />
+                    <span className="flex-1 min-w-0">
+                      <span className="block">{t('newConvPublicChannel')}</span>
+                      <span className="block text-xs text-muted-foreground">{t('newConvPublicChannelHint')}</span>
+                    </span>
+                    <Switch
+                      checked={conversation.isPublic}
+                      disabled={saving}
+                      onCheckedChange={handleTogglePublic}
+                      aria-label={t('newConvPublicChannel')}
+                    />
+                  </label>
                 )}
                 <button onClick={() => setNicknamesOpen(true)} className={itemBtnCls}>
                   <PenLine className="size-4 text-muted-foreground" />

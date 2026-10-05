@@ -31,6 +31,31 @@ let client: Client | null = null
 let connectResolvers: Array<() => void> = []
 const stateChangeListeners: Array<(connected: boolean) => void> = []
 
+/**
+ * Session-level subscriptions (`/user/queue/notifications`, `/user/queue/webrtc`,
+ * `/topic/presence`) that must survive reconnects. stompjs never re-subscribes on
+ * its own: every reconnect opens a fresh socket with ZERO subscriptions, so a
+ * subscription made once after the first connect silently died at the first
+ * network blip / server restart / Cloud Run timeout — no notifications, sidebar
+ * previews or incoming calls until a reload. Entries here are re-attached in
+ * `onConnect`, i.e. after EVERY (re)connect.
+ */
+interface DurableSubscription {
+  destination: string
+  callback: (message: IMessage) => void
+  current?: StompSubscription
+}
+const durableSubscriptions = new Set<DurableSubscription>()
+
+function attachDurable(instance: Client, entry: DurableSubscription): void {
+  try {
+    entry.current = instance.subscribe(entry.destination, entry.callback)
+  } catch {
+    // Socket dropped between onConnect and here — the next onConnect retries.
+    entry.current = undefined
+  }
+}
+
 function notifyStateChange(connected: boolean) {
   stateChangeListeners.forEach((l) => l(connected))
 }
@@ -122,6 +147,8 @@ export const stompService = {
         },
         onConnect: () => {
           mustRefresh = false
+          // A reconnect is a brand-new socket: re-attach every durable subscription.
+          durableSubscriptions.forEach((entry) => attachDurable(instance, entry))
           resolve()
           connectResolvers.forEach((r) => r())
           connectResolvers = []
@@ -152,7 +179,42 @@ export const stompService = {
     client?.deactivate()
     client = null
     connectResolvers = []
+    durableSubscriptions.forEach((entry) => {
+      entry.current = undefined
+    })
     notifyStateChange(false)
+  },
+
+  /**
+   * Drop the socket and let stompjs reconnect through `beforeConnect`, which reads
+   * the freshest access token from the store. Used after a silent claims refresh
+   * (CLAIMS_CHANGED) so the socket carries the new role/permissions. Every
+   * subscription is re-established on the new connection (durable ones in
+   * `onConnect`, per-screen ones via `useStompConnected`).
+   */
+  reconnect(): void {
+    client?.forceDisconnect()
+  },
+
+  /**
+   * Subscribe for the whole session: re-attached automatically after every
+   * reconnect. Returns the unsubscribe function (removes it from the registry).
+   */
+  subscribeDurable(destination: string, callback: (message: IMessage) => void): () => void {
+    const entry: DurableSubscription = { destination, callback }
+    durableSubscriptions.add(entry)
+    if (client?.connected) attachDurable(client, entry)
+    return () => {
+      durableSubscriptions.delete(entry)
+      const sub = entry.current
+      entry.current = undefined
+      if (!sub || !client?.connected) return
+      try {
+        sub.unsubscribe()
+      } catch {
+        /* socket already closed — nothing to clean up */
+      }
+    }
   },
 
   waitForConnect(): Promise<void> {

@@ -20,6 +20,7 @@ import { useRelationship } from '@/lib/hooks/use-relationship'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { friendsService } from '@/lib/api/friends'
 import { chatService } from '@/lib/api/chat'
+import { chatErrorMessage, existingConversationId } from '@/lib/api/chat-errors'
 import { absoluteMediaUrl } from '@/lib/media'
 
 interface Props {
@@ -70,21 +71,15 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
       router.push(`/conversations/${conv.id}`)
       onClose()
     } catch (err) {
-      const isConflict = (err as { response?: { status?: number } })?.response?.status === 409
-      if (isConflict) {
-        try {
-          const convs = await chatService.getConversations()
-          const existing = convs.content.find((c) =>
-            c.type === 'direct' && c.participants.includes(userId),
-          )
-          if (existing) {
-            router.push(`/conversations/${existing.id}`)
-            onClose()
-            return
-          }
-        } catch { /* fall through */ }
+      // 409: the DM already exists and the body names it — open that one (the
+      // old fallback scanned only the first page of the list, so older DMs failed).
+      const existingId = existingConversationId(err)
+      if (existingId) {
+        router.push(`/conversations/${existingId}`)
+        onClose()
+        return
       }
-      toast.error(t('openConversationError'))
+      toast.error(chatErrorMessage(err, t, 'openConversationError'))
     } finally {
       setActionLoading(false)
     }
@@ -108,8 +103,9 @@ export function UserProfileDrawer({ userId, onClose }: Props) {
         toast.success(t('friendRequestAccepted'))
       }
       refetchRel()
-    } catch {
-      toast.error(t('actionFailed'))
+    } catch (err) {
+      // 403 USER_BLOCKED (either side blocked) gets its own message.
+      toast.error(chatErrorMessage(err, t, 'actionFailed'))
     } finally {
       setActionLoading(false)
     }

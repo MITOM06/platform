@@ -6,17 +6,18 @@ import { toast } from 'sonner'
 import { Search, Loader2, X, Users, MessageCircle } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
-import axios from 'axios'
 import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Switch } from '@/components/ui/switch'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { authService } from '@/lib/api/auth'
 import { chatService } from '@/lib/api/chat'
+import { chatErrorMessage, existingConversationId } from '@/lib/api/chat-errors'
 import { useHasCapability } from '@/lib/hooks/use-capabilities'
 import { useDepartments } from '@/lib/hooks/use-admin'
 import type { UserSearchResult } from '@/lib/api/types'
@@ -85,6 +86,8 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
   const [groupName, setGroupName] = useState('')
   const [selectedMembers, setSelectedMembers] = useState<UserSearchResult[]>([])
   const [creatingGroup, setCreatingGroup] = useState(false)
+  // F5: a public channel is listed in Explore and anyone may join it.
+  const [publicChannel, setPublicChannel] = useState(false)
   const [activeTab, setActiveTab] = useState<'direct' | 'group'>(defaultTab || 'direct')
 
   // Department group (P6) — only members who can manage departments may create one.
@@ -117,6 +120,7 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
     setGroupName('')
     setSelectedMembers([])
     setDepartmentId(NO_DEPT)
+    setPublicChannel(false)
     onClose()
   }
 
@@ -131,15 +135,13 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
       router.push(`/conversations/${conv.id}`)
       handleClose()
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 409) {
-        const body = err.response.data as { conversationId?: string }
-        if (body.conversationId) {
-          router.push(`/conversations/${body.conversationId}`)
-          handleClose()
-          return
-        }
+      const existingId = existingConversationId(err)
+      if (existingId) {
+        router.push(`/conversations/${existingId}`)
+        handleClose()
+        return
       }
-      toast.error(t('newConvDirectError'))
+      toast.error(chatErrorMessage(err, t, 'newConvDirectError'))
     } finally {
       setCreatingId(null)
     }
@@ -167,15 +169,15 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
       const conv = await chatService.createGroup(
         groupName.trim(),
         memberIds,
-        false,
+        publicChannel && departmentId === NO_DEPT,
         departmentId === NO_DEPT ? undefined : departmentId,
       )
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       router.push(`/conversations/${conv.id}`)
       handleClose()
       toast.success(t('newConvGroupSuccess'))
-    } catch {
-      toast.error(t('newConvGroupError'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'newConvGroupError'))
     } finally {
       setCreatingGroup(false)
     }
@@ -271,6 +273,26 @@ export function NewConversationModal({ open, onClose, defaultTab }: Props) {
                 ))}
               </SelectContent>
             </Select>
+          )}
+
+          {/* Public channel (F5) — off by default */}
+          <label className="flex items-start justify-between gap-3 rounded-lg border border-border/60 px-3 py-2.5 cursor-pointer">
+            <span className="min-w-0">
+              <span className="block text-sm font-medium">{t('newConvPublicChannel')}</span>
+              <span className="block text-xs text-muted-foreground">{t('newConvPublicChannelHint')}</span>
+            </span>
+            <Switch
+              // A department group is scoped to that department, so it can't be
+              // public (server: 400 PUBLIC_DEPARTMENT_CHANNEL_NOT_ALLOWED).
+              checked={publicChannel && departmentId === NO_DEPT}
+              disabled={departmentId !== NO_DEPT}
+              onCheckedChange={setPublicChannel}
+              aria-label={t('newConvPublicChannel')}
+              className="mt-0.5 shrink-0"
+            />
+          </label>
+          {departmentId !== NO_DEPT && (
+            <p className="-mt-1 text-xs text-muted-foreground">{t('newConvPublicChannelDeptHint')}</p>
           )}
 
           {/* Selected members chips */}

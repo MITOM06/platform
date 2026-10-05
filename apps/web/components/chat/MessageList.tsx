@@ -16,6 +16,17 @@ const TOOL_LABEL_KEYS: Record<string, string> = {
   search_knowledge_base: 'toolSearchKnowledgeBase',
   summarize_conversation: 'toolSummarizeConversation',
   create_reminder: 'toolCreateReminder',
+  web_search: 'toolWebSearch',
+  remember_fact: 'toolRememberFact',
+}
+
+/**
+ * Localized label of an in-progress tool call. Connector tools are named
+ * `mcp__<provider>__<tool>` (provider may be `custom_<24hex>`) — machine ids that
+ * must never be shown, so anything unmapped gets a generic localized label.
+ */
+function toolLabelKey(tool: string): string {
+  return TOOL_LABEL_KEYS[tool] ?? (tool.startsWith('mcp__') ? 'aiToolCallingConnector' : 'aiToolCallingGeneric')
 }
 
 // Gap between consecutive messages beyond which a lightweight time marker is
@@ -25,7 +36,8 @@ const TIME_GROUP_GAP_MS = 15 * 60 * 1000 // 15 minutes
 type VirtualRow =
   | { kind: 'separator'; isoDate: string }
   | { kind: 'time-separator'; isoDate: string }
-  | { kind: 'message'; msg: Message }
+  /** `firstOfRun`: first bubble of a run by the same sender (group name label). */
+  | { kind: 'message'; msg: Message; firstOfRun: boolean }
 
 function formatSeparatorDate(
   dateStr: string,
@@ -145,6 +157,7 @@ export function MessageList({
     const result: VirtualRow[] = []
     let lastDate = ''
     let lastTimestamp = 0
+    let lastSender: string | null = null
     for (const msg of messages) {
       const msgDate = new Date(msg.createdAt)
       const dateStr = msgDate.toDateString()
@@ -152,11 +165,14 @@ export function MessageList({
       if (dateStr !== lastDate) {
         result.push({ kind: 'separator', isoDate: msg.createdAt })
         lastDate = dateStr
+        lastSender = null
       } else if (msgTs - lastTimestamp > TIME_GROUP_GAP_MS) {
         result.push({ kind: 'time-separator', isoDate: msg.createdAt })
+        lastSender = null
       }
       lastTimestamp = msgTs
-      result.push({ kind: 'message', msg })
+      result.push({ kind: 'message', msg, firstOfRun: msg.senderId !== lastSender })
+      lastSender = msg.type === 'system' ? null : msg.senderId
     }
     return result
   }, [messages])
@@ -220,6 +236,7 @@ export function MessageList({
                   isPinned={pinnedMessages.includes(row.msg.id)}
                   pinnedCount={pinnedMessages.length}
                   isGroup={isGroup}
+                  showSenderName={isGroup && row.firstOfRun}
                   onEdit={onEdit}
                   onForward={onForward}
                   onReply={onReply}
@@ -248,8 +265,7 @@ export function MessageList({
           <div className="max-w-[70%] rounded-[14px] rounded-tl-[4px] px-4 py-2.5 text-sm bg-muted/70 border border-border/50">
             {aiStream.activeTools.length > 0 && (() => {
               const tool = aiStream.activeTools[aiStream.activeTools.length - 1]
-              const key = TOOL_LABEL_KEYS[tool]
-              const label = key ? t(key) : t('aiToolCalling', { toolName: tool })
+              const label = t(toolLabelKey(tool))
               const isSensitive = aiStream.sensitiveTools.includes(tool)
               return (
                 <div

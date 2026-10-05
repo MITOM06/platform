@@ -2,9 +2,8 @@
 
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
-import { humanizeMessagePreview } from '@/lib/system-messages'
-import { useNickname } from '@/lib/nicknames'
-import { useUser } from '@/lib/hooks/use-user'
+import { humanizeReplyPreview } from '@/lib/system-messages'
+import { useSenderDisplayName } from '@/lib/hooks/use-display-names'
 import type { Message } from '@/lib/api/types'
 
 interface Props {
@@ -27,9 +26,12 @@ export function MessageReplyQuote({
   resolveName,
 }: Props) {
   const t = useTranslations('chat')
-  const replyNickname = useNickname(conversationId ?? '', replyPreview.senderId)
   // Resolve the replied-to message's author (not the current message's sender).
-  const { data: repliedSender } = useUser(replyPreview.senderId)
+  const repliedSender = useSenderDisplayName(
+    replyPreview.senderId,
+    conversationId,
+    replyPreview.senderId !== currentUserId,
+  )
 
   return (
     <button
@@ -52,16 +54,16 @@ export function MessageReplyQuote({
       }}
     >
       <p className="font-semibold mb-0.5">
-        {replyPreview.senderId === currentUserId
-          ? t('you')
-          : (replyNickname || repliedSender?.displayName || '')}
+        {replyPreview.senderId === currentUserId ? t('you') : repliedSender}
       </p>
       {/* Never render replied-to content raw (system code / upload URL / JSON
-          payload — rule: no-raw-system-data-in-ui); humanize by sniffing it. */}
+          payload — rule: no-raw-system-data-in-ui); humanize by sniffing it. A
+          recalled original shows the recalled label, never its stale text. */}
       <p className="truncate italic">
-        {humanizeMessagePreview(replyPreview.content, undefined, t, {
-          short: true,
+        {humanizeReplyPreview(replyPreview, t, {
           resolveName,
+          senderId: replyPreview.senderId,
+          currentUserId,
         })}
       </p>
     </button>

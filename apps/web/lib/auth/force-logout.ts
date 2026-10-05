@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { clearQueryCache } from '@/lib/query-client'
 
 /**
  * Reasons the login screen can explain after a forced logout. Only codes in
@@ -60,6 +61,8 @@ export function loginPath(reason?: LoginNotice): string {
  */
 export async function forceLogout(err?: unknown): Promise<void> {
   useAuthStore.getState().clearAuth()
+  // Same hygiene as a normal logout: nothing of this user stays cached.
+  clearQueryCache()
   if (typeof window === 'undefined') return
   await axios.post('/api/auth/clear-cookie').catch(() => {})
   window.location.href = loginPath(logoutReasonFromError(err))

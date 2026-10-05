@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { chatService } from '@/lib/api/chat'
+import { chatErrorMessage } from '@/lib/api/chat-errors'
 import { authService } from '@/lib/api/auth'
 import { useRelationship } from '@/lib/hooks/use-relationship'
 import {
@@ -47,6 +48,9 @@ export function useConversationSettings({ conversation, currentUserId, onClose }
   const isDirect = conversation.type === 'direct'
   const isGroup = conversation.type === 'group'
   const isAI = conversation.participants.includes(AI_BOT_ID)
+  // Disappearing messages: group admins only (server: 403 GROUP_ADMIN_REQUIRED);
+  // in a DM either side may change it.
+  const canChangeAutoDelete = !isGroup || conversation.admins.includes(currentUserId)
 
   const otherUserId = isDirect && !isAI
     ? conversation.participants.find((p) => p !== currentUserId)
@@ -94,8 +98,8 @@ export function useConversationSettings({ conversation, currentUserId, onClose }
       await action()
       toast.success(success)
       invalidate()
-    } catch {
-      toast.error(t('actionError'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'actionError'))
     } finally {
       setSaving(false)
     }
@@ -189,8 +193,8 @@ export function useConversationSettings({ conversation, currentUserId, onClose }
         invalidateAll()
         toast.success(t('blockSuccess'))
       }
-    } catch {
-      toast.error(t('actionError'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'actionError'))
     } finally {
       setSaving(false)
     }
@@ -240,7 +244,7 @@ export function useConversationSettings({ conversation, currentUserId, onClose }
   return {
     // derived flags
     iBlocked, blockedMe, isBlocked, isMuted, isArchived, isDirect, isGroup, isAI,
-    otherUserId, nicknameParticipantIds, autoDeleteOptions, sliderValue,
+    otherUserId, nicknameParticipantIds, autoDeleteOptions, sliderValue, canChangeAutoDelete,
     // ui state
     saving,
     confirmClearOpen, setConfirmClearOpen,

@@ -26,15 +26,20 @@ export function formatTime(iso: string | null, locale: string): string {
   return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit' })
 }
 
-/** Returns a short human-readable remaining time string for mute expiry. */
-export function formatMuteExpiry(expiresAt: number): string {
-  const remaining = expiresAt - Date.now()
+/**
+ * Short remaining time for a mute expiry, in the UI locale ("15 min", "3 h",
+ * "2 j"…) via `Intl.NumberFormat` units instead of hardcoded English m/h/d.
+ */
+export function formatMuteExpiry(expiresAt: number, locale = 'en', now: number = Date.now()): string {
+  const remaining = expiresAt - now
   if (remaining <= 0) return ''
+  const unit = (value: number, u: 'minute' | 'hour' | 'day') =>
+    new Intl.NumberFormat(locale, { style: 'unit', unit: u, unitDisplay: 'short' }).format(value)
   const mins = Math.ceil(remaining / 60_000)
-  if (mins < 60) return `${mins}m`
+  if (mins < 60) return unit(mins, 'minute')
   const hrs = Math.floor(remaining / 3_600_000)
-  if (hrs < 24) return `${hrs}h`
-  return `${Math.floor(hrs / 24)}d`
+  if (hrs < 24) return unit(hrs, 'hour')
+  return unit(Math.floor(hrs / 24), 'day')
 }
 
 export const MUTE_OPTIONS = [

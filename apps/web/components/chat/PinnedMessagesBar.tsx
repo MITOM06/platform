@@ -3,11 +3,11 @@
 import { useState } from 'react'
 import { Pin, X, ChevronUp, ChevronDown } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { chatService } from '@/lib/api/chat'
-import { humanizeMessagePreview } from '@/lib/system-messages'
-import { getNickname } from '@/lib/nicknames'
+import { chatErrorMessage } from '@/lib/api/chat-errors'
+import { humanizeMessagePreview, type HumanizeOptions } from '@/lib/system-messages'
+import { useNameResolver } from '@/lib/hooks/use-display-names'
 import { toast } from 'sonner'
 
 import type { PinnedMessage } from '@/lib/api/types'
@@ -28,44 +28,38 @@ type Translate = (key: string, values?: Record<string, string | number>) => stri
  * humanizer, which maps media/file → attachment label, meeting_summary → its
  * label, ai → flattened text, and system codes → humanized sentence.
  */
-function getDisplayContent(
-  pinned: PinnedMessage,
-  t: Translate,
-  resolveName: (actorId: string) => string | undefined,
-): string {
-  return humanizeMessagePreview(pinned.content, pinned.type, t, { short: true, resolveName })
+function getDisplayContent(pinned: PinnedMessage, t: Translate, opts: HumanizeOptions): string {
+  return humanizeMessagePreview(pinned.content, pinned.type, t, {
+    short: true,
+    senderId: pinned.senderId,
+    ...opts,
+  })
 }
 
 export function PinnedMessagesBar({ pinnedMessages, onUnpin, conversationId, currentUserId }: Props) {
   const t = useTranslations('chat')
-  const queryClient = useQueryClient()
   const [expanded, setExpanded] = useState(false)
 
   // Resolve an actor id to a display name for system codes that carry one
   // (mirror MessageBubble.tsx): current user → "You", then conversation
   // nickname, then cached profile name.
-  const resolveName = (actorId: string): string | undefined => {
-    if (actorId === currentUserId) return t('you')
-    const nick = conversationId ? getNickname(conversationId, actorId) : undefined
-    if (nick) return nick
-    const cached = queryClient.getQueryData<{ displayName?: string }>(['user', actorId])
-    return cached?.displayName
-  }
+  const resolveName = useNameResolver(conversationId)
+  const humanize: HumanizeOptions = { resolveName, currentUserId }
 
   if (pinnedMessages.length === 0) return null
 
   const latest = pinnedMessages[0]!
   const extraCount = pinnedMessages.length - 1
   const hasMore = extraCount > 0
-  const latestContent = getDisplayContent(latest, t, resolveName)
+  const latestContent = getDisplayContent(latest, t, humanize)
 
   const handleUnpin = async (messageId: string) => {
     try {
       await chatService.unpinMessage(messageId)
       onUnpin(messageId)
       if (pinnedMessages.length <= 1) setExpanded(false)
-    } catch {
-      toast.error(t('pinError'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'pinError'))
     }
   }
 
@@ -105,7 +99,7 @@ export function PinnedMessagesBar({ pinnedMessages, onUnpin, conversationId, cur
           >
             <div className="flex-1 min-w-0">
               <p className="text-xs text-foreground truncate">
-                {getDisplayContent(pin, t, resolveName)}
+                {getDisplayContent(pin, t, humanize)}
               </p>
             </div>
             <Button

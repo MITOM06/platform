@@ -58,14 +58,38 @@ export interface Conversation {
   pendingMembers?: string[]
   pinnedMessages: PinnedMessage[]
   autoDeleteSeconds: number | null
-  lastMessage: {
-    content: string
-    senderId: string
-    createdAt: string
-  } | null
+  /** When disappearing messages were last turned on (only newer messages expire). */
+  autoDeleteEnabledAt?: string | null
+  lastMessage: LastMessage | null
   lastMessageAt: string | null
   unreadCount: number
+  createdAt?: string
 }
+
+/**
+ * Conversation-list preview of the newest message. `messageId`/`type` are null on
+ * previews written before they existed; `recalled === true` means the message was
+ * unsent (`content` is blank) — render the localized "recalled" label instead.
+ */
+export interface LastMessage {
+  content: string
+  senderId: string
+  createdAt: string
+  messageId?: string | null
+  type?: string | null
+  recalled?: boolean
+}
+
+/**
+ * Fields of a conversation that every member shares. The topic
+ * `CONVERSATION_UPDATED` carries only these (never the viewer's own unread / mute /
+ * archive / block state), so clients MERGE it into their per-user copy.
+ */
+export const SHARED_CONVERSATION_FIELDS = [
+  'id', 'type', 'name', 'avatarUrl', 'participants', 'admins', 'createdBy',
+  'autoDeleteSeconds', 'autoDeleteEnabledAt', 'lastMessage', 'lastMessageAt', 'createdAt',
+  'status', 'isPublic', 'pinnedMessages', 'wallpaper', 'pendingMembers',
+] as const satisfies readonly (keyof Conversation)[]
 
 export type MessageType =
   | 'text' | 'image' | 'video' | 'file' | 'voice' | 'sticker' | 'system' | 'call_log' | 'ai'
@@ -125,6 +149,8 @@ export interface Message {
     messageId: string
     senderId: string
     content: string
+    /** The quoted message was unsent — `content` is blank, show the recalled label. */
+    recalled?: boolean
   }
   recalled?: boolean
   reactions?: Reaction[]
@@ -132,6 +158,22 @@ export interface Message {
   readBy?: string[]
   /** RAG citation sources, attached from the AI_STREAM_DONE event (AI messages only). */
   sources?: AiSource[]
+  /** Sensitive AI actions awaiting confirmation (F2) — rendered by the confirmation card. */
+  pendingActions?: AiPendingAction[]
+}
+
+/**
+ * A sensitive AI tool call waiting for the requester's confirmation (F2). Never
+ * render `toolName` / `provider` raw — they are machine ids (`mcp__…`, `custom_<hex>`).
+ */
+export interface AiPendingAction {
+  id: string
+  toolName?: string
+  provider?: string
+  summary?: Record<string, unknown>
+  status?: 'pending' | 'confirmed' | 'cancelled' | 'failed' | 'expired' | string
+  expiresAt?: string
+  requesterId?: string
 }
 
 /**
@@ -154,6 +196,7 @@ export interface ConversationsResponse {
   page: number
   size: number
   totalElements: number
+  hasNext?: boolean
 }
 
 export interface UserSearchResult {
@@ -210,17 +253,45 @@ export interface PageResponse<T> {
 
 // STOMP event shapes (broadcasted on /topic/conversation/{id})
 export type StompEvent =
-  | { type: 'MESSAGE_UPDATED'; messageId: string; conversationId: string; content: string; editedAt: string }
+  // `editedAt` is absent for pending-action status updates (they carry `pendingActions`).
+  | {
+      type: 'MESSAGE_UPDATED'
+      messageId: string
+      conversationId: string
+      content?: string
+      editedAt?: string
+      pendingActions?: AiPendingAction[]
+    }
   | { type: 'MESSAGE_RECALLED'; messageId: string; conversationId: string }
   | { type: 'MESSAGE_READ'; messageId: string; readerId: string }
   | { type: 'REACTION_UPDATED'; messageId: string; reactions: Reaction[] }
   | { type: 'PINNED_MESSAGE'; conversationId: string; messageId: string; pinnedMessages: string[] }
   | { type: 'CONVERSATION_UPDATED'; conversation: Conversation }
+  | { type: 'AI_ACTION_PENDING'; conversationId: string; replyId?: string; requesterId?: string }
   | { type: 'AI_STREAM_CHUNK'; chunk: string; senderId: string; conversationId: string }
   | { type: 'AI_STREAM_DONE'; senderId: string; conversationId: string; sources?: AiSource[] }
   | { type: 'AI_STREAM_ERROR'; error: string; code?: string; senderId: string; conversationId: string }
   | { type: 'AI_TOOL_CALL'; toolName: string; inputSummary: string; sensitive?: boolean; senderId: string; conversationId: string }
   | { type: 'KB_STATUS_UPDATE'; documentId: string; status: 'pending' | 'processing' | 'done' | 'error'; chunkCount?: number }
+
+/** Per-user events delivered on `/user/queue/notifications`. */
+export type UserQueueEvent =
+  | {
+      type: 'NEW_MESSAGE' | 'MENTIONED_YOU'
+      conversationId: string
+      senderId?: string
+      senderName?: string
+      content?: string
+      messageType?: string
+    }
+  /** Send rate exceeded — the message was dropped. */
+  | { type: 'RATE_LIMITED' }
+  /** `/app/chat.send` refused (code: chat-service ErrorCodes, `NOT_FOUND`, `FORBIDDEN`, `BAD_REQUEST`). */
+  | { type: 'MESSAGE_REJECTED'; code?: string; conversationId?: string }
+  /** The actor's FULL view after a per-user change (mute / archive / read / block …). */
+  | { type: 'CONVERSATION_UPDATED'; conversation: Conversation }
+  /** My role / departments / permissions changed — refresh the token silently. */
+  | { type: 'CLAIMS_CHANGED' }
 
 // ── Group call (Track A contract §3) ────────────────────────────────────────
 
@@ -263,93 +334,5 @@ export interface AiStreamState {
   sensitiveTools: string[]
 }
 
-// ── Admin usage & quality dashboard (TASK-13) ───────────────────────────────
-// Mirror of ai-service `GET /usage/dashboard` (port 3002, gated by
-// MANAGE_WORKSPACE). Single source of truth for the web admin dashboard.
-
-/** The date window the dashboard covers. */
-export interface UsageRange {
-  /** Inclusive start, `YYYY-MM-DD`. */
-  from: string
-  /** Inclusive end, `YYYY-MM-DD`. */
-  to: string
-  /** Human label — `YYYY-MM` for a month window, else a range string. */
-  label: string
-}
-
-/** Headline totals. `estimatedCostUsd` = sum of `perModelCost[].costUsd`. */
-export interface UsageTotals {
-  inputTokens: number
-  outputTokens: number
-  /** Authoritative volume figure (from token_usage rollup). */
-  totalTokens: number
-  requestCount: number
-  /** Model-aware estimate; derived from messages.trace, may differ from token totals. */
-  estimatedCostUsd: number
-}
-
-/** One point in the over-time series (token_usage rollup, zero-filled gaps). */
-export interface UsageDailyPoint {
-  date: string
-  inputTokens: number
-  outputTokens: number
-  totalTokens: number
-  requestCount: number
-}
-
-/** Per-model cost breakdown (messages.trace grouped by model). */
-export interface UsagePerModelCost {
-  model: string
-  inputTokens: number
-  outputTokens: number
-  requestCount: number
-  /** Resolved from the ai-service price map (echoed for transparency). */
-  inputPricePerMTok: number
-  outputPricePerMTok: number
-  /** round(2). */
-  costUsd: number
-}
-
-/** A top consumer by tokens (token_usage grouped by user, desc). */
-export interface UsageTopUser {
-  userId: string
-  /** Best-effort users-collection join; falls back to userId. */
-  displayName: string
-  totalTokens: number
-  requestCount: number
-  estimatedCostUsd: number
-}
-
-/** A recent 👎-rated answer in the window. */
-export interface UsageWorstAnswer {
-  messageId: string
-  conversationId: string
-  /** Optional reviewer comment. */
-  comment: string | null
-  /** First ~200 chars of the AI answer. */
-  answerPreview: string
-  /** Null when the underlying message has no timestamp. */
-  createdAt: string | null
-}
-
-/** Feedback rollup for the window. */
-export interface UsageFeedback {
-  up: number
-  down: number
-  /** Rated messages with a non-cleared vote in window. */
-  total: number
-  /** down / total, 0..1; 0 when total === 0. */
-  thumbsDownRate: number
-  /** Most recent down-rated answers, limit 10. */
-  worstAnswers: UsageWorstAnswer[]
-}
-
-/** `GET /usage/dashboard` response. */
-export interface DashboardResponse {
-  range: UsageRange
-  totals: UsageTotals
-  daily: UsageDailyPoint[]
-  perModelCost: UsagePerModelCost[]
-  topUsers: UsageTopUser[]
-  feedback: UsageFeedback
-}
+// Admin usage & quality dashboard types (TASK-13) live in ./usage-types.ts.
+export * from './usage-types'

@@ -20,9 +20,12 @@ const fmtSeconds = (s: number) =>
 
 export function ReplyBanner({
   replyingTo,
+  senderName,
   onCancelReply,
 }: {
   replyingTo: Message
+  /** Resolved display name of the replied-to author ('' while unknown). */
+  senderName?: string
   onCancelReply?: () => void
 }) {
   const t = useTranslations('chat')
@@ -31,7 +34,9 @@ export function ReplyBanner({
       <Reply className="size-3.5 text-primary shrink-0" />
       <div className="min-w-0 flex-1">
         <p className="text-[11px] font-semibold text-primary">
-          {t('replyTo', { name: replyingTo.senderName || '' })}
+          {/* Messages carry no sender name — the caller resolves it; never print
+              "Reply to " with an empty name. */}
+          {senderName ? t('replyTo', { name: senderName }) : t('replyAction')}
         </p>
         {/* Humanized like the reply quote inside the bubble — replying to a system event,
             a file or an image otherwise printed the raw `system.*` code, the JSON payload or

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { CheckCheck, BookMarked, Archive, ArchiveX, Timer } from 'lucide-react'
 import {
@@ -14,6 +15,8 @@ interface Props {
   isArchived: boolean
   autoDeleteOptions: { label: string; value: number }[]
   sliderValue: number
+  /** Groups: only admins may change disappearing messages (DMs: both sides). */
+  canChangeAutoDelete: boolean
   onMarkRead: () => void
   onMarkUnread: () => void
   onArchiveToggle: () => void
@@ -26,12 +29,17 @@ export function ActionOptionsSection({
   isArchived,
   autoDeleteOptions,
   sliderValue,
+  canChangeAutoDelete,
   onMarkRead,
   onMarkUnread,
   onArchiveToggle,
   onAutoDelete,
 }: Props) {
   const t = useTranslations('chat')
+  // Local position while dragging; the server is called once on release
+  // (onValueCommit) instead of once per tick.
+  const [draft, setDraft] = useState<number | null>(null)
+  const shown = draft ?? sliderValue
   return (
     <AccordionItem value="options" className="border-none">
       <AccordionTrigger className="hover:no-underline py-2 data-[state=open]:text-primary">
@@ -60,17 +68,25 @@ export function ActionOptionsSection({
             min={0}
             max={autoDeleteOptions.length - 1}
             step={1}
-            value={[sliderValue]}
-            onValueChange={([v]) => onAutoDelete(v)}
+            value={[shown]}
+            disabled={!canChangeAutoDelete || saving}
+            onValueChange={([v]) => setDraft(v)}
+            onValueCommit={([v]) => {
+              setDraft(null)
+              if (v !== sliderValue) onAutoDelete(v)
+            }}
             className="w-full"
           />
           <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
             {autoDeleteOptions.map((o, i) => (
-              <span key={i} className={i === sliderValue ? 'text-primary' : ''}>
+              <span key={i} className={i === shown ? 'text-primary' : ''}>
                 {o.label}
               </span>
             ))}
           </div>
+          {!canChangeAutoDelete && (
+            <p className="text-[11px] text-muted-foreground">{t('autoDeleteAdminOnly')}</p>
+          )}
         </div>
       </AccordionContent>
     </AccordionItem>

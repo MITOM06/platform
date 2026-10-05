@@ -5,6 +5,91 @@
 
 type Translate = (key: string, values?: Record<string, string | number>) => string
 
+export interface HumanizeOptions {
+  /** Concise sidebar / preview variant. */
+  short?: boolean
+  /** Resolve a user id to a display name (current user → "You"). */
+  resolveName?: (userId: string) => string | undefined
+  /** The message's `senderId` — the actor of codes whose sender is the actor. */
+  senderId?: string
+  /** The viewer, for "You are now an admin"-style wording. */
+  currentUserId?: string
+}
+
+/** Sender id of system messages written by the server itself (no human actor). */
+export const SYSTEM_SENDER_ID = 'system'
+
+/** Auto-delete presets with an existing localized label (seconds → `chat.*` key). */
+const AUTO_DELETE_LABELS: Record<number, string> = {
+  3600: 'autoDelete1h',
+  86400: 'autoDelete1d',
+  604800: 'autoDelete1w',
+  2592000: 'autoDelete1m',
+}
+
+function humanizeAutoDelete(content: string, t: Translate): string {
+  const seconds = parseInt(content.slice('system.autodelete.changed:'.length), 10)
+  if (!Number.isFinite(seconds) || seconds <= 0) return t('systemAutoDeleteOff')
+  const label = AUTO_DELETE_LABELS[seconds]
+  return label ? t('systemAutoDeleteOn', { duration: t(label) }) : t('systemAutoDeleteOnGeneric')
+}
+
+/**
+ * `system.admin.promoted:<targetId>` / `system.admin.demoted:<targetId>`. The
+ * sender is the acting admin; a `system` sender (server-side heir promotion) gets
+ * the actor-less sentence.
+ */
+function humanizeAdminChange(content: string, t: Translate, opts?: HumanizeOptions): string {
+  const promoted = content.startsWith('system.admin.promoted:')
+  const targetId = content.slice(content.indexOf(':') + 1)
+  if (targetId && targetId === opts?.currentUserId) {
+    return promoted ? t('systemAdminPromotedYou') : t('systemAdminDemotedYou')
+  }
+  const name = (targetId && opts?.resolveName?.(targetId)) || undefined
+  if (!name) return t('systemAdminChanged')
+  const actorId = opts?.senderId
+  const actor =
+    actorId && actorId !== SYSTEM_SENDER_ID && actorId !== targetId
+      ? opts?.resolveName?.(actorId)
+      : undefined
+  if (actor && !opts?.short) {
+    return promoted
+      ? t('systemAdminPromotedBy', { actor, name })
+      : t('systemAdminDemotedBy', { actor, name })
+  }
+  return promoted ? t('systemAdminPromoted', { name }) : t('systemAdminDemoted', { name })
+}
+
+/**
+ * Does `content` look like a JSON payload (file / media / meeting summary)? Reply
+ * quotes and previews may be TRUNCATED server-side, so a parse failure alone does
+ * not make it plain text — sniff the leading keys too.
+ */
+function jsonPayloadLabel(content: string, t: Translate): string | null {
+  const trimmed = content.trim()
+  if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) return null
+  try {
+    const parsed = JSON.parse(trimmed) as unknown
+    if (Array.isArray(parsed)) {
+      return parsed.every((u) => typeof u === 'string' && u.includes('/api/uploads/'))
+        ? t('attachmentLabel')
+        : null
+    }
+    if (parsed && typeof parsed === 'object') {
+      const obj = parsed as Record<string, unknown>
+      if ('overview' in obj || 'actionItems' in obj || 'keyPoints' in obj) return t('meetingSummaryLabel')
+      if ('url' in obj) return t('attachmentLabel')
+    }
+    return null
+  } catch {
+    if (/^\{\s*"(overview|attendees|durationSec|keyPoints|actionItems)"/.test(trimmed)) {
+      return t('meetingSummaryLabel')
+    }
+    if (/^\{\s*"(url|name|size)"/.test(trimmed) || /^\[\s*"/.test(trimmed)) return t('attachmentLabel')
+    return null
+  }
+}
+
 /**
  * Map a `system.*` code (or any last-message content) to clean human-readable
  * text. Returns the original content untouched if it is not a system code.
@@ -21,27 +106,23 @@ type Translate = (key: string, values?: Record<string, string | number>) => stri
 export function humanizeSystemMessage(
   content: string,
   t: Translate,
-  opts?: { short?: boolean; resolveName?: (actorId: string) => string | undefined },
+  opts?: HumanizeOptions,
 ): string {
   if (!content) return content
-
-  // Attachment detection (mirror Flutter conversation_tile `/api/uploads/`).
-  if (content.includes('/api/uploads/')) return t('attachmentLabel')
 
   // JSON payloads (file/media message content or a meeting-summary) must never
   // render raw (.claude/rules/no-raw-system-data-in-ui.md). Sniff the shape when
   // no message type is available (e.g. conversation-list last-message, reply
   // quotes) and map to the localized label.
-  if (content.startsWith('{') && content.endsWith('}')) {
-    try {
-      const obj = JSON.parse(content) as Record<string, unknown>
-      if ('overview' in obj || 'actionItems' in obj || 'keyPoints' in obj) {
-        return t('meetingSummaryLabel')
-      }
-      if ('url' in obj) return t('attachmentLabel')
-    } catch {
-      // not JSON — fall through
-    }
+  const payloadLabel = jsonPayloadLabel(content, t)
+  if (payloadLabel) return payloadLabel
+
+  // Attachment detection (mirror Flutter conversation_tile `/api/uploads/`).
+  if (content.includes('/api/uploads/')) return t('attachmentLabel')
+
+  if (content.startsWith('system.autodelete.changed:')) return humanizeAutoDelete(content, t)
+  if (content.startsWith('system.admin.promoted:') || content.startsWith('system.admin.demoted:')) {
+    return humanizeAdminChange(content, t, opts)
   }
 
   if (content.startsWith('system.message.pinned:') || content.startsWith('system.message.unpinned:')) {
@@ -141,9 +222,9 @@ export function flattenMarkdown(md: string): string {
  */
 export function humanizeMessagePreview(
   content: string,
-  type: string | undefined,
+  type: string | undefined | null,
   t: Translate,
-  opts?: { short?: boolean; resolveName?: (actorId: string) => string | undefined },
+  opts?: HumanizeOptions,
 ): string {
   if (!content) return content
   if (type === 'system' || content.startsWith('system.')) {
@@ -155,4 +236,36 @@ export function humanizeMessagePreview(
   // Unknown/typeless → sniff the content (system codes, uploads, JSON payloads,
   // markdown) through the shared humanizer.
   return humanizeSystemMessage(content, t, opts)
+}
+
+/**
+ * Conversation-list preview of the newest message (sidebar, Archived tab, requests).
+ * A recalled message never shows its old text (`recalled` + blank content).
+ */
+export function humanizeLastMessage(
+  lastMessage:
+    | { content: string; senderId?: string; type?: string | null; recalled?: boolean }
+    | null
+    | undefined,
+  t: Translate,
+  opts?: HumanizeOptions,
+): string | null {
+  if (!lastMessage) return null
+  if (lastMessage.recalled) return t('recalled')
+  if (!lastMessage.content) return null
+  return humanizeMessagePreview(lastMessage.content, lastMessage.type, t, {
+    short: true,
+    senderId: lastMessage.senderId,
+    ...opts,
+  })
+}
+
+/** A reply quote's text: recalled originals show the localized label, never stale text. */
+export function humanizeReplyPreview(
+  preview: { content: string; senderId?: string; recalled?: boolean },
+  t: Translate,
+  opts?: HumanizeOptions,
+): string {
+  if (preview.recalled) return t('recalled')
+  return humanizeMessagePreview(preview.content, undefined, t, { short: true, ...opts })
 }

@@ -28,7 +28,7 @@ import {
 import Link from 'next/link'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useNotificationPrefs } from '@/lib/store/notification-prefs'
-import { stompService } from '@/lib/stomp/client'
+import { performLogout } from '@/lib/auth/logout'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { absoluteMediaUrl } from '@/lib/media'
 import { cn } from '@/lib/utils'
@@ -103,7 +103,6 @@ export default function SettingsPage() {
   const t = useTranslations('settings')
   const router = useRouter()
   const user = useAuthStore((s) => s.user)
-  const clearAuth = useAuthStore((s) => s.clearAuth)
   const { theme } = useTheme()
   const locale = useLocale()
   const notificationsEnabled = useNotificationPrefs((s) => s.enabled)
@@ -116,12 +115,8 @@ export default function SettingsPage() {
   const handleLogout = async () => {
     setLoggingOut(true)
     try {
-      await fetch('/api/auth/clear-cookie', { method: 'POST' })
-      stompService.disconnect()
-      clearAuth()
-      // `?cleared=1` tells the login page to wipe any browser-autofilled
-      // credentials so the next person doesn't see the prior account.
-      router.push('/login?cleared=1')
+      // Revokes the server session, clears cookies + query cache, hard-navigates.
+      await performLogout()
     } catch {
       toast.error(t('logoutError'))
       setLoggingOut(false)

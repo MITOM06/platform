@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { chatService } from '@/lib/api/chat'
+import { isReportedSendError } from '@/lib/chat/send-error'
 
 interface Options {
   onSend: (url: string, type: 'voice') => Promise<void> | void
@@ -63,8 +64,9 @@ export function useVoiceRecorder({ onSend, onUploadingChange, labels }: Options)
           const ext = mimeType.includes('ogg') ? 'ogg' : 'webm'
           const { url } = await chatService.uploadFile(blob, `voice_${Date.now()}.${ext}`)
           await onSend(url, 'voice')
-        } catch {
-          toast.error(labels.sendError)
+        } catch (err) {
+          // The send handler already toasted its (more specific) error.
+          if (!isReportedSendError(err)) toast.error(labels.sendError)
         } finally {
           onUploadingChange(false)
         }
