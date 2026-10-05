@@ -3486,4 +3486,184 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get adminLoadFailed => '이 섹션을 불러올 수 없습니다. 다시 시도해 주세요.';
+
+  @override
+  String get setPasswordTitle => 'PON 비밀번호 만들기';
+
+  @override
+  String get setPasswordSubtitle =>
+      'Google로 가입하셨습니다. 이메일로도 로그인할 수 있도록 비밀번호를 만드세요.';
+
+  @override
+  String get setPasswordSubmit => '비밀번호 만들기';
+
+  @override
+  String get setPasswordSuccess => '비밀번호가 만들어졌습니다. 이제 이메일로도 로그인할 수 있습니다.';
+
+  @override
+  String get authErrCurrentPasswordRequired => '현재 비밀번호를 입력하세요.';
+
+  @override
+  String get mfaVerifyTitle => '2단계 인증';
+
+  @override
+  String get mfaVerifySubtitle => '로그인을 완료하려면 인증 앱에 표시된 6자리 코드를 입력하세요.';
+
+  @override
+  String get mfaBackupSubtitle =>
+      '백업 코드(XXXXX-XXXXX) 중 하나를 입력하세요. 각 코드는 한 번만 사용할 수 있습니다.';
+
+  @override
+  String get mfaCodeLabel => '6자리 코드';
+
+  @override
+  String get mfaBackupCodeLabel => '백업 코드';
+
+  @override
+  String get mfaVerifyButton => '확인';
+
+  @override
+  String get mfaUseBackupCode => '백업 코드 사용';
+
+  @override
+  String get mfaUseAuthenticatorCode => '인증 앱 사용';
+
+  @override
+  String get mfaBackToSignIn => '로그인으로 돌아가기';
+
+  @override
+  String mfaBackupCodeUsed(int remaining) {
+    return '백업 코드를 사용했습니다. 남은 백업 코드: $remaining개.';
+  }
+
+  @override
+  String get valMfaCodeInvalid => '6자리 코드를 입력하세요.';
+
+  @override
+  String get valMfaBackupCodeInvalid => 'ABCDE-FGHIJ 형식의 백업 코드를 입력하세요.';
+
+  @override
+  String get mfaEnrollTitle => '2단계 인증 설정';
+
+  @override
+  String get mfaEnrollSubtitle => '회원님의 역할은 로그인할 때마다 인증 앱의 코드가 필요합니다.';
+
+  @override
+  String get mfaEnrollStepInstall =>
+      '1. Google Authenticator(또는 다른 인증 앱)를 설치하세요.';
+
+  @override
+  String get mfaEnrollStepScan => '2. 이 QR 코드를 스캔하거나, 앱에서 열거나, 설정 키를 입력하세요.';
+
+  @override
+  String get mfaEnrollStepCode => '3. 앱에 표시된 6자리 코드를 입력하세요.';
+
+  @override
+  String get mfaEnrollOpenApp => '인증 앱에서 열기';
+
+  @override
+  String get mfaEnrollNoApp =>
+      '인증 앱을 찾을 수 없습니다. Google Authenticator를 설치하거나 설정 키를 직접 입력하세요.';
+
+  @override
+  String get mfaEnrollManualKey => '설정 키';
+
+  @override
+  String get mfaCopyKey => '키 복사';
+
+  @override
+  String get mfaKeyCopied => '설정 키를 복사했습니다';
+
+  @override
+  String get mfaQrSemantic => '인증 앱용 QR 코드';
+
+  @override
+  String get mfaEnrollConfirm => '확인';
+
+  @override
+  String get mfaBackupCodesTitle => '백업 코드 저장';
+
+  @override
+  String get mfaBackupCodesSubtitle =>
+      '휴대폰을 잃어버린 경우 각 코드로 한 번 로그인할 수 있습니다. 다시 표시되지 않으니 안전한 곳에 보관하세요.';
+
+  @override
+  String get mfaCopyCodes => '코드 복사';
+
+  @override
+  String get mfaCodesCopied => '백업 코드를 복사했습니다';
+
+  @override
+  String get mfaSavedCheckbox => '백업 코드를 저장했습니다';
+
+  @override
+  String get mfaContinue => '계속';
+
+  @override
+  String get securityMfaOn => '로그인할 때마다 인증 앱의 코드가 필요합니다.';
+
+  @override
+  String get securityMfaPending => '회원님의 역할에 필수입니다. 다음 로그인 시 설정합니다.';
+
+  @override
+  String get securityMfaStatusOn => '켜짐';
+
+  @override
+  String get securityMfaStatusOff => '설정 안 됨';
+
+  @override
+  String get securityMfaRegenerate => '백업 코드 재생성';
+
+  @override
+  String get securityMfaRegenerateHint =>
+      '인증 앱의 현재 코드를 입력하세요. 기존 백업 코드는 더 이상 사용할 수 없습니다.';
+
+  @override
+  String get securityMfaRegenerateSubmit => '생성';
+
+  @override
+  String get securityMfaDone => '완료';
+
+  @override
+  String get adminMfaBadge => '2FA 켜짐';
+
+  @override
+  String get adminMfaReset => '2FA 재설정';
+
+  @override
+  String adminMfaResetConfirm(String name) {
+    return '$name님의 2단계 인증을 재설정할까요? 모든 기기에서 로그아웃되며 다음 로그인 시 다시 설정해야 합니다.';
+  }
+
+  @override
+  String get adminMfaResetDone => '2FA를 재설정했습니다. 다음 로그인 시 다시 설정하게 됩니다.';
+
+  @override
+  String get authMsgMfaRequired => '로그인을 완료하려면 인증 앱의 코드를 입력하세요.';
+
+  @override
+  String get authErrMfaTokenInvalid => '로그인 시간이 만료되었습니다. 다시 로그인하세요.';
+
+  @override
+  String get authErrMfaCodeInvalid => '코드가 틀렸습니다. 다시 시도하세요.';
+
+  @override
+  String authErrMfaCodeInvalidRemaining(int remaining) {
+    return '코드가 틀렸습니다. 남은 시도 횟수: $remaining회.';
+  }
+
+  @override
+  String get authErrMfaTooManyAttempts => '잘못된 코드를 너무 많이 입력했습니다. 다시 로그인하세요.';
+
+  @override
+  String get authErrMfaNotEnrolled => '이 계정은 아직 2단계 인증이 설정되지 않았습니다.';
+
+  @override
+  String get authErrMfaAlreadyEnrolled => '이 계정은 이미 2단계 인증이 설정되어 있습니다.';
+
+  @override
+  String get authErrMfaResetForbidden => '소유자만 2단계 인증을 재설정할 수 있습니다.';
+
+  @override
+  String get authErrMfaResetSelfForbidden => '본인의 2단계 인증은 재설정할 수 없습니다.';
 }

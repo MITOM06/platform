@@ -6,6 +6,7 @@ import '../../../core/api/dio_client.dart';
 import '../domain/auth_provider.dart';
 import '../domain/auth_state.dart';
 import '../domain/invitation_preview.dart';
+import '../domain/mfa_models.dart';
 import '../domain/sso_info.dart';
 
 const _keyAccessToken = 'accessToken';
@@ -19,12 +20,29 @@ class AuthRepository {
 
   const AuthRepository(this._storage, this._dio);
 
-  Future<UserModel> login(String email, String password) async {
+  /// Password sign-in. A privileged member (Owner / Admin — contract 09) gets
+  /// [SignInMfaRequired] instead of a session: nothing is persisted until the
+  /// second factor succeeds (`mfaVerify` / `mfaEnrollComplete`).
+  Future<SignInResult> login(String email, String password) async {
     final response = await _dio.post('/auth/login', data: {
       'email': email,
       'password': password,
     });
-    final data = response.data as Map<String, dynamic>;
+    return _signInResult(response.data as Map<String, dynamic>);
+  }
+
+  /// `MFA_REQUIRED` body → the challenge; any other body is a login success
+  /// whose session is persisted.
+  Future<SignInResult> _signInResult(Map<String, dynamic> data) async {
+    if (data['code'] == 'MFA_REQUIRED') {
+      return SignInMfaRequired(MfaChallenge.fromJson(data));
+    }
+    return SignInSuccess(await _persistSession(data));
+  }
+
+  /// Persists the tokens of a login-success body (login, exchange, invitation
+  /// accept, MFA verify / enroll complete all share it) and returns its user.
+  Future<UserModel> _persistSession(Map<String, dynamic> data) async {
     final user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
     await _saveCredentials(
       accessToken: data['accessToken'] as String,
@@ -34,6 +52,75 @@ class AuthRepository {
     );
     return user;
   }
+
+  // ── Two-factor authentication (contract 09) ─────────────────────────────
+  // The `/auth/mfa/*` calls are public (no JWT): the single-use `mfaToken`
+  // from the login/exchange response identifies the pending sign-in. Wrong
+  // codes answer 401 `MFA_*`, which the Dio refresh interceptor leaves alone.
+
+  /// Starts enrollment: secret + QR for the authenticator app. Calling it
+  /// again with the same token returns the same pending secret.
+  Future<MfaEnrollment> mfaEnrollStart(String mfaToken) async {
+    final res = await _dio.post('/auth/mfa/enroll/start', data: {
+      'mfaToken': mfaToken,
+    });
+    return MfaEnrollment.fromJson(Map<String, dynamic>.from(res.data as Map));
+  }
+
+  /// Confirms enrollment with the first code. The account is now enrolled but
+  /// NO session is issued (`MFA_BACKUP_CODES_ISSUED` — contract 11): returns
+  /// the 10 backup codes, which the caller must show once and have
+  /// acknowledged before [mfaEnrollComplete]. Persists nothing.
+  Future<List<String>> mfaEnrollConfirm(String mfaToken, String code) async {
+    final res = await _dio.post('/auth/mfa/enroll/confirm', data: {
+      'mfaToken': mfaToken,
+      'code': code,
+    });
+    return _codeList((res.data as Map)['backupCodes']);
+  }
+
+  /// "I saved my backup codes" → the session (persisted) and its user. Single
+  /// use, only after [mfaEnrollConfirm] and within its 10-minute window;
+  /// otherwise `MFA_TOKEN_INVALID` / `MFA_NOT_ENROLLED`.
+  Future<UserModel> mfaEnrollComplete(String mfaToken) async {
+    final res = await _dio.post('/auth/mfa/enroll/complete', data: {
+      'mfaToken': mfaToken,
+      'platform': 'mobile',
+    });
+    return _persistSession(Map<String, dynamic>.from(res.data as Map));
+  }
+
+  /// Second factor of a sign-in: exactly one of [code] (TOTP) or
+  /// [backupCode] (`XXXXX-XXXXX`) → session (persisted).
+  Future<MfaSignIn> mfaVerify(
+    String mfaToken, {
+    String? code,
+    String? backupCode,
+  }) async {
+    final res = await _dio.post('/auth/mfa/verify', data: {
+      'mfaToken': mfaToken,
+      if (code != null) 'code': code,
+      if (backupCode != null) 'backupCode': backupCode,
+      'platform': 'mobile',
+    });
+    final data = Map<String, dynamic>.from(res.data as Map);
+    return MfaSignIn(
+      user: await _persistSession(data),
+      backupCodesRemaining: (data['backupCodesRemaining'] as num?)?.toInt(),
+    );
+  }
+
+  /// Replaces the signed-in member's backup codes; [code] is a current TOTP
+  /// code (`POST /api/users/me/mfa/backup-codes`).
+  Future<List<String>> regenerateBackupCodes(String code) async {
+    final res = await _dio.post('/api/users/me/mfa/backup-codes', data: {
+      'code': code,
+    });
+    return _codeList((res.data as Map)['backupCodes']);
+  }
+
+  static List<String> _codeList(dynamic raw) =>
+      (raw as List<dynamic>? ?? const []).map((e) => e.toString()).toList();
 
   /// Public preview of an invitation (`GET /auth/invitations/:token`).
   /// Throws a DioException carrying `INVITATION_INVALID` / `_EXPIRED` /
@@ -62,15 +149,7 @@ class AuthRepository {
         'platform': 'mobile',
       },
     );
-    final data = response.data as Map<String, dynamic>;
-    final user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
-    await _saveCredentials(
-      accessToken: data['accessToken'] as String,
-      refreshToken: data['refreshToken'] as String,
-      sid: data['sid'] as String,
-      user: user,
-    );
-    return user;
+    return _persistSession(response.data as Map<String, dynamic>);
   }
 
   Future<void> verifyOtp(String email, String otpCode) async {
@@ -107,21 +186,14 @@ class AuthRepository {
     });
   }
 
-  /// Đổi OAuth code (từ deeplink platform://auth?code=xxx) lấy JWT tokens
-  Future<UserModel> exchangeCode(String code) async {
+  /// Đổi OAuth code (từ deeplink platform://auth?code=xxx) lấy JWT tokens.
+  /// Like [login], a privileged member gets [SignInMfaRequired] first.
+  Future<SignInResult> exchangeCode(String code) async {
     final response = await _dio.post('/auth/exchange', data: {
       'code': code,
       'platform': 'mobile',
     });
-    final data = response.data as Map<String, dynamic>;
-    final user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
-    await _saveCredentials(
-      accessToken: data['accessToken'] as String,
-      refreshToken: data['refreshToken'] as String,
-      sid: data['sid'] as String,
-      user: user,
-    );
-    return user;
+    return _signInResult(response.data as Map<String, dynamic>);
   }
 
   Future<void> logout() async {
@@ -176,11 +248,18 @@ class AuthRepository {
   Future<UserModel> getMe() async {
     final response = await _dio.get('/api/users/me');
     final user = UserModel.fromJson(response.data as Map<String, dynamic>);
+    await cacheUser(user);
+    return user;
+  }
+
+  /// Overwrites the persisted session user (only while a session is stored —
+  /// never resurrects a signed-out session), so a cold start restores the
+  /// latest profile flags such as `mustSetPassword` / `hasPassword`.
+  Future<void> cacheUser(UserModel user) async {
     final userJson = await _storage.read(key: _keyUser);
     if (userJson != null) {
       await _storage.write(key: _keyUser, value: jsonEncode(user.toJson()));
     }
-    return user;
   }
 
   /// Lấy public profile của bất kỳ user nào theo id — dùng cho chat UI
@@ -232,13 +311,7 @@ class AuthRepository {
     });
     
     final updated = UserModel.fromJson(response.data as Map<String, dynamic>);
-    
-    // Update local storage
-    final userJson = await _storage.read(key: _keyUser);
-    if (userJson != null) {
-      await _storage.write(key: _keyUser, value: jsonEncode(updated.toJson()));
-    }
-    
+    await cacheUser(updated);
     return updated;
   }
 
@@ -253,9 +326,18 @@ class AuthRepository {
     return response.data['phoneNumber'] as String?;
   }
 
-  Future<void> changePassword(String currentPassword, String newPassword) async {
+  /// Sets or changes the account password
+  /// (`POST /api/users/me/change-password` → `{ success: true }`).
+  ///
+  /// [currentPassword] is omitted when null/empty: an account without a
+  /// password (Google-only, incl. the forced `/set-password` step) creates
+  /// its first one; the server answers `CURRENT_PASSWORD_REQUIRED` if the
+  /// account does have one. Errors are typed codes (`VAL_PASSWORD_TOO_SHORT`,
+  /// `CURRENT_PASSWORD_INCORRECT`, …) — map them with `authErrorMessage`.
+  Future<void> changePassword(String? currentPassword, String newPassword) async {
     await _dio.post('/api/users/me/change-password', data: {
-      'currentPassword': currentPassword,
+      if (currentPassword != null && currentPassword.isNotEmpty)
+        'currentPassword': currentPassword,
       'newPassword': newPassword,
     });
   }

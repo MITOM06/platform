@@ -3450,4 +3450,178 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminLoadFailed => '无法加载此部分，请重试。';
+
+  @override
+  String get setPasswordTitle => '创建您的 PON 密码';
+
+  @override
+  String get setPasswordSubtitle => '您是通过 Google 加入的。请创建密码，以便也能使用邮箱登录。';
+
+  @override
+  String get setPasswordSubmit => '创建密码';
+
+  @override
+  String get setPasswordSuccess => '密码已创建。现在您也可以使用邮箱登录了。';
+
+  @override
+  String get authErrCurrentPasswordRequired => '请输入当前密码。';
+
+  @override
+  String get mfaVerifyTitle => '双重验证';
+
+  @override
+  String get mfaVerifySubtitle => '请输入身份验证器应用中的 6 位验证码以完成登录。';
+
+  @override
+  String get mfaBackupSubtitle => '请输入一个备用码（XXXXX-XXXXX）。每个备用码只能使用一次。';
+
+  @override
+  String get mfaCodeLabel => '6 位验证码';
+
+  @override
+  String get mfaBackupCodeLabel => '备用码';
+
+  @override
+  String get mfaVerifyButton => '验证';
+
+  @override
+  String get mfaUseBackupCode => '使用备用码';
+
+  @override
+  String get mfaUseAuthenticatorCode => '改用身份验证器应用';
+
+  @override
+  String get mfaBackToSignIn => '返回登录';
+
+  @override
+  String mfaBackupCodeUsed(int remaining) {
+    return '已使用备用码，剩余 $remaining 个。';
+  }
+
+  @override
+  String get valMfaCodeInvalid => '请输入 6 位验证码。';
+
+  @override
+  String get valMfaBackupCodeInvalid => '请输入格式如 ABCDE-FGHIJ 的备用码。';
+
+  @override
+  String get mfaEnrollTitle => '设置双重验证';
+
+  @override
+  String get mfaEnrollSubtitle => '你的角色要求每次登录时输入身份验证器应用中的验证码。';
+
+  @override
+  String get mfaEnrollStepInstall => '1. 安装 Google Authenticator（或其他身份验证器应用）。';
+
+  @override
+  String get mfaEnrollStepScan => '2. 扫描此二维码、在应用中打开，或输入设置密钥。';
+
+  @override
+  String get mfaEnrollStepCode => '3. 输入应用中显示的 6 位验证码。';
+
+  @override
+  String get mfaEnrollOpenApp => '在身份验证器应用中打开';
+
+  @override
+  String get mfaEnrollNoApp => '未找到身份验证器应用。请安装 Google Authenticator 或手动输入设置密钥。';
+
+  @override
+  String get mfaEnrollManualKey => '设置密钥';
+
+  @override
+  String get mfaCopyKey => '复制密钥';
+
+  @override
+  String get mfaKeyCopied => '已复制设置密钥';
+
+  @override
+  String get mfaQrSemantic => '身份验证器应用的二维码';
+
+  @override
+  String get mfaEnrollConfirm => '确认';
+
+  @override
+  String get mfaBackupCodesTitle => '保存你的备用码';
+
+  @override
+  String get mfaBackupCodesSubtitle => '如果丢失手机，每个备用码可用于登录一次。备用码不会再次显示，请妥善保存。';
+
+  @override
+  String get mfaCopyCodes => '复制备用码';
+
+  @override
+  String get mfaCodesCopied => '已复制备用码';
+
+  @override
+  String get mfaSavedCheckbox => '我已保存备用码';
+
+  @override
+  String get mfaContinue => '继续';
+
+  @override
+  String get securityMfaOn => '每次登录都需要输入身份验证器应用中的验证码。';
+
+  @override
+  String get securityMfaPending => '你的角色必须启用。下次登录时将进行设置。';
+
+  @override
+  String get securityMfaStatusOn => '已开启';
+
+  @override
+  String get securityMfaStatusOff => '未设置';
+
+  @override
+  String get securityMfaRegenerate => '重新生成备用码';
+
+  @override
+  String get securityMfaRegenerateHint => '请输入身份验证器应用中的当前验证码。旧的备用码将失效。';
+
+  @override
+  String get securityMfaRegenerateSubmit => '生成';
+
+  @override
+  String get securityMfaDone => '完成';
+
+  @override
+  String get adminMfaBadge => '已开启双重验证';
+
+  @override
+  String get adminMfaReset => '重置双重验证';
+
+  @override
+  String adminMfaResetConfirm(String name) {
+    return '要重置 $name 的双重验证吗？对方将在所有设备上被登出，并需在下次登录时重新设置。';
+  }
+
+  @override
+  String get adminMfaResetDone => '已重置双重验证。对方将在下次登录时重新设置。';
+
+  @override
+  String get authMsgMfaRequired => '请输入身份验证器应用中的验证码以完成登录。';
+
+  @override
+  String get authErrMfaTokenInvalid => '登录已过期，请重新登录。';
+
+  @override
+  String get authErrMfaCodeInvalid => '验证码不正确，请重试。';
+
+  @override
+  String authErrMfaCodeInvalidRemaining(int remaining) {
+    return '验证码不正确，剩余 $remaining 次尝试。';
+  }
+
+  @override
+  String get authErrMfaTooManyAttempts => '验证码错误次数过多，请重新登录。';
+
+  @override
+  String get authErrMfaNotEnrolled => '此账号尚未设置双重验证。';
+
+  @override
+  String get authErrMfaAlreadyEnrolled => '此账号已设置双重验证。';
+
+  @override
+  String get authErrMfaResetForbidden => '只有所有者才能重置双重验证。';
+
+  @override
+  String get authErrMfaResetSelfForbidden => '你不能重置自己的双重验证。';
 }
