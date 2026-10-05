@@ -108,6 +108,8 @@
 
 ### C2 — Web
 
+> ✅ **Xong 2026-10-05** trên `feat/calls-livekit` — plan step-level `2026-10-05-calls-c2-web.md`; web tsc/lint/build sạch, vitest 234/234. Còn chờ test thiết bị thật (C4).
+
 **Files:**
 - `apps/web/package.json` — thêm `livekit-client` (không dùng `@livekit/components-react`: UI tự dựng theo `docs/design-system.md`).
 - Create: `apps/web/lib/rtc/livekit-session.ts` — **dùng chung với Phòng họp**: `connect(url, token, {audio, video})`, `disconnect()`, `setMic/ setCamera/ setScreenShare`, `switchCamera()`, sự kiện → callback: `participants` (identity, name, isSpeaking, micMuted, camMuted, quality, tracks), `reconnecting`/`reconnected`, `disconnected(reason)`. Map lỗi LiveKit → `media_error` | `failed`.
