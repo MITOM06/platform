@@ -121,8 +121,9 @@ export class AuthService {
       profile.groups,
     );
     if (changed) {
-      // role/dept changed → invalidate existing sessions so new claims take effect.
-      await this.session.revokeAllSessions(userId, 'role_changed');
+      // role/dept changed → tokens on the user's other devices carry stale
+      // claims: they get 401 TOKEN_CLAIMS_STALE and refresh (no sign-out).
+      await this.session.markClaimsStale(userId);
     }
     return this.oauthRedirect.redirectWithLoginCode(userId, res, platform);
   }
@@ -328,6 +329,11 @@ export class AuthService {
     role?: string;
     perms?: string[];
     depts?: string[];
+    /**
+     * Explicit issued-at (unix seconds). Only set by refresh to keep the new
+     * token at or after the session's `claimsAt` (see `refresh`).
+     */
+    iat?: number;
   }) {
     const secret = this.configService.get<string>('JWT_ACCESS_SECRET');
     // Fall back to 15m so a missing JWT_ACCESS_EXPIRES env never breaks token signing
@@ -341,14 +347,20 @@ export class AuthService {
     if (payload.role !== undefined) claims.role = payload.role;
     if (payload.perms !== undefined) claims.perms = payload.perms;
     if (payload.depts !== undefined) claims.depts = payload.depts;
+    // jsonwebtoken honours a numeric payload.iat and computes `exp` from it.
+    if (payload.iat !== undefined) claims.iat = payload.iat;
 
     return this.jwt.sign(claims, options);
   }
 
   // Resolve the user's RBAC claims and sign a token that carries them.
-  private async signAccessTokenWithClaims(sub: string, sid: string) {
+  private async signAccessTokenWithClaims(
+    sub: string,
+    sid: string,
+    iat?: number,
+  ) {
     const { role, perms, depts } = await this.claims.resolve(sub);
-    return this.signAccessToken({ sub, sid, role, perms, depts });
+    return this.signAccessToken({ sub, sid, role, perms, depts, iat });
   }
 
   async exchangeLoginCode(code: string, deviceId?: string, platform?: string) {
@@ -394,11 +406,17 @@ export class AuthService {
     // Status BEFORE session validity: blocking revokes every session, so rotating
     // first would answer SESSION_REVOKED instead of 403 ACCOUNT_BLOCKED.
     await this.assertRefreshOwnerCanSignIn(sid, refreshToken);
-    const { userId, newRefreshToken } = await this.session.rotateRefreshToken({
-      sid,
-      refreshToken,
-    });
-    const accessToken = await this.signAccessTokenWithClaims(userId, sid);
+    const { userId, newRefreshToken, claimsAt } =
+      await this.session.rotateRefreshToken({ sid, refreshToken });
+    // Works on a claims-stale session (role / departments / permissions
+    // changed): the claims are resolved fresh right here. The new token's iat
+    // never predates the session's claimsAt — under clock skew between
+    // instances a plain `now` could, and the client would loop on
+    // TOKEN_CLAIMS_STALE.
+    const nowSec = Math.floor(Date.now() / 1000);
+    const iat =
+      claimsAt !== undefined && claimsAt > nowSec ? claimsAt : undefined;
+    const accessToken = await this.signAccessTokenWithClaims(userId, sid, iat);
     return { accessToken, refreshToken: newRefreshToken };
   }
 

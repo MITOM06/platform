@@ -24,7 +24,6 @@ const DEFAULT_CLAIMS: ResolvedClaims = {
 };
 
 const MEMBER_ROLE = 'Member';
-const MEMBER_CACHE_MS = 60_000;
 
 /**
  * Resolves a user's RBAC claims (role name, enabled capability keys, department
@@ -33,9 +32,6 @@ const MEMBER_CACHE_MS = 60_000;
  */
 @Injectable()
 export class ClaimsService {
-  /** Cached preset-Member capabilities (fallback for role-less users). */
-  private memberCache: { perms: Capability[]; at: number } | null = null;
-
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     @InjectModel(Role.name) private readonly roleModel: Model<RoleDocument>,
@@ -67,19 +63,20 @@ export class ClaimsService {
     return { role: role.name, perms, depts };
   }
 
+  /**
+   * Preset-Member capabilities (fallback for role-less users). Read on every
+   * token issue — NOT cached: an edit of the Member role marks its holders'
+   * sessions claims-stale, and the refresh that follows must already see the
+   * new matrix (a per-process cache would hand out the old one for up to its
+   * TTL, and this service is instantiated in more than one module).
+   */
   private async memberPerms(): Promise<Capability[]> {
-    const now = Date.now();
-    if (this.memberCache && now - this.memberCache.at < MEMBER_CACHE_MS) {
-      return [...this.memberCache.perms];
-    }
     const member = await this.roleModel
       .findOne({ name: MEMBER_ROLE })
       .lean()
       .exec();
-    const perms = member
+    return member
       ? enabledCapabilities((member.permissions ?? {}) as PermissionMatrix)
       : [];
-    this.memberCache = { perms, at: now };
-    return [...perms];
   }
 }

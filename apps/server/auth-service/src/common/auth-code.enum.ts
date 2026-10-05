@@ -54,6 +54,11 @@ export enum AuthCode {
   SESSION_INVALID = 'SESSION_INVALID',
   SESSION_REVOKED = 'SESSION_REVOKED',
   TOKEN_SESSION_MISMATCH = 'TOKEN_SESSION_MISMATCH',
+  /**
+   * The access token was minted before the user's role / departments / permissions changed
+   * (`iat < sess:{sid}.claimsAt`). The session is still valid: refresh and retry — never a logout.
+   */
+  TOKEN_CLAIMS_STALE = 'TOKEN_CLAIMS_STALE',
   SOCIAL_EMAIL_UNAVAILABLE = 'SOCIAL_EMAIL_UNAVAILABLE',
   LOGIN_CODE_INVALID = 'LOGIN_CODE_INVALID',
   REFRESH_TOKEN_REUSE = 'REFRESH_TOKEN_REUSE',

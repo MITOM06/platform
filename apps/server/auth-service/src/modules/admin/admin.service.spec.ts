@@ -36,7 +36,11 @@ describe('AdminService', () => {
   let departmentModel: any;
   let roleModel: any;
   let userModel: any;
-  let session: { revokeAllSessions: jest.Mock };
+  let session: {
+    revokeAllSessions: jest.Mock;
+    markClaimsStale: jest.Mock;
+    markClaimsStaleForUsers: jest.Mock;
+  };
   let audit: { record: jest.Mock; list: jest.Mock };
   let redis: { publish: jest.Mock };
 
@@ -63,7 +67,11 @@ describe('AdminService', () => {
       findByIdAndUpdate: jest.fn(),
       updateMany: jest.fn().mockReturnValue(execable({ modifiedCount: 0 })),
     };
-    session = { revokeAllSessions: jest.fn().mockResolvedValue(undefined) };
+    session = {
+      revokeAllSessions: jest.fn().mockResolvedValue(undefined),
+      markClaimsStale: jest.fn().mockResolvedValue({ sessions: 1 }),
+      markClaimsStaleForUsers: jest.fn().mockResolvedValue({ users: 0, sessions: 0 }),
+    };
     audit = {
       record: jest.fn().mockResolvedValue(undefined),
       list: jest.fn().mockResolvedValue({ items: [], total: 0 }),
@@ -121,6 +129,7 @@ describe('AdminService', () => {
       await expect(p).rejects.toMatchObject({ status, response: { code } });
       expect(userModel.findByIdAndUpdate).not.toHaveBeenCalled();
       expect(session.revokeAllSessions).not.toHaveBeenCalled();
+      expect(session.markClaimsStale).not.toHaveBeenCalled();
     }
 
     beforeEach(() => {
@@ -133,7 +142,7 @@ describe('AdminService', () => {
       roleModel.findOne = jest.fn().mockReturnValue(execable(roles[OWNER_ROLE]));
     });
 
-    it('sets role + departments, revokes sessions (role_changed) and audits', async () => {
+    it('sets role + departments, marks claims stale (no sign-out) and audits', async () => {
       target(MEMBER_ROLE);
       const res = await service.updateMember(actorAs(ACTOR, 'Admin'), TARGET, {
         roleId: ADMIN_ROLE,
@@ -145,7 +154,8 @@ describe('AdminService', () => {
         { $set: { roleId: ADMIN_ROLE, departmentIds: [DEPT] } },
         { new: true },
       );
-      expect(session.revokeAllSessions).toHaveBeenCalledWith(TARGET, 'role_changed');
+      expect(session.markClaimsStale).toHaveBeenCalledWith(TARGET);
+      expect(session.revokeAllSessions).not.toHaveBeenCalled();
       expect(audit.record).toHaveBeenCalledWith(
         expect.objectContaining({ action: 'member.update', targetId: TARGET }),
       );
@@ -195,14 +205,16 @@ describe('AdminService', () => {
         { $set: { departmentIds: [DEPT] } },
         { new: true },
       );
-      expect(session.revokeAllSessions).toHaveBeenCalledWith(ACTOR, 'other');
+      expect(session.markClaimsStale).toHaveBeenCalledWith(ACTOR);
+      expect(session.revokeAllSessions).not.toHaveBeenCalled();
     });
 
-    it('unchanged roleId and nothing else → no write, no revoke', async () => {
+    it('unchanged roleId and nothing else → no write, no revoke, no claims mark', async () => {
       target(ADMIN_ROLE);
       await service.updateMember(actorAs(ACTOR, 'Admin'), TARGET, { roleId: ADMIN_ROLE });
       expect(userModel.findByIdAndUpdate).not.toHaveBeenCalled();
       expect(session.revokeAllSessions).not.toHaveBeenCalled();
+      expect(session.markClaimsStale).not.toHaveBeenCalled();
       expect(audit.record).not.toHaveBeenCalled();
     });
 
@@ -232,6 +244,7 @@ describe('AdminService', () => {
         { $set: { roleId: OWNER_ROLE } },
         { new: true },
       );
+      expect(session.markClaimsStale).toHaveBeenCalledWith(TARGET);
     });
 
     it('400 LAST_OWNER_CANNOT_BE_DEMOTED when no other active Owner remains', async () => {
@@ -252,10 +265,11 @@ describe('AdminService', () => {
     it('an Owner may demote another Owner while an active Owner remains', async () => {
       target(OWNER_ROLE);
       await service.updateMember(actorAs(ACTOR, 'Owner'), TARGET, { roleId: ADMIN_ROLE });
-      expect(session.revokeAllSessions).toHaveBeenCalledWith(TARGET, 'role_changed');
+      expect(session.markClaimsStale).toHaveBeenCalledWith(TARGET);
+      expect(session.revokeAllSessions).not.toHaveBeenCalled();
     });
 
-    it('no-op Save (same departments, other order + duplicates, same role) → no write, no revoke, no audit', async () => {
+    it('no-op Save (same departments, other order + duplicates, same role) → no write, no claims mark, no audit', async () => {
       target(MEMBER_ROLE, 'active', [DEPT, DEPT2]);
       const res = await service.updateMember(actorAs(ACTOR, 'Admin'), TARGET, {
         roleId: MEMBER_ROLE,
@@ -263,11 +277,12 @@ describe('AdminService', () => {
       });
       expect(userModel.findByIdAndUpdate).not.toHaveBeenCalled();
       expect(session.revokeAllSessions).not.toHaveBeenCalled();
+      expect(session.markClaimsStale).not.toHaveBeenCalled();
       expect(audit.record).not.toHaveBeenCalled();
       expect(res).toMatchObject({ _id: TARGET });
     });
 
-    it('departments-only change writes the deduped set and revokes with reason "other"', async () => {
+    it('departments-only change writes the deduped set and marks claims stale', async () => {
       target(MEMBER_ROLE, 'active', [DEPT]);
       await service.updateMember(actorAs(ACTOR, 'Admin'), TARGET, {
         departmentIds: [DEPT, DEPT2, DEPT],
@@ -277,7 +292,8 @@ describe('AdminService', () => {
         { $set: { departmentIds: [DEPT, DEPT2] } },
         { new: true },
       );
-      expect(session.revokeAllSessions).toHaveBeenCalledWith(TARGET, 'other');
+      expect(session.markClaimsStale).toHaveBeenCalledWith(TARGET);
+      expect(session.revokeAllSessions).not.toHaveBeenCalled();
     });
 
     it("403 OWNER_ROLE_ASSIGN_FORBIDDEN when a non-Owner changes an Owner's departments", async () => {
@@ -294,7 +310,7 @@ describe('AdminService', () => {
       await service.updateMember(actorAs(ACTOR, 'Owner', ALL_CAPABILITIES), TARGET, {
         departmentIds: [DEPT],
       });
-      expect(session.revokeAllSessions).toHaveBeenCalledWith(TARGET, 'other');
+      expect(session.markClaimsStale).toHaveBeenCalledWith(TARGET);
     });
 
     it('403 ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS when the role carries a capability the actor lacks', async () => {
@@ -310,6 +326,7 @@ describe('AdminService', () => {
       });
       expect(userModel.findByIdAndUpdate).not.toHaveBeenCalled();
       expect(session.revokeAllSessions).not.toHaveBeenCalled();
+      expect(session.markClaimsStale).not.toHaveBeenCalled();
     });
 
     it('an Owner may assign any role', async () => {
@@ -317,7 +334,15 @@ describe('AdminService', () => {
       await service.updateMember(actorAs(ACTOR, 'Owner', ALL_CAPABILITIES), TARGET, {
         roleId: SUPER_ROLE,
       });
-      expect(session.revokeAllSessions).toHaveBeenCalledWith(TARGET, 'role_changed');
+      expect(session.markClaimsStale).toHaveBeenCalledWith(TARGET);
+    });
+
+    it('a failed claims mark surfaces (the change must not silently keep stale tokens valid)', async () => {
+      target(MEMBER_ROLE);
+      session.markClaimsStale.mockRejectedValue(new Error('redis down'));
+      await expect(
+        service.updateMember(actorAs(ACTOR, 'Admin'), TARGET, { roleId: ADMIN_ROLE }),
+      ).rejects.toThrow('redis down');
     });
   });
 
@@ -341,8 +366,15 @@ describe('AdminService', () => {
       expect(departmentModel.findByIdAndUpdate).not.toHaveBeenCalled();
     });
 
-    it('delete pulls the id from members and from the SSO groupDeptMap', async () => {
+    beforeEach(() => {
+      userModel.find.mockReturnValue({ lean: () => execable([]) });
+    });
+
+    it('delete pulls the id from members and from the SSO groupDeptMap, marks their claims stale', async () => {
       departmentModel.findByIdAndDelete.mockReturnValue(execable({ _id: DEPT, name: 'Eng' }));
+      userModel.find.mockReturnValue({
+        lean: () => execable([{ _id: { toString: () => 'm1' } }, { _id: 'm2' }]),
+      });
       userModel.updateMany.mockReturnValue(execable({ modifiedCount: 2 }));
       workspaceModel.findOne.mockReturnValue({
         lean: () =>
@@ -354,10 +386,13 @@ describe('AdminService', () => {
 
       await expect(service.deleteDepartment('actor1', DEPT)).resolves.toEqual({ success: true });
 
+      expect(userModel.find).toHaveBeenCalledWith({ departmentIds: DEPT }, { _id: 1 });
       expect(userModel.updateMany).toHaveBeenCalledWith(
         { departmentIds: DEPT },
         { $pull: { departmentIds: DEPT } },
       );
+      expect(session.markClaimsStaleForUsers).toHaveBeenCalledWith(['m1', 'm2']);
+      expect(session.revokeAllSessions).not.toHaveBeenCalled();
       expect(workspaceModel.updateOne).toHaveBeenCalledWith(
         { _id: 'ws1' },
         { $set: { 'sso.groupDeptMap': { 'sales.emea': OTHER } } },
@@ -377,6 +412,19 @@ describe('AdminService', () => {
       });
       await service.deleteDepartment('actor1', DEPT);
       expect(workspaceModel.updateOne).not.toHaveBeenCalled();
+      // Nobody was in the department → nothing to mark.
+      expect(session.markClaimsStaleForUsers).not.toHaveBeenCalled();
+    });
+
+    it('a failed claims mark never fails the delete nor skips the SSO cleanup', async () => {
+      departmentModel.findByIdAndDelete.mockReturnValue(execable({ _id: DEPT, name: 'Eng' }));
+      userModel.find.mockReturnValue({ lean: () => execable([{ _id: 'm1' }]) });
+      session.markClaimsStaleForUsers.mockRejectedValue(new Error('redis down'));
+      workspaceModel.findOne.mockReturnValue({
+        lean: () => execable({ _id: 'ws1', sso: { groupDeptMap: { eng: DEPT } } }),
+      });
+      await expect(service.deleteDepartment('actor1', DEPT)).resolves.toEqual({ success: true });
+      expect(workspaceModel.updateOne).toHaveBeenCalled();
     });
   });
 
@@ -539,6 +587,80 @@ describe('AdminService', () => {
           }),
         ).resolves.toBeDefined();
         expect(roleModel.find).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('allowedConnectors vs connectorAllowList ([] = allow all)', () => {
+      beforeEach(() => {
+        workspaceModel.findOneAndUpdate.mockReturnValue(execable({ name: 'Acme' }));
+      });
+
+      it('stored connectorAllowList [] (allow all) → any non-empty allowedConnectors is accepted', async () => {
+        workspaceModel.findOne.mockReturnValue({
+          lean: () => execable({ connectorAllowList: [] }),
+        });
+        await expect(
+          service.updateWorkspace(OWNER_ACTOR, {
+            aiSettings: { allowedConnectors: ['gmail', 'notion'] },
+          }),
+        ).resolves.toBeDefined();
+        expect(workspaceModel.findOneAndUpdate).toHaveBeenCalledWith(
+          {},
+          { $set: { 'aiSettings.allowedConnectors': ['gmail', 'notion'] } },
+          { new: true, upsert: true },
+        );
+      });
+
+      it('no stored workspace / field missing counts as [] (allow all)', async () => {
+        workspaceModel.findOne.mockReturnValue({ lean: () => execable(null) });
+        await expect(
+          service.updateWorkspace(OWNER_ACTOR, {
+            aiSettings: { allowedConnectors: ['drive'] },
+          }),
+        ).resolves.toBeDefined();
+      });
+
+      it('validates against the connectorAllowList sent in the SAME patch (not the stored one)', async () => {
+        workspaceModel.findOne.mockReturnValue({
+          lean: () => execable({ connectorAllowList: ['gmail', 'slack'] }),
+        });
+        await expect(
+          service.updateWorkspace(OWNER_ACTOR, {
+            connectorAllowList: ['gmail'],
+            aiSettings: { allowedConnectors: ['gmail', 'slack'] },
+          }),
+        ).rejects.toMatchObject({
+          status: 400,
+          response: { code: 'AI_CONNECTORS_NOT_IN_ALLOW_LIST' },
+        });
+        expect(workspaceModel.findOne).not.toHaveBeenCalled();
+        expect(workspaceModel.findOneAndUpdate).not.toHaveBeenCalled();
+
+        // …and a patch that widens the outer list to [] (allow all) accepts anything.
+        await expect(
+          service.updateWorkspace(OWNER_ACTOR, {
+            connectorAllowList: [],
+            aiSettings: { allowedConnectors: ['slack'] },
+          }),
+        ).resolves.toBeDefined();
+      });
+
+      it('a non-empty connectorAllowList still rejects entries outside it', async () => {
+        workspaceModel.findOne.mockReturnValue({
+          lean: () => execable({ connectorAllowList: ['gmail'] }),
+        });
+        await expect(
+          service.updateWorkspace(OWNER_ACTOR, {
+            aiSettings: { allowedConnectors: ['drive'] },
+          }),
+        ).rejects.toMatchObject({ response: { code: 'AI_CONNECTORS_NOT_IN_ALLOW_LIST' } });
+      });
+
+      it('allowedConnectors=null (inherit) needs no lookup', async () => {
+        await expect(
+          service.updateWorkspace(OWNER_ACTOR, { aiSettings: { allowedConnectors: null } }),
+        ).resolves.toBeDefined();
+        expect(workspaceModel.findOne).not.toHaveBeenCalled();
       });
     });
 

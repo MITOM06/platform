@@ -100,6 +100,19 @@ describe('SessionService.rotateRefreshToken', () => {
     expect(result.userId).toBe('u1');
     expect(result.newRefreshToken).toMatch(/^v4\./);
     expect(redis.eval).toHaveBeenCalled();
+    expect(result.claimsAt).toBeUndefined();
+  });
+
+  it('a claims-stale session still rotates and reports its claimsAt', async () => {
+    redis.hgetall.mockResolvedValue(sessionData({ claimsAt: '1700000005' }));
+
+    const result = await service.rotateRefreshToken({
+      sid: 's1',
+      refreshToken: CURRENT_TOKEN,
+    });
+
+    expect(result.newRefreshToken).toMatch(/^v4\./);
+    expect(result.claimsAt).toBe(1_700_000_005);
   });
 
   it('treats the previous token WITHIN the grace window as a benign race (no revoke)', async () => {

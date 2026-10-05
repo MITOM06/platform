@@ -7,8 +7,16 @@ import {
 import { randomBytes } from 'crypto';
 import * as argon2 from 'argon2';
 import { nanoid } from 'nanoid';
-import { Redis, REDIS_CLIENT } from '@platform/database';
+import {
+  CLAIMS_CHANGED_CHANNEL,
+  parseClaimsAt,
+  Redis,
+  REDIS_CLIENT,
+} from '@platform/database';
 import { AuthCode } from '../../common/auth-code.enum';
+import { markUsersClaimsStale } from './session-claims';
+
+export { CLAIMS_CHANGED_CHANNEL };
 
 /**
  * Redis Pub/Sub channel published at the end of every `revokeAllSessions`.
@@ -18,6 +26,11 @@ import { AuthCode } from '../../common/auth-code.enum';
  */
 export const SESSIONS_REVOKED_CHANNEL = 'auth:sessions-revoked';
 
+/**
+ * `role_changed` is no longer emitted: role / department / permission changes
+ * mark the sessions claims-stale instead (see `markClaimsStale`). Kept in the
+ * type because subscribers may still switch on it.
+ */
 export type SessionRevokeReason =
   | 'blocked'
   | 'role_changed'
@@ -249,7 +262,13 @@ export class SessionService {
       throw new UnauthorizedException({ code: AuthCode.REFRESH_TOKEN_ROTATED });
     }
 
-    return { userId: data.userId, newRefreshToken: newRefresh };
+    return {
+      userId: data.userId,
+      newRefreshToken: newRefresh,
+      // The access token minted from this refresh must not predate it (see
+      // AuthService.refresh); undefined when the claims never changed.
+      claimsAt: parseClaimsAt(data.claimsAt) ?? undefined,
+    };
   }
 
   /**
@@ -326,6 +345,31 @@ export class SessionService {
     // Published even when no sid is tracked: a service may still hold a live
     // socket for this user (e.g. the session set expired before the hash).
     await this.publishSessionsRevoked(userId, reason);
+  }
+
+  /**
+   * The user's role / departments / permissions changed: every access token
+   * issued before now carries stale claims. Sets `claimsAt = floor(now/1000)`
+   * on each live `sess:{sid}` of the user (TTL kept) — validators then answer
+   * `401 TOKEN_CLAIMS_STALE` for a token with `iat < claimsAt`, while the
+   * session itself stays valid and `/auth/refresh` mints fresh claims — and
+   * publishes `auth:claims-changed` `{"userId"}` so connected clients refresh
+   * right away. Nobody is signed out (contrast `revokeAllSessions`).
+   */
+  async markClaimsStale(userId: string): Promise<{ sessions: number }> {
+    const { sessions } = await this.markClaimsStaleForUsers([userId]);
+    return { sessions };
+  }
+
+  /**
+   * Batched {@link markClaimsStale} (e.g. every holder of an edited role).
+   * `auth:claims-changed` is published once per user that had at least one
+   * live session marked — a user without a session has no client to notify.
+   */
+  markClaimsStaleForUsers(
+    userIds: readonly string[],
+  ): Promise<{ users: number; sessions: number }> {
+    return markUsersClaimsStale(this.redis, userIds, this.logger);
   }
 
   /** Never throws: a failed publish must not undo / fail the revoke itself. */
@@ -407,3 +451,4 @@ export class SessionService {
     return sessions;
   }
 }
+

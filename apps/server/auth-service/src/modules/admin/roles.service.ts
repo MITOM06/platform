@@ -7,7 +7,14 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Role, RoleDocument, User, UserDocument } from '@platform/database';
+import {
+  PermissionMatrix,
+  Role,
+  RoleDocument,
+  User,
+  UserDocument,
+  enabledCapabilities,
+} from '@platform/database';
 import { AuthCode } from '../../common/auth-code.enum';
 import { isObjectIdString } from '../../common/ids';
 import {
@@ -20,6 +27,7 @@ import {
 } from '../../common/role-grant';
 import { isDuplicateKey } from '../invitations/invitation.shared';
 import { AuditService } from '../audit/audit.service';
+import { SessionService } from '../auth/session.service';
 import { CreateRoleDto, UpdateRoleDto } from './dto/role.dto';
 
 /**
@@ -34,6 +42,7 @@ export class RolesService {
     @InjectModel(Role.name) private readonly roleModel: Model<RoleDocument>,
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly audit: AuditService,
+    private readonly session: SessionService,
   ) {}
 
   listRoles() {
@@ -78,6 +87,10 @@ export class RolesService {
    * Check order: ROLE_NOT_FOUND (404) → OWNER_ROLE_IMMUTABLE (400) → CANNOT_EDIT_OWN_ROLE (403)
    * → ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS (403; current AND resulting grants must be inside the
    * actor's perms) → PRESET_ROLE_RENAME_FORBIDDEN (400) → ROLE_NAME_TAKEN (409).
+   *
+   * When the enabled capability set or the name (the JWT `role` claim) really changes, every
+   * holder's sessions are marked claims-stale: their next request with an older access token
+   * gets 401 TOKEN_CLAIMS_STALE and the refresh carries the new claims (no sign-out).
    */
   async updateRole(actor: RoleActor, id: string, dto: UpdateRoleDto) {
     const role = isObjectIdString(id)
@@ -134,7 +147,32 @@ export class RolesService {
       targetId: id,
       meta: { changes: set },
     });
+    const capsChanged =
+      dto.permissions !== undefined &&
+      !sameCapabilities(role.permissions, dto.permissions);
+    if (capsChanged || renaming) {
+      await this.session.markClaimsStaleForUsers(await this.holderIds(role));
+    }
     return updated;
+  }
+
+  /**
+   * Users whose token claims come from `role`: `roleId` = the role. For the Member preset also
+   * every user whose `roleId` is unset or points at no existing role — ClaimsService falls back
+   * to Member for them.
+   */
+  private async holderIds(role: RoleDocument): Promise<string[]> {
+    let filter: Record<string, unknown> = { roleId: role._id };
+    if (role.name === MEMBER_ROLE_NAME) {
+      const others = await this.roleModel
+        .find({ _id: { $ne: role._id } }, { _id: 1 })
+        .lean()
+        .exec();
+      // $nin also matches a missing / null roleId.
+      filter = { roleId: { $nin: (others ?? []).map((r) => r._id) } };
+    }
+    const users = await this.userModel.find(filter, { _id: 1 }).lean().exec();
+    return (users ?? []).map((u) => String(u._id));
   }
 
   /**
@@ -157,4 +195,14 @@ export class RolesService {
     if (!me.roleId) return role.name === MEMBER_ROLE_NAME;
     return String(me.roleId) === String(role._id);
   }
+}
+
+/** Same enabled-capability set (what ClaimsService puts into `perms`). */
+function sameCapabilities(
+  a: PermissionMatrix | null | undefined,
+  b: PermissionMatrix | null | undefined,
+): boolean {
+  const x = enabledCapabilities(a ?? {});
+  const y = new Set(enabledCapabilities(b ?? {}));
+  return x.length === y.size && x.every((cap) => y.has(cap));
 }

@@ -1,3 +1,6 @@
+// SessionService (a dependency) imports nanoid, which is ESM-only — mock before import.
+jest.mock('nanoid', () => ({ nanoid: () => 'test-id' }));
+
 import { Test } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import {
@@ -10,6 +13,7 @@ import {
 } from '@platform/database';
 import { RolesService } from './roles.service';
 import { AuditService } from '../audit/audit.service';
+import { SessionService } from '../auth/session.service';
 
 const C = Capability;
 const execable = (value: any) => ({ exec: jest.fn().mockResolvedValue(value) });
@@ -25,6 +29,7 @@ const ADMIN_PERMS = ALL_CAPABILITIES.filter((c) => ADMIN_PRESET[c] === true);
 
 const ADMIN_ROLE_ID = '64b0000000000000000000a2';
 const MANAGER_ROLE_ID = '64b0000000000000000000a3';
+const MEMBER_ROLE_ID = '64b0000000000000000000a4';
 const CUSTOM_ROLE_ID = '64b0000000000000000000a5';
 const OWNER_ROLE_ID = '64b0000000000000000000a1';
 const ACTOR_ID = '64b0000000000000000000bb';
@@ -41,13 +46,17 @@ describe('RolesService', () => {
   let roleModel: any;
   let userModel: any;
   let audit: { record: jest.Mock };
+  let session: { markClaimsStaleForUsers: jest.Mock };
   let rolesById: Record<string, any>;
+  /** Users returned by the holder lookup (userModel.find). */
+  let holders: any[];
 
   beforeEach(async () => {
     rolesById = {
       [OWNER_ROLE_ID]: roleDoc(OWNER_ROLE_ID, 'Owner', buildFullMatrix(true)),
       [ADMIN_ROLE_ID]: roleDoc(ADMIN_ROLE_ID, 'Admin', ADMIN_PRESET),
       [MANAGER_ROLE_ID]: roleDoc(MANAGER_ROLE_ID, 'Manager', MANAGER_PRESET),
+      [MEMBER_ROLE_ID]: roleDoc(MEMBER_ROLE_ID, 'Member', { [C.USE_GROUP_BOT]: true }),
       [CUSTOM_ROLE_ID]: roleDoc(
         CUSTOM_ROLE_ID,
         'Support',
@@ -55,8 +64,17 @@ describe('RolesService', () => {
         false,
       ),
     };
+    holders = [];
     roleModel = {
-      find: jest.fn().mockReturnValue(execable([])),
+      find: jest.fn((q: any) => ({
+        lean: () =>
+          execable(
+            Object.values(rolesById)
+              .filter((r) => !q?._id?.$ne || r._id !== q._id.$ne)
+              .map((r) => ({ _id: r._id })),
+          ),
+        exec: jest.fn().mockResolvedValue([]),
+      })),
       findById: jest.fn((id: string) => execable(rolesById[id] ?? null)),
       create: jest.fn(async (d: any) => ({
         _id: { toString: () => 'new-role' },
@@ -71,8 +89,12 @@ describe('RolesService', () => {
       findById: jest
         .fn()
         .mockReturnValue(leanExec({ _id: ACTOR_ID, roleId: ADMIN_ROLE_ID })),
+      find: jest.fn(() => ({ lean: () => execable(holders) })),
     };
     audit = { record: jest.fn().mockResolvedValue(undefined) };
+    session = {
+      markClaimsStaleForUsers: jest.fn().mockResolvedValue({ users: 0, sessions: 0 }),
+    };
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -80,6 +102,7 @@ describe('RolesService', () => {
         { provide: getModelToken(Role.name), useValue: roleModel },
         { provide: getModelToken(User.name), useValue: userModel },
         { provide: AuditService, useValue: audit },
+        { provide: SessionService, useValue: session },
       ],
     }).compile();
     service = moduleRef.get(RolesService);
@@ -291,6 +314,68 @@ describe('RolesService', () => {
       });
       expect(roleModel.findByIdAndUpdate).toHaveBeenCalled();
       expect(userModel.findById).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateRole → holders get claims-stale tokens (no sign-out)', () => {
+    it('a real capability change marks every user whose roleId is the role', async () => {
+      holders = [{ _id: { toString: () => 'u1' } }, { _id: 'u2' }];
+      await service.updateRole(owner, MANAGER_ROLE_ID, {
+        permissions: { ...MANAGER_PRESET, [C.VIEW_AUDIT_LOG]: true },
+      });
+      expect(userModel.find).toHaveBeenCalledWith(
+        { roleId: rolesById[MANAGER_ROLE_ID]._id },
+        { _id: 1 },
+      );
+      expect(session.markClaimsStaleForUsers).toHaveBeenCalledWith(['u1', 'u2']);
+      // Marked after the write + audit.
+      expect(session.markClaimsStaleForUsers.mock.invocationCallOrder[0]).toBeGreaterThan(
+        audit.record.mock.invocationCallOrder[0],
+      );
+    });
+
+    it('the Member preset also covers users with no / a dangling roleId', async () => {
+      holders = [{ _id: 'legacy-user' }, { _id: 'member-user' }];
+      await service.updateRole(owner, MEMBER_ROLE_ID, {
+        permissions: { [C.USE_GROUP_BOT]: true, [C.USE_PERSONAL_ASSISTANT]: true },
+      });
+      expect(roleModel.find).toHaveBeenCalledWith(
+        { _id: { $ne: rolesById[MEMBER_ROLE_ID]._id } },
+        { _id: 1 },
+      );
+      const [[filter]] = userModel.find.mock.calls;
+      const excluded = filter.roleId.$nin.map((id: any) => id.toString()).sort();
+      expect(excluded).toEqual(
+        [OWNER_ROLE_ID, ADMIN_ROLE_ID, MANAGER_ROLE_ID, CUSTOM_ROLE_ID].sort(),
+      );
+      expect(excluded).not.toContain(MEMBER_ROLE_ID);
+      expect(session.markClaimsStaleForUsers).toHaveBeenCalledWith([
+        'legacy-user',
+        'member-user',
+      ]);
+    });
+
+    it('renaming a custom role marks its holders (the JWT role claim changes)', async () => {
+      holders = [{ _id: 'u9' }];
+      await service.updateRole(owner, CUSTOM_ROLE_ID, { name: 'Helpdesk' });
+      expect(session.markClaimsStaleForUsers).toHaveBeenCalledWith(['u9']);
+    });
+
+    it('same enabled capabilities (false ↔ absent, same name) → nothing marked', async () => {
+      await service.updateRole(owner, MANAGER_ROLE_ID, {
+        name: 'Manager',
+        permissions: { ...MANAGER_PRESET, [C.MANAGE_WORKSPACE]: false },
+      });
+      expect(roleModel.findByIdAndUpdate).toHaveBeenCalled();
+      expect(userModel.find).not.toHaveBeenCalled();
+      expect(session.markClaimsStaleForUsers).not.toHaveBeenCalled();
+    });
+
+    it('a rejected edit marks nobody', async () => {
+      await expect(
+        service.updateRole(admin, ADMIN_ROLE_ID, { permissions: {} }),
+      ).rejects.toMatchObject({ response: { code: 'CANNOT_EDIT_OWN_ROLE' } });
+      expect(session.markClaimsStaleForUsers).not.toHaveBeenCalled();
     });
   });
 });

@@ -46,7 +46,8 @@ export const AI_SETTINGS_INVALIDATE_CHANNEL = 'ai:settings:invalidate';
  * and the singleton workspace (roles live in RolesService). All mutations are
  * authorized at the controller via @RequirePermission; this service enforces
  * invariants (Owner protections, no role grant beyond the actor's own
- * capabilities, revoke sessions only on a real membership change).
+ * capabilities, mark the member's tokens claims-stale only on a real
+ * membership change).
  */
 @Injectable()
 export class AdminService {
@@ -123,10 +124,20 @@ export class AdminService {
     return { success: true };
   }
 
-  /** Never throws: the department is already gone; a failed cleanup is logged. */
+  /**
+   * Never throws: the department is already gone; a failed cleanup is logged.
+   * Members who lose the department get their tokens marked claims-stale
+   * (their `depts` claim changes).
+   */
   private async removeDepartmentReferences(id: string): Promise<number> {
     let membersUpdated = 0;
+    let affected: string[] = [];
     try {
+      const members = await this.userModel
+        .find({ departmentIds: id }, { _id: 1 })
+        .lean()
+        .exec();
+      affected = (members ?? []).map((u) => String(u._id));
       const res = await this.userModel
         .updateMany({ departmentIds: id }, { $pull: { departmentIds: id } })
         .exec();
@@ -152,6 +163,15 @@ export class AdminService {
         `Department ${id} deleted but reference cleanup failed: ${(err as Error).message}`,
       );
     }
+    if (affected.length > 0) {
+      try {
+        await this.session.markClaimsStaleForUsers(affected);
+      } catch (err) {
+        this.logger.warn(
+          `Department ${id} deleted but marking claims stale failed: ${(err as Error).message}`,
+        );
+      }
+    }
     return membersUpdated;
   }
 
@@ -166,9 +186,10 @@ export class AdminService {
   /**
    * Assign a member's role and/or departments. Only a REAL change is written —
    * the role differs, or the department SET differs (order/duplicates ignored)
-   * — and only then are the member's sessions revoked, so stale permissions
-   * can't outlive one access-token lifetime while a no-op Save (the web always
-   * sends departmentIds) no longer logs the member out.
+   * — and only then are the member's sessions marked claims-stale: every access
+   * token minted before the change gets 401 TOKEN_CLAIMS_STALE, the client
+   * refreshes into the new claims, nobody is signed out. A no-op Save (the web
+   * always sends departmentIds) touches nothing.
    *
    * A non-Owner may not change an Owner's departments (same rule as the role).
    */
@@ -201,7 +222,7 @@ export class AdminService {
       .exec();
     if (!updated) throw new NotFoundException({ code: AuthCode.MEMBER_NOT_FOUND });
 
-    await this.session.revokeAllSessions(id, roleChanged ? 'role_changed' : 'other');
+    await this.session.markClaimsStale(id);
     await this.audit.record({
       actorId: actor.sub,
       action: 'member.update',
@@ -359,7 +380,7 @@ export class AdminService {
     // unspecified aiSettings fields are preserved (deep-merge semantics).
     const set: Record<string, unknown> = { ...rest };
     if (aiSettings !== undefined) {
-      await this.validateAiSettings(aiSettings);
+      await this.validateAiSettings(aiSettings, dto.connectorAllowList);
       for (const [key, value] of Object.entries(aiSettings)) {
         if (value === undefined) continue; // skip absent keys; null is meaningful
         set[`aiSettings.${key}`] = value;
@@ -428,19 +449,28 @@ export class AdminService {
   /**
    * Validate AI connector allow-list against the OUTER workspace boundary: the
    * AI list can only NARROW `connectorAllowList`, never widen it. `null` (inherit)
-   * and `[]` (allow none) are always valid.
+   * and `[]` (allow none) are always valid. An EMPTY `connectorAllowList` means
+   * "every connector allowed" (connector-service contract), so any AI list is
+   * inside it. The outer list is the one this same PATCH writes, if it has one.
    */
   private async validateAiSettings(
     aiSettings: UpdateWorkspaceDto['aiSettings'],
+    nextConnectorAllowList: string[] | undefined,
   ): Promise<void> {
     const allowed = aiSettings?.allowedConnectors;
     if (!Array.isArray(allowed) || allowed.length === 0) return;
 
-    const ws = await this.workspaceModel
-      .findOne({}, { connectorAllowList: 1 })
-      .lean()
-      .exec();
-    const outer = new Set(ws?.connectorAllowList ?? []);
+    const outerList =
+      nextConnectorAllowList ??
+      (
+        await this.workspaceModel
+          .findOne({}, { connectorAllowList: 1 })
+          .lean()
+          .exec()
+      )?.connectorAllowList ??
+      [];
+    if (outerList.length === 0) return; // [] = allow all
+    const outer = new Set(outerList);
     const offenders = allowed.filter((c) => !outer.has(c));
     if (offenders.length > 0) {
       throw new BadRequestException({

@@ -49,6 +49,7 @@
 | `REFRESH_TOKEN_INVALID` | 401 | Invalid refresh token | — |
 | `REFRESH_TOKEN_ROTATED` | 401 | Refresh token has already been rotated | — |
 | `TOKEN_SESSION_MISMATCH` | 401 | Token does not match the session. | — |
+| `TOKEN_CLAIMS_STALE` | 401 — any access-token-protected route (auth-, chat-, ai-, connector-service) | — (not user-facing: refresh silently and retry; **never log out**) | — |
 | `SOCIAL_EMAIL_UNAVAILABLE` | 401 | Unable to retrieve email from social account. | — |
 | `LOGIN_CODE_INVALID` | 401 | Login code is invalid or has expired. | — |
 | `EMAIL_NOT_FOUND` | 404 | Email does not exist in the system. | — |
@@ -64,7 +65,7 @@
 | `ROLE_NOT_FOUND` | 400/404 | Role not found. | — |
 | `MEMBER_NOT_FOUND` | 404 | Member not found. | — |
 | `OWNER_ROLE_IMMUTABLE` | 400 | The Owner role cannot be modified or deleted. | — |
-| `AI_CONNECTORS_NOT_IN_ALLOW_LIST` | 400 | Selected AI connectors must be a subset of the workspace connector allow-list. | — |
+| `AI_CONNECTORS_NOT_IN_ALLOW_LIST` | 400 — `PATCH /admin/workspace`: a non-empty `aiSettings.allowedConnectors` entry outside a **non-empty** `connectorAllowList` (the one in the same patch, else the stored one). `connectorAllowList: []` = every connector allowed, so any list passes. | Selected AI connectors must be a subset of the workspace connector allow-list. | — |
 | `SSO_DISABLED` | 401 | Single sign-on is not enabled for this workspace. | — |
 | `SSO_DOMAIN_NOT_ALLOWED` | 401 | This email domain is not permitted to sign in via SSO. | — |
 | `OIDC_NO_STATE` | 401 | Missing OIDC state parameter. | — |
@@ -123,11 +124,52 @@ the session. A token that does not belong to the session still gets the normal s
 
 **ai-service / connector-service** run the same `sess:{sid}` check as auth-service on every
 client request (shared `SharedJwtStrategy`): `401 SESSION_NOT_FOUND | SESSION_REVOKED |
-TOKEN_SESSION_MISMATCH | TOKEN_INVALID`; a Redis outage answers `503 SESSION_CHECK_UNAVAILABLE`
-(do not log out on 503).
+TOKEN_SESSION_MISMATCH | TOKEN_CLAIMS_STALE | TOKEN_INVALID`; a Redis outage answers
+`503 SESSION_CHECK_UNAVAILABLE` (do not log out on 503).
 
 **`auth:sessions-revoked`** (Redis Pub/Sub, published by auth-service at the end of every
-`revokeAllSessions`): payload `{"userId":"<id>","reason":"blocked|role_changed|password_reset|refresh_reuse|other"}`.
+`revokeAllSessions`): payload `{"userId":"<id>","reason":"blocked|password_reset|refresh_reuse|other"}`
+(`role_changed` is no longer emitted since 2026-10-05 round 2 — see below; subscribers may keep
+handling it).
+
+### Role / department / permission changes without re-login (2026-10-05, round 2)
+
+A change to a user's RBAC claims no longer signs them out. auth-service instead marks every live
+session of the user **claims-stale**:
+
+- `HSET sess:{sid} claimsAt <unix seconds, floor(now)>` on each live session in
+  `user:{userId}:sessions` (TTL kept, revoked sessions untouched, `claimsAt` only moves forward,
+  dangling sids pruned), then
+- Redis Pub/Sub **`auth:claims-changed`** with payload `{"userId":"<id>"}` — once per user that had
+  at least one live session marked.
+
+Every access-token validator then rejects a token with `iat < claimsAt` (strict; no `claimsAt` =
+no check; a token without `iat` is stale once `claimsAt` exists) with **`401 { code:
+"TOKEN_CLAIMS_STALE" }`**. Check order: `SESSION_NOT_FOUND` → `SESSION_REVOKED` →
+`TOKEN_SESSION_MISMATCH` → `TOKEN_CLAIMS_STALE`. Validators: auth-service `JwtStrategy`,
+`packages/database` `SharedJwtStrategy` (ai-service, connector-service — one `HMGET userId revoked
+claimsAt`), chat-service `SessionValidator` (REST + STOMP CONNECT).
+
+`POST /auth/refresh` keeps working on a claims-stale session: it resolves the claims fresh and the
+new access token's `iat` is never earlier than the session's `claimsAt` (it is pinned to `claimsAt`
+when the signing instance's clock is behind), so the refreshed token always passes.
+
+What marks claims stale (instead of revoking):
+
+| Action | Who is marked |
+|--------|---------------|
+| `PATCH /admin/members/:id` — role or department set really changes | that member |
+| `PATCH /admin/roles/:id` — enabled capability set or the name (JWT `role` claim) really changes | every holder: `roleId` = the role; for the **Member** preset also users whose `roleId` is unset or points at no existing role (they fall back to Member) |
+| `DELETE /admin/departments/:id` | every member who was in the department |
+| OIDC SSO login whose group mapping changed the user's role / departments | that user (their other devices) |
+
+Still **revoking** (sign-out, `auth:sessions-revoked`): block, password reset, refresh-token reuse;
+change-password revokes the other sessions; logout revokes the caller's session.
+
+Clients: treat `401 TOKEN_CLAIMS_STALE` exactly like an expired access token (single-flight refresh,
+retry once); never log out on it. chat-service turns `auth:claims-changed` into
+`{ "type": "CLAIMS_CHANGED" }` on `/user/queue/notifications` (refresh token → refetch
+`/me/capabilities` → reconnect STOMP).
 
 `MEMBER_NOT_FOUND`, `ROLE_NOT_FOUND`, `DEPARTMENT_NOT_FOUND`, `OWNER_ROLE_IMMUTABLE`,
 `SSO_DISABLED` and `SSO_DOMAIN_NOT_ALLOWED` (above) were string literals and are now
@@ -176,8 +218,9 @@ Contract changes that are not new codes:
   createdAt, roleName, bio` + `phoneNumber` / `dateOfBirth` / `gender` only when the owner's `show*`
   toggles allow); `fcmTokens`, `trustedDevices`, `socialLinks`, `status`, `roleId`, `departmentIds`
   are gone. Users in a block relationship are left out.
-- `PATCH /admin/members/:id` only writes and revokes the member's sessions when the role or the
-  department set (order-insensitive) really changes.
+- `PATCH /admin/members/:id` only writes (and, since round 2, marks the member's sessions
+  claims-stale instead of revoking them) when the role or the department set (order-insensitive)
+  really changes.
 
 ## OAuth / SSO redirect errors
 
