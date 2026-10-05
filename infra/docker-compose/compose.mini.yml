@@ -104,6 +104,12 @@ services:
       ALLOWED_ORIGINS: ${WEB_ORIGIN:?required}
       BOTFACTORY_BASE_URL: ${BOTFACTORY_BASE_URL:-}
       BOTFACTORY_WORKER_TOKEN: ${BOTFACTORY_WORKER_TOKEN:-}
+      # LiveKit media host (infra/livekit/, runbook docs/superpowers/runbooks/livekit.md).
+      # Blank = calls stay peer-to-peer and meetings report unavailable.
+      LIVEKIT_URL: ${LIVEKIT_URL:-}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-}
+      CALL_TRANSPORT: ${CALL_TRANSPORT:-mesh}
       MAIL_HOST: ${MAIL_HOST:-}
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USER: ${MAIL_USER:-}
