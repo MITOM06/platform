@@ -11,6 +11,8 @@ export interface IncomingGroupCall {
   startedByName: string
   media: CallMedia
   aiNotetaker: boolean
+  /** Media path of the call (absent from older servers = mesh). */
+  transport?: CallTransport
 }
 
 interface CallState {
@@ -51,6 +53,10 @@ interface CallState {
   streamsVersion: number
   /** Incoming group-call ring awaiting accept/decline. */
   incomingGroupCall: IncomingGroupCall | null
+  /** Media path of the current group call. */
+  groupTransport: CallTransport
+  /** sfu: identities currently speaking (active-speaker ring). */
+  speakingIds: string[]
 
   // ── 1-on-1 actions ──────────────────────────────────────────────────────────
   setIncoming: (p: {
@@ -81,7 +87,14 @@ interface CallState {
   reset: () => void
 
   // ── Group actions ─────────────────────────────────────────────────────────
-  startGroupCall: (p: { callId: string; conversationId: string; media: CallMedia; aiNotetaker: boolean }) => void
+  startGroupCall: (p: {
+    callId: string
+    conversationId: string
+    media: CallMedia
+    aiNotetaker: boolean
+    transport?: CallTransport
+  }) => void
+  setSpeaking: (ids: string[]) => void
   setGroupActive: () => void
   setRoster: (participants: CallParticipant[]) => void
   setAiNotetaker: (on: boolean) => void
@@ -114,7 +127,9 @@ const initialGroup = {
   groupActive: false,
   roster: [] as CallParticipant[],
   streamsVersion: 0,
-  incomingGroupCall: null,
+  incomingGroupCall: null as IncomingGroupCall | null,
+  groupTransport: 'mesh' as CallTransport,
+  speakingIds: [] as string[],
 }
 
 export const useCallStore = create<CallState>((set) => ({
@@ -155,8 +170,10 @@ export const useCallStore = create<CallState>((set) => ({
   reset: () => set({ ...initial }),
 
   // group
-  startGroupCall: ({ callId, conversationId, media, aiNotetaker }) =>
+  startGroupCall: ({ callId, conversationId, media, aiNotetaker, transport }) =>
     set({
+      groupTransport: transport ?? 'mesh',
+      speakingIds: [],
       groupCallId: callId,
       groupConversationId: conversationId,
       groupMedia: media,
@@ -174,5 +191,6 @@ export const useCallStore = create<CallState>((set) => ({
   setAiNotetaker: (on) => set({ groupAiNotetaker: on }),
   bumpStreams: () => set((s) => ({ streamsVersion: s.streamsVersion + 1 })),
   setIncomingGroupCall: (call) => set({ incomingGroupCall: call }),
+  setSpeaking: (speakingIds) => set({ speakingIds }),
   resetGroup: () => set({ ...initialGroup }),
 }))

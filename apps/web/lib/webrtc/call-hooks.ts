@@ -15,3 +15,11 @@ export interface CallHooks {
    */
   onEndNotice: ((reason: CallEndReason, byPeer: boolean, peerName: string) => void) | null
 }
+
+/** UI callbacks for a group call, set on the `groupCallManager` façade. */
+export interface GroupCallHooks {
+  /** Local preview stream callback (set by GroupCallModal). */
+  onLocalStream: ((s: MediaStream) => void) | null
+  /** Fired when teardown completes so the overlay can unmount. */
+  onEnded: (() => void) | null
+}
