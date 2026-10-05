@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { CallMedia, CallParticipant } from '@/lib/api/types'
+import type { CallMedia, CallParticipant, CallTransport } from '@/lib/api/types'
 
 export type CallStatus = 'idle' | 'incoming' | 'outgoing' | 'connected'
 
@@ -28,6 +28,14 @@ interface CallState {
   cameraEnabled: boolean
   /** True = two-way video call; false = audio-only voice call. */
   video: boolean
+  /** Media path of this call: mesh (P2P) or sfu (LiveKit). */
+  transport: CallTransport
+  /** sfu only: the server's call id (mesh 1-on-1 calls have none). */
+  callId: string | null
+  /** sfu: LiveKit is re-establishing the connection. */
+  reconnecting: boolean
+  /** sfu: our own connection quality is poor. */
+  poorConnection: boolean
 
   // ── Group call (mesh) ───────────────────────────────────────────────────────
   /** Non-null while the local user is in a group call. */
@@ -45,8 +53,26 @@ interface CallState {
   incomingGroupCall: IncomingGroupCall | null
 
   // ── 1-on-1 actions ──────────────────────────────────────────────────────────
-  setIncoming: (p: { peerId: string; peerName: string; conversationId: string; sdp: string; video: boolean }) => void
-  setOutgoing: (p: { peerId: string; peerName: string; conversationId: string; video: boolean }) => void
+  setIncoming: (p: {
+    peerId: string
+    peerName: string
+    conversationId: string
+    /** mesh: the offer SDP. sfu rings carry no SDP. */
+    sdp?: string
+    video: boolean
+    callId?: string
+    transport?: CallTransport
+  }) => void
+  setOutgoing: (p: {
+    peerId: string
+    peerName: string
+    conversationId: string
+    video: boolean
+    transport?: CallTransport
+  }) => void
+  setCallId: (callId: string) => void
+  setReconnecting: (on: boolean) => void
+  setPoorConnection: (on: boolean) => void
   setPeerName: (name: string) => void
   setConnected: () => void
   setDuration: (s: number) => void
@@ -74,6 +100,10 @@ const initial = {
   micEnabled: true,
   cameraEnabled: true,
   video: true,
+  transport: 'mesh' as CallTransport,
+  callId: null as string | null,
+  reconnecting: false,
+  poorConnection: false,
 }
 
 const initialGroup = {
@@ -92,10 +122,31 @@ export const useCallStore = create<CallState>((set) => ({
   ...initialGroup,
 
   // 1-on-1
-  setIncoming: ({ peerId, peerName, conversationId, sdp, video }) =>
-    set({ status: 'incoming', peerId, peerName, conversationId, pendingOfferSdp: sdp, video }),
-  setOutgoing: ({ peerId, peerName, conversationId, video }) =>
-    set({ status: 'outgoing', peerId, peerName, conversationId, pendingOfferSdp: null, video }),
+  setIncoming: ({ peerId, peerName, conversationId, sdp, video, callId, transport }) =>
+    set({
+      status: 'incoming',
+      peerId,
+      peerName,
+      conversationId,
+      pendingOfferSdp: sdp ?? null,
+      video,
+      callId: callId ?? null,
+      transport: transport ?? 'mesh',
+    }),
+  setOutgoing: ({ peerId, peerName, conversationId, video, transport }) =>
+    set({
+      status: 'outgoing',
+      peerId,
+      peerName,
+      conversationId,
+      pendingOfferSdp: null,
+      video,
+      callId: null,
+      transport: transport ?? 'mesh',
+    }),
+  setCallId: (callId) => set({ callId }),
+  setReconnecting: (reconnecting) => set({ reconnecting }),
+  setPoorConnection: (poorConnection) => set({ poorConnection }),
   setPeerName: (peerName) => set({ peerName }),
   setConnected: () => set({ status: 'connected', durationSeconds: 0 }),
   setDuration: (s) => set({ durationSeconds: s }),
