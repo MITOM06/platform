@@ -45,6 +45,12 @@ public class CallSession {
   /** Set when the call ends (last participant left or explicit end). Null while active. */
   private Instant endedAt;
 
+  /** Media path: "mesh" (P2P, the default for old records) or "sfu" (LiveKit). */
+  @Builder.Default private String transport = "mesh";
+
+  /** "direct" (two members) or "group". */
+  private String kind;
+
   /** 'audio' | 'video'. */
   private String media;
 
@@ -64,6 +70,9 @@ public class CallSession {
     private String userId;
     private String displayName;
     private Instant joinedAt;
+
+    /** LiveKit participant sid of the session currently in the room (sfu only). */
+    private String sid;
 
     /** Null while the participant is still in the call. */
     private Instant leftAt;

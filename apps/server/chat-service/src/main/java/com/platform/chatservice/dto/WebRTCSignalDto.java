@@ -21,7 +21,7 @@ public class WebRTCSignalDto {
 
   /**
    * Why a 1-on-1 call ended, on {@code type:"end"}: hangup | declined | busy | no_answer |
-   * media_error | failed. Relayed verbatim; null from older clients means hangup.
+   * media_error | failed | answered_elsewhere. Null from older clients means hangup.
    */
   private String reason;
 
@@ -41,4 +41,7 @@ public class WebRTCSignalDto {
 
   /** Ring payload: display name of the member who started the call. */
   private String startedByName;
+
+  /** Ring payload: "mesh" | "sfu" — which media path this call uses. */
+  private String transport;
 }
