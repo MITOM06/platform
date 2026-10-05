@@ -297,6 +297,21 @@ describe('F1 — claims-stale access tokens', () => {
     );
   });
 
+  it('a token minted earlier in the SAME second as the change is stale too', async () => {
+    setNow(T0 + 7_100);
+    const login = await auth.issueTokensForUser(user, 'web-login', 'web');
+    setNow(T0 + 7_900); // same wall-clock second as the login
+    claims = { role: 'Admin', perms: ['MANAGE_MEMBERS'] as any, depts: [] };
+    await session.markClaimsStale('u1');
+
+    await expect(check(login.accessToken)).resolves.toBe(
+      '401 TOKEN_CLAIMS_STALE',
+    );
+    // ...and a refresh in that same second still yields a passing token.
+    const refreshed = await auth.refresh(login.sid, login.refreshToken);
+    await expect(check(refreshed.accessToken)).resolves.toBe('OK');
+  });
+
   it('keeps the session TTL, does not sign anyone out, publishes auth:claims-changed {userId}', async () => {
     const a = await auth.issueTokensForUser(user, 'phone', 'mobile');
     const b = await auth.issueTokensForUser(user, 'laptop', 'web');
@@ -306,8 +321,9 @@ describe('F1 — claims-stale access tokens', () => {
     await session.markClaimsStale('u1');
 
     for (const sid of [a.sid, b.sid]) {
+      // One second ahead of the change (JWT iat only has 1 s resolution).
       expect(redis.hashes.get(`sess:${sid}`)?.get('claimsAt')).toBe(
-        String((T0 + 10_000) / 1000),
+        String((T0 + 10_000) / 1000 + 1),
       );
       expect(redis.hashes.get(`sess:${sid}`)?.get('revoked')).toBe('0');
     }
@@ -354,7 +370,7 @@ describe('F1 — claims-stale access tokens', () => {
     setNow(T0 + 1_000); // another instance with a slower clock
     await session.markClaimsStale('u1');
     expect(redis.hashes.get(`sess:${s.sid}`)?.get('claimsAt')).toBe(
-      String((T0 + 60_000) / 1000),
+      String((T0 + 60_000) / 1000 + 1),
     );
   });
 
@@ -364,7 +380,7 @@ describe('F1 — claims-stale access tokens', () => {
     await session.markClaimsStale('u1');
     setNow(T0 + 28_000); // 2s behind the instance that marked the claims
     const refreshed = await auth.refresh(login.sid, login.refreshToken);
-    expect(decode(refreshed.accessToken).iat).toBe((T0 + 30_000) / 1000);
+    expect(decode(refreshed.accessToken).iat).toBe((T0 + 30_000) / 1000 + 1);
     await expect(check(refreshed.accessToken)).resolves.toBe('OK');
   });
 

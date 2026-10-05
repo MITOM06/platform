@@ -31,7 +31,7 @@ const sessKey = (sid: string) => `sess:${sid}`;
 const userSessSetKey = (userId: string) => `user:${userId}:sessions`;
 
 /**
- * Set `claimsAt = floor(now / 1000)` on every live session of `userIds`, drop
+ * Set `claimsAt = floor(now / 1000) + 1` on every live session of `userIds`, drop
  * dangling sids from the users' session sets and publish `auth:claims-changed`
  * `{"userId"}` once per user that had at least one live session marked.
  * Two pipelined round-trips per 500 users (+1 best-effort publish/cleanup).
@@ -43,7 +43,11 @@ export async function markUsersClaimsStale(
   logger: Logger,
 ): Promise<{ users: number; sessions: number }> {
   const ids = [...new Set(userIds.filter((id) => !!id))];
-  const claimsAt = Math.floor(Date.now() / 1000).toString();
+  // +1: JWT `iat` has one-second resolution, so with `iat < claimsAt` a token
+  // minted earlier in the same second as the change would otherwise keep the
+  // old claims for its whole lifetime. Tokens minted after the change are
+  // unaffected: `refresh` pins `iat` up to `claimsAt` when the clock is behind it.
+  const claimsAt = (Math.floor(Date.now() / 1000) + 1).toString();
   let users = 0;
   let sessions = 0;
   for (let i = 0; i < ids.length; i += CHUNK) {
