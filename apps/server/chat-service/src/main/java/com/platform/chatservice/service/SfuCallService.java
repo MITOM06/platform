@@ -1,15 +1,27 @@
 package com.platform.chatservice.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.platform.chatservice.config.LiveKitProperties;
 import com.platform.chatservice.dto.WebRTCSignalDto;
+import com.platform.chatservice.exception.ApiException;
 import com.platform.chatservice.model.CallSession;
 import com.platform.chatservice.repository.UserBlockRepository;
 import com.platform.chatservice.service.rtc.LiveKitTokenService;
+import com.platform.chatservice.service.rtc.RtcGrant;
+import com.platform.chatservice.service.rtc.RtcRooms;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 /**
@@ -25,6 +37,10 @@ public class SfuCallService {
 
   private static final Set<String> DECLINE_REASONS = Set.of("declined", "busy", "media_error");
   private static final Set<String> CANCEL_REASONS = Set.of("hangup", "no_answer");
+  private static final ObjectMapper JSON = new ObjectMapper();
+
+  /** What a client needs to join the call's LiveKit room. */
+  public record CallToken(String url, String token) {}
 
   private final CallService calls;
   private final CallBusyRegistry busy;
@@ -78,6 +94,70 @@ public class SfuCallService {
                   .forEach(m -> calls.sendToUser(m, ringCancel(callId, why)));
               calls.endCall(callId, why);
             });
+  }
+
+  /**
+   * A LiveKit token for {@code callId}'s room. Checked in this order so the client can tell an
+   * outage from a refusal: LiveKit off (503), unknown call (404), ended or not on sfu (409), not a
+   * member or blocked in a 1-on-1 (403).
+   */
+  public CallToken issueToken(String userId, String callId) {
+    if (!props.isConfigured()) {
+      throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "CALLS_UNAVAILABLE");
+    }
+    CallSession s =
+        calls
+            .findSession(callId)
+            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "CALL_NOT_FOUND"));
+    if (s.getEndedAt() != null) {
+      throw new ApiException(HttpStatus.CONFLICT, "CALL_ENDED");
+    }
+    if (!CallService.isSfu(s)) {
+      throw new ApiException(HttpStatus.CONFLICT, "CALL_NOT_SFU");
+    }
+    List<String> members = calls.membersOf(s.getConversationId());
+    if (!members.contains(userId) || blockedInDirectCall(s, members, userId)) {
+      throw new ApiException(HttpStatus.FORBIDDEN, "CALL_FORBIDDEN");
+    }
+    Document user = lookupUser(userId);
+    String name = user == null ? null : user.getString("displayName");
+    String avatar = user == null ? null : user.getString("avatarUrl");
+    String token =
+        tokens.participantToken(
+            userId, name, metadata(avatar), RtcGrant.participant(RtcRooms.forCall(callId)));
+    return new CallToken(props.getUrl(), token);
+  }
+
+  private boolean blockedInDirectCall(CallSession s, List<String> members, String userId) {
+    if (!"direct".equals(s.getKind())) {
+      return false;
+    }
+    return members.stream()
+        .filter(m -> !m.equals(userId))
+        .anyMatch(
+            other ->
+                blocks.existsByBlockerIdAndBlockedId(other, userId)
+                    || blocks.existsByBlockerIdAndBlockedId(userId, other));
+  }
+
+  private Document lookupUser(String userId) {
+    if (!ObjectId.isValid(userId)) {
+      return null;
+    }
+    Query query = new Query(Criteria.where("_id").is(new ObjectId(userId)));
+    query.fields().include("displayName").include("avatarUrl");
+    return mongo.findOne(query, Document.class, "users");
+  }
+
+  private static String metadata(String avatarUrl) {
+    if (avatarUrl == null || avatarUrl.isBlank()) {
+      return null;
+    }
+    try {
+      return JSON.writeValueAsString(Map.of("avatarUrl", avatarUrl));
+    } catch (JsonProcessingException e) {
+      return null;
+    }
   }
 
   private Optional<CallSession> sfuSessionFor(String userId, String callId) {
