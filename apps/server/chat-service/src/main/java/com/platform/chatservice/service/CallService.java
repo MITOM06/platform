@@ -1,6 +1,7 @@
 package com.platform.chatservice.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.platform.chatservice.config.LiveKitProperties;
 import com.platform.chatservice.dto.CallEventDto;
 import com.platform.chatservice.dto.WebRTCSignalDto;
 import com.platform.chatservice.model.CallSession;
@@ -8,11 +9,14 @@ import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.repository.CallSessionRepository;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.UserBlockRepository;
+import com.platform.chatservice.service.rtc.LiveKitRoomClient;
+import com.platform.chatservice.service.rtc.RtcRooms;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +57,9 @@ public class CallService {
   private final ClusterMessageBroker clusterBroker;
   private final StringRedisTemplate redisTemplate;
   private final ObjectMapper objectMapper;
+  private final LiveKitProperties liveKitProperties;
+  private final LiveKitRoomClient liveKitRoomClient;
+  private final CallBusyRegistry busyRegistry;
 
   // ----------------------------------------------------------------------------------------------
   // call.start
@@ -82,6 +89,24 @@ public class CallService {
       }
     }
 
+    boolean sfu = liveKitProperties.callsUseSfu();
+    List<String> members = membersOf(conversationId);
+    String kind = members.size() == 2 ? "direct" : "group";
+    if (sfu && "direct".equals(kind)) {
+      String callee = members.stream().filter(m -> !m.equals(userId)).findFirst().orElse(null);
+      if (busyRegistry.busyCallOf(callee) != null) {
+        sendToUser(
+            userId,
+            WebRTCSignalDto.builder()
+                .type("call-declined")
+                .conversationId(conversationId)
+                .reason("busy")
+                .senderId(callee)
+                .build());
+        return;
+      }
+    }
+
     String callId = UUID.randomUUID().toString();
     Instant now = Instant.now();
 
@@ -94,9 +119,14 @@ public class CallService {
             .startedAt(now)
             .media(media == null ? "audio" : media)
             .aiNotetaker(aiNotetaker)
+            .transport(sfu ? "sfu" : "mesh")
+            .kind(kind)
             .participants(new ArrayList<>(List.of(participant(userId, now))))
             .build();
     callSessionRepository.save(session);
+    if (sfu) {
+      busyRegistry.markBusy(userId, callId);
+    }
 
     redisTemplate.opsForValue().set(ACTIVE_KEY_PREFIX + conversationId, callId);
 
@@ -115,6 +145,8 @@ public class CallService {
             .startedBy(session.getStartedBy())
             .startedByName(session.getStartedByName())
             .participants(toParticipantDtos(session))
+            .transport(session.getTransport())
+            .livekitUrl(isSfu(session) ? liveKitProperties.getUrl() : null)
             .build();
     broadcastToConversation(session.getConversationId(), event);
   }
@@ -123,6 +155,10 @@ public class CallService {
     List<String> members = membersOf(session.getConversationId());
     for (String memberId : members) {
       if (memberId.equals(session.getStartedBy())) {
+        continue;
+      }
+      // On sfu a member already in another call is not rung (a 1-on-1 to them never got here).
+      if (isSfu(session) && busyRegistry.busyCallOf(memberId) != null) {
         continue;
       }
       WebRTCSignalDto ring =
@@ -134,6 +170,7 @@ public class CallService {
               .startedByName(session.getStartedByName())
               .media(session.getMedia())
               .aiNotetaker(session.isAiNotetaker())
+              .transport(session.getTransport())
               .build();
       clusterBroker.convertAndSendToUser(memberId, WEBRTC_QUEUE, ring);
     }
@@ -176,6 +213,14 @@ public class CallService {
     }
     callSessionRepository.save(session);
     broadcastRoster(session);
+    if (isSfu(session)) {
+      busyRegistry.clear(userId, callId);
+      if ("direct".equals(session.getKind())) {
+        // A 1-on-1 cannot go on with one person: hanging up ends it for both.
+        endCall(callId, "hangup");
+        return;
+      }
+    }
 
     boolean anyActive = session.getParticipants().stream().anyMatch(p -> p.getLeftAt() == null);
     if (!anyActive) {
@@ -188,6 +233,11 @@ public class CallService {
    * notetaker is on) ask ai-service for a summary. Idempotent — a no-op if already ended.
    */
   public void endCall(String callId) {
+    endCall(callId, "hangup");
+  }
+
+  /** As {@link #endCall(String)}, telling clients why: hangup | declined | busy | … */
+  public void endCall(String callId, String reason) {
     CallSession session = callSessionRepository.findByCallId(callId).orElse(null);
     if (session == null || session.getEndedAt() != null) {
       return;
@@ -195,10 +245,22 @@ public class CallService {
     session.setEndedAt(Instant.now());
     callSessionRepository.save(session);
 
-    CallEventDto event = CallEventDto.builder().event("call.ended").callId(callId).build();
+    CallEventDto event =
+        CallEventDto.builder().event("call.ended").callId(callId).reason(reason).build();
     broadcastToConversation(session.getConversationId(), event);
 
     redisTemplate.delete(ACTIVE_KEY_PREFIX + session.getConversationId());
+
+    if (isSfu(session)) {
+      busyRegistry.clear(session.getStartedBy(), callId);
+      session.getParticipants().forEach(p -> busyRegistry.clear(p.getUserId(), callId));
+      try {
+        liveKitRoomClient.deleteRoom(RtcRooms.forCall(callId));
+      } catch (RuntimeException e) {
+        // The room may already be gone (LiveKit closes empty rooms itself).
+        log.warn("Could not close LiveKit room for call {}: {}", callId, e.toString());
+      }
+    }
 
     if (session.isAiNotetaker()) {
       publishSummarize(session.getCallId(), session.getConversationId());
@@ -265,7 +327,29 @@ public class CallService {
     return Map.of("userId", userId, "displayName", displayName, "text", text, "ts", ts);
   }
 
-  private void broadcastRoster(CallSession session) {
+  /** The session, ended or not. */
+  Optional<CallSession> findSession(String callId) {
+    return callId == null ? Optional.empty() : callSessionRepository.findByCallId(callId);
+  }
+
+  /** The session while it is still running. */
+  Optional<CallSession> activeSession(String callId) {
+    return findSession(callId).filter(s -> s.getEndedAt() == null);
+  }
+
+  void save(CallSession session) {
+    callSessionRepository.save(session);
+  }
+
+  void sendToUser(String userId, WebRTCSignalDto dto) {
+    clusterBroker.convertAndSendToUser(userId, WEBRTC_QUEUE, dto);
+  }
+
+  static boolean isSfu(CallSession session) {
+    return "sfu".equals(session.getTransport());
+  }
+
+  void broadcastRoster(CallSession session) {
     CallEventDto event =
         CallEventDto.builder()
             .event("call.roster")
@@ -279,7 +363,7 @@ public class CallService {
     clusterBroker.convertAndSend("/topic/conversation/" + conversationId, event);
   }
 
-  private List<String> membersOf(String conversationId) {
+  List<String> membersOf(String conversationId) {
     return conversationRepository
         .findById(conversationId)
         .map(c -> c.getParticipants() == null ? List.<String>of() : c.getParticipants())
