@@ -126,6 +126,8 @@
 
 ### C3 — Flutter
 
+> ✅ **Xong 2026-10-05** trên `feat/calls-livekit` — plan step-level `2026-10-05-calls-c3-flutter.md`; `flutter analyze` 0 issue, `flutter test` 215 pass, `pod install` + `flutter build apk --debug` OK. Còn chờ test thiết bị thật (C4).
+
 **Files:**
 - `apps/client/pubspec.yaml` — thêm `livekit_client` (tự kéo `flutter_webrtc`; giữ bản `flutter_webrtc` đang dùng cho mesh nếu tương thích, nếu không thì nâng cùng lúc và chạy lại test mesh). iOS deployment target hiện 13.0 — kiểm yêu cầu tối thiểu của bản `livekit_client` chọn trước khi thêm.
 - Create: `apps/client/lib/core/rtc/livekit_session.dart` — mirror 1:1 `livekit-session.ts` (**dùng chung với Phòng họp**).
