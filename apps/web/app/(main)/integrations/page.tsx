@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Plug, Sparkles } from 'lucide-react'
@@ -11,13 +11,17 @@ import {
   useConnections,
   useConnectorActions,
 } from '@/lib/hooks/use-connectors'
-import { useOAuthPopup } from '@/lib/hooks/use-oauth-popup'
+import { useOAuthPopup, useOAuthReturnNotice } from '@/lib/hooks/use-oauth-popup'
+import { useCapabilities } from '@/lib/hooks/use-capabilities'
 import { connectorService } from '@/lib/api/connector'
-import { useAuthStore } from '@/lib/store/auth.store'
+import { connectorErrorKey, parseOAuthReturn } from '@/lib/integrations/connector-errors'
+import { canConnect } from '@/lib/integrations/gating'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ConnectorCard } from '@/components/integrations/ConnectorCard'
 import { CustomMcpPanel } from '@/components/integrations/CustomMcpPanel'
+import { CustomMcpList } from '@/components/integrations/CustomMcpList'
+import { ConnectionManageDialog } from '@/components/integrations/ConnectionManageDialog'
 import { DirectorySection } from '@/components/integrations/DirectorySection'
 import type { CatalogEntry, ConnectionView } from '@/lib/api/connector-types'
 
@@ -25,39 +29,41 @@ export default function IntegrationsPage() {
   const t = useTranslations('integrations')
   const router = useRouter()
   const searchParams = useSearchParams()
-  const userId = useAuthStore((s) => s.user?.id)
+  const perms = useCapabilities().data?.perms
+  const canAddCustomMcp = !!perms?.includes('ADD_CUSTOM_MCP')
 
   const { data: catalog = [], isLoading: loadingCatalog } = useCatalog()
   const { data: connections = [], isLoading: loadingConnections } = useConnections()
   const { disconnect, invalidateConnections } = useConnectorActions()
-  const { connectingId, open, reset } = useOAuthPopup(invalidateConnections)
+  const notifyOAuth = useOAuthReturnNotice()
+  const { connectingId, open, reset } = useOAuthPopup((result) => {
+    invalidateConnections()
+    if (result) notifyOAuth(result)
+  })
+  const [managing, setManaging] = useState<ConnectionView | null>(null)
 
-  // Backend redirects the OAuth popup to `?connected=<provider>`. If we land
-  // back here with that param (popup blocked → same-tab fallback), refresh.
+  // The OAuth callback redirects to `?connected=<slug>` or `?error=<CODE>&provider=`.
+  // The popup flow reads it from the popup; landing here with it means the popup
+  // was blocked (same-tab fallback) — report it once and clean the URL.
   useEffect(() => {
-    const connected = searchParams.get('connected')
-    if (connected) {
-      invalidateConnections()
-      toast.success(t('connectSuccess', { provider: connected }))
-      router.replace('/integrations')
-    }
-    // run once on the connected param changing
+    const result = parseOAuthReturn(searchParams)
+    if (!result) return
+    invalidateConnections()
+    notifyOAuth(result)
+    router.replace('/integrations')
+    // run once per return; the helpers are stable enough for that
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
   const handleConnect = async (entry: CatalogEntry) => {
-    if (!userId) return
     try {
       const { authorizeUrl } = await connectorService.startOAuth(entry.id)
       open(authorizeUrl, entry.id)
-    } catch {
-      toast.error(t('connectError'))
+    } catch (err) {
+      // INSUFFICIENT_PERMISSION / CONNECTOR_NOT_ALLOWED / CONNECTOR_UNAVAILABLE…
+      toast.error(t(connectorErrorKey(err, 'connectError')))
       reset()
     }
-  }
-
-  const handleDisconnect = (connection: ConnectionView) => {
-    disconnect.mutate(connection.id)
   }
 
   const connectionByProvider = new Map(connections.map((c) => [c.provider, c]))
@@ -119,13 +125,9 @@ export default function IntegrationsPage() {
                   entry={entry}
                   connection={connectionByProvider.get(entry.id)}
                   connecting={connectingId === entry.id}
-                  disconnecting={
-                    disconnect.isPending &&
-                    disconnect.variables ===
-                      connectionByProvider.get(entry.id)?.id
-                  }
+                  canConnect={canConnect(entry.tier, perms)}
                   onConnect={handleConnect}
-                  onDisconnect={handleDisconnect}
+                  onManage={setManaging}
                 />
               ))}
             </div>
@@ -144,8 +146,28 @@ export default function IntegrationsPage() {
               {t('sectionCustomDesc')}
             </p>
           </div>
-          <CustomMcpPanel />
+          <CustomMcpList />
+          {canAddCustomMcp ? (
+            <CustomMcpPanel />
+          ) : (
+            <p className="mt-4 text-sm text-muted-foreground">{t('customNeedsCap')}</p>
+          )}
         </section>
+
+        <ConnectionManageDialog
+          name={
+            catalog.find((e) => e.id === managing?.provider)?.name ?? t('connectorFallbackName')
+          }
+          connection={managing}
+          onOpenChange={(o) => !o && setManaging(null)}
+          disconnecting={disconnect.isPending}
+          onDisconnect={(c) => disconnect.mutate(c.id, { onSuccess: () => setManaging(null) })}
+          onReconnect={() => {
+            const entry = catalog.find((e) => e.id === managing?.provider)
+            setManaging(null)
+            if (entry) void handleConnect(entry)
+          }}
+        />
       </div>
     </div>
   )

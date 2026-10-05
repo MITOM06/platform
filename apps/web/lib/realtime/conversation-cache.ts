@@ -223,3 +223,49 @@ export function markPreviewRecalled(
   const one = queryClient.getQueryData<Conversation>(conversationKey(conversationId))
   if (one) queryClient.setQueryData(conversationKey(conversationId), recall(one))
 }
+
+/**
+ * A user-queue `NEW_MESSAGE` / `MENTIONED_YOU` for a chat that is not open: move
+ * its row to the top with the new preview (and +1 unread unless I am looking at
+ * it) instead of refetching the whole list. Needs the event's `messageId` +
+ * `createdAt`; returns false when the row is not cached (caller refetches).
+ */
+export function applyIncomingPreview(
+  queryClient: QueryClient,
+  event: {
+    conversationId: string
+    messageId?: string
+    createdAt?: string
+    senderId?: string
+    content?: string
+    messageType?: string
+  },
+  viewing: boolean,
+): boolean {
+  const { conversationId, messageId, createdAt } = event
+  if (!messageId || !createdAt || !Number.isFinite(Date.parse(createdAt))) return false
+  const list = queryClient.getQueryData<ConversationsResponse>(CONVERSATIONS_KEY)
+  const conv = list?.content.find((c) => c.id === conversationId)
+  if (!list || !conv) return false
+  // Already applied (the open thread or a duplicate frame), or older than the row.
+  if (conv.lastMessage?.messageId === messageId) return true
+  if (conv.lastMessageAt && Date.parse(conv.lastMessageAt) > Date.parse(createdAt)) return true
+  const updated: Conversation = {
+    ...conv,
+    lastMessage: {
+      content: event.content ?? '',
+      senderId: event.senderId ?? '',
+      createdAt,
+      messageId,
+      type: event.messageType ?? null,
+      recalled: false,
+    },
+    lastMessageAt: createdAt,
+    unreadCount: viewing ? conv.unreadCount : (conv.unreadCount ?? 0) + 1,
+  }
+  queryClient.setQueryData<ConversationsResponse>(CONVERSATIONS_KEY, {
+    ...list,
+    content: [updated, ...list.content.filter((c) => c.id !== conversationId)],
+  })
+  return true
+}

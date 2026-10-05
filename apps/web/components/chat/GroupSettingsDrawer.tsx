@@ -229,11 +229,16 @@ export function GroupSettingsDrawer({ conversation, currentUserId, open, onClose
                     <Globe className="size-4 text-muted-foreground" />
                     <span className="flex-1 min-w-0">
                       <span className="block">{t('newConvPublicChannel')}</span>
-                      <span className="block text-xs text-muted-foreground">{t('newConvPublicChannelHint')}</span>
+                      <span className="block text-xs text-muted-foreground">
+                        {/* Department groups can never be public channels. */}
+                        {conversation.departmentId
+                          ? t('publicChannelDepartmentHint')
+                          : t('newConvPublicChannelHint')}
+                      </span>
                     </span>
                     <Switch
                       checked={conversation.isPublic}
-                      disabled={saving}
+                      disabled={saving || !!conversation.departmentId}
                       onCheckedChange={handleTogglePublic}
                       aria-label={t('newConvPublicChannel')}
                     />

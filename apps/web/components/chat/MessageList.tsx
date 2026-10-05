@@ -2,32 +2,13 @@
 
 import { useMemo, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { MessageCircle, Wrench, ShieldAlert } from 'lucide-react'
+import { MessageCircle } from 'lucide-react'
 import { MessageBubble } from '@/components/chat/MessageBubble'
 import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { AiStreamState, Message } from '@/lib/api/types'
-
-// Maps backend tool names to localized "in progress" labels (parity with the
-// Flutter StreamingAiBubble); unknown tools fall back to a generic label.
-const TOOL_LABEL_KEYS: Record<string, string> = {
-  search_messages: 'toolSearchMessages',
-  get_user_info: 'toolGetUserInfo',
-  search_knowledge_base: 'toolSearchKnowledgeBase',
-  summarize_conversation: 'toolSummarizeConversation',
-  create_reminder: 'toolCreateReminder',
-  web_search: 'toolWebSearch',
-  remember_fact: 'toolRememberFact',
-}
-
-/**
- * Localized label of an in-progress tool call. Connector tools are named
- * `mcp__<provider>__<tool>` (provider may be `custom_<24hex>`) — machine ids that
- * must never be shown, so anything unmapped gets a generic localized label.
- */
-function toolLabelKey(tool: string): string {
-  return TOOL_LABEL_KEYS[tool] ?? (tool.startsWith('mcp__') ? 'aiToolCallingConnector' : 'aiToolCallingGeneric')
-}
+import { AiStreamBubble } from '@/components/chat/AiStreamBubble'
+import type { Message } from '@/lib/api/types'
+import type { AiStreamEntry } from '@/lib/ai/stream-routing'
 
 // Gap between consecutive messages beyond which a lightweight time marker is
 // inserted (Messenger-style grouping). Tunable in one place.
@@ -79,7 +60,8 @@ interface Props {
   /** True while the personal assistant bot is preparing its reply (no STOMP
    *  typing event exists for external bots — Bot Factory calls are synchronous). */
   assistantTyping?: boolean
-  aiStream: AiStreamState | null
+  /** Live AI replies, one bubble each (routed by replyId). */
+  aiStreams: AiStreamEntry[]
   onEdit: (message: Message) => void
   onForward: (message: Message) => void
   onReply: (message: Message) => void
@@ -113,7 +95,7 @@ export function MessageList({
   isError,
   typingUserIds,
   assistantTyping = false,
-  aiStream,
+  aiStreams,
   onEdit,
   onForward,
   onReply,
@@ -260,50 +242,9 @@ export function MessageList({
         <ChatTypingIndicator />
       )}
 
-      {aiStream !== null && (
-        <div className="flex flex-row items-end gap-1 motion-safe:pon-enter">
-          <div className="max-w-[70%] rounded-[14px] rounded-tl-[4px] px-4 py-2.5 text-sm bg-muted/70 border border-border/50">
-            {aiStream.activeTools.length > 0 && (() => {
-              const tool = aiStream.activeTools[aiStream.activeTools.length - 1]
-              const label = t(toolLabelKey(tool))
-              const isSensitive = aiStream.sensitiveTools.includes(tool)
-              return (
-                <div
-                  className={`flex items-center gap-1.5 mb-1.5 text-[12px] italic ${
-                    isSensitive ? 'text-red-400' : 'text-amber-500'
-                  }`}
-                >
-                  {isSensitive ? (
-                    <ShieldAlert className="size-3 shrink-0" />
-                  ) : (
-                    <Wrench className="size-3 shrink-0" />
-                  )}
-                  <span>{isSensitive ? `${label} · ${t('aiSensitiveAction')}` : label}</span>
-                </div>
-              )
-            })()}
-            {aiStream.content ? (
-              <p className="whitespace-pre-wrap leading-relaxed">
-                {aiStream.content}
-                <span className="ml-0.5 inline-block w-[2px] h-[1.05em] translate-y-0.5 bg-primary/70 animate-pulse" />
-              </p>
-            ) : (
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">{t('aiThinking')}</span>
-                <div className="flex gap-1">
-                  {[0, 1, 2].map((i) => (
-                    <span
-                      key={i}
-                      className="inline-block size-1.5 rounded-full bg-primary/60 animate-bounce"
-                      style={{ animationDelay: `${i * 0.15}s` }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {aiStreams.map((stream) => (
+        <AiStreamBubble key={stream.key} stream={stream} conversationId={conversationId} />
+      ))}
     </div>
   )
 }

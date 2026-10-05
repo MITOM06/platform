@@ -9,18 +9,14 @@ import { stompService } from '@/lib/stomp/client'
 import { useStompConnected } from '@/lib/stomp/use-stomp-connected'
 import { chatService } from '@/lib/api/chat'
 import { useMessageCache } from '@/lib/hooks/use-message-cache'
+import { useAiStreams } from '@/lib/hooks/use-ai-streams'
+import { aiStreamErrorKey, type AiStreamEntry } from '@/lib/ai/stream-routing'
 import { useCallStore } from '@/lib/store/call.store'
 import { applyNicknameSystemMessage } from '@/lib/nicknames'
 import { applyQuickReactionSystemMessage } from '@/lib/quick-reaction'
 import { isMessageFrame, isStompEvent } from '@/lib/realtime/message-frames'
 import { applySharedConversationUpdate } from '@/lib/realtime/conversation-cache'
-import type {
-  AiSource,
-  AiStreamState,
-  CallEvent,
-  CallMedia,
-  Message,
-} from '@/lib/api/types'
+import type { AiSource, CallEvent, CallMedia, Message } from '@/lib/api/types'
 
 // Group-call lifecycle events (Track A §3) are keyed by `event`, not `type`.
 const CALL_EVENT_TYPES = new Set(['call.started', 'call.roster', 'call.ended'])
@@ -43,11 +39,13 @@ interface UseConversationStompArgs {
 
 interface UseConversationStompResult {
   typingUserIds: string[]
-  aiStream: AiStreamState | null
-  setAiStream: React.Dispatch<React.SetStateAction<AiStreamState | null>>
+  /** Live AI reply bubbles, one per reply (routed by `replyId`). */
+  aiStreams: AiStreamEntry[]
   activeCall: ActiveCall | null
-  armAiWatchdog: () => void
-  clearAiStream: () => void
+  /** Show the "thinking" bubble for a message I just sent that triggers the AI. */
+  startLocalAiStream: () => void
+  /** The send failed — drop that bubble. */
+  dropLocalAiStream: () => void
 }
 
 /**
@@ -69,11 +67,13 @@ export function useConversationStomp({
   const stompConnected = useStompConnected()
 
   const [typingUserIds, setTypingUserIds] = useState<string[]>([])
-  const [aiStream, setAiStream] = useState<AiStreamState | null>(null)
   const [activeCall, setActiveCall] = useState<ActiveCall | null>(null)
-  // Watchdog so a "thinking" bubble never sticks forever if the AI never
-  // responds (parity with Flutter's 30s watchdog). Re-armed on every AI event.
-  const aiWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // One bubble per AI reply, each with its own 30s watchdog (parity with Flutter).
+  const ai = useAiStreams(id, currentUserId)
+  const aiRef = useRef(ai)
+  useEffect(() => {
+    aiRef.current = ai
+  })
 
   // Mirror of `messages` for stale-closure-free reads inside the STOMP effect
   // (which only depends on [id, stompConnected]). Used by the reconnect catch-up.
@@ -102,25 +102,8 @@ export function useConversationStomp({
 
   // RAG sources from an AI_STREAM_DONE that arrived before the persisted AI
   // message was in the cache — applied to that message on append (rare race).
-  const pendingAiSourcesRef = useRef<AiSource[] | null>(null)
-
-  const armAiWatchdog = useCallback(() => {
-    if (aiWatchdogRef.current) clearTimeout(aiWatchdogRef.current)
-    aiWatchdogRef.current = setTimeout(() => setAiStream(null), 30000)
-  }, [])
-
-  const clearAiStream = useCallback(() => {
-    if (aiWatchdogRef.current) {
-      clearTimeout(aiWatchdogRef.current)
-      aiWatchdogRef.current = null
-    }
-    setAiStream(null)
-  }, [])
-
-  // Clear the watchdog timer on unmount.
-  useEffect(() => () => {
-    if (aiWatchdogRef.current) clearTimeout(aiWatchdogRef.current)
-  }, [])
+  // Keyed by replyId ('' for servers that send none).
+  const pendingAiSourcesRef = useRef(new Map<string, AiSource[]>())
 
   // Subscribe to STOMP for real-time messages + events + typing
   useEffect(() => {
@@ -174,64 +157,34 @@ export function useConversationStomp({
                 queryClient.invalidateQueries({ queryKey: ['kb-documents', id] })
                 break
               case 'AI_ACTION_PENDING':
-                // Rendered from the persisted AI message's pendingActions (F2).
-                break
               case 'AI_STREAM_CHUNK':
-                setAiStream((prev) => ({
-                  content: (prev?.content ?? '') + String(parsed.chunk ?? ''),
-                  thinking: false,
-                  activeTools: prev?.activeTools ?? [],
-                  sensitiveTools: prev?.sensitiveTools ?? [],
-                }))
-                armAiWatchdog()
+              case 'AI_TOOL_CALL':
+                // Routed to the bubble of that reply (replyId), never a shared one.
+                aiRef.current.handleEvent(parsed)
                 break
-              case 'AI_TOOL_CALL': {
-                const toolName = String(parsed.toolName ?? '')
-                const isSensitive = parsed.sensitive === true
-                setAiStream((prev) => {
-                  const base = prev ?? { content: '', thinking: true, activeTools: [], sensitiveTools: [] }
-                  return {
-                    ...base,
-                    activeTools: base.activeTools.includes(toolName)
-                      ? base.activeTools
-                      : [...base.activeTools, toolName],
-                    sensitiveTools:
-                      isSensitive && !base.sensitiveTools.includes(toolName)
-                        ? [...base.sensitiveTools, toolName]
-                        : base.sensitiveTools,
-                  }
-                })
-                armAiWatchdog()
-                break
-              }
               case 'AI_STREAM_DONE': {
-                clearAiStream()
+                aiRef.current.handleEvent(parsed)
                 // Attach RAG citation sources to the persisted AI message so the
                 // bubble can render clickable chips. The saved message frame is
                 // sent before this DONE frame (same topic, FIFO), so it is
                 // normally already in the cache; if not (rare reorder), stash the
                 // sources for the next AI message append.
                 const doneSources = parsed.sources ?? []
-                if (doneSources.length > 0 && !msgCallbacksRef.current.attachAiSources(doneSources)) {
-                  pendingAiSourcesRef.current = doneSources
+                if (
+                  doneSources.length > 0 &&
+                  !msgCallbacksRef.current.attachAiSources(doneSources, parsed.replyId)
+                ) {
+                  pendingAiSourcesRef.current.set(parsed.replyId ?? '', doneSources)
                 }
                 break
               }
               case 'AI_STREAM_ERROR': {
-                clearAiStream()
-                const aiErrCodeMap: Record<string, string> = {
-                  AI_QUOTA_EXCEEDED: t('aiQuotaExceeded'),
-                  AI_RATE_LIMITED: t('aiRateLimited'),
-                  AI_STREAM_INTERRUPTED: t('aiStreamInterrupted'),
-                  AI_UNAVAILABLE: t('aiUnavailable'),
-                  AI_EMPTY_RESPONSE: t('aiEmptyResponse'),
+                // Only the member who asked gets the toast; everyone else just
+                // sees that reply's bubble end. Mapped, localized text only —
+                // never the raw backend error string.
+                if (aiRef.current.handleEvent(parsed)) {
+                  toast.error(t(aiStreamErrorKey(parsed.code)))
                 }
-                // Only show a mapped, localized message — never the raw backend
-                // error string, which is internal/system text.
-                const aiErrMsg = parsed.code && aiErrCodeMap[parsed.code]
-                  ? aiErrCodeMap[parsed.code]
-                  : t('aiError')
-                toast.error(aiErrMsg)
                 break
               }
             }
@@ -289,13 +242,20 @@ export function useConversationStomp({
               applyNicknameSystemMessage(id, msg.content)
               applyQuickReactionSystemMessage(id, msg.content)
             }
-            // If a DONE frame delivered sources before this AI message arrived
-            // (rare reorder), graft them on so the chips render.
-            if (msg.type === 'ai' && pendingAiSourcesRef.current) {
-              msg.sources = pendingAiSourcesRef.current
-              pendingAiSourcesRef.current = null
+            if (msg.type === 'ai') {
+              // If a DONE frame delivered sources before this AI message arrived
+              // (rare reorder), graft them on so the chips render.
+              const stashKey = msg.aiReplyId && pendingAiSourcesRef.current.has(msg.aiReplyId)
+                ? msg.aiReplyId
+                : pendingAiSourcesRef.current.has('') ? '' : undefined
+              if (stashKey !== undefined) {
+                msg.sources = pendingAiSourcesRef.current.get(stashKey)
+                pendingAiSourcesRef.current.delete(stashKey)
+              }
             }
             msgCallbacksRef.current.appendMessage(msg)
+            // The saved reply replaces exactly its own streaming bubble.
+            if (msg.type === 'ai' && msg.aiReplyId) aiRef.current.finishReply(msg.aiReplyId)
           }
         } catch {
           // ignore malformed frames
@@ -347,7 +307,7 @@ export function useConversationStomp({
       messageSub?.unsubscribe()
       typingSub?.unsubscribe()
     }
-  }, [id, stompConnected, queryClient, currentUserId, t, armAiWatchdog, clearAiStream, leaveConversation])
+  }, [id, stompConnected, queryClient, currentUserId, t, leaveConversation])
 
   // Mark conversation as read on open
   useEffect(() => {
@@ -385,5 +345,11 @@ export function useConversationStomp({
     })
   }, [id, messages, currentUserId])
 
-  return { typingUserIds, aiStream, setAiStream, activeCall, armAiWatchdog, clearAiStream }
+  return {
+    typingUserIds,
+    aiStreams: ai.streams,
+    activeCall,
+    startLocalAiStream: ai.startLocal,
+    dropLocalAiStream: ai.dropLocal,
+  }
 }

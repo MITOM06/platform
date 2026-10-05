@@ -47,6 +47,8 @@ export interface Conversation {
   admins: string[]
   createdBy: string
   isPublic: boolean
+  /** Set on department groups — they can never be public channels. */
+  departmentId?: string | null
   status: 'pending' | 'accepted'
   isMuted: boolean
   /** epoch ms; 9_200_000_000_000_000 = muted forever; null = not muted */
@@ -88,7 +90,7 @@ export interface LastMessage {
 export const SHARED_CONVERSATION_FIELDS = [
   'id', 'type', 'name', 'avatarUrl', 'participants', 'admins', 'createdBy',
   'autoDeleteSeconds', 'autoDeleteEnabledAt', 'lastMessage', 'lastMessageAt', 'createdAt',
-  'status', 'isPublic', 'pinnedMessages', 'wallpaper', 'pendingMembers',
+  'status', 'isPublic', 'pinnedMessages', 'wallpaper', 'pendingMembers', 'departmentId',
 ] as const satisfies readonly (keyof Conversation)[]
 
 export type MessageType =
@@ -160,6 +162,8 @@ export interface Message {
   sources?: AiSource[]
   /** Sensitive AI actions awaiting confirmation (F2) — rendered by the confirmation card. */
   pendingActions?: AiPendingAction[]
+  /** Persisted AI replies: the stream `replyId` this message came from (absent on others). */
+  aiReplyId?: string
 }
 
 /**
@@ -225,14 +229,32 @@ export interface UserStatus {
   lastSeen: string | null
 }
 
+/**
+ * One tool call of an AI reply (`GET /api/messages/{id}/trace`). `inputSummary`
+ * is the start of the raw tool input (it can hold an email body) and
+ * `resultSummary` the start of the raw tool output — neither is ever rendered.
+ */
+export interface AiTraceToolCall {
+  toolName: string
+  inputSummary?: string | null
+  resultSummary?: string | null
+}
+
+/** `GET /api/messages/{id}/trace` — how the AI produced a reply. */
 export interface AiTraceResponse {
-  messageId: string
+  thinkingBlocks?: string[]
+  toolCalls?: AiTraceToolCall[]
+  /** TOTAL prompt tokens, cache reads and writes included. */
   inputTokens: number
   outputTokens: number
-  thinkingBlocks?: string[]
-  toolCalls?: Array<{ name: string; input: unknown; output: unknown }>
-  ragSources?: Array<{ documentId: string; excerpt: string; score: number }>
-  promptVariables?: Record<string, string>
+  thinkingTokens?: number
+  processingMs?: number
+  model?: string | null
+  iterationCount?: number
+  /** Prompt-cache reads — subset of `inputTokens`. */
+  cachedInputTokens?: number
+  /** Prompt-cache writes — subset of `inputTokens`. */
+  cacheCreationInputTokens?: number
 }
 
 /** Thumbs feedback rating on an AI answer (`none` clears a prior vote). */
@@ -267,11 +289,51 @@ export type StompEvent =
   | { type: 'REACTION_UPDATED'; messageId: string; reactions: Reaction[] }
   | { type: 'PINNED_MESSAGE'; conversationId: string; messageId: string; pinnedMessages: string[] }
   | { type: 'CONVERSATION_UPDATED'; conversation: Conversation }
-  | { type: 'AI_ACTION_PENDING'; conversationId: string; replyId?: string; requesterId?: string }
-  | { type: 'AI_STREAM_CHUNK'; chunk: string; senderId: string; conversationId: string }
-  | { type: 'AI_STREAM_DONE'; senderId: string; conversationId: string; sources?: AiSource[] }
-  | { type: 'AI_STREAM_ERROR'; error: string; code?: string; senderId: string; conversationId: string }
-  | { type: 'AI_TOOL_CALL'; toolName: string; inputSummary: string; sensitive?: boolean; senderId: string; conversationId: string }
+  | {
+      type: 'AI_ACTION_PENDING'
+      conversationId: string
+      replyId?: string
+      requesterId?: string
+      action?: AiPendingAction
+    }
+  // Every AI stream frame names its reply (`replyId`) and who asked (`requesterId`).
+  | {
+      type: 'AI_STREAM_CHUNK'
+      chunk: string
+      senderId: string
+      conversationId: string
+      replyId?: string
+      requesterId?: string
+    }
+  | {
+      type: 'AI_STREAM_DONE'
+      senderId: string
+      conversationId: string
+      sources?: AiSource[]
+      pendingActions?: AiPendingAction[]
+      replyId?: string
+      requesterId?: string
+    }
+  | {
+      type: 'AI_STREAM_ERROR'
+      error: string
+      code?: string
+      stopReason?: string
+      senderId: string
+      conversationId: string
+      replyId?: string
+      requesterId?: string
+    }
+  | {
+      type: 'AI_TOOL_CALL'
+      toolName: string
+      inputSummary: string
+      sensitive?: boolean
+      senderId: string
+      conversationId: string
+      replyId?: string
+      requesterId?: string
+    }
   | { type: 'KB_STATUS_UPDATE'; documentId: string; status: 'pending' | 'processing' | 'done' | 'error'; chunkCount?: number }
 
 /** Per-user events delivered on `/user/queue/notifications`. */
@@ -283,6 +345,9 @@ export type UserQueueEvent =
       senderName?: string
       content?: string
       messageType?: string
+      /** Id + ISO time of the message — lets the list update the row in place. */
+      messageId?: string
+      createdAt?: string
     }
   /** Send rate exceeded — the message was dropped. */
   | { type: 'RATE_LIMITED' }

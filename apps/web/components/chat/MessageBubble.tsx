@@ -10,6 +10,7 @@ import { GroupReadDetailsModal } from './GroupReadDetailsModal'
 import { ReactionsDetailModal } from './ReactionsDetailModal'
 import { MessageFeedback } from './MessageFeedback'
 import { MessageSources } from './MessageSources'
+import { AiActionCard } from './AiActionCard'
 import { ExternalBotBubble } from './ExternalBotBubble'
 import { MessageBubbleBody } from './MessageBubbleBody'
 import { MessageReplyQuote } from './MessageReplyQuote'
@@ -292,6 +293,14 @@ const MessageBubbleInner = function MessageBubble({
             {showFeedback && message.sources && message.sources.length > 0 && (
               <MessageSources sources={message.sources} conversationId={conversationId} />
             )}
+            {message.type === 'ai' &&
+              message.pendingActions?.map((action) => (
+                <AiActionCard
+                  key={action.id}
+                  action={action}
+                  conversationId={conversationId ?? message.conversationId}
+                />
+              ))}
           </div>
         )}
 
@@ -361,6 +370,7 @@ export const MessageBubble = memo(
     prev.message.reactions === next.message.reactions &&
     prev.message.readBy === next.message.readBy &&
     prev.message.sources === next.message.sources &&
+    prev.message.pendingActions === next.message.pendingActions &&
     prev.message.replyPreview === next.message.replyPreview &&
     prev.showSenderName === next.showSenderName &&
     prev.isPinned === next.isPinned &&

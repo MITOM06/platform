@@ -21,6 +21,7 @@ import {
 import { aiService } from '@/lib/api/ai'
 import { chatService } from '@/lib/api/chat'
 import { absoluteMediaUrl } from '@/lib/media'
+import { useAssistantName } from '@/lib/hooks/use-capabilities'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -76,6 +77,11 @@ function ToneSelector({
 export default function AiPersonaPage() {
   const t = useTranslations('aiPersona')
   const tc = useTranslations('common')
+  const tChat = useTranslations('chat')
+  // Default = the workspace's assistant name (admin → AI settings), never a
+  // hard-coded "PON AI" that silently overrode it on the first save.
+  const workspaceName = useAssistantName()
+  const defaultName = workspaceName ?? tChat('aiAssistant')
   const searchParams = useSearchParams()
   const conversationId = searchParams.get('conversationId') ?? ''
   const queryClient = useQueryClient()
@@ -87,7 +93,7 @@ export default function AiPersonaPage() {
     creative: t('toneCreative'),
   }
 
-  const [name, setName] = useState('PON AI')
+  const [name, setName] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
   const [tone, setTone] = useState('friendly')
   const [instructions, setInstructions] = useState('')
@@ -119,7 +125,7 @@ export default function AiPersonaPage() {
   // Initialize form when data loads
   useEffect(() => {
     if (persona && !initialized) {
-      setName(persona.name || 'PON AI')
+      setName(persona.name || '')
       setAvatarUrl(persona.avatarUrl || '')
       setTone(persona.tone || 'friendly')
       setInstructions(persona.systemPromptPrefix || '')
@@ -130,10 +136,12 @@ export default function AiPersonaPage() {
   const saveMutation = useMutation({
     mutationFn: () =>
       aiService.upsertPersona(conversationId, {
-        name: name.trim(),
+        name: name.trim() || defaultName,
         ...(avatarUrl.trim() ? { avatarUrl: avatarUrl.trim() } : {}),
         tone,
-        ...(instructions.trim() ? { systemPromptPrefix: instructions.trim() } : {}),
+        // Always sent: an empty string CLEARS the instructions server-side
+        // (omitting it kept the old text forever).
+        systemPromptPrefix: instructions.trim(),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ai-persona', conversationId] })
@@ -145,7 +153,7 @@ export default function AiPersonaPage() {
   const resetMutation = useMutation({
     mutationFn: () => aiService.deletePersona(conversationId),
     onSuccess: () => {
-      setName('PON AI')
+      setName('')
       setAvatarUrl('')
       setTone('friendly')
       setInstructions('')
@@ -156,13 +164,8 @@ export default function AiPersonaPage() {
     onError: () => toast.error(t('resetError')),
   })
 
-  const handleSave = () => {
-    if (!name.trim()) {
-      toast.error(t('botNameRequired'))
-      return
-    }
-    saveMutation.mutate()
-  }
+  // An empty name falls back to the workspace assistant name.
+  const handleSave = () => saveMutation.mutate()
 
   const isBusy = saveMutation.isPending || resetMutation.isPending
 
@@ -240,7 +243,7 @@ export default function AiPersonaPage() {
                   >
                     <Avatar className="size-20 ring-2 ring-primary/30 ring-offset-2 ring-offset-background">
                       {avatarUrl ? (
-                        <AvatarImage src={absoluteMediaUrl(avatarUrl)} alt={name} />
+                        <AvatarImage src={absoluteMediaUrl(avatarUrl)} alt={name || defaultName} />
                       ) : (
                         <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
                           <Bot className="size-8" />
@@ -267,7 +270,7 @@ export default function AiPersonaPage() {
                   <Input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder={t('botNamePlaceholder')}
+                    placeholder={defaultName}
                     maxLength={30}
                     disabled={isBusy}
                   />

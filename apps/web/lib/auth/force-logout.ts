@@ -34,6 +34,15 @@ export const LOGIN_NOTICES = [
   'SOCIAL_EMAIL_UNAVAILABLE',
   'SSO_DISABLED',
   'SSO_DOMAIN_NOT_ALLOWED',
+  // Google / OIDC sign-in matched an account but the IdP did not verify the
+  // email, or the account is linked to another identity of that provider.
+  'SSO_EMAIL_UNVERIFIED',
+  'OIDC_EMAIL_UNVERIFIED',
+  'SOCIAL_ACCOUNT_CONFLICT',
+  'SOCIAL_PROVIDER_UNSUPPORTED',
+  'OIDC_NO_STATE',
+  'OIDC_BAD_STATE',
+  'OIDC_EXCHANGE_FAILED',
   'GENERIC_ERROR',
 ] as const
 export type LoginNotice = (typeof LOGIN_NOTICES)[number]

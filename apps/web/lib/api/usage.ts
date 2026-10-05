@@ -1,5 +1,6 @@
 import { aiApi } from './axios'
 import type { DashboardResponse } from './types'
+import type { QuotaStatus } from '@/lib/usage/quota'
 
 // ── Admin usage & quality dashboard (TASK-13) ───────────────────────────────
 // Targets ai-service `GET /usage/dashboard` (port 3002), gated server-side by
@@ -13,6 +14,9 @@ export interface DashboardParams {
 }
 
 export const usageService = {
+  /** The caller's own monthly quota, exactly as ai-service enforces it (JWT only). */
+  getQuota: () => aiApi.get<QuotaStatus>('/usage/quota').then((r) => r.data),
+
   getDashboard: (params: DashboardParams = {}) =>
     aiApi
       .get<DashboardResponse>('/usage/dashboard', { params })

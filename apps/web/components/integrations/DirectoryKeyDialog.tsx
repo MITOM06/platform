@@ -5,6 +5,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { connectorErrorKey } from '@/lib/integrations/connector-errors'
 import { connectorService } from '@/lib/api/connector'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -43,7 +44,7 @@ export function DirectoryKeyDialog({
       toast.success(t('connectSuccess', { provider: entry?.name ?? '' }))
       onConnected()
     },
-    onError: () => toast.error(t('connectError')),
+    onError: (err) => toast.error(t(connectorErrorKey(err, 'connectError'))),
   })
 
   return (

@@ -10,6 +10,7 @@ import type {
   MessagesResponse,
 } from '@/lib/api/types'
 import { CONVERSATIONS_KEY, lastMessageOf, markPreviewRecalled } from '@/lib/realtime/conversation-cache'
+import { withActionStatus, type ActionStatus } from '@/lib/ai/pending-actions'
 
 type Pages = InfiniteData<MessagesResponse>
 
@@ -205,13 +206,14 @@ export function useMessageCache(conversationId: string) {
     [conversationId, queryClient],
   )
 
-  // Attach RAG citation sources to the most recent AI message that doesn't yet
-  // have them. The `AI_STREAM_DONE` event carries sources but the persisted AI
-  // message arrives as a separate frame (saved first, DONE second — same topic,
-  // FIFO), so on DONE we patch the latest sources-less AI bubble. Returns true
-  // when a message was patched; the caller can stash sources for a late message.
+  // Attach RAG citation sources to the AI message of a reply. The `AI_STREAM_DONE`
+  // event carries sources but the persisted AI message arrives as a separate frame
+  // (saved first, DONE second — same topic, FIFO). With `replyId` the message is
+  // matched exactly (`Message.aiReplyId`); older servers send no id, so the latest
+  // sources-less AI bubble is patched instead. Returns true when a message was
+  // patched; the caller can stash sources for a late message.
   const attachAiSources = useCallback(
-    (sources: AiSource[]): boolean => {
+    (sources: AiSource[], replyId?: string): boolean => {
       if (sources.length === 0) return false
       let attached = false
       queryClient.setQueryData<Pages>(['messages', conversationId], (old) => {
@@ -219,7 +221,10 @@ export function useMessageCache(conversationId: string) {
         // Scan newest-first (page[0] is freshest; content[0] is newest).
         for (const page of old.pages) {
           for (const m of page.content) {
-            if (m.type === 'ai' && (m.sources?.length ?? 0) === 0) {
+            const match = replyId
+              ? m.type === 'ai' && m.aiReplyId === replyId
+              : m.type === 'ai' && (m.sources?.length ?? 0) === 0
+            if (match) {
               attached = true
               return mapMessages(old, (x) => (x.id === m.id ? { ...x, sources } : x))
             }
@@ -232,6 +237,17 @@ export function useMessageCache(conversationId: string) {
     [conversationId, queryClient],
   )
 
+  // Optimistic / confirmed status of a pending AI action card (F2), until the
+  // MESSAGE_UPDATED broadcast carries the server's copy.
+  const setPendingActionStatus = useCallback(
+    (actionId: string, status: ActionStatus) => {
+      queryClient.setQueryData<Pages>(['messages', conversationId], (old) =>
+        old ? mapMessages(old, (m) => withActionStatus(m, actionId, status)) : old,
+      )
+    },
+    [conversationId, queryClient],
+  )
+
   return {
     patchMessage,
     recallMessage,
@@ -240,5 +256,6 @@ export function useMessageCache(conversationId: string) {
     appendMessage,
     reconcileMessages,
     attachAiSources,
+    setPendingActionStatus,
   }
 }

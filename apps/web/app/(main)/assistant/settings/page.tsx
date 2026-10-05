@@ -17,7 +17,7 @@ import {
   useDeleteAssistant,
   useSetupAssistant,
 } from '@/lib/hooks/use-assistant'
-import type { AssistantInfo } from '@/lib/api/assistant'
+import { assistantErrorKey, type AssistantInfo } from '@/lib/api/assistant'
 
 export default function AssistantSettingsPage() {
   const router = useRouter()
@@ -51,23 +51,24 @@ function AssistantSettingsForm({ assistant }: { assistant: AssistantInfo }) {
   const setup = useSetupAssistant()
   const del = useDeleteAssistant()
 
-  // Persona is not returned by GET /me — left empty.
+  // Prefilled from GET /api/assistant/me; a blank value on save keeps the
+  // stored one server-side, so saving a rename never wipes the persona / model.
   const [name, setName] = useState(assistant.name)
-  const [systemPrompt, setSystemPrompt] = useState('')
-  const [providerId, setProviderId] = useState('')
+  const [systemPrompt, setSystemPrompt] = useState(assistant.systemPrompt ?? '')
+  const [providerId, setProviderId] = useState(assistant.providerId ?? '')
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   async function handleSave() {
-    if (!name.trim() || !providerId) return
+    if (!name.trim()) return
     try {
       await setup.mutateAsync({
         name: name.trim(),
-        systemPrompt: systemPrompt.trim(),
-        providerId,
+        ...(systemPrompt.trim() ? { systemPrompt: systemPrompt.trim() } : {}),
+        ...(providerId ? { providerId } : {}),
       })
-      toast.success(ts('success'))
-    } catch {
-      toast.error(tc('somethingWrong'))
+      toast.success(ts('saved'))
+    } catch (err) {
+      toast.error(ts(assistantErrorKey(err)))
     }
   }
 
@@ -76,8 +77,8 @@ function AssistantSettingsForm({ assistant }: { assistant: AssistantInfo }) {
       await del.mutateAsync()
       setConfirmOpen(false)
       router.push('/conversations')
-    } catch {
-      toast.error(tc('somethingWrong'))
+    } catch (err) {
+      toast.error(ts(assistantErrorKey(err)))
     }
   }
 
@@ -126,7 +127,7 @@ function AssistantSettingsForm({ assistant }: { assistant: AssistantInfo }) {
 
           <Button
             onClick={handleSave}
-            disabled={setup.isPending || !name.trim() || !providerId}
+            disabled={setup.isPending || !name.trim()}
             className="w-full"
           >
             {setup.isPending ? (

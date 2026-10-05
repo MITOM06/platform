@@ -12,6 +12,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useWorkspace, useUpdateWorkspace } from '@/lib/hooks/use-admin'
 import { useCatalog } from '@/lib/hooks/use-connectors'
 import {
+  aiConnectorScope,
+  allowedConnectorsToSave,
+  selectableAiConnectors,
+} from '@/lib/admin/ai-connectors'
+import {
   AI_MODEL_TIERS,
   AI_TONES,
   type AiModelTier,
@@ -86,9 +91,11 @@ export function WorkspaceAiSettings() {
     setAllowed(list ?? [])
   }
 
-  // The AI allow-list can only narrow the workspace connector allow-list.
+  // The AI allow-list can only narrow the workspace connector allow-list — and an
+  // EMPTY workspace list means every connector is allowed, so all are selectable.
   const allowList = ws?.connectorAllowList ?? []
-  const selectableConnectors = catalog.filter((c) => allowList.includes(c.id))
+  const selectableConnectors = selectableAiConnectors(catalog, allowList)
+  const scopeState = aiConnectorScope(restrictConnectors, allowed, allowList)
 
   const toggleConnector = (id: string) =>
     setAllowed((prev) =>
@@ -121,9 +128,7 @@ export function WorkspaceAiSettings() {
       dailyDigestHour: parseDigestHour(),
       monthlyTokenLimit: parseLimit(),
       // Restrict OFF ⇒ null (inherit). Restrict ON ⇒ explicit list (may be []).
-      allowedConnectors: restrictConnectors
-        ? allowed.filter((id) => allowList.includes(id))
-        : null,
+      allowedConnectors: allowedConnectorsToSave(restrictConnectors, allowed, allowList),
     }
     save.mutate({ aiSettings })
   }
@@ -287,6 +292,17 @@ export function WorkspaceAiSettings() {
             onCheckedChange={setRestrictConnectors}
           />
         </div>
+
+        <p className="text-sm text-muted-foreground" data-testid="ai-connector-scope">
+          {t(
+            {
+              'inherit-all': 'aiConnectorsInheritAll',
+              'inherit-list': 'aiConnectorsInheritList',
+              none: 'aiConnectorsNone',
+              some: 'aiConnectorsSome',
+            }[scopeState],
+          )}
+        </p>
 
         {restrictConnectors &&
           (selectableConnectors.length === 0 ? (

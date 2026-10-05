@@ -82,7 +82,7 @@ export default function ConversationPage({ params }: Props) {
 
   // Real-time wiring (STOMP subscriptions, AI streaming, group-call lifecycle,
   // typing + read receipts). Patches the TanStack Query cache, not refetch.
-  const { typingUserIds, aiStream, setAiStream, activeCall, armAiWatchdog, clearAiStream } =
+  const { typingUserIds, aiStreams, activeCall, startLocalAiStream, dropLocalAiStream } =
     useConversationStomp({ id, messages, currentUserId: currentUser?.id })
 
   const { patchMessage, appendMessage, removeMessage } = useMessageCache(id)
@@ -128,15 +128,12 @@ export default function ConversationPage({ params }: Props) {
       // group — so the indicator appears before the first stream chunk (parity
       // with Flutter, which creates the placeholder on send).
       const triggersAi = type === 'text' && (isAI || /@(?:AI|ponai)\b/i.test(content))
-      if (triggersAi) {
-        setAiStream({ content: '', thinking: true, activeTools: [], sensitiveTools: [] })
-        armAiWatchdog()
-      }
+      if (triggersAi) startLocalAiStream()
       const sent = await chatService.sendMessage(id, finalContent, type, replyingTo?.id)
       appendMessage(sent)
       setReplyingTo(null)
     } catch (err) {
-      clearAiStream()
+      dropLocalAiStream()
       // Specific, localized reason (blocked, admin-only, rate limited, offline…),
       // never the raw server text. The quoted message is gone → drop the quote.
       toast.error(chatErrorMessage(err, t, 'sendMessageError'))
@@ -297,7 +294,7 @@ export default function ConversationPage({ params }: Props) {
           fetchNextPage={fetchNextPage}
           typingUserIds={typingUserIds}
           assistantTyping={isAssistantTyping}
-          aiStream={aiStream}
+          aiStreams={aiStreams}
           onEdit={setEditingMessage}
           onForward={setForwardMessage}
           onReply={setReplyingTo}

@@ -8,6 +8,7 @@ import type {
   CustomMcpDiscoverInput,
   CustomMcpDiscoverResponse,
   CustomMcpInput,
+  CustomMcpServer,
   DirectoryEntry,
   DirectoryStartResponse,
   OAuthStartResponse,
@@ -61,7 +62,18 @@ export const connectorService = {
       .then((r) => r.data),
 
   saveCustomMcp: (input: CustomMcpInput) =>
-    connectorApi.post<void>('/custom-mcp', input).then((r) => r.data),
+    connectorApi.post<CustomMcpServer>('/custom-mcp', input).then((r) => r.data),
+
+  /** The caller's own custom MCP servers (no capability needed to list / delete). */
+  listCustomMcp: () =>
+    connectorApi
+      .get<CustomMcpServer[]>('/custom-mcp')
+      .then((r) => (Array.isArray(r.data) ? r.data : [])),
+
+  deleteCustomMcp: (id: string) =>
+    connectorApi
+      .delete<{ deleted: boolean }>(`/custom-mcp/${encodeURIComponent(id)}`)
+      .then((r) => r.data),
 
   getSkills: () =>
     connectorApi

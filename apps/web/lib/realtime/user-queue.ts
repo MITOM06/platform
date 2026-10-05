@@ -5,6 +5,7 @@ import { humanizeMessagePreview } from '@/lib/system-messages'
 import { safeDisplayName } from '@/lib/chat/names'
 import {
   CONVERSATIONS_KEY,
+  applyIncomingPreview,
   applyOwnConversationUpdate,
   findCachedConversation,
   isConversationMuted,
@@ -110,7 +111,17 @@ export function handleUserQueueEvent(event: UserQueueEvent, ctx: UserQueueContex
       // Keep sidebar previews / unread badges live for chats that are not open
       // (the open one is kept live by its own topic subscription) — regardless
       // of the notification preference or mute.
-      ctx.queryClient.invalidateQueries({ queryKey: CONVERSATIONS_KEY })
+      // The event carries messageId + createdAt: update the row in place; only
+      // an unknown chat (or an older server) needs the list refetched.
+      if (
+        !applyIncomingPreview(
+          ctx.queryClient,
+          event,
+          ctx.isViewingConversation(event.conversationId),
+        )
+      ) {
+        ctx.queryClient.invalidateQueries({ queryKey: CONVERSATIONS_KEY })
+      }
       if (!ctx.notificationsEnabled()) return
       if (ctx.isViewingConversation(event.conversationId)) return
       // Muted chats stay silent (mirrors the server, which skips their push).

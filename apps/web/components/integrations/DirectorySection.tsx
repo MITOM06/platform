@@ -10,15 +10,19 @@ import {
   useDirectory,
   useDirectoryAdmin,
 } from '@/lib/hooks/use-connectors'
-import { useHasCapability } from '@/lib/hooks/use-capabilities'
-import { useOAuthPopup } from '@/lib/hooks/use-oauth-popup'
+import { useCapabilities, useHasCapability } from '@/lib/hooks/use-capabilities'
+import { useOAuthPopup, useOAuthReturnNotice } from '@/lib/hooks/use-oauth-popup'
 import { connectorService } from '@/lib/api/connector'
+import { connectorErrorKey } from '@/lib/integrations/connector-errors'
+import { canConnect } from '@/lib/integrations/gating'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DirectoryCard } from './DirectoryCard'
 import { DirectoryAdminDialog } from './DirectoryAdminDialog'
 import { DirectoryKeyDialog } from './DirectoryKeyDialog'
+import { ConnectionManageDialog } from './ConnectionManageDialog'
 import type { DirectoryEntry, ConnectionView } from '@/lib/api/connector-types'
 
 /**
@@ -30,14 +34,21 @@ import type { DirectoryEntry, ConnectionView } from '@/lib/api/connector-types'
 export function DirectorySection() {
   const t = useTranslations('integrations')
   const isAdmin = useHasCapability('MANAGE_WORKSPACE')
+  const perms = useCapabilities().data?.perms
 
   const { data: directory = [], isLoading } = useDirectory()
   const { data: connections = [] } = useConnections()
   const { disconnect, invalidateConnections } = useConnectorActions()
   const { remove } = useDirectoryAdmin()
 
-  const { connectingId, open, reset } = useOAuthPopup(invalidateConnections)
+  const notifyOAuth = useOAuthReturnNotice()
+  const { connectingId, open, reset } = useOAuthPopup((result) => {
+    invalidateConnections()
+    if (result) notifyOAuth(result)
+  })
   const [query, setQuery] = useState('')
+  const [managing, setManaging] = useState<ConnectionView | null>(null)
+  const [deleting, setDeleting] = useState<DirectoryEntry | null>(null)
   const [editEntry, setEditEntry] = useState<DirectoryEntry | null>(null)
   const [adminOpen, setAdminOpen] = useState(false)
   const [keyEntry, setKeyEntry] = useState<DirectoryEntry | null>(null)
@@ -69,11 +80,14 @@ export function DirectorySection() {
         invalidateConnections()
         toast.success(t('connectSuccess', { provider: entry.name }))
       }
-    } catch {
-      toast.error(t('connectError'))
+    } catch (err) {
+      toast.error(t(connectorErrorKey(err, 'connectError')))
       reset()
     }
   }
+
+  const managingName =
+    directory.find((e) => e.slug === managing?.provider)?.name ?? t('connectorFallbackName')
 
   const openCreate = () => {
     setEditEntry(null)
@@ -135,14 +149,12 @@ export function DirectorySection() {
                 entry={entry}
                 connection={connection}
                 connecting={connectingId === entry.slug}
-                disconnecting={
-                  disconnect.isPending && disconnect.variables === connection?.id
-                }
+                canConnect={canConnect(entry.tier, perms)}
                 isAdmin={isAdmin}
                 onConnect={handleConnect}
-                onDisconnect={(c: ConnectionView) => disconnect.mutate(c.id)}
+                onManage={setManaging}
                 onEdit={openEdit}
-                onDelete={(e) => remove.mutate(e.id)}
+                onDelete={setDeleting}
               />
             )
           })}
@@ -156,6 +168,26 @@ export function DirectorySection() {
           entry={editEntry}
         />
       )}
+      <ConnectionManageDialog
+        name={managingName}
+        connection={managing}
+        onOpenChange={(o) => !o && setManaging(null)}
+        disconnecting={disconnect.isPending}
+        onDisconnect={(c) => disconnect.mutate(c.id, { onSuccess: () => setManaging(null) })}
+        onReconnect={() => {
+          const entry = directory.find((e) => e.slug === managing?.provider)
+          setManaging(null)
+          if (entry) void handleConnect(entry)
+        }}
+      />
+      <ConfirmDialog
+        open={!!deleting}
+        onOpenChange={(o) => !o && setDeleting(null)}
+        title={t('directoryDelete')}
+        description={t('directoryDeleteConfirm', { name: deleting?.name ?? '' })}
+        confirmLabel={t('directoryDelete')}
+        onConfirm={() => deleting && remove.mutate(deleting.id)}
+      />
       <DirectoryKeyDialog
         entry={keyEntry}
         onOpenChange={(o) => !o && setKeyEntry(null)}
