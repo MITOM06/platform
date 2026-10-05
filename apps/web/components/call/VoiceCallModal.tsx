@@ -31,10 +31,10 @@ export function VoiceCallModal() {
 
   useEffect(() => {
     callManager.onRemoteStream = (stream) => {
-      if (audioRef.current) audioRef.current.srcObject = stream
+      if (audioRef.current && audioRef.current.srcObject !== stream) audioRef.current.srcObject = stream
     }
     const remote = callManager.getRemoteStream()
-    if (remote && audioRef.current) audioRef.current.srcObject = remote
+    if (remote && audioRef.current && audioRef.current.srcObject !== remote) audioRef.current.srcObject = remote
     return () => {
       callManager.onRemoteStream = null
     }

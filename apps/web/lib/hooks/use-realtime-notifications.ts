@@ -42,9 +42,14 @@ export function useRealtimeNotifications(): void {
     const token = useAuthStore.getState().accessToken
     if (!token || stompService.isConnected()) return
 
+    // Which media path new calls take (mesh / LiveKit) — re-read on every
+    // (re)connect, so a server switching CALL_TRANSPORT is picked up after its
+    // restart. connect() resolves only once, hence the state listener.
+    const stopTransportWatch = stompService.onStateChange((connected) => {
+      if (connected) void import('@/lib/webrtc/call-transport').then((m) => m.refreshCallTransport())
+    })
+
     stompService.connect(token).then(() => {
-      // Which media path new calls take (mesh / LiveKit) — re-read on every (re)connect.
-      void import('@/lib/webrtc/call-transport').then((m) => m.refreshCallTransport())
       // NOTE: notification-permission prompting was moved to the post-login /
       // post-register success path (see lib/notifications.ts). It must NOT be
       // requested here — that fired on every authenticated session load.
@@ -153,6 +158,10 @@ export function useRealtimeNotifications(): void {
             return
           }
 
+          // A 1-on-1 only rings through call-ring on sfu; a mesh "direct" ring is a
+          // stray session from a caller with a stale transport (it cancels itself).
+          if (signal.type === 'call-ring' && signal.kind === 'direct') return
+
           // ── Group call ring → open the incoming-group-call prompt ───────────
           if (signal.type === 'call-ring') {
             // Ignore a ring while already in any call.
@@ -216,6 +225,7 @@ export function useRealtimeNotifications(): void {
     })
 
     return () => {
+      stopTransportWatch()
       stompService.disconnect()
     }
     // `router` from next/navigation is stable; only (dis)connect on the

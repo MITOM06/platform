@@ -147,6 +147,8 @@ export const useCallStore = create<CallState>((set) => ({
       video,
       callId: callId ?? null,
       transport: transport ?? 'mesh',
+      reconnecting: false,
+      poorConnection: false,
     }),
   setOutgoing: ({ peerId, peerName, conversationId, video, transport }) =>
     set({
@@ -158,6 +160,8 @@ export const useCallStore = create<CallState>((set) => ({
       video,
       callId: null,
       transport: transport ?? 'mesh',
+      reconnecting: false,
+      poorConnection: false,
     }),
   setCallId: (callId) => set({ callId }),
   setReconnecting: (reconnecting) => set({ reconnecting }),
@@ -174,6 +178,8 @@ export const useCallStore = create<CallState>((set) => ({
     set({
       groupTransport: transport ?? 'mesh',
       speakingIds: [],
+      reconnecting: false,
+      poorConnection: false,
       groupCallId: callId,
       groupConversationId: conversationId,
       groupMedia: media,

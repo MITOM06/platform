@@ -1,3 +1,4 @@
+import { stompService } from '@/lib/stomp/client'
 import { useCallStore } from '@/lib/store/call.store'
 import type { CallEvent } from '@/lib/api/types'
 import type { CallEndReason } from './call-end-notice'
@@ -55,8 +56,26 @@ class CallManager implements CallHooks {
   handleSignal(signal: WebRTCSignal): void {
     const sfu =
       signal.transport === 'sfu' || signal.type === 'call-ring-cancel' || signal.type === 'call-declined'
-    if (sfu) this.sfu.handleSignal(signal)
-    else this.mesh.handleSignal(signal)
+    if (sfu) {
+      this.sfu.handleSignal(signal)
+      return
+    }
+    const st = useCallStore.getState()
+    if (st.transport === 'sfu' && st.status !== 'idle') {
+      // A peer-to-peer call while we are on LiveKit (e.g. a mesh-only app): we
+      // are busy. Its other signals must never reach — and reset — our call.
+      if (signal.type === 'offer' && signal.senderId && signal.conversationId) {
+        stompService.publish('/app/call.end', {
+          targetId: signal.senderId,
+          conversationId: signal.conversationId,
+          type: 'end',
+          reason: 'busy',
+          duration: 0,
+        })
+      }
+      return
+    }
+    this.mesh.handleSignal(signal)
   }
 
   /** `call.started` / `call.ended` of a direct sfu call, from the conversation topic. */

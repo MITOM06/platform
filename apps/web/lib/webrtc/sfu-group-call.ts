@@ -108,8 +108,10 @@ export class SfuGroupCall {
     }
     session.onReconnecting = (on) => store().setReconnecting(on)
     session.onLocalPoorConnection = (poor) => store().setPoorConnection(poor)
-    session.onDisconnected = () => {
-      if (this.session === session) this.leave()
+    session.onDisconnected = (reason) => {
+      if (this.session !== session) return
+      if (reason === 'ended') this.teardown() // the server closed the room: nothing to tell it
+      else this.leave()
     }
     try {
       await session.connect(token.url, token.token, { video: media === 'video' })
@@ -126,6 +128,9 @@ export class SfuGroupCall {
     this.pendingStart = false
     this.hooks.onLocalStream = null
     this.hooks.onEnded?.()
+    // reconnecting / poorConnection are shared with 1-on-1 calls: never carry them over.
+    store().setReconnecting(false)
+    store().setPoorConnection(false)
     store().resetGroup()
   }
 }

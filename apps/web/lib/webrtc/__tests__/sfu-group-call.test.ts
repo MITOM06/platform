@@ -26,7 +26,9 @@ const m = vi.hoisted(() => {
     transport: { value: 'sfu' as 'mesh' | 'sfu' },
   }
 })
-vi.mock('@/lib/stomp/client', () => ({ stompService: { publish: m.publish } }))
+vi.mock('@/lib/stomp/client', () => ({
+  stompService: { publish: m.publish, subscribe: vi.fn(() => undefined) },
+}))
 vi.mock('@/lib/api/calls', () => ({ callsApi: { getToken: m.getToken } }))
 vi.mock('@/lib/rtc/livekit-session', () => ({ LiveKitSession: m.FakeSession, MediaAccessError: class extends Error {} }))
 vi.mock('../call-transport', () => ({ getCallTransport: () => m.transport.value }))
@@ -109,4 +111,23 @@ describe('group calls on sfu', () => {
     groupCallManager.declineRing({ ...ring, transport: 'mesh' })
     expect(m.publish).not.toHaveBeenCalled()
   })
+
+  it('leaving clears the shared reconnecting / poor-connection flags', async () => {
+    await groupCallManager.join('c1', 'grp', 'me', 'audio', false, 'sfu')
+    await flush()
+    m.FakeSession.last!.onReconnecting!(true)
+    groupCallManager.leave()
+    expect(store().reconnecting).toBe(false)
+    expect(store().poorConnection).toBe(false)
+  })
+
+  it('a room the server closed tears the call down without a leave', async () => {
+    await groupCallManager.join('c1', 'grp', 'me', 'audio', false, 'sfu')
+    await flush()
+    m.publish.mockClear()
+    m.FakeSession.last!.onDisconnected!('ended' as never)
+    expect(store().groupCallId).toBeNull()
+    expect(sent('/app/call.leave')).toEqual([])
+  })
 })
+

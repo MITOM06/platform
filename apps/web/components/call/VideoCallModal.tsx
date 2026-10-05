@@ -32,15 +32,15 @@ export function VideoCallModal() {
 
   useEffect(() => {
     callManager.onLocalStream = (stream) => {
-      if (localRef.current) localRef.current.srcObject = stream
+      if (localRef.current && localRef.current.srcObject !== stream) localRef.current.srcObject = stream
     }
     callManager.onRemoteStream = (stream) => {
-      if (remoteRef.current) remoteRef.current.srcObject = stream
+      if (remoteRef.current && remoteRef.current.srcObject !== stream) remoteRef.current.srcObject = stream
     }
     const local = callManager.getLocalStream()
-    if (local && localRef.current) localRef.current.srcObject = local
+    if (local && localRef.current && localRef.current.srcObject !== local) localRef.current.srcObject = local
     const remote = callManager.getRemoteStream()
-    if (remote && remoteRef.current) remoteRef.current.srcObject = remote
+    if (remote && remoteRef.current && remoteRef.current.srcObject !== remote) remoteRef.current.srcObject = remote
     return () => {
       callManager.onLocalStream = null
       callManager.onRemoteStream = null

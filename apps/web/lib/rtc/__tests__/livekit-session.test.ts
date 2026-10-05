@@ -60,6 +60,7 @@ const lk = vi.hoisted(() => {
       },
       Track: { Source: { Camera: 'camera', Microphone: 'microphone' } },
       ConnectionQuality: { Excellent: 'excellent', Good: 'good', Poor: 'poor', Lost: 'lost' },
+      DisconnectReason: { CLIENT_INITIATED: 1, PARTICIPANT_REMOVED: 4, ROOM_DELETED: 5, SIGNAL_CLOSE: 9 },
     },
   }
 })
@@ -200,5 +201,27 @@ describe('connection state', () => {
     session.disconnect()
     expect(room().disconnect).toHaveBeenCalled()
     expect(onDisconnected).not.toHaveBeenCalled()
+  })
+})
+
+describe('final-review fixes', () => {
+  it('does not use adaptive stream — tracks go into our own <video>, not track.attach()', async () => {
+    await session.connect('wss://rtc', 'tok', { video: true })
+    expect(room().options).toMatchObject({ adaptiveStream: false })
+  })
+
+  it('tells a server-closed room apart from a dropped connection', async () => {
+    await session.connect('wss://rtc', 'tok', { video: false })
+    const onDisconnected = vi.fn()
+    session.onDisconnected = onDisconnected
+    room().emit('disconnected', 5) // ROOM_DELETED
+    expect(onDisconnected).toHaveBeenCalledWith('ended')
+
+    const other = new LiveKitSession()
+    await other.connect('wss://rtc', 'tok', { video: false })
+    const onOther = vi.fn()
+    other.onDisconnected = onOther
+    room().emit('disconnected', 9) // SIGNAL_CLOSE
+    expect(onOther).toHaveBeenCalledWith('failed')
   })
 })

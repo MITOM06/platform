@@ -1,5 +1,6 @@
 import {
   ConnectionQuality,
+  DisconnectReason,
   Room,
   RoomEvent,
   Track,
@@ -53,8 +54,12 @@ export class LiveKitSession {
   onPeersChanged: ((peers: RemotePeer[]) => void) | null = null
   onReconnecting: ((reconnecting: boolean) => void) | null = null
   onLocalPoorConnection: ((poor: boolean) => void) | null = null
-  /** Fired only when the room drops on its own — never after `disconnect()`. */
-  onDisconnected: ((reason: 'failed') => void) | null = null
+  /**
+   * Fired only when the room goes away on its own — never after `disconnect()`.
+   * 'ended' = the server closed the room or removed us (the call is over);
+   * 'failed' = the connection dropped and could not be resumed.
+   */
+  onDisconnected: ((reason: 'failed' | 'ended') => void) | null = null
 
   private room: Room | null = null
   private leaving = false
@@ -62,7 +67,10 @@ export class LiveKitSession {
   private remote = new Map<string, RemotePeer>()
 
   async connect(url: string, token: string, opts: { video: boolean }): Promise<void> {
-    const room = new Room({ adaptiveStream: true, dynacast: true })
+    // No adaptiveStream: it only works with track.attach(), and our call UI
+    // feeds plain MediaStreams into its own <video> — with it on, remote video
+    // is paused as "not visible" and never starts.
+    const room = new Room({ adaptiveStream: false, dynacast: true })
     this.room = room
     this.leaving = false
     this.wire(room)
@@ -161,11 +169,13 @@ export class LiveKitSession {
       })
       .on(RoomEvent.Reconnecting, () => this.onReconnecting?.(true))
       .on(RoomEvent.Reconnected, () => this.onReconnecting?.(false))
-      .on(RoomEvent.Disconnected, () => {
+      .on(RoomEvent.Disconnected, (reason?: DisconnectReason) => {
         if (this.leaving) return
         this.leaving = true
         this.room = null
-        this.onDisconnected?.('failed')
+        const ended =
+          reason === DisconnectReason.ROOM_DELETED || reason === DisconnectReason.PARTICIPANT_REMOVED
+        this.onDisconnected?.(ended ? 'ended' : 'failed')
       })
   }
 

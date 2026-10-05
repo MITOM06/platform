@@ -29,16 +29,27 @@ const m = vi.hoisted(() => {
       this.peersById.set(identity, { identity, stream: { getTracks: () => [{}] } })
       this.onPeersChanged?.()
     }
+    /** Simulate someone leaving the room. */
+    leave(identity: string) {
+      this.peersById.delete(identity)
+      this.onPeersChanged?.()
+    }
   }
+  const subs = new Map<string, (frame: { body: string }) => void>()
   return {
     FakeSession,
     MediaAccessError,
+    subs,
+    subscribe: vi.fn((dest: string, cb: (frame: { body: string }) => void) => {
+      subs.set(dest, cb)
+      return { unsubscribe: vi.fn(() => subs.delete(dest)) }
+    }),
     publish: vi.fn(),
     sendMessage: vi.fn(() => Promise.resolve()),
     getToken: vi.fn<(callId: string) => Promise<unknown>>(async () => ({ url: 'wss://rtc', token: 'tok' })),
   }
 })
-vi.mock('@/lib/stomp/client', () => ({ stompService: { publish: m.publish } }))
+vi.mock('@/lib/stomp/client', () => ({ stompService: { publish: m.publish, subscribe: m.subscribe } }))
 vi.mock('@/lib/api/chat', () => ({ chatService: { sendMessage: m.sendMessage } }))
 vi.mock('@/lib/api/calls', () => ({ callsApi: { getToken: m.getToken } }))
 vi.mock('@/lib/rtc/livekit-session', () => ({
@@ -93,6 +104,7 @@ beforeEach(() => {
   m.sendMessage.mockClear()
   m.getToken.mockClear()
   m.FakeSession.last = null
+  m.subs.clear()
   Object.values(hooks).forEach((h) => h.mockClear())
   getUserMedia.mockReset().mockResolvedValue({ getTracks: () => [{ stop: vi.fn() }] })
   Object.defineProperty(navigator, 'mediaDevices', { value: { getUserMedia }, configurable: true })
@@ -272,3 +284,89 @@ describe('in a call', () => {
     expect(store().micEnabled).toBe(false)
   })
 })
+
+describe('final-review fixes', () => {
+  const connect = async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    started()
+    await flush()
+    m.FakeSession.last!.join('bob')
+  }
+  const topicEvent = (event: object) =>
+    m.subs.get('/topic/conversation/conv')!({ body: JSON.stringify(event) })
+
+  it('a room the server closed ends the call as the other side hanging up — no leave, no log', async () => {
+    await connect()
+    m.sendMessage.mockClear()
+    m.FakeSession.last!.onDisconnected!('ended' as never)
+    expect(hooks.onEndNotice).toHaveBeenCalledWith('hangup', true, 'Bob')
+    expect(sent('/app/call.leave')).toEqual([])
+    expect(m.sendMessage).not.toHaveBeenCalled()
+  })
+
+  it('hears call.ended for its own conversation even with that thread closed', async () => {
+    await connect()
+    topicEvent({ event: 'call.ended', callId: 'c1', reason: 'hangup' })
+    expect(hooks.onEndNotice).toHaveBeenCalledWith('hangup', true, 'Bob')
+    expect(store().status).toBe('idle')
+  })
+
+  it('ends after the grace period when the other person vanishes from the room', async () => {
+    await connect()
+    m.FakeSession.last!.leave('bob')
+    vi.advanceTimersByTime(7_000)
+    m.FakeSession.last!.join('bob') // came back in time
+    vi.advanceTimersByTime(5_000)
+    expect(store().status).toBe('connected')
+
+    m.FakeSession.last!.leave('bob')
+    vi.advanceTimersByTime(8_000)
+    expect(store().status).toBe('idle')
+    expect(hooks.onEndNotice).toHaveBeenCalledWith('failed', false, 'Bob')
+  })
+
+  it('hands the remote stream to the UI once, not on every speaking change', async () => {
+    await connect()
+    m.FakeSession.last!.onPeersChanged!()
+    m.FakeSession.last!.onPeersChanged!()
+    expect(hooks.onRemoteStream).toHaveBeenCalledTimes(1)
+  })
+
+  it('a caller hanging up while still ringing also leaves, in case the callee just answered', async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    started()
+    await flush()
+    call.endCall('hangup')
+    expect(sent('/app/call.cancel')).toEqual([{ callId: 'c1', reason: 'hangup' }])
+    expect(sent('/app/call.leave')).toEqual([{ callId: 'c1' }])
+  })
+
+  it('a mesh call.started for our pending start ends that stray session and fails cleanly', async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    topicEvent({
+      event: 'call.started', callId: 'c7', conversationId: 'conv', media: 'audio',
+      aiNotetaker: false, startedBy: 'me', startedByName: 'me', participants: [],
+      transport: 'mesh', kind: 'direct',
+    })
+    expect(sent('/app/call.leave')).toEqual([{ callId: 'c7' }])
+    expect(hooks.onEndNotice).toHaveBeenCalledWith('failed', false, 'Bob')
+    expect(m.FakeSession.last).toBeNull()
+  })
+
+  it('a double click on Answer while the permission prompt is open answers once', async () => {
+    ring()
+    const first = call.acceptIncoming()
+    const second = call.acceptIncoming()
+    await Promise.all([first, second])
+    await flush()
+    expect(sent('/app/call.accept')).toHaveLength(1)
+  })
+
+  it('a new call starts without the previous call\'s reconnecting/poor flags', async () => {
+    useCallStore.setState({ reconnecting: true, poorConnection: true })
+    await call.startCall('bob', 'Bob', 'conv', false)
+    expect(store().reconnecting).toBe(false)
+    expect(store().poorConnection).toBe(false)
+  })
+})
+
