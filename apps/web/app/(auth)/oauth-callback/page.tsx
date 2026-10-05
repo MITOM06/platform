@@ -5,14 +5,14 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
-import { useAuthStore } from '@/lib/store/auth.store'
 import { parseAuthError, authCodeToI18nKey } from '@/lib/auth/auth-error'
 import { isLoginNotice, loginPath } from '@/lib/auth/force-logout'
+import { MFA_PATH, isMfaChallenge, savePendingMfa } from '@/lib/auth/mfa'
+import { establishSession } from '@/lib/auth/sign-in'
 
 export default function OAuthCallbackPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const setAuth = useAuthStore((s) => s.setAuth)
   const t = useTranslations('auth.oauth')
   const tAuth = useTranslations('auth')
 
@@ -37,14 +37,15 @@ export default function OAuthCallbackPage() {
     authService
       .exchangeCode(code)
       .then(async ({ data }) => {
-        const { accessToken, refreshToken, sid, user } = data
-        await fetch('/api/auth/set-cookie', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ accessToken, refreshToken, sid }),
-        })
-        setAuth(user, accessToken)
-        router.replace('/')
+        // Owner / Admin signing in with Google: finish with the authenticator
+        // code (or first-time 2FA setup) on /mfa before any session exists.
+        if (isMfaChallenge(data)) {
+          savePendingMfa(data)
+          router.replace(MFA_PATH)
+          return
+        }
+        // A member who just joined with Google must create a PON password first.
+        router.replace(await establishSession(data))
       })
       .catch((err: unknown) => {
         // Specific reason when the server gave one (e.g. ACCOUNT_BLOCKED),
@@ -57,7 +58,7 @@ export default function OAuthCallbackPage() {
         toast.error(errCode === 'GENERIC_ERROR' ? t('failed') : tAuth(authCodeToI18nKey(errCode), params))
         router.replace('/login')
       })
-  }, [searchParams, router, setAuth, t, tAuth])
+  }, [searchParams, router, t, tAuth])
 
   return (
     <div className="flex h-dvh items-center justify-center">

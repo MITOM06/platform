@@ -7,6 +7,7 @@ import { EditMemberAiContextModal } from '@/components/admin/EditMemberAiContext
 import { InviteMemberDialog } from '@/components/admin/InviteMemberDialog'
 import { MemberRow } from '@/components/admin/MemberRow'
 import { PendingInvitationsList } from '@/components/admin/PendingInvitationsList'
+import { ResetMfaDialog } from '@/components/admin/ResetMfaDialog'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
@@ -27,7 +28,13 @@ import {
   useUpdateMember,
 } from '@/lib/hooks/use-admin'
 import { useCapabilities, useHasCapability } from '@/lib/hooks/use-capabilities'
-import { OWNER_ROLE_NAME, assignableRoles, memberRoleLock } from '@/lib/admin/role-guard'
+import {
+  OWNER_ROLE_NAME,
+  assignableRoles,
+  canResetMemberMfa,
+  isPrivilegedRole,
+  memberRoleLock,
+} from '@/lib/admin/role-guard'
 import { useAuthStore } from '@/lib/store/auth.store'
 import type { Member } from '@/lib/api/admin-types'
 
@@ -56,6 +63,7 @@ export function MembersPanel() {
   // Bumped per open so the invite dialog remounts with a fresh form.
   const [inviteKey, setInviteKey] = useState(0)
   const [statusTarget, setStatusTarget] = useState<Member | null>(null)
+  const [mfaTarget, setMfaTarget] = useState<Member | null>(null)
 
   const openInvite = () => {
     setInviteKey((k) => k + 1)
@@ -89,6 +97,15 @@ export function MembersPanel() {
     )
 
   const roleName = (id?: string) => roles.find((r) => r._id === id)?.name
+
+  // "Reset 2FA": Owner only, never on their own row (contract 09).
+  const canResetMfa = (m: Member) =>
+    canResetMemberMfa({
+      callerIsOwner,
+      isSelf: m._id === selfId,
+      targetPrivileged: isPrivilegedRole(roles.find((r) => r._id === m.roleId)),
+      targetMfaEnabled: m.mfaEnabled === true,
+    })
 
   // Own row and (for non-Owners) an Owner's row: role is read-only, departments
   // stay editable. Owner option is offered to Owners only.
@@ -138,11 +155,15 @@ export function MembersPanel() {
           roleName={roleName(m.roleId)}
           isSelf={m._id === selfId}
           canManageMembers={canManageMembers}
+          canResetMfa={canResetMfa(m)}
           onEdit={openEdit}
           onAiContext={openAiContext}
           onToggleBlock={setStatusTarget}
+          onResetMfa={setMfaTarget}
         />
       ))}
+
+      <ResetMfaDialog member={mfaTarget} onClose={() => setMfaTarget(null)} />
 
       {canManageMembers && (
         <InviteMemberDialog

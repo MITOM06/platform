@@ -21,6 +21,7 @@ import { PonLogo } from '@/components/layout/PonLogo'
 import { useUiStore } from '@/lib/store/ui.store'
 import { useSidebarResize } from '@/lib/hooks/use-sidebar-resize'
 import { useRealtimeNotifications } from '@/lib/hooks/use-realtime-notifications'
+import { SetPasswordGate } from '@/components/auth/SetPasswordGate'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +38,18 @@ const CallOverlay = dynamic(
   { ssr: false },
 )
 
+// A Google-invited member who has not created a PON password yet is held on
+// /set-password: the gate renders a spinner instead of the shell (so STOMP and
+// the conversation list never start) and redirects.
 export default function MainLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SetPasswordGate>
+      <MainShell>{children}</MainShell>
+    </SetPasswordGate>
+  )
+}
+
+function MainShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const t = useTranslations('layout')
 

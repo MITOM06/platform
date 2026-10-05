@@ -150,6 +150,24 @@ export function useSetMemberStatus() {
   })
 }
 
+/**
+ * Owner only: reset a member's 2FA (`POST /admin/members/:id/mfa/reset`).
+ * MFA_RESET_FORBIDDEN / MFA_RESET_SELF_FORBIDDEN / MEMBER_NOT_FOUND → localized toast.
+ */
+export function useResetMemberMfa() {
+  const qc = useQueryClient()
+  const t = useTranslations('admin')
+  const onError = useAuthErrorToast()
+  return useMutation({
+    mutationFn: (id: string) => adminService.resetMemberMfa(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-members'] })
+      toast.success(t('memberMfaResetDone'))
+    },
+    onError,
+  })
+}
+
 // ── invitations ───────────────────────────────────────────────────────────────
 const INVITATIONS_KEY = ['admin-invitations'] as const
 

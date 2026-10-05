@@ -46,6 +46,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Change the password, or set the first one (also clears mustSetPassword) */
         post: operations["UsersController_changePassword"];
         delete?: never;
         options?: never;
@@ -637,6 +638,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/mfa/enroll/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start authenticator enrollment (QR + manual key) */
+        post: operations["MfaLoginController_enrollStart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/mfa/enroll/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm enrollment with one code; returns the backup codes, NO session yet */
+        post: operations["MfaLoginController_enrollConfirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/mfa/enroll/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** The backup codes of a confirmed enrollment again (after a reload) */
+        post: operations["MfaLoginController_enrollCodes"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/mfa/enroll/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Backup codes saved: finish enrollment and sign in (single use) */
+        post: operations["MfaLoginController_enrollComplete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/mfa/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify a TOTP or backup code; signs in */
+        post: operations["MfaLoginController_verify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/invitations": {
         parameters: {
             query?: never;
@@ -684,6 +770,40 @@ export interface paths {
         post?: never;
         /** Revoke a pending/expired invitation */
         delete: operations["AdminInvitationsController_revoke"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/me/mfa/backup-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Replace the backup codes (needs the current authenticator code) */
+        post: operations["MfaSelfController_regenerateBackupCodes"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/members/{id}/mfa/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Owner only: reset a member's 2FA and revoke their sessions */
+        post: operations["MfaAdminController_reset"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -958,6 +1078,16 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ChangePasswordDto: {
+            /** @description Required only when the account already has a password (omit when setting the first one) */
+            currentPassword?: string;
+            /** @example N3wP@ssw0rd */
+            newPassword: string;
+        };
+        ChangePasswordResponseDto: {
+            /** @example true */
+            success: boolean;
+        };
         FriendRequestDto: {
             /** @description User id of the friend-request recipient */
             recipientId: string;
@@ -965,6 +1095,57 @@ export interface components {
         AcceptFriendDto: {
             /** @description User id of the requester whose request is accepted */
             requesterId: string;
+        };
+        ExchangeUserDto: {
+            id: string;
+            email: string;
+            displayName: string;
+            avatarUrl?: string;
+            isVerified: boolean;
+            /** @description true only for an account created by accepting an invitation with Google: the client must show "create your PON password" before the app */
+            mustSetPassword: boolean;
+        };
+        ExchangeResponseDto: {
+            userId: string;
+            sid: string;
+            accessToken: string;
+            refreshToken: string;
+            user: components["schemas"]["ExchangeUserDto"];
+        };
+        LoginTokensUserDto: {
+            id: string;
+            email: string;
+            displayName: string;
+            /** @description true only for an account created by accepting an invitation with Google: the client must show "create your PON password" before the app */
+            mustSetPassword: boolean;
+        };
+        LoginTokensResponseDto: {
+            /**
+             * @description LOGIN_SUCCESS (login) or INVITATION_ACCEPTED (accept-password)
+             * @example LOGIN_SUCCESS
+             */
+            code: string;
+            accessToken: string;
+            refreshToken: string;
+            sid: string;
+            user: components["schemas"]["LoginTokensUserDto"];
+        };
+        MfaUserDto: {
+            id: string;
+            email: string;
+            displayName: string;
+        };
+        MfaRequiredResponseDto: {
+            /**
+             * @example MFA_REQUIRED
+             * @enum {string}
+             */
+            code: "MFA_REQUIRED";
+            /** @description Opaque, single-use, valid for 5 minutes */
+            mfaToken: string;
+            /** @description true = first sign-in since becoming privileged: enroll an authenticator first */
+            enrollmentRequired: boolean;
+            user: components["schemas"]["MfaUserDto"];
         };
         ExchangeDto: {
             /** @description One-time login code returned by the OAuth/login flow */
@@ -1059,18 +1240,114 @@ export interface components {
              */
             platform?: "web" | "mobile";
         };
-        LoginTokensUserDto: {
-            id: string;
-            email: string;
-            displayName: string;
+        MfaEnrollStartDto: {
+            /** @description mfaToken from the MFA_REQUIRED sign-in answer */
+            mfaToken: string;
         };
-        LoginTokensResponseDto: {
-            /** @example INVITATION_ACCEPTED */
+        MfaEnrollStartResponseDto: {
+            /** @example otpauth://totp/PON:jane%40acme.com?secret=...&issuer=PON */
+            otpauthUrl: string;
+            /** @description Base32 secret for manual entry */
+            secret: string;
+            /** @description QR code of otpauthUrl as a data:image/png;base64 URL */
+            qrDataUrl: string;
+        };
+        MfaEnrollConfirmDto: {
+            /** @description Device identifier for the issued session */
+            deviceId?: string;
+            /**
+             * @description Originating platform
+             * @example web
+             */
+            platform?: string;
+            mfaToken: string;
+            /**
+             * @description 6-digit code from the authenticator app
+             * @example 123456
+             */
+            code: string;
+        };
+        MfaEnrollConfirmResponseDto: {
+            /**
+             * @example MFA_BACKUP_CODES_ISSUED
+             * @enum {string}
+             */
+            code: "MFA_BACKUP_CODES_ISSUED";
+            /**
+             * @description 10 single-use backup codes (stored hashed). Re-readable via enroll/codes until enroll/complete, at most 10 minutes.
+             * @example [
+             *       "ABCDE-FGH23"
+             *     ]
+             */
+            backupCodes: string[];
+        };
+        MfaEnrollCodesDto: {
+            /** @description mfaToken of the confirmed enrollment */
+            mfaToken: string;
+        };
+        MfaEnrollCodesResponseDto: {
+            /**
+             * @description The same 10 backup codes enroll/confirm returned
+             * @example [
+             *       "ABCDE-FGH23"
+             *     ]
+             */
+            backupCodes: string[];
+        };
+        MfaEnrollCompleteDto: {
+            /** @description Device identifier for the issued session */
+            deviceId?: string;
+            /**
+             * @description Originating platform
+             * @example web
+             */
+            platform?: string;
+            /** @description mfaToken of the confirmed enrollment */
+            mfaToken: string;
+        };
+        MfaEnrollCompleteResponseDto: {
+            /**
+             * @description LOGIN_SUCCESS (login) or INVITATION_ACCEPTED (accept-password)
+             * @example LOGIN_SUCCESS
+             */
             code: string;
             accessToken: string;
             refreshToken: string;
             sid: string;
             user: components["schemas"]["LoginTokensUserDto"];
+        };
+        MfaVerifyDto: {
+            /** @description Device identifier for the issued session */
+            deviceId?: string;
+            /**
+             * @description Originating platform
+             * @example web
+             */
+            platform?: string;
+            mfaToken: string;
+            /**
+             * @description 6-digit authenticator code (send exactly one of code / backupCode)
+             * @example 123456
+             */
+            code?: string;
+            /**
+             * @description Single-use backup code (send exactly one of code / backupCode)
+             * @example ABCDE-FGH23
+             */
+            backupCode?: string;
+        };
+        MfaVerifyResponseDto: {
+            /**
+             * @description LOGIN_SUCCESS (login) or INVITATION_ACCEPTED (accept-password)
+             * @example LOGIN_SUCCESS
+             */
+            code: string;
+            accessToken: string;
+            refreshToken: string;
+            sid: string;
+            user: components["schemas"]["LoginTokensUserDto"];
+            /** @description Unused backup codes left after this sign-in */
+            backupCodesRemaining: number;
         };
         CreateInvitationDto: {
             /**
@@ -1126,6 +1403,17 @@ export interface components {
             /** @example true */
             success: boolean;
         };
+        RegenerateBackupCodesDto: {
+            /**
+             * @description Current authenticator code
+             * @example 123456
+             */
+            code: string;
+        };
+        BackupCodesResponseDto: {
+            /** @description 10 new single-use backup codes (the old ones stop working). Shown once. */
+            backupCodes: string[];
+        };
         CreateDepartmentDto: {
             name: string;
             description?: string;
@@ -1147,6 +1435,8 @@ export interface components {
             departmentIds: string[];
             /** @enum {string} */
             status: "active" | "blocked" | "pending";
+            /** @description The member has an enrolled authenticator (2FA) */
+            mfaEnabled: boolean;
         };
         UpdateMemberDto: {
             /** @description Role id to assign to the member */
@@ -1272,13 +1562,19 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordDto"];
+            };
+        };
         responses: {
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ChangePasswordResponseDto"];
+                };
             };
         };
     };
@@ -1754,12 +2050,14 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Access + refresh tokens issued */
+            /** @description Tokens issued, or MFA_REQUIRED (privileged user, Google sign-in) */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ExchangeResponseDto"] | components["schemas"]["MfaRequiredResponseDto"];
+                };
             };
         };
     };
@@ -1807,12 +2105,14 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Login succeeded; tokens issued */
+            /** @description LOGIN_SUCCESS + tokens, or MFA_REQUIRED (privileged user) */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["LoginTokensResponseDto"] | components["schemas"]["MfaRequiredResponseDto"];
+                };
             };
             /** @description Invalid credentials */
             401: {
@@ -1974,6 +2274,163 @@ export interface operations {
             };
         };
     };
+    MfaLoginController_enrollStart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MfaEnrollStartDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MfaEnrollStartResponseDto"];
+                };
+            };
+        };
+    };
+    MfaLoginController_enrollConfirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MfaEnrollConfirmDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MfaEnrollConfirmResponseDto"];
+                };
+            };
+            /** @description MFA_TOKEN_INVALID / MFA_CODE_INVALID / MFA_TOO_MANY_ATTEMPTS */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MfaLoginController_enrollCodes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MfaEnrollCodesDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MfaEnrollCodesResponseDto"];
+                };
+            };
+            /** @description MFA_NOT_ENROLLED (wrong step) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description MFA_TOKEN_INVALID */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MfaLoginController_enrollComplete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MfaEnrollCompleteDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MfaEnrollCompleteResponseDto"];
+                };
+            };
+            /** @description MFA_NOT_ENROLLED (wrong step) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description MFA_TOKEN_INVALID */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MfaLoginController_verify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MfaVerifyDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MfaVerifyResponseDto"];
+                };
+            };
+            /** @description MFA_TOKEN_INVALID / MFA_CODE_INVALID / MFA_TOO_MANY_ATTEMPTS */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AdminInvitationsController_list: {
         parameters: {
             query?: {
@@ -2054,6 +2511,50 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponseDto"];
+                };
+            };
+        };
+    };
+    MfaSelfController_regenerateBackupCodes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegenerateBackupCodesDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupCodesResponseDto"];
+                };
+            };
+        };
+    };
+    MfaAdminController_reset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

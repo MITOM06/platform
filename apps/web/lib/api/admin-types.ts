@@ -142,6 +142,8 @@ export interface Member {
   roleId?: string
   departmentIds?: string[]
   status?: MemberStatus
+  /** 2FA (authenticator app) is set up for this member. */
+  mfaEnabled?: boolean
 }
 
 /** `PATCH /admin/members/:id/status` — only these two values are settable. */

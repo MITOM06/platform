@@ -64,6 +64,9 @@ export function authCodeToI18nKey(code: string): string {
     LOGIN_CODE_INVALID: 'errLoginCodeInvalid',
     EMAIL_NOT_FOUND: 'errEmailNotFound',
     USER_NOT_FOUND: 'errUserNotFound',
+    // Change / first set password (POST /api/users/me/change-password)
+    CURRENT_PASSWORD_REQUIRED: 'errCurrentPasswordRequired',
+    CURRENT_PASSWORD_INCORRECT: 'errCurrentPasswordIncorrect',
     // Invite-only onboarding / account status
     ACCOUNT_NOT_PROVISIONED: 'errAccountNotProvisioned',
     ACCOUNT_BLOCKED: 'errAccountBlocked',
@@ -88,6 +91,16 @@ export function authCodeToI18nKey(code: string): string {
     CANNOT_BLOCK_SELF: 'errCannotBlockSelf',
     OWNER_BLOCK_FORBIDDEN: 'errOwnerBlockForbidden',
     LAST_OWNER_CANNOT_BE_BLOCKED: 'errLastOwnerCannotBeBlocked',
+    // Two-factor authentication (contract 09). MFA_CODE_INVALID with
+    // `params.remaining` uses errMfaCodeInvalidWithRemaining (lib/auth/mfa.ts).
+    MFA_REQUIRED: 'msgMfaRequired',
+    MFA_TOKEN_INVALID: 'errMfaTokenInvalid',
+    MFA_CODE_INVALID: 'errMfaCodeInvalid',
+    MFA_TOO_MANY_ATTEMPTS: 'errMfaTooManyAttempts',
+    MFA_NOT_ENROLLED: 'errMfaNotEnrolled',
+    MFA_ALREADY_ENROLLED: 'errMfaAlreadyEnrolled',
+    MFA_RESET_FORBIDDEN: 'errMfaResetForbidden',
+    MFA_RESET_SELF_FORBIDDEN: 'errMfaResetSelfForbidden',
     // SSO
     SSO_DISABLED: 'errSsoDisabled',
     SSO_DOMAIN_NOT_ALLOWED: 'errSsoDomainNotAllowed',

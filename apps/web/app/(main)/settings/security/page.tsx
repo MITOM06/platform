@@ -10,7 +10,6 @@ import {
   KeyRound,
   Eye,
   EyeOff,
-  ShieldCheck,
   AlertTriangle,
   Loader2,
 } from 'lucide-react'
@@ -21,14 +20,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter'
-
-interface ServerError {
-  response?: { data?: { message?: string } }
-}
+import { TwoFactorSection } from '@/components/settings/TwoFactorSection'
+import { parseAuthError, authCodeToI18nKey } from '@/lib/auth/auth-error'
 
 export default function SecurityPage() {
   const t = useTranslations('settings.security')
   const tReg = useTranslations('auth.password')
+  const tAuth = useTranslations('auth')
   const tCommon = useTranslations('common')
   const user = useAuthStore((s) => s.user)
   const setAuth = useAuthStore((s) => s.setAuth)
@@ -86,17 +84,11 @@ export default function SecurityPage() {
       setNewPw('')
       setConfirmPw('')
     } catch (e: unknown) {
-      // An unrecognised server message falls back to the generic localized copy. Assigning
-      // `serverMsg` here would print raw English backend text into the UI regardless of locale
-      // (.claude/rules/no-raw-system-data-in-ui.md).
-      let msg = t('genericError')
-      const serverMsg = (e as ServerError)?.response?.data?.message
-      if (serverMsg?.includes('Incorrect current password')) {
-        msg = t('incorrectCurrent')
-      } else if (serverMsg?.includes('Current password is required')) {
-        msg = t('currentRequired')
-      }
-      setError(msg)
+      // Typed auth code (CURRENT_PASSWORD_INCORRECT, VAL_PASSWORD_TOO_SHORT, …) →
+      // localized text; never the raw server body (.claude/rules/no-raw-system-data-in-ui.md).
+      // An unknown failure keeps this screen's own generic copy.
+      const { code, params } = parseAuthError(e)
+      setError(code === 'GENERIC_ERROR' ? t('genericError') : tAuth(authCodeToI18nKey(code), params))
     } finally {
       setSaving(false)
     }
@@ -279,25 +271,7 @@ export default function SecurityPage() {
             </div>
           </section>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="size-9 rounded-full bg-muted flex items-center justify-center">
-                <ShieldCheck className="size-4 text-muted-foreground" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-base text-muted-foreground">
-                  {t('twoFaTitle')}
-                </h2>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {t('twoFaSubtitle')}
-                </p>
-              </div>
-            </div>
-            <div className="rounded-xl border border-dashed bg-muted/30 px-5 py-4 flex items-center gap-3">
-              <ShieldCheck className="size-5 text-muted-foreground shrink-0" />
-              <p className="text-sm text-muted-foreground">{t('twoFaComingSoon')}</p>
-            </div>
-          </section>
+          <TwoFactorSection />
         </div>
       </div>
     </div>
