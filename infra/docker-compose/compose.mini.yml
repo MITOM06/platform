@@ -112,6 +112,10 @@ services:
       ALLOWED_ORIGINS: ${WEB_ORIGIN:?required}
       BOTFACTORY_BASE_URL: ${BOTFACTORY_BASE_URL:-}
       BOTFACTORY_WORKER_TOKEN: ${BOTFACTORY_WORKER_TOKEN:-}
+      # Personal-assistant setup issues the bot's MCP token through
+      # connector-service's internal API. Unset, every setup answered 503.
+      CONNECTOR_SERVICE_BASE_URL: http://connector-service:3003
+      CONNECTOR_INTERNAL_KEY: ${INTERNAL_API_KEY:?required}
       MAIL_HOST: ${MAIL_HOST:-}
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USER: ${MAIL_USER:-}
@@ -185,6 +189,9 @@ services:
       # With a quick tunnel it changes on every restart and must be re-registered
       # in each provider's console — see the runbook.
       OAUTH_REDIRECT_BASE: ${PON_API_BASE:?required}/api/connector
+      # Public MCP endpoint handed to Bot Factory assistants. Unset, they were
+      # given http://localhost:3003/mcp, which is unreachable from Bot Factory.
+      MCP_SERVER_URL: ${PON_API_BASE:?required}/api/connector/mcp
       CLIENT_REDIRECT_URL: ${WEB_ORIGIN:?required}/integrations
       # Explicit allow-list — main.ts refuses to boot in production without one.
       CORS_ORIGINS: ${WEB_ORIGIN:?required}

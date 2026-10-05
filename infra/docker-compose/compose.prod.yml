@@ -145,6 +145,9 @@ services:
       # to open CORS. Everything is served from the single Caddy domain, so that
       # origin is the whole allow-list; override only for extra front-ends.
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://${DOMAIN}}
+      # Personal-assistant setup issues the bot's MCP token through connector-service.
+      CONNECTOR_SERVICE_BASE_URL: http://connector-service:3003
+      CONNECTOR_INTERNAL_KEY: ${INTERNAL_API_KEY}
       # See ProdEnvironmentGuard — the addresses below are container names, so the
       # guard passes; point one of them back at localhost and it refuses to boot.
       SPRING_PROFILES_ACTIVE: prod
@@ -239,6 +242,8 @@ services:
       CONNECTOR_VAULT_KEY: ${CONNECTOR_VAULT_KEY}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       OAUTH_REDIRECT_BASE: https://${DOMAIN}/api/connector
+      # Public MCP endpoint handed to Bot Factory assistants (never localhost).
+      MCP_SERVER_URL: https://${DOMAIN}/api/connector/mcp
       CLIENT_REDIRECT_URL: https://${DOMAIN}/integrations
       # main.ts refuses to boot in production without an allow-list; it no longer
       # falls back to reflecting whatever origin asks.
