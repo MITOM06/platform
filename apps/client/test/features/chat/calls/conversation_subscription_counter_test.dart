@@ -2,7 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:platform_client/features/chat/data/conversation_subscription_counter.dart';
 
 void main() {
-  test('only the first holder subscribes and only the last one unsubscribes', () {
+  test('only the first holder subscribes and only the last one unsubscribes',
+      () {
     final c = ConversationSubscriptionCounter();
     expect(c.acquire('conv'), isTrue); // chat screen opens the thread
     expect(c.acquire('conv'), isFalse); // a call also needs it

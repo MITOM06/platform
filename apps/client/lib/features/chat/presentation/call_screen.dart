@@ -153,6 +153,8 @@ class _CallScreenState extends ConsumerState<CallScreen> {
         webrtc.prepareIncoming(
           targetId: widget.targetId,
           conversationId: widget.conversationId,
+          // Non-null: an incoming call only reaches the LiveKit engine through
+          // `widget.callId != null` (see _engine).
           callId: widget.callId!,
           isVideo: effectiveVideo,
         );

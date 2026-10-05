@@ -22,14 +22,16 @@ void main() {
 
   test('switches to sfu when the server says so', () async {
     final cache = CallTransportCache();
-    final repo = _FakeRepo()..next = const CallConfig(transport: CallTransport.sfu);
+    final repo = _FakeRepo()
+      ..next = const CallConfig(transport: CallTransport.sfu);
     await cache.refresh(repo);
     expect(cache.current, CallTransport.sfu);
   });
 
   test('falls back to mesh when the server cannot be reached', () async {
     final cache = CallTransportCache();
-    final repo = _FakeRepo()..next = const CallConfig(transport: CallTransport.sfu);
+    final repo = _FakeRepo()
+      ..next = const CallConfig(transport: CallTransport.sfu);
     await cache.refresh(repo);
     repo.next = Exception('offline');
     await cache.refresh(repo);
@@ -40,6 +42,9 @@ void main() {
     expect(CallTransport.fromWire('sfu'), CallTransport.sfu);
     expect(CallTransport.fromWire('mesh'), CallTransport.mesh);
     expect(CallTransport.fromWire(null), CallTransport.mesh);
-    expect(CallConfig.fromJson({'transport': 'sfu', 'livekitUrl': 'wss://rtc'}).livekitUrl, 'wss://rtc');
+    expect(
+        CallConfig.fromJson({'transport': 'sfu', 'livekitUrl': 'wss://rtc'})
+            .livekitUrl,
+        'wss://rtc');
   });
 }

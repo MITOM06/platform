@@ -18,7 +18,8 @@ class _Port implements CallSignalPort {
   final held = <String>[];
   final events = StreamController<Map<String, dynamic>>.broadcast();
   @override
-  void send(String destination, Map<String, dynamic> body) => sent.add((destination, body));
+  void send(String destination, Map<String, dynamic> body) =>
+      sent.add((destination, body));
   @override
   void holdConversation(String id) => held.add(id);
   @override
@@ -106,7 +107,9 @@ void main() {
   late int ended;
 
   Future<void> flush() => Future<void>.delayed(Duration.zero);
-  Map<String, dynamic> started({String transport = 'sfu', String callId = 'c1'}) => {
+  Map<String, dynamic> started(
+          {String transport = 'sfu', String callId = 'c1'}) =>
+      {
         'event': 'call.started',
         'callId': callId,
         'conversationId': 'conv',
@@ -143,7 +146,8 @@ void main() {
 
   group('outgoing', () {
     test('starts on the server and joins once the id arrives', () async {
-      await call.startOutgoing(targetId: 'bob', conversationId: 'conv', isVideo: false);
+      await call.startOutgoing(
+          targetId: 'bob', conversationId: 'conv', isVideo: false);
       expect(port.to('/app/call.start'), [
         {'conversationId': 'conv', 'media': 'audio'}
       ]);
@@ -153,8 +157,10 @@ void main() {
       expect(sessions.single.connected, isTrue);
     });
 
-    test('a mesh call.started ends that stray session and fails cleanly', () async {
-      await call.startOutgoing(targetId: 'bob', conversationId: 'conv', isVideo: false);
+    test('a mesh call.started ends that stray session and fails cleanly',
+        () async {
+      await call.startOutgoing(
+          targetId: 'bob', conversationId: 'conv', isVideo: false);
       port.events.add(started(transport: 'mesh', callId: 'c7'));
       await flush();
       expect(port.to('/app/call.leave'), [
@@ -166,7 +172,8 @@ void main() {
     });
 
     test('hands the remote stream to the UI once', () async {
-      await call.startOutgoing(targetId: 'bob', conversationId: 'conv', isVideo: false);
+      await call.startOutgoing(
+          targetId: 'bob', conversationId: 'conv', isVideo: false);
       port.events.add(started());
       await flush();
       sessions.single.join('bob');
@@ -174,8 +181,10 @@ void main() {
       expect(remoteStreams, 1);
     });
 
-    test('giving up while ringing cancels and leaves and logs a missed call', () async {
-      await call.startOutgoing(targetId: 'bob', conversationId: 'conv', isVideo: true);
+    test('giving up while ringing cancels and leaves and logs a missed call',
+        () async {
+      await call.startOutgoing(
+          targetId: 'bob', conversationId: 'conv', isVideo: true);
       port.events.add(started());
       await flush();
       await call.endCall(reason: CallEndReason.noAnswer);
@@ -189,8 +198,10 @@ void main() {
       expect(notices, [(CallEndReason.noAnswer, false)]);
     });
 
-    test('hanging up before the id arrives cancels and leaves when it does', () async {
-      await call.startOutgoing(targetId: 'bob', conversationId: 'conv', isVideo: false);
+    test('hanging up before the id arrives cancels and leaves when it does',
+        () async {
+      await call.startOutgoing(
+          targetId: 'bob', conversationId: 'conv', isVideo: false);
       await call.endCall();
       expect(port.to('/app/call.cancel'), isEmpty);
       port.events.add(started());
@@ -206,8 +217,13 @@ void main() {
     });
 
     test('a busy callee is reported and logged', () async {
-      await call.startOutgoing(targetId: 'bob', conversationId: 'conv', isVideo: false);
-      call.handleSignal({'type': 'call-declined', 'conversationId': 'conv', 'reason': 'busy'});
+      await call.startOutgoing(
+          targetId: 'bob', conversationId: 'conv', isVideo: false);
+      call.handleSignal({
+        'type': 'call-declined',
+        'conversationId': 'conv',
+        'reason': 'busy'
+      });
       expect(notices, [(CallEndReason.busy, true)]);
       expect(logs, ['system.call.missed:voice']);
       expect(ended, 1);
@@ -215,7 +231,8 @@ void main() {
 
     test('a token failure ends the attempt', () async {
       api.tokenError = Exception('503');
-      await call.startOutgoing(targetId: 'bob', conversationId: 'conv', isVideo: false);
+      await call.startOutgoing(
+          targetId: 'bob', conversationId: 'conv', isVideo: false);
       port.events.add(started());
       await flush();
       expect(notices.last, (CallEndReason.failed, false));
@@ -224,15 +241,25 @@ void main() {
 
   group('incoming', () {
     setUp(() {
-      call.prepareIncoming(targetId: 'alice', conversationId: 'conv', callId: 'c1', isVideo: false);
+      call.prepareIncoming(
+          targetId: 'alice',
+          conversationId: 'conv',
+          callId: 'c1',
+          isVideo: false);
     });
 
-    test('answering accepts and joins; its own answered-elsewhere echo is ignored', () async {
+    test(
+        'answering accepts and joins; its own answered-elsewhere echo is ignored',
+        () async {
       await call.answer();
       expect(port.to('/app/call.accept'), [
         {'callId': 'c1'}
       ]);
-      call.handleSignal({'type': 'call-ring-cancel', 'callId': 'c1', 'reason': 'answered_elsewhere'});
+      call.handleSignal({
+        'type': 'call-ring-cancel',
+        'callId': 'c1',
+        'reason': 'answered_elsewhere'
+      });
       await flush();
       expect(sessions.single.connected, isTrue);
       expect(ended, 0);
@@ -256,7 +283,8 @@ void main() {
 
   group('in a call', () {
     Future<_Session> connect() async {
-      await call.startOutgoing(targetId: 'bob', conversationId: 'conv', isVideo: false);
+      await call.startOutgoing(
+          targetId: 'bob', conversationId: 'conv', isVideo: false);
       port.events.add(started());
       await flush();
       sessions.single.join('bob');
@@ -272,7 +300,9 @@ void main() {
       expect(logs, ['system.call.ended:voice:65']);
     });
 
-    test('a room the server closed is the other side hanging up — no leave, no log', () async {
+    test(
+        'a room the server closed is the other side hanging up — no leave, no log',
+        () async {
       final s = await connect();
       s.onDisconnected!(RtcEnd.ended);
       expect(notices, [(CallEndReason.hangup, true)]);
@@ -283,7 +313,8 @@ void main() {
 
     test('call.ended from the topic ends it with a notice', () async {
       await connect();
-      port.events.add({'event': 'call.ended', 'callId': 'c1', 'reason': 'hangup'});
+      port.events
+          .add({'event': 'call.ended', 'callId': 'c1', 'reason': 'hangup'});
       await flush();
       expect(notices, [(CallEndReason.hangup, true)]);
     });
@@ -297,7 +328,9 @@ void main() {
       ]);
     });
 
-    test('the other person vanishing ends the call after the grace, unless they return', () async {
+    test(
+        'the other person vanishing ends the call after the grace, unless they return',
+        () async {
       final s = await connect();
       s.leave('bob');
       await Future<void>.delayed(const Duration(milliseconds: 20));

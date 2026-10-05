@@ -22,4 +22,5 @@ class CallTransportCache {
   }
 }
 
-final callTransportProvider = Provider<CallTransportCache>((ref) => CallTransportCache());
+final callTransportProvider =
+    Provider<CallTransportCache>((ref) => CallTransportCache());

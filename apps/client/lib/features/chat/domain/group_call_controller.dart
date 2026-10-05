@@ -4,8 +4,12 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
+import '../../../core/rtc/livekit_session.dart';
+import '../../../core/rtc/rtc_session.dart';
+import '../data/calls_repository.dart';
 import '../data/stomp_service.dart';
 import 'call_stt_service.dart';
+import 'sfu_group_media.dart';
 import 'group_call_service.dart';
 import 'group_call_state.dart';
 
@@ -23,6 +27,11 @@ class GroupCallController extends _$GroupCallController {
   late final CallSttService _stt =
       CallSttService(ref.read(stompServiceProvider.notifier));
 
+  /// LiveKit media for calls the server runs on sfu (same callbacks as mesh).
+  late final SfuGroupMedia _sfu = SfuGroupMedia(
+    api: ref.read(callsRepositoryProvider),
+    sessionFactory: LiveKitSession.new,
+  );
   final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
   final Map<String, RemotePeer> _remotePeers = {};
   bool _localRendererReady = false;
@@ -45,9 +54,24 @@ class GroupCallController extends _$GroupCallController {
     _service.onLocalStream = (stream) => _localRenderer.srcObject = stream;
     _service.onRemoteStream = _onRemoteStream;
     _service.onPeerRemoved = _onPeerRemoved;
+    _sfu
+      ..onLocalStream = ((stream) => _localRenderer.srcObject = stream)
+      ..onRemoteStream = _onRemoteStream
+      ..onPeerRemoved = _onPeerRemoved
+      ..onRoomGone = (reason) {
+        final callId = state.callId;
+        if (callId == null) return;
+        // The server closed the room: the call is over, nothing to tell it.
+        if (reason == RtcEnd.ended) {
+          unawaited(onCallEnded(callId));
+        } else {
+          unawaited(leave());
+        }
+      };
     ref.onDispose(() {
       _stt.stop();
       _service.dispose();
+      _sfu.dispose();
       _localRenderer.dispose();
       for (final p in _remotePeers.values) {
         p.renderer.dispose();
@@ -67,8 +91,20 @@ class GroupCallController extends _$GroupCallController {
     required bool isVideo,
     required bool aiNotetaker,
     required bool isStarter,
+    CallTransport transport = CallTransport.mesh,
   }) async {
     if (state.callId == callId && state.joined) return;
+
+    if (transport == CallTransport.sfu) {
+      await _joinSfu(
+        callId: callId,
+        conversationId: conversationId,
+        isVideo: isVideo,
+        aiNotetaker: aiNotetaker,
+        isStarter: isStarter,
+      );
+      return;
+    }
 
     if (!_localRendererReady) {
       await _localRenderer.initialize();
@@ -104,6 +140,39 @@ class GroupCallController extends _$GroupCallController {
     }
   }
 
+  /// LiveKit path: answer (the starter is already counted in), enter the room.
+  /// No `call.join` — the roster comes from LiveKit webhooks.
+  Future<void> _joinSfu({
+    required String callId,
+    required String conversationId,
+    required bool isVideo,
+    required bool aiNotetaker,
+    required bool isStarter,
+  }) async {
+    if (!_localRendererReady) {
+      await _localRenderer.initialize();
+      _localRendererReady = true;
+    }
+    state = state.copyWith(
+      callId: callId,
+      conversationId: conversationId,
+      isVideo: isVideo,
+      aiNotetaker: aiNotetaker,
+      isStarter: isStarter,
+      joined: true,
+      micEnabled: true,
+      camEnabled: isVideo,
+      transport: CallTransport.sfu,
+    );
+    if (!isStarter) {
+      ref
+          .read(stompServiceProvider.notifier)
+          .sendRawMessage(destination: '/app/call.accept', body: '{"callId":"$callId"}');
+    }
+    await _sfu.start(callId, isVideo: isVideo);
+    if (isStarter && aiNotetaker) _startStt(callId);
+  }
+
   /// Apply a `call.roster` event. Determines which peers existed before us and
   /// initiates offers to them (mesh glare-avoidance rule).
   Future<void> applyRoster(
@@ -114,6 +183,8 @@ class GroupCallController extends _$GroupCallController {
 
     final present = roster.where((p) => p.isPresent).toList();
     state = state.copyWith(roster: roster);
+    // On LiveKit the room itself adds/removes streams; only the roster is ours.
+    if (state.transport == CallTransport.sfu) return;
 
     // Peers present that we don't yet have a connection to AND that joined
     // before us → we offer to them. We approximate "before us" by joinedAt
@@ -155,6 +226,7 @@ class GroupCallController extends _$GroupCallController {
 
     await _stt.stop();
     await _service.dispose();
+    await _sfu.dispose();
     for (final p in _remotePeers.values) {
       p.renderer.dispose();
     }
@@ -167,6 +239,7 @@ class GroupCallController extends _$GroupCallController {
     if (state.callId != callId) return;
     await _stt.stop();
     await _service.dispose();
+    await _sfu.dispose();
     for (final p in _remotePeers.values) {
       p.renderer.dispose();
     }
@@ -198,14 +271,22 @@ class GroupCallController extends _$GroupCallController {
 
   void toggleMic() {
     final next = !state.micEnabled;
-    _service.setMicEnabled(next);
+    if (state.transport == CallTransport.sfu) {
+      _sfu.setMicEnabled(next);
+    } else {
+      _service.setMicEnabled(next);
+    }
     state = state.copyWith(micEnabled: next);
   }
 
   void toggleCam() {
     if (!state.isVideo) return;
     final next = !state.camEnabled;
-    _service.setCamEnabled(next);
+    if (state.transport == CallTransport.sfu) {
+      _sfu.setCamEnabled(next);
+    } else {
+      _service.setCamEnabled(next);
+    }
     state = state.copyWith(camEnabled: next);
   }
 

@@ -31,7 +31,8 @@ class LiveKitSession implements RtcSession {
 
   @override
   Future<void> connect(String url, String token, {required bool video}) async {
-    final room = Room(roomOptions: const RoomOptions(adaptiveStream: false, dynacast: true));
+    final room = Room(
+        roomOptions: const RoomOptions(adaptiveStream: false, dynacast: true));
     _room = room;
     _leaving = false;
     _wire(room);
@@ -71,7 +72,8 @@ class LiveKitSession implements RtcSession {
   }
 
   @override
-  Future<void> setMic(bool on) async => _room?.localParticipant?.setMicrophoneEnabled(on);
+  Future<void> setMic(bool on) async =>
+      _room?.localParticipant?.setMicrophoneEnabled(on);
 
   @override
   Future<void> setCamera(bool on) async {
@@ -81,7 +83,9 @@ class LiveKitSession implements RtcSession {
 
   @override
   Future<void> switchCamera() async {
-    final track = _room?.localParticipant?.getTrackPublicationBySource(TrackSource.camera)?.track;
+    final track = _room?.localParticipant
+        ?.getTrackPublicationBySource(TrackSource.camera)
+        ?.track;
     if (track != null) await rtc.Helper.switchCamera(track.mediaStreamTrack);
   }
 
@@ -120,7 +124,9 @@ class LiveKitSession implements RtcSession {
       })
       ..on<TrackUnsubscribedEvent>((e) {
         final peer = _peers[e.participant.identity];
-        if (peer != null && peer.stream == e.track.mediaStream) peer.stream = null;
+        if (peer != null && peer.stream == e.track.mediaStream) {
+          peer.stream = null;
+        }
         _emit();
       })
       ..on<TrackMutedEvent>((e) => _mute(e.participant, e.publication, true))
@@ -165,8 +171,8 @@ class LiveKitSession implements RtcSession {
     _emit();
   }
 
-  RtcPeer _ensure(Participant p) =>
-      _peers.putIfAbsent(p.identity, () => RtcPeer(identity: p.identity, name: p.name));
+  RtcPeer _ensure(Participant p) => _peers.putIfAbsent(
+      p.identity, () => RtcPeer(identity: p.identity, name: p.name));
 
   void _refreshLocal() {
     final s = localStream;
@@ -176,8 +182,11 @@ class LiveKitSession implements RtcSession {
   void _emit() => onPeersChanged?.call(peers);
 
   static bool _isPermissionError(Object e) {
-    final text = e is PlatformException ? '${e.code} ${e.message}' : e.toString();
+    final text =
+        e is PlatformException ? '${e.code} ${e.message}' : e.toString();
     final t = text.toLowerCase();
-    return t.contains('permission') || t.contains('notallowed') || t.contains('denied');
+    return t.contains('permission') ||
+        t.contains('notallowed') ||
+        t.contains('denied');
   }
 }

@@ -52,10 +52,12 @@ class CallsRepository implements CallsApi {
 
   @override
   Future<CallToken> getToken(String callId) async {
-    final res = await _dio
-        .post<Map<String, dynamic>>('/api/calls/${Uri.encodeComponent(callId)}/token');
+    final res = await _dio.post<Map<String, dynamic>>(
+        '/api/calls/${Uri.encodeComponent(callId)}/token');
     final data = res.data ?? const {};
-    return CallToken(url: data['url'] as String? ?? '', token: data['token'] as String? ?? '');
+    return CallToken(
+        url: data['url'] as String? ?? '',
+        token: data['token'] as String? ?? '');
   }
 }
 
@@ -64,7 +66,8 @@ final callsRepositoryProvider = Provider<CallsApi>((ref) {
   return CallsRepository(
     DioClient.createChatDio(
       storage,
-      onForceLogout: () => ref.read(authNotifierProvider.notifier).forceLogout(),
+      onForceLogout: () =>
+          ref.read(authNotifierProvider.notifier).forceLogout(),
     ),
   );
 });

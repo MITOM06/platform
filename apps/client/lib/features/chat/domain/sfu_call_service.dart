@@ -31,14 +31,20 @@ class StompCallSignalPort implements CallSignalPort {
   void send(String destination, Map<String, dynamic> body) =>
       _stomp.sendRawMessage(destination: destination, body: jsonEncode(body));
   @override
-  void holdConversation(String conversationId) => _stomp.subscribeConversation(conversationId);
+  void holdConversation(String conversationId) =>
+      _stomp.subscribeConversation(conversationId);
   @override
-  void releaseConversation(String conversationId) => _stomp.unsubscribeConversation(conversationId);
+  void releaseConversation(String conversationId) =>
+      _stomp.unsubscribeConversation(conversationId);
   @override
   Stream<Map<String, dynamic>> get callEvents => _stomp.callEvents;
 }
 
-const _declineReasons = {CallEndReason.declined, CallEndReason.busy, CallEndReason.mediaError};
+const _declineReasons = {
+  CallEndReason.declined,
+  CallEndReason.busy,
+  CallEndReason.mediaError
+};
 
 /// 1-on-1 calls through LiveKit (server `CALL_TRANSPORT=sfu`). Same UX as
 /// [WebRTCService] — ringback, end reasons, call log — but the server rings
@@ -119,11 +125,15 @@ class SfuCallService implements DirectCallEngine {
     required String conversationId,
     required bool isVideo,
   }) async {
-    _reset(targetId: targetId, conversationId: conversationId, isVideo: isVideo);
+    _reset(
+        targetId: targetId, conversationId: conversationId, isVideo: isVideo);
     _incoming = false;
     _pendingStart = true;
     _hold(conversationId);
-    _port.send('/app/call.start', {'conversationId': conversationId, 'media': isVideo ? 'video' : 'audio'});
+    _port.send('/app/call.start', {
+      'conversationId': conversationId,
+      'media': isVideo ? 'video' : 'audio'
+    });
   }
 
   /// Callee: the call screen opened for a ring the user tapped Answer on.
@@ -133,7 +143,8 @@ class SfuCallService implements DirectCallEngine {
     required String callId,
     required bool isVideo,
   }) {
-    _reset(targetId: targetId, conversationId: conversationId, isVideo: isVideo);
+    _reset(
+        targetId: targetId, conversationId: conversationId, isVideo: isVideo);
     _incoming = true;
     _callId = callId;
     _hold(conversationId);
@@ -168,7 +179,9 @@ class SfuCallService implements DirectCallEngine {
             : _pendingStart && signal['conversationId'] == _conversationId;
         if (!sameCall) return;
         final reason = CallEndReason.fromWire(signal['reason'] as String?);
-        if (reason == CallEndReason.busy) onSendCallLog?.call(WebRTCServiceLogs.missed(_isVideo));
+        if (reason == CallEndReason.busy) {
+          onSendCallLog?.call(WebRTCServiceLogs.missed(_isVideo));
+        }
         onEndNotice?.call(reason, true);
         dispose();
       case 'call-ring-cancel':
@@ -179,13 +192,18 @@ class SfuCallService implements DirectCallEngine {
   }
 
   @override
-  Future<void> endCall({int? duration, CallEndReason reason = CallEndReason.hangup}) async {
+  Future<void> endCall(
+      {int? duration, CallEndReason reason = CallEndReason.hangup}) async {
     final callId = _callId;
-    final secs = duration ?? (_mediaSince == null ? 0 : DateTime.now().difference(_mediaSince!).inSeconds);
+    final secs = duration ??
+        (_mediaSince == null
+            ? 0
+            : DateTime.now().difference(_mediaSince!).inSeconds);
     var keepPending = false;
     if (_incoming && !_accepting) {
       if (callId != null) {
-        final why = _declineReasons.contains(reason) ? reason : CallEndReason.declined;
+        final why =
+            _declineReasons.contains(reason) ? reason : CallEndReason.declined;
         _port.send('/app/call.decline', {'callId': callId, 'reason': why.wire});
       }
       onSendCallLog?.call(WebRTCServiceLogs.missed(_isVideo));
@@ -247,7 +265,10 @@ class SfuCallService implements DirectCallEngine {
 
   // ---------------------------------------------------------------------------
 
-  void _reset({required String targetId, required String conversationId, required bool isVideo}) {
+  void _reset(
+      {required String targetId,
+      required String conversationId,
+      required bool isVideo}) {
     _teardown(keepPending: false, notify: false);
     _targetId = targetId;
     _conversationId = conversationId;
@@ -274,7 +295,9 @@ class SfuCallService implements DirectCallEngine {
   }
 
   void _onCallEvent(Map<String, dynamic> e) {
-    if (e['conversationId'] != null && e['conversationId'] != _conversationId) return;
+    if (e['conversationId'] != null && e['conversationId'] != _conversationId) {
+      return;
+    }
     switch (e['event']) {
       case 'call.started':
         _onStarted(e['callId'] as String?, e['transport'] as String?);
@@ -291,8 +314,10 @@ class SfuCallService implements DirectCallEngine {
     final cancelled = _cancelledBeforeStart;
     if (cancelled != null) {
       _cancelledBeforeStart = null;
-      _port.send('/app/call.cancel',
-          {'callId': callId, 'reason': cancelled == CallEndReason.noAnswer ? 'no_answer' : 'hangup'});
+      _port.send('/app/call.cancel', {
+        'callId': callId,
+        'reason': cancelled == CallEndReason.noAnswer ? 'no_answer' : 'hangup'
+      });
       _port.send('/app/call.leave', {'callId': callId});
       _release();
       return;
@@ -346,7 +371,10 @@ class SfuCallService implements DirectCallEngine {
       await session.connect(token.url, token.token, video: _isVideo);
     } catch (e) {
       if (_session != session) return;
-      await endCall(reason: e is MediaAccessException ? CallEndReason.mediaError : CallEndReason.failed);
+      await endCall(
+          reason: e is MediaAccessException
+              ? CallEndReason.mediaError
+              : CallEndReason.failed);
     }
   }
 
@@ -397,12 +425,14 @@ class SfuCallService implements DirectCallEngine {
 
 /// Call-log contents shared with [WebRTCService] (same wire format as web).
 abstract final class WebRTCServiceLogs {
-  static String missed(bool isVideo) => 'system.call.missed:${isVideo ? 'video' : 'voice'}';
+  static String missed(bool isVideo) =>
+      'system.call.missed:${isVideo ? 'video' : 'voice'}';
 }
 
 Future<bool> _probeDeviceMedia(bool video) async {
   try {
-    final stream = await navigator.mediaDevices.getUserMedia({'audio': true, 'video': video});
+    final stream = await navigator.mediaDevices
+        .getUserMedia({'audio': true, 'video': video});
     for (final t in stream.getTracks()) {
       await t.stop();
     }

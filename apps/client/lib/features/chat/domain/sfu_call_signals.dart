@@ -47,7 +47,8 @@ void _ringDirect(Ref ref, Map<String, dynamic> signal) {
     callId: callId,
     ringingCallId: ref.read(incomingCallProvider)?.callId ??
         (ref.read(incomingCallProvider) != null ? '' : null),
-    inCall: ref.read(webRtcServiceProvider).isActive || ref.read(sfuCallServiceProvider).isActive,
+    inCall: ref.read(webRtcServiceProvider).isActive ||
+        ref.read(sfuCallServiceProvider).isActive,
     inGroupCall: ref.read(groupCallControllerProvider).isActive,
   );
   switch (action) {
@@ -56,7 +57,8 @@ void _ringDirect(Ref ref, Map<String, dynamic> signal) {
     case SfuRingAction.replyBusy:
       ref.read(stompServiceProvider.notifier).sendRawMessage(
             destination: '/app/call.decline',
-            body: jsonEncode({'callId': callId, 'reason': CallEndReason.busy.wire}),
+            body: jsonEncode(
+                {'callId': callId, 'reason': CallEndReason.busy.wire}),
           );
     case SfuRingAction.ring:
       ref.read(incomingCallProvider.notifier).set(IncomingCall(

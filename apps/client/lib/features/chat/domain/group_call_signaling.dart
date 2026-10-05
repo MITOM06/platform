@@ -71,6 +71,7 @@ class GroupCallSignaling extends _$GroupCallSignaling {
               startedByName: (signal['startedByName'] ?? '').toString(),
               isVideo: signal['media'] == 'video',
               aiNotetaker: signal['aiNotetaker'] == true,
+              transport: CallTransport.fromWire(signal['transport'] as String?),
             ),
           );
       return;
@@ -111,6 +112,7 @@ class GroupCallSignaling extends _$GroupCallSignaling {
     required String conversationId,
     required bool isVideo,
     required bool aiNotetaker,
+    required CallTransport transport,
   }) async {
     try {
       await controller.join(
@@ -119,6 +121,7 @@ class GroupCallSignaling extends _$GroupCallSignaling {
         isVideo: isVideo,
         aiNotetaker: aiNotetaker,
         isStarter: true,
+        transport: transport,
       );
       ref.read(appRouterProvider).push('/group-call');
     } catch (e) {
@@ -141,13 +144,16 @@ class GroupCallSignaling extends _$GroupCallSignaling {
         final startedBy = data['startedBy'] as String?;
         final convId = data['conversationId'] as String?;
         final active = ref.read(groupCallControllerProvider);
-        if (startedBy == selfId && convId != null && !active.isActive) {
+        // A LiveKit 1-on-1 is run by SfuCallService, never as a group call.
+        final direct = data['kind'] == 'direct';
+        if (!direct && startedBy == selfId && convId != null && !active.isActive) {
           _starterAutoJoin(
             controller,
             callId: callId,
             conversationId: convId,
             isVideo: data['media'] == 'video',
             aiNotetaker: data['aiNotetaker'] == true,
+            transport: CallTransport.fromWire(data['transport'] as String?),
           );
         }
         break;
