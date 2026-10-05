@@ -9,9 +9,9 @@ public interface RtcRoomEventHandler {
   /** True when this handler owns {@code room} (decided by the room-name prefix). */
   boolean supports(String room);
 
-  void onParticipantJoined(String room, String identity);
+  void onParticipantJoined(RtcParticipantEvent event);
 
-  void onParticipantLeft(String room, String identity);
+  void onParticipantLeft(RtcParticipantEvent event);
 
   void onRoomFinished(String room);
 }

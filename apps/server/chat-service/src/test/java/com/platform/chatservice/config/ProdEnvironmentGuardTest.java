@@ -90,14 +90,14 @@ class ProdEnvironmentGuardTest {
   }
 
   @Test
-  @DisplayName("a loopback LiveKit URL or a short secret is rejected")
-  void loopbackUrlAndShortSecretRejected() {
+  @DisplayName("a short secret is rejected even while calls stay on mesh")
+  void shortSecretRejected() {
     Map<String, String> env =
         Map.of(
             "app.livekit.url", "ws://localhost:7880",
             "app.livekit.api-key", "devkey",
             "app.livekit.api-secret", "secret");
-    assertThat(liveKit(env)).hasSize(2);
+    assertThat(liveKit(env)).singleElement().asString().contains("32");
   }
 
   @Test
@@ -110,5 +110,29 @@ class ProdEnvironmentGuardTest {
             "app.livekit.api-key", "APIabc",
             "app.livekit.api-secret", "0123456789abcdef0123456789abcdef");
     assertThat(liveKit(env)).isEmpty();
+  }
+
+  @Test
+  @DisplayName("self-host local test (DOMAIN=localhost) boots while calls stay on mesh")
+  void localhostSelfHostTestBootsOnMesh() {
+    Map<String, String> env =
+        Map.of(
+            "app.livekit.call-transport", "mesh",
+            "app.livekit.url", "wss://rtc.localhost",
+            "app.livekit.api-key", "APIabc",
+            "app.livekit.api-secret", "0123456789abcdef0123456789abcdef");
+    assertThat(liveKit(env)).isEmpty();
+  }
+
+  @Test
+  @DisplayName("calls on sfu with a loopback LiveKit URL still refuse to start")
+  void loopbackUrlRejectedOnSfu() {
+    Map<String, String> env =
+        Map.of(
+            "app.livekit.call-transport", "sfu",
+            "app.livekit.url", "wss://rtc.localhost",
+            "app.livekit.api-key", "APIabc",
+            "app.livekit.api-secret", "0123456789abcdef0123456789abcdef");
+    assertThat(liveKit(env)).singleElement().asString().contains("app.livekit.url");
   }
 }

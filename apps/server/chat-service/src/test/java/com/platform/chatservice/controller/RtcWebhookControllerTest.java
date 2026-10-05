@@ -55,6 +55,9 @@ class RtcWebhookControllerTest {
     assertThat(captor.getValue().event()).isEqualTo("participant_left");
     assertThat(captor.getValue().room().name()).isEqualTo("call_abc");
     assertThat(captor.getValue().participant().identity()).isEqualTo("user-1");
+    // protojson sends int64 as a string
+    assertThat(captor.getValue().createdAt()).isEqualTo(1_700_000_000L);
+    assertThat(captor.getValue().id()).isEqualTo("evt-1");
   }
 
   @Test

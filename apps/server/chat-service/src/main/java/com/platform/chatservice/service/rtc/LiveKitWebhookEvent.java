@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /** The fields of a LiveKit webhook the platform uses; everything else is ignored. */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record LiveKitWebhookEvent(String id, String event, Room room, Participant participant) {
+public record LiveKitWebhookEvent(
+    String id, String event, Long createdAt, Room room, Participant participant) {
 
   public static final String PARTICIPANT_JOINED = "participant_joined";
   public static final String PARTICIPANT_LEFT = "participant_left";

@@ -862,7 +862,7 @@ git commit -m "feat(chat): verify LiveKit webhook signatures and body hash"
 
 **Interfaces:**
 - Consumes: `LiveKitWebhookVerifier.verify`, `LiveKitWebhookEvent` (Task 3).
-- Produces: interface `RtcRoomEventHandler { boolean supports(String room); void onParticipantJoined(String room, String identity); void onParticipantLeft(String room, String identity); void onRoomFinished(String room); }` — `CallService` (plan Calls) và `MeetingService` (plan Meetings P1) cài interface này; `RtcWebhookDispatcher.dispatch(LiveKitWebhookEvent)`; route `POST /api/rtc/livekit/webhook` (ra ngoài qua Caddy: `/api/chat/api/rtc/livekit/webhook`).
+- Produces: interface `RtcRoomEventHandler { boolean supports(String room); void onParticipantJoined(RtcParticipantEvent e); void onParticipantLeft(RtcParticipantEvent e); void onRoomFinished(String room); }` với `record RtcParticipantEvent(String room, String identity, String participantSid, String eventId, Instant createdAt)` *(đổi sau final review 2026-10-05 — xem ledger; code thật là chuẩn, khối code ở Task 4 bên dưới là bản trước review)* — `CallService` (plan Calls) và `MeetingService` (plan Meetings P1) cài interface này; `RtcWebhookDispatcher.dispatch(LiveKitWebhookEvent)`; route `POST /api/rtc/livekit/webhook` (ra ngoài qua Caddy: `/api/chat/api/rtc/livekit/webhook`).
 
 - [ ] **Step 1: Viết test thất bại**
 

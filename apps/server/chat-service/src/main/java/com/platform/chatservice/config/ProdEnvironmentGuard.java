@@ -93,12 +93,15 @@ public class ProdEnvironmentGuard {
     String key = resolver.apply("app.livekit.api-key");
     String secret = resolver.apply("app.livekit.api-secret");
     boolean configured = !isBlank(url) && !isBlank(key) && !isBlank(secret);
-    if ("sfu".equalsIgnoreCase(resolver.apply("app.livekit.call-transport")) && !configured) {
+    boolean sfu = "sfu".equalsIgnoreCase(resolver.apply("app.livekit.call-transport"));
+    if (sfu && !configured) {
       problems.add(
           "CALL_TRANSPORT=sfu but LIVEKIT_URL / LIVEKIT_API_KEY / LIVEKIT_API_SECRET are not all"
               + " set");
     }
-    if (!isBlank(url) && pointsAtLoopback(url)) {
+    // Only fatal once calls depend on it: the self-host kit's documented local test runs with
+    // DOMAIN=localhost, i.e. LIVEKIT_URL=wss://rtc.localhost, and must still boot on mesh.
+    if (sfu && !isBlank(url) && pointsAtLoopback(url)) {
       problems.add(
           "app.livekit.url = " + url + " — clients cannot reach this container; set LIVEKIT_URL");
     }

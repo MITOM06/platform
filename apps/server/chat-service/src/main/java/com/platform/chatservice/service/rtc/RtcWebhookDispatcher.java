@@ -1,5 +1,6 @@
 package com.platform.chatservice.service.rtc;
 
+import java.time.Instant;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -43,17 +44,18 @@ public class RtcWebhookDispatcher {
   }
 
   private void route(RtcRoomEventHandler handler, String room, LiveKitWebhookEvent event) {
-    String identity = event.participant() == null ? null : event.participant().identity();
     try {
       switch (event.event()) {
         case LiveKitWebhookEvent.PARTICIPANT_JOINED -> {
-          if (identity != null) {
-            handler.onParticipantJoined(room, identity);
+          RtcParticipantEvent joined = participantEvent(room, event);
+          if (joined != null) {
+            handler.onParticipantJoined(joined);
           }
         }
         case LiveKitWebhookEvent.PARTICIPANT_LEFT -> {
-          if (identity != null) {
-            handler.onParticipantLeft(room, identity);
+          RtcParticipantEvent left = participantEvent(room, event);
+          if (left != null) {
+            handler.onParticipantLeft(left);
           }
         }
         case LiveKitWebhookEvent.ROOM_FINISHED -> handler.onRoomFinished(room);
@@ -64,5 +66,17 @@ public class RtcWebhookDispatcher {
     } catch (RuntimeException e) {
       log.error("LiveKit webhook {} for room {} failed", event.event(), room, e);
     }
+  }
+
+  private static RtcParticipantEvent participantEvent(String room, LiveKitWebhookEvent event) {
+    if (event.participant() == null || event.participant().identity() == null) {
+      return null;
+    }
+    return new RtcParticipantEvent(
+        room,
+        event.participant().identity(),
+        event.participant().sid(),
+        event.id(),
+        event.createdAt() == null ? null : Instant.ofEpochSecond(event.createdAt()));
   }
 }
