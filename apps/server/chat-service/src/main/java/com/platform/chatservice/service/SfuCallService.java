@@ -9,7 +9,10 @@ import com.platform.chatservice.model.CallSession;
 import com.platform.chatservice.repository.UserBlockRepository;
 import com.platform.chatservice.service.rtc.LiveKitTokenService;
 import com.platform.chatservice.service.rtc.RtcGrant;
+import com.platform.chatservice.service.rtc.RtcParticipantEvent;
+import com.platform.chatservice.service.rtc.RtcRoomEventHandler;
 import com.platform.chatservice.service.rtc.RtcRooms;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,14 +29,15 @@ import org.springframework.stereotype.Service;
 
 /**
  * Calls on the LiveKit (sfu) path: answering, declining and cancelling a ringing call. The session
- * lifecycle itself stays in {@link CallService}; mesh sessions are never touched here.
+ * lifecycle itself stays in {@link CallService}; mesh sessions are never touched here. LiveKit
+ * webhooks for {@code call_*} rooms land here and are the source of truth for who is in a call.
  *
  * <p>Contract: {@code docs/superpowers/plans/2026-10-05-calls-on-livekit.md}.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SfuCallService {
+public class SfuCallService implements RtcRoomEventHandler {
 
   private static final Set<String> DECLINE_REASONS = Set.of("declined", "busy", "media_error");
   private static final Set<String> CANCEL_REASONS = Set.of("hangup", "no_answer");
@@ -158,6 +162,82 @@ public class SfuCallService {
     } catch (JsonProcessingException e) {
       return null;
     }
+  }
+
+  // ---- LiveKit webhooks (room call_{callId}) ----
+
+  @Override
+  public boolean supports(String room) {
+    return room.startsWith(RtcRooms.CALL_PREFIX);
+  }
+
+  @Override
+  public void onParticipantJoined(RtcParticipantEvent e) {
+    sfuSessionForRoom(e.room())
+        .ifPresent(
+            s -> {
+              CallSession.Participant p = participant(s, e.identity());
+              if (p == null) {
+                p = CallSession.Participant.builder().userId(e.identity()).build();
+                s.getParticipants().add(p);
+              }
+              if (p.getJoinedAt() == null) {
+                p.setJoinedAt(e.createdAt() == null ? Instant.now() : e.createdAt());
+              }
+              p.setLeftAt(null);
+              p.setSid(e.participantSid());
+              calls.save(s);
+              calls.broadcastRoster(s);
+              busy.markBusy(e.identity(), s.getCallId());
+            });
+  }
+
+  @Override
+  public void onParticipantLeft(RtcParticipantEvent e) {
+    sfuSessionForRoom(e.room())
+        .ifPresent(
+            s -> {
+              CallSession.Participant p = participant(s, e.identity());
+              if (p == null || p.getLeftAt() != null) {
+                return; // unknown, or already left through call.leave
+              }
+              if (p.getSid() != null
+                  && e.participantSid() != null
+                  && !p.getSid().equals(e.participantSid())) {
+                return; // an older session, kicked when they rejoined from another device
+              }
+              p.setLeftAt(Instant.now());
+              calls.save(s);
+              calls.broadcastRoster(s);
+              busy.clear(e.identity(), s.getCallId());
+              if ("direct".equals(s.getKind())) {
+                // Gone without hanging up: dropped connection or killed app.
+                calls.endCall(s.getCallId(), "failed");
+              } else if (s.getParticipants().stream().allMatch(x -> x.getLeftAt() != null)) {
+                calls.endCall(s.getCallId(), "hangup");
+              }
+            });
+  }
+
+  @Override
+  public void onRoomFinished(String room) {
+    String callId = RtcRooms.idOf(room, RtcRooms.CALL_PREFIX);
+    if (callId != null) {
+      calls.endCall(callId, "hangup");
+    }
+  }
+
+  private Optional<CallSession> sfuSessionForRoom(String room) {
+    return calls
+        .activeSession(RtcRooms.idOf(room, RtcRooms.CALL_PREFIX))
+        .filter(CallService::isSfu);
+  }
+
+  private static CallSession.Participant participant(CallSession s, String userId) {
+    return s.getParticipants().stream()
+        .filter(p -> userId.equals(p.getUserId()))
+        .findFirst()
+        .orElse(null);
   }
 
   private Optional<CallSession> sfuSessionFor(String userId, String callId) {
