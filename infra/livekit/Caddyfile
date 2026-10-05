@@ -1,0 +1,8 @@
+{
+	email {$ACME_EMAIL}
+}
+
+# Signalling + server API. Media goes straight to the host on UDP/TCP.
+{$LIVEKIT_DOMAIN} {
+	reverse_proxy 127.0.0.1:7880
+}

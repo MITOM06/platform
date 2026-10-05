@@ -104,6 +104,12 @@ services:
       ALLOWED_ORIGINS: ${WEB_ORIGIN:?required}
       BOTFACTORY_BASE_URL: ${BOTFACTORY_BASE_URL:-}
       BOTFACTORY_WORKER_TOKEN: ${BOTFACTORY_WORKER_TOKEN:-}
+      # LiveKit media host (infra/livekit/, runbook docs/superpowers/runbooks/livekit.md).
+      # Blank = calls stay peer-to-peer and meetings report unavailable.
+      LIVEKIT_URL: ${LIVEKIT_URL:-}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-}
+      CALL_TRANSPORT: ${CALL_TRANSPORT:-mesh}
       MAIL_HOST: ${MAIL_HOST:-}
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USER: ${MAIL_USER:-}
@@ -225,6 +231,11 @@ services:
     # The choice cannot be made here with `sh -c`: the cloudflared image is
     # distroless and has no shell.
     command: ${CF_TUNNEL_COMMAND:-tunnel --no-autoupdate --protocol http2 --url http://caddy:80}
+    environment:
+      # Dial the Cloudflare edge over IPv4 only. app-net has no IPv6, but after a
+      # network blip cloudflared can fall back to IPv6 edges and then loop on
+      # "network is unreachable" forever (Error 1033, 2026-09-28).
+      TUNNEL_EDGE_IP_VERSION: "4"
     depends_on:
       - caddy
     networks: [app-net]

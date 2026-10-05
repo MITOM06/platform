@@ -1,0 +1,52 @@
+# LiveKit on its own host — for deployments whose API host cannot take UDP
+# (the Mac mini behind Cloudflare Tunnel). Runbook: docs/superpowers/runbooks/livekit.md
+#
+#   cp .env.livekit.example .env.livekit   # fill it in
+#   docker compose -f compose.livekit.yml --env-file .env.livekit up -d
+name: pon-livekit
+
+services:
+  # Host networking: WebRTC needs the host's public IP and a wide UDP range.
+  livekit:
+    image: livekit/livekit-server:v1.8
+    network_mode: host
+    environment:
+      LIVEKIT_CONFIG: |
+        port: 7880
+        rtc:
+          tcp_port: 7881
+          port_range_start: 50000
+          port_range_end: 60000
+          use_external_ip: true
+        turn:
+          enabled: true
+          domain: ${LIVEKIT_DOMAIN:?set LIVEKIT_DOMAIN, e.g. rtc.example.com}
+          udp_port: 3478
+        keys:
+          ${LIVEKIT_API_KEY:?required}: ${LIVEKIT_API_SECRET:?required, 32+ chars}
+        webhook:
+          api_key: ${LIVEKIT_API_KEY:?required}
+          urls:
+            - ${LIVEKIT_WEBHOOK_URL:?set to https://<api host>/api/chat/api/rtc/livekit/webhook}
+        room:
+          auto_create: true
+          max_participants: 25
+          empty_timeout: 300
+    restart: unless-stopped
+
+  # TLS for signalling (wss://LIVEKIT_DOMAIN) — automatic Let's Encrypt.
+  caddy:
+    image: caddy:2
+    network_mode: host
+    environment:
+      LIVEKIT_DOMAIN: ${LIVEKIT_DOMAIN:?required}
+      ACME_EMAIL: ${ACME_EMAIL:?required for Let's Encrypt}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

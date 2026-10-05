@@ -94,6 +94,16 @@ app:
     # Leave blank to disable the bridge (graceful no-op).
     base-url: ${BOTFACTORY_BASE_URL:}
     worker-token: ${BOTFACTORY_WORKER_TOKEN:}
+  livekit:
+    # Media server for calls and meetings
+    # (docs/superpowers/specs/2026-10-05-calls-and-meetings-design.md).
+    # Blank url/key/secret = LiveKit off: calls stay P2P, meetings are unavailable.
+    url: ${LIVEKIT_URL:}
+    api-url: ${LIVEKIT_API_URL:}
+    api-key: ${LIVEKIT_API_KEY:}
+    api-secret: ${LIVEKIT_API_SECRET:}
+    # mesh (P2P, default) | sfu (through LiveKit). Rollback = set back to mesh.
+    call-transport: ${CALL_TRANSPORT:mesh}
   connector:
     # Internal connector-service (:3003) — issues/revokes the MCP session token a member's
     # Bot Factory assistant authenticates with. Leave blank to disable BotFather Zone provisioning.

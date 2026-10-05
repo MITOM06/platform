@@ -16,6 +16,17 @@ each has its own compose file and its own env template.
 | Data tier | containers on this machine | Atlas · Upstash · CloudAMQP · Qdrant Cloud | containers in the same stack |
 | Web app | `next dev`, `.env.development.local` | Vercel, `NEXT_PUBLIC_API_BASE` | served by Caddy, no variable needed |
 | Mobile | `--dart-define=PON_CHAT_URL=http://…` | `--dart-define=PON_DOMAIN=<host>` | `--dart-define=PON_DOMAIN=<domain>` |
+| LiveKit (calls + meetings) | container `livekit` on `dev` (`ws://localhost:7880`) | separate media host, `infra/livekit/` (the tunnel carries no UDP) | `livekit` service in `compose.prod.yml` (`wss://rtc.<DOMAIN>`) |
+
+## Calls and meetings — LiveKit
+
+`CALL_TRANSPORT` picks the media path for calls: `mesh` (peer-to-peer, the
+default) or `sfu` (through LiveKit, works behind 4G and corporate NAT).
+Rollback is setting it back to `mesh`. Meetings always use LiveKit. chat-service
+reads `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` (32+ characters) and
+optionally `LIVEKIT_API_URL`; all blank means calls stay peer-to-peer and
+meetings report themselves unavailable. Runbooks:
+`docs/superpowers/runbooks/livekit.md`, `docs/superpowers/runbooks/self-host.md`.
 
 ## The one variable
 
