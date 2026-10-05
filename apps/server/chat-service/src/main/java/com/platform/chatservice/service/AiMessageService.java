@@ -61,8 +61,24 @@ public class AiMessageService {
       String content,
       AiTraceData trace,
       List<PendingAction> pendingActions) {
+    return persistAiMessage(conversationId, content, trace, pendingActions, null);
+  }
+
+  /** Same, also recording the ai-service {@code replyId} the streamed reply was published under. */
+  public MessageResponse persistAiMessage(
+      String conversationId,
+      String content,
+      AiTraceData trace,
+      List<PendingAction> pendingActions,
+      String aiReplyId) {
     return persist(
-        conversationId, AiConstants.AI_BOT_USER_ID, content, "ai", trace, pendingActions);
+        conversationId,
+        AiConstants.AI_BOT_USER_ID,
+        content,
+        "ai",
+        trace,
+        pendingActions,
+        aiReplyId);
   }
 
   /**
@@ -76,7 +92,7 @@ public class AiMessageService {
 
   private MessageResponse persistAndBroadcast(
       String conversationId, String senderId, String content, String type, AiTraceData trace) {
-    MessageResponse response = persist(conversationId, senderId, content, type, trace, null);
+    MessageResponse response = persist(conversationId, senderId, content, type, trace, null, null);
     clusterBroker.convertAndSend("/topic/conversation/" + conversationId, response);
     return response;
   }
@@ -87,7 +103,8 @@ public class AiMessageService {
       String content,
       String type,
       AiTraceData trace,
-      List<PendingAction> pendingActions) {
+      List<PendingAction> pendingActions,
+      String aiReplyId) {
     Message message =
         messageRepository.save(
             Message.builder()
@@ -101,6 +118,7 @@ public class AiMessageService {
                     pendingActions == null || pendingActions.isEmpty()
                         ? null
                         : new ArrayList<>(pendingActions))
+                .aiReplyId(aiReplyId)
                 .build());
 
     Instant savedAt = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();

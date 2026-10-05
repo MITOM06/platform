@@ -78,6 +78,12 @@ public class Message {
    */
   private List<PendingAction> pendingActions;
 
+  /**
+   * The ai-service stream id ({@code replyId}) this AI message was produced by — lets clients swap
+   * their streaming placeholder for the persisted message exactly. Null on every other message.
+   */
+  private String aiReplyId;
+
   @CreatedDate private Instant createdAt;
 
   @Data

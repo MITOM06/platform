@@ -210,7 +210,13 @@ public class AiResponseListener implements MessageListener {
     }
     MessageResponse saved = null;
     try {
-      saved = messageService.persistAiMessage(convId, fullContent, trace, pendingActions);
+      saved =
+          messageService.persistAiMessage(
+              convId,
+              fullContent,
+              trace,
+              pendingActions,
+              replyId != null ? replyId.toString() : null);
       // An action confirmed from the AI_ACTION_PENDING card while this reply was still streaming
       // resolved before the message existed — apply that outcome now.
       saved = pendingActionService.reconcile(saved);

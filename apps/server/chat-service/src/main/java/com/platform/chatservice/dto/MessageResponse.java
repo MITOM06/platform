@@ -24,7 +24,42 @@ public record MessageResponse(
     boolean recalled,
     Instant editedAt,
     List<String> mentions,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) List<PendingActionDto> pendingActions) {
+    @JsonInclude(JsonInclude.Include.NON_EMPTY) List<PendingActionDto> pendingActions,
+    // ai-service stream replyId of an AI reply (null otherwise) — exact placeholder swap.
+    @JsonInclude(JsonInclude.Include.NON_NULL) String aiReplyId) {
+
+  public MessageResponse(
+      String id,
+      String conversationId,
+      String senderId,
+      String content,
+      String type,
+      List<String> readBy,
+      Instant createdAt,
+      String replyToId,
+      ReplyPreviewDto replyPreview,
+      List<ReactionDto> reactions,
+      boolean recalled,
+      Instant editedAt,
+      List<String> mentions,
+      List<PendingActionDto> pendingActions) {
+    this(
+        id,
+        conversationId,
+        senderId,
+        content,
+        type,
+        readBy,
+        createdAt,
+        replyToId,
+        replyPreview,
+        reactions,
+        recalled,
+        editedAt,
+        mentions,
+        pendingActions,
+        null);
+  }
 
   /** Constructor without {@code pendingActions} (every non-AI message). */
   public MessageResponse(

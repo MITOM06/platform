@@ -359,6 +359,17 @@ public class MessageService {
     return aiMessageService.persistAiMessage(conversationId, content, trace, pendingActions);
   }
 
+  /** Same, recording the ai-service stream {@code replyId} on the saved message. */
+  public MessageResponse persistAiMessage(
+      String conversationId,
+      String content,
+      AiTraceData trace,
+      List<PendingAction> pendingActions,
+      String aiReplyId) {
+    return aiMessageService.persistAiMessage(
+        conversationId, content, trace, pendingActions, aiReplyId);
+  }
+
   /**
    * Returns the AI trace for a message. Throws 404 if message not found or trace is null (regular
    * non-AI messages have no trace).

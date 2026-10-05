@@ -43,7 +43,8 @@ public class MessageMapper {
         m.isRecalled(),
         m.getEditedAt(),
         m.getMentions() == null ? List.of() : m.getMentions(),
-        pendingActions(m.getPendingActions()));
+        pendingActions(m.getPendingActions()),
+        m.getAiReplyId());
   }
 
   /** {@code null} (omitted from the JSON) unless the message carries pending AI actions. */
