@@ -44,4 +44,7 @@ public class WebRTCSignalDto {
 
   /** Ring payload: "mesh" | "sfu" — which media path this call uses. */
   private String transport;
+
+  /** Ring payload: "direct" (1-on-1, Messenger-style UI) | "group". */
+  private String kind;
 }

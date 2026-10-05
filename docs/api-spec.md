@@ -545,10 +545,10 @@ for the whole call; `mesh` (default) keeps the routes above unchanged.
 
 **Server sends**
 
-- `/topic/conversation/{id}`: `call.started` adds `transport` and `livekitUrl`; `call.roster`
+- `/topic/conversation/{id}`: `call.started` adds `transport`, `kind` (`direct | group`) and `livekitUrl`; `call.roster`
   comes from LiveKit webhooks; `call.ended` adds `reason`
   (`hangup | declined | busy | no_answer | media_error | failed`).
-- `/user/queue/webrtc`: `call-ring` adds `transport`; new `call-ring-cancel { callId, reason }`
+- `/user/queue/webrtc`: `call-ring` adds `transport` and `kind` (`direct` ⇒ Messenger-style 1-on-1 UI, `group`); new `call-ring-cancel { callId, reason }`
   (to every session of the callee: `answered_elsewhere`, `declined`, or the caller's
   `hangup | no_answer`); new `call-declined { callId, conversationId, reason, senderId }` to the
   caller (`callId` is null when the callee was already busy and no call was created).

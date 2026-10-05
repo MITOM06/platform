@@ -47,6 +47,9 @@ public class CallEventDto {
   /** call.started: "mesh" | "sfu". */
   private String transport;
 
+  /** call.started: "direct" | "group". */
+  private String kind;
+
   /** call.started on sfu: the wss:// URL clients connect to. */
   private String livekitUrl;
 

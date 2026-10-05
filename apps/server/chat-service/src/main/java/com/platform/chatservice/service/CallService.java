@@ -160,6 +160,7 @@ public class CallService {
             .startedByName(session.getStartedByName())
             .participants(toParticipantDtos(session))
             .transport(session.getTransport())
+            .kind(session.getKind())
             .livekitUrl(isSfu(session) ? liveKitProperties.getUrl() : null)
             .build();
     broadcastToConversation(session.getConversationId(), event);
@@ -185,6 +186,7 @@ public class CallService {
               .media(session.getMedia())
               .aiNotetaker(session.isAiNotetaker())
               .transport(session.getTransport())
+              .kind(session.getKind())
               .build();
       clusterBroker.convertAndSendToUser(memberId, WEBRTC_QUEUE, ring);
     }

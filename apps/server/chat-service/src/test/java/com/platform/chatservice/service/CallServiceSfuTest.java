@@ -333,4 +333,14 @@ class CallServiceSfuTest {
     assertThat(broadcast("conv"))
         .noneSatisfy(e -> assertThat(e.getEvent()).isEqualTo("call.ended"));
   }
+
+  @Test
+  void ringAndStartedTellClientsWhetherItIsADirectOrGroupCall() {
+    conversation("conv", "alice", "bob");
+
+    service.startCall("alice", "conv", "audio", false);
+
+    assertThat(sentTo("bob").get(0).getKind()).isEqualTo("direct");
+    assertThat(broadcast("conv").get(0).getKind()).isEqualTo("direct");
+  }
 }
