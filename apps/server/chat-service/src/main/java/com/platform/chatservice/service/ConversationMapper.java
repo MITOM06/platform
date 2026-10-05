@@ -66,7 +66,8 @@ public class ConversationMapper {
         isBlocked,
         muteExpiresAt,
         c.getPendingMembers() != null ? c.getPendingMembers() : List.of(),
-        c.getAutoDeleteSeconds() != null ? c.getAutoDeleteEnabledAt() : null);
+        c.getAutoDeleteSeconds() != null ? c.getAutoDeleteEnabledAt() : null,
+        c.getDepartmentId());
   }
 
   private List<ConversationResponse.PinnedMessageDto> resolvePinnedMessages(Conversation c) {

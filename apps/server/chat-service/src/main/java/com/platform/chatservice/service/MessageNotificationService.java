@@ -97,7 +97,10 @@ public class MessageNotificationService {
               "senderId", senderId,
               "senderName", senderDisplayName,
               "content", content,
-              "messageType", type);
+              "messageType", type,
+              // Lets clients update the list row in place instead of refetching it.
+              "messageId", response.id() != null ? response.id() : "",
+              "createdAt", response.createdAt() != null ? response.createdAt().toString() : "");
       clusterBroker.convertAndSendToUser(participantId, "/queue/notifications", notification);
 
       if (!muted) {

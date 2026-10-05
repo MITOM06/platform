@@ -36,7 +36,10 @@ public record ConversationResponse(
     @JsonInclude(JsonInclude.Include.NON_NULL) Boolean isBlocked,
     @JsonInclude(JsonInclude.Include.NON_NULL) Long muteExpiresAt,
     List<String> pendingMembers,
-    @JsonInclude(JsonInclude.Include.NON_NULL) Instant autoDeleteEnabledAt) {
+    @JsonInclude(JsonInclude.Include.NON_NULL) Instant autoDeleteEnabledAt,
+    // Department of a department group (shared field). Lets clients disable the
+    // public-channel switch up front: a department group can never be public.
+    @JsonInclude(JsonInclude.Include.NON_NULL) String departmentId) {
 
   /**
    * Preview of the newest message. {@code messageId}, {@code type} and {@code recalled} are
@@ -79,6 +82,7 @@ public record ConversationResponse(
         null,
         null,
         pendingMembers,
-        autoDeleteEnabledAt);
+        autoDeleteEnabledAt,
+        departmentId);
   }
 }

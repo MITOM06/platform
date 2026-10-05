@@ -81,4 +81,16 @@ class ConversationMapperTest {
         .isEmpty();
     verifyNoInteractions(repository);
   }
+
+  @Test
+  void departmentId_isExposed_andKeptInTheSharedView() {
+    MessageRepository repository = mock(MessageRepository.class);
+    Conversation c =
+        Conversation.builder().id("c1").participants(List.of("u1")).departmentId("d1").build();
+
+    ConversationResponse view = new ConversationMapper(repository).toResponse(c, "u1", 0L);
+
+    assertThat(view.departmentId()).isEqualTo("d1");
+    assertThat(view.withoutViewerState().departmentId()).isEqualTo("d1");
+  }
 }
