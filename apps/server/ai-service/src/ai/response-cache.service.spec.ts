@@ -40,32 +40,41 @@ describe('ResponseCacheService', () => {
   it('is disabled by default (returns null, no store)', async () => {
     const svc = new ResponseCacheService(makeRedis(), makeConfig({ 'config.cache.responseCacheEnabled': false }));
     expect(svc.isEnabled).toBe(false);
-    await svc.store('c1', [1, 0], 'answer');
-    expect(await svc.lookup('c1', [1, 0])).toBeNull();
+    await svc.store('c1', 'u1', [1, 0], 'answer');
+    expect(await svc.lookup('c1', 'u1', [1, 0])).toBeNull();
   });
 
   it('returns a stored answer for a near-identical query above threshold', async () => {
     const svc = new ResponseCacheService(makeRedis(), makeConfig());
-    await svc.store('c1', [1, 0, 0], 'the answer');
+    await svc.store('c1', 'u1', [1, 0, 0], 'the answer');
     // Almost identical direction → cosine ≈ 1 ≥ 0.97.
-    expect(await svc.lookup('c1', [0.999, 0.01, 0])).toBe('the answer');
+    expect(await svc.lookup('c1', 'u1', [0.999, 0.01, 0])).toBe('the answer');
   });
 
   it('does NOT return for a dissimilar query below threshold', async () => {
     const svc = new ResponseCacheService(makeRedis(), makeConfig());
-    await svc.store('c1', [1, 0, 0], 'the answer');
-    expect(await svc.lookup('c1', [0, 1, 0])).toBeNull();
+    await svc.store('c1', 'u1', [1, 0, 0], 'the answer');
+    expect(await svc.lookup('c1', 'u1', [0, 1, 0])).toBeNull();
   });
 
   it('scopes by conversation', async () => {
     const svc = new ResponseCacheService(makeRedis(), makeConfig());
-    await svc.store('c1', [1, 0], 'a1');
-    expect(await svc.lookup('c2', [1, 0])).toBeNull();
+    await svc.store('c1', 'u1', [1, 0], 'a1');
+    expect(await svc.lookup('c2', 'u1', [1, 0])).toBeNull();
+  });
+
+  it('scopes by requester: in a group, Bob is never served the answer built for Alice', async () => {
+    const redis = makeRedis();
+    const svc = new ResponseCacheService(redis, makeConfig());
+    await svc.store('group-1', 'alice', [1, 0], "Alice's personalised answer");
+    expect(await svc.lookup('group-1', 'bob', [1, 0])).toBeNull();
+    expect(await svc.lookup('group-1', 'alice', [1, 0])).toBe("Alice's personalised answer");
+    expect((redis.set as jest.Mock).mock.calls[0][0]).toBe('ai:respcache:group-1:alice');
   });
 
   it('treats entries past the TTL as misses', async () => {
     const svc = new ResponseCacheService(makeRedis(), makeConfig({ 'config.cache.responseCacheTtlSec': 0 }));
-    await svc.store('c1', [1, 0], 'a1');
-    expect(await svc.lookup('c1', [1, 0])).toBeNull();
+    await svc.store('c1', 'u1', [1, 0], 'a1');
+    expect(await svc.lookup('c1', 'u1', [1, 0])).toBeNull();
   });
 });

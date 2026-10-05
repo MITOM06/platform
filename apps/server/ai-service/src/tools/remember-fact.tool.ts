@@ -56,7 +56,7 @@ export class RememberFactTool {
 
     // Preserve the existing conversation summary + turn count so writing a fact
     // never wipes the summary or resets the message-count badge shown in the UI.
-    const existing = await this.memoryService.getMemory(ctx.conversationId);
+    const existing = await this.memoryService.getMemory(ctx.conversationId, ctx.userId);
     const stored = await this.memoryService.addFacts(
       ctx.conversationId,
       ctx.userId,

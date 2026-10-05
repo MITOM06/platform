@@ -30,3 +30,34 @@ describe('MemoryVectorService — per-user scope', () => {
     expect(filter.must).toEqual([{ key: 'userId', match: { value: 'u1' } }]);
   });
 });
+
+describe('MemoryVectorService — memory delete scope', () => {
+  function svcWithDelete(deleteImpl: jest.Mock) {
+    const s = new MemoryVectorService({ get: () => undefined } as any);
+    (s as any).client = { getCollection: jest.fn().mockResolvedValue({}), delete: deleteImpl };
+    (s as any).ensured = true;
+    return s;
+  }
+
+  it("deleteUserConversation filters by BOTH userId and conversationId (other members' facts survive)", async () => {
+    const del = jest.fn().mockResolvedValue({});
+    const s = svcWithDelete(del);
+
+    await expect(s.deleteUserConversation('u1', 'group-1')).resolves.toBe(true);
+
+    expect(del).toHaveBeenCalledWith('ai_memory', {
+      wait: true,
+      filter: {
+        must: [
+          { key: 'userId', match: { value: 'u1' } },
+          { key: 'conversationId', match: { value: 'group-1' } },
+        ],
+      },
+    });
+  });
+
+  it('deleteUserConversation reports failure instead of throwing', async () => {
+    const s = svcWithDelete(jest.fn().mockRejectedValue(new Error('qdrant down')));
+    await expect(s.deleteUserConversation('u1', 'c1')).resolves.toBe(false);
+  });
+});

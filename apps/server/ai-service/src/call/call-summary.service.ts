@@ -8,6 +8,7 @@ import { REDIS_PUBLISHER } from '../redis/redis.constants';
 import { RedisPublisherService } from '../redis/redis-publisher.service';
 import { CallSession, CallSessionDocument } from './call-session.schema';
 import { User, UserDocument } from './user.schema';
+import { UsageService } from '../usage/usage.service';
 
 /** Redis pub/sub channel chat-service publishes to request a summary. */
 export const CALL_SUMMARIZE_CHANNEL = 'call:summarize';
@@ -44,6 +45,8 @@ export class CallSummaryService {
   private readonly logger = new Logger(CallSummaryService.name);
   private readonly anthropic: Anthropic;
   private readonly model: string;
+  /** Notetaker summaries are a workspace feature: tokens go on the bot user, not a member's quota. */
+  private readonly botUserId: string;
 
   constructor(
     @Inject(REDIS_PUBLISHER) private readonly redis: Redis,
@@ -53,12 +56,15 @@ export class CallSummaryService {
     private readonly userModel: Model<UserDocument>,
     private readonly publisher: RedisPublisherService,
     private readonly configService: ConfigService,
+    private readonly usageService?: UsageService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
     });
     // Reuse the configured primary model (Opus 4.8 by default).
     this.model = this.configService.get<string>('config.anthropic.model') ?? 'claude-opus-4-8';
+    this.botUserId =
+      this.configService.get<string>('config.bot.userId') ?? 'ai-bot-000000000000000000000001';
   }
 
   /**
@@ -275,6 +281,7 @@ export class CallSummaryService {
         system,
         messages: [{ role: 'user', content: `Transcript:\n\n${transcript}` }],
       });
+      this.usageService?.recordModelCall(this.botUserId, res.usage, 'call-summary');
       const text = res.content
         .filter((b): b is Anthropic.TextBlock => b.type === 'text')
         .map((b) => b.text)

@@ -123,9 +123,15 @@ export class ContextBuilderService {
         const relevant = await this.reranker.refine(queryText, gated, this.topK);
 
         if (relevant.length > 0) {
-          relevant.forEach((r) =>
-            ragSources.push({ documentId: r.documentId, fileName: '', score: r.score }),
-          );
+          // One source per DOCUMENT, numbered in first-appearance order; every
+          // chunk of a document carries that document's number. `ragSources[N-1]`
+          // is then exactly what `[Source N]` refers to — the clients dedupe chips
+          // by documentId, so per-chunk entries shifted every later number.
+          for (const r of relevant) {
+            const existing = ragSources.find((s) => s.documentId === r.documentId);
+            if (existing) existing.score = Math.max(existing.score, r.score);
+            else ragSources.push({ documentId: r.documentId, fileName: '', score: r.score });
+          }
           // Enrich each source with its display filename so clients can render
           // clickable citations. Fail-soft: on lookup failure fileName stays ''.
           const fileNames = await this.kbProcessor.getFileNames(
@@ -134,11 +140,13 @@ export class ContextBuilderService {
           ragSources.forEach((s) => {
             s.fileName = fileNames.get(s.documentId) ?? '';
           });
+          const numberOf = (documentId: string) =>
+            ragSources.findIndex((s) => s.documentId === documentId) + 1;
           // Fence the document chunks as untrusted data (spotlighting); keep the
           // citation/grounding directive OUTSIDE the fence as trusted guidance.
           const fenced = wrapUntrusted(
             'Knowledge Base Context',
-            relevant.map((r, i) => `[Source ${i + 1}] ${r.text}`).join('\n\n'),
+            relevant.map((r) => `[Source ${numberOf(r.documentId)}] ${r.text}`).join('\n\n'),
           );
           parts.push(
             fenced +

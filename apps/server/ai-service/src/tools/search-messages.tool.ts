@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 import { ToolContext, ToolDefinition } from './tool.interface';
+import { resolveDisplayNames, UNKNOWN_MEMBER_LABEL } from '../common/user-names';
 
 @Injectable()
 export class SearchMessagesTool {
@@ -22,14 +23,17 @@ export class SearchMessagesTool {
   constructor(@InjectConnection() private readonly connection: Connection) {}
 
   async execute(input: Record<string, unknown>, ctx: ToolContext): Promise<string> {
-    const query = input['query'] as string;
+    const query = String(input['query'] ?? '');
     const limit = Math.min((input['limit'] as number | undefined) ?? 5, 10);
+    // Literal match: a model-written query like "C++" or "(urgent" is not a regex
+    // (it threw, and a crafted pattern could backtrack catastrophically).
+    const literal = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
     const messages = this.connection.collection('messages');
     const results = await messages
       .find({
         conversationId: ctx.conversationId,
-        content: { $regex: query, $options: 'i' },
+        content: { $regex: literal, $options: 'i' },
         type: { $in: ['text', 'ai'] },
         recalled: { $ne: true },
       })
@@ -41,15 +45,13 @@ export class SearchMessagesTool {
       return `No messages found matching '${query}'`;
     }
 
-    const users = this.connection.collection('users');
-    const senderIds = [...new Set(results.map((m) => m['senderId'] as string))];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userDocs = await users.find({ _id: { $in: senderIds } } as any).toArray();
-    const nameMap = new Map(userDocs.map((u) => [String(u['_id']), u['displayName'] as string]));
+    const senderIds = [...new Set(results.map((m) => String(m['senderId'] ?? '')))];
+    const nameMap = await resolveDisplayNames(this.connection, senderIds);
 
+    // Never hand the model a raw user id — it would repeat it in the chat.
     const formatted = results.map((m) => ({
       content: m['content'],
-      senderDisplayName: nameMap.get(m['senderId'] as string) ?? m['senderId'],
+      senderDisplayName: nameMap.get(String(m['senderId'] ?? '')) ?? UNKNOWN_MEMBER_LABEL,
       createdAt: m['createdAt'],
     }));
 

@@ -1,35 +1,40 @@
-/**
- * Local-time date helpers for the daily-digest cron (TASK-11). Single-tenant
- * deployment ⇒ "local" is the server/workspace timezone (per-user timezone is a
- * documented follow-up). Extracted as pure functions so the idempotency-key and
- * window math are unit-testable without a running clock.
- */
-
-/** `YYYY-MM-DD` in LOCAL time for the given date. */
-export function localYmd(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-/** Local midnight (00:00:00.000) of the day `now` falls in. */
-export function startOfLocalDay(now: Date): Date {
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-}
+import { startOfDayIn, wallClockIn, wallClockToUtc, ymdIn } from '../common/time-zone';
 
 /**
- * The [start, end) window for "yesterday" relative to `now`, plus its
- * `YYYY-MM-DD` digestDate key. `start` = yesterday 00:00 local, `end` = today
- * 00:00 local.
+ * Date helpers for the daily-digest cron (TASK-11), evaluated in the workspace
+ * time zone (`AI_TIMEZONE`). One deployment = one company = one zone. They used
+ * container-local time, which is UTC in production: the digest fired at the
+ * configured hour UTC and summarized a UTC day. Pure functions so the
+ * idempotency key and window math are unit-testable without a running clock.
  */
-export function yesterdayWindow(now: Date): {
-  start: Date;
-  end: Date;
-  digestDate: string;
-} {
-  const end = startOfLocalDay(now);
-  const start = new Date(end);
-  start.setDate(start.getDate() - 1);
-  return { start, end, digestDate: localYmd(start) };
+
+/** `YYYY-MM-DD` of the day `d` falls on in `timeZone`. */
+export function localYmd(d: Date, timeZone: string): string {
+  return ymdIn(d, timeZone);
+}
+
+/** The hour (0–23) the wall clock shows in `timeZone` at `now`. */
+export function localHour(now: Date, timeZone: string): number {
+  return wallClockIn(now, timeZone).hour;
+}
+
+/** Midnight (00:00 in `timeZone`) of the day `now` falls in. */
+export function startOfLocalDay(now: Date, timeZone: string): Date {
+  return startOfDayIn(now, timeZone);
+}
+
+/**
+ * The [start, end) window for "yesterday" relative to `now` in `timeZone`, plus
+ * its `YYYY-MM-DD` digestDate key: `start` = yesterday 00:00 local, `end` =
+ * today 00:00 local (23 or 25 h long across a DST change).
+ */
+export function yesterdayWindow(
+  now: Date,
+  timeZone: string,
+): { start: Date; end: Date; digestDate: string } {
+  const today = wallClockIn(now, timeZone);
+  const midnight = { ...today, hour: 0, minute: 0, second: 0 };
+  const end = wallClockToUtc(midnight, timeZone);
+  const start = wallClockToUtc({ ...midnight, day: today.day - 1 }, timeZone);
+  return { start, end, digestDate: ymdIn(start, timeZone) };
 }

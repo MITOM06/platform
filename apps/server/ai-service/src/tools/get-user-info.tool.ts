@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 import { ToolContext, ToolDefinition } from './tool.interface';
+import { userIdQueryValues } from '../common/user-names';
 
 @Injectable()
 export class GetUserInfoTool {
@@ -19,7 +20,9 @@ export class GetUserInfoTool {
 
   async execute(_input: Record<string, unknown>, ctx: ToolContext): Promise<string> {
     const users = this.connection.collection('users');
-    const user = await users.findOne({ _id: ctx.userId as unknown });
+    // People have ObjectId `_id`s — a raw-string lookup never found them.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const user = await users.findOne({ _id: { $in: userIdQueryValues([ctx.userId]) } } as any);
 
     if (!user) return 'User not found';
 

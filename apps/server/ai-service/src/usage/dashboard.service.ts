@@ -208,6 +208,8 @@ export class DashboardService {
       inputTokens: number;
       outputTokens: number;
       requestCount: number;
+      cacheCreationInputTokens?: number;
+      cacheReadInputTokens?: number;
     }>([
       {
         $match: {
@@ -221,6 +223,10 @@ export class DashboardService {
           _id: '$trace.model',
           inputTokens: { $sum: { $ifNull: ['$trace.inputTokens', 0] } },
           outputTokens: { $sum: { $ifNull: ['$trace.outputTokens', 0] } },
+          // Cache breakdown (subsets of inputTokens) — 0 until chat-service
+          // persists the trace fields; the estimator then prices it at 1.25x/0.1x.
+          cacheCreationInputTokens: { $sum: { $ifNull: ['$trace.cacheCreationInputTokens', 0] } },
+          cacheReadInputTokens: { $sum: { $ifNull: ['$trace.cachedInputTokens', 0] } },
           requestCount: { $sum: 1 },
         },
       },
@@ -230,6 +236,8 @@ export class DashboardService {
       inputTokens: r.inputTokens ?? 0,
       outputTokens: r.outputTokens ?? 0,
       requestCount: r.requestCount ?? 0,
+      cacheCreationInputTokens: r.cacheCreationInputTokens ?? 0,
+      cacheReadInputTokens: r.cacheReadInputTokens ?? 0,
     }));
   }
 

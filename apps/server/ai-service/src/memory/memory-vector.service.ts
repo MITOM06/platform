@@ -23,8 +23,9 @@ interface UpsertFactInput {
  * Embedding-backed semantic fact store on a dedicated Qdrant collection.
  * Points carry {userId, conversationId} in payload, but READS filter by `userId`
  * ONLY (global per-user recall — a fact taught in any conversation is recalled
- * everywhere). `conversationId` is retained in the payload for provenance and as
- * the delete key for conversation removal. Migrates gracefully: all reads
+ * everywhere). `conversationId` is retained in the payload for provenance and,
+ * together with `userId`, as the delete key when a user deletes the memory of
+ * a conversation. Migrates gracefully: all reads
  * tolerate a missing/empty collection.
  */
 @Injectable()
@@ -171,15 +172,29 @@ export class MemoryVectorService {
     }
   }
 
-  async deleteConversation(conversationId: string): Promise<void> {
+  /**
+   * Forget the facts ONE user taught in ONE conversation (memory delete). Scoped
+   * by both keys: a conversation-only filter would wipe every member's facts
+   * learned in a shared group. Returns whether the delete went through.
+   */
+  async deleteUserConversation(userId: string, conversationId: string): Promise<boolean> {
     try {
       await this.ensureCollection();
       await this.client.delete(this.collection, {
         wait: true,
-        filter: { must: [{ key: 'conversationId', match: { value: conversationId } }] },
+        filter: {
+          must: [
+            { key: 'userId', match: { value: userId } },
+            { key: 'conversationId', match: { value: conversationId } },
+          ],
+        },
       });
+      return true;
     } catch (err) {
-      this.logger.warn(`Memory delete failed for ${conversationId}: ${(err as Error).message}`);
+      this.logger.warn(
+        `Memory delete failed for user ${userId} in ${conversationId}: ${(err as Error).message}`,
+      );
+      return false;
     }
   }
 

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
 import { MemoryService } from '../memory/memory.service';
+import { UsageService } from '../usage/usage.service';
 import type { AiRequestPayload } from './ai.service';
 /**
  * The last 20 turns as ONE user message holding a plain transcript. Sending them
@@ -37,6 +38,7 @@ export class FactExtractorService {
   constructor(
     private readonly configService: ConfigService,
     private readonly memoryService: MemoryService,
+    private readonly usageService?: UsageService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -73,6 +75,8 @@ export class FactExtractorService {
       system: systemPrompt,
       messages,
     });
+    // Background extraction serves this user's memory — count it against them.
+    this.usageService?.recordModelCall(userId, response.usage, 'fact-extraction');
 
     const text = response.content
       .filter((b): b is Anthropic.TextBlock => b.type === 'text')

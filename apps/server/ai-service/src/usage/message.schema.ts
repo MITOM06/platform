@@ -13,11 +13,20 @@ export class AiTrace {
   @Prop()
   model?: string;
 
+  /** Total prompt tokens of the reply (cache writes/reads included). */
   @Prop({ default: 0 })
   inputTokens?: number;
 
   @Prop({ default: 0 })
   outputTokens?: number;
+
+  /** Prompt-cache reads (subset of inputTokens) — present once chat-service persists it. */
+  @Prop()
+  cachedInputTokens?: number;
+
+  /** Prompt-cache writes (subset of inputTokens) — present once chat-service persists it. */
+  @Prop()
+  cacheCreationInputTokens?: number;
 }
 
 export const AiTraceSchema = SchemaFactory.createForClass(AiTrace);

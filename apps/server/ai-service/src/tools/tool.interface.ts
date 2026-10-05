@@ -13,11 +13,12 @@ export interface ToolContext {
   /** Owning department id (P6 group bot); scopes KB retrieval when present. */
   departmentId?: string;
   /**
-   * Mutable per-request sink the agentic loop creates and tools push citable
-   * sources into (e.g. the web-search tool). The loop merges these with the
-   * pre-retrieved RAG sources when publishing `AI_STREAM_DONE`, so tool-produced
-   * sources flow into the existing `[Source N]` citation contract. Optional —
-   * absent for code paths that don't run the loop (e.g. cached answers).
+   * The reply-wide, ordered citation list the agentic loop creates — seeded with
+   * the KB sources already numbered in the system prompt. Tools that return
+   * citable results (KB search, web search) register them through
+   * `ai/source-registry` and print the number they get back, so `[Source N]` is
+   * always `AI_STREAM_DONE.sources[N-1]`. Optional — absent for code paths that
+   * don't run the loop.
    */
   sourceSink?: RagSource[];
   /**

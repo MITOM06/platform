@@ -10,19 +10,26 @@ import { WebSearchService } from './web-search/web-search.service';
 import { McpConnectorClient } from './mcp-connector.client';
 import { ToolResultCacheService } from './tool-result-cache.service';
 import { ToolContext, ToolDefinition } from './tool.interface';
-import { filterByAllowedConnectors, filterBySkillGate } from './tool-registry.service';
+import {
+  filterByAllowedConnectors,
+  filterBySkillGate,
+  isCacheableTool,
+  sanitizeToolDefinitions,
+} from './tool-registry.service';
 
 /** In-memory fake of ToolResultCacheService for tests. Disabled by default. */
 function makeCache(enabled = false): ToolResultCacheService {
   const store = new Map<string, string>();
-  const key = (u: string, t: string, i: unknown) => `${u}:${t}:${JSON.stringify(i)}`;
+  // Same key ingredients as the real service: user + conversation + department + tool + input.
+  const key = (sc: any, t: string, i: unknown) =>
+    `${sc.userId}:${sc.conversationId}:${sc.departmentId ?? ''}:${t}:${JSON.stringify(i)}`;
   return {
     isEnabled: enabled,
-    get: jest.fn(async (u: string, t: string, i: Record<string, unknown>) =>
-      enabled ? store.get(key(u, t, i)) ?? null : null,
+    get: jest.fn(async (sc: any, t: string, i: Record<string, unknown>) =>
+      enabled ? store.get(key(sc, t, i)) ?? null : null,
     ),
-    set: jest.fn(async (u: string, t: string, i: Record<string, unknown>, r: string) => {
-      if (enabled) store.set(key(u, t, i), r);
+    set: jest.fn(async (sc: any, t: string, i: Record<string, unknown>, r: string) => {
+      if (enabled) store.set(key(sc, t, i), r);
     }),
   } as unknown as ToolResultCacheService;
 }
@@ -399,14 +406,21 @@ describe('filterBySkillGate (pure)', () => {
     expect(out.map((t) => t.name)).toEqual(['mcp__calendar__create_event']);
   });
 
-  it('gmail requires gmail-mapped skills (mailWriter / inboxTriage)', () => {
-    expect(filterBySkillGate([gmailTool], [])).toHaveLength(0);
-    expect(filterBySkillGate([gmailTool], ['mailWriter']).map((t) => t.name)).toEqual([
-      'mcp__gmail__send_email',
+  it('gates gmail PER TOOL: Inbox triage (read) never exposes send_email', () => {
+    const searchTool: ToolDefinition = { ...gmailTool, name: 'mcp__gmail__search_threads' };
+    const draftTool: ToolDefinition = { ...gmailTool, name: 'mcp__gmail__create_draft' };
+    const all = [gmailTool, searchTool, draftTool];
+    expect(filterBySkillGate(all, [])).toHaveLength(0);
+    expect(filterBySkillGate(all, ['inboxTriage']).map((t) => t.name)).toEqual([
+      'mcp__gmail__search_threads',
     ]);
-    expect(filterBySkillGate([gmailTool], ['inboxTriage']).map((t) => t.name)).toEqual([
+    expect(filterBySkillGate(all, ['mailWriter']).map((t) => t.name)).toEqual([
       'mcp__gmail__send_email',
+      'mcp__gmail__create_draft',
     ]);
+    expect(filterBySkillGate(all, ['mailWriter', 'inboxTriage'])).toHaveLength(3);
+    // An unknown tool of a gated provider stays hidden (deny by default).
+    expect(filterBySkillGate([{ ...gmailTool, name: 'mcp__gmail__delete_all' }], ['mailWriter', 'inboxTriage'])).toHaveLength(0);
   });
 
   it('never gates non-mapped providers or static tools', () => {
@@ -417,5 +431,65 @@ describe('filterBySkillGate (pure)', () => {
   it('gates each provider independently (calendar on, gmail off)', () => {
     const out = filterBySkillGate([calendarTool, gmailTool], ['scheduler']);
     expect(out.map((t) => t.name)).toEqual(['mcp__calendar__create_event']);
+  });
+});
+
+describe('sanitizeToolDefinitions (one bad connector tool must not 400 every request)', () => {
+  const schema = { type: 'object' as const, properties: {}, required: [] };
+  it('drops invalid names, duplicates and non-object schemas; keeps the first duplicate', () => {
+    const warn = jest.fn();
+    const out = sanitizeToolDefinitions(
+      [
+        { name: 'search_messages', description: 'built-in', input_schema: schema },
+        { name: 'mcp__custom:abc__run', description: '', input_schema: schema },
+        { name: 'x'.repeat(65), description: '', input_schema: schema },
+        { name: 'mcp__notion__search', description: 'first', input_schema: schema },
+        { name: 'mcp__notion__search', description: 'dup', input_schema: schema },
+        { name: 'search_messages', description: 'connector clash', input_schema: schema },
+        { name: 'mcp__x__bad_schema', description: '', input_schema: { type: 'string' } as never },
+      ],
+      warn,
+    );
+    expect(out.map((t) => [t.name, t.description])).toEqual([
+      ['search_messages', 'built-in'],
+      ['mcp__notion__search', 'first'],
+    ]);
+    expect(warn).toHaveBeenCalledTimes(5);
+  });
+
+  it('getDefinitions never returns an invalid or duplicate name', async () => {
+    const getTools = jest.fn().mockResolvedValue([
+      { name: 'mcp__custom:abc__run', description: '', input_schema: schema },
+      { name: 'mcp__github__list', description: '', input_schema: schema },
+      { name: 'mcp__github__list', description: '', input_schema: schema },
+    ]);
+    const defs = await makeRegistry({ mcpGetTools: getTools }).getDefinitions(ctx);
+    const names = defs.map((d) => d.name);
+    expect(new Set(names).size).toBe(names.length);
+    expect(names.every((n) => /^[a-zA-Z0-9_-]{1,64}$/.test(n))).toBe(true);
+    expect(names).toContain('mcp__github__list');
+  });
+});
+
+describe('tool result cache scope (no leak across conversations)', () => {
+  it('a cached search_messages result in group X is NOT served in group Y', async () => {
+    const searchFn = jest.fn().mockResolvedValueOnce('X results').mockResolvedValueOnce('Y results');
+    const registry = makeRegistry({ search: searchFn, cache: makeCache(true) });
+    const r1 = await registry.execute('search_messages', { query: 'q' }, { ...ctx, conversationId: 'group-X' });
+    const r2 = await registry.execute('search_messages', { query: 'q' }, { ...ctx, conversationId: 'group-Y' });
+    expect([r1, r2]).toEqual(['X results', 'Y results']);
+    expect(searchFn).toHaveBeenCalledTimes(2);
+  });
+
+  it.each(['web_search', 'search_knowledge_base', 'summarize_conversation', 'remember_fact', 'create_reminder', 'mcp__gmail__send_email'])(
+    'never serves %s from the cache',
+    (name) => {
+      expect(isCacheableTool(name)).toBe(false);
+    },
+  );
+
+  it('still caches read-only MCP tools and search_messages', () => {
+    expect(isCacheableTool('mcp__notion__notion-search')).toBe(true);
+    expect(isCacheableTool('search_messages')).toBe(true);
   });
 });

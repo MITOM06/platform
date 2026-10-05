@@ -1,21 +1,29 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
 import { SettingsService } from '../settings/settings.service';
 import { DigestGeneratorService } from './digest-generator.service';
 import { DigestLog, DigestLogDocument } from './digest-log.schema';
-import { yesterdayWindow } from './digest-date.util';
+import { localHour, yesterdayWindow } from './digest-date.util';
+import { safeTimeZone } from '../common/time-zone';
 
 /** Mongo duplicate-key error code (unique-index idempotency guard). */
 const DUP_KEY = 11000;
+const DEFAULT_TIME_ZONE = 'Asia/Ho_Chi_Minh';
+const DEFAULT_BOT_USER_ID = 'ai-bot-000000000000000000000001';
 
 /**
  * Daily-digest scheduler (TASK-11) — the FIRST @nestjs/schedule cron in
- * ai-service. Runs hourly; on the tick whose LOCAL hour matches the workspace's
- * configured `dailyDigestHour`, it posts a digest of YESTERDAY's activity into
- * each conversation that was active yesterday — gated by the cached
- * workspace-level `aiSettings.dailyDigestEnabled` opt-in (TASK-12 infra).
+ * ai-service. Runs hourly; on the tick whose hour in the workspace zone
+ * (`AI_TIMEZONE`) matches the configured `dailyDigestHour`, it posts a digest of
+ * YESTERDAY's (same zone) human activity into each conversation that had some —
+ * gated by the cached workspace-level `aiSettings.dailyDigestEnabled` opt-in.
+ *
+ * "Activity" is human text only: counting the bot's own `type:'ai'` messages
+ * made yesterday's digest mark the conversation active again — a digest of the
+ * digest every day, forever, even in a human DM nobody wrote in.
  *
  * Idempotency: a `DigestLog {conversationId, digestDate}` row is inserted BEFORE
  * generation; the unique index makes a duplicate insert (redeploy mid-run, two
@@ -25,13 +33,22 @@ const DUP_KEY = 11000;
 @Injectable()
 export class DailyDigestCron {
   private readonly logger = new Logger(DailyDigestCron.name);
+  private readonly timeZone: string;
+  private readonly botUserId: string;
 
   constructor(
     @InjectConnection() private readonly connection: Connection,
     @InjectModel(DigestLog.name) private readonly digestLogModel: Model<DigestLogDocument>,
     private readonly settings: SettingsService,
     private readonly generator: DigestGeneratorService,
-  ) {}
+    configService?: ConfigService,
+  ) {
+    this.timeZone = safeTimeZone(
+      configService?.get<string>('config.ai.timeZone') ?? DEFAULT_TIME_ZONE,
+      DEFAULT_TIME_ZONE,
+    );
+    this.botUserId = configService?.get<string>('config.bot.userId') ?? DEFAULT_BOT_USER_ID;
+  }
 
   /** Hourly tick. Top-level guarded so a failure never crashes the scheduler. */
   @Cron('0 * * * *')
@@ -39,7 +56,7 @@ export class DailyDigestCron {
     try {
       const settings = await this.settings.getSettings();
       if (settings.dailyDigestEnabled !== true) return;
-      if (now.getHours() !== settings.dailyDigestHour) return;
+      if (localHour(now, this.timeZone) !== settings.dailyDigestHour) return;
 
       const conversationIds = await this.activeConversations(now);
       if (conversationIds.length === 0) {
@@ -66,7 +83,7 @@ export class DailyDigestCron {
     settings: Awaited<ReturnType<SettingsService['getSettings']>>,
     now: Date,
   ): Promise<void> {
-    const { digestDate } = yesterdayWindow(now);
+    const { digestDate } = yesterdayWindow(now, this.timeZone);
     try {
       await this.digestLogModel.create({ conversationId, digestDate });
     } catch (err) {
@@ -95,13 +112,14 @@ export class DailyDigestCron {
     }
   }
 
-  /** Distinct conversationIds with non-recalled text/ai messages yesterday. */
+  /** Distinct conversationIds with non-recalled HUMAN text messages yesterday (workspace zone). */
   private async activeConversations(now: Date): Promise<string[]> {
-    const { start, end } = yesterdayWindow(now);
+    const { start, end } = yesterdayWindow(now, this.timeZone);
     const messages = this.connection.collection('messages');
     const ids = await messages.distinct('conversationId', {
       createdAt: { $gte: start, $lt: end },
-      type: { $in: ['text', 'ai'] },
+      type: 'text',
+      senderId: { $ne: this.botUserId },
       recalled: { $ne: true },
     });
     return (ids as unknown[]).map((id) => String(id)).filter(Boolean);
