@@ -3,7 +3,15 @@
  * verbatim by chat-service. A missing reason (older client) means 'hangup'.
  * Mirrors Flutter `CallEndReason` (`features/chat/domain/call_rules.dart`).
  */
-export type CallEndReason = 'hangup' | 'declined' | 'busy' | 'no_answer' | 'media_error' | 'failed'
+export type CallEndReason =
+  | 'hangup'
+  | 'declined'
+  | 'busy'
+  | 'no_answer'
+  | 'media_error'
+  | 'failed'
+  /** sfu: picked up on another of the user's devices — nothing to explain. */
+  | 'answered_elsewhere'
 
 /** Keys in the `call` i18n namespace used to explain an ended call. */
 export type CallNoticeKey =
@@ -34,6 +42,7 @@ export function endNoticeKey(reason: CallEndReason, byPeer: boolean): CallNotice
       case 'hangup':
         return 'ended'
       case 'no_answer':
+      case 'answered_elsewhere':
         return null
     }
   }

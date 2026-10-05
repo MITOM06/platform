@@ -1,7 +1,11 @@
+import { useCallStore } from '@/lib/store/call.store'
+import type { CallEvent } from '@/lib/api/types'
 import type { CallEndReason } from './call-end-notice'
 import type { WebRTCSignal } from './call-config'
 import type { CallHooks } from './call-hooks'
+import { getCallTransport } from './call-transport'
 import { MeshCallManager } from './mesh-call-manager'
+import { SfuDirectCall } from './sfu-call'
 
 export type { CallEndReason } from './call-end-notice'
 export {
@@ -23,10 +27,11 @@ class CallManager implements CallHooks {
   onEndNotice: ((reason: CallEndReason, byPeer: boolean, peerName: string) => void) | null = null
 
   private readonly mesh = new MeshCallManager(this)
+  private readonly sfu = new SfuDirectCall(this)
 
-  /** The engine running the current call. */
-  private get active(): MeshCallManager {
-    return this.mesh
+  /** The engine running the current call (idle → mesh, which is a no-op then). */
+  private get active(): MeshCallManager | SfuDirectCall {
+    return useCallStore.getState().transport === 'sfu' ? this.sfu : this.mesh
   }
 
   getLocalStream(): MediaStream | null {
@@ -38,15 +43,25 @@ class CallManager implements CallHooks {
   }
 
   startCall(targetId: string, targetName: string, conversationId: string, video = true): Promise<void> {
-    return this.mesh.startCall(targetId, targetName, conversationId, video)
+    const engine = getCallTransport() === 'sfu' ? this.sfu : this.mesh
+    return engine.startCall(targetId, targetName, conversationId, video)
   }
 
   acceptIncoming(): Promise<void> {
     return this.active.acceptIncoming()
   }
 
+  /** Inbound `/user/queue/webrtc` signal for a 1-on-1 call. */
   handleSignal(signal: WebRTCSignal): void {
-    this.mesh.handleSignal(signal)
+    const sfu =
+      signal.transport === 'sfu' || signal.type === 'call-ring-cancel' || signal.type === 'call-declined'
+    if (sfu) this.sfu.handleSignal(signal)
+    else this.mesh.handleSignal(signal)
+  }
+
+  /** `call.started` / `call.ended` of a direct sfu call, from the conversation topic. */
+  handleCallEvent(event: CallEvent): void {
+    this.sfu.handleCallEvent(event)
   }
 
   endCall(reason: CallEndReason = 'hangup'): void {

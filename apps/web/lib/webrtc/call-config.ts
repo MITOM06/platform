@@ -4,7 +4,17 @@ export interface WebRTCSignal {
   senderId?: string
   targetId?: string
   conversationId?: string
-  type: 'offer' | 'answer' | 'ice' | 'end' | 'call-ring' | 'call-blocked'
+  type:
+    | 'offer'
+    | 'answer'
+    | 'ice'
+    | 'end'
+    | 'call-ring'
+    | 'call-blocked'
+    /** sfu: stop ringing (answered elsewhere / declined elsewhere / caller gave up). */
+    | 'call-ring-cancel'
+    /** sfu: the callee declined (callId absent when they were busy and no call was made). */
+    | 'call-declined'
   sdp?: string
   candidate?: RTCIceCandidateInit
   /** On `end`: why the call ended. Absent from older clients (= 'hangup'). */
@@ -18,6 +28,10 @@ export interface WebRTCSignal {
   startedByName?: string
   media?: 'audio' | 'video'
   aiNotetaker?: boolean
+  /** Ring: which media path the call uses. */
+  transport?: 'mesh' | 'sfu'
+  /** Ring: 'direct' (1-on-1) or 'group'. */
+  kind?: 'direct' | 'group'
 }
 
 /**
