@@ -2169,7 +2169,7 @@ abstract class AppLocalizations {
   /// No description provided for @pinLimitReached.
   ///
   /// In en, this message translates to:
-  /// **'You can pin up to 2 messages'**
+  /// **'You can pin up to 5 messages'**
   String get pinLimitReached;
 
   /// No description provided for @cannotPinCall.
@@ -6648,6 +6648,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load this section. Please try again.'**
   String get adminLoadFailed;
+
+  /// No description provided for @errTooManyRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Please wait a moment and try again.'**
+  String get errTooManyRequests;
+
+  /// No description provided for @removedFromConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'You are no longer a member of this conversation'**
+  String get removedFromConversation;
+
+  /// No description provided for @errGroupAdminRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Only group admins can do this'**
+  String get errGroupAdminRequired;
+
+  /// No description provided for @errChatUserBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t message this person'**
+  String get errChatUserBlocked;
+
+  /// No description provided for @errReplyTargetInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The message you replied to is no longer available'**
+  String get errReplyTargetInvalid;
+
+  /// No description provided for @errMessageTypeNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'This kind of message can\'t be sent here'**
+  String get errMessageTypeNotAllowed;
+
+  /// No description provided for @errInvalidUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'This link can\'t be previewed'**
+  String get errInvalidUrl;
+
+  /// No description provided for @errNotAGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'This only works in group chats'**
+  String get errNotAGroup;
+
+  /// No description provided for @errNotAMember.
+  ///
+  /// In en, this message translates to:
+  /// **'This person is no longer in the group'**
+  String get errNotAMember;
+
+  /// No description provided for @errLastAdminCannotBeRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'A group needs at least one admin'**
+  String get errLastAdminCannotBeRemoved;
+
+  /// No description provided for @errPublicDepartmentChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'A department group can\'t be a public channel'**
+  String get errPublicDepartmentChannel;
+
+  /// No description provided for @publicChannelToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Public channel'**
+  String get publicChannelToggle;
+
+  /// No description provided for @publicChannelHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone in the workspace can find it in Explore and join'**
+  String get publicChannelHint;
+
+  /// No description provided for @groupMakeAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Make admin'**
+  String get groupMakeAdmin;
+
+  /// No description provided for @groupRemoveAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove as admin'**
+  String get groupRemoveAdmin;
+
+  /// No description provided for @aiErrEmptyResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'The assistant didn\'t produce an answer. Please try again.'**
+  String get aiErrEmptyResponse;
+
+  /// No description provided for @sysGroupCreatedNoActor.
+  ///
+  /// In en, this message translates to:
+  /// **'Group created'**
+  String get sysGroupCreatedNoActor;
+
+  /// No description provided for @sysMembersAddedNoActor.
+  ///
+  /// In en, this message translates to:
+  /// **'New members were added'**
+  String get sysMembersAddedNoActor;
+
+  /// No description provided for @sysMemberLeftNoActor.
+  ///
+  /// In en, this message translates to:
+  /// **'A member left the group'**
+  String get sysMemberLeftNoActor;
+
+  /// No description provided for @sysMemberRemovedNoActor.
+  ///
+  /// In en, this message translates to:
+  /// **'A member was removed'**
+  String get sysMemberRemovedNoActor;
+
+  /// No description provided for @sysMemberJoinedNoActor.
+  ///
+  /// In en, this message translates to:
+  /// **'A new member joined'**
+  String get sysMemberJoinedNoActor;
+
+  /// No description provided for @sysAutoDeleteOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Disappearing messages turned off'**
+  String get sysAutoDeleteOff;
+
+  /// No description provided for @sysAutoDeleteOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Disappearing messages set to {duration}'**
+  String sysAutoDeleteOn(String duration);
+
+  /// No description provided for @sysAutoDeleteOffBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} turned off disappearing messages'**
+  String sysAutoDeleteOffBy(String actorName);
+
+  /// No description provided for @sysAutoDeleteOnBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} set disappearing messages to {duration}'**
+  String sysAutoDeleteOnBy(String actorName, String duration);
+
+  /// No description provided for @sysAdminPromoted.
+  ///
+  /// In en, this message translates to:
+  /// **'{targetName} is now an admin'**
+  String sysAdminPromoted(String targetName);
+
+  /// No description provided for @sysAdminDemoted.
+  ///
+  /// In en, this message translates to:
+  /// **'{targetName} is no longer an admin'**
+  String sysAdminDemoted(String targetName);
+
+  /// No description provided for @sysAdminPromotedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} made {targetName} an admin'**
+  String sysAdminPromotedBy(String actorName, String targetName);
+
+  /// No description provided for @sysAdminDemotedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} removed {targetName} as admin'**
+  String sysAdminDemotedBy(String actorName, String targetName);
+
+  /// No description provided for @durationSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 second} other{{count} seconds}}'**
+  String durationSeconds(int count);
+
+  /// No description provided for @durationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 minute} other{{count} minutes}}'**
+  String durationMinutes(int count);
+
+  /// No description provided for @durationHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hour} other{{count} hours}}'**
+  String durationHours(int count);
+
+  /// No description provided for @durationDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String durationDays(int count);
+
+  /// No description provided for @durationShortMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m'**
+  String durationShortMinutes(int count);
+
+  /// No description provided for @durationShortHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h'**
+  String durationShortHours(int count);
+
+  /// No description provided for @durationShortDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d'**
+  String durationShortDays(int count);
+
+  /// No description provided for @authErrUserBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available — one of you has blocked the other'**
+  String get authErrUserBlocked;
+
+  /// No description provided for @authErrCurrentPasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your current password'**
+  String get authErrCurrentPasswordRequired;
+
+  /// No description provided for @authErrSsoEmailUnverified.
+  ///
+  /// In en, this message translates to:
+  /// **'Your sign-in provider hasn\'t verified this email address'**
+  String get authErrSsoEmailUnverified;
+
+  /// No description provided for @authErrSocialAccountConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already linked to a different sign-in account'**
+  String get authErrSocialAccountConflict;
 }
 
 class _AppLocalizationsDelegate

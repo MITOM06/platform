@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/global_messenger.dart';
 import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/domain/auth_state.dart';
 import '../../../friends/data/friends_repository.dart';
@@ -102,7 +103,7 @@ void showConversationTileMenu(
                 Navigator.pop(sheetCtx);
                 final profile =
                     ref.read(userProfileProvider(otherUserId)).valueOrNull;
-                final name = profile?.displayName ?? 'User';
+                final name = profile?.displayName ?? l10n.someone;
                 context.push('/call', extra: {
                   'targetId': otherUserId,
                   'targetName': name,
@@ -120,7 +121,7 @@ void showConversationTileMenu(
                 Navigator.pop(sheetCtx);
                 final profile =
                     ref.read(userProfileProvider(otherUserId)).valueOrNull;
-                final name = profile?.displayName ?? 'User';
+                final name = profile?.displayName ?? l10n.someone;
                 context.push('/call', extra: {
                   'targetId': otherUserId,
                   'targetName': name,
@@ -139,7 +140,13 @@ void showConversationTileMenu(
                 onTap: () async {
                   Navigator.pop(sheetCtx);
                   final repo = ref.read(friendsRepositoryProvider);
-                  await repo.unblockUser(otherUserId);
+                  final errorText = l10n.errActionFailed;
+                  try {
+                    await repo.unblockUser(otherUserId);
+                  } catch (_) {
+                    showErrorSnackBar(errorText);
+                    return;
+                  }
                   ref.invalidate(relationshipProvider(otherUserId));
                   await notifier.unblockAndRestoreConversation(conv.id);
                 },
@@ -171,14 +178,28 @@ void showConversationTileMenu(
                   );
                   if (ok == true) {
                     final repo = ref.read(friendsRepositoryProvider);
-                    await repo.blockUser(otherUserId);
+                    try {
+                      await repo.blockUser(otherUserId);
+                    } catch (_) {
+                      showErrorSnackBar(l10n.errActionFailed);
+                      return;
+                    }
                     ref.invalidate(relationshipProvider(otherUserId));
                     await notifier.blockAndArchiveConversation(conv.id);
                   }
                 },
               ),
           ],
-          if (!isConvBlocked)
+          if (conv.isArchived)
+            ListTile(
+              leading: const Icon(Icons.unarchive_rounded),
+              title: Text(l10n.unarchiveChat),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                notifier.unarchiveConversation(conv.id);
+              },
+            )
+          else if (!isConvBlocked)
             ListTile(
               leading:
                   const Icon(Icons.archive_rounded),

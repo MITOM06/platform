@@ -1109,7 +1109,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinnedMessagesTitle => 'Pinned Messages';
 
   @override
-  String get pinLimitReached => 'You can pin up to 2 messages';
+  String get pinLimitReached => 'You can pin up to 5 messages';
 
   @override
   String get cannotPinCall => 'Calls can\'t be pinned';
@@ -3563,4 +3563,186 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminLoadFailed =>
       'Couldn\'t load this section. Please try again.';
+
+  @override
+  String get errTooManyRequests =>
+      'Too many requests. Please wait a moment and try again.';
+
+  @override
+  String get removedFromConversation =>
+      'You are no longer a member of this conversation';
+
+  @override
+  String get errGroupAdminRequired => 'Only group admins can do this';
+
+  @override
+  String get errChatUserBlocked => 'You can\'t message this person';
+
+  @override
+  String get errReplyTargetInvalid =>
+      'The message you replied to is no longer available';
+
+  @override
+  String get errMessageTypeNotAllowed =>
+      'This kind of message can\'t be sent here';
+
+  @override
+  String get errInvalidUrl => 'This link can\'t be previewed';
+
+  @override
+  String get errNotAGroup => 'This only works in group chats';
+
+  @override
+  String get errNotAMember => 'This person is no longer in the group';
+
+  @override
+  String get errLastAdminCannotBeRemoved => 'A group needs at least one admin';
+
+  @override
+  String get errPublicDepartmentChannel =>
+      'A department group can\'t be a public channel';
+
+  @override
+  String get publicChannelToggle => 'Public channel';
+
+  @override
+  String get publicChannelHint =>
+      'Anyone in the workspace can find it in Explore and join';
+
+  @override
+  String get groupMakeAdmin => 'Make admin';
+
+  @override
+  String get groupRemoveAdmin => 'Remove as admin';
+
+  @override
+  String get aiErrEmptyResponse =>
+      'The assistant didn\'t produce an answer. Please try again.';
+
+  @override
+  String get sysGroupCreatedNoActor => 'Group created';
+
+  @override
+  String get sysMembersAddedNoActor => 'New members were added';
+
+  @override
+  String get sysMemberLeftNoActor => 'A member left the group';
+
+  @override
+  String get sysMemberRemovedNoActor => 'A member was removed';
+
+  @override
+  String get sysMemberJoinedNoActor => 'A new member joined';
+
+  @override
+  String get sysAutoDeleteOff => 'Disappearing messages turned off';
+
+  @override
+  String sysAutoDeleteOn(String duration) {
+    return 'Disappearing messages set to $duration';
+  }
+
+  @override
+  String sysAutoDeleteOffBy(String actorName) {
+    return '$actorName turned off disappearing messages';
+  }
+
+  @override
+  String sysAutoDeleteOnBy(String actorName, String duration) {
+    return '$actorName set disappearing messages to $duration';
+  }
+
+  @override
+  String sysAdminPromoted(String targetName) {
+    return '$targetName is now an admin';
+  }
+
+  @override
+  String sysAdminDemoted(String targetName) {
+    return '$targetName is no longer an admin';
+  }
+
+  @override
+  String sysAdminPromotedBy(String actorName, String targetName) {
+    return '$actorName made $targetName an admin';
+  }
+
+  @override
+  String sysAdminDemotedBy(String actorName, String targetName) {
+    return '$actorName removed $targetName as admin';
+  }
+
+  @override
+  String durationSeconds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count seconds',
+      one: '1 second',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes',
+      one: '1 minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours',
+      one: '1 hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationShortMinutes(int count) {
+    return '${count}m';
+  }
+
+  @override
+  String durationShortHours(int count) {
+    return '${count}h';
+  }
+
+  @override
+  String durationShortDays(int count) {
+    return '${count}d';
+  }
+
+  @override
+  String get authErrUserBlocked =>
+      'Not available — one of you has blocked the other';
+
+  @override
+  String get authErrCurrentPasswordRequired => 'Enter your current password';
+
+  @override
+  String get authErrSsoEmailUnverified =>
+      'Your sign-in provider hasn\'t verified this email address';
+
+  @override
+  String get authErrSocialAccountConflict =>
+      'This email is already linked to a different sign-in account';
 }

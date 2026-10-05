@@ -9,6 +9,7 @@ import '../../auth/domain/auth_state.dart';
 import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
 import 'widgets/conversation_avatar.dart';
+import 'widgets/message_preview_text.dart';
 
 /// Lists conversations the user has archived (`isArchived == true`), with the
 /// ability to restore each one back into the main list. (Task 71)
@@ -125,7 +126,10 @@ class _ArchivedTile extends ConsumerWidget {
         conv.participants.where((p) => p != currentUserId).toList();
     final otherUserId = !isGroup && others.isNotEmpty ? others.first : '';
 
-    final profileAsync = otherUserId.isNotEmpty
+    final isAiBot = !isGroup && otherUserId == kAiBotUserId;
+    final profileAsync = (otherUserId.isNotEmpty &&
+            !isAiBot &&
+            !otherUserId.startsWith('extbot:'))
         ? ref.watch(userProfileProvider(otherUserId))
         : null;
     // Bot Factory personal assistants (`extbot:*` participants) are never
@@ -135,10 +139,12 @@ class _ArchivedTile extends ConsumerWidget {
     final isExtBot = !isGroup && otherUserId.startsWith('extbot:');
     final displayName = isGroup
         ? (conv.name ?? context.l10n.conversationDefault)
-        : (isExtBot
-            ? (ref.watch(assistantProvider).valueOrNull?.name ??
-                context.l10n.assistantDefaultName)
-            : (profileAsync?.valueOrNull?.displayName ?? '...'));
+        : isAiBot
+            ? context.l10n.aiAssistant
+            : (isExtBot
+                ? (ref.watch(assistantProvider).valueOrNull?.name ??
+                    context.l10n.assistantDefaultName)
+                : (profileAsync?.valueOrNull?.displayName ?? '...'));
     final tileLetter = displayName.isNotEmpty && displayName != '...'
         ? displayName[0].toUpperCase()
         : '?';
@@ -183,9 +189,9 @@ class _ArchivedTile extends ConsumerWidget {
           ),
           subtitle: conv.lastMessage != null
               ? Text(
-                  conv.lastMessage!.content.contains('/api/uploads/')
-                      ? context.l10n.attachmentLabel
-                      : conv.lastMessage!.content,
+                  // Same sanitized preview as the main list (no raw system
+                  // codes, upload URLs or recalled text).
+                  lastMessagePreview(context, conv.lastMessage!),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(

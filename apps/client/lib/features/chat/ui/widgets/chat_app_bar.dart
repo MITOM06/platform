@@ -16,7 +16,6 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final String currentUserId;
   final VoidCallback onSearch;
   final VoidCallback onClearHistory;
-  final VoidCallback onChooseAutoDelete;
   final VoidCallback onDeleteConversation;
 
   const ChatScreenAppBar({
@@ -25,7 +24,6 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
     required this.currentUserId,
     required this.onSearch,
     required this.onClearHistory,
-    required this.onChooseAutoDelete,
     required this.onDeleteConversation,
   });
 
@@ -34,12 +32,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final conversations =
-        ref.watch(conversationsNotifierProvider).valueOrNull ?? [];
-    final ConversationModel? conv = conversations
-        .where((c) => c.id == conversationId)
-        .cast<ConversationModel?>()
-        .firstOrNull;
+    final ConversationModel? conv = ref.watch(conversationProvider(conversationId));
 
     final isGroup = conv?.isGroup ?? false;
     final others =
@@ -52,10 +45,12 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
         : null;
     final aiPersonaName = chatState?.aiPersonaName ?? 'PON AI';
 
-    final profileAsync = (otherUserId != null)
-        ? ref.watch(userProfileProvider(otherUserId))
-        : null;
-    final statusAsync = (otherUserId != null && !isGroup)
+    // The AI bot is not a user: a profile/status lookup for it can only fail
+    // (the title used to sit on a placeholder forever).
+    final isPerson = otherUserId != null && !isAiConversation;
+    final profileAsync =
+        isPerson ? ref.watch(userProfileProvider(otherUserId)) : null;
+    final statusAsync = (isPerson && !isGroup)
         ? ref.watch(userStatusProvider(otherUserId))
         : null;
 
@@ -64,9 +59,11 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
     final dmNickname = (!isGroup && otherUserId != null) ? nicknames[otherUserId] : null;
     final displayName = isGroup
         ? (conv?.name ?? context.l10n.conversationDefault)
-        : (dmNickname != null && dmNickname.isNotEmpty
-            ? dmNickname
-            : (resolvedName ?? context.l10n.chatDefaultTitle));
+        : isAiConversation
+            ? context.l10n.aiAssistant
+            : (dmNickname != null && dmNickname.isNotEmpty
+                ? dmNickname
+                : (resolvedName ?? context.l10n.chatDefaultTitle));
     final avatarLetter =
         displayName.isNotEmpty && displayName != context.l10n.chatDefaultTitle
             ? displayName[0].toUpperCase()
@@ -164,12 +161,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
                               : FontWeight.normal,
                         ),
                       ),
-                      loading: () => Text(
-                        '...',
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: AppTheme.mutedText(context)),
-                      ),
+                      loading: () => const SizedBox.shrink(),
                       error: (_, __) => const SizedBox.shrink(),
                     ),
                 ],

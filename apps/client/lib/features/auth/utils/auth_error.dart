@@ -226,6 +226,20 @@ String _codeToString(
       return l10n.authErrSsoDisabled;
     case 'SSO_DOMAIN_NOT_ALLOWED':
       return l10n.authErrSsoDomainNotAllowed;
+    case 'SSO_EMAIL_UNVERIFIED':
+      return l10n.authErrSsoEmailUnverified;
+    case 'SOCIAL_ACCOUNT_CONFLICT':
+      return l10n.authErrSocialAccountConflict;
+
+    // ── Friends / blocking ───────────────────────────────────────────────────
+    case 'USER_BLOCKED':
+      return l10n.authErrUserBlocked;
+
+    // ── Change password ──────────────────────────────────────────────────────
+    case 'CURRENT_PASSWORD_REQUIRED':
+      return l10n.authErrCurrentPasswordRequired;
+    case 'CURRENT_PASSWORD_INCORRECT':
+      return l10n.errCurrentPasswordIncorrect;
 
     default:
       return l10n.errActionFailed;

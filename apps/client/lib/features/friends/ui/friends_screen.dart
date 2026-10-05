@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../auth/utils/auth_error.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/utils/app_error.dart';
@@ -133,7 +134,7 @@ class _FriendsTab extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(friendlyError(e))),
+          SnackBar(content: Text(authErrorMessage(context, e))),
         );
       }
     }
@@ -250,7 +251,7 @@ class _RequestsTab extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(friendlyError(e))),
+          SnackBar(content: Text(authErrorMessage(context, e))),
         );
       }
     }
@@ -264,7 +265,7 @@ class _RequestsTab extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(friendlyError(e))),
+          SnackBar(content: Text(authErrorMessage(context, e))),
         );
       }
     }

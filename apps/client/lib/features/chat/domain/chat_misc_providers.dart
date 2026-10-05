@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/theme_provider.dart';
@@ -30,6 +31,16 @@ final userProfileProvider =
   final link = ref.keepAlive();
   Timer(const Duration(seconds: 60), link.close);
   return ref.read(authRepositoryProvider).getUserProfile(userId);
+});
+
+/// The conversation [id] from the loaded list (null until loaded / when not a
+/// member). Screens call `ConversationsNotifier.ensureLoaded` so a
+/// conversation beyond the first page is fetched into the list too.
+final conversationProvider =
+    Provider.autoDispose.family<ConversationModel?, String>((ref, id) {
+  return ref.watch(conversationsNotifierProvider.select(
+    (s) => s.valueOrNull?.firstWhereOrNull((c) => c.id == id),
+  ));
 });
 
 /// Conversations the current user has archived (Task 71).

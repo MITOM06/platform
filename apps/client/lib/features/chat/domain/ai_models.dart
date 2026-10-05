@@ -6,12 +6,14 @@ const kAiQuotaExceededSentinel = '__AI_QUOTA__';
 const kAiStreamInterruptedSentinel = '__AI_INTERRUPTED__';
 const kAiUnavailableSentinel = '__AI_UNAVAILABLE__';
 const kAiRateLimitedSentinel = '__AI_RATE_LIMITED__';
+const kAiEmptyResponseSentinel = '__AI_EMPTY__';
 
 // Stable error codes emitted by ai-service (additive — keep in sync with AiStreamErrorCode).
 const kAiErrCodeQuotaExceeded = 'AI_QUOTA_EXCEEDED';
 const kAiErrCodeStreamInterrupted = 'AI_STREAM_INTERRUPTED';
 const kAiErrCodeUnavailable = 'AI_UNAVAILABLE';
 const kAiErrCodeRateLimited = 'AI_RATE_LIMITED';
+const kAiErrCodeEmptyResponse = 'AI_EMPTY_RESPONSE';
 
 @immutable
 class ToolCallEntry {

@@ -1124,7 +1124,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pinnedMessagesTitle => 'Messages épinglés';
 
   @override
-  String get pinLimitReached => 'Vous pouvez épingler jusqu\'à 2 messages';
+  String get pinLimitReached => 'Vous pouvez épingler jusqu\'à 5 messages';
 
   @override
   String get cannotPinCall => 'Les appels ne peuvent pas être épinglés';
@@ -3615,4 +3615,190 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get adminLoadFailed =>
       'Impossible de charger cette section. Veuillez réessayer.';
+
+  @override
+  String get errTooManyRequests =>
+      'Trop de requêtes. Patientez un instant puis réessayez.';
+
+  @override
+  String get removedFromConversation =>
+      'Vous ne faites plus partie de cette conversation';
+
+  @override
+  String get errGroupAdminRequired =>
+      'Seuls les administrateurs du groupe peuvent faire cela';
+
+  @override
+  String get errChatUserBlocked =>
+      'Vous ne pouvez pas envoyer de message à cette personne';
+
+  @override
+  String get errReplyTargetInvalid =>
+      'Le message auquel vous répondez n\'est plus disponible';
+
+  @override
+  String get errMessageTypeNotAllowed =>
+      'Ce type de message ne peut pas être envoyé ici';
+
+  @override
+  String get errInvalidUrl => 'Impossible d\'afficher l\'aperçu de ce lien';
+
+  @override
+  String get errNotAGroup => 'Cela ne fonctionne que dans les groupes';
+
+  @override
+  String get errNotAMember => 'Cette personne ne fait plus partie du groupe';
+
+  @override
+  String get errLastAdminCannotBeRemoved =>
+      'Un groupe doit avoir au moins un administrateur';
+
+  @override
+  String get errPublicDepartmentChannel =>
+      'Un groupe de service ne peut pas être un canal public';
+
+  @override
+  String get publicChannelToggle => 'Canal public';
+
+  @override
+  String get publicChannelHint =>
+      'Tout membre de l\'espace de travail peut le trouver dans Explorer et le rejoindre';
+
+  @override
+  String get groupMakeAdmin => 'Nommer administrateur';
+
+  @override
+  String get groupRemoveAdmin => 'Retirer le rôle d\'administrateur';
+
+  @override
+  String get aiErrEmptyResponse =>
+      'L\'assistant n\'a produit aucune réponse. Veuillez réessayer.';
+
+  @override
+  String get sysGroupCreatedNoActor => 'Groupe créé';
+
+  @override
+  String get sysMembersAddedNoActor => 'De nouveaux membres ont été ajoutés';
+
+  @override
+  String get sysMemberLeftNoActor => 'Un membre a quitté le groupe';
+
+  @override
+  String get sysMemberRemovedNoActor => 'Un membre a été retiré';
+
+  @override
+  String get sysMemberJoinedNoActor => 'Un nouveau membre a rejoint le groupe';
+
+  @override
+  String get sysAutoDeleteOff => 'Messages éphémères désactivés';
+
+  @override
+  String sysAutoDeleteOn(String duration) {
+    return 'Messages éphémères réglés sur $duration';
+  }
+
+  @override
+  String sysAutoDeleteOffBy(String actorName) {
+    return '$actorName a désactivé les messages éphémères';
+  }
+
+  @override
+  String sysAutoDeleteOnBy(String actorName, String duration) {
+    return '$actorName a réglé les messages éphémères sur $duration';
+  }
+
+  @override
+  String sysAdminPromoted(String targetName) {
+    return '$targetName est maintenant administrateur';
+  }
+
+  @override
+  String sysAdminDemoted(String targetName) {
+    return '$targetName n\'est plus administrateur';
+  }
+
+  @override
+  String sysAdminPromotedBy(String actorName, String targetName) {
+    return '$actorName a nommé $targetName administrateur';
+  }
+
+  @override
+  String sysAdminDemotedBy(String actorName, String targetName) {
+    return '$actorName a retiré le rôle d\'administrateur à $targetName';
+  }
+
+  @override
+  String durationSeconds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count secondes',
+      one: '1 seconde',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes',
+      one: '1 minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count heures',
+      one: '1 heure',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count jours',
+      one: '1 jour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationShortMinutes(int count) {
+    return '$count min';
+  }
+
+  @override
+  String durationShortHours(int count) {
+    return '$count h';
+  }
+
+  @override
+  String durationShortDays(int count) {
+    return '$count j';
+  }
+
+  @override
+  String get authErrUserBlocked =>
+      'Indisponible : l\'un de vous a bloqué l\'autre';
+
+  @override
+  String get authErrCurrentPasswordRequired =>
+      'Saisissez votre mot de passe actuel';
+
+  @override
+  String get authErrSsoEmailUnverified =>
+      'Votre fournisseur de connexion n\'a pas vérifié cette adresse e-mail';
+
+  @override
+  String get authErrSocialAccountConflict =>
+      'Cet e-mail est déjà lié à un autre compte de connexion';
 }

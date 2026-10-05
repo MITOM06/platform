@@ -1094,7 +1094,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinnedMessagesTitle => '置顶消息';
 
   @override
-  String get pinLimitReached => '最多只能置顶 2 条消息';
+  String get pinLimitReached => '最多只能置顶 5 条消息';
 
   @override
   String get cannotPinCall => '通话无法置顶';
@@ -3450,4 +3450,152 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminLoadFailed => '无法加载此部分，请重试。';
+
+  @override
+  String get errTooManyRequests => '请求过于频繁，请稍后再试。';
+
+  @override
+  String get removedFromConversation => '你已不再是此会话的成员';
+
+  @override
+  String get errGroupAdminRequired => '只有群管理员可以执行此操作';
+
+  @override
+  String get errChatUserBlocked => '你无法给此人发消息';
+
+  @override
+  String get errReplyTargetInvalid => '你回复的消息已不可用';
+
+  @override
+  String get errMessageTypeNotAllowed => '此处无法发送此类消息';
+
+  @override
+  String get errInvalidUrl => '无法预览此链接';
+
+  @override
+  String get errNotAGroup => '此功能仅适用于群聊';
+
+  @override
+  String get errNotAMember => '此人已不在群组中';
+
+  @override
+  String get errLastAdminCannotBeRemoved => '群组至少需要一名管理员';
+
+  @override
+  String get errPublicDepartmentChannel => '部门群组不能设为公开频道';
+
+  @override
+  String get publicChannelToggle => '公开频道';
+
+  @override
+  String get publicChannelHint => '工作区中的任何人都可以在“探索”中找到并加入';
+
+  @override
+  String get groupMakeAdmin => '设为管理员';
+
+  @override
+  String get groupRemoveAdmin => '取消管理员';
+
+  @override
+  String get aiErrEmptyResponse => '助手没有给出回答，请重试。';
+
+  @override
+  String get sysGroupCreatedNoActor => '群组已创建';
+
+  @override
+  String get sysMembersAddedNoActor => '已添加新成员';
+
+  @override
+  String get sysMemberLeftNoActor => '一名成员退出了群组';
+
+  @override
+  String get sysMemberRemovedNoActor => '一名成员被移出群组';
+
+  @override
+  String get sysMemberJoinedNoActor => '一名新成员加入了';
+
+  @override
+  String get sysAutoDeleteOff => '已关闭阅后即焚消息';
+
+  @override
+  String sysAutoDeleteOn(String duration) {
+    return '阅后即焚消息已设置为 $duration';
+  }
+
+  @override
+  String sysAutoDeleteOffBy(String actorName) {
+    return '$actorName 关闭了阅后即焚消息';
+  }
+
+  @override
+  String sysAutoDeleteOnBy(String actorName, String duration) {
+    return '$actorName 将阅后即焚消息设置为 $duration';
+  }
+
+  @override
+  String sysAdminPromoted(String targetName) {
+    return '$targetName 现在是管理员';
+  }
+
+  @override
+  String sysAdminDemoted(String targetName) {
+    return '$targetName 不再是管理员';
+  }
+
+  @override
+  String sysAdminPromotedBy(String actorName, String targetName) {
+    return '$actorName 将 $targetName 设为管理员';
+  }
+
+  @override
+  String sysAdminDemotedBy(String actorName, String targetName) {
+    return '$actorName 取消了 $targetName 的管理员身份';
+  }
+
+  @override
+  String durationSeconds(int count) {
+    return '$count 秒';
+  }
+
+  @override
+  String durationMinutes(int count) {
+    return '$count 分钟';
+  }
+
+  @override
+  String durationHours(int count) {
+    return '$count 小时';
+  }
+
+  @override
+  String durationDays(int count) {
+    return '$count 天';
+  }
+
+  @override
+  String durationShortMinutes(int count) {
+    return '$count分钟';
+  }
+
+  @override
+  String durationShortHours(int count) {
+    return '$count小时';
+  }
+
+  @override
+  String durationShortDays(int count) {
+    return '$count天';
+  }
+
+  @override
+  String get authErrUserBlocked => '无法操作——你们其中一方已屏蔽对方';
+
+  @override
+  String get authErrCurrentPasswordRequired => '请输入当前密码';
+
+  @override
+  String get authErrSsoEmailUnverified => '你的登录提供方尚未验证此邮箱地址';
+
+  @override
+  String get authErrSocialAccountConflict => '此邮箱已关联到其他登录账号';
 }

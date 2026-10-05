@@ -1097,7 +1097,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pinnedMessagesTitle => 'ピン留めしたメッセージ';
 
   @override
-  String get pinLimitReached => 'ピン留めできるメッセージは2件までです';
+  String get pinLimitReached => 'ピン留めできるメッセージは5件までです';
 
   @override
   String get cannotPinCall => '通話はピン留めできません';
@@ -3487,4 +3487,152 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get adminLoadFailed => 'このセクションを読み込めませんでした。もう一度お試しください。';
+
+  @override
+  String get errTooManyRequests => 'リクエストが多すぎます。しばらくしてからもう一度お試しください。';
+
+  @override
+  String get removedFromConversation => 'この会話のメンバーではなくなりました';
+
+  @override
+  String get errGroupAdminRequired => 'この操作はグループ管理者のみ行えます';
+
+  @override
+  String get errChatUserBlocked => 'この相手にはメッセージを送信できません';
+
+  @override
+  String get errReplyTargetInvalid => '返信先のメッセージは利用できなくなりました';
+
+  @override
+  String get errMessageTypeNotAllowed => 'この種類のメッセージはここでは送信できません';
+
+  @override
+  String get errInvalidUrl => 'このリンクはプレビューできません';
+
+  @override
+  String get errNotAGroup => 'この機能はグループチャットでのみ使えます';
+
+  @override
+  String get errNotAMember => 'この人はもうグループにいません';
+
+  @override
+  String get errLastAdminCannotBeRemoved => 'グループには少なくとも1人の管理者が必要です';
+
+  @override
+  String get errPublicDepartmentChannel => '部署のグループは公開チャンネルにできません';
+
+  @override
+  String get publicChannelToggle => '公開チャンネル';
+
+  @override
+  String get publicChannelHint => 'ワークスペースの誰でも「探索」で見つけて参加できます';
+
+  @override
+  String get groupMakeAdmin => '管理者にする';
+
+  @override
+  String get groupRemoveAdmin => '管理者を解除';
+
+  @override
+  String get aiErrEmptyResponse => 'アシスタントから回答がありませんでした。もう一度お試しください。';
+
+  @override
+  String get sysGroupCreatedNoActor => 'グループが作成されました';
+
+  @override
+  String get sysMembersAddedNoActor => '新しいメンバーが追加されました';
+
+  @override
+  String get sysMemberLeftNoActor => 'メンバーがグループを退出しました';
+
+  @override
+  String get sysMemberRemovedNoActor => 'メンバーが削除されました';
+
+  @override
+  String get sysMemberJoinedNoActor => '新しいメンバーが参加しました';
+
+  @override
+  String get sysAutoDeleteOff => '消えるメッセージをオフにしました';
+
+  @override
+  String sysAutoDeleteOn(String duration) {
+    return '消えるメッセージを$durationに設定しました';
+  }
+
+  @override
+  String sysAutoDeleteOffBy(String actorName) {
+    return '$actorNameさんが消えるメッセージをオフにしました';
+  }
+
+  @override
+  String sysAutoDeleteOnBy(String actorName, String duration) {
+    return '$actorNameさんが消えるメッセージを$durationに設定しました';
+  }
+
+  @override
+  String sysAdminPromoted(String targetName) {
+    return '$targetNameさんが管理者になりました';
+  }
+
+  @override
+  String sysAdminDemoted(String targetName) {
+    return '$targetNameさんは管理者ではなくなりました';
+  }
+
+  @override
+  String sysAdminPromotedBy(String actorName, String targetName) {
+    return '$actorNameさんが$targetNameさんを管理者にしました';
+  }
+
+  @override
+  String sysAdminDemotedBy(String actorName, String targetName) {
+    return '$actorNameさんが$targetNameさんの管理者を解除しました';
+  }
+
+  @override
+  String durationSeconds(int count) {
+    return '$count秒';
+  }
+
+  @override
+  String durationMinutes(int count) {
+    return '$count分';
+  }
+
+  @override
+  String durationHours(int count) {
+    return '$count時間';
+  }
+
+  @override
+  String durationDays(int count) {
+    return '$count日';
+  }
+
+  @override
+  String durationShortMinutes(int count) {
+    return '$count分';
+  }
+
+  @override
+  String durationShortHours(int count) {
+    return '$count時間';
+  }
+
+  @override
+  String durationShortDays(int count) {
+    return '$count日';
+  }
+
+  @override
+  String get authErrUserBlocked => 'ご利用いただけません — どちらかが相手をブロックしています';
+
+  @override
+  String get authErrCurrentPasswordRequired => '現在のパスワードを入力してください';
+
+  @override
+  String get authErrSsoEmailUnverified => 'サインインプロバイダーでこのメールアドレスが確認されていません';
+
+  @override
+  String get authErrSocialAccountConflict => 'このメールは別のサインインアカウントに既にリンクされています';
 }

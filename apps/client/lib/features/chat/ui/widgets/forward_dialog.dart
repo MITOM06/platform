@@ -116,6 +116,11 @@ Future<void> showForwardDialog(
   MessageModel message,
   String conversationId,
 ) async {
+  // Capture everything needed after the dialog up-front: [context] may be
+  // gone (list rebuilt) by the time the forward request finishes.
+  final notifier = ref.read(chatNotifierProvider(conversationId).notifier);
+  final messenger = ScaffoldMessenger.of(context);
+  final forwarded = context.l10n.messageForwarded;
   final targetConvId = await showDialog<String>(
     context: context,
     builder: (_) => ForwardDialog(
@@ -123,14 +128,7 @@ Future<void> showForwardDialog(
       sourceConversationId: conversationId,
     ),
   );
-  if (targetConvId == null || !context.mounted) return;
-  final notifier = ref.read(chatNotifierProvider(conversationId).notifier);
-  final ok = await notifier.forwardMessage(message.id, targetConvId);
-  if (context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(ok
-          ? context.l10n.messageForwarded
-          : context.l10n.forwardFailed),
-    ));
-  }
+  if (targetConvId == null) return;
+  final error = await notifier.forwardMessage(message.id, targetConvId);
+  messenger.showSnackBar(SnackBar(content: Text(error ?? forwarded)));
 }

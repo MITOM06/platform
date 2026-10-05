@@ -136,6 +136,9 @@ class AuthRepository {
     await clearCredentials();
   }
 
+  /// The stored access token, or null when signed out.
+  Future<String?> readAccessToken() => _storage.read(key: _keyAccessToken);
+
   Future<UserModel?> getStoredUser() async {
     final token = await _storage.read(key: _keyAccessToken);
     final userJson = await _storage.read(key: _keyUser);
@@ -265,6 +268,30 @@ class AuthRepository {
       await _dio.post('/api/users/device-tokens', data: {'token': token});
     } catch (_) {
       // Best-effort
+    }
+  }
+
+  /// Unregisters this device's FCM [token] from the signed-in account
+  /// (`DELETE /api/users/device-tokens`) so the next account on this phone
+  /// never receives the previous one's pushes. Best-effort.
+  ///
+  /// Sent on a bare Dio carrying [accessToken] (read by the caller BEFORE the
+  /// credentials are wiped): on a forced logout
+  /// the session is already dead, and the normal interceptors would try a
+  /// refresh and re-enter the forced-logout path.
+  Future<void> removeFcmToken(String token, {required String? accessToken}) async {
+    try {
+      final access = accessToken;
+      if (access == null) return;
+      final bare = Dio(BaseOptions(
+        baseUrl: _dio.options.baseUrl,
+        connectTimeout: const Duration(seconds: 5),
+        receiveTimeout: const Duration(seconds: 5),
+        headers: {'Authorization': 'Bearer $access'},
+      ));
+      await bare.delete('/api/users/device-tokens', data: {'token': token});
+    } catch (_) {
+      // Best-effort — the token is also deleted on the device itself.
     }
   }
 }

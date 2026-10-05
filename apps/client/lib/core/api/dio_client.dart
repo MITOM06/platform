@@ -204,6 +204,10 @@ class _TokenRefreshInterceptor extends Interceptor {
       return handler.next(err);
     }
 
+    // A 401 — including `TOKEN_CLAIMS_STALE` (the role/department/permission
+    // matrix changed since the token was minted) — is handled exactly like an
+    // expired token: one single-flight refresh, then one retry. The refreshed
+    // token carries the fresh claims; this path never logs out on its own.
     final alreadyRetried = err.requestOptions.extra[_retriedKey] == true;
     if (err.response?.statusCode != 401 || alreadyRetried) {
       return handler.next(err);
@@ -254,6 +258,10 @@ class _TokenRefreshInterceptor extends Interceptor {
       final retryOptions = err.requestOptions;
       retryOptions.headers['Authorization'] = 'Bearer $newAccess';
       retryOptions.extra[_retriedKey] = true;
+      // A FormData body is single-use: re-sending the finalized instance
+      // throws, so the first upload after an expired token used to fail.
+      final body = retryOptions.data;
+      if (body is FormData) retryOptions.data = body.clone();
       final retryResponse = await _dio.fetch(retryOptions);
       return handler.resolve(retryResponse);
     } on DioException catch (e) {

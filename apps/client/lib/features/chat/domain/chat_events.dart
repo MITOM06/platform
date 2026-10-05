@@ -62,19 +62,44 @@ class RecallEvent {
   const RecallEvent({required this.conversationId, required this.messageId});
 }
 
+/// `MESSAGE_UPDATED`. Two shapes share the event: a text edit (carries
+/// `editedAt`) and an AI pending-action status change (carries
+/// `pendingActions`, NO `editedAt` — the message was not edited).
 @immutable
 class MessageUpdateEvent {
   final String conversationId;
   final String messageId;
-  final String content;
-  final DateTime editedAt;
+  final String? content;
+  final DateTime? editedAt;
+  // Raw `pendingActions[]` of an AI message (sensitive-action confirmation
+  // cards); null when the event is a plain edit.
+  final List<dynamic>? pendingActions;
 
   const MessageUpdateEvent({
     required this.conversationId,
     required this.messageId,
-    required this.content,
-    required this.editedAt,
+    this.content,
+    this.editedAt,
+    this.pendingActions,
   });
+
+  bool get isEdit => editedAt != null;
+}
+
+/// A `CONVERSATION_UPDATED` payload. chat-service sends two shapes:
+/// - on `/topic/conversation/{id}` the SHARED fields only (never the viewer's
+///   unread / mute / archive / block state) — [personal] is false;
+/// - on `/user/queue/notifications` the actor's FULL view after a personal
+///   action (mute, archive, read, …) — [personal] is true.
+/// Clients merge [json] into their copy rather than replacing it.
+@immutable
+class ConversationUpdateEvent {
+  final Map<String, dynamic> json;
+  final bool personal;
+
+  const ConversationUpdateEvent({required this.json, required this.personal});
+
+  String? get conversationId => json['id'] as String?;
 }
 
 @immutable

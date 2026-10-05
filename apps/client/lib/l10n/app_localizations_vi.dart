@@ -1110,7 +1110,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pinnedMessagesTitle => 'Tin nhắn đã ghim';
 
   @override
-  String get pinLimitReached => 'Bạn chỉ có thể ghim tối đa 2 tin nhắn';
+  String get pinLimitReached => 'Bạn chỉ có thể ghim tối đa 5 tin nhắn';
 
   @override
   String get cannotPinCall => 'Không thể ghim cuộc gọi';
@@ -3565,4 +3565,164 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get adminLoadFailed => 'Không tải được mục này. Vui lòng thử lại.';
+
+  @override
+  String get errTooManyRequests =>
+      'Quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại.';
+
+  @override
+  String get removedFromConversation =>
+      'Bạn không còn là thành viên của cuộc trò chuyện này';
+
+  @override
+  String get errGroupAdminRequired =>
+      'Chỉ quản trị viên nhóm mới có thể thực hiện việc này';
+
+  @override
+  String get errChatUserBlocked => 'Bạn không thể nhắn tin cho người này';
+
+  @override
+  String get errReplyTargetInvalid => 'Tin nhắn bạn trả lời không còn khả dụng';
+
+  @override
+  String get errMessageTypeNotAllowed =>
+      'Không thể gửi loại tin nhắn này ở đây';
+
+  @override
+  String get errInvalidUrl => 'Không thể xem trước liên kết này';
+
+  @override
+  String get errNotAGroup => 'Chức năng này chỉ dùng được trong nhóm';
+
+  @override
+  String get errNotAMember => 'Người này không còn ở trong nhóm';
+
+  @override
+  String get errLastAdminCannotBeRemoved =>
+      'Nhóm cần có ít nhất một quản trị viên';
+
+  @override
+  String get errPublicDepartmentChannel =>
+      'Nhóm thuộc phòng ban không thể là kênh công khai';
+
+  @override
+  String get publicChannelToggle => 'Kênh công khai';
+
+  @override
+  String get publicChannelHint =>
+      'Mọi người trong workspace có thể tìm thấy trong Khám phá và tham gia';
+
+  @override
+  String get groupMakeAdmin => 'Đặt làm quản trị viên';
+
+  @override
+  String get groupRemoveAdmin => 'Gỡ quyền quản trị viên';
+
+  @override
+  String get aiErrEmptyResponse =>
+      'Trợ lý không đưa ra câu trả lời. Vui lòng thử lại.';
+
+  @override
+  String get sysGroupCreatedNoActor => 'Nhóm đã được tạo';
+
+  @override
+  String get sysMembersAddedNoActor => 'Đã thêm thành viên mới';
+
+  @override
+  String get sysMemberLeftNoActor => 'Một thành viên đã rời nhóm';
+
+  @override
+  String get sysMemberRemovedNoActor => 'Một thành viên đã bị xoá khỏi nhóm';
+
+  @override
+  String get sysMemberJoinedNoActor => 'Một thành viên mới đã tham gia';
+
+  @override
+  String get sysAutoDeleteOff => 'Đã tắt tin nhắn tự huỷ';
+
+  @override
+  String sysAutoDeleteOn(String duration) {
+    return 'Tin nhắn tự huỷ được đặt thành $duration';
+  }
+
+  @override
+  String sysAutoDeleteOffBy(String actorName) {
+    return '$actorName đã tắt tin nhắn tự huỷ';
+  }
+
+  @override
+  String sysAutoDeleteOnBy(String actorName, String duration) {
+    return '$actorName đã đặt tin nhắn tự huỷ thành $duration';
+  }
+
+  @override
+  String sysAdminPromoted(String targetName) {
+    return '$targetName đã trở thành quản trị viên';
+  }
+
+  @override
+  String sysAdminDemoted(String targetName) {
+    return '$targetName không còn là quản trị viên';
+  }
+
+  @override
+  String sysAdminPromotedBy(String actorName, String targetName) {
+    return '$actorName đã đặt $targetName làm quản trị viên';
+  }
+
+  @override
+  String sysAdminDemotedBy(String actorName, String targetName) {
+    return '$actorName đã gỡ quyền quản trị viên của $targetName';
+  }
+
+  @override
+  String durationSeconds(int count) {
+    return '$count giây';
+  }
+
+  @override
+  String durationMinutes(int count) {
+    return '$count phút';
+  }
+
+  @override
+  String durationHours(int count) {
+    return '$count giờ';
+  }
+
+  @override
+  String durationDays(int count) {
+    return '$count ngày';
+  }
+
+  @override
+  String durationShortMinutes(int count) {
+    return '$count phút';
+  }
+
+  @override
+  String durationShortHours(int count) {
+    return '$count giờ';
+  }
+
+  @override
+  String durationShortDays(int count) {
+    return '$count ngày';
+  }
+
+  @override
+  String get authErrUserBlocked =>
+      'Không thể thực hiện — một trong hai người đã chặn người kia';
+
+  @override
+  String get authErrCurrentPasswordRequired =>
+      'Vui lòng nhập mật khẩu hiện tại';
+
+  @override
+  String get authErrSsoEmailUnverified =>
+      'Nhà cung cấp đăng nhập chưa xác minh địa chỉ email này';
+
+  @override
+  String get authErrSocialAccountConflict =>
+      'Email này đã được liên kết với một tài khoản đăng nhập khác';
 }

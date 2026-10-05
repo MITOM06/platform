@@ -1,16 +1,6 @@
 import 'chat_events.dart';
 import 'chat_models.dart';
 
-/// Result of [ChatStompReducers.reconcileNewMessage].
-class ReconcileResult {
-  final List<MessageModel> messages;
-  final bool consumedAiPlaceholder;
-  const ReconcileResult({
-    required this.messages,
-    required this.consumedAiPlaceholder,
-  });
-}
-
 /// Pure list transforms for the simple realtime STOMP events (read receipt,
 /// reaction update, recall, edit, pinned). Extracted from ChatNotifier for the
 /// clean-code file limit; each function returns a new list and never mutates
@@ -42,108 +32,163 @@ class ChatStompReducers {
         .toList();
   }
 
-  /// Mark the matching message as recalled (clearing content + reactions).
+  /// Mark the matching message as recalled (clearing content + reactions),
+  /// and blank every reply quote of it — a recalled message must not stay
+  /// readable inside the replies to it.
   static List<MessageModel> applyRecall(
     List<MessageModel> messages,
     RecallEvent event,
   ) {
-    return messages
-        .map((m) => m.id == event.messageId
-            ? m.copyWith(recalled: true, content: '', reactions: const [])
-            : m)
-        .toList();
+    return messages.map((m) {
+      if (m.id == event.messageId) {
+        return m.copyWith(recalled: true, content: '', reactions: const []);
+      }
+      final quote = m.replyPreview;
+      if (quote != null && quote.messageId == event.messageId) {
+        return m.copyWith(
+          replyPreview: ReplyPreview(
+            messageId: quote.messageId,
+            senderId: quote.senderId,
+            content: '',
+            recalled: true,
+          ),
+        );
+      }
+      return m;
+    }).toList();
   }
 
-  /// Apply an edited content + editedAt to the matching message.
+  /// Apply a MESSAGE_UPDATED to the matching message (and, for a real edit,
+  /// to the reply quotes of it). An update without `editedAt` (AI
+  /// pending-action status) never marks the message as edited.
   static List<MessageModel> applyEdit(
     List<MessageModel> messages,
     MessageUpdateEvent event,
   ) {
-    return messages
-        .map((m) => m.id == event.messageId
-            ? m.copyWith(content: event.content, editedAt: event.editedAt)
-            : m)
-        .toList();
-  }
-
-  /// Reconcile an incoming persisted [message] against the current list:
-  /// replace the finalized AI streaming placeholder, else a matching optimistic
-  /// (locally-echoed) pending message, else prepend as new.
-  ///
-  /// [finalizedAiPlaceholderId] is the id remembered on AI_STREAM_DONE.
-  /// `consumedAiPlaceholder` in the result is true when that exact placeholder
-  /// was swapped, so the caller can clear the tracked id.
-  static ReconcileResult reconcileNewMessage(
-    List<MessageModel> messages,
-    MessageModel message, {
-    required String? finalizedAiPlaceholderId,
-  }) {
-    // Replace the finalized AI streaming placeholder with the real persisted
-    // message. Prefer the exact tracked id (set on AI_STREAM_DONE); only fall
-    // back to a heuristic when no id is tracked.
-    int aiStreamingIdx = -1;
-    if (message.isAiMessage) {
-      if (finalizedAiPlaceholderId != null) {
-        aiStreamingIdx =
-            messages.indexWhere((m) => m.id == finalizedAiPlaceholderId);
-      }
-      if (aiStreamingIdx == -1) {
-        aiStreamingIdx = messages.indexWhere(
-          (m) =>
-              m.isAiMessage &&
-              !m.isStreaming &&
-              m.senderId == kAiBotUserId &&
-              m.id.startsWith('ai-pending-'),
+    final content = event.content;
+    return messages.map((m) {
+      if (m.id == event.messageId) {
+        return m.copyWith(
+          content: event.isEdit ? content : null,
+          editedAt: event.editedAt,
         );
       }
-    }
-
-    // Replace the optimistic (locally-echoed) message if one matches by id-shape
-    // + sender + content. Restrict to pending placeholders we created so we
-    // never clobber a distinct real message that happens to share text.
-    final pendingIdx = messages.indexWhere(
-      (m) =>
-          m.isPending &&
-          m.id.startsWith('pending_') &&
-          m.senderId == message.senderId &&
-          m.content == message.content,
-    );
-
-    if (aiStreamingIdx != -1) {
-      return ReconcileResult(
-        messages: List.from(messages)..[aiStreamingIdx] = message,
-        consumedAiPlaceholder: true,
-      );
-    } else if (pendingIdx != -1) {
-      return ReconcileResult(
-        messages: List.from(messages)..[pendingIdx] = message,
-        consumedAiPlaceholder: false,
-      );
-    }
-    return ReconcileResult(
-      messages: [message, ...messages],
-      consumedAiPlaceholder: false,
-    );
+      final quote = m.replyPreview;
+      if (event.isEdit &&
+          content != null &&
+          quote != null &&
+          quote.messageId == event.messageId &&
+          !quote.recalled) {
+        return m.copyWith(
+          replyPreview: ReplyPreview(
+            messageId: quote.messageId,
+            senderId: quote.senderId,
+            content: content,
+          ),
+        );
+      }
+      return m;
+    }).toList();
   }
 
-  /// Build the PinnedMessageModel list from pinned IDs using loaded messages.
+  /// Reconcile an incoming persisted [message] (non-AI, or an AI message no
+  /// tracked reply claimed — see ChatAiStreamHandler.reconcilePersisted):
+  /// - already in the list (STOMP echo of a REST send, a catch-up page racing
+  ///   the live frame, a multi-instance duplicate) → replaced in place, never
+  ///   shown twice;
+  /// - else it replaces the matching optimistic (locally-echoed) message;
+  /// - else it is prepended as new.
+  static List<MessageModel> reconcileNewMessage(
+    List<MessageModel> messages,
+    MessageModel message,
+  ) {
+    final existingIdx = message.id.isEmpty
+        ? -1
+        : messages.indexWhere((m) => m.id == message.id);
+    if (existingIdx != -1) {
+      final existing = messages[existingIdx];
+      return List.from(messages)
+        ..[existingIdx] = message.copyWith(
+          sources: message.sources ?? existing.sources,
+          trace: message.trace ?? existing.trace,
+        );
+    }
+
+    // Replace the optimistic message if one matches by id-shape + sender +
+    // content + type. Restrict to pending placeholders we created so we never
+    // clobber a distinct real message that happens to share text.
+    final pendingIdx = messages.indexWhere(
+      (m) =>
+          (m.isPending || m.sendFailed) &&
+          m.id.startsWith('pending_') &&
+          m.senderId == message.senderId &&
+          m.type == message.type &&
+          m.content == message.content,
+    );
+    if (pendingIdx != -1) {
+      return List.from(messages)..[pendingIdx] = message;
+    }
+    return [message, ...messages];
+  }
+
+  /// The newest message the server has confirmed (cursor for the reconnect
+  /// catch-up): skips optimistic sends, failed sends and AI placeholders,
+  /// whose timestamps are local.
+  static MessageModel? newestConfirmed(List<MessageModel> messages) {
+    for (final m in messages) {
+      if (m.isPending || m.sendFailed) continue;
+      if (m.id.startsWith('pending_') ||
+          m.id.startsWith('ai-pending-') ||
+          m.id.startsWith('ai-stream-')) {
+        continue;
+      }
+      return m;
+    }
+    return null;
+  }
+
+  /// Merges a catch-up page ([fresh], oldest first) into the newest-first
+  /// list, skipping messages already present.
+  static List<MessageModel> mergeCatchup(
+    List<MessageModel> messages,
+    List<MessageModel> fresh,
+  ) {
+    var out = messages;
+    for (final m in fresh) {
+      out = reconcileNewMessage(out, m);
+    }
+    return out;
+  }
+
+  /// Build the PinnedMessageModel list from pinned IDs using loaded messages,
+  /// falling back to the [previous] pinned models (from the conversation
+  /// payload) for pinned messages that are not loaded in the timeline.
   static List<PinnedMessageModel> buildPinned(
     List<MessageModel> messages,
-    PinnedMessageEvent event,
-  ) {
+    PinnedMessageEvent event, {
+    List<PinnedMessageModel> previous = const [],
+  }) {
     final loadedById = {for (final m in messages) m.id: m};
-    return event.pinnedMessageIds
-        .map((id) => loadedById[id])
-        .whereType<MessageModel>()
-        .map((m) => PinnedMessageModel(
-              id: m.id,
-              senderId: m.senderId,
-              content: m.content,
-              // Carry type so previews stay sanitized (no raw system codes /
-              // media JSON) for realtime-pinned messages too.
-              type: m.type,
-              createdAt: m.createdAt,
-            ))
-        .toList();
+    final previousById = {for (final p in previous) p.id: p};
+    final out = <PinnedMessageModel>[];
+    for (final id in event.pinnedMessageIds) {
+      final m = loadedById[id];
+      if (m != null) {
+        if (m.recalled) continue;
+        out.add(PinnedMessageModel(
+          id: m.id,
+          senderId: m.senderId,
+          content: m.content,
+          // Carry type so previews stay sanitized (no raw system codes /
+          // media JSON) for realtime-pinned messages too.
+          type: m.type,
+          createdAt: m.createdAt,
+        ));
+      } else {
+        final prev = previousById[id];
+        if (prev != null) out.add(prev);
+      }
+    }
+    return out;
   }
 }

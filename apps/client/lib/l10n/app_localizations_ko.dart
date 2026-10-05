@@ -1097,7 +1097,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get pinnedMessagesTitle => '고정된 메시지';
 
   @override
-  String get pinLimitReached => '메시지는 최대 2개까지 고정할 수 있습니다';
+  String get pinLimitReached => '메시지는 최대 5개까지 고정할 수 있습니다';
 
   @override
   String get cannotPinCall => '통화는 고정할 수 없습니다';
@@ -3486,4 +3486,152 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get adminLoadFailed => '이 섹션을 불러올 수 없습니다. 다시 시도해 주세요.';
+
+  @override
+  String get errTooManyRequests => '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String get removedFromConversation => '더 이상 이 대화의 멤버가 아닙니다';
+
+  @override
+  String get errGroupAdminRequired => '그룹 관리자만 할 수 있습니다';
+
+  @override
+  String get errChatUserBlocked => '이 사용자에게 메시지를 보낼 수 없습니다';
+
+  @override
+  String get errReplyTargetInvalid => '답장하려는 메시지를 더 이상 사용할 수 없습니다';
+
+  @override
+  String get errMessageTypeNotAllowed => '이 유형의 메시지는 여기에서 보낼 수 없습니다';
+
+  @override
+  String get errInvalidUrl => '이 링크는 미리 볼 수 없습니다';
+
+  @override
+  String get errNotAGroup => '그룹 채팅에서만 사용할 수 있습니다';
+
+  @override
+  String get errNotAMember => '이 사용자는 더 이상 그룹에 없습니다';
+
+  @override
+  String get errLastAdminCannotBeRemoved => '그룹에는 최소 한 명의 관리자가 있어야 합니다';
+
+  @override
+  String get errPublicDepartmentChannel => '부서 그룹은 공개 채널로 만들 수 없습니다';
+
+  @override
+  String get publicChannelToggle => '공개 채널';
+
+  @override
+  String get publicChannelHint => '워크스페이스의 누구나 탐색에서 찾아 참여할 수 있습니다';
+
+  @override
+  String get groupMakeAdmin => '관리자로 지정';
+
+  @override
+  String get groupRemoveAdmin => '관리자 해제';
+
+  @override
+  String get aiErrEmptyResponse => '어시스턴트가 답변을 생성하지 못했습니다. 다시 시도해 주세요.';
+
+  @override
+  String get sysGroupCreatedNoActor => '그룹이 생성되었습니다';
+
+  @override
+  String get sysMembersAddedNoActor => '새 멤버가 추가되었습니다';
+
+  @override
+  String get sysMemberLeftNoActor => '멤버가 그룹을 나갔습니다';
+
+  @override
+  String get sysMemberRemovedNoActor => '멤버가 내보내졌습니다';
+
+  @override
+  String get sysMemberJoinedNoActor => '새 멤버가 참여했습니다';
+
+  @override
+  String get sysAutoDeleteOff => '사라지는 메시지가 꺼졌습니다';
+
+  @override
+  String sysAutoDeleteOn(String duration) {
+    return '사라지는 메시지가 $duration(으)로 설정되었습니다';
+  }
+
+  @override
+  String sysAutoDeleteOffBy(String actorName) {
+    return '$actorName님이 사라지는 메시지를 껐습니다';
+  }
+
+  @override
+  String sysAutoDeleteOnBy(String actorName, String duration) {
+    return '$actorName님이 사라지는 메시지를 $duration(으)로 설정했습니다';
+  }
+
+  @override
+  String sysAdminPromoted(String targetName) {
+    return '$targetName님이 이제 관리자입니다';
+  }
+
+  @override
+  String sysAdminDemoted(String targetName) {
+    return '$targetName님은 더 이상 관리자가 아닙니다';
+  }
+
+  @override
+  String sysAdminPromotedBy(String actorName, String targetName) {
+    return '$actorName님이 $targetName님을 관리자로 지정했습니다';
+  }
+
+  @override
+  String sysAdminDemotedBy(String actorName, String targetName) {
+    return '$actorName님이 $targetName님의 관리자 권한을 해제했습니다';
+  }
+
+  @override
+  String durationSeconds(int count) {
+    return '$count초';
+  }
+
+  @override
+  String durationMinutes(int count) {
+    return '$count분';
+  }
+
+  @override
+  String durationHours(int count) {
+    return '$count시간';
+  }
+
+  @override
+  String durationDays(int count) {
+    return '$count일';
+  }
+
+  @override
+  String durationShortMinutes(int count) {
+    return '$count분';
+  }
+
+  @override
+  String durationShortHours(int count) {
+    return '$count시간';
+  }
+
+  @override
+  String durationShortDays(int count) {
+    return '$count일';
+  }
+
+  @override
+  String get authErrUserBlocked => '사용할 수 없습니다 — 둘 중 한 명이 상대를 차단했습니다';
+
+  @override
+  String get authErrCurrentPasswordRequired => '현재 비밀번호를 입력하세요';
+
+  @override
+  String get authErrSsoEmailUnverified => '로그인 제공업체에서 이 이메일 주소를 인증하지 않았습니다';
+
+  @override
+  String get authErrSocialAccountConflict => '이 이메일은 이미 다른 로그인 계정에 연결되어 있습니다';
 }

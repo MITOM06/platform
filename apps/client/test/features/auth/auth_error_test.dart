@@ -58,6 +58,11 @@ void main() {
       'LAST_OWNER_CANNOT_BE_BLOCKED': l10n.authErrLastOwnerCannotBeBlocked,
       'SSO_DISABLED': l10n.authErrSsoDisabled,
       'SSO_DOMAIN_NOT_ALLOWED': l10n.authErrSsoDomainNotAllowed,
+      'SSO_EMAIL_UNVERIFIED': l10n.authErrSsoEmailUnverified,
+      'SOCIAL_ACCOUNT_CONFLICT': l10n.authErrSocialAccountConflict,
+      'USER_BLOCKED': l10n.authErrUserBlocked,
+      'CURRENT_PASSWORD_REQUIRED': l10n.authErrCurrentPasswordRequired,
+      'CURRENT_PASSWORD_INCORRECT': l10n.errCurrentPasswordIncorrect,
     };
     for (final e in expected.entries) {
       expect(authCodeToString(ctx, e.key), e.value, reason: e.key);

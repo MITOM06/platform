@@ -8,7 +8,8 @@ import '../../../core/utils/app_error.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
-import '../../chat/data/chat_repository.dart';
+import '../../auth/utils/auth_error.dart';
+import '../../chat/ui/open_direct_chat.dart';
 import '../../chat/domain/chat_provider.dart';
 import '../../chat/ui/widgets/conversation_avatar.dart';
 import '../../friends/data/friends_repository.dart';
@@ -35,16 +36,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   Future<void> _message(UserModel user) async {
     setState(() => _busy = true);
     try {
-      final conv = await ref
-          .read(chatRepositoryProvider)
-          .getOrCreateConversation(user.id);
-      if (mounted) context.go('/chat/${conv.id}');
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(friendlyError(e))),
-        );
-      }
+      await openDirectChat(context, ref, user.id);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -65,8 +57,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
+        // Auth-service codes (USER_BLOCKED, CANNOT_BLOCK_SELF, …) map to their
+        // specific localized text; network/HTTP failures to the generic one.
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(friendlyError(e))),
+          SnackBar(content: Text(authErrorMessage(context, e))),
         );
       }
     } finally {

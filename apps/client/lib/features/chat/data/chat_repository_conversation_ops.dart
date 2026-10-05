@@ -5,8 +5,13 @@ part of 'chat_repository.dart';
 mixin ChatRepositoryConversationOps {
   Dio get _dio;
 
+  /// The conversation list. One page of the server maximum (100) — a chat
+  /// opened beyond it is fetched on demand (ConversationsNotifier.ensureLoaded).
   Future<List<ConversationModel>> listConversations() async {
-    final response = await _dio.get('/api/conversations');
+    final response = await _dio.get(
+      '/api/conversations',
+      queryParameters: {'size': 100},
+    );
     final data = response.data as Map<String, dynamic>;
     final content = data['content'] as List;
     return content
@@ -18,7 +23,7 @@ mixin ChatRepositoryConversationOps {
   Future<List<ConversationModel>> listArchivedConversations() async {
     final response = await _dio.get(
       '/api/conversations',
-      queryParameters: {'archived': true},
+      queryParameters: {'archived': true, 'size': 100},
     );
     final data = response.data as Map<String, dynamic>;
     final content = data['content'] as List;
@@ -31,7 +36,7 @@ mixin ChatRepositoryConversationOps {
   Future<List<ConversationModel>> listBlockedConversations() async {
     final response = await _dio.get(
       '/api/conversations',
-      queryParameters: {'blocked': true},
+      queryParameters: {'blocked': true, 'size': 100},
     );
     final data = response.data as Map<String, dynamic>;
     final content = data['content'] as List;
@@ -59,12 +64,15 @@ mixin ChatRepositoryConversationOps {
     List<String> participantIds, {
     String? avatarUrl,
     String? departmentId,
+    bool publicChannel = false,
   }) async {
     final response = await _dio.post('/api/conversations/group', data: {
       'name': name,
       'avatarUrl': avatarUrl,
       'participantIds': participantIds,
       if (departmentId != null) 'departmentId': departmentId,
+      // Listed in Explore (GET /api/conversations/public) when true.
+      'publicChannel': publicChannel,
     });
     return ConversationModel.fromJson(response.data as Map<String, dynamic>);
   }
@@ -78,10 +86,14 @@ mixin ChatRepositoryConversationOps {
     String conversationId, {
     String? name,
     String? avatarUrl,
+    bool? publicChannel,
   }) async {
     final response = await _dio.put('/api/conversations/$conversationId', data: {
       if (name != null) 'name': name,
       if (avatarUrl != null) 'avatarUrl': avatarUrl,
+      // Admin-only Explore visibility toggle (not allowed for department
+      // groups: 400 PUBLIC_DEPARTMENT_CHANNEL_NOT_ALLOWED).
+      if (publicChannel != null) 'publicChannel': publicChannel,
     });
     return ConversationModel.fromJson(response.data as Map<String, dynamic>);
   }
@@ -108,6 +120,27 @@ mixin ChatRepositoryConversationOps {
       '/api/conversations/$conversationId/members',
       data: {'userIds': userIds},
     );
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// Makes [userId] a group admin (`POST …/admins/{userId}`, admin-only).
+  Future<ConversationModel> promoteAdmin(
+    String conversationId,
+    String userId,
+  ) async {
+    final response =
+        await _dio.post('/api/conversations/$conversationId/admins/$userId');
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// Removes [userId]'s admin role (`DELETE …/admins/{userId}`). The last
+  /// admin cannot be demoted (409 `LAST_ADMIN_CANNOT_BE_REMOVED`).
+  Future<ConversationModel> demoteAdmin(
+    String conversationId,
+    String userId,
+  ) async {
+    final response =
+        await _dio.delete('/api/conversations/$conversationId/admins/$userId');
     return ConversationModel.fromJson(response.data as Map<String, dynamic>);
   }
 

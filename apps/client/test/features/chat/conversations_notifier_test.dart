@@ -8,7 +8,6 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:platform_client/features/chat/data/chat_repository.dart';
 import 'package:platform_client/features/chat/data/stomp_service.dart';
-import 'package:platform_client/features/chat/domain/chat_models.dart';
 import 'package:platform_client/features/chat/domain/chat_state.dart';
 import 'package:platform_client/features/chat/domain/conversations_notifier.dart';
 
@@ -37,7 +36,8 @@ class FakeStompService extends StompService {
   Stream<Map<String, dynamic>> get notifications => const Stream.empty();
 
   @override
-  Stream<ConversationModel> get conversationUpdates => const Stream.empty();
+  Stream<ConversationUpdateEvent> get conversationUpdates =>
+      const Stream.empty();
 
   @override
   Stream<Map<String, dynamic>> get webrtcSignals => const Stream.empty();

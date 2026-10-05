@@ -9,7 +9,13 @@ import '../../../core/router/app_router.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../ui/widgets/message_preview_text.dart';
+import '../../../core/api/token_manager.dart';
+import '../../auth/domain/auth_provider.dart';
+import '../../auth/domain/session_reset.dart';
+import '../../home/domain/home_providers.dart';
+import '../data/stomp_service.dart';
 import 'chat_misc_providers.dart';
+import 'chat_provider.dart' show chatNotifierProvider;
 import 'chat_state.dart';
 import 'webrtc_service.dart';
 
@@ -100,6 +106,23 @@ void handleWebRtcSignal(
   }
 }
 
+/// [senderName] from a notification payload, or null when it is unusable for
+/// display: empty, the literal `system`, or a raw id (chat-service sends the
+/// id itself when the name can't be resolved).
+String? displayableSenderName(String? senderName, String? senderId) {
+  final name = senderName?.trim() ?? '';
+  if (name.isEmpty || name == 'system') return null;
+  if (senderId != null && name == senderId) return null;
+  if (looksLikeRawId(name)) return null;
+  return name;
+}
+
+/// A Mongo ObjectId, a bot id (`extbot:…`, `ai-bot-…`) — never display text.
+bool looksLikeRawId(String value) =>
+    RegExp(r'^[0-9a-fA-F]{24}$').hasMatch(value) ||
+    value.startsWith('extbot:') ||
+    value.startsWith('ai-bot-');
+
 /// Builds the SANITIZED body line for the in-app banner and the OS notification.
 ///
 /// Kept pure (context + values in, string out) so the no-raw-system-data rule can be
@@ -147,14 +170,19 @@ Future<void> showIncomingMessageBanner(
 }) async {
   final isAssistant =
       senderId == kAiBotUserId || senderId.startsWith('extbot:');
+  // chat-service falls back to the raw id when it can't resolve a name —
+  // that must never be displayed.
+  final safeSenderName = displayableSenderName(senderName, senderId);
   String resolvedName = '';
   if (isAssistant) {
-    resolvedName = senderName ?? '';
-  } else if (senderId.isNotEmpty) {
+    resolvedName = safeSenderName ?? '';
+  } else if (senderId.isNotEmpty && senderId != 'system') {
     try {
       final profile = await ref.read(userProfileProvider(senderId).future);
       resolvedName = profile.displayName;
-    } catch (_) {}
+    } catch (_) {
+      resolvedName = safeSenderName ?? '';
+    }
   }
 
   final context =
@@ -192,4 +220,41 @@ Future<void> showIncomingMessageBanner(
     body: bodyText,
     conversationId: convId,
   ));
+}
+
+/// The user was removed from (or left) [conversationId]: close it wherever it
+/// is open (mobile route or the wide-layout detail pane) and say why.
+void leaveRemovedConversation(Ref ref, String conversationId) {
+  ref.invalidate(archivedConversationsProvider);
+  ref.invalidate(chatNotifierProvider(conversationId));
+  if (ref.read(selectedConversationIdProvider) == conversationId) {
+    ref.read(selectedConversationIdProvider.notifier).state = null;
+  }
+  final router = ref.read(appRouterProvider);
+  final path = router.routeInformationProvider.value.uri.path;
+  final openHere = path.endsWith('/$conversationId') ||
+      path.contains('/$conversationId/');
+  if (!openHere) return;
+  router.go('/');
+  final context = router.routerDelegate.navigatorKey.currentContext;
+  if (context != null) showErrorSnackBar(context.l10n.removedFromConversation);
+}
+
+/// `CLAIMS_CHANGED`: the user's role / departments / permission matrix
+/// changed. Mint a token with the fresh claims, refetch everything gated by
+/// them and move the socket onto the new token — no re-login, no toast.
+Future<void> refreshClaims(Ref ref) async {
+  try {
+    try {
+      await TokenManager.shared.forceRefresh();
+    } on RefreshRejectedException {
+      // The session itself is gone — the one case that signs out.
+      ref.read(authNotifierProvider.notifier).forceLogout();
+      return;
+    }
+    invalidateClaimsDependentState(ref);
+    await ref.read(stompServiceProvider.notifier).reconnect();
+  } catch (_) {
+    // Transient: the next 401 TOKEN_CLAIMS_STALE refreshes anyway.
+  }
 }

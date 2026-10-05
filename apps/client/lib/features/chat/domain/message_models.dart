@@ -21,17 +21,22 @@ class ReplyPreview {
   final String? messageId;
   final String senderId;
   final String content;
+  // The quoted message was recalled — [content] is blank; render the
+  // localized "message recalled" label instead.
+  final bool recalled;
 
   const ReplyPreview({
     this.messageId,
     required this.senderId,
     required this.content,
+    this.recalled = false,
   });
 
   factory ReplyPreview.fromJson(Map<String, dynamic> json) => ReplyPreview(
         messageId: json['messageId'] as String?,
         senderId: json['senderId'] as String? ?? '',
         content: json['content'] as String? ?? '',
+        recalled: json['recalled'] as bool? ?? false,
       );
 }
 
@@ -108,6 +113,18 @@ class MessageModel {
       isAiMessage && content == kAiStreamInterruptedSentinel;
   bool get isAiUnavailable => isAiMessage && content == kAiUnavailableSentinel;
   bool get isAiRateLimited => isAiMessage && content == kAiRateLimitedSentinel;
+  bool get isAiEmptyResponse =>
+      isAiMessage && content == kAiEmptyResponseSentinel;
+
+  /// Any AI failure state (rendered as a localized notice, never the
+  /// sentinel itself).
+  bool get isAiFailure =>
+      isAiError ||
+      isAiQuotaExceeded ||
+      isAiRateLimited ||
+      isAiStreamInterrupted ||
+      isAiUnavailable ||
+      isAiEmptyResponse;
   bool get isImage => type == 'image';
   bool get isVideo => type == 'video';
   bool get isMedia => isImage || isVideo;

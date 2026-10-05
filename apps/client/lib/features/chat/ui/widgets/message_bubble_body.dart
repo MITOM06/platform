@@ -126,6 +126,22 @@ class MessageBubbleBody extends StatelessWidget {
               ),
             ],
           )
+        else if (message.isAiEmptyResponse)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.info_outline_rounded,
+                  color: AppTheme.mutedText(context), size: 16),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  context.l10n.aiErrEmptyResponse,
+                  style: TextStyle(
+                      color: AppTheme.mutedText(context), fontSize: 14),
+                ),
+              ),
+            ],
+          )
         else if (message.isAiError)
           Row(
             mainAxisSize: MainAxisSize.min,

@@ -1,16 +1,16 @@
 import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
-import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
-import '../../../core/l10n/l10n_ext.dart';
-import '../../../core/router/app_router.dart';
+import '../../../core/utils/app_error.dart';
 import '../../../core/utils/global_messenger.dart';
+import '../../../l10n/app_localizations.dart';
 import '../data/ai_persona_repository.dart';
 import '../data/chat_repository.dart';
 import '../data/stomp_service.dart';
+import '../utils/chat_error.dart';
 import 'chat_ai_stream_handler.dart';
 import 'chat_state.dart';
 import 'chat_stomp_reducers.dart';
@@ -26,30 +26,35 @@ export 'conversations_notifier.dart';
 
 part 'chat_provider.g.dart';
 // Message action methods (reply/edit/reaction/recall/pin/unpin/forward/delete)
-// live in a mixin in a separate part file for the clean-code file limit. They
-// remain methods of ChatNotifier, so the public provider API is unchanged.
+// and the send path live in mixins in separate part files for the clean-code
+// file limit. They remain methods of ChatNotifier, so the public provider API
+// is unchanged.
 part 'chat_provider_actions.dart';
+part 'chat_provider_send.dart';
+
+/// Catch-up pages fetched after a reconnect before giving up (50 per page).
+const _kMaxCatchupPages = 20;
 
 // ---------------------------------------------------------------------------
 // ChatNotifier — messages for a single conversation
 // ---------------------------------------------------------------------------
 
 @riverpod
-class ChatNotifier extends _$ChatNotifier with _ChatActionsMixin {
-  Timer? _typingTimer;
+class ChatNotifier extends _$ChatNotifier
+    with _ChatActionsMixin, _ChatSendMixin {
   final Map<String, Timer> _typingTimers = {};
-  StreamSubscription<MessageModel>? _messageSub;
-  StreamSubscription<TypingEvent>? _typingSub;
-  StreamSubscription<ReadReceiptEvent>? _readSub;
-  StreamSubscription<ReactionUpdateEvent>? _reactionSub;
-  StreamSubscription<RecallEvent>? _recallSub;
-  StreamSubscription<MessageUpdateEvent>? _editSub;
-  StreamSubscription<PinnedMessageEvent>? _pinSub;
-  StreamSubscription<void>? _reconnectSub;
-  StreamSubscription<Map<String, dynamic>>? _aiStreamSub;
+  final List<StreamSubscription<dynamic>> _subscriptions = [];
+  bool _catchupRunning = false;
 
-  /// AI streaming placeholder correlation + chunk/done/error handling + the
-  /// response watchdog timer (extracted for the clean-code file limit).
+  /// 1-1 conversation with the built-in AI: every text message gets a
+  /// streaming placeholder (no `@AI` needed there).
+  bool _directAi = false;
+
+  @override
+  bool get _isDirectAiChat => _directAi;
+
+  /// AI streaming correlation (by `replyId`) + the per-reply watchdogs.
+  @override
   late final ChatAiStreamHandler _ai = ChatAiStreamHandler(
     readState: () => state.valueOrNull,
     writeMessages: (messages) {
@@ -57,6 +62,8 @@ class ChatNotifier extends _$ChatNotifier with _ChatActionsMixin {
       if (current == null) return;
       state = AsyncData(current.copyWith(messages: messages));
     },
+    currentUserId: () => _currentUserId,
+    conversationId: conversationId,
   );
 
   @override
@@ -65,51 +72,34 @@ class ChatNotifier extends _$ChatNotifier with _ChatActionsMixin {
 
     stomp.subscribeConversation(conversationId);
 
-    _messageSub = stomp.messages
-        .where((m) => m.conversationId == conversationId)
-        .listen(_onNewMessage);
-
-    _typingSub = stomp.typing
-        .where((e) => e.conversationId == conversationId)
-        .listen(_onTypingEvent);
-
-    _readSub = stomp.readReceipts
-        .where((e) => e.conversationId == conversationId)
-        .listen(_onReadReceipt);
-
-    _reactionSub = stomp.reactionUpdates
-        .where((e) => e.conversationId == conversationId)
-        .listen(_onReactionUpdate);
-
-    _recallSub = stomp.recalledMessages
-        .where((e) => e.conversationId == conversationId)
-        .listen(_onRecall);
-
-    _editSub = stomp.editedMessages
-        .where((e) => e.conversationId == conversationId)
-        .listen(_onEdit);
-
-    _pinSub = stomp.pinnedMessageUpdates
-        .where((e) => e.conversationId == conversationId)
-        .listen(_onPinnedMessage);
-
-    _reconnectSub = stomp.reconnects.listen((_) => _catchupMessages());
-
-    _aiStreamSub = stomp.aiStreamEvents.listen(_ai.onStreamEvent);
+    bool mine(dynamic e) => e.conversationId == conversationId;
+    _subscriptions.addAll([
+      stomp.messages.where(mine).listen(_onNewMessage),
+      stomp.typing.where(mine).listen(_onTypingEvent),
+      stomp.readReceipts.where(mine).listen(_onReadReceipt),
+      stomp.reactionUpdates.where(mine).listen(_onReactionUpdate),
+      stomp.recalledMessages.where(mine).listen(_onRecall),
+      stomp.editedMessages.where(mine).listen(_onEdit),
+      stomp.pinnedMessageUpdates.where(mine).listen(_onPinnedMessage),
+      stomp.reconnects.listen((_) => _catchupMessages()),
+      stomp.aiStreamEvents
+          .where((e) => e['conversationId'] == conversationId)
+          .listen(_ai.onStreamEvent),
+      stomp.notifications
+          .where((n) =>
+              n['type'] == 'MESSAGE_REJECTED' &&
+              n['conversationId'] == conversationId)
+          .listen((n) => _onMessageRejected(n['code'] as String?)),
+    ]);
 
     ref.onDispose(() {
-      _messageSub?.cancel();
-      _typingSub?.cancel();
-      _readSub?.cancel();
-      _reactionSub?.cancel();
-      _recallSub?.cancel();
-      _editSub?.cancel();
-      _pinSub?.cancel();
-      _reconnectSub?.cancel();
-      _aiStreamSub?.cancel();
+      for (final s in _subscriptions) {
+        s.cancel();
+      }
+      _subscriptions.clear();
       _ai.dispose();
       _cancelSendWatchdogs();
-      _typingTimer?.cancel();
+      _disposeTyping();
       for (final t in _typingTimers.values) {
         t.cancel();
       }
@@ -133,6 +123,7 @@ class ChatNotifier extends _$ChatNotifier with _ChatActionsMixin {
     final paged = results[0] as PagedResult<MessageModel>;
     final conv = results[1] as ConversationModel;
     final persona = results[2];
+    _directAi = conv.isDirectAi;
     _markLoadedAsRead(paged.content);
 
     // Parse historical system messages for config (theme, nickname, quick reaction)
@@ -165,38 +156,44 @@ class ChatNotifier extends _$ChatNotifier with _ChatActionsMixin {
     }
   }
 
-  /// Task 55 — fetch messages that arrived while we were offline and merge them
-  /// into the current state without duplicates. Called on every STOMP reconnect.
+  /// Task 55 — fetch the messages that arrived while the socket was down and
+  /// merge them in without duplicates. Called on every STOMP reconnect. The
+  /// server pages 50 at a time (oldest first) with an exact `hasNext`, so
+  /// keep paging from the last item until the gap is closed.
   Future<void> _catchupMessages() async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    final nonPending = current.messages.where((m) => !m.isPending).toList();
-    if (nonPending.isEmpty) return;
-    // Messages list is newest-first; nonPending.first is the most recent.
-    final newestAt = nonPending.first.createdAt;
+    if (_catchupRunning) return;
+    final start = state.valueOrNull;
+    if (start == null) return;
+    final newest = ChatStompReducers.newestConfirmed(start.messages);
+    if (newest == null) return;
+    _catchupRunning = true;
+    var after = newest.createdAt;
+    String? afterId = newest.id;
     try {
-      final fresh = await ref
-          .read(chatRepositoryProvider)
-          .getMessagesSince(conversationId, newestAt);
-      if (fresh.isEmpty) return;
-      final c = state.valueOrNull;
-      if (c == null) return;
-      final existingIds = c.messages.map((m) => m.id).toSet();
-      final newMessages =
-          fresh.where((m) => !existingIds.contains(m.id)).toList();
-      if (newMessages.isEmpty) return;
-
-      for (final m in newMessages) {
-        ChatSystemMessageParser.apply(ref, conversationId, m);
+      for (var page = 0; page < _kMaxCatchupPages; page++) {
+        final fresh = await ref
+            .read(chatRepositoryProvider)
+            .getMessagesSince(conversationId, after, afterId: afterId);
+        final c = state.valueOrNull;
+        if (c == null) return;
+        if (fresh.content.isNotEmpty) {
+          for (final m in fresh.content) {
+            ChatSystemMessageParser.apply(ref, conversationId, m);
+          }
+          state = AsyncData(c.copyWith(
+            messages: ChatStompReducers.mergeCatchup(c.messages, fresh.content),
+          ));
+          _markLoadedAsRead(fresh.content);
+          after = fresh.content.last.createdAt;
+          afterId = fresh.content.last.id;
+        }
+        if (!fresh.hasNext || fresh.content.isEmpty) break;
       }
-
-      // fresh is oldest-first; reverse so newest is at index 0.
-      state = AsyncData(c.copyWith(
-        messages: [...newMessages.reversed, ...c.messages],
-      ));
-      _markLoadedAsRead(newMessages);
     } catch (_) {
-      // Best-effort: failed catch-up is non-fatal; user can pull-to-refresh.
+      // Best-effort: a failed catch-up is non-fatal; the next reconnect or
+      // re-opening the chat recovers.
+    } finally {
+      _catchupRunning = false;
     }
   }
 
@@ -206,16 +203,17 @@ class ChatNotifier extends _$ChatNotifier with _ChatActionsMixin {
 
     ChatSystemMessageParser.apply(ref, conversationId, message);
 
-    final reconciled = ChatStompReducers.reconcileNewMessage(
-      current.messages,
-      message,
-      finalizedAiPlaceholderId: _ai.finalizedAiPlaceholderId,
-    );
-    if (reconciled.consumedAiPlaceholder) {
-      _ai.finalizedAiPlaceholderId = null;
-    }
-
-    state = AsyncData(current.copyWith(messages: reconciled.messages));
+    final messages = _ai.reconcilePersisted(current.messages, message) ??
+        ChatStompReducers.reconcileNewMessage(current.messages, message);
+    // Optimistic sends reconciled by this message need no watchdog anymore.
+    _sendWatchdogs.removeWhere((pendingId, timer) {
+      final gone = !messages.any((m) => m.id == pendingId);
+      if (gone) timer.cancel();
+      return gone;
+    });
+    _aiPlaceholderFor
+        .removeWhere((pendingId, _) => !messages.any((m) => m.id == pendingId));
+    state = AsyncData(current.copyWith(messages: messages));
 
     // Mark messages from others as read. Prefer STOMP so the server broadcasts
     // a MESSAGE_READ event (sender sees the tick update live); fall back to REST
@@ -249,7 +247,11 @@ class ChatNotifier extends _$ChatNotifier with _ChatActionsMixin {
     final current = state.valueOrNull;
     if (current == null) return;
     state = AsyncData(current.copyWith(
-        messages: ChatStompReducers.applyRecall(current.messages, event)));
+      messages: ChatStompReducers.applyRecall(current.messages, event),
+      // A recalled message cannot stay pinned / quoted in the header.
+      pinnedMessages:
+          current.pinnedMessages.where((p) => p.id != event.messageId).toList(),
+    ));
   }
 
   void _onEdit(MessageUpdateEvent event) {
@@ -263,11 +265,15 @@ class ChatNotifier extends _$ChatNotifier with _ChatActionsMixin {
     final current = state.valueOrNull;
     if (current == null) return;
     state = AsyncData(current.copyWith(
-        pinnedMessages:
-            ChatStompReducers.buildPinned(current.messages, event)));
+        pinnedMessages: ChatStompReducers.buildPinned(
+            current.messages, event,
+            previous: current.pinnedMessages)));
   }
 
   void _onTypingEvent(TypingEvent event) {
+    // The server echoes our own typing back on the topic; it must never hide
+    // (or stand in for) somebody else's indicator.
+    if (event.userId == _currentUserId) return;
     final current = state.valueOrNull;
     if (current == null) return;
     final typingIds = Set<String>.from(current.typingUserIds);
@@ -293,108 +299,5 @@ class ChatNotifier extends _$ChatNotifier with _ChatActionsMixin {
     final typingIds = Set<String>.from(current.typingUserIds)..remove(userId);
     _typingTimers.remove(userId);
     state = AsyncData(current.copyWith(typingUserIds: typingIds));
-  }
-
-  static final _aiMentionRe = RegExp(r'@(AI|ponai)\b', caseSensitive: false);
-
-  @override
-  Future<void> sendMessage(String content, {String type = 'text'}) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    final uid = _currentUserId;
-    if (uid == null) return;
-
-    final replyTo = current.replyingTo;
-    final replyPreview = replyTo == null
-        ? null
-        : ReplyPreview(
-            messageId: replyTo.id,
-            senderId: replyTo.senderId,
-            content: replyTo.content,
-          );
-
-    final optimistic = MessageModel(
-      id: 'pending_${DateTime.now().millisecondsSinceEpoch}',
-      conversationId: conversationId,
-      senderId: uid,
-      content: content,
-      type: type,
-      readBy: [uid],
-      createdAt: DateTime.now(),
-      replyToId: replyTo?.id,
-      replyPreview: replyPreview,
-      isPending: true,
-    );
-    // @AI mention → insert a thinking placeholder too.
-    final hasAiMention = type == 'text' && _aiMentionRe.hasMatch(content);
-    final aiPlaceholderId = 'ai-pending-${DateTime.now().millisecondsSinceEpoch}';
-    final aiPlaceholder = hasAiMention
-        ? MessageModel(
-            id: aiPlaceholderId,
-            conversationId: conversationId,
-            senderId: kAiBotUserId,
-            content: '',
-            type: 'ai',
-            readBy: const [],
-            createdAt: DateTime.now(),
-            isStreaming: true,
-            isThinking: true,
-          )
-        : null;
-    if (hasAiMention) {
-      _ai.beginPending(aiPlaceholderId);
-    }
-
-    state = AsyncData(current.copyWith(
-      messages: [
-        if (aiPlaceholder != null) aiPlaceholder,
-        optimistic,
-        ...current.messages,
-      ],
-      clearReplyingTo: true, // adding the message also clears the reply composer
-    ));
-
-    final stomp = ref.read(stompServiceProvider.notifier);
-    if (stomp.isConnected) {
-      stomp.sendMessage(conversationId, content,
-          type: type, replyToId: replyTo?.id);
-      // STOMP send has no ack; watchdog fails the bubble (tap-to-retry) on no echo.
-      _startSendWatchdog(optimistic.id);
-    } else {
-      try {
-        // REST fallback when STOMP unavailable.
-        final sent = await ref
-            .read(chatRepositoryProvider)
-            .sendMessageRest(conversationId, content,
-                type: type, replyToId: replyTo?.id);
-        final c = state.valueOrNull;
-        if (c != null) {
-          state = AsyncData(c.copyWith(
-            messages: c.messages
-                .map((m) => m.id == optimistic.id ? sent : m)
-                .toList(),
-          ));
-        }
-      } catch (e) {
-        final c = state.valueOrNull;
-        if (c != null) {
-          state = AsyncData(c.copyWith(
-            messages: c.messages.where((m) => m.id != optimistic.id).toList(),
-          ));
-        }
-        if (e is DioException && e.response?.statusCode == 429) {
-          _showRateLimitError();
-        }
-      }
-    }
-  }
-
-  void startTyping() {
-    final stomp = ref.read(stompServiceProvider.notifier);
-    stomp.sendTyping(conversationId, isTyping: true);
-    _typingTimer?.cancel();
-    _typingTimer = Timer(const Duration(seconds: 3), () {
-      stomp.sendTyping(conversationId, isTyping: false);
-    });
   }
 }

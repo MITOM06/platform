@@ -540,7 +540,7 @@
   "pinMessage": "Pin",
   "unpinMessage": "Unpin",
   "pinnedMessagesTitle": "Pinned Messages",
-  "pinLimitReached": "You can pin up to 2 messages",
+  "pinLimitReached": "You can pin up to 5 messages",
   "cannotPinCall": "Calls can't be pinned",
   "forwardMessage": "Forward",
   "messageForwarded": "Message forwarded",
@@ -1678,5 +1678,152 @@
   },
   "adminMemberBlocked": "Member blocked",
   "adminMemberUnblocked": "Member unblocked",
-  "adminLoadFailed": "Couldn't load this section. Please try again."
+  "adminLoadFailed": "Couldn't load this section. Please try again.",
+  "errTooManyRequests": "Too many requests. Please wait a moment and try again.",
+  "removedFromConversation": "You are no longer a member of this conversation",
+  "errGroupAdminRequired": "Only group admins can do this",
+  "errChatUserBlocked": "You can't message this person",
+  "errReplyTargetInvalid": "The message you replied to is no longer available",
+  "errMessageTypeNotAllowed": "This kind of message can't be sent here",
+  "errInvalidUrl": "This link can't be previewed",
+  "errNotAGroup": "This only works in group chats",
+  "errNotAMember": "This person is no longer in the group",
+  "errLastAdminCannotBeRemoved": "A group needs at least one admin",
+  "errPublicDepartmentChannel": "A department group can't be a public channel",
+  "publicChannelToggle": "Public channel",
+  "publicChannelHint": "Anyone in the workspace can find it in Explore and join",
+  "groupMakeAdmin": "Make admin",
+  "groupRemoveAdmin": "Remove as admin",
+  "aiErrEmptyResponse": "The assistant didn't produce an answer. Please try again.",
+  "sysGroupCreatedNoActor": "Group created",
+  "sysMembersAddedNoActor": "New members were added",
+  "sysMemberLeftNoActor": "A member left the group",
+  "sysMemberRemovedNoActor": "A member was removed",
+  "sysMemberJoinedNoActor": "A new member joined",
+  "sysAutoDeleteOff": "Disappearing messages turned off",
+  "sysAutoDeleteOn": "Disappearing messages set to {duration}",
+  "@sysAutoDeleteOn": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "sysAutoDeleteOffBy": "{actorName} turned off disappearing messages",
+  "@sysAutoDeleteOffBy": {
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      }
+    }
+  },
+  "sysAutoDeleteOnBy": "{actorName} set disappearing messages to {duration}",
+  "@sysAutoDeleteOnBy": {
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "sysAdminPromoted": "{targetName} is now an admin",
+  "@sysAdminPromoted": {
+    "placeholders": {
+      "targetName": {
+        "type": "String"
+      }
+    }
+  },
+  "sysAdminDemoted": "{targetName} is no longer an admin",
+  "@sysAdminDemoted": {
+    "placeholders": {
+      "targetName": {
+        "type": "String"
+      }
+    }
+  },
+  "sysAdminPromotedBy": "{actorName} made {targetName} an admin",
+  "@sysAdminPromotedBy": {
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      },
+      "targetName": {
+        "type": "String"
+      }
+    }
+  },
+  "sysAdminDemotedBy": "{actorName} removed {targetName} as admin",
+  "@sysAdminDemotedBy": {
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      },
+      "targetName": {
+        "type": "String"
+      }
+    }
+  },
+  "durationSeconds": "{count, plural, =1{1 second} other{{count} seconds}}",
+  "@durationSeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutes": "{count, plural, =1{1 minute} other{{count} minutes}}",
+  "@durationMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHours": "{count, plural, =1{1 hour} other{{count} hours}}",
+  "@durationHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationDays": "{count, plural, =1{1 day} other{{count} days}}",
+  "@durationDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationShortMinutes": "{count}m",
+  "@durationShortMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationShortHours": "{count}h",
+  "@durationShortHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationShortDays": "{count}d",
+  "@durationShortDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "authErrUserBlocked": "Not available — one of you has blocked the other",
+  "authErrCurrentPasswordRequired": "Enter your current password",
+  "authErrSsoEmailUnverified": "Your sign-in provider hasn't verified this email address",
+  "authErrSocialAccountConflict": "This email is already linked to a different sign-in account"
 }
