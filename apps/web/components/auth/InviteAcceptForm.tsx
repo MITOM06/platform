@@ -1,18 +1,19 @@
 'use client'
 
-import { useMemo, useState, useSyncExternalStore, type ComponentProps } from 'react'
+import { useMemo, useSyncExternalStore } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { Eye, EyeOff, Smartphone } from 'lucide-react'
+import { Smartphone } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
 import type { InvitationPreview } from '@/lib/api/types'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { parseAuthError, authCodeToI18nKey } from '@/lib/auth/auth-error'
+import { MFA_PATH, isMfaChallenge, savePendingMfa } from '@/lib/auth/mfa'
 import { maybeRequestNotificationPermission } from '@/lib/notifications'
 import { AUTH_URL } from '@/lib/config/env'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,7 @@ import { Separator } from '@/components/ui/separator'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter'
 import { GoogleIcon } from '@/components/auth/GoogleIcon'
+import { RevealableInput } from '@/components/auth/RevealableInput'
 
 type FormData = { displayName: string; password: string; confirmPassword: string; agreeToTerms: boolean }
 
@@ -35,24 +37,6 @@ function appInviteHref(token: string, ua: string): string {
   return /Android/i.test(ua)
     ? `intent://invite?${q}#Intent;scheme=platform;package=com.platform.platform_client;end`
     : `platform://invite?${q}`
-}
-
-/** Password input with a show/hide toggle; forwards react-hook-form's register props. */
-function RevealableInput(props: ComponentProps<typeof Input>) {
-  const [show, setShow] = useState(false)
-  return (
-    <div className="relative">
-      <Input {...props} type={show ? 'text' : 'password'} className="h-11 text-base pr-10" />
-      <button
-        type="button"
-        onClick={() => setShow((v) => !v)}
-        className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
-        tabIndex={-1}
-      >
-        {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-      </button>
-    </div>
-  )
 }
 
 interface Props {
@@ -130,11 +114,15 @@ export function InviteAcceptForm({ token, preview }: Props) {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const { accessToken, refreshToken, sid, user } = await authService.acceptInvitation(
-        token,
-        data.displayName.trim(),
-        data.password,
-      )
+      const result = await authService.acceptInvitation(token, data.displayName.trim(), data.password)
+      // Defensive: should the server ever ask an invited Owner/Admin for 2FA
+      // right away, finish on /mfa instead of storing tokens that aren't there.
+      if (isMfaChallenge(result)) {
+        savePendingMfa(result)
+        router.replace(MFA_PATH)
+        return
+      }
+      const { accessToken, refreshToken, sid, user } = result
       await fetch('/api/auth/set-cookie', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

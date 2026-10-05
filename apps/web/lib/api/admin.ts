@@ -68,6 +68,12 @@ export const adminService = {
       .patch<Member>(`/admin/members/${id}/status`, { status })
       .then((r) => r.data),
 
+  /** Owner only: clear the member's 2FA (re-enroll at next sign-in) and revoke their sessions. */
+  resetMemberMfa: (id: string) =>
+    authApi
+      .post<{ success: boolean }>(`/admin/members/${id}/mfa/reset`)
+      .then((r) => r.data),
+
   // ── invitations ───────────────────────────────────────────────────────────
   listInvitations: (status?: InvitationListFilter) =>
     authApi

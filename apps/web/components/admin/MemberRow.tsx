@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { Ban, Brain, LockOpen, Pencil } from 'lucide-react'
+import { Ban, Brain, LockOpen, Pencil, ShieldCheck, ShieldOff } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,13 +17,26 @@ interface Props {
   /** The signed-in admin's own row — the block action is hidden. */
   isSelf: boolean
   canManageMembers: boolean
+  /** Owner viewing another privileged member — "Reset 2FA" is offered (see `canResetMemberMfa`). */
+  canResetMfa: boolean
   onEdit: (m: Member) => void
   onAiContext: (m: Member) => void
   onToggleBlock: (m: Member) => void
+  onResetMfa: (m: Member) => void
 }
 
 /** One row of the admin members list. */
-export function MemberRow({ member: m, roleName, isSelf, canManageMembers, onEdit, onAiContext, onToggleBlock }: Props) {
+export function MemberRow({
+  member: m,
+  roleName,
+  isSelf,
+  canManageMembers,
+  canResetMfa,
+  onEdit,
+  onAiContext,
+  onToggleBlock,
+  onResetMfa,
+}: Props) {
   const t = useTranslations('admin')
   const blocked = m.status === 'blocked'
 
@@ -42,6 +55,12 @@ export function MemberRow({ member: m, roleName, isSelf, canManageMembers, onEdi
         <p className="text-sm text-muted-foreground truncate">{m.email}</p>
       </div>
       {blocked && <Badge variant="destructive">{t('memberStatusBlocked')}</Badge>}
+      {m.mfaEnabled && (
+        <Badge variant="outline" className="gap-1" data-testid="member-mfa-badge">
+          <ShieldCheck className="size-3" aria-hidden />
+          {t('memberMfaOn')}
+        </Badge>
+      )}
       {roleName && <Badge variant="secondary">{roleName}</Badge>}
       {canManageMembers && (
         <Button
@@ -64,6 +83,18 @@ export function MemberRow({ member: m, roleName, isSelf, canManageMembers, onEdi
           onClick={() => onToggleBlock(m)}
         >
           {blocked ? <LockOpen className="size-4" /> : <Ban className="size-4" />}
+        </Button>
+      )}
+      {canResetMfa && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="tap"
+          title={t('memberMfaReset')}
+          aria-label={t('memberMfaReset')}
+          onClick={() => onResetMfa(m)}
+        >
+          <ShieldOff className="size-4" />
         </Button>
       )}
       <Button variant="ghost" size="icon" className="tap" onClick={() => onEdit(m)}>

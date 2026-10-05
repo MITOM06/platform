@@ -16,6 +16,7 @@ const PUBLIC_PATHS = [
   '/verify-otp',
   '/oauth-callback',
   '/forgot-password',
+  '/mfa',
   '/privacy',
   '/terms',
 ]

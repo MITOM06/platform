@@ -33,6 +33,12 @@ export const LOGIN_NOTICES = [
   'SOCIAL_EMAIL_UNAVAILABLE',
   'SSO_DISABLED',
   'SSO_DOMAIN_NOT_ALLOWED',
+  // The 2FA step (`/mfa`) became unusable — expired/used token, too many wrong
+  // codes, wrong step — and the user must sign in again (see lib/auth/mfa.ts).
+  'MFA_TOKEN_INVALID',
+  'MFA_TOO_MANY_ATTEMPTS',
+  'MFA_NOT_ENROLLED',
+  'MFA_ALREADY_ENROLLED',
   'GENERIC_ERROR',
 ] as const
 export type LoginNotice = (typeof LOGIN_NOTICES)[number]

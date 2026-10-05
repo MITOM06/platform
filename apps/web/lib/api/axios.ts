@@ -82,6 +82,15 @@ function isRotatedRace(err: unknown): boolean {
   )
 }
 
+// A 401 carrying a typed 2FA code (MFA_CODE_INVALID, MFA_TOKEN_INVALID, …) is a
+// verdict on the code the user typed, not an expired session: refreshing would
+// rotate the tokens for nothing and replay the same wrong code (spending one
+// more attempt). E.g. a wrong code on Settings → Security "Regenerate backup codes".
+function isMfaVerdict(err: AxiosError): boolean {
+  const code = (err.response?.data as { code?: unknown } | undefined)?.code
+  return typeof code === 'string' && code.startsWith('MFA_')
+}
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 // Serialize refreshes ACROSS TABS with the Web Locks API. Refresh tokens rotate
@@ -155,6 +164,8 @@ const create401ResponseInterceptor = (apiInstance: typeof chatApi) => {
       original.url?.includes('/auth/login') ||
       original.url?.includes('/auth/invitations') ||
       original.url?.includes('/auth/verify') ||
+      original.url?.includes('/auth/mfa/') ||
+      isMfaVerdict(error) ||
       // Public/anonymous call that 401s before any session exists (initial
       // load, logged-out browsing) → don't attempt a refresh that can't succeed.
       !useAuthStore.getState().accessToken

@@ -17,12 +17,19 @@ export type LoginRequest = AuthSchemas['LoginDto']
 export type RefreshRequest = AuthSchemas['RefreshDto']
 /** `POST /auth/verify-otp` request body (email, otp). */
 export type VerifyOtpRequest = AuthSchemas['VerifyOtpDto']
+/** `POST /api/users/me/change-password` body — `currentPassword` omitted when setting the first one. */
+export type ChangePasswordRequest = AuthSchemas['ChangePasswordDto']
 
 // ── Invitations (invite-only onboarding) ─────────────────────────────────────
 /** `POST /auth/invitations/:token/accept-password` request body. */
 export type AcceptInvitationRequest = AuthSchemas['AcceptInvitationPasswordDto']
 /** `GET /auth/invitations/:token` response — public preview. `roleName` is null for a deleted role. */
 export type InvitationPreview = AuthSchemas['InvitationPreviewDto']
+
+// ── Two-factor authentication (TOTP) ─────────────────────────────────────────
+// MfaChallenge, MfaEnroll*, MfaVerifyRequest, MfaBackupCodesResponse, … are
+// aliases of the generated DTOs in `./mfa-types` (kept apart for the 400-line limit).
+export type * from './mfa-types'
 
 export interface Reaction {
   userId: string

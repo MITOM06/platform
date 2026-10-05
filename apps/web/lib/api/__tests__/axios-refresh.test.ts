@@ -297,6 +297,41 @@ describe('axios 401-refresh interceptor', () => {
     expect(callCount).toBe(0)
   })
 
+  it('does NOT refresh on a typed 2FA verdict (wrong code while signed in)', async () => {
+    let callCount = 0
+    const adapter: SimpleAdapter = () => {
+      callCount++
+      return Promise.reject(new Error('unexpected call'))
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    axios.defaults.adapter = adapter as any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    chatApi.defaults.adapter = adapter as any
+
+    const err = make401('/api/users/me/mfa/backup-codes')
+    err.response!.data = { code: 'MFA_CODE_INVALID', params: { remaining: 3 } }
+    const handler = getInterceptorHandler()
+    await expect(handler(err)).rejects.toBe(err)
+    expect(callCount).toBe(0)
+    expect(getStoreState().clearAuth).not.toHaveBeenCalled()
+  })
+
+  it('does NOT attempt a refresh for 401 on the public 2FA endpoints', async () => {
+    let callCount = 0
+    const adapter: SimpleAdapter = () => {
+      callCount++
+      return Promise.reject(new Error('unexpected call'))
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    axios.defaults.adapter = adapter as any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    chatApi.defaults.adapter = adapter as any
+
+    const handler = getInterceptorHandler()
+    await expect(handler(make401('/auth/mfa/verify'))).rejects.toThrow()
+    expect(callCount).toBe(0)
+  })
+
   it('does NOT attempt a refresh when there is no access token', async () => {
     setToken(null)
 
