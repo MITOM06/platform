@@ -47,7 +47,8 @@ public class ProdEnvironmentGuard {
 
   @PostConstruct
   void verify() {
-    List<String> problems = findProblems(environment::getProperty);
+    List<String> problems = new ArrayList<>(findProblems(environment::getProperty));
+    problems.addAll(findLiveKitProblems(environment::getProperty));
     if (!problems.isEmpty()) {
       throw new IllegalStateException(
           "Refusing to start the prod profile with development infrastructure addresses:\n  - "
@@ -79,6 +80,36 @@ public class ProdEnvironmentGuard {
       }
     }
     return problems;
+  }
+
+  /**
+   * LiveKit is optional (blank = calls stay P2P, meetings unavailable), but a half-configured one
+   * is not: calls switched to sfu with nothing to connect to, a URL no client can reach, or a
+   * secret LiveKit itself would refuse.
+   */
+  static List<String> findLiveKitProblems(UnaryOperator<String> resolver) {
+    List<String> problems = new ArrayList<>();
+    String url = resolver.apply("app.livekit.url");
+    String key = resolver.apply("app.livekit.api-key");
+    String secret = resolver.apply("app.livekit.api-secret");
+    boolean configured = !isBlank(url) && !isBlank(key) && !isBlank(secret);
+    if ("sfu".equalsIgnoreCase(resolver.apply("app.livekit.call-transport")) && !configured) {
+      problems.add(
+          "CALL_TRANSPORT=sfu but LIVEKIT_URL / LIVEKIT_API_KEY / LIVEKIT_API_SECRET are not all"
+              + " set");
+    }
+    if (!isBlank(url) && pointsAtLoopback(url)) {
+      problems.add(
+          "app.livekit.url = " + url + " — clients cannot reach this container; set LIVEKIT_URL");
+    }
+    if (!isBlank(secret) && secret.length() < LiveKitProperties.MIN_SECRET_LENGTH) {
+      problems.add("LIVEKIT_API_SECRET is shorter than 32 characters");
+    }
+    return problems;
+  }
+
+  private static boolean isBlank(String value) {
+    return value == null || value.isBlank();
   }
 
   private static boolean pointsAtLoopback(String value) {

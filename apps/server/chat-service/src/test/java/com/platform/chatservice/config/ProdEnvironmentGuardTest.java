@@ -70,4 +70,45 @@ class ProdEnvironmentGuardTest {
     partial.put("spring.data.redis.url", "redis://127.0.0.1:6379");
     assertThat(check(partial)).singleElement().asString().contains("127.0.0.1");
   }
+
+  private static List<String> liveKit(Map<String, String> env) {
+    return ProdEnvironmentGuard.findLiveKitProblems(env::get);
+  }
+
+  @Test
+  @DisplayName("LiveKit unset with calls on mesh is fine — meetings just report unavailable")
+  void liveKitOptionalOnMesh() {
+    assertThat(liveKit(Map.of("app.livekit.call-transport", "mesh"))).isEmpty();
+  }
+
+  @Test
+  @DisplayName("calls on sfu without LiveKit refuse to start")
+  void sfuNeedsLiveKit() {
+    List<String> problems = liveKit(Map.of("app.livekit.call-transport", "sfu"));
+    assertThat(problems).hasSize(1);
+    assertThat(problems.get(0)).contains("CALL_TRANSPORT=sfu");
+  }
+
+  @Test
+  @DisplayName("a loopback LiveKit URL or a short secret is rejected")
+  void loopbackUrlAndShortSecretRejected() {
+    Map<String, String> env =
+        Map.of(
+            "app.livekit.url", "ws://localhost:7880",
+            "app.livekit.api-key", "devkey",
+            "app.livekit.api-secret", "secret");
+    assertThat(liveKit(env)).hasSize(2);
+  }
+
+  @Test
+  @DisplayName("a complete external LiveKit config on sfu passes")
+  void completeSfuPasses() {
+    Map<String, String> env =
+        Map.of(
+            "app.livekit.call-transport", "sfu",
+            "app.livekit.url", "wss://rtc.example.com",
+            "app.livekit.api-key", "APIabc",
+            "app.livekit.api-secret", "0123456789abcdef0123456789abcdef");
+    assertThat(liveKit(env)).isEmpty();
+  }
 }
