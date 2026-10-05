@@ -39,6 +39,8 @@ const reminderFeature = MongooseModule.forFeature([
     ToolResultCacheService,
     ToolRegistryService,
   ],
-  exports: [ToolRegistryService],
+  // McpConnectorClient: a confirmed pending action (actions/) executes its
+  // stored input through the same connector client the loop uses.
+  exports: [ToolRegistryService, McpConnectorClient],
 })
 export class ToolsModule {}

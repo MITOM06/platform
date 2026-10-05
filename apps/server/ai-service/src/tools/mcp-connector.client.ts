@@ -11,10 +11,26 @@ export const WRITE_TIMEOUT_RESULT =
   'Tool error: the connector did not confirm this action in time. It may still have ' +
   'completed — do NOT retry it automatically; tell the user to check before trying again.';
 
+/**
+ * One item of connector-service `GET /internal/tools`. `sensitive` and
+ * `actionGroup` are governance metadata for ai-service only — they are NOT
+ * part of an Anthropic tool definition and must never be forwarded there.
+ */
 interface ConnectorTool {
   name: string;
   description: string;
   input_schema: ToolDefinition['input_schema'];
+  sensitive?: unknown;
+  actionGroup?: unknown;
+}
+
+export interface CallToolOptions {
+  /**
+   * Treat the call as a write (long timeout, "outcome unknown" on timeout)
+   * even when the name has no write marker — e.g. a connector tool flagged
+   * `sensitive` whose verb the local heuristic does not know.
+   */
+  write?: boolean;
 }
 
 class ConnectorTimeoutError extends Error {
@@ -51,8 +67,8 @@ export class McpConnectorClient {
     return this.config.get<string>('config.connector.internalApiKey') ?? '';
   }
 
-  private timeoutFor(toolName: string | null): number {
-    if (toolName !== null && isSensitiveTool(toolName)) {
+  private timeoutFor(toolName: string | null, write = false): number {
+    if (write || (toolName !== null && isSensitiveTool(toolName))) {
       return this.config.get<number>('config.connector.writeTimeoutMs') ?? DEFAULT_WRITE_TIMEOUT_MS;
     }
     return this.config.get<number>('config.connector.readTimeoutMs') ?? DEFAULT_READ_TIMEOUT_MS;
@@ -89,10 +105,15 @@ export class McpConnectorClient {
       }
       const body = (await res.json()) as { tools?: ConnectorTool[] };
       const tools = body.tools ?? [];
+      // Whitelist the fields: `actionGroup` (and anything else connector-service
+      // adds later) is dropped here; `sensitive` is kept INTERNALLY for the
+      // confirmation gate. An older connector without the flag falls back to
+      // the local name heuristic, so a write is never silently "not sensitive".
       return tools.map((t) => ({
         name: t.name,
         description: t.description,
         input_schema: t.input_schema,
+        sensitive: typeof t.sensitive === 'boolean' ? t.sensitive : isSensitiveTool(t.name),
       }));
     } catch (err) {
       this.logger.warn(
@@ -106,8 +127,9 @@ export class McpConnectorClient {
     userId: string,
     name: string,
     input: Record<string, unknown>,
+    opts: CallToolOptions = {},
   ): Promise<string> {
-    const isWrite = isSensitiveTool(name);
+    const isWrite = opts.write === true || isSensitiveTool(name);
     try {
       const url = `${this.baseUrl}/internal/tools/call`;
       const res = await this.fetchWithTimeout(
@@ -120,7 +142,7 @@ export class McpConnectorClient {
           },
           body: JSON.stringify({ userId, name, input }),
         },
-        this.timeoutFor(name),
+        this.timeoutFor(name, isWrite),
       );
       if (!res.ok) {
         this.logger.warn(`connector callTool returned ${res.status}`);

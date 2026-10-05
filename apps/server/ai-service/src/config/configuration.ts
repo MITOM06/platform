@@ -224,6 +224,12 @@ export default registerAs('config', () => ({
     readTimeoutMs: parseInt(process.env.CONNECTOR_READ_TIMEOUT_MS ?? '5000', 10),
     writeTimeoutMs: parseInt(process.env.CONNECTOR_WRITE_TIMEOUT_MS ?? '30000', 10),
   },
+  actions: {
+    // How long a connector write the AI prepared waits for the requester's
+    // in-chat confirmation (`expiresAt`). The Redis record outlives it by a
+    // short grace so a late click gets 410 ACTION_EXPIRED instead of 404.
+    pendingTtlSec: parseInt(process.env.AI_PENDING_ACTION_TTL_SEC ?? '600', 10),
+  },
   chat: {
     // chat-service base used to resolve RELATIVE `/api/uploads/{id}` refs — both
     // AI history image turns (TASK-10 chat vision) and KB fileUrls, which web and

@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { ToolContext } from '../tools/tool.interface';
+import { ToolContext, ToolDefinition } from '../tools/tool.interface';
+import type { PendingActionView } from '../actions/pending-action.types';
 import { RagSource } from './rag-source.type';
 import { ToolTraceEntry } from './ai.types';
 import { TokenCounts } from '../usage/token-counts';
@@ -13,8 +14,16 @@ import { TokenCounts } from '../usage/token-counts';
  */
 export interface LoopState {
   readonly system: Anthropic.TextBlockParam[];
+  /** What Anthropic receives: name / description / input_schema only. */
   readonly tools: Anthropic.Tool[];
+  /**
+   * The same tools by name WITH internal metadata (connector `sensitive` flag).
+   * A connector tool the model asks for that is not in here is refused.
+   */
+  readonly offeredTools: ReadonlyMap<string, ToolDefinition>;
   readonly toolCtx: ToolContext;
+  /** The requester's message of this turn (context for a confirmed action's follow-up). */
+  readonly requestText: string;
   /** The Anthropic message list; completed tool rounds are appended in place. */
   readonly messages: Anthropic.MessageParam[];
   /** Reply-wide citation list (KB sources first), shared with tools via toolCtx.sourceSink. */
@@ -29,8 +38,14 @@ export interface LoopState {
   iteration: number;
   /** Text already streamed to the client in completed tool rounds. */
   carriedText: string;
-  /** Tools actually executed in this run. */
+  /** Tools actually executed in this run (a pending action is NOT executed — not counted). */
   toolsExecuted: number;
+  /**
+   * Sensitive actions held for the user's confirmation, keyed by call
+   * fingerprint (tool + input) so a repeated request — e.g. by the fallback
+   * model after a continuation — reuses the same pending action.
+   */
+  readonly pendingActions: Map<string, PendingActionView>;
   /** Thinking mode the completed rounds ran with (null before the first call). */
   thinkingMode: boolean | null;
 }

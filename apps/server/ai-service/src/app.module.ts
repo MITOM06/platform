@@ -6,6 +6,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { DatabaseRedisModule, SharedJwtStrategy } from '@platform/database';
 import configuration from './config/configuration';
 import { AiModule } from './ai/ai.module';
+import { ActionsModule } from './actions/actions.module';
 import { RedisModule } from './redis/redis.module';
 import { MemoryModule } from './memory/memory.module';
 import { KbModule } from './kb/kb.module';
@@ -55,6 +56,7 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
     SessionModule,
     RetentionModule,
     CallModule,
+    ActionsModule,
     AiModule,
     RabbitmqModule,
     SchedulerModule,

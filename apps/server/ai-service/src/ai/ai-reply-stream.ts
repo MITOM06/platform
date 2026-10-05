@@ -3,19 +3,22 @@ import { RedisPublisherService } from '../redis/redis-publisher.service';
 import { AiStreamErrorCodeValue } from './ai-stream-error';
 import { RagSource } from './rag-source.type';
 import { AiTrace } from './ai.types';
+import type { PendingActionView } from '../actions/pending-action.types';
 
 export interface AiStreamDonePayload {
   fullContent: string;
   sources: RagSource[];
   trace: AiTrace | null;
   fromCache?: boolean;
+  /** Actions of this reply waiting for the requester's confirmation (omitted when none). */
+  pendingActions?: PendingActionView[];
 }
 
 /**
  * One AI reply on `ai:response:{conversationId}`.
  *
- * Every event it publishes (`AI_STREAM_CHUNK`, `AI_TOOL_CALL`, `AI_STREAM_DONE`,
- * `AI_STREAM_ERROR`) carries `replyId` (unique per reply) and `requesterId` (the
+ * Every event it publishes (`AI_STREAM_CHUNK`, `AI_TOOL_CALL`, `AI_ACTION_PENDING`,
+ * `AI_STREAM_DONE`, `AI_STREAM_ERROR`) carries `replyId` (unique per reply) and `requesterId` (the
  * user who asked). Without them two @AI requests in one group streamed into one
  * bubble, and one user's quota error cleared another user's stream. chat-service
  * also keys its multi-instance DONE claim on `replyId`, so every separately
@@ -46,6 +49,11 @@ export class AiReplyStream {
 
   async toolCall(toolName: string, inputSummary: string, sensitive: boolean): Promise<void> {
     await this.emit({ type: 'AI_TOOL_CALL', toolName, inputSummary, sensitive });
+  }
+
+  /** A sensitive action of this reply is waiting for the requester's confirmation (§F2). */
+  async actionPending(action: PendingActionView): Promise<void> {
+    await this.emit({ type: 'AI_ACTION_PENDING', action });
   }
 
   async done(payload: AiStreamDonePayload): Promise<void> {

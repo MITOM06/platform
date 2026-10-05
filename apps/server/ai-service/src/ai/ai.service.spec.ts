@@ -16,6 +16,10 @@ import { ConversationAccessService } from '../conversation/conversation-access.s
 import { SettingsService } from '../settings/settings.service';
 import { ResolvedAiSettings } from '../settings/resolved-ai-settings';
 import { ChatImageService } from './chat-image.service';
+import { ToolRoundRunner } from './tool-round.runner';
+import { PendingActionStore } from '../actions/pending-action.store';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const RedisMock = require('ioredis-mock');
 
 function makeAsyncIterator(chunks: unknown[]) {
   return {
@@ -157,6 +161,8 @@ describe('AiService', () => {
   let appendMessage: jest.Mock;
   let createNewSession: jest.Mock;
   let maybeCompact: jest.Mock;
+  /** In-memory Redis behind the REAL PendingActionStore (§F2 confirmation flow). */
+  let pendingRedis: any;
 
   const basePayload: AiRequestPayload = {
     conversationId: 'conv-test',
@@ -295,11 +301,17 @@ describe('AiService', () => {
     // limit). Construct the REAL loop with the same fakes so streaming/tool
     // behavior is exercised end-to-end; AiService passes its `anthropic` client
     // into the loop, so the `service['anthropic']` override below still applies.
+    pendingRedis = new RedisMock();
+    const toolRound = new ToolRoundRunner(
+      fakeToolRegistry,
+      new PendingActionStore(pendingRedis, fakeConfig),
+    );
     const agenticLoop = new AgenticLoopService(
       fakeConfig,
       fakeToolRegistry,
       fakeResponseCache,
       fakeChatImage,
+      toolRound,
     );
 
     service = new AiService(
@@ -325,7 +337,11 @@ describe('AiService', () => {
     (service as any)['anthropic'] = { messages: { stream: mockStream, create: mockCreate } };
   });
 
-  afterEach(() => jest.clearAllMocks());
+  afterEach(async () => {
+    jest.clearAllMocks();
+    // ioredis-mock instances share one in-memory store — isolate tests.
+    await pendingRedis.flushall();
+  });
 
   // ─── Basic streaming ──────────────────────────────────────────────────────
 
@@ -583,6 +599,7 @@ describe('AiService', () => {
     expect(toolRegistryExecute).toHaveBeenCalledWith(
       'search_messages', { query: 'Flutter' },
       expect.objectContaining({ conversationId: 'conv-test' }),
+      { sensitive: false },
     );
     expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
       type: 'AI_TOOL_CALL',
@@ -1078,6 +1095,8 @@ describe('AiService', () => {
   // ─── Fallback never re-runs a tool that already executed (bug 3) ──────────
 
   it('continues on the fallback model after a tool ran — the tool executes exactly once', async () => {
+    // A side-effecting tool that runs WITHOUT confirmation (built-in). Sensitive
+    // connector writes are held for confirmation instead — see the §F2 tests.
     toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
     const seen: Array<{ model: string; messages: any[] }> = [];
     const capture = (impl: () => unknown) => (params: any) => {
@@ -1089,8 +1108,8 @@ describe('AiService', () => {
       params.messages.some(
         (m: any) => Array.isArray(m.content) && m.content.some((b: any) => b.type === 'tool_result'),
       )
-        ? makeStream(['Email sent.'])
-        : makeToolUseStream('mcp__gmail__send_email', `tu-${seen.length}`, { to: 'a@b.co' });
+        ? makeStream(['Reminder set.'])
+        : makeToolUseStream('create_reminder', `tu-${seen.length}`, { text: 'call Bob' });
     mockStream
       .mockImplementationOnce((params: any) => capture(modelLike(params))(params))
       .mockImplementationOnce(
@@ -1099,7 +1118,7 @@ describe('AiService', () => {
         }),
       )
       .mockImplementation((params: any) => capture(modelLike(params))(params));
-    toolRegistryExecute.mockResolvedValue('sent');
+    toolRegistryExecute.mockResolvedValue('Reminder created');
 
     await service.handleRequest(basePayload);
 
@@ -1116,7 +1135,7 @@ describe('AiService', () => {
     );
     expect(publish).toHaveBeenCalledWith(
       'conv-test',
-      expect.objectContaining({ type: 'AI_STREAM_DONE', fullContent: 'Email sent.' }),
+      expect.objectContaining({ type: 'AI_STREAM_DONE', fullContent: 'Reminder set.' }),
     );
     expect(publish).not.toHaveBeenCalledWith(
       'conv-test',

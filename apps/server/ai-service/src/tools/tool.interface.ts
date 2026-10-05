@@ -4,6 +4,14 @@ export interface ToolDefinition {
   name: string;
   description: string;
   input_schema: { type: 'object'; properties: Record<string, unknown>; required: string[] };
+  /**
+   * INTERNAL — never sent to Anthropic (the loop forwards only name /
+   * description / input_schema). For connector tools: connector-service's
+   * `sensitive` flag (every non-read-only tool), which makes the loop hold the
+   * call for an in-chat user confirmation instead of executing it
+   * (`actions/pending-action-policy.ts`). Built-ins leave it unset.
+   */
+  sensitive?: boolean;
 }
 
 export interface ToolContext {

@@ -12,9 +12,10 @@ import { ToolContext, ToolDefinition } from './tool.interface';
 import { ToolResultCacheService } from './tool-result-cache.service';
 import { isSensitiveTool } from '../ai/injection-guard';
 import { SKILL_TOOL_REQUIREMENTS } from '../skills/skill-catalog';
+import { MCP_PREFIX, providerOf, toolOf } from './tool-names';
 
-const MCP_PREFIX = 'mcp__';
-const MCP_SEP = '__';
+// Re-exported: these used to live here and are imported from this module.
+export { providerOf, toolOf } from './tool-names';
 
 /** Anthropic's tool-name rule. One violating name 400s the whole request. */
 const TOOL_NAME_RE = /^[a-zA-Z0-9_-]{1,64}$/;
@@ -132,18 +133,9 @@ export function sanitizeToolDefinitions(
   return out;
 }
 
-/** Extract the `<provider>` segment from `mcp__<provider>__<tool>`; else null. */
-export function providerOf(name: string): string | null {
-  if (!name.startsWith(MCP_PREFIX)) return null;
-  const rest = name.slice(MCP_PREFIX.length);
-  const idx = rest.indexOf(MCP_SEP);
-  return idx > 0 ? rest.slice(0, idx) : null;
-}
-
-/** Extract the bare `<tool>` segment from `mcp__<provider>__<tool>`; else null. */
-export function toolOf(name: string): string | null {
-  const provider = providerOf(name);
-  return provider === null ? null : name.slice(MCP_PREFIX.length + provider.length + MCP_SEP.length);
+export interface ExecuteOptions {
+  /** The offered definition is flagged sensitive by connector-service. */
+  sensitive?: boolean;
 }
 
 @Injectable()
@@ -188,15 +180,23 @@ export class ToolRegistryService {
     );
   }
 
+  /**
+   * Run one tool. `opts.sensitive` is the offered definition's connector flag:
+   * a flagged tool is never cached and gets the connector write timeout even
+   * when its name carries no write marker. (Tools that need a user
+   * confirmation never reach this method — the loop stages them instead.)
+   */
   async execute(
     toolName: string,
     input: Record<string, unknown>,
     ctx: ToolContext,
+    opts: ExecuteOptions = {},
   ): Promise<string> {
     // Cache only read-only tools whose output is plain text (see isCacheableTool),
     // keyed by user + conversation + department scope so a result never leaks
     // into another conversation. Never a send/create/delete result.
-    const cacheable = this.resultCache.isEnabled && isCacheableTool(toolName);
+    const cacheable =
+      this.resultCache.isEnabled && opts.sensitive !== true && isCacheableTool(toolName);
     const scope = {
       userId: ctx.userId,
       conversationId: ctx.conversationId,
@@ -210,7 +210,7 @@ export class ToolRegistryService {
       }
     }
 
-    const result = await this.dispatch(toolName, input, ctx);
+    const result = await this.dispatch(toolName, input, ctx, opts.sensitive === true);
 
     // Don't cache failures (let the next call retry).
     if (cacheable && !result.startsWith('Tool error') && !result.startsWith('Tool not found')) {
@@ -223,10 +223,13 @@ export class ToolRegistryService {
     toolName: string,
     input: Record<string, unknown>,
     ctx: ToolContext,
+    write: boolean,
   ): Promise<string> {
     try {
       if (toolName.startsWith(MCP_PREFIX)) {
-        return await this.mcpConnector.callTool(ctx.userId, toolName, input);
+        return write
+          ? await this.mcpConnector.callTool(ctx.userId, toolName, input, { write: true })
+          : await this.mcpConnector.callTool(ctx.userId, toolName, input);
       }
       switch (toolName) {
         case 'search_messages':

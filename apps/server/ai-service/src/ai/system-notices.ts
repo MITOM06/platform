@@ -13,6 +13,20 @@ export const CONTEXT_COMPACTED_NOTICE =
 export const MEMORY_EMPTY_NOTICE =
   '🧠 Tôi chưa ghi nhớ điều gì về bạn. Hãy chat thêm một chút để tôi học được về bạn.';
 
+/**
+ * Confirmation flow (CONTRACTS-ROUND2 §F2). The reply that holds a pending
+ * action normally carries the model's own words; this is only used when the
+ * model ended that turn without any text, so the card is never orphaned.
+ */
+export const ACTION_PENDING_FALLBACK_TEXT =
+  '🔔 Hành động bên dưới cần bạn xác nhận trước khi tôi thực hiện.';
+/** Follow-up after a confirm when the model cannot write one (down, quota, empty). */
+export const ACTION_CONFIRMED_NOTICE = '✅ Đã thực hiện hành động bạn vừa xác nhận.';
+export const ACTION_FAILED_NOTICE =
+  '⚠️ Không thực hiện được hành động bạn vừa xác nhận. Vui lòng thử lại sau.';
+export const ACTION_OUTCOME_UNKNOWN_NOTICE =
+  '⚠️ Dịch vụ kết nối chưa phản hồi kịp — hành động có thể đã được thực hiện. Vui lòng kiểm tra lại trước khi thử lại.';
+
 /** A zeroed trace for system-authored (non-model) stream responses. */
 export const SYSTEM_TRACE: AiTrace = {
   thinkingBlocks: [],

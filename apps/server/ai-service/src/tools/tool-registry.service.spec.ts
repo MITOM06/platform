@@ -229,6 +229,18 @@ describe('ToolRegistryService', () => {
     expect(callTool).toHaveBeenCalledTimes(2);
   });
 
+  it('a connector-flagged sensitive tool is never cached and is called as a write', async () => {
+    const callTool = jest.fn().mockResolvedValue('archived');
+    const registry = makeRegistry({ mcpCallTool: callTool, cache: makeCache(true) });
+
+    // No write marker in the name — only the connector's flag says it is a write.
+    await registry.execute('mcp__notion__archive_page', { id: 'p' }, ctx, { sensitive: true });
+    await registry.execute('mcp__notion__archive_page', { id: 'p' }, ctx, { sensitive: true });
+
+    expect(callTool).toHaveBeenCalledTimes(2);
+    expect(callTool).toHaveBeenCalledWith('user-1', 'mcp__notion__archive_page', { id: 'p' }, { write: true });
+  });
+
   it('does not cache a failed tool result', async () => {
     const crashFn = jest
       .fn()

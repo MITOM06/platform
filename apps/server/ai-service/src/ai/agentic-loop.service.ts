@@ -4,16 +4,17 @@ import Anthropic from '@anthropic-ai/sdk';
 import { ToolRegistryService } from '../tools/tool-registry.service';
 import { ResponseCacheService } from './response-cache.service';
 import { ChatImageService } from './chat-image.service';
-import { ToolContext } from '../tools/tool.interface';
+import { ToolContext, ToolDefinition } from '../tools/tool.interface';
 import { RagSource } from './rag-source.type';
 import { modelSupportsAdaptiveThinking, modelSupportsEffort } from './model-router';
-import { isSensitiveTool, wrapUntrusted } from './injection-guard';
 import { normalizeMessages } from './message-utils';
 import { AiHistoryEntry, AiTrace, RequestContext } from './ai.types';
 import { AiReplyStream } from './ai-reply-stream';
 import { AiStreamErrorCode, AiStreamErrorCodeValue } from './ai-stream-error';
 import { LoopState, StreamInterruptedError } from './loop-state';
 import { withAgenticLoopSpan } from './tracing-helpers';
+import { ToolRoundRunner } from './tool-round.runner';
+import { ACTION_PENDING_FALLBACK_TEXT } from './system-notices';
 import { addTokens, countTokens, zeroTokens } from '../usage/token-counts';
 
 const MAX_ITER = 5;
@@ -39,8 +40,9 @@ export interface FallbackRunParams extends Omit<LoopRunParams, 'model'> {
 
 /**
  * Runs the streaming agentic loop against Anthropic: streams text deltas to the
- * reply stream; when a turn stops with `tool_use`, runs the tools, appends the
- * results, and continues. All progress lives in a `LoopState` (see
+ * reply stream; when a turn stops with `tool_use`, hands the round to
+ * `ToolRoundRunner` (runs the tools, or holds a sensitive connector write for
+ * the user's confirmation) and continues. All progress lives in a `LoopState` (see
  * loop-state.ts) so a failed model can be replaced mid-loop without redoing
  * work. The Anthropic client is passed in by the caller so per-request model
  * selection and test overrides apply.
@@ -56,6 +58,7 @@ export class AgenticLoopService {
     private readonly toolRegistry: ToolRegistryService,
     private readonly responseCache: ResponseCacheService,
     private readonly chatImageService: ChatImageService,
+    private readonly toolRound: ToolRoundRunner,
   ) {
     this.effort =
       (this.configService.get<string>('config.anthropic.effort') as 'low' | 'medium' | 'high') ??
@@ -84,7 +87,7 @@ export class AgenticLoopService {
       allowedConnectors: ctx.settings.allowedConnectors,
       enabledSkillIds: ctx.enabledSkillIds,
     };
-    const tools = await this.buildTools(toolCtx);
+    const defs = await this.toolRegistry.getDefinitions(toolCtx);
     // Single chokepoint for the final messages array: normalizeMessages drops a
     // leading assistant turn and merges consecutive same-role PLAIN-TEXT turns
     // (no Anthropic 400); image turns are never merged.
@@ -94,8 +97,10 @@ export class AgenticLoopService {
     ]);
     return {
       system: this.buildSystemBlocks(ctx),
-      tools,
+      tools: this.toAnthropicTools(defs),
+      offeredTools: new Map(defs.map((d) => [d.name, d])),
       toolCtx,
+      requestText: userContent,
       messages,
       citations,
       hasImages: messages.some(
@@ -107,6 +112,7 @@ export class AgenticLoopService {
       iteration: 0,
       carriedText: '',
       toolsExecuted: 0,
+      pendingActions: new Map(),
       thinkingMode: null,
     };
   }
@@ -115,8 +121,10 @@ export class AgenticLoopService {
    * Run on the primary model; if it fails, CONTINUE on the fallback model from
    * the accumulated state. Completed tool rounds stay in `state.messages`, so a
    * tool that already ran (an email send, a reminder, a calendar write) is never
-   * executed a second time. A turn that died after streaming text cannot be
-   * resumed without a garbled bubble → AI_STREAM_INTERRUPTED instead.
+   * executed a second time — and an action held for confirmation is reused, not
+   * staged again (nor run). A turn that died after streaming text cannot be
+   * resumed without a garbled bubble → AI_STREAM_INTERRUPTED instead; a reply
+   * that ends in an error drops its pending actions.
    */
   async runWithFallback(p: FallbackRunParams): Promise<AiTrace> {
     const { primaryModel, fallbackModel, ...rest } = p;
@@ -129,6 +137,7 @@ export class AgenticLoopService {
       this.logger.error(`Model (${primaryModel}) failed for conversation ${conversationId}`, primaryError);
       if (primaryError instanceof StreamInterruptedError) {
         this.logger.warn(`Primary model failed mid-stream. No fallback for ${conversationId} (text already shown).`);
+        await this.toolRound.discardPending(p.state);
         await this.publishError(p.stream, AiStreamErrorCode.STREAM_INTERRUPTED, INTERRUPTED_MESSAGE);
         throw primaryError;
       }
@@ -148,6 +157,8 @@ export class AgenticLoopService {
           fallbackError,
         );
         const interrupted = fallbackError instanceof StreamInterruptedError;
+        // The reply ends in an error, so its confirmation card is never persisted.
+        await this.toolRound.discardPending(p.state);
         await this.publishError(
           p.stream,
           interrupted ? AiStreamErrorCode.STREAM_INTERRUPTED : AiStreamErrorCode.UNAVAILABLE,
@@ -181,7 +192,7 @@ export class AgenticLoopService {
         // Text streamed before the tool call already reached the client — keep it
         // for the persisted message (newline-separated across rounds).
         if (text.trim()) state.carriedText = state.carriedText ? `${state.carriedText}\n${text}` : text;
-        await this.runToolRound(message, toolUses, state, stream);
+        await this.toolRound.run(message, toolUses, state, stream);
         continue;
       }
       finalText = text;
@@ -255,57 +266,16 @@ export class AgenticLoopService {
     }
   }
 
-  /**
-   * Execute one round of tool calls and append the assistant + tool_result turns.
-   * Committed even when a step throws: every tool_use needs its tool_result, and
-   * a tool that already ran must stay recorded as run so a continuation on the
-   * fallback model never executes it again.
-   */
-  private async runToolRound(
-    message: Anthropic.Message,
-    toolUses: Anthropic.ToolUseBlock[],
-    state: LoopState,
-    stream: AiReplyStream,
-  ): Promise<void> {
-    const results: Anthropic.ToolResultBlockParam[] = [];
-    try {
-      for (const block of toolUses) {
-        const inputSummary = JSON.stringify(block.input).slice(0, 100);
-        // Flag state-changing / outbound tools so the client can surface a
-        // confirmation affordance before the action is shown as done.
-        await stream.toolCall(block.name, inputSummary, isSensitiveTool(block.name));
-        const result = await this.toolRegistry.execute(
-          block.name,
-          block.input as Record<string, unknown>,
-          state.toolCtx,
-        );
-        state.toolsExecuted++;
-        state.toolCalls.push({ toolName: block.name, inputSummary, resultSummary: result.slice(0, 200) });
-        // Fence tool output as UNTRUSTED before it re-enters the model context
-        // (indirect prompt-injection surface). web_search fences at source.
-        const fenced =
-          block.name === 'web_search' ? result : wrapUntrusted(`Tool Result: ${block.name}`, result) || result;
-        results.push({ type: 'tool_result', tool_use_id: block.id, content: fenced || '(no output)' });
-      }
-    } finally {
-      for (const block of toolUses.slice(results.length)) {
-        results.push({
-          type: 'tool_result',
-          tool_use_id: block.id,
-          is_error: true,
-          content: 'Tool error: this tool was not executed (internal error).',
-        });
-      }
-      state.messages.push({ role: 'assistant', content: message.content });
-      state.messages.push({ role: 'user', content: results });
-      state.iteration++;
-    }
-  }
-
   /** Compose the final text, publish DONE / AI_EMPTY_RESPONSE, maybe cache, return the trace. */
   private async finish(p: LoopRunParams, finalText: string, stopReason: string | null): Promise<AiTrace> {
     const { ctx, state, stream, model, startMs, resultSink } = p;
+    const pendingActions = [...state.pendingActions.values()];
     let text = finalText;
+    // A reply holding a confirmation card must reach DONE (that is where the
+    // card is persisted) even when the model ended the turn without words.
+    if (!text.trim() && !state.carriedText.trim() && pendingActions.length > 0) {
+      text = ACTION_PENDING_FALLBACK_TEXT;
+    }
     if (state.iteration >= MAX_ITER && !text && !state.carriedText) text = MAX_ITER_NOTICE;
     if (state.carriedText) text = text ? `${state.carriedText}\n${text}` : state.carriedText;
     if (resultSink) resultSink.fullContent = text;
@@ -340,7 +310,12 @@ export class AgenticLoopService {
         );
         return trace;
       }
-      await stream.done({ fullContent: text, sources: state.citations, trace });
+      await stream.done({
+        fullContent: text,
+        sources: state.citations,
+        trace,
+        ...(pendingActions.length > 0 ? { pendingActions } : {}),
+      });
     } catch (err) {
       // The answer was generated (and streamed): never let a publish failure
       // trigger a second generation on the fallback model.
@@ -387,9 +362,12 @@ export class AgenticLoopService {
     return blocks;
   }
 
-  /** Tool definitions with a cache breakpoint on the last tool. */
-  private async buildTools(ctx: ToolContext): Promise<Anthropic.Tool[]> {
-    const defs = await this.toolRegistry.getDefinitions(ctx);
+  /**
+   * Anthropic tool definitions with a cache breakpoint on the last tool. Only
+   * name / description / input_schema are forwarded: internal metadata
+   * (connector `sensitive` / `actionGroup`) never leaves ai-service.
+   */
+  private toAnthropicTools(defs: ToolDefinition[]): Anthropic.Tool[] {
     const tools = defs.map((d) => ({
       name: d.name,
       description: d.description,
