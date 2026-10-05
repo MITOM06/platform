@@ -68,6 +68,11 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/uploads/**")
                     .permitAll()
+                    // LiveKit webhook authenticates itself (token signed with the LiveKit API
+                    // secret + body hash, see LiveKitWebhookVerifier); it carries no user JWT.
+                    .requestMatchers(
+                        org.springframework.http.HttpMethod.POST, "/api/rtc/livekit/webhook")
+                    .permitAll()
                     .anyRequest()
                     .authenticated())
         .exceptionHandling(
