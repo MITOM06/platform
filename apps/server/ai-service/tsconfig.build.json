@@ -3,6 +3,10 @@
   "exclude": ["node_modules", "dist", "**/*spec.ts", "eval"],
   "compilerOptions": {
     "rootDir": "./src",
+    // With rootDir ./src, tsc's default buildinfo path is ./tsconfig.build.tsbuildinfo —
+    // outside dist, so nest's deleteOutDir wiped dist while the buildinfo survived and the
+    // next incremental build emitted only changed files (a second `pnpm build` = empty dist).
+    "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo",
     "paths": {
       "@platform/database": ["../../../packages/database/dist"],
       "@platform/database/*": ["../../../packages/database/dist/*"]
