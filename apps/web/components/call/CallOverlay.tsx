@@ -4,7 +4,8 @@ import { useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Phone, PhoneOff, Video } from 'lucide-react'
 import { useCallStore } from '@/lib/store/call.store'
-import { callManager } from '@/lib/webrtc/call-manager'
+import { useCallAlerts } from '@/lib/hooks/use-call-alerts'
+import { callManager, INCOMING_RING_TIMEOUT_MS } from '@/lib/webrtc/call-manager'
 import { Button } from '@/components/ui/button'
 import { VoiceCallModal } from './VoiceCallModal'
 import { VideoCallModal } from './VideoCallModal'
@@ -27,6 +28,9 @@ export function CallOverlay() {
   const groupCallId = useCallStore((s) => s.groupCallId)
   const incomingGroupCall = useCallStore((s) => s.incomingGroupCall)
 
+  // Ringtone/ringback, caller name, background notification, end-reason toasts.
+  useCallAlerts()
+
   // Drive the in-call duration timer (1-on-1 only; GroupCallModal owns its own).
   useEffect(() => {
     if (status !== 'connected') return
@@ -37,6 +41,14 @@ export function CallOverlay() {
     }, 1000)
     return () => clearInterval(id)
   }, [status, setDuration])
+
+  // Callee-side safety net: if the caller vanished without sending `end`
+  // (tab closed, connection dropped), stop showing a prompt nobody can answer.
+  useEffect(() => {
+    if (status !== 'incoming') return
+    const id = setTimeout(() => callManager.dismissIncoming(), INCOMING_RING_TIMEOUT_MS)
+    return () => clearTimeout(id)
+  }, [status])
 
   // ── Group call takes over the screen when active ──────────────────────────
   if (groupCallId) return <GroupCallModal />
@@ -58,13 +70,13 @@ export function CallOverlay() {
           <Button
             variant="destructive"
             className="flex-1 gap-2"
-            onClick={() => callManager.endCall()}
+            onClick={() => callManager.endCall('declined')}
           >
             <PhoneOff className="size-4" /> {t('decline')}
           </Button>
           <Button
             className="flex-1 gap-2 bg-[#00C853] hover:bg-[#00B248]"
-            onClick={() => callManager.acceptIncoming()}
+            onClick={() => void callManager.acceptIncoming()}
           >
             {video ? <Video className="size-4" /> : <Phone className="size-4" />} {t('answer')}
           </Button>

@@ -19,6 +19,12 @@ public class WebRTCSignalDto {
   private Map<String, Object> candidate;
   private Integer duration;
 
+  /**
+   * Why a 1-on-1 call ended, on {@code type:"end"}: hangup | declined | busy | no_answer |
+   * media_error | failed. Relayed verbatim; null from older clients means hangup.
+   */
+  private String reason;
+
   // ---- Group-call (mesh) optional fields. Null/absent for legacy 1-on-1 signaling. ----
 
   /** Group-call session id (UUID generated on call.start). */

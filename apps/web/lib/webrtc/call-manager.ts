@@ -1,39 +1,30 @@
 import { stompService } from '@/lib/stomp/client'
 import { useCallStore } from '@/lib/store/call.store'
 import { chatService } from '@/lib/api/chat'
+import type { CallEndReason } from './call-end-notice'
+import {
+  CallCancelledError,
+  DISCONNECT_GRACE_MS,
+  ICE_SERVERS,
+  REJECTIONS,
+  RING_TIMEOUT_MS,
+  type WebRTCSignal,
+} from './call-config'
+
+export type { CallEndReason } from './call-end-notice'
+export {
+  DISCONNECT_GRACE_MS,
+  INCOMING_RING_TIMEOUT_MS,
+  RING_TIMEOUT_MS,
+  type WebRTCSignal,
+} from './call-config'
 
 /**
  * Web counterpart of the Flutter `WebRTCService`. Owns a single
  * `RTCPeerConnection` and drives the call lifecycle over the chat-service STOMP
- * signaling channel (`/app/call.*` → `/user/queue/webrtc`).
- *
- * Uses Unified Plan (`addTrack` / `ontrack`) — matches the mobile peer so SDP
- * negotiation is symmetric.
+ * signaling channel (`/app/call.*` → `/user/queue/webrtc`). Unified Plan
+ * (`addTrack` / `ontrack`) — matches the mobile peer so SDP is symmetric.
  */
-export interface WebRTCSignal {
-  senderId?: string
-  targetId?: string
-  conversationId?: string
-  type: 'offer' | 'answer' | 'ice' | 'end' | 'call-ring' | 'call-blocked'
-  sdp?: string
-  candidate?: RTCIceCandidateInit
-  // ── Group-call fields (Track A §3). Absent on legacy 1-on-1 signals. ───────
-  /** Present on every mesh signal; routes the signal into the group manager. */
-  callId?: string
-  /** Mesh peer id the signal was relayed from (server-filled). */
-  fromId?: string
-  /** Ring metadata (`type:'call-ring'`). */
-  startedByName?: string
-  media?: 'audio' | 'video'
-  aiNotetaker?: boolean
-}
-
-const ICE_SERVERS: RTCConfiguration = {
-  iceServers: [
-    { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
-  ],
-}
-
 class CallManager {
   private pc: RTCPeerConnection | null = null
   private localStream: MediaStream | null = null
@@ -42,10 +33,28 @@ class CallManager {
   private conversationId: string | null = null
   private remoteDescriptionSet = false
   private pendingCandidates: RTCIceCandidateInit[] = []
+  private ringTimer: ReturnType<typeof setTimeout> | null = null
+  private disconnectTimer: ReturnType<typeof setTimeout> | null = null
+  /**
+   * The caller trickles ICE candidates right after its offer — while we are
+   * still ringing and have no peer connection. They are kept here (only from
+   * the caller that is ringing) and applied on answer; dropping them made
+   * calls across NATs connect without audio.
+   */
+  private expectingFrom: string | null = null
+  private earlyCandidates: RTCIceCandidateInit[] = []
+  /** Caller only: the offer has left. Before that, hanging up signals nothing. */
+  private offerSent = false
 
   onLocalStream: ((s: MediaStream) => void) | null = null
   onRemoteStream: ((s: MediaStream) => void) | null = null
   onEnded: (() => void) | null = null
+  /**
+   * Fired after a call ended, so the UI can explain why (see `endNoticeKey`).
+   * `byPeer` = the other side ended it. `peerName` is captured before the
+   * store is reset.
+   */
+  onEndNotice: ((reason: CallEndReason, byPeer: boolean, peerName: string) => void) | null = null
 
   getLocalStream(): MediaStream | null {
     return this.localStream
@@ -54,7 +63,11 @@ class CallManager {
     return this.remoteStream
   }
 
-  /** Start an outgoing call to `targetId`. `video=false` → audio-only voice call. */
+  /**
+   * Start an outgoing call to `targetId`. `video=false` → audio-only voice call.
+   * Rejects (after resetting the call UI) when the camera/mic can't be opened,
+   * so the caller is never left on "Calling…" for a call that was never placed.
+   */
   async startCall(
     targetId: string,
     targetName: string,
@@ -62,80 +75,123 @@ class CallManager {
     video = true,
   ): Promise<void> {
     useCallStore.getState().setOutgoing({ peerId: targetId, peerName: targetName, conversationId, video })
-    await this.setup(targetId, conversationId, video)
-    const offer = await this.pc!.createOffer()
-    await this.pc!.setLocalDescription(offer)
-    stompService.publish('/app/call.offer', {
-      targetId,
-      conversationId,
-      type: 'offer',
-      sdp: offer.sdp,
-    })
+    try {
+      const pc = await this.setup(targetId, conversationId, video)
+      const offer = await pc.createOffer()
+      this.assertLive(pc)
+      await pc.setLocalDescription(offer)
+      this.assertLive(pc)
+      stompService.publish('/app/call.offer', {
+        targetId,
+        conversationId,
+        type: 'offer',
+        sdp: offer.sdp,
+      })
+      this.offerSent = true
+    } catch (err) {
+      // Hung up while the mic/camera was opening: already torn down, nothing to report.
+      if (err instanceof CallCancelledError) return
+      this.teardown(true)
+      throw err
+    }
+    this.ringTimer = setTimeout(() => {
+      this.ringTimer = null
+      if (useCallStore.getState().status !== 'outgoing') return
+      this.endCall('no_answer')
+    }, RING_TIMEOUT_MS)
   }
 
   /** Accept the incoming offer currently held in the store. */
   async acceptIncoming(): Promise<void> {
     const { peerId, conversationId, pendingOfferSdp } = useCallStore.getState()
-    if (!peerId || !conversationId || !pendingOfferSdp) return
+    // `this.pc` is set synchronously at the start of setup(): a double click
+    // on Answer must not build a second connection.
+    if (!peerId || !conversationId || !pendingOfferSdp || this.pc) return
     // Match the caller's media: only enable local video if the offer has a video m-line.
     const video = pendingOfferSdp.includes('m=video')
-    await this.setup(peerId, conversationId, video)
-    await this.pc!.setRemoteDescription({ type: 'offer', sdp: pendingOfferSdp })
-    await this.flushPending()
-    const answer = await this.pc!.createAnswer()
-    await this.pc!.setLocalDescription(answer)
-    stompService.publish('/app/call.answer', {
-      targetId: peerId,
-      conversationId,
-      type: 'answer',
-      sdp: answer.sdp,
-    })
+    let pc: RTCPeerConnection
+    try {
+      pc = await this.setup(peerId, conversationId, video)
+    } catch (err) {
+      // The caller gave up while the permission prompt was open: already gone.
+      if (err instanceof CallCancelledError) return
+      // Mic/camera denied or missing: tell the caller instead of leaving
+      // them ringing, and explain it locally.
+      this.endCall('media_error')
+      return
+    }
+    try {
+      await pc.setRemoteDescription({ type: 'offer', sdp: pendingOfferSdp })
+      await this.flushPending()
+      this.assertLive(pc)
+      const answer = await pc.createAnswer()
+      this.assertLive(pc)
+      await pc.setLocalDescription(answer)
+      this.assertLive(pc)
+      stompService.publish('/app/call.answer', {
+        targetId: peerId,
+        conversationId,
+        type: 'answer',
+        sdp: answer.sdp,
+      })
+    } catch (err) {
+      if (err instanceof CallCancelledError) return
+      this.endCall('failed') // unusable offer: don't leave the prompt stuck
+    }
   }
 
-  /** Route an inbound signal (from `/user/queue/webrtc`). */
+  /** Route an inbound 1-on-1 signal (from `/user/queue/webrtc`). */
   handleSignal(signal: WebRTCSignal): void {
     switch (signal.type) {
+      case 'offer':
+        this.handleOffer(signal)
+        break
       case 'answer':
         void this.handleAnswer(signal.sdp ?? '')
         break
       case 'ice':
-        if (signal.candidate) void this.addCandidate(signal.candidate)
+        if (signal.candidate) void this.addCandidate(signal.candidate, signal.senderId)
         break
       case 'end':
-        this.teardown(true)
+        this.handleRemoteEnd(signal)
         break
     }
   }
 
-  /** Hang up an active/ringing call and notify the peer. */
-  endCall(): void {
+  /** Hang up / decline / give up, notify the peer with `reason`, log the call. */
+  endCall(reason: CallEndReason = 'hangup'): void {
     const store = useCallStore.getState()
     // Fall back to the store when rejecting an incoming call that was never
     // set up (peer connection not created yet) — the caller must still be told.
     const targetId = this.targetId ?? store.peerId
     const conversationId = this.conversationId ?? store.conversationId
-    if (targetId && conversationId) {
-      stompService.publish('/app/call.end', {
-        targetId,
-        conversationId,
-        type: 'end',
-        duration: store.durationSeconds,
-      })
+    const peerName = store.peerName
+    // A caller hanging up before its offer left: the callee never rang.
+    const reachedPeer = store.status !== 'outgoing' || this.offerSent
+    if (reachedPeer && targetId && conversationId) {
+      this.publishEnd(targetId, conversationId, reason, store.durationSeconds)
     }
     // Emit a system message so both sides see the call log in the chat history.
     // Only the hang-up initiator sends this (the peer's teardown via 'end'
     // signal does not call endCall, preventing duplicate messages).
-    if (conversationId) {
+    if (reachedPeer && conversationId) {
       const kind = store.video ? 'video' : 'voice'
-      const wasConnected = store.status === 'connected'
-      const content = wasConnected
-        ? `system.call.ended:${kind}:${store.durationSeconds}`
-        : `system.call.missed:${kind}`
-      chatService.sendMessage(conversationId, content, 'system').catch(() => {
-        // best-effort — a failed system message must not block hangup
-      })
+      this.sendCallLog(
+        conversationId,
+        store.status === 'connected'
+          ? `system.call.ended:${kind}:${store.durationSeconds}`
+          : `system.call.missed:${kind}`,
+      )
     }
     this.teardown(true)
+    this.onEndNotice?.(reason, false, peerName)
+  }
+
+  /** The incoming prompt timed out locally (caller vanished without `end`). */
+  dismissIncoming(): void {
+    this.expectingFrom = null
+    this.earlyCandidates = []
+    if (useCallStore.getState().status === 'incoming') useCallStore.getState().reset()
   }
 
   toggleMic(on: boolean): void {
@@ -148,7 +204,71 @@ class CallManager {
     useCallStore.getState().setCamera(on)
   }
 
-  private async setup(targetId: string, conversationId: string, video: boolean): Promise<void> {
+  private handleOffer(signal: WebRTCSignal): void {
+    const from = signal.senderId
+    const conversationId = signal.conversationId
+    const sdp = signal.sdp
+    if (!from || !conversationId || !sdp) return
+    const st = useCallStore.getState()
+    if (st.status !== 'idle' || st.groupCallId) {
+      // Same caller re-sending (reconnect) → keep ringing; anyone else → busy.
+      if (st.peerId !== from) this.publishEnd(from, conversationId, 'busy')
+      return
+    }
+    this.expectingFrom = from
+    this.earlyCandidates = []
+    st.setIncoming({
+      peerId: from,
+      peerName: '',
+      conversationId,
+      sdp,
+      video: sdp.includes('m=video'),
+    })
+  }
+
+  private handleRemoteEnd(signal: WebRTCSignal): void {
+    const st = useCallStore.getState()
+    if (st.status === 'idle') return
+    // A late/stray `end` from someone else must never kill the current call.
+    if (signal.senderId && st.peerId && signal.senderId !== st.peerId) return
+    const reason = signal.reason ?? 'hangup'
+    const wasIncoming = st.status === 'incoming'
+    const peerName = st.peerName
+    if (reason === 'busy' && st.conversationId) {
+      // The callee never rang: log the attempt so it shows as a missed call.
+      this.sendCallLog(st.conversationId, `system.call.missed:${st.video ? 'video' : 'voice'}`)
+    }
+    if (REJECTIONS.has(reason) && st.peerId && st.conversationId) {
+      // The callee may be signed in elsewhere (web + phone): one session
+      // rejected, the others are still ringing — tell them all it is over.
+      this.publishEnd(st.peerId, st.conversationId, 'hangup')
+    }
+    this.teardown(true)
+    // A caller cancelling before we answered just makes the prompt go away.
+    if (!wasIncoming) this.onEndNotice?.(reason, true, peerName)
+  }
+
+  private publishEnd(targetId: string, conversationId: string, reason: CallEndReason, duration = 0): void {
+    stompService.publish('/app/call.end', { targetId, conversationId, type: 'end', reason, duration })
+  }
+
+  private sendCallLog(conversationId: string, content: string): void {
+    chatService.sendMessage(conversationId, content, 'system').catch(() => {
+      // best-effort — a failed system message must not block hangup
+    })
+  }
+
+  /** Throws when the call was torn down while we were awaiting. */
+  private assertLive(pc: RTCPeerConnection): void {
+    if (this.pc !== pc) throw new CallCancelledError()
+  }
+
+  /** Builds the connection and opens the mic/camera. Resolves with the live pc. */
+  private async setup(
+    targetId: string,
+    conversationId: string,
+    video: boolean,
+  ): Promise<RTCPeerConnection> {
     this.targetId = targetId
     this.conversationId = conversationId
     this.remoteDescriptionSet = false
@@ -156,6 +276,10 @@ class CallManager {
 
     const pc = new RTCPeerConnection(ICE_SERVERS)
     this.pc = pc
+    // Candidates the caller sent while we were ringing (see earlyCandidates).
+    if (this.expectingFrom === targetId) this.pendingCandidates.push(...this.earlyCandidates)
+    this.expectingFrom = null
+    this.earlyCandidates = []
 
     pc.onicecandidate = (e) => {
       if (e.candidate) {
@@ -171,20 +295,41 @@ class CallManager {
       if (e.streams[0]) {
         this.remoteStream = e.streams[0]
         this.onRemoteStream?.(e.streams[0])
+        this.clearRingTimer()
         useCallStore.getState().setConnected()
       }
     }
     pc.onconnectionstatechange = () => {
-      if (['failed', 'closed', 'disconnected'].includes(pc.connectionState)) {
-        this.teardown(true)
+      if (this.pc !== pc) return
+      switch (pc.connectionState) {
+        case 'connected':
+          this.clearDisconnectTimer()
+          break
+        case 'disconnected':
+          // Often transient (network hand-off): give it a chance to recover.
+          this.disconnectTimer ??= setTimeout(() => {
+            this.disconnectTimer = null
+            if (this.pc === pc) this.endCall('failed')
+          }, DISCONNECT_GRACE_MS)
+          break
+        case 'failed':
+          this.endCall('failed')
+          break
       }
     }
 
-    this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video })
-    this.onLocalStream?.(this.localStream)
-    for (const track of this.localStream.getTracks()) {
-      pc.addTrack(track, this.localStream)
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video })
+    if (this.pc !== pc) {
+      // Ended while the permission prompt was open: release the late stream.
+      stream.getTracks().forEach((t) => t.stop())
+      throw new CallCancelledError()
     }
+    this.localStream = stream
+    this.onLocalStream?.(stream)
+    for (const track of stream.getTracks()) {
+      pc.addTrack(track, stream)
+    }
+    return pc
   }
 
   private async handleAnswer(sdp: string): Promise<void> {
@@ -193,8 +338,11 @@ class CallManager {
     await this.flushPending()
   }
 
-  private async addCandidate(candidate: RTCIceCandidateInit): Promise<void> {
-    if (!this.pc) return
+  private async addCandidate(candidate: RTCIceCandidateInit, from?: string): Promise<void> {
+    if (!this.pc) {
+      if (from && from === this.expectingFrom) this.earlyCandidates.push(candidate)
+      return
+    }
     if (!this.remoteDescriptionSet) {
       this.pendingCandidates.push(candidate)
       return
@@ -214,17 +362,33 @@ class CallManager {
     this.pendingCandidates = []
   }
 
+  private clearRingTimer(): void {
+    if (this.ringTimer) clearTimeout(this.ringTimer)
+    this.ringTimer = null
+  }
+
+  private clearDisconnectTimer(): void {
+    if (this.disconnectTimer) clearTimeout(this.disconnectTimer)
+    this.disconnectTimer = null
+  }
+
   /** Tear down media + connection. `notifyUi` resets the store/overlay. */
   private teardown(notifyUi: boolean): void {
+    this.clearRingTimer()
+    this.clearDisconnectTimer()
     this.localStream?.getTracks().forEach((t) => t.stop())
     this.localStream = null
     this.remoteStream = null
-    this.pc?.close()
-    this.pc = null
+    const pc = this.pc
+    this.pc = null // before close(): a 'closed' state change must not re-enter endCall
+    pc?.close()
     this.targetId = null
     this.conversationId = null
     this.remoteDescriptionSet = false
     this.pendingCandidates = []
+    this.expectingFrom = null
+    this.earlyCandidates = []
+    this.offerSent = false
     if (notifyUi) {
       this.onEnded?.()
       useCallStore.getState().reset()

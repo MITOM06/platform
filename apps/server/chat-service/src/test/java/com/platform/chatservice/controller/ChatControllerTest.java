@@ -234,4 +234,23 @@ class ChatControllerTest {
         .convertAndSendToUser(eq("user-789"), eq("/queue/webrtc"), eq(dto));
     verify(messageService, never()).sendMessage(anyString(), any(SendMessageRequest.class));
   }
+
+  /** The end reason (declined / busy / …) must reach the peer so it can explain the hang-up. */
+  @Test
+  void callEnd_RelaysTheEndReasonToThePeer() {
+    com.platform.chatservice.dto.WebRTCSignalDto dto =
+        new com.platform.chatservice.dto.WebRTCSignalDto();
+    dto.setTargetId("user-789");
+    dto.setConversationId("conv-999");
+    dto.setType("end");
+    dto.setReason("declined");
+
+    chatController.callEnd(dto, principal);
+
+    org.mockito.ArgumentCaptor<com.platform.chatservice.dto.WebRTCSignalDto> sent =
+        org.mockito.ArgumentCaptor.forClass(com.platform.chatservice.dto.WebRTCSignalDto.class);
+    verify(clusterBroker).convertAndSendToUser(eq("user-789"), eq("/queue/webrtc"), sent.capture());
+    org.assertj.core.api.Assertions.assertThat(sent.getValue().getReason()).isEqualTo("declined");
+    org.assertj.core.api.Assertions.assertThat(sent.getValue().getSenderId()).isEqualTo(SENDER_ID);
+  }
 }

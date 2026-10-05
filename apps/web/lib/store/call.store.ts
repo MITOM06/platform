@@ -47,6 +47,7 @@ interface CallState {
   // ── 1-on-1 actions ──────────────────────────────────────────────────────────
   setIncoming: (p: { peerId: string; peerName: string; conversationId: string; sdp: string; video: boolean }) => void
   setOutgoing: (p: { peerId: string; peerName: string; conversationId: string; video: boolean }) => void
+  setPeerName: (name: string) => void
   setConnected: () => void
   setDuration: (s: number) => void
   setMic: (on: boolean) => void
@@ -95,6 +96,7 @@ export const useCallStore = create<CallState>((set) => ({
     set({ status: 'incoming', peerId, peerName, conversationId, pendingOfferSdp: sdp, video }),
   setOutgoing: ({ peerId, peerName, conversationId, video }) =>
     set({ status: 'outgoing', peerId, peerName, conversationId, pendingOfferSdp: null, video }),
+  setPeerName: (peerName) => set({ peerName }),
   setConnected: () => set({ status: 'connected', durationSeconds: 0 }),
   setDuration: (s) => set({ durationSeconds: s }),
   setMic: (on) => set({ micEnabled: on }),

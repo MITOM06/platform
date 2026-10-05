@@ -1363,6 +1363,13 @@
   },
   "call": {
     "peerFallback": "ユーザー",
+    "mediaError": "カメラまたはマイクにアクセスできません。ブラウザの権限を確認してください。",
+    "noAnswer": "応答がありません",
+    "declined": "{name}さんが通話を拒否しました",
+    "busy": "{name}さんは別の通話中です",
+    "peerMediaError": "{name}さんのマイクまたはカメラを起動できませんでした",
+    "ended": "通話が終了しました",
+    "connectionLost": "接続が切れたため通話が終了しました",
     "calling": "発信中…",
     "muteMic": "マイクをオフ",
     "unmuteMic": "マイクをオン",

@@ -855,6 +855,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get callMediaError => '无法访问摄像头/麦克风（需要 HTTPS 或 localhost）';
 
   @override
+  String get callNoAnswer => '无人接听';
+
+  @override
   String get callUnknownCaller => '某人';
 
   @override
@@ -3450,4 +3453,34 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminLoadFailed => '无法加载此部分，请重试。';
+
+  @override
+  String callDeclined(String name) {
+    return '$name 拒绝了通话';
+  }
+
+  @override
+  String callBusy(String name) {
+    return '$name 正在通话中';
+  }
+
+  @override
+  String callPeerMediaError(String name) {
+    return '$name 无法开启麦克风或摄像头';
+  }
+
+  @override
+  String get callEnded => '通话已结束';
+
+  @override
+  String get callConnectionLost => '连接中断，通话已结束';
+
+  @override
+  String get callSpeaker => '扬声器';
+
+  @override
+  String get callSwitchCamera => '切换摄像头';
+
+  @override
+  String get callHangUp => '挂断';
 }

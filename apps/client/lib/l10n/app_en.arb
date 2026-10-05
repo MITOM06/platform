@@ -416,6 +416,7 @@
   },
   "callConnecting": "Connecting…",
   "callMediaError": "Cannot access camera/microphone (HTTPS or localhost required)",
+  "callNoAnswer": "No answer",
   "callUnknownCaller": "Someone",
   "callToggleMic": "Toggle microphone",
   "callToggleCam": "Toggle camera",
@@ -1678,5 +1679,22 @@
   },
   "adminMemberBlocked": "Member blocked",
   "adminMemberUnblocked": "Member unblocked",
-  "adminLoadFailed": "Couldn't load this section. Please try again."
+  "adminLoadFailed": "Couldn't load this section. Please try again.",
+  "callDeclined": "{name} declined the call",
+  "@callDeclined": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callBusy": "{name} is on another call",
+  "@callBusy": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callPeerMediaError": "{name} couldn't turn on their microphone or camera",
+  "@callPeerMediaError": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callEnded": "Call ended",
+  "callConnectionLost": "Call dropped — connection lost",
+  "callSpeaker": "Speaker",
+  "callSwitchCamera": "Switch camera",
+  "callHangUp": "End call"
 }

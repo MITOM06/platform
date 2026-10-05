@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart'
     show BuildContext, ScaffoldMessenger, SnackBar, Text;
@@ -9,13 +8,15 @@ import '../../../core/router/app_router.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../ui/widgets/message_preview_text.dart';
+import 'call_rules.dart';
 import 'chat_misc_providers.dart';
 import 'chat_state.dart';
+import 'group_call_controller.dart';
+import 'incoming_call.dart';
 import 'webrtc_service.dart';
 
 /// Handles a raw 1-on-1 WebRTC [signal]. Group-call signals (call-ring + mesh
 /// offer/answer/ice carrying a callId) are handled elsewhere and ignored here.
-/// [conversations] is the current conversation list (for caller-name lookup).
 void handleWebRtcSignal(
   Ref ref,
   Map<String, dynamic> signal,
@@ -27,11 +28,15 @@ void handleWebRtcSignal(
     // callId) are handled by GroupCallSignaling. Ignore them here so the
     // legacy 1-on-1 flow stays untouched.
     if (type == 'call-ring' || signal['callId'] != null) return;
+    final webrtc = ref.read(webRtcServiceProvider);
 
     // The callee has us blocked — notify the caller and bail.
     if (type == 'call-blocked') {
-      final context =
-          ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
+      final context = ref
+          .read(appRouterProvider)
+          .routerDelegate
+          .navigatorKey
+          .currentContext;
       if (context != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.l10n.callBlocked)),
@@ -40,7 +45,7 @@ void handleWebRtcSignal(
       // Mirror web: close the call screen. dispose() fires onCallEnded →
       // Navigator.pop() in CallScreen. Safe to call even when no active
       // call exists — WebRTCService.dispose() is idempotent.
-      ref.read(webRtcServiceProvider).dispose();
+      webrtc.dispose();
       return;
     }
 
@@ -50,35 +55,34 @@ void handleWebRtcSignal(
       final sdp = signal['sdp'] as String?;
       if (senderId == null || convId == null || sdp == null) return;
 
-      // Show incoming call dialog
-      final router = ref.read(appRouterProvider);
-      final context = router.routerDelegate.navigatorKey.currentContext;
-      if (context == null) return;
-      final l10n = context.l10n;
-
-      // Resolve caller display name from local conversation state if available.
-      String callerName = l10n.callUnknownCaller;
-      final conv = conversations?.firstWhereOrNull((c) => c.id == convId);
-      if (conv?.name != null) {
-        callerName = conv!.name!;
+      switch (decideIncomingOffer(
+        from: senderId,
+        ringingFrom: ref.read(incomingCallProvider)?.senderId,
+        inCallWith: webrtc.peerId,
+        inGroupCall: ref.read(groupCallControllerProvider).isActive,
+      )) {
+        case IncomingOfferAction.ignore:
+          return; // the same caller re-sent its offer
+        case IncomingOfferAction.replyBusy:
+          webrtc.sendEnd(
+            targetId: senderId,
+            conversationId: convId,
+            reason: CallEndReason.busy,
+          );
+          return;
+        case IncomingOfferAction.ring:
+          // Show the accept/decline prompt (IncomingCallPrompt) and keep the
+          // caller's early ICE candidates until the call is answered.
+          webrtc.expectCallFrom(senderId);
+          ref.read(incomingCallProvider.notifier).set(IncomingCall(
+                senderId: senderId,
+                conversationId: convId,
+                sdp: sdp,
+                isVideo: WebRTCService.sdpHasVideo(sdp),
+              ));
       }
-
-      showInAppNotification(
-        l10n.callIncoming,
-        l10n.callIncomingBody(callerName),
-        onTap: () {
-          router.push('/call', extra: {
-            'targetId': senderId, // we reply back to sender
-            'targetName': callerName,
-            'conversationId': convId,
-            'isCaller': false,
-            'initialOfferSdp': sdp,
-          });
-        },
-      );
     } else {
-      // For answer, ice, end, we need to pass them to WebRTCService if it's active.
-      final webrtc = ref.read(webRtcServiceProvider);
+      // answer / ice / end go to WebRTCService.
       if (type == 'answer') {
         final sdp = signal['sdp'] as String?;
         if (sdp == null) return;
@@ -86,12 +90,23 @@ void handleWebRtcSignal(
       } else if (type == 'ice') {
         final candidate = signal['candidate'] as Map?;
         if (candidate == null) return;
-        webrtc.handleIceCandidate(Map<String, dynamic>.from(candidate));
+        webrtc.handleIceCandidate(
+          Map<String, dynamic>.from(candidate),
+          senderId: signal['senderId'] as String?,
+        );
       } else if (type == 'end') {
         // Peer hung up: tear down locally only. Do NOT re-publish /app/call.end
         // or send a system call-log message — the hang-up initiator already
         // did both, otherwise we'd ping-pong and log the call twice.
-        webrtc.dispose();
+        // A caller hanging up (or ringing out) before we answered also
+        // dismisses the incoming prompt. An `end` from anyone but the current
+        // peer is ignored by handleRemoteEnd.
+        final from = signal['senderId'] as String?;
+        ref.read(incomingCallProvider.notifier).clearFrom(from);
+        webrtc.handleRemoteEnd(
+          from: from,
+          reasonWire: signal['reason'] as String?,
+        );
       }
     }
   } catch (e) {
@@ -161,7 +176,8 @@ Future<void> showIncomingMessageBanner(
       ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
   if (context == null || !context.mounted) return;
   final l10n = context.l10n;
-  final name = resolvedName.isNotEmpty ? resolvedName : l10n.conversationDefault;
+  final name =
+      resolvedName.isNotEmpty ? resolvedName : l10n.conversationDefault;
 
   final bodyText = notificationBodyText(
     context,

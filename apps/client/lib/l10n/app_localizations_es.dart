@@ -876,6 +876,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se puede acceder a la cámara/micrófono (se requiere HTTPS o localhost)';
 
   @override
+  String get callNoAnswer => 'Sin respuesta';
+
+  @override
   String get callUnknownCaller => 'Alguien';
 
   @override
@@ -3591,4 +3594,35 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get adminLoadFailed =>
       'No se pudo cargar esta sección. Inténtalo de nuevo.';
+
+  @override
+  String callDeclined(String name) {
+    return '$name rechazó la llamada';
+  }
+
+  @override
+  String callBusy(String name) {
+    return '$name está en otra llamada';
+  }
+
+  @override
+  String callPeerMediaError(String name) {
+    return '$name no pudo activar su micrófono o cámara';
+  }
+
+  @override
+  String get callEnded => 'Llamada finalizada';
+
+  @override
+  String get callConnectionLost =>
+      'La llamada se cortó por pérdida de conexión';
+
+  @override
+  String get callSpeaker => 'Altavoz';
+
+  @override
+  String get callSwitchCamera => 'Cambiar cámara';
+
+  @override
+  String get callHangUp => 'Colgar';
 }

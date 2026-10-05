@@ -159,24 +159,14 @@ export function useRealtimeNotifications(): void {
             return
           }
 
-          // ── Legacy 1-on-1 ───────────────────────────────────────────────────
-          if (signal.type === 'offer') {
-            // Ignore a second offer while already in a call.
-            if (useCallStore.getState().status !== 'idle') return
-            useCallStore.getState().setIncoming({
-              peerId: signal.senderId ?? '',
-              peerName: '',
-              conversationId: signal.conversationId ?? '',
-              sdp: signal.sdp ?? '',
-              video: (signal.sdp ?? '').includes('m=video'),
-            })
-          } else {
-            // Lazy-load the WebRTC module only when an active call needs it —
-            // keeps RTCPeerConnection code out of the initial layout bundle.
-            void import('@/lib/webrtc/call-manager').then((m) =>
-              m.callManager.handleSignal(signal),
-            )
-          }
+          // ── Legacy 1-on-1 (offer / answer / ice / end) ──────────────────────
+          // callManager owns ringing, busy replies and the early-ICE buffer.
+          // Lazy-load the WebRTC module only when a call signal arrives — keeps
+          // RTCPeerConnection code out of the initial layout bundle. Successive
+          // signals stay in order: they all chain on the same import() promise.
+          void import('@/lib/webrtc/call-manager').then((m) =>
+            m.callManager.handleSignal(signal),
+          )
         } catch {
           // ignore
         }
