@@ -3483,4 +3483,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get callHangUp => '挂断';
+
+  @override
+  String get callReconnecting => '正在重新连接…';
+
+  @override
+  String get callPoorConnection => '网络连接不佳';
 }

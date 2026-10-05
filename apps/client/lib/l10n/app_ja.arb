@@ -1242,5 +1242,7 @@
   "callConnectionLost": "接続が切れたため通話が終了しました",
   "callSpeaker": "スピーカー",
   "callSwitchCamera": "カメラを切り替え",
-  "callHangUp": "通話を終了"
+  "callHangUp": "通話を終了",
+  "callReconnecting": "再接続中…",
+  "callPoorConnection": "接続が不安定です"
 }

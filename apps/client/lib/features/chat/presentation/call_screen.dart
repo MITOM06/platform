@@ -9,6 +9,9 @@ import '../data/chat_repository.dart';
 import '../domain/call_end_notice.dart';
 import '../domain/call_rules.dart';
 import '../domain/call_sounds.dart';
+import '../domain/call_transport.dart';
+import '../domain/direct_call_engine.dart';
+import '../domain/sfu_call_service.dart';
 import '../domain/webrtc_service.dart';
 import '../ui/widgets/call_controls.dart';
 
@@ -20,6 +23,9 @@ class CallScreen extends ConsumerStatefulWidget {
   final bool isVideo;
   final String? initialOfferSdp;
 
+  /// LiveKit (sfu) incoming call: the server's call id. Null on mesh.
+  final String? callId;
+
   const CallScreen({
     super.key,
     required this.targetId,
@@ -28,6 +34,7 @@ class CallScreen extends ConsumerStatefulWidget {
     required this.isCaller,
     this.isVideo = true,
     this.initialOfferSdp,
+    this.callId,
   });
 
   @override
@@ -47,6 +54,13 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   /// Captured in didChangeDependencies: the end notice may fire after this
   /// screen is gone, and l10n cannot be read from context in initState.
   late AppLocalizations _l10n;
+
+  /// The engine running this call: LiveKit for an sfu ring or a new call while
+  /// the server runs sfu, peer-to-peer otherwise.
+  late final DirectCallEngine _engine = widget.callId != null ||
+          (widget.isCaller && ref.read(callTransportProvider).current == CallTransport.sfu)
+      ? ref.read(sfuCallServiceProvider)
+      : ref.read(webRtcServiceProvider);
 
   @override
   void initState() {
@@ -68,7 +82,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   }
 
   Future<void> _initWebRTC() async {
-    final webrtc = ref.read(webRtcServiceProvider);
+    final webrtc = _engine;
     final peerName = widget.targetName;
     webrtc.onEndNotice = (reason, byPeer) {
       unawaited(_sounds.stop());
@@ -119,14 +133,37 @@ class _CallScreenState extends ConsumerState<CallScreen> {
           .ignore();
     };
 
-    // For incoming calls, only open the camera when the offer advertises video.
-    final effectiveVideo = widget.isCaller
+    // For incoming calls, only open the camera when the offer advertises video
+    // (a LiveKit ring carries the media instead of an SDP).
+    final effectiveVideo = widget.isCaller || webrtc is SfuCallService
         ? widget.isVideo
         : WebRTCService.sdpHasVideo(widget.initialOfferSdp);
     _isVideoCall = effectiveVideo;
 
+    if (webrtc is SfuCallService) {
+      if (widget.isCaller) {
+        await webrtc.startOutgoing(
+          targetId: widget.targetId,
+          conversationId: widget.conversationId,
+          isVideo: effectiveVideo,
+        );
+        unawaited(_sounds.play(CallTone.ringback, speaker: effectiveVideo));
+        _ringTimer = Timer(WebRTCService.ringTimeout, _onRingTimeout);
+      } else {
+        webrtc.prepareIncoming(
+          targetId: widget.targetId,
+          conversationId: widget.conversationId,
+          callId: widget.callId!,
+          isVideo: effectiveVideo,
+        );
+        await webrtc.answer();
+      }
+      return;
+    }
+    final mesh = webrtc as WebRTCService;
+
     try {
-      await webrtc.initialize(
+      await mesh.initialize(
         widget.targetId,
         widget.conversationId,
         isVideo: effectiveVideo,
@@ -134,11 +171,11 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       );
 
       if (widget.isCaller) {
-        await webrtc.makeCall();
+        await mesh.makeCall();
         unawaited(_sounds.play(CallTone.ringback, speaker: effectiveVideo));
         _ringTimer = Timer(WebRTCService.ringTimeout, _onRingTimeout);
       } else if (widget.initialOfferSdp != null) {
-        await webrtc.handleOffer(widget.initialOfferSdp!);
+        await mesh.handleOffer(widget.initialOfferSdp!);
       }
     } on CallCancelledException {
       // The call ended while setup was awaiting (e.g. the caller gave up while
@@ -160,7 +197,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   /// the callee, logs a missed call and shows "No answer" via onEndNotice).
   void _onRingTimeout() {
     if (!mounted || _isConnected) return;
-    ref.read(webRtcServiceProvider).endCall(reason: CallEndReason.noAnswer);
+    _engine.endCall(reason: CallEndReason.noAnswer);
   }
 
   void _startTimer() {
@@ -184,7 +221,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   void _endCall() {
     // endCall() → dispose() → onCallEnded closes this screen. Popping here as
     // well used to pop twice, closing the chat screen underneath too.
-    ref.read(webRtcServiceProvider).endCall(duration: _durationSeconds);
+    _engine.endCall(duration: _durationSeconds);
   }
 
   @override
@@ -283,6 +320,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                     _formattedDuration,
                     style: const TextStyle(color: Colors.white70, fontSize: 16),
                   ),
+                if (_engine case final SfuCallService sfu) _ConnectionNotice(sfu),
               ],
             ),
           ),
@@ -293,7 +331,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
             left: 16,
             right: 16,
             child: Builder(builder: (context) {
-              final webrtc = ref.read(webRtcServiceProvider);
+              final webrtc = _engine;
               return CallControls(
                 isVideo: _isVideoCall,
                 micOn: webrtc.micOn,
@@ -318,6 +356,29 @@ class _CallScreenState extends ConsumerState<CallScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// "Reconnecting…" / "Poor connection" under the call status (LiveKit calls).
+class _ConnectionNotice extends StatelessWidget {
+  final SfuCallService call;
+  const _ConnectionNotice(this.call);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([call.reconnecting, call.poorConnection]),
+      builder: (context, _) {
+        final text = call.reconnecting.value
+            ? context.l10n.callReconnecting
+            : (call.poorConnection.value ? context.l10n.callPoorConnection : null);
+        if (text == null) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(text, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        );
+      },
     );
   }
 }

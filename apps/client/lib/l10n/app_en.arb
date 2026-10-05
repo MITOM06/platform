@@ -1696,5 +1696,7 @@
   "callConnectionLost": "Call dropped — connection lost",
   "callSpeaker": "Speaker",
   "callSwitchCamera": "Switch camera",
-  "callHangUp": "End call"
+  "callHangUp": "End call",
+  "callReconnecting": "Reconnecting…",
+  "callPoorConnection": "Poor connection"
 }

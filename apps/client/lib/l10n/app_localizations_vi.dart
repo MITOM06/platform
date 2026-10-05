@@ -3598,4 +3598,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get callHangUp => 'Kết thúc';
+
+  @override
+  String get callReconnecting => 'Đang kết nối lại…';
+
+  @override
+  String get callPoorConnection => 'Kết nối yếu';
 }

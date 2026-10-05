@@ -102,6 +102,9 @@ class SfuCallService implements DirectCallEngine {
   bool _cameraOn = true;
   bool _speakerOn = false;
 
+  /// A LiveKit 1-on-1 is starting, ringing out, or running.
+  bool get isActive => _callId != null || _pendingStart;
+
   @override
   bool get micOn => _micOn;
   @override

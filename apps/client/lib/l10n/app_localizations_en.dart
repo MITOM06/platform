@@ -3596,4 +3596,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get callHangUp => 'End call';
+
+  @override
+  String get callReconnecting => 'Reconnecting…';
+
+  @override
+  String get callPoorConnection => 'Poor connection';
 }

@@ -3625,4 +3625,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get callHangUp => 'Colgar';
+
+  @override
+  String get callReconnecting => 'Reconectando…';
+
+  @override
+  String get callPoorConnection => 'Conexión débil';
 }

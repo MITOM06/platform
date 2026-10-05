@@ -1242,5 +1242,7 @@
   "callConnectionLost": "연결이 끊겨 통화가 종료되었습니다",
   "callSpeaker": "스피커",
   "callSwitchCamera": "카메라 전환",
-  "callHangUp": "통화 종료"
+  "callHangUp": "통화 종료",
+  "callReconnecting": "다시 연결하는 중…",
+  "callPoorConnection": "연결 상태가 좋지 않음"
 }

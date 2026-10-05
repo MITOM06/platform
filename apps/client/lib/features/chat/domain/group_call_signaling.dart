@@ -7,6 +7,9 @@ import '../../auth/domain/auth_state.dart';
 import '../data/stomp_service.dart';
 import 'group_call_controller.dart';
 import 'group_call_state.dart';
+import '../data/calls_repository.dart';
+import 'call_transport.dart';
+import 'sfu_call_signals.dart';
 
 part 'group_call_signaling.g.dart';
 
@@ -32,19 +35,27 @@ class IncomingGroupCallNotifier extends _$IncomingGroupCallNotifier {
 class GroupCallSignaling extends _$GroupCallSignaling {
   StreamSubscription<Map<String, dynamic>>? _webrtcSub;
   StreamSubscription<Map<String, dynamic>>? _callEventSub;
+  StreamSubscription<void>? _connectionSub;
 
   @override
   void build() {
     final stomp = ref.read(stompServiceProvider.notifier);
     _webrtcSub = stomp.webrtcSignals.listen(_onWebRtc);
     _callEventSub = stomp.callEvents.listen(_onCallEvent);
+    // Which media path new calls take (mesh / LiveKit) — re-read on every
+    // (re)connect, so a server switching CALL_TRANSPORT is picked up.
+    _connectionSub = stomp.connections.listen((_) {
+      ref.read(callTransportProvider).refresh(ref.read(callsRepositoryProvider));
+    });
     ref.onDispose(() {
       _webrtcSub?.cancel();
       _callEventSub?.cancel();
+      _connectionSub?.cancel();
     });
   }
 
   void _onWebRtc(Map<String, dynamic> signal) {
+    if (handleSfuCallSignal(ref, signal)) return;
     final type = signal['type'] as String?;
     final callId = signal['callId'] as String?;
 

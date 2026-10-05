@@ -3648,4 +3648,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get callHangUp => 'Raccrocher';
+
+  @override
+  String get callReconnecting => 'Reconnexion…';
+
+  @override
+  String get callPoorConnection => 'Connexion faible';
 }

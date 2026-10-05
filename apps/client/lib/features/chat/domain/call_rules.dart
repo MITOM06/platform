@@ -10,7 +10,10 @@ enum CallEndReason {
   busy('busy'),
   noAnswer('no_answer'),
   mediaError('media_error'),
-  failed('failed');
+  failed('failed'),
+
+  /// LiveKit calls: picked up on another of the user's devices.
+  answeredElsewhere('answered_elsewhere');
 
   const CallEndReason(this.wire);
   final String wire;
@@ -20,6 +23,21 @@ enum CallEndReason {
 }
 
 enum IncomingOfferAction { ring, ignore, replyBusy }
+
+enum SfuRingAction { ring, ignore, replyBusy }
+
+/// What to do with a LiveKit 1-on-1 ring [callId] while possibly already
+/// ringing ([ringingCallId]), in a 1-on-1 ([inCall]) or a group call.
+SfuRingAction decideSfuRing({
+  required String callId,
+  String? ringingCallId,
+  bool inCall = false,
+  bool inGroupCall = false,
+}) {
+  if (ringingCallId == callId) return SfuRingAction.ignore;
+  if (ringingCallId != null || inCall || inGroupCall) return SfuRingAction.replyBusy;
+  return SfuRingAction.ring;
+}
 
 /// What to do with an incoming offer from [from] while possibly already
 /// ringing ([ringingFrom]), in a 1-on-1 call ([inCallWith]) or in a group

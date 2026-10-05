@@ -3520,4 +3520,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get callHangUp => '通話を終了';
+
+  @override
+  String get callReconnecting => '再接続中…';
+
+  @override
+  String get callPoorConnection => '接続が不安定です';
 }

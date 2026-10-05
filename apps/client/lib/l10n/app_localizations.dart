@@ -6702,6 +6702,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'End call'**
   String get callHangUp;
+
+  /// No description provided for @callReconnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting…'**
+  String get callReconnecting;
+
+  /// No description provided for @callPoorConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Poor connection'**
+  String get callPoorConnection;
 }
 
 class _AppLocalizationsDelegate

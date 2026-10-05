@@ -3519,4 +3519,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get callHangUp => '통화 종료';
+
+  @override
+  String get callReconnecting => '다시 연결하는 중…';
+
+  @override
+  String get callPoorConnection => '연결 상태가 좋지 않음';
 }

@@ -1242,5 +1242,7 @@
   "callConnectionLost": "Cuộc gọi bị ngắt do mất kết nối",
   "callSpeaker": "Loa ngoài",
   "callSwitchCamera": "Đổi camera",
-  "callHangUp": "Kết thúc"
+  "callHangUp": "Kết thúc",
+  "callReconnecting": "Đang kết nối lại…",
+  "callPoorConnection": "Kết nối yếu"
 }

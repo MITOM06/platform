@@ -14,6 +14,7 @@ void main() {
         'no_answer',
         'media_error',
         'failed',
+        'answered_elsewhere', // LiveKit calls (2026-10-05 calls-on-livekit contract)
       ]);
       for (final r in CallEndReason.values) {
         expect(CallEndReason.fromWire(r.wire), r);

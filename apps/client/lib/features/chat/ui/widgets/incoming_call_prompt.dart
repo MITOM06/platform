@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/chat_repository.dart';
+import '../../data/stomp_service.dart';
 import '../../domain/call_name_resolver.dart';
 import '../../domain/call_rules.dart';
 import '../../domain/incoming_call.dart';
@@ -27,17 +30,28 @@ class IncomingCallPrompt extends ConsumerWidget {
       'targetName': callerName,
       'conversationId': call.conversationId,
       'isCaller': false,
-      'initialOfferSdp': call.sdp,
+      'isVideo': call.isVideo,
+      'initialOfferSdp': call.callId == null ? call.sdp : null,
+      'callId': call.callId, // LiveKit call: answered by SfuCallService
     });
   }
 
   void _decline(WidgetRef ref, IncomingCall call) {
     ref.read(incomingCallProvider.notifier).clear();
-    ref.read(webRtcServiceProvider).sendEnd(
-          targetId: call.senderId,
-          conversationId: call.conversationId,
-          reason: CallEndReason.declined,
-        );
+    final callId = call.callId;
+    if (callId != null) {
+      // LiveKit call: the server ends it and stops the user's other devices ringing.
+      ref.read(stompServiceProvider.notifier).sendRawMessage(
+            destination: '/app/call.decline',
+            body: jsonEncode({'callId': callId, 'reason': CallEndReason.declined.wire}),
+          );
+    } else {
+      ref.read(webRtcServiceProvider).sendEnd(
+            targetId: call.senderId,
+            conversationId: call.conversationId,
+            reason: CallEndReason.declined,
+          );
+    }
     ref
         .read(chatRepositoryProvider)
         .sendMessageRest(

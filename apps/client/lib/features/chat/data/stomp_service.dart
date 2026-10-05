@@ -48,6 +48,8 @@ class StompService extends _$StompService {
   final _callEventCtrl = StreamController<Map<String, dynamic>>.broadcast();
   // Emits whenever a STOMP reconnect completes (not on first connect).
   final _reconnectCtrl = StreamController<void>.broadcast();
+  // Emits on EVERY completed connect, first one included.
+  final _connectedCtrl = StreamController<void>.broadcast();
   bool _presenceSubPending = false;
   // Tracks whether we have successfully connected at least once this session.
   bool _everConnected = false;
@@ -78,6 +80,9 @@ class StompService extends _$StompService {
   Stream<Map<String, dynamic>> get callEvents => _callEventCtrl.stream;
   // Fires whenever the STOMP socket reconnects after a prior disconnect.
   Stream<void> get reconnects => _reconnectCtrl.stream;
+
+  /// Every completed connect (first and reconnects).
+  Stream<void> get connections => _connectedCtrl.stream;
 
   bool get isConnected => _client?.connected ?? false;
 
@@ -169,6 +174,7 @@ class StompService extends _$StompService {
       _reconnectCtrl.add(null);
     }
     _everConnected = true;
+    _connectedCtrl.add(null);
 
     // Re-establish all pending subscriptions after connect/reconnect
     if (_notifSubPending) _doSubscribeNotifications();

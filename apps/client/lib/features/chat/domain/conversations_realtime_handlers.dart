@@ -13,6 +13,7 @@ import 'chat_misc_providers.dart';
 import 'chat_state.dart';
 import 'group_call_controller.dart';
 import 'incoming_call.dart';
+import 'sfu_call_service.dart';
 import 'webrtc_service.dart';
 
 /// Handles a raw 1-on-1 WebRTC [signal]. Group-call signals (call-ring + mesh
@@ -59,7 +60,9 @@ void handleWebRtcSignal(
         from: senderId,
         ringingFrom: ref.read(incomingCallProvider)?.senderId,
         inCallWith: webrtc.peerId,
-        inGroupCall: ref.read(groupCallControllerProvider).isActive,
+        // A LiveKit 1-on-1 in progress counts as busy too.
+        inGroupCall: ref.read(groupCallControllerProvider).isActive ||
+            ref.read(sfuCallServiceProvider).isActive,
       )) {
         case IncomingOfferAction.ignore:
           return; // the same caller re-sent its offer

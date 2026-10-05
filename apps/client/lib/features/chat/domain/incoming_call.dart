@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/calls_repository.dart';
 import 'call_sounds.dart';
 import 'webrtc_service.dart';
 
@@ -9,14 +10,22 @@ import 'webrtc_service.dart';
 class IncomingCall {
   final String senderId;
   final String conversationId;
+
+  /// mesh: the offer SDP. LiveKit rings carry none ('').
   final String sdp;
   final bool isVideo;
+
+  /// LiveKit (sfu) rings only: the server's call id.
+  final String? callId;
+  final CallTransport transport;
 
   const IncomingCall({
     required this.senderId,
     required this.conversationId,
-    required this.sdp,
+    this.sdp = '',
     required this.isVideo,
+    this.callId,
+    this.transport = CallTransport.mesh,
   });
 }
 
@@ -53,6 +62,11 @@ class IncomingCallNotifier extends Notifier<IncomingCall?> {
   /// else must not dismiss it).
   void clearFrom(String? senderId) {
     if (state != null && state!.senderId == senderId) clear();
+  }
+
+  /// Clears the prompt only if it is the LiveKit ring [callId].
+  void clearCall(String? callId) {
+    if (state != null && callId != null && state!.callId == callId) clear();
   }
 }
 

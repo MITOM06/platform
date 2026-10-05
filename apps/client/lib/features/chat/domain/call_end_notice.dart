@@ -18,6 +18,7 @@ String? callEndNotice(
       CallEndReason.failed => l10n.callConnectionLost,
       CallEndReason.hangup => l10n.callEnded,
       CallEndReason.noAnswer => null,
+      CallEndReason.answeredElsewhere => null,
     };
   }
   return switch (reason) {
