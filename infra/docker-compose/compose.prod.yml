@@ -83,6 +83,9 @@ services:
       REDIS_PORT: ${REDIS_PORT:-6379}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      # Express session + the 2FA (TOTP) encryption key, derived from it.
+      # Changing it invalidates every 2FA enrollment (Owner resets, users re-enroll).
+      SESSION_SECRET: ${SESSION_SECRET:?run ./bootstrap.sh to generate it}
       WORKSPACE_NAME: ${WORKSPACE_NAME}
       BOOTSTRAP_OWNER_EMAIL: ${BOOTSTRAP_OWNER_EMAIL}
       MAIL_HOST: ${MAIL_HOST:-}
