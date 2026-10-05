@@ -14,6 +14,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,7 @@ public class MessageQueryService {
   private final MongoTemplate mongoTemplate;
   private final MessageServiceHelper helper;
   private final MessageMapper messageMapper;
+  private final SenderNameResolver senderNameResolver;
 
   /**
    * Cursor-based pagination (newest first). When {@code beforeId} is null/blank the most recent
@@ -207,6 +210,10 @@ public class MessageQueryService {
    * anymore — they carry {@code type="image"} + {@code imageUrls} (parsed from the message content,
    * which is a single URL or a JSON array, mirroring web's {@code parseImageUrls}) so ai-service
    * can render them as image content blocks. Caption is the (usually empty) text.
+   *
+   * <p>Every entry carries its {@code senderId} and, when it resolves, {@code senderName} (one
+   * batched lookup for all senders, see {@link SenderNameResolver}) — without them ai-service's
+   * group context attributed every line to "A member".
    */
   public List<AiHistoryEntry> getAiHistory(String userId, String conversationId) {
     try {
@@ -222,19 +229,39 @@ public class MessageQueryService {
           List<String> imageUrls = parseImageUrls(msg.content());
           if (imageUrls.isEmpty()) continue;
           // No caption field on image messages today — caption stays empty.
-          history.add(AiHistoryEntry.image(role, "", imageUrls));
+          history.add(AiHistoryEntry.image(role, "", imageUrls).withSender(msg.senderId(), null));
           continue;
         }
 
         String content = AI_MENTION_STRIP.matcher(msg.content()).replaceAll("").trim();
         if (content.isBlank()) continue;
-        history.add(AiHistoryEntry.text(role, content));
+        history.add(AiHistoryEntry.text(role, content).withSender(msg.senderId(), null));
       }
       Collections.reverse(history); // newest-first → chronological
-      return history;
+      return withSenderNames(conversationId, history);
     } catch (Exception e) {
       return List.of();
     }
+  }
+
+  /** Fill {@code senderName} for every entry whose sender resolves; a lookup failure keeps none. */
+  private List<AiHistoryEntry> withSenderNames(
+      String conversationId, List<AiHistoryEntry> history) {
+    if (history.isEmpty()) {
+      return history;
+    }
+    Map<String, String> names;
+    try {
+      names =
+          senderNameResolver.displayNames(
+              conversationId,
+              history.stream().map(AiHistoryEntry::senderId).filter(Objects::nonNull).toList());
+    } catch (Exception e) {
+      return history;
+    }
+    return history.stream()
+        .map(h -> h.senderId() == null ? h : h.withSender(h.senderId(), names.get(h.senderId())))
+        .toList();
   }
 
   /**

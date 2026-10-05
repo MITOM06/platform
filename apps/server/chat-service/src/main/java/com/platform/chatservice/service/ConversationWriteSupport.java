@@ -1,6 +1,7 @@
 package com.platform.chatservice.service;
 
 import com.platform.chatservice.dto.ConversationResponse;
+import com.platform.chatservice.exception.BadRequestException;
 import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.ErrorCodes;
 import com.platform.chatservice.exception.ForbiddenException;
@@ -52,7 +53,7 @@ class ConversationWriteSupport {
   Conversation requireGroupAdmin(String userId, String conversationId) {
     Conversation conversation = requireParticipant(userId, conversationId);
     if (!conversation.isGroup()) {
-      throw new IllegalArgumentException("Not a group conversation");
+      throw notAGroup();
     }
     if (!isAdmin(conversation, userId)) {
       throw adminRequired("Only admins can perform this action");
@@ -66,6 +67,11 @@ class ConversationWriteSupport {
 
   static ForbiddenException adminRequired(String message) {
     return new ForbiddenException(ErrorCodes.GROUP_ADMIN_REQUIRED, message);
+  }
+
+  /** 400 {@code NOT_A_GROUP} — a group-only action on a direct conversation. */
+  static BadRequestException notAGroup() {
+    return new BadRequestException(ErrorCodes.NOT_A_GROUP, "Not a group conversation");
   }
 
   /**

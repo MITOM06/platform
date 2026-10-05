@@ -47,6 +47,7 @@ class AiResponseListenerTest {
   @Mock private TraceContext traceContext;
   @Mock private StringRedisTemplate redisTemplate;
   @Mock private ValueOperations<String, String> valueOperations;
+  @Mock private AiPendingActionService pendingActionService;
 
   private AiResponseListener listener;
 
@@ -73,6 +74,8 @@ class AiResponseListenerTest {
     when(redisTemplate.opsForValue()).thenReturn(valueOperations);
     when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
         .thenReturn(true);
+    // No early action outcomes by default: reconcile hands the saved message back unchanged.
+    when(pendingActionService.reconcile(any())).thenAnswer(inv -> inv.getArgument(0));
 
     listener =
         new AiResponseListener(
@@ -83,7 +86,8 @@ class AiResponseListenerTest {
             objectMapper,
             tracer,
             propagator,
-            redisTemplate);
+            redisTemplate,
+            pendingActionService);
   }
 
   @Test
@@ -129,7 +133,7 @@ class AiResponseListenerTest {
             "ai",
             List.of(),
             Instant.now());
-    when(messageService.persistAiMessage(eq("conv-1"), eq("Full AI reply"), isNull()))
+    when(messageService.persistAiMessage(eq("conv-1"), eq("Full AI reply"), isNull(), anyList()))
         .thenReturn(saved);
 
     listener.onMessage(redisMessage, null);
@@ -169,7 +173,7 @@ class AiResponseListenerTest {
     verify(valueOperations).setIfAbsent(eq("ai:done:conv-1:reply-a"), anyString(), any());
     verify(valueOperations).setIfAbsent(eq("ai:done:conv-1:reply-b"), anyString(), any());
     verify(messageService, org.mockito.Mockito.times(2))
-        .persistAiMessage(eq("conv-1"), eq("Đã nhớ!"), isNull());
+        .persistAiMessage(eq("conv-1"), eq("Đã nhớ!"), isNull(), anyList());
   }
 
   @Test
@@ -207,7 +211,7 @@ class AiResponseListenerTest {
 
     listener.onMessage(redisMessage, null);
 
-    verify(messageService, never()).persistAiMessage(any(), any(), any());
+    verify(messageService, never()).persistAiMessage(any(), any(), any(), any());
     verify(notificationService, never()).notifyNewMessage(any(), any());
     verifyNoInteractions(messagingTemplate, clusterBroker);
   }
@@ -240,7 +244,7 @@ class AiResponseListenerTest {
             "fullContent", "Full AI reply",
             "conversationId", "conv-1");
     when(redisMessage.getBody()).thenReturn(objectMapper.writeValueAsBytes(payload));
-    when(messageService.persistAiMessage(any(), any(), any()))
+    when(messageService.persistAiMessage(any(), any(), any(), any()))
         .thenThrow(new RuntimeException("mongo down"));
 
     listener.onMessage(redisMessage, null);
@@ -267,7 +271,7 @@ class AiResponseListenerTest {
 
     listener.onMessage(redisMessage, null);
 
-    verify(messageService, never()).persistAiMessage(any(), any(), any());
+    verify(messageService, never()).persistAiMessage(any(), any(), any(), any());
     verify(messagingTemplate)
         .convertAndSend(
             eq("/topic/conversation/conv-1"),
@@ -358,5 +362,198 @@ class AiResponseListenerTest {
     verify(tracer).nextSpan();
     verify(spanInScope).close();
     verify(span).end();
+  }
+
+  // ---------------------------------------------------------------- round 2 wiring
+
+  @SuppressWarnings("unchecked")
+  private Map<String, Object> capturedLocal() {
+    org.mockito.ArgumentCaptor<Object> event = org.mockito.ArgumentCaptor.forClass(Object.class);
+    verify(messagingTemplate).convertAndSend(eq("/topic/conversation/conv-1"), event.capture());
+    return (Map<String, Object>) event.getValue();
+  }
+
+  private void receive(Map<String, Object> payload) throws Exception {
+    when(redisMessage.getBody()).thenReturn(objectMapper.writeValueAsBytes(payload));
+    listener.onMessage(redisMessage, null);
+  }
+
+  @Test
+  void chunk_forwardsReplyIdAndRequesterId() throws Exception {
+    receive(
+        Map.of(
+            "type", "AI_STREAM_CHUNK",
+            "chunk", "Hi",
+            "conversationId", "conv-1",
+            "replyId", "r-1",
+            "requesterId", "user-9"));
+
+    Map<String, Object> event = capturedLocal();
+    org.assertj.core.api.Assertions.assertThat(event)
+        .containsEntry("type", "AI_STREAM_CHUNK")
+        .containsEntry("chunk", "Hi")
+        .containsEntry("replyId", "r-1")
+        .containsEntry("requesterId", "user-9");
+  }
+
+  @Test
+  void toolCall_forwardsReplyIdAndRequesterId() throws Exception {
+    receive(
+        Map.of(
+            "type", "AI_TOOL_CALL",
+            "toolName", "web_search",
+            "inputSummary", "q",
+            "sensitive", false,
+            "conversationId", "conv-1",
+            "replyId", "r-1",
+            "requesterId", "user-9"));
+
+    org.assertj.core.api.Assertions.assertThat(capturedLocal())
+        .containsEntry("type", "AI_TOOL_CALL")
+        .containsEntry("sensitive", false)
+        .containsEntry("replyId", "r-1")
+        .containsEntry("requesterId", "user-9");
+  }
+
+  @Test
+  void error_forwardsRoutingCodeAndStopReason() throws Exception {
+    receive(
+        Map.of(
+            "type", "AI_STREAM_ERROR",
+            "error", "The AI returned an empty response.",
+            "code", "AI_EMPTY_RESPONSE",
+            "stopReason", "refusal",
+            "conversationId", "conv-1",
+            "replyId", "r-1",
+            "requesterId", "user-9"));
+
+    org.assertj.core.api.Assertions.assertThat(capturedLocal())
+        .containsEntry("code", "AI_EMPTY_RESPONSE")
+        .containsEntry("stopReason", "refusal")
+        .containsEntry("replyId", "r-1")
+        .containsEntry("requesterId", "user-9");
+  }
+
+  @Test
+  void actionPending_forwardsOnlyDisplayFields_withRouting() throws Exception {
+    receive(
+        Map.of(
+            "type", "AI_ACTION_PENDING",
+            "conversationId", "conv-1",
+            "replyId", "r-1",
+            "requesterId", "user-9",
+            "action",
+                Map.of(
+                    "id", "act-1",
+                    "toolName", "mcp__gmail__send_email",
+                    "provider", "gmail",
+                    "summary", Map.of("kind", "send_email", "to", "a@b.c", "subject", "Hi"),
+                    "status", "pending",
+                    "expiresAt", "2026-10-05T10:10:00Z",
+                    "input", Map.of("body", "secret draft"))));
+
+    Map<String, Object> event = capturedLocal();
+    org.assertj.core.api.Assertions.assertThat(event)
+        .containsEntry("type", "AI_ACTION_PENDING")
+        .containsEntry("replyId", "r-1")
+        .containsEntry("requesterId", "user-9")
+        .containsEntry("senderId", AiConstants.AI_BOT_USER_ID);
+    @SuppressWarnings("unchecked")
+    Map<String, Object> action = (Map<String, Object>) event.get("action");
+    org.assertj.core.api.Assertions.assertThat(action)
+        .containsEntry("id", "act-1")
+        .containsEntry("toolName", "mcp__gmail__send_email")
+        .containsEntry("provider", "gmail")
+        .containsEntry("status", "pending")
+        .containsEntry("expiresAt", "2026-10-05T10:10:00Z")
+        .containsEntry("requesterId", "user-9")
+        .doesNotContainKey("input");
+    verifyNoInteractions(clusterBroker, messageService);
+  }
+
+  @Test
+  void actionPending_withoutValidAction_isDropped() throws Exception {
+    receive(Map.of("type", "AI_ACTION_PENDING", "conversationId", "conv-1", "action", "x"));
+
+    verifyNoInteractions(messagingTemplate, clusterBroker);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void done_persistsPendingActionsAndCacheTokens_andForwardsRouting() throws Exception {
+    Map<String, Object> trace =
+        Map.of(
+            "inputTokens", 1200,
+            "outputTokens", 80,
+            "cachedInputTokens", 900,
+            "cacheCreationInputTokens", 250,
+            "model", "claude-sonnet-4-5");
+    receive(
+        Map.of(
+            "type", "AI_STREAM_DONE",
+            "fullContent", "I will send it once you confirm.",
+            "conversationId", "conv-1",
+            "replyId", "r-1",
+            "requesterId", "user-9",
+            "trace", trace,
+            "pendingActions",
+                List.of(
+                    Map.of(
+                        "id", "act-1",
+                        "toolName", "mcp__gmail__send_email",
+                        "provider", "gmail",
+                        "summary", Map.of("kind", "send_email", "subject", "Hi"),
+                        "status", "pending",
+                        "expiresAt", "2026-10-05T10:10:00Z"))));
+
+    org.mockito.ArgumentCaptor<com.platform.chatservice.model.AiTraceData> traceArg =
+        org.mockito.ArgumentCaptor.forClass(com.platform.chatservice.model.AiTraceData.class);
+    org.mockito.ArgumentCaptor<List<com.platform.chatservice.model.PendingAction>> actionsArg =
+        org.mockito.ArgumentCaptor.forClass(List.class);
+    verify(messageService)
+        .persistAiMessage(
+            eq("conv-1"),
+            eq("I will send it once you confirm."),
+            traceArg.capture(),
+            actionsArg.capture());
+    org.assertj.core.api.Assertions.assertThat(traceArg.getValue().getCachedInputTokens())
+        .isEqualTo(900);
+    org.assertj.core.api.Assertions.assertThat(traceArg.getValue().getCacheCreationInputTokens())
+        .isEqualTo(250);
+    org.assertj.core.api.Assertions.assertThat(traceArg.getValue().getInputTokens())
+        .isEqualTo(1200);
+    com.platform.chatservice.model.PendingAction action = actionsArg.getValue().get(0);
+    org.assertj.core.api.Assertions.assertThat(action.getId()).isEqualTo("act-1");
+    org.assertj.core.api.Assertions.assertThat(action.getRequesterId()).isEqualTo("user-9");
+    org.assertj.core.api.Assertions.assertThat(action.getStatus()).isEqualTo("pending");
+    org.assertj.core.api.Assertions.assertThat(action.getExpiresAt())
+        .isEqualTo(Instant.parse("2026-10-05T10:10:00Z"));
+    verify(pendingActionService).reconcile(any());
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void done_eventCarriesReplyIdRequesterIdAndPendingActions() throws Exception {
+    MessageResponse saved =
+        new MessageResponse(
+            "msg-ai-1", "conv-1", AiConstants.AI_BOT_USER_ID, "ok", "ai", List.of(), Instant.now());
+    when(messageService.persistAiMessage(any(), any(), any(), any())).thenReturn(saved);
+    receive(
+        Map.of(
+            "type", "AI_STREAM_DONE",
+            "fullContent", "ok",
+            "conversationId", "conv-1",
+            "replyId", "r-1",
+            "requesterId", "user-9",
+            "pendingActions", List.of(Map.of("id", "act-1", "toolName", "t"))));
+
+    org.mockito.ArgumentCaptor<List<Object>> batch =
+        org.mockito.ArgumentCaptor.forClass(List.class);
+    verify(clusterBroker).convertAndSendAll(eq("/topic/conversation/conv-1"), batch.capture());
+    Map<String, Object> done = (Map<String, Object>) batch.getValue().get(1);
+    org.assertj.core.api.Assertions.assertThat(done)
+        .containsEntry("replyId", "r-1")
+        .containsEntry("requesterId", "user-9")
+        .containsKey("pendingActions");
   }
 }

@@ -7,10 +7,12 @@ import com.platform.chatservice.exception.MessageNotFoundException;
 import com.platform.chatservice.model.AiTraceData;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.Message;
+import com.platform.chatservice.model.PendingAction;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -47,7 +49,20 @@ public class AiMessageService {
   /** Persist an AI message and bump the conversation WITHOUT broadcasting it. */
   public MessageResponse persistAiMessage(
       String conversationId, String content, AiTraceData trace) {
-    return persist(conversationId, AiConstants.AI_BOT_USER_ID, content, "ai", trace);
+    return persistAiMessage(conversationId, content, trace, null);
+  }
+
+  /**
+   * Same as {@link #persistAiMessage(String, String, AiTraceData)}, also storing the sensitive
+   * actions the reply is waiting for the requester to confirm (F2). Null/empty = none.
+   */
+  public MessageResponse persistAiMessage(
+      String conversationId,
+      String content,
+      AiTraceData trace,
+      List<PendingAction> pendingActions) {
+    return persist(
+        conversationId, AiConstants.AI_BOT_USER_ID, content, "ai", trace, pendingActions);
   }
 
   /**
@@ -61,13 +76,18 @@ public class AiMessageService {
 
   private MessageResponse persistAndBroadcast(
       String conversationId, String senderId, String content, String type, AiTraceData trace) {
-    MessageResponse response = persist(conversationId, senderId, content, type, trace);
+    MessageResponse response = persist(conversationId, senderId, content, type, trace, null);
     clusterBroker.convertAndSend("/topic/conversation/" + conversationId, response);
     return response;
   }
 
   private MessageResponse persist(
-      String conversationId, String senderId, String content, String type, AiTraceData trace) {
+      String conversationId,
+      String senderId,
+      String content,
+      String type,
+      AiTraceData trace,
+      List<PendingAction> pendingActions) {
     Message message =
         messageRepository.save(
             Message.builder()
@@ -77,6 +97,10 @@ public class AiMessageService {
                 .type(type)
                 .readBy(new ArrayList<>())
                 .trace(trace)
+                .pendingActions(
+                    pendingActions == null || pendingActions.isEmpty()
+                        ? null
+                        : new ArrayList<>(pendingActions))
                 .build());
 
     Instant savedAt = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();

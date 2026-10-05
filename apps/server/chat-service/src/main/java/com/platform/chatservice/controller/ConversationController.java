@@ -19,6 +19,7 @@ import com.platform.chatservice.service.ConversationEventPublisher;
 import com.platform.chatservice.service.ConversationQueryService;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.ConversationUserStateService;
+import com.platform.chatservice.service.GroupAdminService;
 import com.platform.chatservice.service.MessageQueryService;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.PageLimits;
@@ -44,7 +45,14 @@ public class ConversationController {
   /** System-message code posted when disappearing messages change ({@code :0} = turned off). */
   static final String SYS_AUTODELETE_CHANGED = "system.autodelete.changed:";
 
+  /** {@code system.admin.promoted:<targetUserId>} — sender = the admin who promoted. */
+  static final String SYS_ADMIN_PROMOTED = "system.admin.promoted:";
+
+  /** {@code system.admin.demoted:<targetUserId>} — sender = the admin who demoted. */
+  static final String SYS_ADMIN_DEMOTED = "system.admin.demoted:";
+
   private final ConversationService conversationService;
+  private final GroupAdminService groupAdminService;
   private final ConversationUserStateService userStateService;
   private final ConversationQueryService conversationQueryService;
   private final MessageService messageService;
@@ -90,13 +98,56 @@ public class ConversationController {
     return conversationService.getConversation(currentUserId(), id);
   }
 
+  /**
+   * Rename / change avatar / make public or private (admins only, 403 {@code
+   * GROUP_ADMIN_REQUIRED}). {@code publicChannel} is optional; {@code true} on a department group
+   * is 400 {@code PUBLIC_DEPARTMENT_CHANNEL_NOT_ALLOWED}.
+   */
   @PutMapping("/{id}")
   public ConversationResponse updateGroup(
       @PathVariable String id, @RequestBody UpdateConversationRequest request) {
     ConversationResponse updated =
-        conversationService.updateGroup(currentUserId(), id, request.name(), request.avatarUrl());
+        conversationService.updateGroup(
+            currentUserId(), id, request.name(), request.avatarUrl(), request.publicChannel());
     events.publishShared(updated);
     return updated;
+  }
+
+  /**
+   * Make a member a group admin (F4). Idempotent for an existing admin. A real change broadcasts
+   * the shared CONVERSATION_UPDATED and a {@code system.admin.promoted:<userId>} notice sent by the
+   * caller. Errors: 400 {@code NOT_A_GROUP}, 403 {@code GROUP_ADMIN_REQUIRED}, 404 {@code
+   * NOT_A_MEMBER}.
+   */
+  @PostMapping("/{id}/admins/{userId}")
+  public ConversationResponse promoteAdmin(@PathVariable String id, @PathVariable String userId) {
+    String actorId = currentUserId();
+    return applyAdminChange(
+        id, actorId, groupAdminService.promote(actorId, id, userId), SYS_ADMIN_PROMOTED + userId);
+  }
+
+  /**
+   * Remove a member's admin rights (F4; self-demotion allowed). Idempotent for a non-admin. 409
+   * {@code LAST_ADMIN_CANNOT_BE_REMOVED} for the only admin; otherwise same errors and side effects
+   * as {@link #promoteAdmin} with {@code system.admin.demoted:<userId>}.
+   */
+  @DeleteMapping("/{id}/admins/{userId}")
+  public ConversationResponse demoteAdmin(@PathVariable String id, @PathVariable String userId) {
+    String actorId = currentUserId();
+    return applyAdminChange(
+        id, actorId, groupAdminService.demote(actorId, id, userId), SYS_ADMIN_DEMOTED + userId);
+  }
+
+  private ConversationResponse applyAdminChange(
+      String conversationId,
+      String actorId,
+      GroupAdminService.AdminChange change,
+      String systemCode) {
+    if (change.changed()) {
+      events.publishShared(change.conversation());
+      broadcastSystem(conversationId, systemCode, actorId, true);
+    }
+    return change.conversation();
   }
 
   /**
@@ -286,7 +337,16 @@ public class ConversationController {
    * except the actor gets a NEW_MESSAGE notification (the actor already knows what they did).
    */
   private void broadcastSystem(String conversationId, String contentKey, String actorId) {
-    MessageResponse system = messageService.createSystemMessage(conversationId, contentKey);
+    broadcastSystem(conversationId, contentKey, actorId, false);
+  }
+
+  /** {@code fromActor}: the notice's sender is the actor (its humanizer names them). */
+  private void broadcastSystem(
+      String conversationId, String contentKey, String actorId, boolean fromActor) {
+    MessageResponse system =
+        fromActor
+            ? messageService.createSystemMessage(conversationId, contentKey, actorId)
+            : messageService.createSystemMessage(conversationId, contentKey);
     clusterBroker.convertAndSend("/topic/conversation/" + conversationId, system);
     for (String participantId : conversationQueryService.getParticipants(conversationId)) {
       if (participantId.equals(actorId)) {

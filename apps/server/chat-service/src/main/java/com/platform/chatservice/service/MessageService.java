@@ -12,6 +12,7 @@ import com.platform.chatservice.exception.MessageNotFoundException;
 import com.platform.chatservice.model.AiTraceData;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.Message;
+import com.platform.chatservice.model.PendingAction;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
 import java.time.Instant;
@@ -134,14 +135,26 @@ public class MessageService {
 
   /** Persist a "system" message (e.g. group events) and bump the conversation. */
   public MessageResponse createSystemMessage(String conversationId, String content) {
+    return createSystemMessage(conversationId, content, null);
+  }
+
+  /**
+   * Persist a "system" notice attributed to {@code actorId} (its {@code senderId}; already read by
+   * them) — e.g. {@code system.admin.promoted:<targetUserId>}, whose humanizer names the actor from
+   * the sender and the target from the code. {@code actorId == null} = the anonymous {@code
+   * "system"} sender.
+   */
+  public MessageResponse createSystemMessage(
+      String conversationId, String content, String actorId) {
+    boolean attributed = actorId != null && !actorId.isBlank();
     Message message =
         messageRepository.save(
             Message.builder()
                 .conversationId(conversationId)
-                .senderId(SYSTEM_SENDER)
+                .senderId(attributed ? actorId : SYSTEM_SENDER)
                 .content(content)
                 .type(MessageTypePolicy.SYSTEM)
-                .readBy(new ArrayList<>())
+                .readBy(attributed ? new ArrayList<>(List.of(actorId)) : new ArrayList<>())
                 .build());
     Instant at = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
     bumpConversation(
@@ -335,6 +348,15 @@ public class MessageService {
   public MessageResponse persistAiMessage(
       String conversationId, String content, AiTraceData trace) {
     return aiMessageService.persistAiMessage(conversationId, content, trace);
+  }
+
+  /** Same, with the sensitive actions the reply waits for the requester to confirm (F2). */
+  public MessageResponse persistAiMessage(
+      String conversationId,
+      String content,
+      AiTraceData trace,
+      List<PendingAction> pendingActions) {
+    return aiMessageService.persistAiMessage(conversationId, content, trace, pendingActions);
   }
 
   /**

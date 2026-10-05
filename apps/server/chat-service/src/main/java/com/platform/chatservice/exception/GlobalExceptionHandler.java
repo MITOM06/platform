@@ -61,13 +61,16 @@ public class GlobalExceptionHandler {
     if (ex.getStatus().is5xxServerError()) {
       log.warn("{} {}: {}", ex.getStatus().value(), ex.getCode(), ex.getMessage(), ex.getCause());
     }
-    return ResponseEntity.status(ex.getStatus())
-        .body(
-            body(
-                ex.getStatus().getReasonPhrase(),
-                ex.getMessage(),
-                ex.getCode(),
-                ex.getStatus().value()));
+    Map<String, Object> body =
+        body(
+            ex.getStatus().getReasonPhrase(),
+            ex.getMessage(),
+            ex.getCode(),
+            ex.getStatus().value());
+    if (ex.getParams() != null) {
+      body.put("params", ex.getParams());
+    }
+    return ResponseEntity.status(ex.getStatus()).body(body);
   }
 
   @ExceptionHandler(RateLimitExceededException.class)
@@ -112,8 +115,9 @@ public class GlobalExceptionHandler {
 
   /**
    * Error body shape shared by the coded handlers: {@code {error, message, statusCode}} plus a
-   * top-level {@code code} when the failure has a stable reason ({@link ErrorCodes}). {@code
-   * message} is English diagnostics; clients localize by {@code code}.
+   * top-level {@code code} when the failure has a stable reason ({@link ErrorCodes}) and, for an
+   * {@link ApiException} that carries them, top-level {@code params}. {@code message} is English
+   * diagnostics; clients localize by {@code code} (+ {@code params}).
    */
   private static Map<String, Object> body(String error, String message, String code, int status) {
     Map<String, Object> body = new LinkedHashMap<>();

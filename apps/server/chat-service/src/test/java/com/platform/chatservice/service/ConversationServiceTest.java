@@ -529,4 +529,113 @@ class ConversationServiceTest {
     assertThatThrownBy(() -> conversationService.setWallpaper("intruder", CONV_ID, "preset:x"))
         .isInstanceOf(ConversationNotFoundException.class);
   }
+
+  // ------------------------------------------------------------------ F5 public channels
+
+  private static com.platform.chatservice.security.UserPrincipal creator(String... depts) {
+    return new com.platform.chatservice.security.UserPrincipal(
+        USER_ID, "Member", List.of(), List.of(depts));
+  }
+
+  @Test
+  void createGroup_publicChannel_isStoredPublic() {
+    ArgumentCaptor<Conversation> saved = ArgumentCaptor.forClass(Conversation.class);
+    when(conversationCacheService.save(saved.capture())).thenAnswer(inv -> inv.getArgument(0));
+
+    ConversationResponse response =
+        conversationService.createGroup(
+            creator(),
+            new com.platform.chatservice.dto.CreateGroupRequest(
+                "Announcements", null, List.of(OTHER_ID), null, true));
+
+    assertThat(saved.getValue().isPublicChannel()).isTrue();
+    assertThat(response.isPublic()).isTrue();
+  }
+
+  @Test
+  void createGroup_publicChannelOmittedOrFalse_isPrivate() {
+    ArgumentCaptor<Conversation> saved = ArgumentCaptor.forClass(Conversation.class);
+    when(conversationCacheService.save(saved.capture())).thenAnswer(inv -> inv.getArgument(0));
+
+    conversationService.createGroup(
+        creator(),
+        new com.platform.chatservice.dto.CreateGroupRequest("Team", null, List.of(OTHER_ID), null));
+    conversationService.createGroup(
+        creator(),
+        new com.platform.chatservice.dto.CreateGroupRequest(
+            "Team", null, List.of(OTHER_ID), null, false));
+
+    assertThat(saved.getAllValues()).allMatch(c -> !c.isPublicChannel());
+  }
+
+  @Test
+  void createGroup_publicDepartmentChannel_isRejected() {
+    assertThatThrownBy(
+            () ->
+                conversationService.createGroup(
+                    creator("dept-1"),
+                    new com.platform.chatservice.dto.CreateGroupRequest(
+                        "Finance", null, List.of(OTHER_ID), "dept-1", true)))
+        .isInstanceOf(com.platform.chatservice.exception.BadRequestException.class)
+        .extracting("code")
+        .isEqualTo(ErrorCodes.PUBLIC_DEPARTMENT_CHANNEL_NOT_ALLOWED);
+    verify(conversationCacheService, never()).save(any());
+  }
+
+  @Test
+  void updateGroup_adminTogglesPublicChannel_atomically() {
+    found(group(USER_ID));
+    var updates = updatesReturning(group(USER_ID).toBuilder().publicChannel(true).build());
+
+    ConversationResponse response =
+        conversationService.updateGroup(USER_ID, CONV_ID, null, null, true);
+
+    assertThat(op(updates.getValue(), "$set").get("publicChannel")).isEqualTo(true);
+    assertThat(response.isPublic()).isTrue();
+  }
+
+  @Test
+  void updateGroup_samePublicValue_isANoOp() {
+    found(group(USER_ID));
+
+    conversationService.updateGroup(USER_ID, CONV_ID, null, null, false);
+
+    verify(mongoTemplate, never())
+        .findAndModify(
+            any(Query.class), any(UpdateDefinition.class), any(FindAndModifyOptions.class), any());
+  }
+
+  @Test
+  void updateGroup_publicToggleByNonAdmin_isForbiddenWithCode() {
+    found(group(USER_ID));
+
+    assertThatThrownBy(() -> conversationService.updateGroup(OTHER_ID, CONV_ID, null, null, true))
+        .isInstanceOf(ForbiddenException.class)
+        .extracting("code")
+        .isEqualTo(ErrorCodes.GROUP_ADMIN_REQUIRED);
+  }
+
+  @Test
+  void updateGroup_makingADepartmentGroupPublic_isRejected() {
+    found(group(USER_ID).toBuilder().departmentId("dept-1").build());
+
+    assertThatThrownBy(() -> conversationService.updateGroup(USER_ID, CONV_ID, null, null, true))
+        .isInstanceOf(com.platform.chatservice.exception.BadRequestException.class)
+        .extracting("code")
+        .isEqualTo(ErrorCodes.PUBLIC_DEPARTMENT_CHANNEL_NOT_ALLOWED);
+  }
+
+  @Test
+  void groupOnlyActionsOnADirectChat_answerNotAGroup() {
+    found(conversation);
+
+    assertThatThrownBy(() -> conversationService.removeMember(USER_ID, CONV_ID, OTHER_ID))
+        .isInstanceOf(com.platform.chatservice.exception.BadRequestException.class)
+        .extracting("code")
+        .isEqualTo(ErrorCodes.NOT_A_GROUP);
+    assertThatThrownBy(() -> conversationService.updateGroup(USER_ID, CONV_ID, "x", null))
+        .isInstanceOf(com.platform.chatservice.exception.BadRequestException.class)
+        .extracting("code")
+        .isEqualTo(ErrorCodes.NOT_A_GROUP);
+  }
 }

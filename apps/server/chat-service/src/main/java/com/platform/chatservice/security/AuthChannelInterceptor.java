@@ -100,9 +100,14 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
 
     String userId = jwtUtil.extractUserId(token);
     String sid = jwtUtil.extractSid(token);
-    SessionStatus status = sessionValidator.validate(sid, userId);
+    // CONNECT is a new authentication: a token minted before the user's claims changed is refused
+    // (TOKEN_CLAIMS_STALE) so the socket always starts with the current role/perms/depts. Frames on
+    // an already-open socket only re-check `revoked` (sessionStillValid).
+    SessionStatus status =
+        sessionValidator.validateToken(sid, userId, jwtUtil.extractIssuedAtSeconds(token));
     if (!status.isValid()) {
-      // The STOMP ERROR frame's "message" header carries the code (e.g. SESSION_REVOKED).
+      // The STOMP ERROR frame's "message" header carries the code (e.g. SESSION_REVOKED,
+      // TOKEN_CLAIMS_STALE).
       throw new MessageDeliveryException(status.code());
     }
     wsSessionRegistry.bind(accessor.getSessionId(), userId, sid);

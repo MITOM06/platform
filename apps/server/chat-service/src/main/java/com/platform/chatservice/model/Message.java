@@ -21,6 +21,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
       def = "{'conversationId': 1, 'type': 1, 'createdAt': -1}"),
   // Sender-scoped lookups: edit/recall own messages
   @CompoundIndex(name = "conv_sender", def = "{'conversationId': 1, 'senderId': 1}"),
+  // ai:action:resolved → the AI message holding that pending action (only AI replies have one).
+  @CompoundIndex(name = "pending_action_id", def = "{'pendingActions.id': 1}", sparse = true),
 })
 @Data
 @Builder(toBuilder = true)
@@ -69,6 +71,12 @@ public class Message {
   /** Agent trace for AI messages — null for non-AI messages. */
   @org.springframework.data.mongodb.core.mapping.Field("trace")
   private AiTraceData trace;
+
+  /**
+   * Sensitive AI actions this reply is waiting for the requester to confirm (F2) — null on every
+   * other message, so the field is only stored where it means something.
+   */
+  private List<PendingAction> pendingActions;
 
   @CreatedDate private Instant createdAt;
 

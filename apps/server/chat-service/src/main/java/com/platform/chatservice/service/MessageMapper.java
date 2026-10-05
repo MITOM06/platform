@@ -2,6 +2,7 @@ package com.platform.chatservice.service;
 
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.model.Message;
+import com.platform.chatservice.model.PendingAction;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
@@ -41,6 +42,27 @@ public class MessageMapper {
         reactions,
         m.isRecalled(),
         m.getEditedAt(),
-        m.getMentions() == null ? List.of() : m.getMentions());
+        m.getMentions() == null ? List.of() : m.getMentions(),
+        pendingActions(m.getPendingActions()));
+  }
+
+  /** {@code null} (omitted from the JSON) unless the message carries pending AI actions. */
+  static List<MessageResponse.PendingActionDto> pendingActions(List<PendingAction> actions) {
+    if (actions == null || actions.isEmpty()) {
+      return null;
+    }
+    return actions.stream()
+        .filter(a -> a != null && a.getId() != null)
+        .map(
+            a ->
+                new MessageResponse.PendingActionDto(
+                    a.getId(),
+                    a.getToolName(),
+                    a.getProvider(),
+                    a.getSummary(),
+                    a.getStatus(),
+                    a.getExpiresAt(),
+                    a.getRequesterId()))
+        .toList();
   }
 }

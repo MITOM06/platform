@@ -11,7 +11,10 @@ import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
 import com.platform.chatservice.repository.UserBlockRepository;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -101,6 +104,39 @@ class MessageServiceHelper {
       }
     }
     return mentioned;
+  }
+
+  /**
+   * {@code userId → displayName} for every id that resolves, in ONE query ({@code _id $in}). Ids
+   * that are not ObjectIds (bots, "system") or have no name are simply absent — never echoed back.
+   */
+  Map<String, String> lookupDisplayNames(Collection<String> userIds) {
+    if (userIds == null || userIds.isEmpty()) {
+      return Map.of();
+    }
+    List<ObjectId> ids =
+        userIds.stream()
+            .filter(id -> id != null && ObjectId.isValid(id))
+            .distinct()
+            .map(ObjectId::new)
+            .toList();
+    if (ids.isEmpty()) {
+      return Map.of();
+    }
+    try {
+      Query query = new Query(Criteria.where("_id").in(ids));
+      query.fields().include("displayName");
+      Map<String, String> names = new HashMap<>();
+      for (Document doc : mongoTemplate.find(query, Document.class, "users")) {
+        String name = doc.getString("displayName");
+        if (name != null && !name.isBlank() && doc.get("_id") != null) {
+          names.put(doc.get("_id").toString(), name);
+        }
+      }
+      return names;
+    } catch (Exception e) {
+      return Map.of();
+    }
   }
 
   String lookupDisplayName(String userId) {

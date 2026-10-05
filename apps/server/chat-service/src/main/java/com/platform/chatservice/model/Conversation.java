@@ -74,7 +74,10 @@ public class Conversation {
   /** Public group channels are discoverable and joinable by any authenticated user. */
   @Builder.Default private boolean publicChannel = false;
 
-  /** Message ids pinned in this conversation (most recent first, max 2). */
+  /**
+   * Message ids pinned in this conversation (most recent first, max {@code
+   * MessageInteractionService.MAX_PINNED_MESSAGES} = 5; a pin past it is refused, never evicted).
+   */
   @Builder.Default private List<String> pinnedMessages = new ArrayList<>();
 
   /**

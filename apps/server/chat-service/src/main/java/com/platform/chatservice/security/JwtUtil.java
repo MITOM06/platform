@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.Date;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -26,6 +27,15 @@ public class JwtUtil {
   /** Auth-service session id ({@code sid} claim), or null if the token has none. */
   public String extractSid(String token) {
     return parseClaims(token).get("sid", String.class);
+  }
+
+  /**
+   * The token's {@code iat} in unix seconds, or null when the token has none (auth-service always
+   * sets it; compared with the session's {@code claimsAt} by {@link SessionValidator}).
+   */
+  public Long extractIssuedAtSeconds(String token) {
+    Date issuedAt = parseClaims(token).getIssuedAt();
+    return issuedAt == null ? null : issuedAt.getTime() / 1000L;
   }
 
   /** Role name claim (e.g. "Owner"), or null for legacy tokens. */

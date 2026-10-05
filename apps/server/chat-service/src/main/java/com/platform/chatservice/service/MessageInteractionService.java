@@ -2,6 +2,7 @@ package com.platform.chatservice.service;
 
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.PinResult;
+import com.platform.chatservice.exception.ApiException;
 import com.platform.chatservice.exception.BadRequestException;
 import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.ErrorCodes;
@@ -12,6 +13,7 @@ import com.platform.chatservice.model.Message;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -21,6 +23,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 /**
@@ -33,8 +36,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class MessageInteractionService {
 
-  /** Max pinned messages per conversation, newest first. */
-  public static final int MAX_PINNED_MESSAGES = 2;
+  /** Max pinned messages per conversation, newest first. A pin past it is refused (409). */
+  public static final int MAX_PINNED_MESSAGES = 5;
 
   /** System-message content codes for pin/unpin notices (see THE PIN SYSTEM-MESSAGE CONTRACT). */
   private static final String SYS_PINNED_PREFIX = "system.message.pinned:";
@@ -114,7 +117,10 @@ public class MessageInteractionService {
 
   /**
    * Pin a message in its conversation (Task 53). Any participant may pin in a direct chat; group
-   * chats require admin rights. Keeps at most {@link #MAX_PINNED_MESSAGES} pins, newest first.
+   * chats require admin rights. At most {@link #MAX_PINNED_MESSAGES} pins, newest first: pinning a
+   * new message when the limit is reached answers {@code 409 PIN_LIMIT_REACHED} ({@code
+   * params.max}) — the oldest pin is never evicted silently. Re-pinning an already pinned message
+   * just moves it to the front. The limit check and the write are one atomic update.
    */
   public PinResult pinMessage(String userId, String messageId) {
     Message message = loadMessage(messageId);
@@ -130,15 +136,35 @@ public class MessageInteractionService {
       throw new IllegalArgumentException("Cannot pin a system message");
     }
     requireAdminInGroup(conversation, userId, "Only admins can pin messages in a group");
+    // Already pinned (re-pin = move to front) OR still below the limit ("pinnedMessages.<MAX-1>"
+    // absent ⇔ fewer than MAX entries) — evaluated atomically with the write.
+    Criteria roomForPin =
+        new Criteria()
+            .orOperator(
+                Criteria.where("pinnedMessages").is(messageId),
+                Criteria.where("pinnedMessages." + (MAX_PINNED_MESSAGES - 1)).exists(false));
     Conversation updated =
         mongoTemplate.findAndModify(
-            new Query(Criteria.where("_id").is(conversation.getId())),
+            new Query(
+                new Criteria()
+                    .andOperator(Criteria.where("_id").is(conversation.getId()), roomForPin)),
             pinFirst(messageId),
             RETURN_NEW,
             Conversation.class);
     conversationCacheService.evict(conversation.getId());
+    if (updated == null) {
+      if (!mongoTemplate.exists(
+          new Query(Criteria.where("_id").is(conversation.getId())), Conversation.class)) {
+        throw new ConversationNotFoundException(conversation.getId());
+      }
+      throw new ApiException(
+          HttpStatus.CONFLICT,
+          ErrorCodes.PIN_LIMIT_REACHED,
+          "At most " + MAX_PINNED_MESSAGES + " messages can be pinned",
+          Map.of("max", MAX_PINNED_MESSAGES));
+    }
     List<String> pinned = pinnedOf(updated);
-    // Persisted centered notice; eviction of an older pin emits NO extra "unpinned" message.
+    // Persisted centered notice.
     MessageResponse systemMessage =
         messageService.createSystemMessage(conversation.getId(), SYS_PINNED_PREFIX + userId);
     return new PinResult(conversation.getId(), pinned, systemMessage);
@@ -163,8 +189,9 @@ public class MessageInteractionService {
   }
 
   /**
-   * Pipeline update: {@code pinnedMessages = slice([id] + (pinnedMessages - id), MAX)} in one
-   * atomic write (a {@code $pull} + {@code $push} pair cannot target the same field in one update).
+   * Pipeline update: {@code pinnedMessages = [id] + (pinnedMessages - id)} in one atomic write (a
+   * {@code $pull} + {@code $push} pair cannot target the same field in one update). No {@code
+   * $slice}: the caller's query guarantees there is room, so nothing is ever dropped.
    */
   private static AggregationUpdate pinFirst(String messageId) {
     Document others =
@@ -174,11 +201,7 @@ public class MessageInteractionService {
                 .append("cond", new Document("$ne", List.of("$$this", messageId))));
     Document pinned =
         new Document(
-            "$slice",
-            List.of(
-                new Document(
-                    "$concatArrays", List.of(new Document("$literal", List.of(messageId)), others)),
-                MAX_PINNED_MESSAGES));
+            "$concatArrays", List.of(new Document("$literal", List.of(messageId)), others));
     AggregationOperation stage =
         context -> new Document("$set", new Document("pinnedMessages", pinned));
     return AggregationUpdate.from(List.of(stage));

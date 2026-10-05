@@ -1,6 +1,8 @@
 package com.platform.chatservice.config;
 
+import com.platform.chatservice.security.ClaimsChangedListener;
 import com.platform.chatservice.security.SessionRevokedListener;
+import com.platform.chatservice.service.AiActionResolvedListener;
 import com.platform.chatservice.service.AiResponseListener;
 import com.platform.chatservice.service.CallSummaryListener;
 import com.platform.chatservice.service.ClusterBroadcastListener;
@@ -25,6 +27,8 @@ public class RedisListenerConfig {
       CallSummaryListener callSummaryListener,
       ClusterBroadcastListener clusterBroadcastListener,
       SessionRevokedListener sessionRevokedListener,
+      ClaimsChangedListener claimsChangedListener,
+      AiActionResolvedListener aiActionResolvedListener,
       ConversationMembershipCache conversationMembershipCache) {
     RedisMessageListenerContainer container = new RedisMessageListenerContainer();
     container.setConnectionFactory(connectionFactory);
@@ -37,10 +41,20 @@ public class RedisListenerConfig {
     // different Cloud Run instances. Published by ClusterMessageBroker.
     container.addMessageListener(
         clusterBroadcastListener, new ChannelTopic(ClusterMessageBroker.CHANNEL));
-    // auth-service → every chat-service instance: a user's sessions were revoked (blocked, role
-    // changed, password reset, …) — close that user's open sockets right away.
+    // auth-service → every chat-service instance: a user's sessions were revoked (blocked,
+    // password reset/change, logout-all, …) — close that user's open sockets right away. A role /
+    // department / permission change no longer revokes: see auth:claims-changed below.
     container.addMessageListener(
         sessionRevokedListener, new ChannelTopic(SessionRevokedListener.CHANNEL));
+    // auth-service → every instance: a user's role/departments/permissions changed. Their cached
+    // sessions are dropped (stale tokens get 401 TOKEN_CLAIMS_STALE) and their open sockets are
+    // told CLAIMS_CHANGED so the client refreshes + reconnects — no logout.
+    container.addMessageListener(
+        claimsChangedListener, new ChannelTopic(ClaimsChangedListener.CHANNEL));
+    // ai-service → chat-service: a sensitive AI action was confirmed / cancelled / failed — flip
+    // the matching pendingActions[] element of the AI message and broadcast MESSAGE_UPDATED.
+    container.addMessageListener(
+        aiActionResolvedListener, new ChannelTopic(AiActionResolvedListener.CHANNEL));
     // Membership of a conversation changed on some instance — drop the cached participants so the
     // outbound STOMP filter stops delivering to removed members right away.
     container.addMessageListener(

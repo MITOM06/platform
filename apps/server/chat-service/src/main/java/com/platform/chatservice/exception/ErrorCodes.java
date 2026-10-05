@@ -35,5 +35,27 @@ public final class ErrorCodes {
   /** 502 — a Bot Factory / connector-service call failed (orphans are cleaned up best-effort). */
   public static final String ASSISTANT_UPSTREAM_FAILED = "ASSISTANT_UPSTREAM_FAILED";
 
+  /**
+   * 409 — the conversation already has the maximum number of pinned messages ({@code params.max});
+   * the oldest pin is never evicted silently. Unpin one first.
+   */
+  public static final String PIN_LIMIT_REACHED = "PIN_LIMIT_REACHED";
+
+  /** 400 — a group-only action (admin promote/demote, …) on a direct conversation. */
+  public static final String NOT_A_GROUP = "NOT_A_GROUP";
+
+  /** 404 — the target user is not a (human) member of the conversation. */
+  public static final String NOT_A_MEMBER = "NOT_A_MEMBER";
+
+  /** 409 — demoting the group's only admin would leave it without one. */
+  public static final String LAST_ADMIN_CANNOT_BE_REMOVED = "LAST_ADMIN_CANNOT_BE_REMOVED";
+
+  /**
+   * 400 — a department group cannot be a public channel: anyone could join it and read that
+   * department's knowledge base through the group assistant.
+   */
+  public static final String PUBLIC_DEPARTMENT_CHANNEL_NOT_ALLOWED =
+      "PUBLIC_DEPARTMENT_CHANNEL_NOT_ALLOWED";
+
   private ErrorCodes() {}
 }

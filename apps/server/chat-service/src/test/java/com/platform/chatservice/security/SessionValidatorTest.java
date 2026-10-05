@@ -110,6 +110,74 @@ class SessionValidatorTest {
   void requestsOnlyTheNeededFields() {
     session("s1", "u1", "0");
     validator.validate("s1", "u1");
-    verify(hash).multiGet("sess:s1", List.<Object>of("userId", "revoked"));
+    verify(hash).multiGet("sess:s1", List.<Object>of("userId", "revoked", "claimsAt"));
+  }
+
+  // ---------------------------------------------------------------- F1 claimsAt
+
+  private void sessionWithClaimsAt(String sid, String userId, String revoked, String claimsAt) {
+    when(hash.multiGet(eq("sess:" + sid), anyCollection()))
+        .thenReturn(Arrays.<Object>asList(userId, revoked, claimsAt));
+  }
+
+  @Test
+  void tokenIssuedBeforeClaimsAtIsStale() {
+    sessionWithClaimsAt("s1", "u1", "0", "1700000100");
+    assertThat(validator.validateToken("s1", "u1", 1_700_000_099L))
+        .isEqualTo(SessionStatus.TOKEN_CLAIMS_STALE);
+    assertThat(SessionStatus.TOKEN_CLAIMS_STALE.code()).isEqualTo("TOKEN_CLAIMS_STALE");
+  }
+
+  @Test
+  void tokenIssuedAtOrAfterClaimsAtIsValid_strictLessThan() {
+    sessionWithClaimsAt("s1", "u1", "0", "1700000100");
+    assertThat(validator.validateToken("s1", "u1", 1_700_000_100L)).isEqualTo(SessionStatus.VALID);
+    assertThat(validator.validateToken("s1", "u1", 1_700_000_500L)).isEqualTo(SessionStatus.VALID);
+  }
+
+  @Test
+  void noClaimsAtMeansNoIatCheck() {
+    session("s1", "u1", "0");
+    assertThat(validator.validateToken("s1", "u1", 1L)).isEqualTo(SessionStatus.VALID);
+    assertThat(validator.validateToken("s1", "u1", null)).isEqualTo(SessionStatus.VALID);
+  }
+
+  @Test
+  void tokenWithoutIatIsStaleOnceClaimsChanged() {
+    sessionWithClaimsAt("s1", "u1", "0", "1700000100");
+    assertThat(validator.validateToken("s1", "u1", null))
+        .isEqualTo(SessionStatus.TOKEN_CLAIMS_STALE);
+  }
+
+  @Test
+  void openSocketCheckIgnoresClaimsAt() {
+    sessionWithClaimsAt("s1", "u1", "0", "1700000100");
+    assertThat(validator.validate("s1", "u1")).isEqualTo(SessionStatus.VALID);
+  }
+
+  @Test
+  void revocationWinsOverStaleClaims() {
+    sessionWithClaimsAt("s1", "u1", "1", "1700000100");
+    assertThat(validator.validateToken("s1", "u1", 1L)).isEqualTo(SessionStatus.SESSION_REVOKED);
+  }
+
+  @Test
+  void claimsAtIsCachedAndEvictUserRereadsIt() {
+    sessionWithClaimsAt("s1", "u1", "0", null);
+    assertThat(validator.validateToken("s1", "u1", 1_700_000_000L)).isEqualTo(SessionStatus.VALID);
+    sessionWithClaimsAt("s1", "u1", "0", "1700000100"); // role changed in auth-service
+    assertThat(validator.validateToken("s1", "u1", 1_700_000_000L))
+        .isEqualTo(SessionStatus.VALID); // still the cached snapshot
+    validator.evictUser("u1"); // auth:claims-changed
+    assertThat(validator.validateToken("s1", "u1", 1_700_000_000L))
+        .isEqualTo(SessionStatus.TOKEN_CLAIMS_STALE);
+  }
+
+  @Test
+  void parsesClaimsAtLeniently() {
+    assertThat(SessionValidator.parseEpochSeconds("1700000100")).isEqualTo(1_700_000_100L);
+    assertThat(SessionValidator.parseEpochSeconds(" 1700000100.9 ")).isEqualTo(1_700_000_100L);
+    assertThat(SessionValidator.parseEpochSeconds("garbage")).isNull();
+    assertThat(SessionValidator.parseEpochSeconds(null)).isNull();
   }
 }

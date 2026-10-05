@@ -248,4 +248,112 @@ class MessagePinTest {
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("recalled");
   }
+
+  // -----------------------------------------------------------------------
+  // F3 — pin limit 5, never a silent eviction
+  // -----------------------------------------------------------------------
+
+  @Test
+  void pinMessage_limitIsFive() {
+    assertThat(MessageInteractionService.MAX_PINNED_MESSAGES).isEqualTo(5);
+  }
+
+  @Test
+  void pinMessage_guardsTheLimitInTheSameAtomicWrite_andNeverSlices() {
+    when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+    org.mockito.ArgumentCaptor<org.springframework.data.mongodb.core.query.Query> query =
+        org.mockito.ArgumentCaptor.forClass(
+            org.springframework.data.mongodb.core.query.Query.class);
+    org.mockito.ArgumentCaptor<org.springframework.data.mongodb.core.query.UpdateDefinition>
+        update =
+            org.mockito.ArgumentCaptor.forClass(
+                org.springframework.data.mongodb.core.query.UpdateDefinition.class);
+    when(mongoTemplate.findAndModify(
+            query.capture(),
+            update.capture(),
+            any(org.springframework.data.mongodb.core.FindAndModifyOptions.class),
+            eq(Conversation.class)))
+        .thenReturn(conversation.toBuilder().pinnedMessages(List.of(MSG_ID)).build());
+    when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
+
+    interactionService.pinMessage(SENDER_ID, MSG_ID);
+
+    String filter = query.getValue().getQueryObject().toJson();
+    // re-pin of an already pinned message OR fewer than 5 pins
+    assertThat(filter).contains("\"pinnedMessages\": \"" + MSG_ID + "\"");
+    assertThat(filter).contains("\"pinnedMessages.4\": {\"$exists\": false}");
+    String pipeline =
+        ((org.springframework.data.mongodb.core.aggregation.AggregationUpdate) update.getValue())
+            .toPipeline(
+                org.springframework.data.mongodb.core.aggregation.Aggregation.DEFAULT_CONTEXT)
+            .toString();
+    assertThat(pipeline).contains("$concatArrays").doesNotContain("$slice");
+  }
+
+  @Test
+  void pinMessage_atTheLimit_is409WithMaxParam_andPostsNoNotice() {
+    when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+    when(mongoTemplate.findAndModify(
+            any(org.springframework.data.mongodb.core.query.Query.class),
+            any(org.springframework.data.mongodb.core.query.UpdateDefinition.class),
+            any(org.springframework.data.mongodb.core.FindAndModifyOptions.class),
+            eq(Conversation.class)))
+        .thenReturn(null);
+    when(mongoTemplate.exists(
+            any(org.springframework.data.mongodb.core.query.Query.class), eq(Conversation.class)))
+        .thenReturn(true);
+
+    assertThatThrownBy(() -> interactionService.pinMessage(SENDER_ID, MSG_ID))
+        .isInstanceOf(com.platform.chatservice.exception.ApiException.class)
+        .satisfies(
+            e -> {
+              var api = (com.platform.chatservice.exception.ApiException) e;
+              assertThat(api.getStatus()).isEqualTo(org.springframework.http.HttpStatus.CONFLICT);
+              assertThat(api.getCode())
+                  .isEqualTo(com.platform.chatservice.exception.ErrorCodes.PIN_LIMIT_REACHED);
+              assertThat(api.getParams()).containsEntry("max", 5);
+            });
+    verify(messageRepository, never()).save(any(Message.class));
+  }
+
+  @Test
+  void pinMessage_whenConversationVanished_is404NotALimitError() {
+    when(messageRepository.findById(MSG_ID)).thenReturn(Optional.of(savedMessage));
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+    when(mongoTemplate.exists(
+            any(org.springframework.data.mongodb.core.query.Query.class), eq(Conversation.class)))
+        .thenReturn(false);
+
+    assertThatThrownBy(() -> interactionService.pinMessage(SENDER_ID, MSG_ID))
+        .isInstanceOf(com.platform.chatservice.exception.ConversationNotFoundException.class);
+  }
+
+  // -----------------------------------------------------------------------
+  // F4 — actor-attributed system notices
+  // -----------------------------------------------------------------------
+
+  @Test
+  void createSystemMessage_fromActor_isSentByAndAlreadyReadByTheActor() {
+    when(messageRepository.save(any(Message.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    MessageResponse notice =
+        messageService.createSystemMessage(CONV_ID, "system.admin.promoted:" + OTHER_ID, SENDER_ID);
+
+    assertThat(notice.type()).isEqualTo("system");
+    assertThat(notice.senderId()).isEqualTo(SENDER_ID);
+    assertThat(notice.content()).isEqualTo("system.admin.promoted:" + OTHER_ID);
+    assertThat(notice.readBy()).containsExactly(SENDER_ID);
+  }
+
+  @Test
+  void createSystemMessage_withoutActor_staysAnonymous() {
+    when(messageRepository.save(any(Message.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    MessageResponse notice = messageService.createSystemMessage(CONV_ID, "system.group.created");
+
+    assertThat(notice.senderId()).isEqualTo("system");
+    assertThat(notice.readBy()).isEmpty();
+  }
 }

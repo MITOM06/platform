@@ -12,7 +12,11 @@ public record AiTraceResponse(
     int thinkingTokens,
     int processingMs,
     String model,
-    int iterationCount) {
+    int iterationCount,
+    /** Prompt-cache reads — subset of {@code inputTokens}. */
+    int cachedInputTokens,
+    /** Prompt-cache writes — subset of {@code inputTokens}. */
+    int cacheCreationInputTokens) {
   public record ToolCallEntry(String toolName, String inputSummary, String resultSummary) {}
 
   public static AiTraceResponse from(AiTraceData data) {
@@ -33,6 +37,8 @@ public record AiTraceResponse(
         data.getThinkingTokens(),
         data.getProcessingMs(),
         data.getModel(),
-        data.getIterationCount());
+        data.getIterationCount(),
+        data.getCachedInputTokens(),
+        data.getCacheCreationInputTokens());
   }
 }

@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -38,6 +40,7 @@ class AuthChannelInterceptorTest {
   private static final String USER = "user-001";
   private static final String WS = "ws-1";
   private static final String CONV = "64b7f0c2a1b2c3d4e5f60718";
+  private static final Long IAT = 1_700_000_000L;
 
   @Mock private JwtUtil jwtUtil;
   @Mock private MessageChannel channel;
@@ -119,7 +122,8 @@ class AuthChannelInterceptorTest {
     when(jwtUtil.isValid("valid.jwt.token")).thenReturn(true);
     when(jwtUtil.extractUserId("valid.jwt.token")).thenReturn(USER);
     when(jwtUtil.extractSid("valid.jwt.token")).thenReturn("sid-1");
-    when(sessionValidator.validate("sid-1", USER)).thenReturn(SessionStatus.VALID);
+    when(jwtUtil.extractIssuedAtSeconds("valid.jwt.token")).thenReturn(IAT);
+    when(sessionValidator.validateToken("sid-1", USER, IAT)).thenReturn(SessionStatus.VALID);
     when(jwtUtil.extractRole("valid.jwt.token")).thenReturn("Manager");
     when(jwtUtil.extractPerms("valid.jwt.token")).thenReturn(List.of("VIEW_INTERNAL_CONTEXT"));
     when(jwtUtil.extractDepts("valid.jwt.token")).thenReturn(List.of("d1"));
@@ -143,7 +147,9 @@ class AuthChannelInterceptorTest {
     when(jwtUtil.isValid("valid.jwt.token")).thenReturn(true);
     when(jwtUtil.extractUserId("valid.jwt.token")).thenReturn(USER);
     when(jwtUtil.extractSid("valid.jwt.token")).thenReturn("sid-1");
-    when(sessionValidator.validate("sid-1", USER)).thenReturn(SessionStatus.SESSION_REVOKED);
+    when(jwtUtil.extractIssuedAtSeconds("valid.jwt.token")).thenReturn(IAT);
+    when(sessionValidator.validateToken("sid-1", USER, IAT))
+        .thenReturn(SessionStatus.SESSION_REVOKED);
 
     assertThatThrownBy(() -> interceptor.preSend(connect("Bearer valid.jwt.token"), channel))
         .isInstanceOf(MessageDeliveryException.class)
@@ -156,11 +162,39 @@ class AuthChannelInterceptorTest {
     when(jwtUtil.isValid("legacy.token")).thenReturn(true);
     when(jwtUtil.extractUserId("legacy.token")).thenReturn(USER);
     when(jwtUtil.extractSid("legacy.token")).thenReturn(null);
-    when(sessionValidator.validate(null, USER)).thenReturn(SessionStatus.TOKEN_INVALID);
+    when(sessionValidator.validateToken(isNull(), eq(USER), any()))
+        .thenReturn(SessionStatus.TOKEN_INVALID);
 
     assertThatThrownBy(() -> interceptor.preSend(connect("Bearer legacy.token"), channel))
         .isInstanceOf(MessageDeliveryException.class)
         .hasMessageContaining("TOKEN_INVALID");
+  }
+
+  /** F1: CONNECT with a token minted before the user's claims changed is refused with the code. */
+  @Test
+  void connect_withStaleClaims_isRejectedWithCode() {
+    when(jwtUtil.isValid("valid.jwt.token")).thenReturn(true);
+    when(jwtUtil.extractUserId("valid.jwt.token")).thenReturn(USER);
+    when(jwtUtil.extractSid("valid.jwt.token")).thenReturn("sid-1");
+    when(jwtUtil.extractIssuedAtSeconds("valid.jwt.token")).thenReturn(IAT);
+    when(sessionValidator.validateToken("sid-1", USER, IAT))
+        .thenReturn(SessionStatus.TOKEN_CLAIMS_STALE);
+
+    assertThatThrownBy(() -> interceptor.preSend(connect("Bearer valid.jwt.token"), channel))
+        .isInstanceOf(MessageDeliveryException.class)
+        .hasMessage("TOKEN_CLAIMS_STALE");
+    verify(wsSessionRegistry, never()).bind(any(), any(), any());
+  }
+
+  /** F1: frames on an already-open socket only re-check revocation, never claims freshness. */
+  @Test
+  void send_onOpenSocket_neverChecksClaimsFreshness() {
+    sessionValid();
+
+    Message<byte[]> message = frame(StompCommand.SEND, "/app/chat.send", true);
+    assertThat(interceptor.preSend(message, channel)).isSameAs(message);
+    verify(sessionValidator).validate("sid-1", USER);
+    verify(sessionValidator, never()).validateToken(any(), any(), any());
   }
 
   /** STOMP 1.2 allows a "STOMP" frame instead of CONNECT — it must be authenticated too. */

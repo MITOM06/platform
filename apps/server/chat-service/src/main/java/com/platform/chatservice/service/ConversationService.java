@@ -2,8 +2,10 @@ package com.platform.chatservice.service;
 
 import com.platform.chatservice.dto.ConversationResponse;
 import com.platform.chatservice.dto.CreateGroupRequest;
+import com.platform.chatservice.exception.BadRequestException;
 import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.DuplicateConversationException;
+import com.platform.chatservice.exception.ErrorCodes;
 import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.ExternalBot;
@@ -75,6 +77,10 @@ public class ConversationService {
       throw new IllegalArgumentException("Group name cannot be empty");
     }
     requireDepartmentAccess(creator, request.departmentId());
+    boolean publicChannel = Boolean.TRUE.equals(request.publicChannel());
+    if (publicChannel) {
+      requireNotDepartmentGroup(request.departmentId());
+    }
     final String creatorId = creator.getUserId();
     // Creator is always a participant + admin; dedupe ids preserving order.
     LinkedHashSet<String> members = new LinkedHashSet<>();
@@ -97,6 +103,7 @@ public class ConversationService {
                 .admins(new ArrayList<>(List.of(creatorId)))
                 .createdBy(creatorId)
                 .departmentId(request.departmentId())
+                .publicChannel(publicChannel)
                 .lastMessageAt(Instant.now())
                 .pendingMembers(pendingMembers)
                 .build());
@@ -116,11 +123,37 @@ public class ConversationService {
     throw new ForbiddenException("Not a member of this department");
   }
 
+  /**
+   * A department group scopes its assistant to that department's knowledge base; making it public
+   * would let anyone join and read that knowledge base through the assistant — the exact leak
+   * {@link #requireDepartmentAccess} closes at creation.
+   */
+  private static void requireNotDepartmentGroup(String departmentId) {
+    if (departmentId != null && !departmentId.isBlank()) {
+      throw new BadRequestException(
+          ErrorCodes.PUBLIC_DEPARTMENT_CHANNEL_NOT_ALLOWED,
+          "A department group cannot be a public channel");
+    }
+  }
+
   public ConversationResponse updateGroup(
       String userId, String conversationId, String name, String avatarUrl) {
+    return updateGroup(userId, conversationId, name, avatarUrl, null);
+  }
+
+  /** Same, optionally switching the group between public channel and private ({@code null}). */
+  public ConversationResponse updateGroup(
+      String userId, String conversationId, String name, String avatarUrl, Boolean publicChannel) {
     Conversation conversation = support.requireGroupAdmin(userId, conversationId);
     Update update = new Update();
     boolean touched = false;
+    if (publicChannel != null && publicChannel != conversation.isPublicChannel()) {
+      if (publicChannel) {
+        requireNotDepartmentGroup(conversation.getDepartmentId());
+      }
+      update.set("publicChannel", publicChannel);
+      touched = true;
+    }
     if (name != null && !name.trim().isEmpty()) {
       update.set("name", name.trim());
       touched = true;
@@ -184,7 +217,7 @@ public class ConversationService {
       String userId, String conversationId, String targetUserId) {
     Conversation conversation = support.requireParticipant(userId, conversationId);
     if (!conversation.isGroup()) {
-      throw new IllegalArgumentException("Not a group conversation");
+      throw ConversationWriteSupport.notAGroup();
     }
     boolean isSelf = userId.equals(targetUserId);
     if (!isSelf && !ConversationWriteSupport.isAdmin(conversation, userId)) {
