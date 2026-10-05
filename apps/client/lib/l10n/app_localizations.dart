@@ -6636,6 +6636,342 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load this section. Please try again.'**
   String get adminLoadFailed;
+
+  /// No description provided for @setPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your PON password'**
+  String get setPasswordTitle;
+
+  /// No description provided for @setPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You joined with Google. Create a password so you can also sign in with your email.'**
+  String get setPasswordSubtitle;
+
+  /// No description provided for @setPasswordSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Create password'**
+  String get setPasswordSubmit;
+
+  /// No description provided for @setPasswordSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Password created. You can now also sign in with your email.'**
+  String get setPasswordSuccess;
+
+  /// No description provided for @authErrCurrentPasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your current password.'**
+  String get authErrCurrentPasswordRequired;
+
+  /// No description provided for @mfaVerifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication'**
+  String get mfaVerifyTitle;
+
+  /// No description provided for @mfaVerifySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code from your authenticator app to finish signing in.'**
+  String get mfaVerifySubtitle;
+
+  /// No description provided for @mfaBackupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter one of your backup codes (XXXXX-XXXXX). Each code works only once.'**
+  String get mfaBackupSubtitle;
+
+  /// No description provided for @mfaCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit code'**
+  String get mfaCodeLabel;
+
+  /// No description provided for @mfaBackupCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup code'**
+  String get mfaBackupCodeLabel;
+
+  /// No description provided for @mfaVerifyButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get mfaVerifyButton;
+
+  /// No description provided for @mfaUseBackupCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a backup code'**
+  String get mfaUseBackupCode;
+
+  /// No description provided for @mfaUseAuthenticatorCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your authenticator app instead'**
+  String get mfaUseAuthenticatorCode;
+
+  /// No description provided for @mfaBackToSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to sign in'**
+  String get mfaBackToSignIn;
+
+  /// No description provided for @mfaBackupCodeUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup code used. {remaining} backup code(s) left.'**
+  String mfaBackupCodeUsed(int remaining);
+
+  /// No description provided for @valMfaCodeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code.'**
+  String get valMfaCodeInvalid;
+
+  /// No description provided for @valMfaBackupCodeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a backup code like ABCDE-FGHIJ.'**
+  String get valMfaBackupCodeInvalid;
+
+  /// No description provided for @mfaEnrollTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up two-factor authentication'**
+  String get mfaEnrollTitle;
+
+  /// No description provided for @mfaEnrollSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your role requires a code from an authenticator app every time you sign in.'**
+  String get mfaEnrollSubtitle;
+
+  /// No description provided for @mfaEnrollStepInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Install Google Authenticator (or another authenticator app).'**
+  String get mfaEnrollStepInstall;
+
+  /// No description provided for @mfaEnrollStepScan.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Scan this QR code, open it in the app, or enter the setup key.'**
+  String get mfaEnrollStepScan;
+
+  /// No description provided for @mfaEnrollStepCode.
+  ///
+  /// In en, this message translates to:
+  /// **'3. Enter the 6-digit code the app shows.'**
+  String get mfaEnrollStepCode;
+
+  /// No description provided for @mfaEnrollOpenApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in authenticator app'**
+  String get mfaEnrollOpenApp;
+
+  /// No description provided for @mfaEnrollNoApp.
+  ///
+  /// In en, this message translates to:
+  /// **'No authenticator app found. Install Google Authenticator or enter the setup key manually.'**
+  String get mfaEnrollNoApp;
+
+  /// No description provided for @mfaEnrollManualKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup key'**
+  String get mfaEnrollManualKey;
+
+  /// No description provided for @mfaCopyKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy key'**
+  String get mfaCopyKey;
+
+  /// No description provided for @mfaKeyCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup key copied'**
+  String get mfaKeyCopied;
+
+  /// No description provided for @mfaQrSemantic.
+  ///
+  /// In en, this message translates to:
+  /// **'QR code for your authenticator app'**
+  String get mfaQrSemantic;
+
+  /// No description provided for @mfaEnrollConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get mfaEnrollConfirm;
+
+  /// No description provided for @mfaBackupCodesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your backup codes'**
+  String get mfaBackupCodesTitle;
+
+  /// No description provided for @mfaBackupCodesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Each code lets you sign in once if you lose your phone. They won\'t be shown again, so keep them somewhere safe.'**
+  String get mfaBackupCodesSubtitle;
+
+  /// No description provided for @mfaCopyCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy codes'**
+  String get mfaCopyCodes;
+
+  /// No description provided for @mfaCodesCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup codes copied'**
+  String get mfaCodesCopied;
+
+  /// No description provided for @mfaSavedCheckbox.
+  ///
+  /// In en, this message translates to:
+  /// **'I saved my backup codes'**
+  String get mfaSavedCheckbox;
+
+  /// No description provided for @mfaContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get mfaContinue;
+
+  /// No description provided for @securityMfaOn.
+  ///
+  /// In en, this message translates to:
+  /// **'A code from your authenticator app is required every time you sign in.'**
+  String get securityMfaOn;
+
+  /// No description provided for @securityMfaPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Required for your role. You\'ll set it up at your next sign-in.'**
+  String get securityMfaPending;
+
+  /// No description provided for @securityMfaStatusOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get securityMfaStatusOn;
+
+  /// No description provided for @securityMfaStatusOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set up'**
+  String get securityMfaStatusOff;
+
+  /// No description provided for @securityMfaRegenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate backup codes'**
+  String get securityMfaRegenerate;
+
+  /// No description provided for @securityMfaRegenerateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a current code from your authenticator app. Your old backup codes will stop working.'**
+  String get securityMfaRegenerateHint;
+
+  /// No description provided for @securityMfaRegenerateSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate'**
+  String get securityMfaRegenerateSubmit;
+
+  /// No description provided for @securityMfaDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get securityMfaDone;
+
+  /// No description provided for @adminMfaBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'2FA on'**
+  String get adminMfaBadge;
+
+  /// No description provided for @adminMfaReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset 2FA'**
+  String get adminMfaReset;
+
+  /// No description provided for @adminMfaResetConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset two-factor authentication for {name}? They will be signed out everywhere and must set it up again at their next sign-in.'**
+  String adminMfaResetConfirm(String name);
+
+  /// No description provided for @adminMfaResetDone.
+  ///
+  /// In en, this message translates to:
+  /// **'2FA reset. They\'ll set it up again at their next sign-in.'**
+  String get adminMfaResetDone;
+
+  /// No description provided for @authMsgMfaRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code from your authenticator app to finish signing in.'**
+  String get authMsgMfaRequired;
+
+  /// No description provided for @authErrMfaTokenInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Your sign-in has expired. Please sign in again.'**
+  String get authErrMfaTokenInvalid;
+
+  /// No description provided for @authErrMfaCodeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect code. Please try again.'**
+  String get authErrMfaCodeInvalid;
+
+  /// No description provided for @authErrMfaCodeInvalidRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect code. {remaining} attempt(s) remaining.'**
+  String authErrMfaCodeInvalidRemaining(int remaining);
+
+  /// No description provided for @authErrMfaTooManyAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many incorrect codes. Please sign in again.'**
+  String get authErrMfaTooManyAttempts;
+
+  /// No description provided for @authErrMfaNotEnrolled.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication isn\'t set up for this account yet.'**
+  String get authErrMfaNotEnrolled;
+
+  /// No description provided for @authErrMfaAlreadyEnrolled.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication is already set up for this account.'**
+  String get authErrMfaAlreadyEnrolled;
+
+  /// No description provided for @authErrMfaResetForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an Owner can reset two-factor authentication.'**
+  String get authErrMfaResetForbidden;
+
+  /// No description provided for @authErrMfaResetSelfForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t reset your own two-factor authentication.'**
+  String get authErrMfaResetSelfForbidden;
 }
 
 class _AppLocalizationsDelegate

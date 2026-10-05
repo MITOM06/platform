@@ -3481,4 +3481,184 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get adminLoadFailed => 'このセクションを読み込めませんでした。もう一度お試しください。';
+
+  @override
+  String get setPasswordTitle => 'PON のパスワードを作成';
+
+  @override
+  String get setPasswordSubtitle =>
+      'Google で参加しました。メールアドレスでもサインインできるよう、パスワードを作成してください。';
+
+  @override
+  String get setPasswordSubmit => 'パスワードを作成';
+
+  @override
+  String get setPasswordSuccess => 'パスワードを作成しました。メールアドレスでもサインインできるようになりました。';
+
+  @override
+  String get authErrCurrentPasswordRequired => '現在のパスワードを入力してください。';
+
+  @override
+  String get mfaVerifyTitle => '二要素認証';
+
+  @override
+  String get mfaVerifySubtitle => 'サインインを完了するには、認証アプリに表示される6桁のコードを入力してください。';
+
+  @override
+  String get mfaBackupSubtitle =>
+      'バックアップコード（XXXXX-XXXXX）を1つ入力してください。各コードは1回のみ使用できます。';
+
+  @override
+  String get mfaCodeLabel => '6桁のコード';
+
+  @override
+  String get mfaBackupCodeLabel => 'バックアップコード';
+
+  @override
+  String get mfaVerifyButton => '確認';
+
+  @override
+  String get mfaUseBackupCode => 'バックアップコードを使用';
+
+  @override
+  String get mfaUseAuthenticatorCode => '認証アプリを使用';
+
+  @override
+  String get mfaBackToSignIn => 'サインインに戻る';
+
+  @override
+  String mfaBackupCodeUsed(int remaining) {
+    return 'バックアップコードを使用しました。残り$remaining個です。';
+  }
+
+  @override
+  String get valMfaCodeInvalid => '6桁のコードを入力してください。';
+
+  @override
+  String get valMfaBackupCodeInvalid => 'ABCDE-FGHIJ の形式でバックアップコードを入力してください。';
+
+  @override
+  String get mfaEnrollTitle => '二要素認証を設定';
+
+  @override
+  String get mfaEnrollSubtitle => 'あなたのロールでは、サインインのたびに認証アプリのコードが必要です。';
+
+  @override
+  String get mfaEnrollStepInstall =>
+      '1. Google Authenticator（または他の認証アプリ）をインストールします。';
+
+  @override
+  String get mfaEnrollStepScan => '2. このQRコードをスキャンするか、アプリで開くか、セットアップキーを入力します。';
+
+  @override
+  String get mfaEnrollStepCode => '3. アプリに表示される6桁のコードを入力します。';
+
+  @override
+  String get mfaEnrollOpenApp => '認証アプリで開く';
+
+  @override
+  String get mfaEnrollNoApp =>
+      '認証アプリが見つかりません。Google Authenticator をインストールするか、セットアップキーを手動で入力してください。';
+
+  @override
+  String get mfaEnrollManualKey => 'セットアップキー';
+
+  @override
+  String get mfaCopyKey => 'キーをコピー';
+
+  @override
+  String get mfaKeyCopied => 'セットアップキーをコピーしました';
+
+  @override
+  String get mfaQrSemantic => '認証アプリ用のQRコード';
+
+  @override
+  String get mfaEnrollConfirm => '確認';
+
+  @override
+  String get mfaBackupCodesTitle => 'バックアップコードを保存';
+
+  @override
+  String get mfaBackupCodesSubtitle =>
+      'スマートフォンを紛失した場合、各コードで1回サインインできます。再表示されないため、安全な場所に保管してください。';
+
+  @override
+  String get mfaCopyCodes => 'コードをコピー';
+
+  @override
+  String get mfaCodesCopied => 'バックアップコードをコピーしました';
+
+  @override
+  String get mfaSavedCheckbox => 'バックアップコードを保存しました';
+
+  @override
+  String get mfaContinue => '続行';
+
+  @override
+  String get securityMfaOn => 'サインインのたびに認証アプリのコードが必要です。';
+
+  @override
+  String get securityMfaPending => 'あなたのロールでは必須です。次回のサインイン時に設定します。';
+
+  @override
+  String get securityMfaStatusOn => 'オン';
+
+  @override
+  String get securityMfaStatusOff => '未設定';
+
+  @override
+  String get securityMfaRegenerate => 'バックアップコードを再生成';
+
+  @override
+  String get securityMfaRegenerateHint =>
+      '認証アプリに表示されている現在のコードを入力してください。古いバックアップコードは使えなくなります。';
+
+  @override
+  String get securityMfaRegenerateSubmit => '生成';
+
+  @override
+  String get securityMfaDone => '完了';
+
+  @override
+  String get adminMfaBadge => '2FA オン';
+
+  @override
+  String get adminMfaReset => '2FA をリセット';
+
+  @override
+  String adminMfaResetConfirm(String name) {
+    return '$name さんの二要素認証をリセットしますか？すべての端末からサインアウトされ、次回のサインイン時に再設定が必要になります。';
+  }
+
+  @override
+  String get adminMfaResetDone => '2FA をリセットしました。次回のサインイン時に再設定されます。';
+
+  @override
+  String get authMsgMfaRequired => 'サインインを完了するには、認証アプリのコードを入力してください。';
+
+  @override
+  String get authErrMfaTokenInvalid => 'サインインの有効期限が切れました。もう一度サインインしてください。';
+
+  @override
+  String get authErrMfaCodeInvalid => 'コードが正しくありません。もう一度お試しください。';
+
+  @override
+  String authErrMfaCodeInvalidRemaining(int remaining) {
+    return 'コードが正しくありません。残り$remaining回の試行があります。';
+  }
+
+  @override
+  String get authErrMfaTooManyAttempts => 'コードの誤りが多すぎます。もう一度サインインしてください。';
+
+  @override
+  String get authErrMfaNotEnrolled => 'このアカウントでは二要素認証がまだ設定されていません。';
+
+  @override
+  String get authErrMfaAlreadyEnrolled => 'このアカウントでは二要素認証がすでに設定されています。';
+
+  @override
+  String get authErrMfaResetForbidden => '二要素認証をリセットできるのはオーナーのみです。';
+
+  @override
+  String get authErrMfaResetSelfForbidden => '自分の二要素認証はリセットできません。';
 }

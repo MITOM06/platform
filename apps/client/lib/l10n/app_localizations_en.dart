@@ -3557,4 +3557,199 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminLoadFailed =>
       'Couldn\'t load this section. Please try again.';
+
+  @override
+  String get setPasswordTitle => 'Create your PON password';
+
+  @override
+  String get setPasswordSubtitle =>
+      'You joined with Google. Create a password so you can also sign in with your email.';
+
+  @override
+  String get setPasswordSubmit => 'Create password';
+
+  @override
+  String get setPasswordSuccess =>
+      'Password created. You can now also sign in with your email.';
+
+  @override
+  String get authErrCurrentPasswordRequired =>
+      'Please enter your current password.';
+
+  @override
+  String get mfaVerifyTitle => 'Two-factor authentication';
+
+  @override
+  String get mfaVerifySubtitle =>
+      'Enter the 6-digit code from your authenticator app to finish signing in.';
+
+  @override
+  String get mfaBackupSubtitle =>
+      'Enter one of your backup codes (XXXXX-XXXXX). Each code works only once.';
+
+  @override
+  String get mfaCodeLabel => '6-digit code';
+
+  @override
+  String get mfaBackupCodeLabel => 'Backup code';
+
+  @override
+  String get mfaVerifyButton => 'Verify';
+
+  @override
+  String get mfaUseBackupCode => 'Use a backup code';
+
+  @override
+  String get mfaUseAuthenticatorCode => 'Use your authenticator app instead';
+
+  @override
+  String get mfaBackToSignIn => 'Back to sign in';
+
+  @override
+  String mfaBackupCodeUsed(int remaining) {
+    return 'Backup code used. $remaining backup code(s) left.';
+  }
+
+  @override
+  String get valMfaCodeInvalid => 'Enter the 6-digit code.';
+
+  @override
+  String get valMfaBackupCodeInvalid => 'Enter a backup code like ABCDE-FGHIJ.';
+
+  @override
+  String get mfaEnrollTitle => 'Set up two-factor authentication';
+
+  @override
+  String get mfaEnrollSubtitle =>
+      'Your role requires a code from an authenticator app every time you sign in.';
+
+  @override
+  String get mfaEnrollStepInstall =>
+      '1. Install Google Authenticator (or another authenticator app).';
+
+  @override
+  String get mfaEnrollStepScan =>
+      '2. Scan this QR code, open it in the app, or enter the setup key.';
+
+  @override
+  String get mfaEnrollStepCode => '3. Enter the 6-digit code the app shows.';
+
+  @override
+  String get mfaEnrollOpenApp => 'Open in authenticator app';
+
+  @override
+  String get mfaEnrollNoApp =>
+      'No authenticator app found. Install Google Authenticator or enter the setup key manually.';
+
+  @override
+  String get mfaEnrollManualKey => 'Setup key';
+
+  @override
+  String get mfaCopyKey => 'Copy key';
+
+  @override
+  String get mfaKeyCopied => 'Setup key copied';
+
+  @override
+  String get mfaQrSemantic => 'QR code for your authenticator app';
+
+  @override
+  String get mfaEnrollConfirm => 'Confirm';
+
+  @override
+  String get mfaBackupCodesTitle => 'Save your backup codes';
+
+  @override
+  String get mfaBackupCodesSubtitle =>
+      'Each code lets you sign in once if you lose your phone. They won\'t be shown again, so keep them somewhere safe.';
+
+  @override
+  String get mfaCopyCodes => 'Copy codes';
+
+  @override
+  String get mfaCodesCopied => 'Backup codes copied';
+
+  @override
+  String get mfaSavedCheckbox => 'I saved my backup codes';
+
+  @override
+  String get mfaContinue => 'Continue';
+
+  @override
+  String get securityMfaOn =>
+      'A code from your authenticator app is required every time you sign in.';
+
+  @override
+  String get securityMfaPending =>
+      'Required for your role. You\'ll set it up at your next sign-in.';
+
+  @override
+  String get securityMfaStatusOn => 'On';
+
+  @override
+  String get securityMfaStatusOff => 'Not set up';
+
+  @override
+  String get securityMfaRegenerate => 'Regenerate backup codes';
+
+  @override
+  String get securityMfaRegenerateHint =>
+      'Enter a current code from your authenticator app. Your old backup codes will stop working.';
+
+  @override
+  String get securityMfaRegenerateSubmit => 'Generate';
+
+  @override
+  String get securityMfaDone => 'Done';
+
+  @override
+  String get adminMfaBadge => '2FA on';
+
+  @override
+  String get adminMfaReset => 'Reset 2FA';
+
+  @override
+  String adminMfaResetConfirm(String name) {
+    return 'Reset two-factor authentication for $name? They will be signed out everywhere and must set it up again at their next sign-in.';
+  }
+
+  @override
+  String get adminMfaResetDone =>
+      '2FA reset. They\'ll set it up again at their next sign-in.';
+
+  @override
+  String get authMsgMfaRequired =>
+      'Enter the code from your authenticator app to finish signing in.';
+
+  @override
+  String get authErrMfaTokenInvalid =>
+      'Your sign-in has expired. Please sign in again.';
+
+  @override
+  String get authErrMfaCodeInvalid => 'Incorrect code. Please try again.';
+
+  @override
+  String authErrMfaCodeInvalidRemaining(int remaining) {
+    return 'Incorrect code. $remaining attempt(s) remaining.';
+  }
+
+  @override
+  String get authErrMfaTooManyAttempts =>
+      'Too many incorrect codes. Please sign in again.';
+
+  @override
+  String get authErrMfaNotEnrolled =>
+      'Two-factor authentication isn\'t set up for this account yet.';
+
+  @override
+  String get authErrMfaAlreadyEnrolled =>
+      'Two-factor authentication is already set up for this account.';
+
+  @override
+  String get authErrMfaResetForbidden =>
+      'Only an Owner can reset two-factor authentication.';
+
+  @override
+  String get authErrMfaResetSelfForbidden =>
+      'You can\'t reset your own two-factor authentication.';
 }

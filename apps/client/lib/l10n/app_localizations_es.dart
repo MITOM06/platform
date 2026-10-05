@@ -3585,4 +3585,201 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get adminLoadFailed =>
       'No se pudo cargar esta sección. Inténtalo de nuevo.';
+
+  @override
+  String get setPasswordTitle => 'Crea tu contraseña de PON';
+
+  @override
+  String get setPasswordSubtitle =>
+      'Te uniste con Google. Crea una contraseña para poder iniciar sesión también con tu correo electrónico.';
+
+  @override
+  String get setPasswordSubmit => 'Crear contraseña';
+
+  @override
+  String get setPasswordSuccess =>
+      'Contraseña creada. Ahora también puedes iniciar sesión con tu correo electrónico.';
+
+  @override
+  String get authErrCurrentPasswordRequired =>
+      'Introduce tu contraseña actual.';
+
+  @override
+  String get mfaVerifyTitle => 'Autenticación de dos factores';
+
+  @override
+  String get mfaVerifySubtitle =>
+      'Introduce el código de 6 dígitos de tu app de autenticación para terminar de iniciar sesión.';
+
+  @override
+  String get mfaBackupSubtitle =>
+      'Introduce uno de tus códigos de respaldo (XXXXX-XXXXX). Cada código solo funciona una vez.';
+
+  @override
+  String get mfaCodeLabel => 'Código de 6 dígitos';
+
+  @override
+  String get mfaBackupCodeLabel => 'Código de respaldo';
+
+  @override
+  String get mfaVerifyButton => 'Verificar';
+
+  @override
+  String get mfaUseBackupCode => 'Usar un código de respaldo';
+
+  @override
+  String get mfaUseAuthenticatorCode => 'Usar tu app de autenticación';
+
+  @override
+  String get mfaBackToSignIn => 'Volver a iniciar sesión';
+
+  @override
+  String mfaBackupCodeUsed(int remaining) {
+    return 'Código de respaldo usado. Quedan $remaining código(s).';
+  }
+
+  @override
+  String get valMfaCodeInvalid => 'Introduce el código de 6 dígitos.';
+
+  @override
+  String get valMfaBackupCodeInvalid =>
+      'Introduce un código de respaldo como ABCDE-FGHIJ.';
+
+  @override
+  String get mfaEnrollTitle => 'Configura la autenticación de dos factores';
+
+  @override
+  String get mfaEnrollSubtitle =>
+      'Tu rol requiere un código de una app de autenticación cada vez que inicies sesión.';
+
+  @override
+  String get mfaEnrollStepInstall =>
+      '1. Instala Google Authenticator (u otra app de autenticación).';
+
+  @override
+  String get mfaEnrollStepScan =>
+      '2. Escanea este código QR, ábrelo en la app o introduce la clave de configuración.';
+
+  @override
+  String get mfaEnrollStepCode =>
+      '3. Introduce el código de 6 dígitos que muestra la app.';
+
+  @override
+  String get mfaEnrollOpenApp => 'Abrir en la app de autenticación';
+
+  @override
+  String get mfaEnrollNoApp =>
+      'No se encontró ninguna app de autenticación. Instala Google Authenticator o introduce la clave de configuración manualmente.';
+
+  @override
+  String get mfaEnrollManualKey => 'Clave de configuración';
+
+  @override
+  String get mfaCopyKey => 'Copiar clave';
+
+  @override
+  String get mfaKeyCopied => 'Clave de configuración copiada';
+
+  @override
+  String get mfaQrSemantic => 'Código QR para tu app de autenticación';
+
+  @override
+  String get mfaEnrollConfirm => 'Confirmar';
+
+  @override
+  String get mfaBackupCodesTitle => 'Guarda tus códigos de respaldo';
+
+  @override
+  String get mfaBackupCodesSubtitle =>
+      'Cada código te permite iniciar sesión una vez si pierdes tu teléfono. No se volverán a mostrar, así que guárdalos en un lugar seguro.';
+
+  @override
+  String get mfaCopyCodes => 'Copiar códigos';
+
+  @override
+  String get mfaCodesCopied => 'Códigos de respaldo copiados';
+
+  @override
+  String get mfaSavedCheckbox => 'He guardado mis códigos de respaldo';
+
+  @override
+  String get mfaContinue => 'Continuar';
+
+  @override
+  String get securityMfaOn =>
+      'Se requiere un código de tu app de autenticación cada vez que inicias sesión.';
+
+  @override
+  String get securityMfaPending =>
+      'Obligatoria para tu rol. La configurarás en tu próximo inicio de sesión.';
+
+  @override
+  String get securityMfaStatusOn => 'Activada';
+
+  @override
+  String get securityMfaStatusOff => 'Sin configurar';
+
+  @override
+  String get securityMfaRegenerate => 'Regenerar códigos de respaldo';
+
+  @override
+  String get securityMfaRegenerateHint =>
+      'Introduce un código actual de tu app de autenticación. Tus códigos de respaldo anteriores dejarán de funcionar.';
+
+  @override
+  String get securityMfaRegenerateSubmit => 'Generar';
+
+  @override
+  String get securityMfaDone => 'Listo';
+
+  @override
+  String get adminMfaBadge => '2FA activada';
+
+  @override
+  String get adminMfaReset => 'Restablecer 2FA';
+
+  @override
+  String adminMfaResetConfirm(String name) {
+    return '¿Restablecer la autenticación de dos factores de $name? Se cerrará su sesión en todos los dispositivos y deberá configurarla de nuevo en su próximo inicio de sesión.';
+  }
+
+  @override
+  String get adminMfaResetDone =>
+      '2FA restablecida. La configurará de nuevo en su próximo inicio de sesión.';
+
+  @override
+  String get authMsgMfaRequired =>
+      'Introduce el código de tu app de autenticación para terminar de iniciar sesión.';
+
+  @override
+  String get authErrMfaTokenInvalid =>
+      'Tu inicio de sesión ha caducado. Vuelve a iniciar sesión.';
+
+  @override
+  String get authErrMfaCodeInvalid => 'Código incorrecto. Inténtalo de nuevo.';
+
+  @override
+  String authErrMfaCodeInvalidRemaining(int remaining) {
+    return 'Código incorrecto. Quedan $remaining intento(s).';
+  }
+
+  @override
+  String get authErrMfaTooManyAttempts =>
+      'Demasiados códigos incorrectos. Vuelve a iniciar sesión.';
+
+  @override
+  String get authErrMfaNotEnrolled =>
+      'Esta cuenta aún no tiene configurada la autenticación de dos factores.';
+
+  @override
+  String get authErrMfaAlreadyEnrolled =>
+      'Esta cuenta ya tiene configurada la autenticación de dos factores.';
+
+  @override
+  String get authErrMfaResetForbidden =>
+      'Solo un Propietario puede restablecer la autenticación de dos factores.';
+
+  @override
+  String get authErrMfaResetSelfForbidden =>
+      'No puedes restablecer tu propia autenticación de dos factores.';
 }

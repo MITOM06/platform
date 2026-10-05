@@ -1222,5 +1222,82 @@
   "adminMemberUnblockConfirm": "{name} さんのブロックを解除しますか？再びサインインできるようになります。",
   "adminMemberBlocked": "メンバーをブロックしました",
   "adminMemberUnblocked": "メンバーのブロックを解除しました",
-  "adminLoadFailed": "このセクションを読み込めませんでした。もう一度お試しください。"
+  "adminLoadFailed": "このセクションを読み込めませんでした。もう一度お試しください。",
+  "setPasswordTitle": "PON のパスワードを作成",
+  "setPasswordSubtitle": "Google で参加しました。メールアドレスでもサインインできるよう、パスワードを作成してください。",
+  "setPasswordSubmit": "パスワードを作成",
+  "setPasswordSuccess": "パスワードを作成しました。メールアドレスでもサインインできるようになりました。",
+  "authErrCurrentPasswordRequired": "現在のパスワードを入力してください。",
+  "mfaVerifyTitle": "二要素認証",
+  "mfaVerifySubtitle": "サインインを完了するには、認証アプリに表示される6桁のコードを入力してください。",
+  "mfaBackupSubtitle": "バックアップコード（XXXXX-XXXXX）を1つ入力してください。各コードは1回のみ使用できます。",
+  "mfaCodeLabel": "6桁のコード",
+  "mfaBackupCodeLabel": "バックアップコード",
+  "mfaVerifyButton": "確認",
+  "mfaUseBackupCode": "バックアップコードを使用",
+  "mfaUseAuthenticatorCode": "認証アプリを使用",
+  "mfaBackToSignIn": "サインインに戻る",
+  "mfaBackupCodeUsed": "バックアップコードを使用しました。残り{remaining}個です。",
+  "@mfaBackupCodeUsed": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "valMfaCodeInvalid": "6桁のコードを入力してください。",
+  "valMfaBackupCodeInvalid": "ABCDE-FGHIJ の形式でバックアップコードを入力してください。",
+  "mfaEnrollTitle": "二要素認証を設定",
+  "mfaEnrollSubtitle": "あなたのロールでは、サインインのたびに認証アプリのコードが必要です。",
+  "mfaEnrollStepInstall": "1. Google Authenticator（または他の認証アプリ）をインストールします。",
+  "mfaEnrollStepScan": "2. このQRコードをスキャンするか、アプリで開くか、セットアップキーを入力します。",
+  "mfaEnrollStepCode": "3. アプリに表示される6桁のコードを入力します。",
+  "mfaEnrollOpenApp": "認証アプリで開く",
+  "mfaEnrollNoApp": "認証アプリが見つかりません。Google Authenticator をインストールするか、セットアップキーを手動で入力してください。",
+  "mfaEnrollManualKey": "セットアップキー",
+  "mfaCopyKey": "キーをコピー",
+  "mfaKeyCopied": "セットアップキーをコピーしました",
+  "mfaQrSemantic": "認証アプリ用のQRコード",
+  "mfaEnrollConfirm": "確認",
+  "mfaBackupCodesTitle": "バックアップコードを保存",
+  "mfaBackupCodesSubtitle": "スマートフォンを紛失した場合、各コードで1回サインインできます。再表示されないため、安全な場所に保管してください。",
+  "mfaCopyCodes": "コードをコピー",
+  "mfaCodesCopied": "バックアップコードをコピーしました",
+  "mfaSavedCheckbox": "バックアップコードを保存しました",
+  "mfaContinue": "続行",
+  "securityMfaOn": "サインインのたびに認証アプリのコードが必要です。",
+  "securityMfaPending": "あなたのロールでは必須です。次回のサインイン時に設定します。",
+  "securityMfaStatusOn": "オン",
+  "securityMfaStatusOff": "未設定",
+  "securityMfaRegenerate": "バックアップコードを再生成",
+  "securityMfaRegenerateHint": "認証アプリに表示されている現在のコードを入力してください。古いバックアップコードは使えなくなります。",
+  "securityMfaRegenerateSubmit": "生成",
+  "securityMfaDone": "完了",
+  "adminMfaBadge": "2FA オン",
+  "adminMfaReset": "2FA をリセット",
+  "adminMfaResetConfirm": "{name} さんの二要素認証をリセットしますか？すべての端末からサインアウトされ、次回のサインイン時に再設定が必要になります。",
+  "@adminMfaResetConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminMfaResetDone": "2FA をリセットしました。次回のサインイン時に再設定されます。",
+  "authMsgMfaRequired": "サインインを完了するには、認証アプリのコードを入力してください。",
+  "authErrMfaTokenInvalid": "サインインの有効期限が切れました。もう一度サインインしてください。",
+  "authErrMfaCodeInvalid": "コードが正しくありません。もう一度お試しください。",
+  "authErrMfaCodeInvalidRemaining": "コードが正しくありません。残り{remaining}回の試行があります。",
+  "@authErrMfaCodeInvalidRemaining": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "authErrMfaTooManyAttempts": "コードの誤りが多すぎます。もう一度サインインしてください。",
+  "authErrMfaNotEnrolled": "このアカウントでは二要素認証がまだ設定されていません。",
+  "authErrMfaAlreadyEnrolled": "このアカウントでは二要素認証がすでに設定されています。",
+  "authErrMfaResetForbidden": "二要素認証をリセットできるのはオーナーのみです。",
+  "authErrMfaResetSelfForbidden": "自分の二要素認証はリセットできません。"
 }

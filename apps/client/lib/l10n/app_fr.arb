@@ -1222,5 +1222,82 @@
   "adminMemberUnblockConfirm": "Débloquer {name} ? Cette personne pourra se reconnecter.",
   "adminMemberBlocked": "Membre bloqué",
   "adminMemberUnblocked": "Membre débloqué",
-  "adminLoadFailed": "Impossible de charger cette section. Veuillez réessayer."
+  "adminLoadFailed": "Impossible de charger cette section. Veuillez réessayer.",
+  "setPasswordTitle": "Créez votre mot de passe PON",
+  "setPasswordSubtitle": "Vous avez rejoint PON avec Google. Créez un mot de passe pour pouvoir aussi vous connecter avec votre adresse e-mail.",
+  "setPasswordSubmit": "Créer le mot de passe",
+  "setPasswordSuccess": "Mot de passe créé. Vous pouvez désormais aussi vous connecter avec votre adresse e-mail.",
+  "authErrCurrentPasswordRequired": "Veuillez saisir votre mot de passe actuel.",
+  "mfaVerifyTitle": "Authentification à deux facteurs",
+  "mfaVerifySubtitle": "Saisissez le code à 6 chiffres de votre application d'authentification pour terminer la connexion.",
+  "mfaBackupSubtitle": "Saisissez l'un de vos codes de secours (XXXXX-XXXXX). Chaque code ne fonctionne qu'une fois.",
+  "mfaCodeLabel": "Code à 6 chiffres",
+  "mfaBackupCodeLabel": "Code de secours",
+  "mfaVerifyButton": "Vérifier",
+  "mfaUseBackupCode": "Utiliser un code de secours",
+  "mfaUseAuthenticatorCode": "Utiliser votre application d'authentification",
+  "mfaBackToSignIn": "Retour à la connexion",
+  "mfaBackupCodeUsed": "Code de secours utilisé. {remaining} code(s) restant(s).",
+  "@mfaBackupCodeUsed": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "valMfaCodeInvalid": "Saisissez le code à 6 chiffres.",
+  "valMfaBackupCodeInvalid": "Saisissez un code de secours au format ABCDE-FGHIJ.",
+  "mfaEnrollTitle": "Configurer l'authentification à deux facteurs",
+  "mfaEnrollSubtitle": "Votre rôle exige un code d'une application d'authentification à chaque connexion.",
+  "mfaEnrollStepInstall": "1. Installez Google Authenticator (ou une autre application d'authentification).",
+  "mfaEnrollStepScan": "2. Scannez ce code QR, ouvrez-le dans l'application ou saisissez la clé de configuration.",
+  "mfaEnrollStepCode": "3. Saisissez le code à 6 chiffres affiché par l'application.",
+  "mfaEnrollOpenApp": "Ouvrir dans l'application d'authentification",
+  "mfaEnrollNoApp": "Aucune application d'authentification trouvée. Installez Google Authenticator ou saisissez la clé de configuration manuellement.",
+  "mfaEnrollManualKey": "Clé de configuration",
+  "mfaCopyKey": "Copier la clé",
+  "mfaKeyCopied": "Clé de configuration copiée",
+  "mfaQrSemantic": "Code QR pour votre application d'authentification",
+  "mfaEnrollConfirm": "Confirmer",
+  "mfaBackupCodesTitle": "Enregistrez vos codes de secours",
+  "mfaBackupCodesSubtitle": "Chaque code vous permet de vous connecter une fois si vous perdez votre téléphone. Ils ne seront plus affichés : conservez-les en lieu sûr.",
+  "mfaCopyCodes": "Copier les codes",
+  "mfaCodesCopied": "Codes de secours copiés",
+  "mfaSavedCheckbox": "J'ai enregistré mes codes de secours",
+  "mfaContinue": "Continuer",
+  "securityMfaOn": "Un code de votre application d'authentification est requis à chaque connexion.",
+  "securityMfaPending": "Obligatoire pour votre rôle. Vous la configurerez à votre prochaine connexion.",
+  "securityMfaStatusOn": "Activée",
+  "securityMfaStatusOff": "Non configurée",
+  "securityMfaRegenerate": "Régénérer les codes de secours",
+  "securityMfaRegenerateHint": "Saisissez un code actuel de votre application d'authentification. Vos anciens codes de secours ne fonctionneront plus.",
+  "securityMfaRegenerateSubmit": "Générer",
+  "securityMfaDone": "Terminé",
+  "adminMfaBadge": "2FA activée",
+  "adminMfaReset": "Réinitialiser la 2FA",
+  "adminMfaResetConfirm": "Réinitialiser l'authentification à deux facteurs de {name} ? Cette personne sera déconnectée partout et devra la reconfigurer à sa prochaine connexion.",
+  "@adminMfaResetConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminMfaResetDone": "2FA réinitialisée. Cette personne la reconfigurera à sa prochaine connexion.",
+  "authMsgMfaRequired": "Saisissez le code de votre application d'authentification pour terminer la connexion.",
+  "authErrMfaTokenInvalid": "Votre connexion a expiré. Veuillez vous reconnecter.",
+  "authErrMfaCodeInvalid": "Code incorrect. Veuillez réessayer.",
+  "authErrMfaCodeInvalidRemaining": "Code incorrect. {remaining} tentative(s) restante(s).",
+  "@authErrMfaCodeInvalidRemaining": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "authErrMfaTooManyAttempts": "Trop de codes incorrects. Veuillez vous reconnecter.",
+  "authErrMfaNotEnrolled": "L'authentification à deux facteurs n'est pas encore configurée pour ce compte.",
+  "authErrMfaAlreadyEnrolled": "L'authentification à deux facteurs est déjà configurée pour ce compte.",
+  "authErrMfaResetForbidden": "Seul un Propriétaire peut réinitialiser l'authentification à deux facteurs.",
+  "authErrMfaResetSelfForbidden": "Vous ne pouvez pas réinitialiser votre propre authentification à deux facteurs."
 }
