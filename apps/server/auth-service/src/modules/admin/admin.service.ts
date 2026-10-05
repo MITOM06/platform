@@ -337,7 +337,14 @@ export class AdminService {
     }
 
     await this.userModel
-      .updateOne({ _id: id }, { $set: { status: dto.status } })
+      .updateOne(
+        { _id: id },
+        // A blocked account's devices must stop receiving push previews of
+        // company messages: drop its FCM tokens with the sessions.
+        dto.status === 'blocked'
+          ? { $set: { status: dto.status, fcmTokens: [] } }
+          : { $set: { status: dto.status } },
+      )
       .exec();
     if (dto.status === 'blocked') await this.session.revokeAllSessions(id, 'blocked');
     await this.audit.record({

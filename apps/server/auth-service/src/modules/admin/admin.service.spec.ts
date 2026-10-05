@@ -734,7 +734,8 @@ describe('AdminService', () => {
 
       expect(userModel.updateOne).toHaveBeenCalledWith(
         { _id: TARGET },
-        { $set: { status: 'blocked' } },
+        // FCM tokens are dropped so the device stops receiving message previews.
+        { $set: { status: 'blocked', fcmTokens: [] } },
       );
       expect(session.revokeAllSessions).toHaveBeenCalledWith(TARGET, 'blocked');
       expect(audit.record).toHaveBeenCalledWith(
