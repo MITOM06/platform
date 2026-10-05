@@ -146,6 +146,12 @@ services:
       # OpenTelemetry — export traces to Jaeger via OTLP HTTP
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
       MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
+      # Local LiveKit [dev-only]: clients connect to localhost, chat-service to the container.
+      LIVEKIT_URL: ws://localhost:7880
+      LIVEKIT_API_URL: http://livekit:7880
+      LIVEKIT_API_KEY: devkey
+      LIVEKIT_API_SECRET: devsecret-devsecret-devsecret-0001
+      CALL_TRANSPORT: ${CALL_TRANSPORT:-mesh}
     networks:
       - app-net
 
@@ -237,6 +243,37 @@ services:
     networks:
       - app-net
     restart: unless-stopped
+
+  # Local LiveKit [dev-only]. Not --dev mode: its built-in secret is shorter than
+  # the 32 chars chat-service requires, so give it a dev key pair instead.
+  # --node-ip 127.0.0.1 = reachable from this machine only (browser / simulator);
+  # a phone on the LAN needs --node-ip <this machine's LAN IP>.
+  livekit:
+    image: livekit/livekit-server:v1.8
+    container_name: livekit
+    command: --node-ip 127.0.0.1 --bind 0.0.0.0
+    environment:
+      LIVEKIT_KEYS: "devkey: devsecret-devsecret-devsecret-0001"
+      LIVEKIT_CONFIG: |
+        port: 7880
+        rtc:
+          tcp_port: 7881
+          port_range_start: 50000
+          port_range_end: 50100
+          use_external_ip: false
+        webhook:
+          api_key: devkey
+          urls:
+            - http://chat-service:8080/api/rtc/livekit/webhook
+        room:
+          auto_create: true
+          max_participants: 25
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "50000-50100:50000-50100/udp"
+    networks:
+      - app-net
 
   jaeger:
     image: jaegertracing/all-in-one:1.62.0
