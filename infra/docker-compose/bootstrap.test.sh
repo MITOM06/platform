@@ -10,8 +10,8 @@ ENV_DIR="$TMP" ./bootstrap.sh --no-validate >/dev/null 2>&1 || true
 test -f "$TMP/.env" || { echo "FAIL: .env not created"; exit 1; }
 
 get() { grep -E "^$1=" "$TMP/.env" | head -1 | cut -d= -f2-; }
-J1="$(get JWT_ACCESS_SECRET)"; V1="$(get CONNECTOR_VAULT_KEY)"; I1="$(get INTERNAL_API_KEY)"
-[ -n "$J1" ] && [ -n "$V1" ] && [ -n "$I1" ] || { echo "FAIL: secrets not generated"; exit 1; }
+J1="$(get JWT_ACCESS_SECRET)"; V1="$(get CONNECTOR_VAULT_KEY)"; I1="$(get INTERNAL_API_KEY)"; S1="$(get SESSION_SECRET)"
+[ -n "$J1" ] && [ -n "$V1" ] && [ -n "$I1" ] && [ -n "$S1" ] || { echo "FAIL: secrets not generated"; exit 1; }
 
 # Vault key must base64-decode to exactly 32 bytes.
 LEN="$(printf '%s' "$V1" | base64 -d 2>/dev/null | wc -c | tr -d ' ')"
@@ -21,6 +21,7 @@ LEN="$(printf '%s' "$V1" | base64 -d 2>/dev/null | wc -c | tr -d ' ')"
 ENV_DIR="$TMP" ./bootstrap.sh --no-validate >/dev/null 2>&1 || true
 [ "$(get JWT_ACCESS_SECRET)" = "$J1" ] || { echo "FAIL: JWT secret changed on re-run"; exit 1; }
 [ "$(get CONNECTOR_VAULT_KEY)" = "$V1" ] || { echo "FAIL: vault key changed on re-run"; exit 1; }
+[ "$(get SESSION_SECRET)" = "$S1" ] || { echo "FAIL: session secret changed on re-run"; exit 1; }
 
 # Absent-key case: delete INTERNAL_API_KEY line entirely, re-run, assert it is restored.
 if command -v gsed >/dev/null 2>&1; then
