@@ -71,6 +71,8 @@ Chỉ dừng và hỏi khi gặp đúng các tình huống dưới đây — kh�
 | Redis | 6379 | Docker |
 | RabbitMQ AMQP | 5672 | Docker |
 | RabbitMQ Management UI | 15672 | Docker (user: platform / platform) |
+| LiveKit (signalling / API) | 7880 (behind Caddy: `rtc.<domain>`) | LiveKit SFU — calls + meetings |
+| LiveKit media | 7881/tcp, 3478/udp (TURN), 50000–60000/udp | LiveKit SFU |
 
 Start infra: `docker compose -f infra/docker-compose/compose.yml up -d`
 
