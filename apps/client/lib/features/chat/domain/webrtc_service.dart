@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../data/stomp_service.dart';
 import 'call_rules.dart';
+import 'direct_call_engine.dart';
 
 /// The call was ended (hang-up, peer cancel) while setup was still awaiting —
 /// e.g. the OS permission dialog was open. Not an error to report.
@@ -17,17 +18,21 @@ class CallCancelledException implements Exception {
 /// Uses the modern **Unified Plan** API (`addTrack` / `onTrack`) — the legacy
 /// Plan-B `addStream` / `onAddStream` does NOT fire on flutter_webrtc 0.12+,
 /// which is why remote video never showed before.
-class WebRTCService {
+class WebRTCService implements DirectCallEngine {
   final StompService _stompService;
   RTCPeerConnection? _peerConnection;
   MediaStream? _localStream;
 
+  @override
   Function(MediaStream)? onLocalStream;
+  @override
   Function(MediaStream)? onRemoteStream;
+  @override
   Function()? onCallEnded;
 
   /// Fired when a call ends, so the UI can explain why (see `callEndNotice`).
   /// `byPeer` = the other side ended it.
+  @override
   void Function(CallEndReason reason, bool byPeer)? onEndNotice;
 
   String? _targetId;
@@ -49,6 +54,7 @@ class WebRTCService {
   /// `system.call.ended:{kind}:{secs}` or `system.call.missed:{kind}`.
   /// Mirrors web `call-manager.ts` so both platforms render identically.
   /// Only the hang-up initiator should invoke this (see [endCall]).
+  @override
   Function(String content)? onSendCallLog;
 
   /// ICE candidates that arrive before the remote description is set must be
@@ -82,8 +88,11 @@ class WebRTCService {
   /// The other party of the active call, or null.
   String? get peerId => isActive ? _targetId : null;
 
+  @override
   bool get micOn => _micOn;
+  @override
   bool get cameraOn => _cameraOn;
+  @override
   bool get speakerOn => _speakerOn;
 
   /// How long an outgoing call rings before it is given up as missed. There
@@ -367,6 +376,7 @@ class WebRTCService {
 
   /// Hang up / give up: tell the peer why, log the call, tear down.
   /// [duration] defaults to the time since remote media arrived.
+  @override
   Future<void> endCall({
     int? duration,
     CallEndReason reason = CallEndReason.hangup,
@@ -402,11 +412,13 @@ class WebRTCService {
 
   /// Tear down a call that never reached the peer (e.g. our own mic/camera
   /// failed before the offer was sent): no signal, no call log.
+  @override
   void failLocally(CallEndReason reason) {
     onEndNotice?.call(reason, false);
     dispose();
   }
 
+  @override
   Future<void> setMicOn(bool on) async {
     _micOn = on;
     for (final t in _localStream?.getAudioTracks() ?? <MediaStreamTrack>[]) {
@@ -414,6 +426,7 @@ class WebRTCService {
     }
   }
 
+  @override
   Future<void> setCameraOn(bool on) async {
     _cameraOn = on;
     for (final t in _localStream?.getVideoTracks() ?? <MediaStreamTrack>[]) {
@@ -421,16 +434,19 @@ class WebRTCService {
     }
   }
 
+  @override
   Future<void> setSpeakerOn(bool on) async {
     _speakerOn = on;
     await Helper.setSpeakerphoneOn(on);
   }
 
+  @override
   Future<void> switchCamera() async {
     final tracks = _localStream?.getVideoTracks() ?? <MediaStreamTrack>[];
     if (tracks.isNotEmpty) await Helper.switchCamera(tracks.first);
   }
 
+  @override
   void dispose() {
     _generation++;
     _signaled = false;
