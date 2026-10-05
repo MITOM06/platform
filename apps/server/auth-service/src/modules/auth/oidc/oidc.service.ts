@@ -73,6 +73,8 @@ export class OidcService {
     displayName: string;
     id: string;
     groups: string[];
+    /** True only when the IdP asserted `email_verified: true` (see SocialProvisioningService). */
+    emailVerified: boolean;
     platform: string;
   }> {
     const state = query?.state;
@@ -96,6 +98,10 @@ export class OidcService {
     }
 
     const claims: any = tokenSet.claims();
+    // An explicit `email_verified: false` is refused outright. A MISSING claim
+    // is let through (some IdPs omit it) but reported as unverified, so the
+    // address can still JIT-create an account on an allowed domain yet can never
+    // take over an EXISTING account by email (SSO_EMAIL_UNVERIFIED there).
     if (!claims.email || claims.email_verified === false) {
       throw new UnauthorizedException({ code: 'OIDC_EMAIL_UNVERIFIED' });
     }
@@ -108,6 +114,7 @@ export class OidcService {
       displayName: claims.name || claims.email.split('@')[0],
       id: claims.sub,
       groups,
+      emailVerified: claims.email_verified === true,
       platform: flow.platform,
     };
   }

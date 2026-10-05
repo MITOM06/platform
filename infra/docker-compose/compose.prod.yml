@@ -108,6 +108,14 @@ services:
       # Everything is served from the single Caddy domain. main.ts refuses to
       # boot in production without this (no fallback to localhost origins).
       CORS_ORIGINS: ${CORS_ORIGINS:-https://${DOMAIN}}
+      # Client IP for rate limiting. Caddy is the public edge here and rewrites
+      # X-Forwarded-For with the real peer, so trusting exactly one hop makes
+      # req.ip the client instead of Caddy (otherwise every user shares one
+      # throttle bucket). Raise it only when another proxy sits in front of Caddy;
+      # set CLIENT_IP_HEADER only when that proxy guarantees the header (e.g.
+      # Cloudflare's cf-connecting-ip). See docs/environments.md.
+      TRUST_PROXY: ${TRUST_PROXY:-1}
+      CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-}
       OIDC_ENABLED: ${OIDC_ENABLED:-}
       OIDC_ISSUER: ${OIDC_ISSUER:-}
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}

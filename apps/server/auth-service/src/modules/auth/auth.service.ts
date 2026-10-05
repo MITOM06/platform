@@ -16,6 +16,7 @@ import { OtpService } from './otp.service';
 import { BadRequestException } from '@nestjs/common/exceptions/bad-request.exception';
 import { Response } from 'express';
 import { AuthCode } from '../../common/auth-code.enum';
+import { normalizeEmail } from '../../common/email';
 import { SsoMappingService } from './oidc/sso-mapping.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { assertCanSignIn } from './account-status';
@@ -87,7 +88,13 @@ export class AuthService {
 
   // ===================== OIDC SSO =====================
   async handleOidcLogin(
-    profile: { email: string; displayName: string; id: string; groups: string[] },
+    profile: {
+      email: string;
+      displayName: string;
+      id: string;
+      groups: string[];
+      emailVerified?: boolean;
+    },
     res: Response,
     platform: string,
   ) {
@@ -122,12 +129,15 @@ export class AuthService {
 
   // ===================== LOGIN / LOGOUT =====================
   async login(dto: LoginDto, locale: string = 'en') {
-    await this.loginAttempts.checkBruteForce(dto.email);
-    const user = await this.usersService.findByEmail(dto.email);
+    // One canonical form for the lookup AND every brute-force key, so case
+    // variants (`Bob@acme.com`) neither miss the account nor get extra guesses.
+    const email = normalizeEmail(dto.email);
+    await this.loginAttempts.checkBruteForce(email);
+    const user = await this.usersService.findByEmail(email);
 
     // ✅ FIX: Kiểm tra user và throw ngay - TypeScript hiểu user không null sau đây
     if (!user) {
-      await this.loginAttempts.handleFailedLogin(dto.email);
+      await this.loginAttempts.handleFailedLogin(email);
       // handleFailedLogin return type là 'never' → TypeScript biết code dưới không chạy
       return; // unreachable, nhưng giúp TypeScript yên tâm
     }
@@ -136,14 +146,14 @@ export class AuthService {
     const isMatch =
       !!user.password && (await bcrypt.compare(dto.password, user.password));
     if (!isMatch) {
-      await this.loginAttempts.handleFailedLogin(dto.email);
+      await this.loginAttempts.handleFailedLogin(email);
       return; // unreachable
     }
 
     // Correct credentials but a blocked / not-yet-accepted account: the attempt
     // was not a guess, so clear the counter, then refuse (403).
     if (user.status === 'blocked' || user.status === 'pending') {
-      await this.loginAttempts.reset(dto.email);
+      await this.loginAttempts.reset(email);
       assertCanSignIn(user);
     }
 
@@ -162,7 +172,7 @@ export class AuthService {
     }
 
     const tokens = await this.issueTokensForUser(user, 'web-login', 'web');
-    await this.loginAttempts.reset(dto.email);
+    await this.loginAttempts.reset(email);
     return { code: AuthCode.LOGIN_SUCCESS, ...tokens };
   }
 
@@ -194,6 +204,7 @@ export class AuthService {
     };
   }
 
+  /** Revokes the CALLER's own session (sid from the verified access token). */
   async logout(userId: string, sid: string) {
     await this.session.revokeSession(userId, sid);
     return {
@@ -211,7 +222,7 @@ export class AuthService {
    * one window. Guards against multi-IP spam that the global IP throttler misses.
    */
   private async enforceForgotOtpRateLimit(email: string): Promise<void> {
-    const rateKey = `forgot_otp_rate:${email.toLowerCase()}`;
+    const rateKey = `forgot_otp_rate:${normalizeEmail(email)}`;
     const sends = await this.redis.incr(rateKey);
     if (sends === 1) {
       await this.redis.expire(rateKey, 600); // 10 min window
@@ -226,7 +237,8 @@ export class AuthService {
     if (user.status === 'blocked') assertCanSignIn(user);
   }
 
-  async forgotPassword(email: string, locale: string = 'en') {
+  async forgotPassword(rawEmail: string, locale: string = 'en') {
+    const email = normalizeEmail(rawEmail);
     // ── Per-email rate limit: max 3 OTP sends per 10 minutes ──
     await this.enforceForgotOtpRateLimit(email);
 
@@ -234,11 +246,18 @@ export class AuthService {
     if (!user) throw new NotFoundException({ code: AuthCode.EMAIL_NOT_FOUND });
     this.assertNotBlocked(user);
 
-    await this.otp.issue(user._id, email, locale);
+    // Mail the address on file (legacy rows may differ in case from the input).
+    await this.otp.issue(user._id, user.email, locale);
     return { success: true, code: AuthCode.OTP_SENT };
   }
 
-  async verifyOtp(email: string, otp: string) {
+  /**
+   * Check an emailed OTP. Does NOT consume it: the mobile forgot-password flow
+   * calls verify-otp and then reset-password with the same code. The code is
+   * consumed by a successful reset (updatePassword unsets it) or expires.
+   */
+  async verifyOtp(rawEmail: string, otp: string) {
+    const email = normalizeEmail(rawEmail);
     const maxAttempts = Number(this.configService.get('MAX_OTP_ATTEMPTS', 5));
     const attemptsTTL = Number(this.configService.get('OTP_ATTEMPTS_TTL', 300));
 
@@ -272,13 +291,14 @@ export class AuthService {
       });
     }
 
-    // OTP correct → reset counter + mark verified
+    // OTP correct → reset counter + mark verified (the code stays valid)
     await this.redis.del(attemptKey);
     await this.usersService.setVerified(user._id.toString());
     return { success: true, code: AuthCode.OTP_VALID };
   }
 
-  async resetPassword(email: string, otp: string, newPass: string) {
+  async resetPassword(rawEmail: string, otp: string, newPass: string) {
+    const email = normalizeEmail(rawEmail);
     // ✅ Verify OTP trước
     await this.verifyOtp(email, otp);
 
@@ -288,7 +308,8 @@ export class AuthService {
     const salt = await bcrypt.genSalt(10);
     const hashedPass = await bcrypt.hash(newPass, salt);
 
-    // ✅ Update password và xóa OTP
+    // ✅ Update password và xóa OTP — this consumes the code, so replaying the
+    // same reset afterwards fails with OTP_INVALID.
     await this.usersService.updatePassword(user._id.toString(), hashedPass);
 
     // ✅ IMPROVEMENT: Revoke tất cả sessions cũ khi đổi mật khẩu
@@ -402,7 +423,8 @@ export class AuthService {
     assertCanSignIn(user);
   }
 
-  async resendOtp(email: string, locale: string = 'en') {
+  async resendOtp(rawEmail: string, locale: string = 'en') {
+    const email = normalizeEmail(rawEmail);
     // ── Per-email rate limit (shared window with forgotPassword) ──
     await this.enforceForgotOtpRateLimit(email);
 
@@ -421,10 +443,11 @@ export class AuthService {
     if (!user) throw new NotFoundException({ code: AuthCode.EMAIL_NOT_FOUND });
     this.assertNotBlocked(user);
 
-    await this.otp.issue(user._id, email, locale);
+    await this.otp.issue(user._id, user.email, locale);
 
-    // Reset attempt counter khi gửi lại OTP mới
-    await this.redis.del(`otp_attempts:${email}`);
+    // The wrong-guess counter (otp_attempts:<email>) is NOT reset here: it
+    // keeps counting across resends until its own TTL, otherwise every resend
+    // would hand out a fresh batch of guesses.
     await this.redis.set(cooldownKey, '1', 'EX', cooldownTTL);
 
     return { success: true, code: AuthCode.OTP_RESENT };

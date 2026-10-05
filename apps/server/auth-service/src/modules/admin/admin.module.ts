@@ -14,6 +14,7 @@ import {
 } from '@platform/database';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { RolesService } from './roles.service';
 import { SessionService } from '../auth/session.service';
 import { RequirePermissionGuard } from '../auth/guards/require-permission.guard';
 import { AuditModule } from '../audit/audit.module';
@@ -31,6 +32,6 @@ import { AuditModule } from '../audit/audit.module';
     ]),
   ],
   controllers: [AdminController],
-  providers: [AdminService, SessionService, RequirePermissionGuard],
+  providers: [AdminService, RolesService, SessionService, RequirePermissionGuard],
 })
 export class AdminModule {}

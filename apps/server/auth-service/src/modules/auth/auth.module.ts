@@ -27,6 +27,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { InvitationsModule } from '../invitations/invitations.module';
+import { AuditModule } from '../audit/audit.module';
 import { InvitationAcceptController } from './invitation-accept.controller';
 import { SocialProvisioningService } from './social-provisioning.service';
 import { OAuthRedirectService } from './oauth-redirect.service';
@@ -46,6 +47,8 @@ import { LoginAttemptsService } from './login-attempts.service';
     MailModule,
     NotificationsModule,
     InvitationsModule,
+    // SsoMappingService audits SSO-driven role/department changes.
+    AuditModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       imports: [ConfigModule],

@@ -9,10 +9,15 @@
 
 | Context | Where the code appears |
 |---------|------------------------|
-| HTTP exception (4xx) | `response.body.message.code` (string) |
-| HTTP exception with dynamic values | `response.body.message.code` + `response.body.message.params` (object) |
+| HTTP exception (4xx) | `response.body.code` (string) — the thrown object IS the body, at the top level |
+| HTTP exception with dynamic values | `response.body.code` + `response.body.params` (object) |
+| Legacy-compatible 409s (change-password, self-block) | `response.body.code` **and** the old English `response.body.message` (kept for shipped clients that substring-match it) |
 | Success body | `response.body.code` (replaces former `message` field) |
 | class-validator DTO violation | each entry in `response.body.message[]` array is a code string |
+
+> Earlier revisions of this table said `response.body.message.code`. NestJS returns a
+> thrown object as the body itself, so clients must read `data.code` first (the
+> web/mobile parsers already do).
 
 ## Code Table
 
@@ -107,7 +112,9 @@ member's current role (an unchanged `roleId` is ignored; departments of self may
 | `ROLE_NOT_FOUND` | 404 | Role not found. (unknown `roleId`) | — |
 
 Check order: `MEMBER_NOT_FOUND` (404) → `CANNOT_CHANGE_OWN_ROLE` → `ROLE_NOT_FOUND` →
-`OWNER_ROLE_ASSIGN_FORBIDDEN` → `LAST_OWNER_CANNOT_BE_DEMOTED`.
+`OWNER_ROLE_ASSIGN_FORBIDDEN` → `ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS` (2026-10-05) →
+`LAST_OWNER_CANNOT_BE_DEMOTED`. A departments-only change of an Owner by a non-Owner is also
+`403 OWNER_ROLE_ASSIGN_FORBIDDEN`.
 
 **Refresh (`POST /auth/refresh`)** checks the account status BEFORE session validity: a blocked
 user presenting a genuine refresh token gets `403 ACCOUNT_BLOCKED` (pending → `403
@@ -126,6 +133,52 @@ TOKEN_SESSION_MISMATCH | TOKEN_INVALID`; a Redis outage answers `503 SESSION_CHE
 `SSO_DISABLED` and `SSO_DOMAIN_NOT_ALLOWED` (above) were string literals and are now
 members of the `AuthCode` enum — values unchanged.
 
+### Security & correctness fixes (2026-10-05)
+
+| Code | HTTP status / context | English default text | params |
+|------|-----------------------|----------------------|--------|
+| `ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS` | 403 — `POST /admin/roles`, `PATCH /admin/roles/:id`, `PATCH /admin/members/:id` (role change), `POST /admin/invitations`, `PATCH /admin/workspace` (`sso` role mappings) | You can't grant permissions you don't have yourself. | `capabilities: string[]` (capability keys the actor lacks) |
+| `CANNOT_EDIT_OWN_ROLE` | 403 — `PATCH /admin/roles/:id` (non-Owner editing the role they hold) | You can't edit your own role. | — |
+| `PRESET_ROLE_RENAME_FORBIDDEN` | 400 — `PATCH /admin/roles/:id` | Built-in roles can't be renamed. | — |
+| `ROLE_NAME_TAKEN` | 409 — `POST /admin/roles`, `PATCH /admin/roles/:id` (duplicate name, or a reserved preset name Owner/Admin/Manager/Member in any casing; used to be a raw 500) | A role with this name already exists. | — |
+| `OWNER_SSO_MAPPING_FORBIDDEN` | 403 — `PATCH /admin/workspace` (non-Owner mapping an SSO group or `defaultRole` to Owner) | Only an Owner can map SSO groups to the Owner role. | — |
+| `INSUFFICIENT_PERMISSION` | 403 — now also `GET /ai-context/users/:userId` (not self / not their manager) and AI-context entry edits that touch a scope you can't manage | You do not have permission to perform this action. | — |
+| `USER_BLOCKED` | 403 — `POST /api/friends/request`, `PUT /api/friends/accept` while either user blocked the other | You can't add this person. | — |
+| `SSO_EMAIL_UNVERIFIED` | 401 (OAuth redirect) — Google/OIDC sign-in matched an existing account (or the bootstrap Owner) by email but the IdP did not assert `email_verified: true` | Your sign-in provider hasn't verified this email address, so it can't be used to sign in to this account. | — |
+| `SOCIAL_ACCOUNT_CONFLICT` | 403 (OAuth redirect) — the matched account is already linked to a different identity of that provider | This email is linked to a different Google/SSO account. Sign in with that account or contact your administrator. | — |
+| `CURRENT_PASSWORD_REQUIRED` | 409 — `POST /api/users/me/change-password`; body also has `message: "Current password is required"` | Enter your current password. | — |
+| `CURRENT_PASSWORD_INCORRECT` | 409 — same route; body also has `message: "Incorrect current password"` | Incorrect current password. | — |
+| `VAL_PASSWORD_TOO_SHORT` | now also 409 on `POST /api/users/me/change-password`; body also has `message: "New password must be at least 8 characters"` | Password must be at least 8 characters. | `min: 8` |
+| `USER_NOT_FOUND` | 409 on change-password (`message: "User not found"`); 404 on `GET /ai-context/users/:userId` / `PATCH …/hard` for an unknown or malformed id | User not found. | — |
+| `CANNOT_BLOCK_SELF` | now also 409 on `POST /api/users/block/:id` (self); body also has `message: "You cannot block yourself"` | You cannot block your own account. | — |
+| `AI_CONTEXT_ENTRY_NOT_FOUND` | 404 — `PATCH /ai-context/entries/:id` (missing or malformed id), `DELETE` (malformed id; a missing one stays 204) | This context entry no longer exists. | — |
+| `NOTIFICATION_NOT_FOUND` | 404 — `POST /api/notifications/:id/read` with a malformed id | Notification not found. | — |
+| `DEVICE_TOKEN_REQUIRED` | 400 — `DELETE /api/users/device-tokens` without a token | — (client bug; not user-facing) | — |
+| `DEPARTMENT_NOT_FOUND` / `ROLE_NOT_FOUND` | now 404 (instead of a CastError 500) for a malformed `:id` on `PATCH/DELETE /admin/departments/:id`, `PATCH /admin/roles/:id` | — | — |
+
+Contract changes that are not new codes:
+
+- `GET /admin/audit` items gain `targetName: string | null` (member → displayName, role/department →
+  name, invitation → email; for deleted departments/roles the name recorded at write time; `null`
+  otherwise). `actorName` is `null` for the `system` actor — localize it ("System").
+- `DELETE /api/users/device-tokens` (JWT) — body `{ "token": "<fcm>" }` or `?token=<fcm>`;
+  200 `{ "success": true }`, idempotent. `POST /api/users/device-tokens` now also removes the token
+  from every other account (a device belongs to one account at a time).
+- `POST /auth/logout` revokes the session of the access token; a `sid` in the body is ignored.
+- `POST /api/users/me/change-password` success now revokes every **other** session of the user
+  (the calling session stays signed in).
+- `POST /auth/verify-otp` no longer consumes the code: the same OTP is then accepted by
+  `POST /auth/reset-password` (which consumes it; a replay → `OTP_INVALID`).
+- Email is trimmed + lower-cased on login / forgot / verify / resend / reset (and in the lockout and
+  OTP counters), so `Bob@acme.com` signs in as `bob@acme.com`.
+- `GET /api/friends`, `/api/friends/requests` (`requester`) and `/api/users/friends/online` return the
+  public-profile shape (`_id, id, displayName, email, avatarUrl, coverPhoto, isVerified, hideInfo,
+  createdAt, roleName, bio` + `phoneNumber` / `dateOfBirth` / `gender` only when the owner's `show*`
+  toggles allow); `fcmTokens`, `trustedDevices`, `socialLinks`, `status`, `roleId`, `departmentIds`
+  are gone. Users in a block relationship are left out.
+- `PATCH /admin/members/:id` only writes and revokes the member's sessions when the role or the
+  department set (order-insensitive) really changes.
+
 ## OAuth / SSO redirect errors
 
 `GET /auth/google/callback`, `GET /auth/oidc/callback` and
@@ -139,22 +192,30 @@ Only `AuthCode` values (and only for 4xx errors) are placed in the URL; anything
 `GENERIC_ERROR`. `params` are never put in the URL. Codes that can appear:
 `ACCOUNT_NOT_PROVISIONED, ACCOUNT_BLOCKED, INVITATION_PENDING, INVITATION_INVALID,
 INVITATION_EXPIRED, INVITATION_REVOKED, INVITATION_ALREADY_ACCEPTED, INVITATION_EMAIL_MISMATCH,
-MEMBER_ALREADY_EXISTS, SOCIAL_EMAIL_UNAVAILABLE, SSO_DISABLED, SSO_DOMAIN_NOT_ALLOWED, GENERIC_ERROR`.
+MEMBER_ALREADY_EXISTS, SOCIAL_EMAIL_UNAVAILABLE, SSO_DISABLED, SSO_DOMAIN_NOT_ALLOWED,
+SSO_EMAIL_UNVERIFIED, SOCIAL_ACCOUNT_CONFLICT, GENERIC_ERROR`.
 
 ## Example response shapes
 
 ### HTTP exception (400/401/404/409)
 
 ```json
-{
-  "statusCode": 401,
-  "message": { "code": "ACCOUNT_LOCKED", "params": { "minutes": 5 } }
-}
+{ "code": "ACCOUNT_LOCKED", "params": { "minutes": 5 } }
 ```
 
-> NestJS wraps the thrown object in the standard exception envelope.
-> Clients should read `error.response.data.message.code` (axios) or
-> `body.message.code` (fetch).
+> NestJS returns the thrown object as the body. Clients should read
+> `error.response.data.code` (axios) or `body.code` (fetch).
+
+### Legacy-compatible 409 (change-password)
+
+```json
+{
+  "statusCode": 409,
+  "error": "Conflict",
+  "code": "CURRENT_PASSWORD_INCORRECT",
+  "message": "Incorrect current password"
+}
+```
 
 ### Success body (code replaces former `message` string)
 

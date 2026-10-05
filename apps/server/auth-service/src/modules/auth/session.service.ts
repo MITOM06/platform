@@ -44,10 +44,14 @@ export type SessionRevokeReason =
  *      concurrent refresh already bumped the version) -> benign race, reject
  *      with 401 but DO NOT revoke. This is a legitimate client refreshing
  *      twice in parallel; the winner already got a fresh token.
- *   3. Presented token matches the PREVIOUS (already-rotated) hash, or any
- *      version older than current -> theft signal. A superseded token must
- *      never be replayed. Revoke the session (optionally the whole family)
- *      and reject.
+ *   3. Presented token matches the PREVIOUS (already-rotated) hash -> theft
+ *      signal. A superseded token must never be replayed. Revoke the session
+ *      (optionally the whole family) and reject.
+ *
+ * The `v<n>.` prefix is caller-supplied and NOT authenticated, so it never
+ * decides anything on its own: a forged `v0.anything` once revoked a victim's
+ * session just because 0 < current. Only a token that verifies against a
+ * stored hash is classified; everything else is REFRESH_TOKEN_INVALID.
  *
  * Atomicity
  * ---------
@@ -171,6 +175,7 @@ export class SessionService {
       throw new UnauthorizedException({ code: AuthCode.SESSION_REVOKED });
 
     const currentVersion = Number(data.tokenVersion ?? '0');
+    // Logging only — the prefix is not authenticated (see class doc).
     const presentedVersion = this.parseTokenVersion(params.refreshToken);
 
     // 1) Does the presented token match the CURRENT refresh hash?
@@ -180,29 +185,21 @@ export class SessionService {
 
     if (!matchesCurrent) {
       // 2) Reuse detection: a non-current token that matches the PREVIOUS hash
-      //    (or carries an older-than-current version) is a replay of a token
-      //    that was already rotated away => treat as theft.
+      //    is a replay of a token that was already rotated away => theft.
       const matchesPrev = data.prevRefreshHash
         ? await argon2
             .verify(data.prevRefreshHash, params.refreshToken)
             .catch(() => false)
         : false;
 
-      const isOlderVersion =
-        presentedVersion !== null && presentedVersion < currentVersion;
-
-      if (matchesPrev || isOlderVersion) {
+      if (matchesPrev) {
         // Staggered benign race: the immediately-previous token presented
         // within the grace window after its rotation is a concurrent client
         // (multi-tab / retried request), not a replayed theft. Reject without
         // revoking so the client can retry with the rotated token it (or a
         // sibling tab) already holds.
         const rotatedAt = Number(data.rotatedAt ?? 0);
-        if (
-          matchesPrev &&
-          rotatedAt > 0 &&
-          Date.now() - rotatedAt < this.reuseGraceMs
-        ) {
+        if (rotatedAt > 0 && Date.now() - rotatedAt < this.reuseGraceMs) {
           throw new UnauthorizedException({
             code: AuthCode.REFRESH_TOKEN_ROTATED,
           });
@@ -215,12 +212,14 @@ export class SessionService {
         if (this.revokeFamilyOnReuse) {
           await this.revokeAllSessions(data.userId, 'refresh_reuse');
         } else {
-          await this.revokeSession(data.userId, params.sid);
+          // Owner is known: data.userId was read from this very session hash.
+          await this.markRevoked(data.userId, params.sid);
         }
         throw new UnauthorizedException({ code: AuthCode.REFRESH_TOKEN_REUSE });
       }
 
-      // Unknown / malformed token that matches neither current nor prev.
+      // Unknown / forged / too-old token that matches neither current nor
+      // prev: reject, never revoke (no proof it was ever issued).
       throw new UnauthorizedException({ code: AuthCode.REFRESH_TOKEN_INVALID });
     }
 
@@ -253,13 +252,60 @@ export class SessionService {
     return { userId: data.userId, newRefreshToken: newRefresh };
   }
 
-  async revokeSession(userId: string, sid: string) {
-    const key = this.sessKey(sid);
+  /**
+   * Revoke ONE session of `userId` (logout). Only a session that belongs to
+   * that user is touched: logout used to trust a client-supplied sid, so any
+   * user could revoke anyone's session, and a missing sid wrote `sess:undefined`.
+   * Returns whether a live session was revoked.
+   */
+  async revokeSession(userId: string, sid: string): Promise<boolean> {
+    if (!userId || !sid) return false;
+    const owner = await this.redis.hget(this.sessKey(sid), 'userId');
+    if (!owner) {
+      // Hash already expired: just drop the dangling id from the user's own set.
+      await this.redis.srem(this.userSessSetKey(userId), sid);
+      return false;
+    }
+    if (owner !== userId) {
+      this.logger.warn(`Refused to revoke a session not owned by user=${userId}`);
+      return false;
+    }
+    await this.markRevoked(userId, sid);
+    return true;
+  }
+
+  /** Mark one session revoked. Callers must already know `userId` owns `sid`. */
+  private async markRevoked(userId: string, sid: string) {
     await this.redis
       .multi()
-      .hset(key, { revoked: '1' })
+      .hset(this.sessKey(sid), { revoked: '1' })
       .srem(this.userSessSetKey(userId), sid)
       .exec();
+  }
+
+  /**
+   * Revoke every session of `userId` except `keepSid` (password change: the
+   * device that changed it stays signed in, all others are signed out).
+   *
+   * Deliberately does NOT publish `auth:sessions-revoked`: that event carries
+   * only a userId and subscribers (chat-service) close EVERY socket of the user
+   * with SESSION_REVOKED — including the caller's, which would read as a logout
+   * on the very device that just changed the password. The revoked sessions
+   * still fail their next request (chat-service's session cache is <= 5s).
+   */
+  async revokeOtherSessions(userId: string, keepSid: string): Promise<number> {
+    const userSessKey = this.userSessSetKey(userId);
+    const sids = ((await this.redis.smembers(userSessKey)) ?? []).filter(
+      (sid) => sid !== keepSid,
+    );
+    if (sids.length === 0) return 0;
+    const pipeline = this.redis.pipeline();
+    for (const sid of sids) {
+      pipeline.hset(this.sessKey(sid), { revoked: '1' });
+      pipeline.srem(userSessKey, sid);
+    }
+    await pipeline.exec();
+    return sids.length;
   }
 
   async revokeAllSessions(

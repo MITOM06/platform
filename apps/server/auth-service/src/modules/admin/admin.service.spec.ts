@@ -4,6 +4,9 @@ import { Test } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import {
+  ALL_CAPABILITIES,
+  Capability,
+  buildFullMatrix,
   Workspace,
   Department,
   Role,
@@ -18,6 +21,15 @@ function execable(value: any) {
   return { exec: jest.fn().mockResolvedValue(value) };
 }
 
+/** Capabilities of the preset Admin role (everything except MANAGE_WORKSPACE). */
+const ADMIN_PERMS = ALL_CAPABILITIES.filter((c) => c !== Capability.MANAGE_WORKSPACE);
+const actorAs = (sub: string, role: string, perms: string[] = ADMIN_PERMS) => ({
+  sub,
+  role,
+  perms,
+});
+const OWNER_ACTOR = actorAs('actor1', 'Owner', ALL_CAPABILITIES);
+
 describe('AdminService', () => {
   let service: AdminService;
   let workspaceModel: any;
@@ -29,7 +41,11 @@ describe('AdminService', () => {
   let redis: { publish: jest.Mock };
 
   beforeEach(async () => {
-    workspaceModel = { findOne: jest.fn(), findOneAndUpdate: jest.fn() };
+    workspaceModel = {
+      findOne: jest.fn(),
+      findOneAndUpdate: jest.fn(),
+      updateOne: jest.fn().mockReturnValue(execable({ modifiedCount: 1 })),
+    };
     departmentModel = {
       find: jest.fn(),
       create: jest.fn(),
@@ -42,7 +58,11 @@ describe('AdminService', () => {
       create: jest.fn(),
       findByIdAndUpdate: jest.fn(),
     };
-    userModel = { find: jest.fn(), findByIdAndUpdate: jest.fn() };
+    userModel = {
+      find: jest.fn(),
+      findByIdAndUpdate: jest.fn(),
+      updateMany: jest.fn().mockReturnValue(execable({ modifiedCount: 0 })),
+    };
     session = { revokeAllSessions: jest.fn().mockResolvedValue(undefined) };
     audit = {
       record: jest.fn().mockResolvedValue(undefined),
@@ -72,15 +92,29 @@ describe('AdminService', () => {
     const MEMBER_ROLE = '64b000000000000000000003';
     const TARGET = '64b0000000000000000000aa';
     const ACTOR = '64b0000000000000000000bb';
+    const SUPER_ROLE = '64b000000000000000000004';
     const DEPT = '64b0000000000000000000d1';
+    const DEPT2 = '64b0000000000000000000d2';
     const roles: Record<string, any> = {
       [OWNER_ROLE]: { _id: { toString: () => OWNER_ROLE }, name: 'Owner' },
       [ADMIN_ROLE]: { _id: { toString: () => ADMIN_ROLE }, name: 'Admin' },
       [MEMBER_ROLE]: { _id: { toString: () => MEMBER_ROLE }, name: 'Member' },
+      // A custom clone of the Owner matrix ("Owner copy" from the E2E report).
+      [SUPER_ROLE]: {
+        _id: { toString: () => SUPER_ROLE },
+        name: 'Owner copy',
+        permissions: buildFullMatrix(true),
+      },
     };
 
-    function target(roleId: string | undefined, status = 'active') {
-      userModel.findById.mockReturnValue(execable({ _id: TARGET, roleId, status }));
+    function target(
+      roleId: string | undefined,
+      status = 'active',
+      departmentIds: string[] = [],
+    ) {
+      userModel.findById.mockReturnValue(
+        execable({ _id: TARGET, roleId, status, departmentIds }),
+      );
     }
 
     async function expectCode(p: Promise<unknown>, status: number, code: string) {
@@ -101,7 +135,7 @@ describe('AdminService', () => {
 
     it('sets role + departments, revokes sessions (role_changed) and audits', async () => {
       target(MEMBER_ROLE);
-      const res = await service.updateMember(ACTOR, 'Admin', TARGET, {
+      const res = await service.updateMember(actorAs(ACTOR, 'Admin'), TARGET, {
         roleId: ADMIN_ROLE,
         departmentIds: [DEPT],
       });
@@ -120,13 +154,13 @@ describe('AdminService', () => {
 
     it('404 MEMBER_NOT_FOUND for an unknown / malformed id', async () => {
       await expectCode(
-        service.updateMember(ACTOR, 'Owner', 'missing', { roleId: ADMIN_ROLE }),
+        service.updateMember(actorAs(ACTOR, 'Owner'), 'missing', { roleId: ADMIN_ROLE }),
         404,
         'MEMBER_NOT_FOUND',
       );
       userModel.findById.mockReturnValue(execable(null));
       await expectCode(
-        service.updateMember(ACTOR, 'Owner', TARGET, { roleId: ADMIN_ROLE }),
+        service.updateMember(actorAs(ACTOR, 'Owner'), TARGET, { roleId: ADMIN_ROLE }),
         404,
         'MEMBER_NOT_FOUND',
       );
@@ -135,7 +169,7 @@ describe('AdminService', () => {
     it('404 ROLE_NOT_FOUND for an unknown roleId', async () => {
       target(MEMBER_ROLE);
       await expectCode(
-        service.updateMember(ACTOR, 'Owner', TARGET, { roleId: '64b0000000000000000000ff' }),
+        service.updateMember(actorAs(ACTOR, 'Owner'), TARGET, { roleId: '64b0000000000000000000ff' }),
         404,
         'ROLE_NOT_FOUND',
       );
@@ -144,7 +178,7 @@ describe('AdminService', () => {
     it('400 CANNOT_CHANGE_OWN_ROLE — even for an Owner', async () => {
       userModel.findById.mockReturnValue(execable({ _id: ACTOR, roleId: OWNER_ROLE }));
       await expectCode(
-        service.updateMember(ACTOR, 'Owner', ACTOR, { roleId: ADMIN_ROLE }),
+        service.updateMember(actorAs(ACTOR, 'Owner'), ACTOR, { roleId: ADMIN_ROLE }),
         400,
         'CANNOT_CHANGE_OWN_ROLE',
       );
@@ -152,7 +186,7 @@ describe('AdminService', () => {
 
     it('self: departments may still change (no role guard)', async () => {
       userModel.findById.mockReturnValue(execable({ _id: ACTOR, roleId: ADMIN_ROLE }));
-      await service.updateMember(ACTOR, 'Admin', ACTOR, {
+      await service.updateMember(actorAs(ACTOR, 'Admin'), ACTOR, {
         roleId: ADMIN_ROLE, // unchanged → ignored
         departmentIds: [DEPT],
       });
@@ -166,7 +200,7 @@ describe('AdminService', () => {
 
     it('unchanged roleId and nothing else → no write, no revoke', async () => {
       target(ADMIN_ROLE);
-      await service.updateMember(ACTOR, 'Admin', TARGET, { roleId: ADMIN_ROLE });
+      await service.updateMember(actorAs(ACTOR, 'Admin'), TARGET, { roleId: ADMIN_ROLE });
       expect(userModel.findByIdAndUpdate).not.toHaveBeenCalled();
       expect(session.revokeAllSessions).not.toHaveBeenCalled();
       expect(audit.record).not.toHaveBeenCalled();
@@ -175,7 +209,7 @@ describe('AdminService', () => {
     it('403 OWNER_ROLE_ASSIGN_FORBIDDEN when a non-Owner grants Owner', async () => {
       target(MEMBER_ROLE);
       await expectCode(
-        service.updateMember(ACTOR, 'Admin', TARGET, { roleId: OWNER_ROLE }),
+        service.updateMember(actorAs(ACTOR, 'Admin'), TARGET, { roleId: OWNER_ROLE }),
         403,
         'OWNER_ROLE_ASSIGN_FORBIDDEN',
       );
@@ -184,7 +218,7 @@ describe('AdminService', () => {
     it('403 OWNER_ROLE_ASSIGN_FORBIDDEN when a non-Owner changes an Owner', async () => {
       target(OWNER_ROLE);
       await expectCode(
-        service.updateMember(ACTOR, 'Admin', TARGET, { roleId: MEMBER_ROLE }),
+        service.updateMember(actorAs(ACTOR, 'Admin'), TARGET, { roleId: MEMBER_ROLE }),
         403,
         'OWNER_ROLE_ASSIGN_FORBIDDEN',
       );
@@ -192,7 +226,7 @@ describe('AdminService', () => {
 
     it('an Owner may grant Owner', async () => {
       target(ADMIN_ROLE);
-      await service.updateMember(ACTOR, 'Owner', TARGET, { roleId: OWNER_ROLE });
+      await service.updateMember(actorAs(ACTOR, 'Owner'), TARGET, { roleId: OWNER_ROLE });
       expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
         TARGET,
         { $set: { roleId: OWNER_ROLE } },
@@ -204,7 +238,7 @@ describe('AdminService', () => {
       target(OWNER_ROLE);
       userModel.countDocuments.mockReturnValue(execable(0));
       await expectCode(
-        service.updateMember(ACTOR, 'Owner', TARGET, { roleId: ADMIN_ROLE }),
+        service.updateMember(actorAs(ACTOR, 'Owner'), TARGET, { roleId: ADMIN_ROLE }),
         400,
         'LAST_OWNER_CANNOT_BE_DEMOTED',
       );
@@ -217,50 +251,132 @@ describe('AdminService', () => {
 
     it('an Owner may demote another Owner while an active Owner remains', async () => {
       target(OWNER_ROLE);
-      await service.updateMember(ACTOR, 'Owner', TARGET, { roleId: ADMIN_ROLE });
+      await service.updateMember(actorAs(ACTOR, 'Owner'), TARGET, { roleId: ADMIN_ROLE });
+      expect(session.revokeAllSessions).toHaveBeenCalledWith(TARGET, 'role_changed');
+    });
+
+    it('no-op Save (same departments, other order + duplicates, same role) → no write, no revoke, no audit', async () => {
+      target(MEMBER_ROLE, 'active', [DEPT, DEPT2]);
+      const res = await service.updateMember(actorAs(ACTOR, 'Admin'), TARGET, {
+        roleId: MEMBER_ROLE,
+        departmentIds: [DEPT2, DEPT, DEPT2],
+      });
+      expect(userModel.findByIdAndUpdate).not.toHaveBeenCalled();
+      expect(session.revokeAllSessions).not.toHaveBeenCalled();
+      expect(audit.record).not.toHaveBeenCalled();
+      expect(res).toMatchObject({ _id: TARGET });
+    });
+
+    it('departments-only change writes the deduped set and revokes with reason "other"', async () => {
+      target(MEMBER_ROLE, 'active', [DEPT]);
+      await service.updateMember(actorAs(ACTOR, 'Admin'), TARGET, {
+        departmentIds: [DEPT, DEPT2, DEPT],
+      });
+      expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        TARGET,
+        { $set: { departmentIds: [DEPT, DEPT2] } },
+        { new: true },
+      );
+      expect(session.revokeAllSessions).toHaveBeenCalledWith(TARGET, 'other');
+    });
+
+    it("403 OWNER_ROLE_ASSIGN_FORBIDDEN when a non-Owner changes an Owner's departments", async () => {
+      target(OWNER_ROLE, 'active', []);
+      await expectCode(
+        service.updateMember(actorAs(ACTOR, 'Admin'), TARGET, { departmentIds: [DEPT] }),
+        403,
+        'OWNER_ROLE_ASSIGN_FORBIDDEN',
+      );
+    });
+
+    it("an Owner may change another Owner's departments", async () => {
+      target(OWNER_ROLE, 'active', []);
+      await service.updateMember(actorAs(ACTOR, 'Owner', ALL_CAPABILITIES), TARGET, {
+        departmentIds: [DEPT],
+      });
+      expect(session.revokeAllSessions).toHaveBeenCalledWith(TARGET, 'other');
+    });
+
+    it('403 ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS when the role carries a capability the actor lacks', async () => {
+      target(MEMBER_ROLE);
+      await expect(
+        service.updateMember(actorAs(ACTOR, 'Admin'), TARGET, { roleId: SUPER_ROLE }),
+      ).rejects.toMatchObject({
+        status: 403,
+        response: {
+          code: 'ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS',
+          params: { capabilities: [Capability.MANAGE_WORKSPACE] },
+        },
+      });
+      expect(userModel.findByIdAndUpdate).not.toHaveBeenCalled();
+      expect(session.revokeAllSessions).not.toHaveBeenCalled();
+    });
+
+    it('an Owner may assign any role', async () => {
+      target(MEMBER_ROLE);
+      await service.updateMember(actorAs(ACTOR, 'Owner', ALL_CAPABILITIES), TARGET, {
+        roleId: SUPER_ROLE,
+      });
       expect(session.revokeAllSessions).toHaveBeenCalledWith(TARGET, 'role_changed');
     });
   });
 
-  describe('updateRole', () => {
-    it('refuses to edit the Owner role', async () => {
-      roleModel.findById.mockReturnValue(
-        execable({ _id: 'r1', name: 'Owner', isPreset: true }),
-      );
-      await expect(
-        service.updateRole('actor1', 'r1', { permissions: {} }),
-      ).rejects.toBeInstanceOf(BadRequestException);
-      expect(roleModel.findByIdAndUpdate).not.toHaveBeenCalled();
-    });
+  describe('departments', () => {
+    const DEPT = '64b0000000000000000000d1';
+    const OTHER = '64b0000000000000000000d9';
 
-    it('updates a non-Owner role', async () => {
-      roleModel.findById.mockReturnValue(
-        execable({ _id: 'r2', name: 'Member', isPreset: true }),
-      );
-      roleModel.findByIdAndUpdate.mockReturnValue(
-        execable({ _id: 'r2', name: 'Member' }),
-      );
-      const res = await service.updateRole('actor1', 'r2', {
-        name: 'Member v2',
-      });
-      expect(roleModel.findByIdAndUpdate).toHaveBeenCalled();
-      expect(res).toMatchObject({ _id: 'r2' });
-    });
-
-    it('throws when the role does not exist', async () => {
-      roleModel.findById.mockReturnValue(execable(null));
-      await expect(
-        service.updateRole('actor1', 'nope', { name: 'x' }),
-      ).rejects.toBeInstanceOf(NotFoundException);
-    });
-  });
-
-  describe('deleteDepartment', () => {
-    it('throws when the department is missing', async () => {
+    it('throws when the department is missing / the id is malformed (no CastError 500)', async () => {
       departmentModel.findByIdAndDelete.mockReturnValue(execable(null));
       await expect(
         service.deleteDepartment('actor1', 'nope'),
       ).rejects.toBeInstanceOf(NotFoundException);
+      expect(departmentModel.findByIdAndDelete).not.toHaveBeenCalled();
+      await expect(service.deleteDepartment('actor1', DEPT)).rejects.toMatchObject({
+        status: 404,
+        response: { code: 'DEPARTMENT_NOT_FOUND' },
+      });
+      await expect(
+        service.updateDepartment('actor1', 'nope', { name: 'x' }),
+      ).rejects.toMatchObject({ status: 404, response: { code: 'DEPARTMENT_NOT_FOUND' } });
+      expect(departmentModel.findByIdAndUpdate).not.toHaveBeenCalled();
+    });
+
+    it('delete pulls the id from members and from the SSO groupDeptMap', async () => {
+      departmentModel.findByIdAndDelete.mockReturnValue(execable({ _id: DEPT, name: 'Eng' }));
+      userModel.updateMany.mockReturnValue(execable({ modifiedCount: 2 }));
+      workspaceModel.findOne.mockReturnValue({
+        lean: () =>
+          execable({
+            _id: 'ws1',
+            sso: { groupDeptMap: { eng: DEPT, 'sales.emea': OTHER, 'eng-2': DEPT } },
+          }),
+      });
+
+      await expect(service.deleteDepartment('actor1', DEPT)).resolves.toEqual({ success: true });
+
+      expect(userModel.updateMany).toHaveBeenCalledWith(
+        { departmentIds: DEPT },
+        { $pull: { departmentIds: DEPT } },
+      );
+      expect(workspaceModel.updateOne).toHaveBeenCalledWith(
+        { _id: 'ws1' },
+        { $set: { 'sso.groupDeptMap': { 'sales.emea': OTHER } } },
+      );
+      expect(audit.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'department.delete',
+          meta: { name: 'Eng', membersUpdated: 2 },
+        }),
+      );
+    });
+
+    it('leaves the workspace untouched when no SSO mapping references the department', async () => {
+      departmentModel.findByIdAndDelete.mockReturnValue(execable({ _id: DEPT, name: 'Eng' }));
+      workspaceModel.findOne.mockReturnValue({
+        lean: () => execable({ _id: 'ws1', sso: { groupDeptMap: { sales: OTHER } } }),
+      });
+      await service.deleteDepartment('actor1', DEPT);
+      expect(workspaceModel.updateOne).not.toHaveBeenCalled();
     });
   });
 
@@ -269,7 +385,7 @@ describe('AdminService', () => {
       workspaceModel.findOneAndUpdate.mockReturnValue(
         execable({ name: 'Acme', features: {} }),
       );
-      const res = await service.updateWorkspace('actor1', { name: 'Acme' });
+      const res = await service.updateWorkspace(OWNER_ACTOR, { name: 'Acme' });
       expect(workspaceModel.findOneAndUpdate).toHaveBeenCalledWith(
         {},
         { $set: { name: 'Acme' } },
@@ -283,13 +399,13 @@ describe('AdminService', () => {
 
     it('does NOT publish invalidation when the patch has no aiSettings', async () => {
       workspaceModel.findOneAndUpdate.mockReturnValue(execable({ name: 'Acme' }));
-      await service.updateWorkspace('actor1', { name: 'Acme' });
+      await service.updateWorkspace(OWNER_ACTOR, { name: 'Acme' });
       expect(redis.publish).not.toHaveBeenCalled();
     });
 
     it('deep-merges aiSettings via dot-path $set (does not wipe siblings)', async () => {
       workspaceModel.findOneAndUpdate.mockReturnValue(execable({ name: 'Acme' }));
-      await service.updateWorkspace('actor1', {
+      await service.updateWorkspace(OWNER_ACTOR, {
         aiSettings: { defaultTone: 'concise', personaName: null },
       });
       expect(workspaceModel.findOneAndUpdate).toHaveBeenCalledWith(
@@ -301,7 +417,7 @@ describe('AdminService', () => {
 
     it('deep-merges the TASK-11 daily-digest fields via dot-path $set', async () => {
       workspaceModel.findOneAndUpdate.mockReturnValue(execable({ name: 'Acme' }));
-      await service.updateWorkspace('actor1', {
+      await service.updateWorkspace(OWNER_ACTOR, {
         aiSettings: { dailyDigestEnabled: true, dailyDigestHour: 8 },
       });
       expect(workspaceModel.findOneAndUpdate).toHaveBeenCalledWith(
@@ -318,7 +434,7 @@ describe('AdminService', () => {
 
     it('publishes ai:settings:invalidate after a successful aiSettings save', async () => {
       workspaceModel.findOneAndUpdate.mockReturnValue(execable({ name: 'Acme' }));
-      await service.updateWorkspace('actor1', {
+      await service.updateWorkspace(OWNER_ACTOR, {
         aiSettings: { thinkingEnabled: true },
       });
       expect(redis.publish).toHaveBeenCalledWith(
@@ -333,7 +449,7 @@ describe('AdminService', () => {
       });
       workspaceModel.findOneAndUpdate.mockReturnValue(execable({ name: 'Acme' }));
       await expect(
-        service.updateWorkspace('actor1', {
+        service.updateWorkspace(OWNER_ACTOR, {
           aiSettings: { allowedConnectors: ['gmail'] },
         }),
       ).resolves.toBeDefined();
@@ -344,17 +460,92 @@ describe('AdminService', () => {
         lean: () => execable({ connectorAllowList: ['gmail'] }),
       });
       await expect(
-        service.updateWorkspace('actor1', {
+        service.updateWorkspace(OWNER_ACTOR, {
           aiSettings: { allowedConnectors: ['gmail', 'slack'] },
         }),
       ).rejects.toBeInstanceOf(BadRequestException);
       expect(workspaceModel.findOneAndUpdate).not.toHaveBeenCalled();
     });
 
+    describe('SSO role mappings (anti-escalation)', () => {
+      const adminActor = actorAs('actor2', 'Admin', [
+        ...ADMIN_PERMS,
+        Capability.MANAGE_WORKSPACE,
+      ]);
+      const narrowActor = actorAs('actor3', 'Workspace editor', [
+        Capability.MANAGE_WORKSPACE,
+        Capability.USE_GROUP_BOT,
+      ]);
+
+      beforeEach(() => {
+        workspaceModel.findOneAndUpdate.mockReturnValue(execable({ name: 'Acme' }));
+        roleModel.find.mockImplementation((q: any) => ({
+          lean: () =>
+            execable(
+              [
+                { name: 'Admin', permissions: { [Capability.MANAGE_MEMBERS]: true } },
+                { name: 'Member', permissions: { [Capability.USE_GROUP_BOT]: true } },
+              ].filter((r) => q.name.$in.includes(r.name)),
+            ),
+        }));
+      });
+
+      it('403 OWNER_SSO_MAPPING_FORBIDDEN when a non-Owner maps a group to Owner', async () => {
+        await expect(
+          service.updateWorkspace(adminActor, {
+            sso: { groupRoleMap: { 'pon-admins': 'Owner' } },
+          }),
+        ).rejects.toMatchObject({
+          status: 403,
+          response: { code: 'OWNER_SSO_MAPPING_FORBIDDEN' },
+        });
+        expect(workspaceModel.findOneAndUpdate).not.toHaveBeenCalled();
+      });
+
+      it('403 OWNER_SSO_MAPPING_FORBIDDEN when a non-Owner sets defaultRole Owner', async () => {
+        await expect(
+          service.updateWorkspace(adminActor, { sso: { defaultRole: 'Owner' } }),
+        ).rejects.toMatchObject({ response: { code: 'OWNER_SSO_MAPPING_FORBIDDEN' } });
+      });
+
+      it('403 ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS when a mapped role exceeds the actor', async () => {
+        await expect(
+          service.updateWorkspace(narrowActor, {
+            sso: { groupRoleMap: { g: 'Admin' }, defaultRole: 'Member' },
+          }),
+        ).rejects.toMatchObject({
+          status: 403,
+          response: {
+            code: 'ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS',
+            params: { capabilities: [Capability.MANAGE_MEMBERS] },
+          },
+        });
+        expect(workspaceModel.findOneAndUpdate).not.toHaveBeenCalled();
+      });
+
+      it('a mapping inside the actor capabilities (or to an unknown role) is saved', async () => {
+        await expect(
+          service.updateWorkspace(narrowActor, {
+            sso: { groupRoleMap: { g: 'Member', h: 'Ghost' }, defaultRole: 'Member' },
+          }),
+        ).resolves.toBeDefined();
+        expect(workspaceModel.findOneAndUpdate).toHaveBeenCalled();
+      });
+
+      it('the Owner may map groups to the Owner role', async () => {
+        await expect(
+          service.updateWorkspace(OWNER_ACTOR, {
+            sso: { groupRoleMap: { 'pon-owners': 'Owner' }, defaultRole: 'Owner' },
+          }),
+        ).resolves.toBeDefined();
+        expect(roleModel.find).not.toHaveBeenCalled();
+      });
+    });
+
     it('allows allowedConnectors=[] (allow none) without subset check', async () => {
       workspaceModel.findOneAndUpdate.mockReturnValue(execable({ name: 'Acme' }));
       await expect(
-        service.updateWorkspace('actor1', { aiSettings: { allowedConnectors: [] } }),
+        service.updateWorkspace(OWNER_ACTOR, { aiSettings: { allowedConnectors: [] } }),
       ).resolves.toBeDefined();
       // No connectorAllowList lookup needed for the empty (allow-none) case.
       expect(workspaceModel.findOne).not.toHaveBeenCalled();

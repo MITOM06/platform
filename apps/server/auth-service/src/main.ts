@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/node';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { JsonLogger } from './logger';
@@ -7,6 +8,7 @@ import { setupSwagger } from './swagger';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import { applyTrustProxy } from './common/client-ip';
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN ?? '',
@@ -16,7 +18,18 @@ Sentry.init({
 });
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { logger: new JsonLogger() });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger: new JsonLogger(),
+  });
+
+  // Behind a reverse proxy req.ip is the proxy for every user, which collapsed all
+  // rate limiting into one shared bucket. TRUST_PROXY (hop count or an Express
+  // preset) makes req.ip the real client; unset keeps Express' default (false).
+  // See common/client-ip.ts and docs/environments.md.
+  const trustProxy = applyTrustProxy(app);
+  if (trustProxy !== undefined) {
+    new JsonLogger('Bootstrap').log(`trust proxy = ${String(trustProxy)}`);
+  }
 
   app.use(
     helmet({

@@ -22,6 +22,7 @@ import {
   RequirePermissionGuard,
 } from '../auth/guards/require-permission.guard';
 import { AdminService } from './admin.service';
+import { RolesService } from './roles.service';
 import {
   CreateDepartmentDto,
   UpdateDepartmentDto,
@@ -43,7 +44,10 @@ import { UpdateWorkspaceDto } from './dto/workspace.dto';
 @UseGuards(AuthGuard('jwt'), RequirePermissionGuard)
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly rolesService: RolesService,
+  ) {}
 
   // ===================== DEPARTMENTS =====================
   @Get('departments')
@@ -95,7 +99,7 @@ export class AdminController {
     @Param('id') id: string,
     @Body() dto: UpdateMemberDto,
   ) {
-    return this.adminService.updateMember(user.sub, user.role, id, dto);
+    return this.adminService.updateMember(user, id, dto);
   }
 
   @Patch('members/:id/status')
@@ -114,25 +118,30 @@ export class AdminController {
   @Get('roles')
   @RequirePermission(Capability.MANAGE_ROLES)
   listRoles() {
-    return this.adminService.listRoles();
+    return this.rolesService.listRoles();
   }
 
   @Post('roles')
   @RequirePermission(Capability.MANAGE_ROLES)
-  @ApiOperation({ summary: 'Create / clone a role' })
+  @ApiOperation({
+    summary: 'Create / clone a role (non-Owners: only capabilities they hold)',
+  })
   createRole(@CurrentUser() user: JwtUser, @Body() dto: CreateRoleDto) {
-    return this.adminService.createRole(user.sub, dto);
+    return this.rolesService.createRole(user, dto);
   }
 
   @Patch('roles/:id')
   @RequirePermission(Capability.MANAGE_ROLES)
-  @ApiOperation({ summary: 'Edit a role (Owner is immutable)' })
+  @ApiOperation({
+    summary:
+      'Edit a role (Owner immutable; presets keep their name; non-Owners: not their own role, only capabilities they hold)',
+  })
   updateRole(
     @CurrentUser() user: JwtUser,
     @Param('id') id: string,
     @Body() dto: UpdateRoleDto,
   ) {
-    return this.adminService.updateRole(user.sub, id, dto);
+    return this.rolesService.updateRole(user, id, dto);
   }
 
   // ===================== WORKSPACE =====================
@@ -149,7 +158,7 @@ export class AdminController {
     @CurrentUser() user: JwtUser,
     @Body() dto: UpdateWorkspaceDto,
   ) {
-    return this.adminService.updateWorkspace(user.sub, dto);
+    return this.adminService.updateWorkspace(user, dto);
   }
 
   // ===================== AUDIT =====================
@@ -160,9 +169,12 @@ export class AdminController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    return this.adminService.listAudit(
-      page ? parseInt(page, 10) : 0,
-      limit ? parseInt(limit, 10) : 20,
-    );
+    return this.adminService.listAudit(toInt(page, 0), toInt(limit, 20));
   }
+}
+
+/** Query-string integer with a fallback for absent / non-numeric input (NaN would reach Mongo). */
+function toInt(raw: string | undefined, fallback: number): number {
+  const n = raw === undefined ? NaN : parseInt(raw, 10);
+  return Number.isFinite(n) ? n : fallback;
 }

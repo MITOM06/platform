@@ -54,6 +54,14 @@ services:
       # main.ts refuses to boot in production without this rather than falling
       # back to a list containing http://localhost:3000.
       CORS_ORIGINS: ${WEB_ORIGIN}
+      # --- client IP (rate limiting) ---
+      # Every request reaches auth-service through Cloudflare -> cloudflared ->
+      # Caddy, so the socket peer (req.ip) is Caddy for every user and the whole
+      # company shared ONE throttle bucket (5 logins/min for everybody). Cloudflare
+      # sets CF-Connecting-IP to the real client and overwrites any value a client
+      # sends, and Caddy here is reachable only through the tunnel (plus loopback
+      # on the mini itself), so the header can be trusted. See docs/environments.md.
+      CLIENT_IP_HEADER: cf-connecting-ip
       # --- optional integrations (blank = feature off) ---
       MAIL_HOST: ${MAIL_HOST:-}
       MAIL_PORT: ${MAIL_PORT:-587}
