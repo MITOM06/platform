@@ -10,16 +10,16 @@ const lk = vi.hoisted(() => {
     handlers = new Map<string, Handler[]>()
     remoteParticipants = new Map<string, unknown>()
     localParticipant = {
-      setMicrophoneEnabled: vi.fn(async (_on: boolean) => {
+      setMicrophoneEnabled: vi.fn<(on: boolean) => Promise<unknown>>(async () => {
         const e = FakeRoom.micError
         FakeRoom.micError = null
         if (e) throw e
         return undefined
       }),
-      setCameraEnabled: vi.fn(async (_on: boolean) => undefined),
-      getTrackPublication: vi.fn((_source: string) => undefined as unknown),
+      setCameraEnabled: vi.fn<(on: boolean) => Promise<unknown>>(async () => undefined),
+      getTrackPublication: vi.fn<(source: string) => unknown>(() => undefined as unknown),
     }
-    connect = vi.fn(async (_url: string, _token: string) => {
+    connect = vi.fn<(url: string, token: string) => Promise<unknown>>(async () => {
       const e = FakeRoom.connectError
       FakeRoom.connectError = null
       if (e) throw e

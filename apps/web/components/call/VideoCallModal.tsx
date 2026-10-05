@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { PhoneOff, Mic, MicOff, Video, VideoOff } from 'lucide-react'
 import { useCallStore } from '@/lib/store/call.store'
+import { CallConnectionNotice } from './CallConnectionNotice'
 import { callManager } from '@/lib/webrtc/call-manager'
 import { cn } from '@/lib/utils'
 
@@ -69,6 +70,7 @@ export function VideoCallModal() {
           <div className="absolute top-6 left-0 right-0 text-center text-white">
             <p className="text-xl font-semibold">{peerName || t('peerFallback')}</p>
             <p className="text-sm text-white/70">{formatDuration(duration)}</p>
+            <CallConnectionNotice className="mt-1" />
           </div>
         )}
 

@@ -1402,7 +1402,9 @@
     "summaryOverview": "概要",
     "summaryKeyPoints": "要点",
     "summaryActionItems": "アクション項目",
-    "summaryUnavailable": "要約は利用できません"
+    "summaryUnavailable": "要約は利用できません",
+    "reconnecting": "再接続中…",
+    "poorConnection": "接続が不安定です"
   },
   "notFound": {
     "title": "ページが見つかりません",

@@ -1402,7 +1402,9 @@
     "summaryOverview": "Aperçu",
     "summaryKeyPoints": "Points clés",
     "summaryActionItems": "Actions à mener",
-    "summaryUnavailable": "Résumé indisponible"
+    "summaryUnavailable": "Résumé indisponible",
+    "reconnecting": "Reconnexion…",
+    "poorConnection": "Connexion faible"
   },
   "notFound": {
     "title": "Page introuvable",

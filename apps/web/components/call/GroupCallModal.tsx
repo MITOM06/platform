@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { PhoneOff, Mic, MicOff, Video, VideoOff, Sparkles, Users } from 'lucide-react'
 import { useCallStore } from '@/lib/store/call.store'
+import { CallConnectionNotice } from './CallConnectionNotice'
 import { groupCallManager } from '@/lib/webrtc/group-call-manager'
 import { useCallTranscriber } from '@/lib/hooks/use-call-transcriber'
 import { useAuthStore } from '@/lib/store/auth.store'
@@ -70,9 +71,12 @@ export function GroupCallModal() {
           <Users className="size-4 text-white/70" />
           <span className="text-sm font-medium">{t('groupParticipants', { count: joinedCount })}</span>
         </div>
-        <span className="text-sm text-white/70">
-          {active ? formatDuration(duration) : t('connecting')}
-        </span>
+        <div className="flex flex-col items-end">
+          <span className="text-sm text-white/70">
+            {active ? formatDuration(duration) : t('connecting')}
+          </span>
+          <CallConnectionNotice />
+        </div>
       </div>
 
       {/* AI notetaker banner */}

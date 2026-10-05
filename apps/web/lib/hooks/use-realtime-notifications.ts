@@ -43,6 +43,8 @@ export function useRealtimeNotifications(): void {
     if (!token || stompService.isConnected()) return
 
     stompService.connect(token).then(() => {
+      // Which media path new calls take (mesh / LiveKit) — re-read on every (re)connect.
+      void import('@/lib/webrtc/call-transport').then((m) => m.refreshCallTransport())
       // NOTE: notification-permission prompting was moved to the post-login /
       // post-register success path (see lib/notifications.ts). It must NOT be
       // requested here — that fired on every authenticated session load.
@@ -135,6 +137,22 @@ export function useRealtimeNotifications(): void {
             return
           }
 
+          // ── LiveKit (sfu) call control: a 1-on-1 ring, ring cancels, declines ─
+          if (signal.type === 'call-ring' && signal.transport === 'sfu' && signal.kind === 'direct') {
+            void import('@/lib/webrtc/call-manager').then((m) => m.callManager.handleSignal(signal))
+            return
+          }
+          if (signal.type === 'call-ring-cancel') {
+            const st = useCallStore.getState()
+            if (st.incomingGroupCall?.callId === signal.callId) st.setIncomingGroupCall(null)
+            else void import('@/lib/webrtc/call-manager').then((m) => m.callManager.handleSignal(signal))
+            return
+          }
+          if (signal.type === 'call-declined') {
+            void import('@/lib/webrtc/call-manager').then((m) => m.callManager.handleSignal(signal))
+            return
+          }
+
           // ── Group call ring → open the incoming-group-call prompt ───────────
           if (signal.type === 'call-ring') {
             // Ignore a ring while already in any call.
@@ -147,6 +165,7 @@ export function useRealtimeNotifications(): void {
               startedByName: signal.startedByName ?? '',
               media: signal.media ?? 'video',
               aiNotetaker: signal.aiNotetaker ?? false,
+              transport: signal.transport,
             })
             return
           }

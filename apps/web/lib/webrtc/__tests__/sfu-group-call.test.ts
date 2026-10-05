@@ -9,10 +9,10 @@ const m = vi.hoisted(() => {
     onLocalPoorConnection: ((p: boolean) => void) | null = null
     onDisconnected: ((r: 'failed') => void) | null = null
     streams = new Map<string, MediaStream>()
-    connect = vi.fn(async (_u: string, _t: string, _o: { video: boolean }) => {})
+    connect = vi.fn<(u: string, t: string, o: { video: boolean }) => Promise<unknown>>(async () => {})
     disconnect = vi.fn()
-    setMic = vi.fn(async (_on: boolean) => {})
-    setCamera = vi.fn(async (_on: boolean) => {})
+    setMic = vi.fn<(on: boolean) => Promise<unknown>>(async () => {})
+    setCamera = vi.fn<(on: boolean) => Promise<unknown>>(async () => {})
     localStream = () => null
     peer = (id: string) => (this.streams.has(id) ? { stream: this.streams.get(id)! } : undefined)
     constructor() {
@@ -22,7 +22,7 @@ const m = vi.hoisted(() => {
   return {
     FakeSession,
     publish: vi.fn(),
-    getToken: vi.fn(async (_c: string) => ({ url: 'wss://rtc', token: 'tok' })),
+    getToken: vi.fn<(c: string) => Promise<unknown>>(async () => ({ url: 'wss://rtc', token: 'tok' })),
     transport: { value: 'sfu' as 'mesh' | 'sfu' },
   }
 })

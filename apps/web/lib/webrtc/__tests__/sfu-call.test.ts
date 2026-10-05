@@ -11,14 +11,14 @@ const m = vi.hoisted(() => {
     onLocalPoorConnection: ((poor: boolean) => void) | null = null
     onDisconnected: ((r: 'failed') => void) | null = null
     peersById = new Map<string, { identity: string; stream: { getTracks: () => unknown[] } }>()
-    connect = vi.fn(async (_url: string, _token: string, _opts: { video: boolean }) => {
+    connect = vi.fn<(url: string, token: string, opts: { video: boolean }) => Promise<unknown>>(async () => {
       const e = FakeSession.connectError
       FakeSession.connectError = null
       if (e) throw e
     })
     disconnect = vi.fn()
-    setMic = vi.fn(async (_on: boolean) => {})
-    setCamera = vi.fn(async (_on: boolean) => {})
+    setMic = vi.fn<(on: boolean) => Promise<unknown>>(async () => {})
+    setCamera = vi.fn<(on: boolean) => Promise<unknown>>(async () => {})
     localStream = () => null
     peer = (id: string) => this.peersById.get(id)
     constructor() {
@@ -35,7 +35,7 @@ const m = vi.hoisted(() => {
     MediaAccessError,
     publish: vi.fn(),
     sendMessage: vi.fn(() => Promise.resolve()),
-    getToken: vi.fn(async (_callId: string) => ({ url: 'wss://rtc', token: 'tok' })),
+    getToken: vi.fn<(callId: string) => Promise<unknown>>(async () => ({ url: 'wss://rtc', token: 'tok' })),
   }
 })
 vi.mock('@/lib/stomp/client', () => ({ stompService: { publish: m.publish } }))

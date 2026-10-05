@@ -21,6 +21,7 @@ function VideoTile({
   muted,
   mirror,
   label,
+  speaking,
 }: {
   stream: MediaStream | null
   name: string
@@ -28,6 +29,8 @@ function VideoTile({
   muted: boolean
   mirror?: boolean
   label?: string
+  /** Active speaker (LiveKit calls): highlighted with the accent ring. */
+  speaking?: boolean
 }) {
   const ref = useRef<HTMLVideoElement>(null)
   useEffect(() => {
@@ -37,7 +40,12 @@ function VideoTile({
   const hasVideoTrack = video && !!stream?.getVideoTracks().some((t) => t.enabled)
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-white/10 bg-neutral-900">
+    <div
+      className={cn(
+        'relative aspect-video w-full overflow-hidden rounded-lg border border-white/10 bg-neutral-900',
+        speaking && 'ring-2 ring-primary',
+      )}
+    >
       <video
         ref={ref}
         autoPlay
@@ -73,6 +81,7 @@ export function ParticipantTileGrid({ youLabel }: { youLabel: string }) {
   const cameraEnabled = useCallStore((s) => s.cameraEnabled)
   // streamsVersion is read so the component re-renders when peers/streams change.
   const streamsVersion = useCallStore((s) => s.streamsVersion)
+  const speakingIds = useCallStore((s) => s.speakingIds)
 
   const localStream = groupCallManager.getLocalStream()
   const isVideo = media === 'video'
@@ -92,8 +101,9 @@ export function ParticipantTileGrid({ youLabel }: { youLabel: string }) {
         peerId: p.userId,
         name: resolveName(p.userId) ?? t('peerFallback'),
         stream: groupCallManager.getRemoteStream(p.userId),
+        speaking: speakingIds.includes(p.userId),
       }))
-  }, [roster, currentUser?.id, streamsVersion, resolveName, t])
+  }, [roster, currentUser?.id, streamsVersion, speakingIds, resolveName, t])
 
   const tileCount = remotes.length + 1
   const cols = tileCount <= 1 ? 1 : tileCount <= 4 ? 2 : 3
@@ -114,7 +124,14 @@ export function ParticipantTileGrid({ youLabel }: { youLabel: string }) {
         />
       </div>
       {remotes.map((r) => (
-        <VideoTile key={r.peerId} stream={r.stream} name={r.name} video={isVideo} muted={false} />
+        <VideoTile
+          key={r.peerId}
+          stream={r.stream}
+          name={r.name}
+          video={isVideo}
+          muted={false}
+          speaking={r.speaking}
+        />
       ))}
     </div>
   )

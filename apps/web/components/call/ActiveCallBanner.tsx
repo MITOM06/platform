@@ -5,12 +5,14 @@ import { Phone, Video } from 'lucide-react'
 import { useCallStore } from '@/lib/store/call.store'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { Button } from '@/components/ui/button'
-import type { CallMedia } from '@/lib/api/types'
+import type { CallMedia, CallTransport } from '@/lib/api/types'
 
 interface Props {
   callId: string
   conversationId: string
   media: CallMedia
+  /** Media path of the running call (absent = mesh). */
+  transport?: CallTransport
   aiNotetaker: boolean
   joinedCount: number
 }
@@ -20,7 +22,14 @@ interface Props {
  * (Track A §4: "Group call · N joined · Join"). Clicking Join joins the mesh.
  * Hidden once the local user is already in this call.
  */
-export function ActiveCallBanner({ callId, conversationId, media, aiNotetaker, joinedCount }: Props) {
+export function ActiveCallBanner({
+  callId,
+  conversationId,
+  media,
+  transport,
+  aiNotetaker,
+  joinedCount,
+}: Props) {
   const t = useTranslations('call')
   const groupCallId = useCallStore((s) => s.groupCallId)
   const currentUser = useAuthStore((s) => s.user)
@@ -32,7 +41,7 @@ export function ActiveCallBanner({ callId, conversationId, media, aiNotetaker, j
     const userId = currentUser?.id
     if (!userId) return
     void import('@/lib/webrtc/group-call-manager').then((m) =>
-      m.groupCallManager.join(callId, conversationId, userId, media, aiNotetaker),
+      m.groupCallManager.join(callId, conversationId, userId, media, aiNotetaker, transport),
     )
   }
 

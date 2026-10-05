@@ -1402,7 +1402,9 @@
     "summaryOverview": "概览",
     "summaryKeyPoints": "要点",
     "summaryActionItems": "行动项",
-    "summaryUnavailable": "摘要不可用"
+    "summaryUnavailable": "摘要不可用",
+    "reconnecting": "正在重新连接…",
+    "poorConnection": "网络连接不佳"
   },
   "notFound": {
     "title": "页面不存在",

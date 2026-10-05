@@ -1402,7 +1402,9 @@
     "summaryOverview": "Overview",
     "summaryKeyPoints": "Key points",
     "summaryActionItems": "Action items",
-    "summaryUnavailable": "Summary unavailable"
+    "summaryUnavailable": "Summary unavailable",
+    "reconnecting": "Reconnecting…",
+    "poorConnection": "Poor connection"
   },
   "notFound": {
     "title": "Page not found",

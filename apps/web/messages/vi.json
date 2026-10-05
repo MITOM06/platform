@@ -1402,7 +1402,9 @@
     "summaryOverview": "Tổng quan",
     "summaryKeyPoints": "Điểm chính",
     "summaryActionItems": "Việc cần làm",
-    "summaryUnavailable": "Không có bản tóm tắt"
+    "summaryUnavailable": "Không có bản tóm tắt",
+    "reconnecting": "Đang kết nối lại…",
+    "poorConnection": "Kết nối yếu"
   },
   "notFound": {
     "title": "Trang không tồn tại",

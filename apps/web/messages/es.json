@@ -1402,7 +1402,9 @@
     "summaryOverview": "Resumen",
     "summaryKeyPoints": "Puntos clave",
     "summaryActionItems": "Tareas",
-    "summaryUnavailable": "Resumen no disponible"
+    "summaryUnavailable": "Resumen no disponible",
+    "reconnecting": "Reconectando…",
+    "poorConnection": "Conexión débil"
   },
   "notFound": {
     "title": "Página no encontrada",

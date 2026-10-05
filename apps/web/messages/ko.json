@@ -1402,7 +1402,9 @@
     "summaryOverview": "개요",
     "summaryKeyPoints": "핵심 사항",
     "summaryActionItems": "실행 항목",
-    "summaryUnavailable": "요약을 사용할 수 없습니다"
+    "summaryUnavailable": "요약을 사용할 수 없습니다",
+    "reconnecting": "다시 연결하는 중…",
+    "poorConnection": "연결 상태가 좋지 않음"
   },
   "notFound": {
     "title": "페이지를 찾을 수 없습니다",

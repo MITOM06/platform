@@ -34,11 +34,13 @@ export function IncomingGroupCall() {
         userId,
         incoming.media,
         incoming.aiNotetaker,
+        incoming.transport,
       ),
     )
   }
 
-  const decline = () => useCallStore.getState().setIncomingGroupCall(null)
+  const decline = () =>
+    void import('@/lib/webrtc/group-call-manager').then((m) => m.groupCallManager.declineRing(incoming))
 
   return (
     <div className="fixed bottom-6 right-6 z-[110] w-[min(90vw,320px)] sm:w-80 rounded-2xl border bg-background p-5">
