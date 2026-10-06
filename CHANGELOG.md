@@ -8,7 +8,7 @@ NestJS services share the product version (`apps/client/pubspec.yaml`, `apps/*/p
 First versioned release. Batches four feature branches that were tested together on `dev`:
 `fix/qc-sweep-2026-10-05`, `feat/new-login-2fa`, `feat/calls-livekit` (includes
 `fix/call-stuck-ringing` and `fix/call-1on1-reliability`) and
-`fix/ai-tools-user-lookup-rag-threshold`.
+`fix/ai-tools-user-lookup-rag-threshold`, plus `chore/google-only-oauth`.
 
 ### Security & sign-in
 
@@ -27,6 +27,8 @@ First versioned release. Batches four feature branches that were tested together
 - Emails are trimmed + lower-cased for login, OTP and lockout counters.
 - Forgot-password: verify-OTP no longer burns the code before the reset.
 - Google / OIDC sign-in into an existing account requires an IdP-verified email.
+- **Social login is Google only:** the last X/Twitter and Facebook leftovers are gone (deploy secrets,
+  Mac mini env variables, the X redirect URI in `scripts/mini/up.sh`, README routes).
 - Rate limiting keys on the real client IP behind Cloudflare / the reverse proxy.
 - Roles: non-Owners cannot grant capabilities they don't hold, edit their own role or map SSO groups
   to Owner; preset roles keep their names; duplicate role names answer `ROLE_NAME_TAKEN` (was a 500).
@@ -79,6 +81,9 @@ First versioned release. Batches four feature branches that were tested together
 - Existing privileged users are asked to enroll in 2FA at their next sign-in; existing sessions stay
   valid. Older mobile builds cannot complete the 2FA step — ship the 1.1.0 app before or with the
   backend.
+- `FACEBOOK_APP_*`, `X_CLIENT_*` and `X_CALLBACK_URL` are no longer read — remove them from the
+  mini `.env` and the GitHub secrets, and drop the `/auth/x/callback` redirect URI from the OAuth
+  consoles.
 - LiveKit stays off unless `LIVEKIT_URL` / `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` are set and
   `CALL_TRANSPORT=sfu`.
 
