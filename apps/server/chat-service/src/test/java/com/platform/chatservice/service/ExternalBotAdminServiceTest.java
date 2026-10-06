@@ -38,9 +38,9 @@ class ExternalBotAdminServiceTest {
 
   @Test
   void findAssistantFor_returnsMapped() {
-    when(repo.findByOwnerUserIdAndEnabledTrue("user-1"))
+    when(repo.findByOwnerUserIdAndEnabledTrueOrderByCreatedAtDesc("user-1"))
         .thenReturn(
-            Optional.of(
+            List.of(
                 ExternalBot.builder()
                     .id("eb-1")
                     .botUserId("extbot:bf-1")
@@ -101,5 +101,29 @@ class ExternalBotAdminServiceTest {
     ExternalBotAdminService service = new ExternalBotAdminService(repo);
 
     assertThat(service.listAll()).isEmpty();
+  }
+
+  /** A duplicate mapping used to make every call throw IncorrectResultSizeDataAccessException. */
+  @Test
+  void findAssistantFor_withDuplicates_picksTheNewest() {
+    when(repo.findByOwnerUserIdAndEnabledTrueOrderByCreatedAtDesc("user-1"))
+        .thenReturn(
+            List.of(
+                ExternalBot.builder()
+                    .botUserId("extbot:new")
+                    .ownerUserId("user-1")
+                    .enabled(true)
+                    .build(),
+                ExternalBot.builder()
+                    .botUserId("extbot:old")
+                    .ownerUserId("user-1")
+                    .enabled(true)
+                    .build()));
+
+    Optional<ExternalBotResponse> res =
+        new ExternalBotAdminService(repo).findAssistantFor("user-1");
+
+    assertThat(res).isPresent();
+    assertThat(res.get().botUserId()).isEqualTo("extbot:new");
   }
 }

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/api/dio_client.dart';
+import '../../auth/domain/auth_provider.dart';
 import 'notification_model.dart';
 
 /// Talks to the auth-service notification endpoints (`/api/notifications`).
@@ -30,5 +31,10 @@ class NotificationRepository {
 
 final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
   const storage = FlutterSecureStorage();
-  return NotificationRepository(DioClient.createAuthDio(storage));
+  return NotificationRepository(DioClient.createAuthDio(
+    storage,
+    // A dead session (refresh rejected / account blocked) must sign out here
+    // too, exactly like the chat and auth repositories.
+    onForceLogout: () => ref.read(authNotifierProvider.notifier).forceLogout(),
+  ));
 });

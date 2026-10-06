@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../auth/utils/auth_error.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/utils/app_error.dart';
@@ -100,7 +101,7 @@ class _FriendSearchTabState extends ConsumerState<FriendSearchTab> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(friendlyError(e))),
+        SnackBar(content: Text(authErrorMessage(context, e))),
       );
     }
   }

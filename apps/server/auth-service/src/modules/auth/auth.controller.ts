@@ -234,13 +234,16 @@ export class AuthController {
   }
 
   // ✅ Logout — yêu cầu JWT token trong header
+  // Revokes the session of the access token itself. A `sid` in the body (sent
+  // by older clients) is ignored: trusting it let any user revoke anyone's
+  // session.
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Revoke the current session' })
-  async logout(@Req() req: any, @Body() body: { sid: string }) {
-    return this.auth.logout(req.user.sub, body.sid);
+  async logout(@Req() req: any) {
+    return this.auth.logout(req.user.sub, req.user.sid);
   }
 
   // ===================== FORGOT PASSWORD =====================

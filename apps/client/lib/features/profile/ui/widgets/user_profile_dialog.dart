@@ -2,10 +2,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../core/api/dio_client.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/utils/app_error.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/media_url.dart';
 import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/domain/auth_state.dart';
 import '../../../chat/data/chat_repository.dart';
@@ -228,12 +228,12 @@ class _ProfileDialogContent extends ConsumerWidget {
     }
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final u = profile!;
-    final coverUrl = u.coverPhoto != null
-        ? (u.coverPhoto!.startsWith('http') ? u.coverPhoto! : '${DioClient.chatBaseUrl}${u.coverPhoto}')
-        : null;
-    final avatarUrl = u.avatarUrl != null
-        ? (u.avatarUrl!.startsWith('http') ? u.avatarUrl! : '${DioClient.chatBaseUrl}${u.avatarUrl}')
-        : null;
+    // Public profiles send '' for "no image" — that must not become a request
+    // for the bare host (a broken image instead of the initial).
+    final cover = u.coverPhoto ?? '';
+    final avatar = u.avatarUrl ?? '';
+    final coverUrl = cover.isNotEmpty ? absoluteMediaUrl(cover) : null;
+    final avatarUrl = avatar.isNotEmpty ? absoluteMediaUrl(avatar) : null;
 
     return SingleChildScrollView(
       child: Column(

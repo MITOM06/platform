@@ -6,6 +6,10 @@ import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../../../core/widgets/pon_widgets.dart';
+import '../../chat/domain/chat_misc_providers.dart';
+import '../../chat/domain/conversations_realtime_handlers.dart'
+    show looksLikeRawId;
+import '../../chat/utils/chat_error.dart';
 import '../data/bot_admin_repository.dart';
 
 /// Admin panel to manage Bot Factory integration tokens. Mirrors the web
@@ -86,8 +90,10 @@ class _BotRowState extends ConsumerState<_BotRow> {
         barrierDismissible: false,
         builder: (_) => _TokenDialog(issued: issued),
       );
-    } catch (_) {
-      if (mounted) showErrorSnackBar(l10n.adminToastError);
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(chatErrorMessage(l10n, e));
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -103,8 +109,10 @@ class _BotRowState extends ConsumerState<_BotRow> {
       if (!mounted) return;
       ref.invalidate(botSessionsProvider(widget.bot.ownerUserId));
       showInfoSnackBar(l10n.adminToastSaved);
-    } catch (_) {
-      if (mounted) showErrorSnackBar(l10n.adminToastError);
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(chatErrorMessage(l10n, e));
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -136,21 +144,17 @@ class _BotRowState extends ConsumerState<_BotRow> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        bot.name.isEmpty ? bot.botUserId : bot.name,
+                        // The synthetic `extbot:…` id is never display text.
+                        bot.name.trim().isEmpty
+                            ? l10n.assistantDefaultName
+                            : bot.name,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        bot.botUserId,
-                        style: TextStyle(
-                          color: AppTheme.mutedText(context),
-                          fontSize: 12,
-                        ),
-                      ),
+                      _OwnerLine(ownerUserId: bot.ownerUserId),
                     ],
                   ),
                 ),
@@ -370,6 +374,32 @@ class _CopyField extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// "Owned by <name>" — the bot owner's resolved display name; nothing while it
+/// loads or when it can't be resolved (never the raw user id).
+class _OwnerLine extends ConsumerWidget {
+  final String ownerUserId;
+  const _OwnerLine({required this.ownerUserId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final name = ref
+        .watch(userProfileProvider(ownerUserId))
+        .valueOrNull
+        ?.displayName
+        .trim();
+    if (name == null || name.isEmpty || looksLikeRawId(name)) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Text(
+        context.l10n.adminBotOwnedBy(name),
+        style: TextStyle(color: AppTheme.mutedText(context), fontSize: 12),
+      ),
     );
   }
 }

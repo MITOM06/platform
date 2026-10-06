@@ -28,9 +28,8 @@ class AiSessionModel {
     final rawSummary = json['summary'] as String?;
     return AiSessionModel(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
-      name: (json['name'] as String?)?.trim().isNotEmpty == true
-          ? json['name'] as String
-          : 'New conversation',
+      // '' when unnamed — the UI shows the localized "New conversation".
+      name: (json['name'] as String?)?.trim() ?? '',
       isActive: json['isActive'] as bool? ?? false,
       totalTokens: (json['totalTokens'] as num?)?.toInt() ?? 0,
       summary: (rawSummary != null && rawSummary.trim().isNotEmpty)

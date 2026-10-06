@@ -4,10 +4,11 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { adminService } from '@/lib/api/admin'
-import { authCodeToI18nKey, parseAuthError } from '@/lib/auth/auth-error'
+import { adminErrorMessage } from '@/lib/admin/admin-errors'
+import { useAuthStore } from '@/lib/store/auth.store'
 import type {
   CreateDepartmentInput,
   CreateInvitationInput,
@@ -23,8 +24,22 @@ import type {
 /**
  * TanStack Query hooks for the admin console. Each mutation invalidates its list
  * query on success and surfaces a toast — no manual refetch loops (web.md rule).
- * Error toasts read the shared `admin.toastError` message.
+ * Error toasts map the typed auth-service code (`{code, params}`) to its localized
+ * message and only fall back to the shared `admin.toastError` when it is unknown.
  */
+
+/**
+ * Toast a typed auth-service error as its localized message — never the raw
+ * server text (no-raw-system-data rule). ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS names
+ * the capabilities the admin lacks.
+ */
+export function useAdminErrorToast() {
+  const tAuth = useTranslations('auth')
+  const tAdmin = useTranslations('admin')
+  const locale = useLocale()
+  return (err: unknown) =>
+    toast.error(adminErrorMessage(err, tAuth, tAdmin, locale, tAdmin('toastError')))
+}
 
 // ── workspace ─────────────────────────────────────────────────────────────────
 export function useWorkspace() {
@@ -37,6 +52,7 @@ export function useWorkspace() {
 export function useUpdateWorkspace() {
   const qc = useQueryClient()
   const t = useTranslations('admin')
+  const onError = useAdminErrorToast()
   return useMutation({
     mutationFn: (input: UpdateWorkspaceInput) =>
       adminService.updateWorkspace(input),
@@ -45,7 +61,7 @@ export function useUpdateWorkspace() {
       qc.invalidateQueries({ queryKey: ['me-capabilities'] })
       toast.success(t('toastSaved'))
     },
-    onError: () => toast.error(t('toastError')),
+    onError,
   })
 }
 
@@ -61,6 +77,7 @@ export function useDepartments(enabled = true) {
 export function useDepartmentActions() {
   const qc = useQueryClient()
   const t = useTranslations('admin')
+  const onError = useAdminErrorToast()
   const invalidate = () =>
     qc.invalidateQueries({ queryKey: ['admin-departments'] })
 
@@ -71,7 +88,7 @@ export function useDepartmentActions() {
       invalidate()
       toast.success(t('toastSaved'))
     },
-    onError: () => toast.error(t('toastError')),
+    onError,
   })
 
   const update = useMutation({
@@ -81,7 +98,7 @@ export function useDepartmentActions() {
       invalidate()
       toast.success(t('toastSaved'))
     },
-    onError: () => toast.error(t('toastError')),
+    onError,
   })
 
   const remove = useMutation({
@@ -90,7 +107,7 @@ export function useDepartmentActions() {
       invalidate()
       toast.success(t('toastDeleted'))
     },
-    onError: () => toast.error(t('toastError')),
+    onError,
   })
 
   return { create, update, remove }
@@ -110,35 +127,26 @@ export function useUpdateMember() {
   const t = useTranslations('admin')
   // Typed role-guard codes (CANNOT_CHANGE_OWN_ROLE, LAST_OWNER_CANNOT_BE_DEMOTED,
   // OWNER_ROLE_ASSIGN_FORBIDDEN, ROLE_NOT_FOUND…) → their own localized message.
-  const onError = useAuthErrorToast()
+  const onError = useAdminErrorToast()
+  const selfId = useAuthStore((s) => s.user?.id)
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: UpdateMemberInput }) =>
       adminService.updateMember(id, input),
-    onSuccess: () => {
+    onSuccess: (_member, { id }) => {
       qc.invalidateQueries({ queryKey: ['admin-members'] })
+      // My own departments changed: my claims did too (CLAIMS_CHANGED follows).
+      if (id === selfId) qc.invalidateQueries({ queryKey: ['me-capabilities'] })
       toast.success(t('toastSaved'))
     },
     onError,
   })
 }
 
-/**
- * Toast a typed auth-service error (`{code, params}`) as its localized `auth.*`
- * message — never the raw server text (no-raw-system-data rule).
- */
-function useAuthErrorToast() {
-  const tAuth = useTranslations('auth')
-  return (err: unknown) => {
-    const { code, params } = parseAuthError(err)
-    toast.error(tAuth(authCodeToI18nKey(code), params))
-  }
-}
-
 /** Block / unblock a member (`PATCH /admin/members/:id/status`). */
 export function useSetMemberStatus() {
   const qc = useQueryClient()
   const t = useTranslations('admin')
-  const onError = useAuthErrorToast()
+  const onError = useAdminErrorToast()
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: SettableMemberStatus }) =>
       adminService.setMemberStatus(id, status),
@@ -173,7 +181,7 @@ function useInvitationResultToast() {
 
 export function useCreateInvitation() {
   const qc = useQueryClient()
-  const onError = useAuthErrorToast()
+  const onError = useAdminErrorToast()
   const notify = useInvitationResultToast()
   return useMutation({
     mutationFn: (input: CreateInvitationInput) => adminService.createInvitation(input),
@@ -187,7 +195,7 @@ export function useCreateInvitation() {
 
 export function useResendInvitation() {
   const qc = useQueryClient()
-  const onError = useAuthErrorToast()
+  const onError = useAdminErrorToast()
   const notify = useInvitationResultToast()
   return useMutation({
     mutationFn: (id: string) => adminService.resendInvitation(id),
@@ -206,7 +214,7 @@ export function useResendInvitation() {
 export function useRevokeInvitation() {
   const qc = useQueryClient()
   const t = useTranslations('admin')
-  const onError = useAuthErrorToast()
+  const onError = useAdminErrorToast()
   return useMutation({
     mutationFn: (id: string) => adminService.revokeInvitation(id),
     onSuccess: () => {
@@ -238,6 +246,7 @@ export function useAuditLog(page: number, limit = 20) {
 export function useRoleActions() {
   const qc = useQueryClient()
   const t = useTranslations('admin')
+  const onError = useAdminErrorToast()
   const invalidate = () => qc.invalidateQueries({ queryKey: ['admin-roles'] })
 
   const create = useMutation({
@@ -246,7 +255,7 @@ export function useRoleActions() {
       invalidate()
       toast.success(t('toastSaved'))
     },
-    onError: () => toast.error(t('toastError')),
+    onError,
   })
 
   const update = useMutation({
@@ -254,9 +263,12 @@ export function useRoleActions() {
       adminService.updateRole(id, input),
     onSuccess: () => {
       invalidate()
+      // A role matrix change reaches every holder through CLAIMS_CHANGED; refetch
+      // mine right away too, in case I hold the role (the Owner editing a shared one).
+      qc.invalidateQueries({ queryKey: ['me-capabilities'] })
       toast.success(t('toastSaved'))
     },
-    onError: () => toast.error(t('toastError')),
+    onError,
   })
 
   return { create, update }

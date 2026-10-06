@@ -16,11 +16,13 @@ import {
   PRESET_ROLES,
 } from '@platform/database';
 import { InvitationsService } from '../invitations/invitations.service';
+import { OWNER_ROLE } from '../invitations/invitation.shared';
 
 /**
  * Seeds the single-deployment enterprise foundation on startup:
  *   1. the singleton Workspace config doc,
- *   2. the preset Role templates (Owner/Admin/Manager/Member),
+ *   2. the preset Role templates (Owner/Admin/Manager/Member) — Owner forced to
+ *      the full matrix, the others only gain missing capability keys,
  *   3. the first Owner (a user matching BOOTSTRAP_OWNER_EMAIL with no role yet),
  *      or — when no such user exists — an Owner invitation emailed to it.
  *
@@ -61,15 +63,48 @@ export class BootstrapService implements OnApplicationBootstrap {
     this.logger.log(`Bootstrapped singleton workspace "${name}"`);
   }
 
-  /** Idempotently seed the preset roles, matched by unique name. */
+  /**
+   * Idempotently seed the preset roles, matched by unique name.
+   *
+   * Only the Owner's matrix is forced (it must always hold every capability,
+   * including ones added in a later release). Admin / Manager / Member are
+   * admin-editable, so an existing role keeps every stored value and only gains
+   * the capability keys it does not have yet, at the preset default — the old
+   * unconditional `$set` silently reverted every edit on each boot/redeploy.
+   * The merge runs as an update pipeline, so it is atomic and still upserts a
+   * fresh preset on first boot.
+   */
   private async ensurePresetRoles(): Promise<void> {
     for (const preset of PRESET_ROLES) {
+      if (preset.name === OWNER_ROLE) {
+        await this.roleModel.updateOne(
+          { name: preset.name },
+          {
+            $set: { isPreset: true, permissions: preset.permissions },
+            $setOnInsert: { name: preset.name },
+          },
+          { upsert: true },
+        );
+        continue;
+      }
       await this.roleModel.updateOne(
         { name: preset.name },
-        {
-          $set: { isPreset: preset.isPreset, permissions: preset.permissions },
-          $setOnInsert: { name: preset.name },
-        },
+        [
+          {
+            $set: {
+              isPreset: true,
+              // Later objects win: stored values override the preset defaults.
+              permissions: {
+                $mergeObjects: [
+                  preset.permissions,
+                  { $ifNull: ['$permissions', {}] },
+                ],
+              },
+              // Mongoose only appends updatedAt to pipeline updates.
+              createdAt: { $ifNull: ['$createdAt', '$$NOW'] },
+            },
+          },
+        ],
         { upsert: true },
       );
     }
@@ -93,7 +128,7 @@ export class BootstrapService implements OnApplicationBootstrap {
     }
     if (user.roleId) return;
 
-    const ownerRole = await this.roleModel.findOne({ name: 'Owner' }).exec();
+    const ownerRole = await this.roleModel.findOne({ name: OWNER_ROLE }).exec();
     if (!ownerRole) return;
 
     await this.userModel.updateOne(

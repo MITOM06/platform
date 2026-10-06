@@ -43,7 +43,7 @@ export function AiContextEntriesPanel() {
   const [scope, setScope] = useState<Scope>('company')
   const [deptId, setDeptId] = useState<string>('')
   const scopeId = scope === 'department' ? deptId || undefined : undefined
-  const { data: entries = [], isLoading } = useContextEntries(scope, scopeId)
+  const { data: entries = [], isLoading, isError } = useContextEntries(scope, scopeId)
 
   const createEntry = useCreateEntry()
   const updateEntry = useUpdateEntry()
@@ -96,7 +96,10 @@ export function AiContextEntriesPanel() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="company">{t('scopeCompany')}</SelectItem>
-            <SelectItem value="department">{t('scopeDepartment')}</SelectItem>
+            {/* Picking a department needs the department list (MANAGE_DEPARTMENTS). */}
+            <SelectItem value="department" disabled={!canDepts}>
+              {t('scopeDepartment')}
+            </SelectItem>
           </SelectContent>
         </Select>
         {scope === 'department' && (
@@ -113,6 +116,11 @@ export function AiContextEntriesPanel() {
             </SelectContent>
           </Select>
         )}
+        {!canDepts && (
+          <p className="w-full text-xs text-muted-foreground order-last">
+            {t('aiContextDeptNeedsCap')}
+          </p>
+        )}
         <Button className="ml-auto" onClick={openCreate} disabled={scope === 'department' && !deptId}>
           <Plus className="mr-2 size-4" />
           {t('createEntry')}
@@ -121,6 +129,8 @@ export function AiContextEntriesPanel() {
 
       {isLoading ? (
         <Skeleton className="h-48 rounded-xl" />
+      ) : isError ? (
+        <p className="py-8 text-center text-sm text-destructive">{t('loadError')}</p>
       ) : entries.length === 0 ? (
         <p className="py-8 text-center text-sm text-muted-foreground">{t('aiContextEntriesEmpty')}</p>
       ) : (

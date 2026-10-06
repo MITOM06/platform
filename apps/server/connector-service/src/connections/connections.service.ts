@@ -1,23 +1,19 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { McpAuth, McpClientService } from '../mcp/mcp-client.service';
-import { TokenVaultService } from '../vault/token-vault.service';
+import { isValidObjectId, Model } from 'mongoose';
+import { Capability, JwtUser } from '@platform/database';
 import { AuditService } from '../audit/audit.service';
-import {
-  UserConnection,
-  UserConnectionDocument,
-} from './schemas/user-connection.schema';
-import {
-  CustomMcpServer,
-  CustomMcpServerDocument,
-} from './schemas/custom-mcp-server.schema';
+import { AdapterRegistryService } from '../adapters/adapter-registry.service';
+import { RevokeOutcome } from '../adapters/provider-adapter.interface';
+import { withTimeout } from '../common/with-timeout';
+import { ALL_ACTION_GROUPS } from '../catalog/catalog';
+import { UserConnection, UserConnectionDocument } from './schemas/user-connection.schema';
 import { UserSkill, UserSkillDocument } from './schemas/user-skill.schema';
-import { CreateCustomMcpDto, DiscoverCustomMcpDto } from './dto/custom-mcp.dto';
-import { ConnectionView, DiscoverResult } from './dto/connection-view.dto';
+import { ConnectionView } from './dto/connection-view.dto';
 import { ConnectionPermissionsView } from './dto/connection-permissions.dto';
 import { SkillView } from './dto/skill.dto';
-import { ALL_ACTION_GROUPS } from '../catalog/catalog';
+
+const REVOKE_TIMEOUT_MS = 6_000;
 
 @Injectable()
 export class ConnectionsService {
@@ -26,12 +22,9 @@ export class ConnectionsService {
   constructor(
     @InjectModel(UserConnection.name)
     private readonly connModel: Model<UserConnectionDocument>,
-    @InjectModel(CustomMcpServer.name)
-    private readonly customModel: Model<CustomMcpServerDocument>,
     @InjectModel(UserSkill.name)
     private readonly skillModel: Model<UserSkillDocument>,
-    private readonly vault: TokenVaultService,
-    private readonly mcp: McpClientService,
+    private readonly adapters: AdapterRegistryService,
     private readonly audit: AuditService,
   ) {}
 
@@ -40,10 +33,9 @@ export class ConnectionsService {
   async listConnections(userId: string): Promise<ConnectionView[]> {
     // The caller's own (personal) connections PLUS every workspace-scoped
     // connection (shared across all members).
-    const docs = await this.connModel
-      .find({ $or: [{ userId }, { scope: 'workspace' }] })
-      .lean();
+    const docs = await this.connModel.find({ $or: [{ userId }, { scope: 'workspace' }] }).lean();
     // Map to a secret-free view — encryptedTokens is deliberately dropped.
+    // `status` is 'active' | 'expired' (refresh token dead — reconnect) | 'revoked'.
     return docs.map((d) => ({
       id: String(d._id),
       provider: d.provider,
@@ -60,30 +52,24 @@ export class ConnectionsService {
    * Read the action groups granted on one of the caller's connections (or any
    * workspace connection). Used to render the permission toggles.
    */
-  async getConnectionPermissions(
-    userId: string,
-    id: string,
-  ): Promise<ConnectionPermissionsView> {
-    const conn = await this.connModel
-      .findOne({ _id: id, $or: [{ userId }, { scope: 'workspace' }] })
-      .lean();
+  async getConnectionPermissions(userId: string, id: string): Promise<ConnectionPermissionsView> {
+    if (!isValidObjectId(id)) throw new NotFoundException('Connection not found');
+    const conn = await this.connModel.findOne({ _id: id, $or: [{ userId }, { scope: 'workspace' }] }).lean();
     if (!conn) throw new NotFoundException('Connection not found');
     return { actionGroups: conn.actionGroups ?? [...ALL_ACTION_GROUPS] };
   }
 
   /**
    * Narrow/restore the action groups the AI may use on the caller's own
-   * connection. Only the owner can change a personal connection's permissions.
+   * connection. Only the owner can change a connection's permissions.
    */
   async updateConnectionPermissions(
     userId: string,
     id: string,
     actionGroups: string[],
   ): Promise<ConnectionPermissionsView> {
-    const res = await this.connModel.updateOne(
-      { _id: id, userId },
-      { $set: { actionGroups } },
-    );
+    if (!isValidObjectId(id)) throw new NotFoundException('Connection not found');
+    const res = await this.connModel.updateOne({ _id: id, userId }, { $set: { actionGroups } });
     if (!res.matchedCount) throw new NotFoundException('Connection not found');
     await this.audit.record({
       actorId: userId,
@@ -95,79 +81,64 @@ export class ConnectionsService {
     return { actionGroups };
   }
 
-  async deleteConnection(
-    userId: string,
-    id: string,
-  ): Promise<{ deleted: boolean }> {
-    // Scope the delete to the caller so a user can only remove their OWN
-    // (personal) connection — never another member's. Workspace-scoped
-    // connections are not deletable via this personal endpoint.
-    const res = await this.connModel.deleteOne({
-      _id: id,
-      userId,
-      scope: { $ne: 'workspace' },
-    });
-    if (!res.deletedCount) {
-      throw new NotFoundException('Connection not found');
+  /**
+   * Disconnect.
+   *  - Personal connection: only its owner (others get 404).
+   *  - Workspace connection: any holder of CONNECT_WORKSPACE_CONNECTOR (403
+   *    otherwise); audited as `connector.disconnect`.
+   * The grant is revoked at the provider first, best-effort (Google today;
+   * providers without a known revocation endpoint are skipped).
+   */
+  async deleteConnection(user: JwtUser, id: string): Promise<{ deleted: boolean }> {
+    if (!isValidObjectId(id)) throw new NotFoundException('Connection not found');
+    const conn = await this.connModel
+      .findOne({ _id: id, $or: [{ userId: user.sub }, { scope: 'workspace' }] })
+      .lean();
+    if (!conn) throw new NotFoundException('Connection not found');
+
+    const workspace = conn.scope === 'workspace';
+    if (workspace && !(user.perms ?? []).includes(Capability.CONNECT_WORKSPACE_CONNECTOR)) {
+      throw new ForbiddenException({
+        code: 'INSUFFICIENT_PERMISSION',
+        required: Capability.CONNECT_WORKSPACE_CONNECTOR,
+      });
+    }
+
+    const revoke = await this.revokeAtProvider(conn);
+    await this.connModel.deleteOne({ _id: conn._id });
+    if (workspace) {
+      await this.audit.record({
+        actorId: user.sub,
+        action: 'connector.disconnect',
+        targetType: 'connector',
+        targetId: conn.provider,
+        meta: { scope: 'workspace', connectionId: String(conn._id), ownerId: conn.userId, revoke },
+      });
     }
     return { deleted: true };
   }
 
-  // ── Custom MCP servers ──────────────────────────────────────────────────
-
-  private toAuth(authType: string, credential?: string): McpAuth {
-    if (authType === 'oauth2') return { type: 'bearer', token: credential };
-    if (authType === 'apikey') return { type: 'apikey', token: credential };
-    return { type: 'none' };
-  }
-
-  async discoverCustom(dto: DiscoverCustomMcpDto): Promise<DiscoverResult> {
-    const auth = this.toAuth(dto.authType, dto.credential);
-    const tools = await this.mcp.listTools(dto.url, auth);
-    return {
-      tools: tools.map((t) => ({ name: t.name, description: t.description })),
-    };
-  }
-
-  async saveCustom(userId: string, dto: CreateCustomMcpDto) {
-    const encryptedCredential =
-      dto.authType !== 'none' && dto.credential
-        ? this.vault.encrypt(dto.credential)
-        : undefined;
-
-    // Best-effort tool preview; failure here must not block saving the server.
-    let toolsPreview: { name: string; description: string }[] = [];
+  private async revokeAtProvider(conn: any): Promise<RevokeOutcome> {
+    const adapter = this.adapters.forProvider(conn.provider);
+    if (!adapter.revoke) return 'unsupported';
     try {
-      const tools = await this.mcp.listTools(
-        dto.url,
-        this.toAuth(dto.authType, dto.credential),
+      return await withTimeout(
+        adapter.revoke({
+          provider: conn.provider,
+          userId: conn.userId,
+          mcpUrl: conn.mcpUrl,
+          encryptedTokens: conn.encryptedTokens,
+          encryptedClientCreds: conn.encryptedClientCreds,
+          tokenEndpoint: conn.tokenEndpoint,
+          _id: conn._id,
+        }),
+        REVOKE_TIMEOUT_MS,
+        'revoke',
       );
-      toolsPreview = tools.map((t) => ({
-        name: t.name,
-        description: t.description,
-      }));
     } catch (err) {
-      this.logger.warn(
-        `Tool preview failed for custom MCP ${dto.url}: ${(err as Error).message}`,
-      );
+      this.logger.warn(`Revocation for ${conn.provider} failed: ${(err as Error).message}`);
+      return 'failed';
     }
-
-    const created = await this.customModel.create({
-      userId,
-      name: dto.name,
-      url: dto.url,
-      authType: dto.authType,
-      encryptedCredential,
-      toolsPreview,
-    });
-    await this.audit.record({
-      actorId: userId,
-      action: 'custom_mcp.add',
-      targetType: 'connector',
-      targetId: String(created._id),
-      meta: { name: dto.name, url: dto.url },
-    });
-    return created;
   }
 
   // ── Skills (thin upsert; wired by web C3 / Flutter D3) ───────────────────
@@ -178,11 +149,7 @@ export class ConnectionsService {
   }
 
   async setSkill(userId: string, skillId: string, enabled: boolean): Promise<SkillView> {
-    await this.skillModel.updateOne(
-      { userId, skillId },
-      { $set: { enabled } },
-      { upsert: true },
-    );
+    await this.skillModel.updateOne({ userId, skillId }, { $set: { enabled } }, { upsert: true });
     return { skillId, enabled };
   }
 }

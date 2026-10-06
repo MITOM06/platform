@@ -1,10 +1,16 @@
 package com.platform.chatservice.service;
 
+import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiFutureCallback;
+import com.google.api.core.ApiFutures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.AndroidConfig;
 import com.google.firebase.messaging.AndroidNotification;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
+import com.google.firebase.messaging.MessagingErrorCode;
 import com.google.firebase.messaging.Notification;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +20,7 @@ import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -98,7 +105,7 @@ public class FcmService {
                   .putData("type", "chat_message")
                   .build();
 
-          FirebaseMessaging.getInstance().sendAsync(message);
+          dispatch(message, token);
         } catch (Exception e) {
           // Skip this recipient token only; never abort the whole loop.
           log.warn("Failed to send FCM to token (skipping): {}", e.getMessage());
@@ -154,7 +161,7 @@ public class FcmService {
                   .putData("conversationId", conversationId == null ? "" : conversationId)
                   .putData("type", "reminder")
                   .build();
-          FirebaseMessaging.getInstance().sendAsync(message);
+          dispatch(message, token);
         } catch (Exception e) {
           log.warn("Failed to send reminder push to token (skipping): {}", e.getMessage());
         }
@@ -163,6 +170,60 @@ public class FcmService {
     } catch (Exception e) {
       log.error("Reminder push skipped due to error", e);
       return false;
+    }
+  }
+
+  /** Send one push and clean up the token when FCM says the device is gone. */
+  private void dispatch(Message message, String token) {
+    ApiFuture<String> future = FirebaseMessaging.getInstance().sendAsync(message);
+    ApiFutures.addCallback(
+        future,
+        new ApiFutureCallback<>() {
+          @Override
+          public void onFailure(Throwable t) {
+            handleSendFailure(token, t);
+          }
+
+          @Override
+          public void onSuccess(String messageId) {
+            // nothing to do
+          }
+        },
+        MoreExecutors.directExecutor());
+  }
+
+  /**
+   * A token FCM reports as UNREGISTERED (app uninstalled, or the client deleted it on logout) or
+   * SENDER_ID_MISMATCH (belongs to another Firebase project) will never deliver again. Keeping it
+   * means pushing every future message preview at a dead — or reassigned — device, so drop it from
+   * whichever account still lists it. Other errors (quota, unavailable, an invalid message) are
+   * transient or about the message, not the token, and leave it alone.
+   */
+  void handleSendFailure(String token, Throwable t) {
+    Throwable cause = t;
+    while (cause != null && !(cause instanceof FirebaseMessagingException)) {
+      cause = cause.getCause();
+    }
+    if (!(cause instanceof FirebaseMessagingException fme)) {
+      log.warn("FCM send failed: {}", t.getMessage());
+      return;
+    }
+    MessagingErrorCode code = fme.getMessagingErrorCode();
+    if (code != MessagingErrorCode.UNREGISTERED && code != MessagingErrorCode.SENDER_ID_MISMATCH) {
+      log.warn("FCM send failed ({}): {}", code, fme.getMessage());
+      return;
+    }
+    try {
+      long removed =
+          mongoTemplate
+              .updateMulti(
+                  new Query(Criteria.where("fcmTokens").is(token)),
+                  new Update().pull("fcmTokens", token),
+                  "users")
+              .getModifiedCount();
+      log.info("Removed a dead FCM token ({}) from {} account(s)", code, removed);
+    } catch (Exception e) {
+      log.warn("Could not remove dead FCM token: {}", e.getMessage());
     }
   }
 }

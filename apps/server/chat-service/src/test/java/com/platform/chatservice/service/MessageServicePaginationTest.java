@@ -78,7 +78,12 @@ class MessageServicePaginationTest {
 
     messageQueryService =
         new MessageQueryService(
-            messageRepository, conversationRepository, mongoTemplate, helper, messageMapper);
+            messageRepository,
+            conversationRepository,
+            mongoTemplate,
+            helper,
+            messageMapper,
+            mock(SenderNameResolver.class));
 
     // Insert the primary test conversation with USER_ID as participant
     conversationRepository.save(

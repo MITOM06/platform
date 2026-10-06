@@ -127,14 +127,9 @@ void main() {
     test('prepends a brand-new message when nothing matches', () {
       final msgs = [_m('a')];
       final incoming = _m('new', senderId: 'user-9');
-      final res = ChatStompReducers.reconcileNewMessage(
-        msgs,
-        incoming,
-        finalizedAiPlaceholderId: null,
-      );
-      expect(res.consumedAiPlaceholder, isFalse);
-      expect(res.messages.first.id, 'new');
-      expect(res.messages, hasLength(2));
+      final res = ChatStompReducers.reconcileNewMessage(msgs, incoming);
+      expect(res.first.id, 'new');
+      expect(res, hasLength(2));
     });
 
     test('replaces the optimistic pending message with the persisted one', () {
@@ -143,50 +138,88 @@ void main() {
       final msgs = [pending, _m('older')];
       final persisted = _m('real-id', content: 'hi there', senderId: 'me');
 
-      final res = ChatStompReducers.reconcileNewMessage(
-        msgs,
-        persisted,
-        finalizedAiPlaceholderId: null,
-      );
+      final res = ChatStompReducers.reconcileNewMessage(msgs, persisted);
 
-      expect(res.consumedAiPlaceholder, isFalse);
-      expect(res.messages.map((m) => m.id), contains('real-id'));
-      expect(res.messages.map((m) => m.id), isNot(contains('pending_123')));
-      expect(res.messages, hasLength(2)); // swapped, not appended
+      expect(res.map((m) => m.id), contains('real-id'));
+      expect(res.map((m) => m.id), isNot(contains('pending_123')));
+      expect(res, hasLength(2)); // swapped, not appended
     });
 
-    test('swaps the exact tracked AI placeholder by id', () {
-      final placeholder = _m('ai-pending-xyz',
-          type: 'ai', senderId: kAiBotUserId, isStreaming: true);
-      final msgs = [placeholder, _m('older')];
-      final persistedAi = _m('ai-real', type: 'ai', senderId: kAiBotUserId);
-
+    test('never shows the same server message twice (dedupe by id)', () {
+      // e.g. the REST send response landed first, then the STOMP echo; or a
+      // catch-up page raced the live frame.
+      final msgs = [_m('m1', content: 'v1'), _m('older')];
       final res = ChatStompReducers.reconcileNewMessage(
-        msgs,
-        persistedAi,
-        finalizedAiPlaceholderId: 'ai-pending-xyz',
-      );
-
-      expect(res.consumedAiPlaceholder, isTrue);
-      expect(res.messages.map((m) => m.id), contains('ai-real'));
-      expect(res.messages.map((m) => m.id), isNot(contains('ai-pending-xyz')));
-      expect(res.messages, hasLength(2));
+          msgs, _m('m1', content: 'v1'));
+      expect(res.where((m) => m.id == 'm1'), hasLength(1));
+      expect(res, hasLength(2));
     });
 
-    test('falls back to heuristic AI placeholder when no id is tracked', () {
-      final placeholder = _m('ai-pending-abc',
-          type: 'ai', senderId: kAiBotUserId, isStreaming: false);
-      final msgs = [placeholder];
-      final persistedAi = _m('ai-real', type: 'ai', senderId: kAiBotUserId);
-
+    test('does not swap a pending message of another type', () {
+      final pending = _m('pending_1',
+          content: '👍', senderId: 'me', isPending: true, type: 'sticker');
       final res = ChatStompReducers.reconcileNewMessage(
-        msgs,
-        persistedAi,
-        finalizedAiPlaceholderId: null,
-      );
+          [pending], _m('real', content: '👍', senderId: 'me'));
+      expect(res, hasLength(2));
+    });
+  });
 
-      expect(res.consumedAiPlaceholder, isTrue);
-      expect(res.messages.single.id, 'ai-real');
+  group('catch-up helpers', () {
+    test('newestConfirmed skips optimistic sends and AI placeholders', () {
+      final msgs = [
+        _m('ai-pending-1', type: 'ai', senderId: kAiBotUserId, isStreaming: true),
+        _m('pending_9', isPending: true),
+        _m('real-2'),
+        _m('real-1'),
+      ];
+      expect(ChatStompReducers.newestConfirmed(msgs)?.id, 'real-2');
+    });
+
+    test('mergeCatchup adds oldest-first pages newest-first, skipping dupes', () {
+      final msgs = [_m('b'), _m('a')];
+      final out = ChatStompReducers.mergeCatchup(msgs, [_m('b'), _m('c'), _m('d')]);
+      expect(out.map((m) => m.id), ['d', 'c', 'b', 'a']);
+    });
+  });
+
+  group('quotes follow recall / edit', () {
+    MessageModel reply(String quotedId, String quoted) => MessageModel(
+          id: 'r',
+          conversationId: 'c-1',
+          senderId: 'u2',
+          content: 'answer',
+          type: 'text',
+          readBy: const [],
+          createdAt: DateTime(2024, 1, 2),
+          replyToId: quotedId,
+          replyPreview:
+              ReplyPreview(messageId: quotedId, senderId: 'u1', content: quoted),
+        );
+
+    test('a recall blanks every quote of the recalled message', () {
+      final out = ChatStompReducers.applyRecall(
+        [reply('m1', 'secret'), _m('m1', content: 'secret')],
+        const RecallEvent(conversationId: 'c-1', messageId: 'm1'),
+      );
+      final quote = out.first.replyPreview!;
+      expect(quote.recalled, isTrue);
+      expect(quote.content, isEmpty);
+      expect(out.last.recalled, isTrue);
+    });
+
+    test('MESSAGE_UPDATED without editedAt (AI action status) is not an edit',
+        () {
+      final out = ChatStompReducers.applyEdit(
+        [_m('m1', content: 'answer')],
+        const MessageUpdateEvent(
+          conversationId: 'c-1',
+          messageId: 'm1',
+          content: 'answer',
+          pendingActions: [],
+        ),
+      );
+      expect(out.single.isEdited, isFalse);
+      expect(out.single.content, 'answer');
     });
   });
 

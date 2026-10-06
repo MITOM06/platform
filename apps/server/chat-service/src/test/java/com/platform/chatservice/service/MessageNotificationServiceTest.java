@@ -85,7 +85,10 @@ class MessageNotificationServiceTest {
                 payload ->
                     "NEW_MESSAGE".equals(((Map<String, String>) payload).get("type"))
                         && "Alice".equals(((Map<String, String>) payload).get("senderName"))
-                        && "Hello".equals(((Map<String, String>) payload).get("content"))));
+                        && "Hello".equals(((Map<String, String>) payload).get("content"))
+                        // The list row can be updated in place from the event alone.
+                        && "msg-1".equals(((Map<String, String>) payload).get("messageId"))
+                        && !((Map<String, String>) payload).get("createdAt").isEmpty()));
     verify(fcmService, timeout(1000))
         .sendPushNotification(eq(RECIPIENT), eq("Alice"), eq("Hello"), eq(CONV));
     // The sender must never be self-notified.

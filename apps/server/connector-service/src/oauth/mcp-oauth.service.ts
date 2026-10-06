@@ -1,5 +1,8 @@
 import { createHash, randomBytes } from 'crypto';
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { redactUrl } from '../common/redact';
+import { assertSafeUrl, checkUrlSyntax, safeFetch } from '../security/url-guard';
+import { OAuthFlowError, parseOAuthErrorCode, TokenEndpointError } from './oauth-errors';
 
 /** OAuth Authorization Server metadata fields we rely on (RFC 8414). */
 export interface AsMetadata {
@@ -29,13 +32,20 @@ export interface McpTokenResponse {
   [k: string]: unknown;
 }
 
+const FETCH_TIMEOUT_MS = 10_000;
+
 /**
  * MCP-native OAuth protocol mechanics: metadata discovery
  * (`.well-known/oauth-protected-resource` → `oauth-authorization-server`),
  * Dynamic Client Registration (RFC 7591), PKCE (RFC 7636), and the
- * authorize-URL / token-exchange builders. Stateless and side-effect free
- * apart from outbound `fetch`; orchestration + persistence live in
- * OAuthService. Kept separate so oauth.service.ts stays under the size limit.
+ * authorize-URL / token-exchange builders. Stateless apart from outbound
+ * requests; orchestration + persistence live in DirectoryConnectService.
+ *
+ * Every outbound request goes through the SSRF guard, and endpoints learned
+ * from remote metadata are re-validated before use — a hostile server cannot
+ * point the issuer, registration or token endpoint at an internal host.
+ * Failures surface as coded {@link OAuthFlowError}s; upstream bodies are only
+ * logged (truncated), never echoed to the caller.
  */
 @Injectable()
 export class McpOAuthService {
@@ -43,19 +53,11 @@ export class McpOAuthService {
 
   // ── Discovery ──────────────────────────────────────────────────────────────
 
-  /**
-   * Resolve the authorization-server metadata for a remote MCP server. Tries
-   * the protected-resource document first (RFC 9728) to find the auth server,
-   * then the AS metadata (RFC 8414); falls back to treating the MCP origin as
-   * the auth server when the protected-resource doc is absent.
-   */
   async discoverMetadata(mcpUrl: string): Promise<AsMetadata> {
-    const origin = new URL(mcpUrl).origin;
+    const origin = (await assertSafeUrl(mcpUrl)).origin;
 
     let issuer = origin;
-    const prm = await this.fetchJson(
-      `${origin}/.well-known/oauth-protected-resource`,
-    ).catch(() => null);
+    const prm = await this.fetchJson(`${origin}/.well-known/oauth-protected-resource`).catch(() => null);
     const servers = prm?.authorization_servers;
     if (Array.isArray(servers) && servers.length && typeof servers[0] === 'string') {
       issuer = servers[0].replace(/\/$/, '');
@@ -69,36 +71,51 @@ export class McpOAuthService {
         : null);
 
     if (!meta) {
-      throw new BadRequestException(
-        `No OAuth authorization-server metadata for ${mcpUrl}`,
+      this.logger.warn(`No OAuth AS metadata for ${redactUrl(mcpUrl)}`);
+      throw new OAuthFlowError('OAUTH_DISCOVERY_FAILED');
+    }
+    // Endpoints from a remote document: the browser is sent to the authorize
+    // endpoint (https only); we POST to the token/registration endpoints.
+    try {
+      checkUrlSyntax(meta.authorizationEndpoint);
+      await assertSafeUrl(meta.tokenEndpoint);
+      if (meta.registrationEndpoint) await assertSafeUrl(meta.registrationEndpoint);
+    } catch (err) {
+      this.logger.warn(
+        `Rejected OAuth metadata endpoints for ${redactUrl(mcpUrl)}: ${(err as { reason?: string }).reason ?? (err as Error).message}`,
       );
+      throw new OAuthFlowError('OAUTH_DISCOVERY_FAILED', { reason: 'unsafe endpoint' });
     }
     return meta;
   }
 
   private async fetchAsMetadata(url: string): Promise<AsMetadata | null> {
     const j = await this.fetchJson(url).catch(() => null);
-    if (!j || !j.authorization_endpoint || !j.token_endpoint) return null;
+    if (!j || typeof j.authorization_endpoint !== 'string' || typeof j.token_endpoint !== 'string') {
+      return null;
+    }
     return {
       authorizationEndpoint: j.authorization_endpoint,
       tokenEndpoint: j.token_endpoint,
-      registrationEndpoint: j.registration_endpoint,
-      scopesSupported: j.scopes_supported,
+      registrationEndpoint: typeof j.registration_endpoint === 'string' ? j.registration_endpoint : undefined,
+      scopesSupported: Array.isArray(j.scopes_supported) ? j.scopes_supported : undefined,
     };
   }
 
   private async fetchJson(url: string): Promise<any> {
-    const res = await fetch(url, { headers: { Accept: 'application/json' } });
-    if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
+    const res = await safeFetch(url, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    if (!res.ok) throw new Error(`metadata fetch -> ${res.status}`);
     return res.json();
   }
 
   // ── Dynamic Client Registration (RFC 7591) ──────────────────────────────────
 
   /**
-   * Register a public OAuth client (PKCE, no secret) at the AS registration
-   * endpoint. Returns the issued client_id (+ optional secret if the server
-   * insists on a confidential client).
+   * Register a public OAuth client (PKCE, no secret). Returns the issued
+   * client_id (+ a secret if the server insists on a confidential client).
    */
   async registerClient(
     registrationEndpoint: string,
@@ -114,22 +131,27 @@ export class McpOAuthService {
     };
     if (scopes.length) body.scope = scopes.join(' ');
 
-    const res = await fetch(registrationEndpoint, {
+    const res = await safeFetch(registrationEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
     if (!res.ok) {
       const text = await res.text().catch(() => '');
-      throw new BadRequestException(
-        `Dynamic client registration failed (${res.status}): ${text.slice(0, 200)}`,
+      this.logger.warn(
+        `DCR failed at ${redactUrl(registrationEndpoint)} (${res.status}): ${text.slice(0, 200)}`,
       );
+      throw new OAuthFlowError('DCR_FAILED', { status: res.status });
     }
-    const j = (await res.json()) as { client_id?: string; client_secret?: string };
-    if (!j.client_id) {
-      throw new BadRequestException('DCR response missing client_id');
+    const j = (await res.json().catch(() => ({}))) as { client_id?: unknown; client_secret?: unknown };
+    if (typeof j.client_id !== 'string' || !j.client_id) {
+      throw new OAuthFlowError('DCR_FAILED', { reason: 'missing client_id' });
     }
-    return { clientId: j.client_id, clientSecret: j.client_secret };
+    return {
+      clientId: j.client_id,
+      clientSecret: typeof j.client_secret === 'string' ? j.client_secret : undefined,
+    };
   }
 
   // ── PKCE (RFC 7636) ──────────────────────────────────────────────────────────
@@ -204,25 +226,28 @@ export class McpOAuthService {
     return this.postToken(params.tokenEndpoint, form);
   }
 
-  private async postToken(
-    tokenEndpoint: string,
-    form: Record<string, string>,
-  ): Promise<McpTokenResponse> {
-    const res = await fetch(tokenEndpoint, {
+  private async postToken(tokenEndpoint: string, form: Record<string, string>): Promise<McpTokenResponse> {
+    const res = await safeFetch(tokenEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         Accept: 'application/json',
       },
       body: new URLSearchParams(form).toString(),
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
     if (!res.ok) {
       const text = await res.text().catch(() => '');
-      throw new BadRequestException(
-        `Token exchange failed (${res.status}): ${text.slice(0, 200)}`,
+      const oauthError = parseOAuthErrorCode(text);
+      this.logger.warn(
+        `Token endpoint ${redactUrl(tokenEndpoint)} answered ${res.status}${oauthError ? ` (${oauthError})` : ''}: ${text.slice(0, 200)}`,
       );
+      throw new TokenEndpointError(res.status, oauthError);
     }
-    const tokens = (await res.json()) as McpTokenResponse;
+    const tokens = (await res.json().catch(() => null)) as McpTokenResponse | null;
+    if (!tokens || typeof tokens.access_token !== 'string') {
+      throw new TokenEndpointError(res.status, 'invalid_response');
+    }
     if (typeof tokens.expires_in === 'number' && !tokens.expiry_date) {
       tokens.expiry_date = Date.now() + tokens.expires_in * 1000;
     }

@@ -3,6 +3,7 @@ import { AiContextController } from './ai-context.controller';
 describe('AiContextController', () => {
   const svc = {
     getUserContext: jest.fn().mockResolvedValue({ userId: 'u1', style: 's' }),
+    getUserContextFor: jest.fn().mockResolvedValue({ userId: 'target', style: 's' }),
     getVisibleEntriesForUser: jest.fn().mockResolvedValue([{ label: 'x' }]),
     updateSoftContext: jest.fn().mockResolvedValue({ userId: 'u1', style: 'brief' }),
     updateHardContext: jest.fn().mockResolvedValue({ userId: 'target', jobTitle: 'Dev' }),
@@ -32,6 +33,12 @@ describe('AiContextController', () => {
     const res = await ctrl.updateMyStyle(user, { style: 'brief' });
     expect(svc.updateSoftContext).toHaveBeenCalledWith('u1', { style: 'brief' });
     expect(res.style).toBe('brief');
+  });
+
+  it('GET /users/:id passes the caller so the service can authorize the read', async () => {
+    await ctrl.getUser(user, 'target');
+    expect(svc.getUserContextFor).toHaveBeenCalledWith({ sub: 'u1', perms: user.perms }, 'target');
+    expect(svc.getUserContext).not.toHaveBeenCalledWith('target');
   });
 
   it('PATCH /users/:id/hard delegates to service authority check', async () => {

@@ -23,31 +23,35 @@ class AiSessionsNotifier
     );
   }
 
-  /// Deactivate the current session and start a fresh active one. A failure is
-  /// swallowed here (not rethrown) so the widget `onPressed` cannot produce an
-  /// unhandled async error; the list still refreshes to reflect server state.
-  Future<void> createNew() async {
+  /// Deactivate the current session and start a fresh active one. Never
+  /// throws (it runs from a widget `onPressed`): the failure is RETURNED so
+  /// the caller can show a localized message, and the list still refreshes to
+  /// reflect server state. Null on success.
+  Future<Object?> createNew() async {
+    Object? failure;
     try {
       await ref.read(aiSessionRepositoryProvider).createNew(_conversationId);
-    } catch (_) {
-      // Surface via the refreshed list / error state below, not as a throw.
+    } catch (e) {
+      failure = e;
     }
     await _refresh();
+    return failure;
   }
 
-  /// Switch the active session to [sessionId]. Called directly from a widget
-  /// `onPressed`, so a failure (e.g. 404 when the session was deleted, or a
-  /// null body) must NOT escape as an unhandled async error. We catch it, keep
-  /// the UI stable, and refresh the list so it reflects the real server state.
-  Future<void> resume(String sessionId) async {
+  /// Switch the active session to [sessionId]. Like [createNew], a failure
+  /// (e.g. 404 when the session was deleted) is returned, not thrown, and the
+  /// refresh drops the stale entry. Null on success.
+  Future<Object?> resume(String sessionId) async {
+    Object? failure;
     try {
       await ref
           .read(aiSessionRepositoryProvider)
           .resume(_conversationId, sessionId);
-    } catch (_) {
-      // Session missing/not owned — refresh below drops the stale entry.
+    } catch (e) {
+      failure = e;
     }
     await _refresh();
+    return failure;
   }
 }
 

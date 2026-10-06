@@ -118,16 +118,26 @@ export function useStagedAttachments() {
 
   const toggleAllHD = useCallback(() => setIsAllHD((v) => !v), [])
 
+  /** Drop sent items from the strip (and free their preview URLs). */
+  const dropSent = useCallback((sent: PendingAttachment[]) => {
+    if (sent.length === 0) return
+    const ids = new Set(sent.map((a) => a.id))
+    sent.forEach((a) => a.previewUrl && URL.revokeObjectURL(a.previewUrl))
+    setPendingAttachments((prev) => prev.filter((a) => !ids.has(a.id)))
+  }, [])
+
   /**
    * Upload every staged attachment then send it. Images are batched into one
    * message (single url, or JSON array for a gallery); videos/files send one
-   * each. Throws on the first upload/send failure so the caller can surface a
-   * localized error; the strip is only cleared on full success.
+   * each. Each item leaves the strip as soon as its message is sent, so on the
+   * first failure (rethrown for the caller's localized error) only what was NOT
+   * sent stays staged — a retry never duplicates the ones that went out.
    */
   const flushAttachments = useCallback(async (onSend: SendFn) => {
     const items = ref.current
     if (items.length === 0) return
     const images: string[] = []
+    const imageItems: PendingAttachment[] = []
     for (const att of items) {
       if (att.type === 'file') {
         const { url, filename, size } = await chatService.uploadFile(att.file)
@@ -135,22 +145,23 @@ export function useStagedAttachments() {
           JSON.stringify({ url, name: filename || att.file.name, size: Number(size) || 0 }),
           'file',
         )
+        dropSent([att])
       } else if (att.type === 'video') {
         const { url } = await chatService.uploadFile(att.file)
         await onSend(url, 'video')
+        dropSent([att])
       } else {
         const fileToUpload = isAllHD ? att.file : await compressImage(att.file, 0.7)
         const { url } = await chatService.uploadFile(fileToUpload)
         images.push(url)
+        imageItems.push(att)
       }
     }
     if (images.length === 1) await onSend(images[0], 'image')
     else if (images.length > 1) await onSend(JSON.stringify(images), 'image')
-
-    items.forEach((a) => a.previewUrl && URL.revokeObjectURL(a.previewUrl))
-    setPendingAttachments([])
+    dropSent(imageItems)
     setIsAllHD(true) // reset to default (HD ON) for the next batch
-  }, [isAllHD])
+  }, [isAllHD, dropSent])
 
   return {
     pendingAttachments,

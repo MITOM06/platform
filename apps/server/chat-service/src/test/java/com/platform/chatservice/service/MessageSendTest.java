@@ -38,7 +38,7 @@ class MessageSendTest {
   @Mock private MessageRepository messageRepository;
   @Mock private ConversationRepository conversationRepository;
   @Mock private MongoTemplate mongoTemplate;
-  @Mock private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+  @Mock private ClusterMessageBroker clusterBroker;
   @Mock private MessageServiceHelper messageServiceHelper;
   @Mock private ConversationCacheService conversationCacheService;
 
@@ -59,7 +59,7 @@ class MessageSendTest {
         new AiMessageService(
             messageRepository,
             conversationRepository,
-            messagingTemplate,
+            clusterBroker,
             messageMapper,
             mongoTemplate,
             conversationCacheService);
@@ -295,8 +295,72 @@ class MessageSendTest {
                             m.getSenderId())
                         && "ai".equals(m.getType())
                         && content.equals(m.getContent())));
-    verify(messagingTemplate)
-        .convertAndSend(eq("/topic/conversation/" + CONV_ID), (Object) eq(response));
+    verify(clusterBroker).convertAndSend("/topic/conversation/" + CONV_ID, response);
+  }
+
+  /** Block User only applies to direct chats — it used to silence the sender in every group. */
+  @Test
+  void sendMessage_InGroup_IgnoresBlocks() {
+    Conversation group =
+        Conversation.builder()
+            .id(CONV_ID)
+            .type(Conversation.TYPE_GROUP)
+            .participants(List.of(SENDER_ID, OTHER_ID, "user-003"))
+            .build();
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(group));
+    when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
+
+    messageService.sendMessage(SENDER_ID, new SendMessageRequest(CONV_ID, "Hello", "text"));
+
+    verify(messageServiceHelper, never()).isBlockedBetween(anyString(), anyString());
+    verify(messageRepository).save(any(Message.class));
+  }
+
+  @Test
+  void sendMessage_WhenBlockedInDirectChat_CarriesUserBlockedCode() {
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+    when(messageServiceHelper.isBlockedBetween(SENDER_ID, OTHER_ID)).thenReturn(true);
+
+    assertThatThrownBy(
+            () ->
+                messageService.sendMessage(
+                    SENDER_ID, new SendMessageRequest(CONV_ID, "Hi", "text")))
+        .isInstanceOf(ForbiddenException.class)
+        .extracting("code")
+        .isEqualTo(com.platform.chatservice.exception.ErrorCodes.USER_BLOCKED);
+  }
+
+  /** Members could store type "system" with a forged pin notice, or type "ai". */
+  @Test
+  void sendMessage_ServerOnlyTypesAndForgedSystemCodes_AreRejected() {
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+
+    for (SendMessageRequest bad :
+        List.of(
+            new SendMessageRequest(CONV_ID, "system.message.pinned:" + OTHER_ID, "system"),
+            new SendMessageRequest(CONV_ID, "I am the AI", "ai"),
+            new SendMessageRequest(CONV_ID, "x", "call_log"),
+            new SendMessageRequest(CONV_ID, "system.member.removed", "text"))) {
+      assertThatThrownBy(() -> messageService.sendMessage(SENDER_ID, bad))
+          .isInstanceOf(com.platform.chatservice.exception.BadRequestException.class)
+          .extracting("code")
+          .isEqualTo(com.platform.chatservice.exception.ErrorCodes.MESSAGE_TYPE_NOT_ALLOWED);
+    }
+    verify(messageRepository, never()).save(any(Message.class));
+  }
+
+  @Test
+  void sendMessage_ClientSystemNotices_AreAccepted() {
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+    when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
+
+    messageService.sendMessage(
+        SENDER_ID,
+        new SendMessageRequest(CONV_ID, "system.nickname.changed:" + OTHER_ID + ":Bo", "system"));
+    messageService.sendMessage(
+        SENDER_ID, new SendMessageRequest(CONV_ID, "system.call.missed:voice", "system"));
+
+    verify(messageRepository, times(2)).save(argThat(m -> "system".equals(m.getType())));
   }
 
   /** Read a field out of an Update's {@code $set} document (null if the key was not set). */

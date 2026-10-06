@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
@@ -6,6 +6,8 @@ import {
   NotificationDocument,
   NotificationType,
 } from './notification.schema';
+import { AuthCode } from '../../common/auth-code.enum';
+import { isObjectIdString } from '../../common/ids';
 
 export interface CreateNotificationPayload {
   recipientId: string;
@@ -49,7 +51,15 @@ export class NotificationsService {
     });
   }
 
+  /**
+   * Mark one of the caller's notifications read. A malformed id is a 404
+   * (it used to reach Mongo and CastError into a 500); an unknown or foreign
+   * id stays a silent no-op as before.
+   */
   async markRead(id: string, recipientId: string): Promise<void> {
+    if (!isObjectIdString(id)) {
+      throw new NotFoundException({ code: AuthCode.NOTIFICATION_NOT_FOUND });
+    }
     await this.notificationModel
       .findOneAndUpdate(
         { _id: id, recipientId },

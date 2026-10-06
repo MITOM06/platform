@@ -3,7 +3,7 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { findEnvProblems, resolveAllowedOrigins } from './config/env-guard';
+import { findEnvProblems, findEnvWarnings, resolveAllowedOrigins } from './config/env-guard';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -21,6 +21,7 @@ async function bootstrap() {
           '\nSet these to the real values (see infra/docker-compose/.env.mini.example).',
       );
     }
+    for (const warning of findEnvWarnings(process.env)) logger.error(warning);
   }
 
   const app = await NestFactory.create(AppModule);

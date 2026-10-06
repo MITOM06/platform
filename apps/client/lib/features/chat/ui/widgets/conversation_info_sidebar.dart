@@ -9,6 +9,7 @@ import '../../../admin/state/capabilities_provider.dart';
 import '../../../home/domain/home_providers.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
+import '../../utils/duration_text.dart';
 import '../chat_screen_helpers.dart';
 import 'ai_session_panel.dart';
 import 'chat_wallpaper_dialog.dart';
@@ -23,12 +24,7 @@ class ConversationInfoSidebar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final conversations =
-        ref.watch(conversationsNotifierProvider).valueOrNull ?? [];
-    final conv = conversations
-        .where((c) => c.id == conversationId)
-        .cast<ConversationModel?>()
-        .firstOrNull;
+    final conv = ref.watch(conversationProvider(conversationId));
     final authState = ref.watch(authNotifierProvider).valueOrNull;
     final currentUserId =
         authState is AuthAuthenticated ? authState.user.id : '';
@@ -38,7 +34,7 @@ class ConversationInfoSidebar extends ConsumerWidget {
     final others =
         conv?.participants.where((p) => p != currentUserId).toList() ?? [];
     final otherUserId = (!isGroup && others.isNotEmpty) ? others.first : null;
-    final profileAsync = otherUserId != null
+    final profileAsync = (otherUserId != null && !isAi)
         ? ref.watch(userProfileProvider(otherUserId))
         : null;
 
@@ -213,6 +209,26 @@ class ConversationInfoSidebar extends ConsumerWidget {
                   leading: const Icon(Icons.label_outline_rounded, size: 18),
                   title: Text(context.l10n.nicknameModalTitle),
                   onTap: () => showNicknamesDialog(context, ref, conversationId, conv),
+                ),
+              // Disappearing messages: both people in a direct chat, admins
+              // only in a group (mirrors the server rule).
+              if (conv != null && conv.canManage(currentUserId))
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.timer_outlined, size: 18),
+                  title: Text(context.l10n.disappearingMessages),
+                  subtitle: Text(
+                    (conv.autoDeleteSeconds ?? 0) > 0
+                        ? durationText(context.l10n, conv.autoDeleteSeconds ?? 0)
+                        : context.l10n.disappearingOff,
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                  onTap: () => showAutoDeletePicker(
+                    context,
+                    ref,
+                    conversationId,
+                    currentSeconds: conv.autoDeleteSeconds,
+                  ),
                 ),
               if (isGroup && (conv?.admins.contains(currentUserId) ?? false)) ...[
                 ListTile(

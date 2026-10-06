@@ -30,8 +30,8 @@ describe('classifyToolActionGroup', () => {
     expect(classifyToolActionGroup('Send_Email')).toBe('create');
   });
 
-  it('defaults unknown tools to the least-privileged view', () => {
-    expect(classifyToolActionGroup('mystery_tool')).toBe('view');
+  it('puts unknown tools in the strictest group (fail-closed)', () => {
+    expect(classifyToolActionGroup('mystery_tool')).toBe('delete');
   });
 
   it('every classification is a member of ALL_ACTION_GROUPS', () => {

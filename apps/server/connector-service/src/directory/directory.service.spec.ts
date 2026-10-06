@@ -1,6 +1,7 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { DirectoryService } from './directory.service';
 import { DIRECTORY_SEED } from '../connections/directory.seed';
+import { resolver } from '../security/url-guard';
 
 describe('DirectoryService', () => {
   let svc: DirectoryService;
@@ -41,7 +42,10 @@ describe('DirectoryService', () => {
     };
     audit = { record: jest.fn().mockResolvedValue(undefined) };
     svc = new DirectoryService(model, audit);
+    jest.spyOn(resolver, 'lookup').mockResolvedValue([{ address: '93.184.216.34', family: 4 }]);
   });
+
+  afterEach(() => jest.restoreAllMocks());
 
   it('seeds every built-in entry idempotently (upsert by slug)', async () => {
     await svc.onModuleInit();
@@ -118,11 +122,43 @@ describe('DirectoryService', () => {
   });
 
   it('update throws NotFound when the entry is missing', async () => {
-    model.findByIdAndUpdate.mockReturnValueOnce({
+    model.findById.mockReturnValueOnce({
       lean: jest.fn().mockResolvedValue(null),
     });
     await expect(svc.update('admin1', 'missing', { name: 'x' })).rejects.toBeInstanceOf(
       NotFoundException,
     );
+  });
+
+  it('create rejects an internal MCP / token URL (SSRF)', async () => {
+    await expect(
+      svc.create('admin1', { slug: 'evil', name: 'Evil', mcpUrl: 'https://chat-service:8080/mcp', authMode: 'none' }),
+    ).rejects.toMatchObject({ reason: 'single-label host' });
+    (resolver.lookup as jest.Mock).mockResolvedValueOnce([{ address: '10.0.0.9', family: 4 }]);
+    await expect(
+      svc.create('admin1', { slug: 'evil2', name: 'Evil', mcpUrl: 'https://looks-public.example.com/mcp', authMode: 'none' }),
+    ).rejects.toMatchObject({ reason: 'private address' });
+    expect(model.create).not.toHaveBeenCalled();
+  });
+
+  it('create rejects env-oauth entries that would read infrastructure secrets', async () => {
+    const base = {
+      slug: 'acme',
+      name: 'Acme',
+      mcpUrl: 'https://mcp.acme.com',
+      authMode: 'env-oauth' as const,
+      authorizeUrl: 'https://auth.acme.com/authorize',
+      tokenUrl: 'https://auth.acme.com/token',
+    };
+    await expect(
+      svc.create('admin1', { ...base, envClientIdName: 'JWT_ACCESS_SECRET', envClientSecretName: 'CONNECTOR_VAULT_KEY' }),
+    ).rejects.toMatchObject({ response: expect.objectContaining({ code: 'INVALID_ENV_OAUTH' }) });
+    // Google's credentials may only be sent to Google.
+    await expect(
+      svc.create('admin1', { ...base, envClientIdName: 'GOOGLE_CLIENT_ID', envClientSecretName: 'GOOGLE_CLIENT_SECRET' }),
+    ).rejects.toMatchObject({ response: expect.objectContaining({ code: 'INVALID_ENV_OAUTH' }) });
+    await expect(
+      svc.create('admin1', { ...base, envClientIdName: 'OAUTH_ACME_CLIENT_ID', envClientSecretName: 'OAUTH_ACME_CLIENT_SECRET' }),
+    ).resolves.toMatchObject({ slug: 'acme' });
   });
 });

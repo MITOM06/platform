@@ -81,11 +81,9 @@ describe('MembersPanel', () => {
     openEdit(0)
     expect(screen.getByTestId('member-role-select')).toBeDisabled()
     expect(screen.getByTestId('member-role-locked')).toHaveTextContent('memberRoleLockedSelf')
+    // Nothing changed (role locked, departments untouched) ⇒ no request at all.
     fireEvent.click(screen.getByText('save'))
-    expect(updateMutate).toHaveBeenCalledWith(
-      { id: 'me', input: { roleId: undefined, departmentIds: [] } },
-      expect.anything(),
-    )
+    expect(updateMutate).not.toHaveBeenCalled()
   })
 
   it("locks an Owner's role for a non-Owner caller", () => {
@@ -107,10 +105,8 @@ describe('MembersPanel', () => {
     render(<MembersPanel />)
     openEdit(1)
     expect(screen.getByTestId('member-role-select')).not.toBeDisabled()
+    // Saving an unchanged row sends nothing (only changed fields are ever sent).
     fireEvent.click(screen.getByText('save'))
-    expect(updateMutate).toHaveBeenCalledWith(
-      { id: 'bob', input: { roleId: 'r-member', departmentIds: [] } },
-      expect.anything(),
-    )
+    expect(updateMutate).not.toHaveBeenCalled()
   })
 })

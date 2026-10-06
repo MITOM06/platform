@@ -5,14 +5,17 @@ import { ThemeProvider } from 'next-themes'
 import { useState } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { SessionInitializer } from '@/components/layout/SessionInitializer'
+import { registerQueryClient } from '@/lib/query-client'
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: { queries: { staleTime: 60_000 } },
-      }),
-  )
+  const [queryClient] = useState(() => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { staleTime: 60_000 } },
+    })
+    // Lets logout / forced logout wipe the cache from outside React.
+    registerQueryClient(client)
+    return client
+  })
 
   return (
     <QueryClientProvider client={queryClient}>

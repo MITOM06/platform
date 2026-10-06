@@ -6,7 +6,31 @@ import { Loader2, ImageIcon, FileText, Link as LinkIcon } from 'lucide-react'
 import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { chatService } from '@/lib/api/chat'
-import { absoluteMediaUrl, parseFileMeta, firstUrl } from '@/lib/media'
+import { absoluteMediaUrl, parseFileMeta, parseImageUrls, firstUrl } from '@/lib/media'
+import type { Message } from '@/lib/api/types'
+
+/**
+ * One tile per image: a gallery message stores a JSON array of upload URLs, which
+ * used to be passed whole to <img src> and render broken. Videos keep one tile.
+ */
+interface MediaTile {
+  key: string
+  src: string
+  isImage: boolean
+}
+
+function mediaTiles(messages: Message[]): MediaTile[] {
+  return messages.flatMap((msg): MediaTile[] => {
+    if (msg.type !== 'image') {
+      return [{ key: msg.id, src: absoluteMediaUrl(msg.content || ''), isImage: false }]
+    }
+    return parseImageUrls(msg.content || '').map((url, i) => ({
+      key: `${msg.id}-${i}`,
+      src: absoluteMediaUrl(url),
+      isImage: true,
+    }))
+  })
+}
 
 /** Best-effort display label for a file/link row (last path segment or the URL). */
 function rowLabel(content: string, type: string): { label: string; href: string } {
@@ -52,17 +76,16 @@ function GalleryTab({ conversationId, type }: { conversationId: string; type: st
   if (type === 'media') {
     return (
       <div className="grid grid-cols-3 gap-1.5">
-        {data.content.map((msg) => {
-          const src = absoluteMediaUrl(msg.content || '')
+        {mediaTiles(data.content).map(({ key, src, isImage }) => {
           return (
             <a
-              key={msg.id}
+              key={key}
               href={src || undefined}
               target="_blank"
               rel="noopener noreferrer"
               className="aspect-square bg-muted rounded-md overflow-hidden flex items-center justify-center"
             >
-              {msg.type === 'image' && src ? (
+              {isImage && src ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={src}

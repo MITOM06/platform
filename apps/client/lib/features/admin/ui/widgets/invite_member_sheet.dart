@@ -4,10 +4,10 @@ import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/global_messenger.dart';
 import '../../../../core/widgets/pon_widgets.dart';
-import '../../../auth/utils/auth_error.dart';
 import '../../data/models/admin_models.dart';
 import '../../state/admin_providers.dart';
 import '../../state/capabilities_provider.dart';
+import '../../utils/admin_error.dart';
 
 /// Bottom sheet to invite a member by email. The role picker shows only when
 /// the caller can read roles (`MANAGE_ROLES`) — otherwise the server defaults
@@ -65,7 +65,7 @@ class _InviteMemberSheetState extends ConsumerState<InviteMemberSheet> {
       }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      if (mounted) showErrorSnackBar(authErrorMessage(context, e));
+      if (mounted) showErrorSnackBar(adminErrorMessage(context, e));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

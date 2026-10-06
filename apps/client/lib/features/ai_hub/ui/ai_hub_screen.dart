@@ -7,21 +7,25 @@ import '../../../core/widgets/pon_widgets.dart';
 import '../../chat/data/chat_repository.dart';
 import '../../chat/domain/chat_state.dart' show kAiBotUserId;
 import 'widgets/ai_hub_tile.dart';
+import '../../../core/utils/global_messenger.dart';
+import '../../chat/utils/chat_error.dart';
 
 /// Opens (or creates) the conversation with the PON AI bot and navigates to it.
 ///
 /// Shared entry point for the AI chat: reused by [AiHubScreen]'s hero CTA and
 /// any other surface that previously called `_startAiChat`. Mirrors the web
 /// `handleOpenAiChat` (create-or-get + navigate). Returns once navigation is
-/// issued; on failure it silently no-ops (caller may surface an error state).
+/// issued; on failure it shows a localized error snackbar and stays put.
 Future<void> startAiChat(BuildContext context, WidgetRef ref) async {
   try {
     final repo = ref.read(chatRepositoryProvider);
     final conv = await repo.getOrCreateConversation(kAiBotUserId);
     if (context.mounted) context.go('/chat/${conv.id}');
-  } catch (_) {
-    // Swallow: the Hub keeps the user on-screen. A transient failure can be
-    // retried by tapping again.
+  } catch (e) {
+    // The Hub keeps the user on-screen; say why so they can retry.
+    if (context.mounted) {
+      showErrorSnackBar(chatErrorMessage(context.l10n, e));
+    }
   }
 }
 

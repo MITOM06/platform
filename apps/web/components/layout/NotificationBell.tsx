@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Bell, UserPlus, Users, ShieldAlert, Smartphone, Info } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -17,25 +17,34 @@ import {
   useNotifications,
   useNotificationActions,
 } from '@/lib/hooks/use-notifications'
-import { useFriendActions } from '@/lib/hooks/use-friends'
+import { useFriendActions, useFriendRequests } from '@/lib/hooks/use-friends'
 import type { AppNotification } from '@/lib/api/notifications'
 
-/** Compact relative-time formatter (no date-fns dependency). */
-function relativeTime(iso: string): string {
+/**
+ * Compact relative time in the UI locale ("5 min ago", "il y a 2 j"…) via
+ * `Intl.RelativeTimeFormat` — the old formatter printed English s/m/h/d to every
+ * locale.
+ */
+export function relativeTime(iso: string, locale: string, now: number = Date.now()): string {
   const then = new Date(iso).getTime()
   if (Number.isNaN(then)) return ''
-  const diff = Math.max(0, Date.now() - then)
-  const sec = Math.floor(diff / 1000)
-  if (sec < 60) return `${sec}s`
+  const sec = Math.floor(Math.max(0, now - then) / 1000)
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'short' })
+  if (sec < 60) return rtf.format(0, 'second')
   const min = Math.floor(sec / 60)
-  if (min < 60) return `${min}m`
+  if (min < 60) return rtf.format(-min, 'minute')
   const hr = Math.floor(min / 60)
-  if (hr < 24) return `${hr}h`
+  if (hr < 24) return rtf.format(-hr, 'hour')
   const day = Math.floor(hr / 24)
-  if (day < 7) return `${day}d`
+  if (day < 7) return rtf.format(-day, 'day')
   const wk = Math.floor(day / 7)
-  if (wk < 4) return `${wk}w`
-  return new Date(then).toLocaleDateString()
+  if (wk < 4) return rtf.format(-wk, 'week')
+  return new Date(then).toLocaleDateString(locale)
+}
+
+/** A friend-request notification whose request is still waiting for an answer. */
+function isPendingRequest(n: AppNotification, pendingRequesterIds: Set<string>): boolean {
+  return n.type === 'FRIEND_REQUEST' && !!n.relatedEntityId && pendingRequesterIds.has(n.relatedEntityId)
 }
 
 /**
@@ -81,6 +90,7 @@ function NotifIcon({ type }: { type: AppNotification['type'] }) {
 
 function NotificationRow({
   n,
+  pending,
   onMarkRead,
   onAccept,
   onDecline,
@@ -88,6 +98,8 @@ function NotificationRow({
   declining,
 }: {
   n: AppNotification
+  /** Friend request still unanswered → show Accept / Decline (even if read). */
+  pending: boolean
   onMarkRead: (id: string) => void
   onAccept: (n: AppNotification) => void
   onDecline: (n: AppNotification) => void
@@ -95,6 +107,7 @@ function NotificationRow({
   declining: boolean
 }) {
   const t = useTranslations('notifications')
+  const locale = useLocale()
   const { title, body } = localizedNotification(n, t)
   return (
     <div
@@ -132,7 +145,7 @@ function NotificationRow({
           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{body}</p>
         )}
         <p className="text-xs text-muted-foreground mt-0.5">
-          {relativeTime(n.createdAt)}
+          {relativeTime(n.createdAt, locale)}
         </p>
 
         {n.type === 'PHONE_SETUP' && (
@@ -160,7 +173,7 @@ function NotificationRow({
           </Link>
         )}
 
-        {n.type === 'FRIEND_REQUEST' && n.relatedEntityId && !n.readAt && (
+        {pending && (
           <div className="flex gap-2 mt-2">
             <Button
               size="sm"
@@ -202,6 +215,12 @@ export function NotificationBell() {
   const { data: notifications = [] } = useNotifications()
   const { markRead, markAllRead } = useNotificationActions()
   const { acceptRequest, removeFriend } = useFriendActions()
+  // Incoming requests decide whether Accept / Decline is still actionable — not
+  // the notification's read flag (auto-read used to make the buttons vanish).
+  const { data: incomingRequests = [], refetch: refetchRequests } = useFriendRequests()
+  const pendingRequesterIds = new Set(
+    incomingRequests.map((u) => u.id ?? u._id ?? '').filter(Boolean),
+  )
 
   const unreadCount = notifications.filter((n) => !n.readAt).length
   const unread = notifications.filter((n) => !n.readAt)
@@ -209,11 +228,18 @@ export function NotificationBell() {
 
   const handleOpen = (next: boolean) => {
     setOpen(next)
-    // When opening, mark all read after a short delay so the user briefly sees
-    // the badge before it clears (signals they've seen the notifications).
-    if (next && unreadCount > 0) {
-      setTimeout(() => markAllRead.mutate(), 1500)
-    }
+    // A request that arrived since the last fetch must show its buttons.
+    if (next) void refetchRequests()
+    // When opening, mark the notifications read after a short delay so the user
+    // briefly sees the badge before it clears — EXCEPT pending friend requests,
+    // which stay unread until they are accepted or declined.
+    if (!next || unreadCount === 0) return
+    const toMark = unread.filter((n) => !isPendingRequest(n, pendingRequesterIds))
+    if (toMark.length === 0) return
+    setTimeout(() => {
+      if (toMark.length === unread.length) markAllRead.mutate()
+      else toMark.forEach((n) => markRead.mutate(n._id))
+    }, 1500)
   }
 
   const handleAccept = (n: AppNotification) => {
@@ -271,6 +297,7 @@ export function NotificationBell() {
                       <NotificationRow
                         key={n._id}
                         n={n}
+                        pending={isPendingRequest(n, pendingRequesterIds)}
                         onMarkRead={(id) => markRead.mutate(id)}
                         onAccept={handleAccept}
                         onDecline={handleDecline}
@@ -291,6 +318,7 @@ export function NotificationBell() {
                       <NotificationRow
                         key={n._id}
                         n={n}
+                        pending={isPendingRequest(n, pendingRequesterIds)}
                         onMarkRead={(id) => markRead.mutate(id)}
                         onAccept={handleAccept}
                         onDecline={handleDecline}

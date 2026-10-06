@@ -76,6 +76,14 @@ public class ConnectorServiceClient {
     }
   }
 
+  /** True when both the base URL and the internal key are set (token calls can succeed). */
+  public boolean isConfigured() {
+    return props.getBaseUrl() != null
+        && !props.getBaseUrl().isBlank()
+        && props.getInternalKey() != null
+        && !props.getInternalKey().isBlank();
+  }
+
   private void requireConfigured() {
     if (props.getBaseUrl() == null || props.getBaseUrl().isBlank()) {
       throw new IllegalStateException("connector-service base URL is not configured");

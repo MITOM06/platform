@@ -492,6 +492,32 @@ describe('axios 401-refresh interceptor', () => {
       expect(nav.href).toBe('')
     })
 
+    it('treats 401 TOKEN_CLAIMS_STALE like an expired token: silent refresh + retry, never logout', async () => {
+      // F1: an admin changed my role. The old token is rejected with
+      // TOKEN_CLAIMS_STALE; the refresh mints one with the fresh claims.
+      const urls: string[] = []
+      const adapter: SimpleAdapter = (config) => {
+        urls.push(config.url ?? '')
+        if (config.url?.includes('/api/auth/refresh')) {
+          return Promise.resolve({ data: { accessToken: 'fresh-claims' }, status: 200, statusText: 'OK', headers: {}, config } as AxiosResponse)
+        }
+        return Promise.resolve({ data: { ok: true }, status: 200, statusText: 'OK', headers: {}, config } as AxiosResponse)
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      axios.defaults.adapter = adapter as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      chatApi.defaults.adapter = adapter as any
+
+      const handler = getInterceptorHandler()
+      const res = (await handler(httpError(401, { code: 'TOKEN_CLAIMS_STALE' }))) as AxiosResponse
+
+      expect(res.data).toEqual({ ok: true })
+      expect(urls).toEqual(['/api/auth/refresh', '/api/conversations'])
+      expect(getStoreState().setAuth).toHaveBeenCalledWith(expect.objectContaining({ id: 'u1' }), 'fresh-claims')
+      expect(getStoreState().clearAuth).not.toHaveBeenCalled()
+      expect(nav.href).toBe('')
+    })
+
     it('ignores a 403 that is not ACCOUNT_BLOCKED (plain permission error)', async () => {
       const handler = getInterceptorHandler()
       await expect(handler(httpError(403, { code: 'INSUFFICIENT_PERMISSION' }))).rejects.toThrow()

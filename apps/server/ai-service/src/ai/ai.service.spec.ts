@@ -16,6 +16,10 @@ import { ConversationAccessService } from '../conversation/conversation-access.s
 import { SettingsService } from '../settings/settings.service';
 import { ResolvedAiSettings } from '../settings/resolved-ai-settings';
 import { ChatImageService } from './chat-image.service';
+import { ToolRoundRunner } from './tool-round.runner';
+import { PendingActionStore } from '../actions/pending-action.store';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const RedisMock = require('ioredis-mock');
 
 function makeAsyncIterator(chunks: unknown[]) {
   return {
@@ -35,7 +39,7 @@ function makeStream(
   finalMessage: {
     stop_reason?: string;
     content?: unknown[];
-    usage?: { input_tokens: number; output_tokens: number };
+    usage?: Record<string, number>;
   } = {},
 ) {
   const events = texts.map((t) => ({
@@ -100,6 +104,19 @@ function makeThinkingStream(thinkingText: string, responseText: string) {
   };
 }
 
+/** A stream that emits some text deltas, then dies (network drop / 529 mid-stream). */
+function makeFailingStream(texts: string[], error: Error) {
+  return {
+    [Symbol.asyncIterator]: async function* () {
+      for (const t of texts) {
+        yield { type: 'content_block_delta', delta: { type: 'text_delta', text: t } };
+      }
+      throw error;
+    },
+    finalMessage: jest.fn().mockImplementation(() => Promise.reject(error)),
+  };
+}
+
 const SAMPLE_TOOLS = [
   {
     name: 'search_messages',
@@ -128,6 +145,8 @@ describe('AiService', () => {
   let acquire: jest.Mock;
   let release: jest.Mock;
   let checkAccess: jest.Mock;
+  /** null = unknown (default: direct-chat behaviour), true = 1-1 AI chat, false = shared chat. */
+  let directAi: jest.Mock;
   let getPersona: jest.Mock;
   let buildSystemPromptFn: jest.Mock;
   let extractFacts: jest.Mock;
@@ -142,6 +161,8 @@ describe('AiService', () => {
   let appendMessage: jest.Mock;
   let createNewSession: jest.Mock;
   let maybeCompact: jest.Mock;
+  /** In-memory Redis behind the REAL PendingActionStore (§F2 confirmation flow). */
+  let pendingRedis: any;
 
   const basePayload: AiRequestPayload = {
     conversationId: 'conv-test',
@@ -170,6 +191,7 @@ describe('AiService', () => {
     release = jest.fn().mockResolvedValue(undefined);
     acquire = jest.fn().mockResolvedValue({ allowed: true, release });
     checkAccess = jest.fn().mockResolvedValue('allowed');
+    directAi = jest.fn().mockReturnValue(null);
     getPersona = jest.fn().mockResolvedValue(null);
     buildSystemPromptFn = jest.fn().mockReturnValue('You are PON AI...');
     extractFacts = jest.fn().mockResolvedValue(undefined);
@@ -226,6 +248,11 @@ describe('AiService', () => {
     } as unknown as ResponseCacheService;
     const fakeConversationAccess = {
       checkAccess,
+      // Same single read as production: access + whether this is a direct AI chat.
+      getConversationContext: jest.fn(async (convId: string, uid: string) => ({
+        access: await checkAccess(convId, uid),
+        directAi: directAi(),
+      })),
     } as unknown as ConversationAccessService;
     // Default resolved settings = pure env behavior (all defaults), so existing
     // assertions are unaffected. Individual tests can override getSettings.
@@ -274,12 +301,17 @@ describe('AiService', () => {
     // limit). Construct the REAL loop with the same fakes so streaming/tool
     // behavior is exercised end-to-end; AiService passes its `anthropic` client
     // into the loop, so the `service['anthropic']` override below still applies.
+    pendingRedis = new RedisMock();
+    const toolRound = new ToolRoundRunner(
+      fakeToolRegistry,
+      new PendingActionStore(pendingRedis, fakeConfig),
+    );
     const agenticLoop = new AgenticLoopService(
       fakeConfig,
-      fakePublisher,
       fakeToolRegistry,
       fakeResponseCache,
       fakeChatImage,
+      toolRound,
     );
 
     service = new AiService(
@@ -305,7 +337,11 @@ describe('AiService', () => {
     (service as any)['anthropic'] = { messages: { stream: mockStream, create: mockCreate } };
   });
 
-  afterEach(() => jest.clearAllMocks());
+  afterEach(async () => {
+    jest.clearAllMocks();
+    // ioredis-mock instances share one in-memory store — isolate tests.
+    await pendingRedis.flushall();
+  });
 
   // ─── Basic streaming ──────────────────────────────────────────────────────
 
@@ -314,8 +350,8 @@ describe('AiService', () => {
 
     await service.handleRequest(basePayload);
 
-    expect(publish).toHaveBeenCalledWith('conv-test', { type: 'AI_STREAM_CHUNK', chunk: 'Hello' });
-    expect(publish).toHaveBeenCalledWith('conv-test', { type: 'AI_STREAM_CHUNK', chunk: ' World' });
+    expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({ type: 'AI_STREAM_CHUNK', chunk: 'Hello' }));
+    expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({ type: 'AI_STREAM_CHUNK', chunk: ' World' }));
     expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
       type: 'AI_STREAM_DONE',
       fullContent: 'Hello World',
@@ -394,11 +430,11 @@ describe('AiService', () => {
 
     await expect(service.handleRequest(basePayload)).rejects.toThrow();
 
-    expect(publish).toHaveBeenCalledWith('conv-test', {
+    expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
       type: 'AI_STREAM_ERROR',
       code: 'AI_UNAVAILABLE',
       error: 'AI is temporarily unavailable.',
-    });
+    }));
   });
 
   // ─── Memory injection (delegated to ContextBuilderService) ────────────────
@@ -563,6 +599,7 @@ describe('AiService', () => {
     expect(toolRegistryExecute).toHaveBeenCalledWith(
       'search_messages', { query: 'Flutter' },
       expect.objectContaining({ conversationId: 'conv-test' }),
+      { sensitive: false },
     );
     expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
       type: 'AI_TOOL_CALL',
@@ -727,7 +764,11 @@ describe('AiService', () => {
     await service.handleRequest(basePayload);
     await new Promise((r) => setTimeout(r, 10));
 
-    expect(recordUsage).toHaveBeenCalledWith('user-1', 10, 20);
+    expect(recordUsage).toHaveBeenCalledWith(
+      'user-1',
+      { inputTokens: 10, outputTokens: 20, cacheCreationInputTokens: 0, cacheReadInputTokens: 0 },
+      { countRequest: true },
+    );
   });
 
   // ─── Quota enforcement ────────────────────────────────────────────────────
@@ -737,11 +778,11 @@ describe('AiService', () => {
 
     await service.handleRequest(basePayload);
 
-    expect(publish).toHaveBeenCalledWith('conv-test', {
+    expect(publish).toHaveBeenCalledWith('conv-test', expect.objectContaining({
       type: 'AI_STREAM_ERROR',
       code: 'AI_QUOTA_EXCEEDED',
       error: 'Monthly AI usage quota exceeded. Please contact your admin.',
-    });
+    }));
     expect(mockStream).not.toHaveBeenCalled();
   });
 
@@ -841,7 +882,7 @@ describe('AiService', () => {
 
     // No model call — served straight from the DB lookup.
     expect(mockStream).not.toHaveBeenCalled();
-    expect(getMemory).toHaveBeenCalledWith('conv-test');
+    expect(getMemory).toHaveBeenCalledWith('conv-test', 'user-1');
     expect(publish).toHaveBeenCalledWith(
       'conv-test',
       expect.objectContaining({
@@ -1048,5 +1089,357 @@ describe('AiService', () => {
     await service.handleRequest(payload);
 
     expect(store).not.toHaveBeenCalled();
+  });
+
+
+  // ─── Fallback never re-runs a tool that already executed (bug 3) ──────────
+
+  it('continues on the fallback model after a tool ran — the tool executes exactly once', async () => {
+    // A side-effecting tool that runs WITHOUT confirmation (built-in). Sensitive
+    // connector writes are held for confirmation instead — see the §F2 tests.
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    const seen: Array<{ model: string; messages: any[] }> = [];
+    const capture = (impl: () => unknown) => (params: any) => {
+      seen.push({ model: params.model, messages: JSON.parse(JSON.stringify(params.messages)) });
+      return impl();
+    };
+    // Behaves like a real model: asks to send the email until it sees the result.
+    const modelLike = (params: any) => () =>
+      params.messages.some(
+        (m: any) => Array.isArray(m.content) && m.content.some((b: any) => b.type === 'tool_result'),
+      )
+        ? makeStream(['Reminder set.'])
+        : makeToolUseStream('create_reminder', `tu-${seen.length}`, { text: 'call Bob' });
+    mockStream
+      .mockImplementationOnce((params: any) => capture(modelLike(params))(params))
+      .mockImplementationOnce(
+        capture(() => {
+          throw new Error('529 overloaded');
+        }),
+      )
+      .mockImplementation((params: any) => capture(modelLike(params))(params));
+    toolRegistryExecute.mockResolvedValue('Reminder created');
+
+    await service.handleRequest(basePayload);
+
+    // The side-effecting tool ran ONCE — the fallback continued, it did not restart.
+    expect(toolRegistryExecute).toHaveBeenCalledTimes(1);
+    expect(seen.map((c) => c.model)).toEqual(['test-primary', 'test-primary', 'test-fallback']);
+    const fallbackMessages = seen[2].messages;
+    expect(fallbackMessages).toHaveLength(3); // user, assistant(tool_use), user(tool_result)
+    expect(fallbackMessages[1].content).toEqual(
+      expect.arrayContaining([expect.objectContaining({ type: 'tool_use', id: 'tu-1' })]),
+    );
+    expect(fallbackMessages[2].content).toEqual(
+      expect.arrayContaining([expect.objectContaining({ type: 'tool_result', tool_use_id: 'tu-1' })]),
+    );
+    expect(publish).toHaveBeenCalledWith(
+      'conv-test',
+      expect.objectContaining({ type: 'AI_STREAM_DONE', fullContent: 'Reminder set.' }),
+    );
+    expect(publish).not.toHaveBeenCalledWith(
+      'conv-test',
+      expect.objectContaining({ type: 'AI_STREAM_ERROR' }),
+    );
+  });
+
+  it('ends with AI_STREAM_INTERRUPTED (no fallback, no re-run) when the failed turn had streamed text', async () => {
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    mockStream
+      .mockReturnValueOnce(makeToolUseStream('create_reminder', 'tu-1', { text: 'x' }))
+      .mockReturnValueOnce(makeFailingStream(['Đã đặt nhắc'], new Error('socket hang up')));
+    toolRegistryExecute.mockResolvedValue('Reminder set');
+
+    await expect(service.handleRequest(basePayload)).rejects.toThrow();
+
+    expect(toolRegistryExecute).toHaveBeenCalledTimes(1);
+    expect(mockStream).toHaveBeenCalledTimes(2); // the fallback was NOT started
+    const errors = publish.mock.calls.filter((c) => c[1]?.type === 'AI_STREAM_ERROR');
+    expect(errors).toHaveLength(1);
+    expect(errors[0][1]).toMatchObject({ code: 'AI_STREAM_INTERRUPTED' });
+  });
+
+  it('continues on the fallback when the stream dies after pre-tool text but before new text', async () => {
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    mockStream
+      .mockReturnValueOnce(
+        makeToolUseStreamWithText('Let me check.', 'search_messages', 't1', { query: 'x' }),
+      )
+      .mockReturnValueOnce(makeFailingStream([], new Error('ECONNRESET')))
+      .mockReturnValueOnce(makeStream(['Found it.']));
+    toolRegistryExecute.mockResolvedValue('r');
+
+    await service.handleRequest(basePayload);
+
+    expect(toolRegistryExecute).toHaveBeenCalledTimes(1);
+    const done = publish.mock.calls.find((c) => c[1]?.type === 'AI_STREAM_DONE');
+    expect(done?.[1].fullContent).toBe('Let me check.\nFound it.');
+  });
+
+  it('publishes exactly one AI_STREAM_ERROR when both models fail', async () => {
+    mockStream.mockImplementation(() => {
+      throw new Error('model overloaded');
+    });
+
+    await expect(service.handleRequest(basePayload)).rejects.toThrow();
+
+    const errors = publish.mock.calls.filter((c) => c[1]?.type === 'AI_STREAM_ERROR');
+    expect(errors).toHaveLength(1);
+  });
+
+  // ─── Failures always reach the client (bug 12) ────────────────────────────
+
+  it('publishes AI_EMPTY_RESPONSE instead of a blank DONE when the model returns no text', async () => {
+    mockStream.mockReturnValue(makeStream([], { stop_reason: 'refusal', content: [] }));
+
+    await service.handleRequest(basePayload);
+
+    expect(publish).toHaveBeenCalledWith(
+      'conv-test',
+      expect.objectContaining({ type: 'AI_STREAM_ERROR', code: 'AI_EMPTY_RESPONSE', stopReason: 'refusal' }),
+    );
+    expect(publish).not.toHaveBeenCalledWith(
+      'conv-test',
+      expect.objectContaining({ type: 'AI_STREAM_DONE' }),
+    );
+    expect(appendMessage).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['settings', () => getSettings.mockRejectedValue(new Error('MongoNetworkError'))],
+    ['quota', () => isQuotaExceeded.mockRejectedValue(new Error('MongoNetworkError'))],
+    ['session', () => getOrCreateActiveSession.mockRejectedValue(new Error('MongoNetworkError'))],
+    ['compaction', () => maybeCompact.mockRejectedValue(new Error('MongoNetworkError'))],
+    ['persona', () => getPersona.mockRejectedValue(new Error('MongoNetworkError'))],
+  ])('publishes AI_UNAVAILABLE when %s setup fails before the model runs', async (_name, breakIt) => {
+    breakIt();
+
+    await expect(service.handleRequest(basePayload)).rejects.toThrow('MongoNetworkError');
+
+    expect(mockStream).not.toHaveBeenCalled();
+    const errors = publish.mock.calls.filter((c) => c[1]?.type === 'AI_STREAM_ERROR');
+    expect(errors).toHaveLength(1);
+    expect(errors[0][1]).toMatchObject({ code: 'AI_UNAVAILABLE', requesterId: 'user-1' });
+  });
+
+  // ─── replyId / requesterId on every stream event (14) ─────────────────────
+
+  it('tags every stream event of a reply with one replyId and the requesterId', async () => {
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    mockStream
+      .mockReturnValueOnce(makeToolUseStream('search_messages', 't1', { query: 'x' }))
+      .mockReturnValueOnce(makeStream(['A', 'B']));
+
+    await service.handleRequest(basePayload);
+
+    const events = publish.mock.calls.map((c) => c[1]);
+    expect(events.map((e) => e.type)).toEqual([
+      'AI_TOOL_CALL',
+      'AI_STREAM_CHUNK',
+      'AI_STREAM_CHUNK',
+      'AI_STREAM_DONE',
+    ]);
+    const replyIds = new Set(events.map((e) => e.replyId));
+    expect(replyIds.size).toBe(1);
+    expect([...replyIds][0]).toEqual(expect.any(String));
+    expect(events.every((e) => e.requesterId === 'user-1')).toBe(true);
+  });
+
+  it('gives a compaction notice its own replyId (chat-service dedupes DONE per replyId)', async () => {
+    maybeCompact.mockImplementation(async (sess: unknown) => ({ session: sess, compacted: true }));
+    mockStream.mockReturnValue(makeStream(['Answer']));
+
+    await service.handleRequest(basePayload);
+
+    const dones = publish.mock.calls.map((c) => c[1]).filter((e) => e.type === 'AI_STREAM_DONE');
+    expect(dones).toHaveLength(2);
+    expect(dones[1].fullContent).toBe('Answer');
+    expect(dones[0].replyId).not.toBe(dones[1].replyId);
+  });
+
+  // ─── Memory isolation in groups (bug 1) ───────────────────────────────────
+
+  it("/memory in a group shows only the requester's own facts", async () => {
+    const docs: Record<string, unknown> = {
+      alice: { summary: 'Alice talked about her salary', keyFacts: ['Alice salary is 90M'], messageCount: 3 },
+      bob: { summary: 'Bob asked about tea', keyFacts: ['Bob likes tea'], messageCount: 2 },
+    };
+    getMemory.mockImplementation(async (_conv: string, uid: string) => docs[uid] ?? null);
+
+    await service.handleRequest({ ...basePayload, userId: 'bob', displayName: 'Bob', content: '/memory' });
+
+    expect(getMemory).toHaveBeenCalledWith('conv-test', 'bob');
+    const done = publish.mock.calls.find((c) => c[1]?.type === 'AI_STREAM_DONE');
+    expect(done?.[1].fullContent).toContain('Bob likes tea');
+    expect(done?.[1].fullContent).not.toContain('Alice');
+    expect(done?.[1].requesterId).toBe('bob');
+  });
+
+  it('counts turns per (conversation, user)', async () => {
+    mockStream.mockReturnValue(makeStream(['OK']));
+
+    await service.handleRequest(basePayload);
+
+    expect(incrementMessageCount).toHaveBeenCalledWith('conv-test', 'user-1');
+  });
+
+  // ─── Group context + sliding window (bug 9) ───────────────────────────────
+
+  it('in a shared chat, injects the recent conversation with display names (no ids, no system codes)', async () => {
+    directAi.mockReturnValue(false);
+    const payload: AiRequestPayload = {
+      ...basePayload,
+      content: 'what did Lan just propose?',
+      history: [
+        { role: 'user', content: 'Let us move the launch to Friday', senderId: '6650a1b2c3d4e5f6a7b8c9d0', senderName: 'Lan' },
+        { role: 'user', content: 'system.nickname.changed:6650a1b2c3d4e5f6a7b8c9d0:Lanny', senderId: '6650a1b2c3d4e5f6a7b8c9d0' },
+        { role: 'user', content: 'I prefer Monday', senderId: '6650a1b2c3d4e5f6a7b8c9d1' },
+        { role: 'assistant', content: 'Noted.' },
+        { role: 'user', content: 'what did Lan just propose?', senderId: 'user-1', senderName: 'Alice' },
+      ],
+    };
+    mockStream.mockReturnValue(makeStream(['Lan proposed Friday.']));
+
+    await service.handleRequest(payload);
+
+    const params = mockStream.mock.calls[0][0];
+    const sys = systemText(params);
+    expect(sys).toContain('Recent conversation');
+    expect(sys).toContain('Lan: Let us move the launch to Friday');
+    expect(sys).toContain('A member: I prefer Monday');
+    expect(sys).toContain('PON AI: Noted.');
+    expect(sys).not.toContain('system.nickname');
+    expect(sys).not.toContain('6650a1b2c3d4e5f6a7b8c9d');
+    // The current question is the final user turn — not repeated in the block.
+    expect(sys).not.toContain('what did Lan just propose?');
+    expect(params.messages[params.messages.length - 1]).toEqual({
+      role: 'user',
+      content: 'what did Lan just propose?',
+    });
+  });
+
+  it('does not add the group block in a direct AI chat', async () => {
+    directAi.mockReturnValue(true);
+    mockStream.mockReturnValue(makeStream(['OK']));
+
+    await service.handleRequest({
+      ...basePayload,
+      history: [{ role: 'user', content: 'older message', senderName: 'Alice' }],
+    });
+
+    expect(systemText(mockStream.mock.calls[0][0])).not.toContain('Recent conversation');
+  });
+
+  it('caps the verbatim session history to the 20-message window', async () => {
+    mockStream.mockReturnValue(makeStream(['OK']));
+
+    await service.handleRequest(basePayload);
+
+    expect(buildMessageHistory).toHaveBeenCalledWith(expect.anything(), 20);
+  });
+
+  it('skips the response cache when the answer depends on the group conversation', async () => {
+    directAi.mockReturnValue(false);
+    const lookup = jest.fn().mockResolvedValue('cached');
+    const store = jest.fn().mockResolvedValue(undefined);
+    (service as any)['responseCache'].lookup = lookup;
+    (service as any)['responseCache'].store = store;
+    mockStream.mockReturnValue(makeStream(['fresh']));
+
+    await service.handleRequest({
+      ...basePayload,
+      history: [{ role: 'user', content: 'earlier group message', senderName: 'Lan' }],
+    });
+
+    expect(lookup).not.toHaveBeenCalled();
+    expect(store).not.toHaveBeenCalled();
+    expect(mockStream).toHaveBeenCalled();
+  });
+
+  it('keys the response cache on the requester', async () => {
+    const lookup = jest.fn().mockResolvedValue(null);
+    const store = jest.fn().mockResolvedValue(undefined);
+    (service as any)['responseCache'].lookup = lookup;
+    (service as any)['responseCache'].store = store;
+    mockStream.mockReturnValue(makeStream(['OK']));
+
+    await service.handleRequest(basePayload);
+
+    expect(lookup).toHaveBeenCalledWith('conv-test', 'user-1', [0.1, 0.2]);
+    expect(store).toHaveBeenCalledWith('conv-test', 'user-1', [0.1, 0.2], 'OK');
+  });
+
+  // ─── Thinking on any capable routed model (14) ────────────────────────────
+
+  it('applies the thinking toggle to a routed non-primary model that supports adaptive thinking', async () => {
+    const base = await getSettings();
+    getSettings.mockResolvedValue({ ...base, thinkingEnabled: true, modelTier: 'mid' });
+    mockStream.mockReturnValue(makeStream(['OK']));
+
+    await service.handleRequest(basePayload);
+
+    const params = mockStream.mock.calls[0][0];
+    expect(params.model).toBe('claude-sonnet-4-6');
+    expect(params.thinking).toEqual({ type: 'adaptive', display: 'summarized' });
+  });
+
+  it('never sends adaptive thinking to a model without it (haiku)', async () => {
+    const base = await getSettings();
+    getSettings.mockResolvedValue({ ...base, thinkingEnabled: true, modelTier: 'simple' });
+    mockStream.mockReturnValue(makeStream(['OK']));
+
+    await service.handleRequest(basePayload);
+
+    const params = mockStream.mock.calls[0][0];
+    expect(params.model).toBe('claude-haiku-4-5');
+    expect(params.thinking).toBeUndefined();
+  });
+
+  // ─── Usage includes prompt-cache tokens (bug 6) ───────────────────────────
+
+  it('counts prompt-cache writes and reads in the trace and the recorded usage', async () => {
+    mockStream.mockReturnValue(
+      makeStream(['OK'], {
+        usage: {
+          input_tokens: 10,
+          output_tokens: 20,
+          cache_creation_input_tokens: 5,
+          cache_read_input_tokens: 100,
+        },
+      }),
+    );
+
+    await service.handleRequest(basePayload);
+    await new Promise((r) => setTimeout(r, 10));
+
+    const done = publish.mock.calls.find((c) => c[1]?.type === 'AI_STREAM_DONE');
+    expect(done?.[1].trace).toMatchObject({
+      inputTokens: 115,
+      outputTokens: 20,
+      cachedInputTokens: 100,
+      cacheCreationInputTokens: 5,
+    });
+    expect(recordUsage).toHaveBeenCalledWith(
+      'user-1',
+      { inputTokens: 115, outputTokens: 20, cacheCreationInputTokens: 5, cacheReadInputTokens: 100 },
+      { countRequest: true },
+    );
+  });
+
+  it('records the tokens of a failed request without counting it as a reply', async () => {
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    mockStream
+      .mockReturnValueOnce(makeToolUseStream('search_messages', 't1', { query: 'x' })) // 8/12
+      .mockImplementation(() => {
+        throw new Error('overloaded');
+      });
+
+    await expect(service.handleRequest(basePayload)).rejects.toThrow();
+
+    expect(recordUsage).toHaveBeenCalledWith(
+      'user-1',
+      expect.objectContaining({ inputTokens: 8, outputTokens: 12 }),
+      { countRequest: false },
+    );
   });
 });

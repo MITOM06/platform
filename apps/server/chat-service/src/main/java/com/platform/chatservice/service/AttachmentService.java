@@ -6,11 +6,14 @@ import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.Message;
 import com.platform.chatservice.repository.ConversationRepository;
-import com.platform.chatservice.repository.MessageRepository;
+import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 /**
@@ -21,9 +24,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AttachmentService {
 
-  private final MessageRepository messageRepository;
   private final ConversationRepository conversationRepository;
-  private final MessageService messageService;
+  private final MongoTemplate mongoTemplate;
+  private final MessageMapper messageMapper;
 
   /**
    * Returns paginated attachments for a conversation filtered by {@code type}:
@@ -33,6 +36,10 @@ public class AttachmentService {
    *   <li>{@code file} — generic uploaded documents
    *   <li>{@code link} — text messages containing an http(s) URL
    * </ul>
+   *
+   * The same visibility rules as the message history apply: recalled messages, messages the user
+   * deleted for themselves, and anything before their clear-history cutoff are excluded — in the
+   * query, so pages stay full and the total is right.
    */
   public PageResponse<MessageResponse> getSharedAttachments(
       String userId, String conversationId, String type, Pageable pageable) {
@@ -41,31 +48,41 @@ public class AttachmentService {
         conversationRepository
             .findById(conversationId)
             .orElseThrow(() -> new ConversationNotFoundException(conversationId));
-    if (!conversation.getParticipants().contains(userId)) {
+    if (conversation.getParticipants() == null
+        || !conversation.getParticipants().contains(userId)) {
       throw new ConversationNotFoundException(conversationId);
     }
+    Instant clearedAt =
+        conversation.getClearedAt() == null ? null : conversation.getClearedAt().get(userId);
 
-    Page<Message> page;
+    Criteria criteria =
+        Criteria.where("conversationId")
+            .is(conversationId)
+            .and("recalled")
+            .ne(true)
+            .and("deletedFor")
+            .ne(userId);
     if ("link".equals(type)) {
-      page = messageRepository.findLinksByConversationId(conversationId, pageable);
+      criteria = criteria.and("type").is("text").and("content").regex("https?://", "i");
     } else if ("file".equals(type)) {
-      page =
-          messageRepository.findByConversationIdAndTypeInOrderByCreatedAtDesc(
-              conversationId, List.of("file"), pageable);
+      criteria = criteria.and("type").is("file");
     } else {
       // default: media (image + video)
-      page =
-          messageRepository.findByConversationIdAndTypeInOrderByCreatedAtDesc(
-              conversationId, List.of("image", "video"), pageable);
+      criteria = criteria.and("type").in(List.of("image", "video"));
+    }
+    if (clearedAt != null) {
+      criteria = criteria.and("createdAt").gt(clearedAt);
     }
 
+    Query query =
+        new Query(criteria)
+            .with(Sort.by(Sort.Direction.DESC, "createdAt"))
+            .skip(pageable.getOffset())
+            .limit(pageable.getPageSize());
     List<MessageResponse> content =
-        page.getContent().stream()
-            .filter(m -> !m.isRecalled())
-            .map(messageService::toResponse)
-            .toList();
+        mongoTemplate.find(query, Message.class).stream().map(messageMapper::toResponse).toList();
+    long total = mongoTemplate.count(new Query(criteria), Message.class);
 
-    return new PageResponse<>(
-        content, pageable.getPageNumber(), pageable.getPageSize(), page.getTotalElements());
+    return new PageResponse<>(content, pageable.getPageNumber(), pageable.getPageSize(), total);
   }
 }

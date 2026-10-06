@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/l10n/l10n_ext.dart';
-import '../../../core/utils/app_error.dart';
+import '../utils/chat_error.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../data/chat_repository.dart';
+import '../../../core/utils/media_url.dart';
+import '../domain/ai_persona_model.dart';
 import '../domain/ai_persona_provider.dart';
 
 class AiPersonaScreen extends ConsumerStatefulWidget {
@@ -24,6 +26,7 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
   String _tone = 'friendly';
   bool _initialized = false;
   bool _uploadingAvatar = false;
+  bool _hadAvatar = false;
 
   @override
   void dispose() {
@@ -33,13 +36,16 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
     super.dispose();
   }
 
-  void _initFromPersona(dynamic persona) {
+  void _initFromPersona(AiPersonaModel? persona) {
     if (_initialized || persona == null) return;
     _initialized = true;
-    _nameController.text = persona.name ?? 'PON AI';
+    // No stored name = the workspace's AI name applies; never pin a
+    // hardcoded "PON AI" over it.
+    _nameController.text = persona.name ?? '';
     _avatarController.text = persona.avatarUrl ?? '';
+    _hadAvatar = (persona.avatarUrl ?? '').isNotEmpty;
     _instructionsController.text = persona.systemPromptPrefix ?? '';
-    _tone = persona.tone ?? 'friendly';
+    _tone = persona.tone;
   }
 
   Future<void> _save(BuildContext context) async {
@@ -48,15 +54,14 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
     final prefix = _instructionsController.text.trim();
     final messenger = ScaffoldMessenger.of(context);
     final l10n = context.l10n;
-    if (name.isEmpty) {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.aiPersonaNameHint)));
-      return;
-    }
     final body = {
-      'name': name,
-      if (avatar.isNotEmpty) 'avatarUrl': avatar,
+      // A blank name is omitted: the stored one (or the workspace AI name) stays.
+      if (name.isNotEmpty) 'name': name,
+      // '' clears a previously set avatar.
+      if (avatar.isNotEmpty || _hadAvatar) 'avatarUrl': avatar,
       'tone': _tone,
-      if (prefix.isNotEmpty) 'systemPromptPrefix': prefix,
+      // Always sent: '' clears the instructions (the server stores null).
+      'systemPromptPrefix': prefix,
     };
     try {
       await ref
@@ -68,7 +73,7 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
     } catch (e) {
       if (mounted) {
         messenger.showSnackBar(
-            SnackBar(content: Text(friendlyError(e))));
+            SnackBar(content: Text(chatErrorMessage(l10n, e))));
       }
     }
   }
@@ -117,7 +122,8 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
       await ref.read(aiPersonaProvider(widget.conversationId).notifier).reset();
       setState(() {
         _initialized = false;
-        _nameController.text = 'PON AI';
+        _hadAvatar = false;
+        _nameController.clear();
         _avatarController.clear();
         _instructionsController.clear();
         _tone = 'friendly';
@@ -125,7 +131,7 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
     } catch (e) {
       if (mounted) {
         messenger.showSnackBar(
-            SnackBar(content: Text(friendlyError(e))));
+            SnackBar(content: Text(chatErrorMessage(l10n, e))));
       }
     }
   }
@@ -188,8 +194,11 @@ class _AiPersonaScreenState extends ConsumerState<AiPersonaScreen> {
                   children: [
                     CircleAvatar(
                       radius: 36,
+                      // Uploads return a relative `/api/uploads/…` path —
+                      // resolve it, or the preview stays blank.
                       backgroundImage: _avatarController.text.isNotEmpty
-                          ? NetworkImage(_avatarController.text)
+                          ? NetworkImage(
+                              absoluteMediaUrl(_avatarController.text))
                           : null,
                       onBackgroundImageError:
                           _avatarController.text.isNotEmpty ? (_, __) {} : null,

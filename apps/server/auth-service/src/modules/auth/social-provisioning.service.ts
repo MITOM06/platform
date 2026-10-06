@@ -21,6 +21,8 @@ export type SocialProvider = 'google' | 'oidc';
 export interface SocialProfile {
   id?: string;
   email?: string;
+  /** True only when the IdP asserted `email_verified: true`. */
+  emailVerified?: boolean;
   displayName?: string;
   name?: string;
   avatar?: string;
@@ -30,9 +32,13 @@ export interface SocialProfile {
 
 /**
  * Resolves a social / SSO identity to a PON user id under invite-only rules:
- *   - existing user (by provider id, else case-insensitive email) → status check
- *     → link the provider if missing;
- *   - no user + BOOTSTRAP_OWNER_EMAIL → create the first Owner;
+ *   - user already linked to this provider id → status check;
+ *   - existing user matched by (case-insensitive) email → only when the IdP
+ *     asserts the email verified (else 401 SSO_EMAIL_UNVERIFIED) and the account
+ *     is not linked to a DIFFERENT id of this provider (else 403
+ *     SOCIAL_ACCOUNT_CONFLICT) → status check → link the provider;
+ *   - no user + BOOTSTRAP_OWNER_EMAIL → create the first Owner (verified email
+ *     required: this path grants Owner);
  *   - no user + `allowJit` (SSO with an explicit domain allow-list) → JIT create,
  *     consuming a live invitation if one exists;
  *   - no user + live invitation → 403 INVITATION_PENDING;
@@ -62,14 +68,26 @@ export class SocialProvisioningService {
     }
     const email = normalizeEmail(profile.email);
 
-    let user = profile.id
+    const linked = profile.id
       ? await this.usersService.findBySocialId(provider, profile.id)
       : null;
-    if (!user) user = await this.usersService.findByEmailInsensitive(email);
+    if (linked) {
+      assertCanSignIn(linked);
+      return linked._id.toString();
+    }
 
+    const user = await this.usersService.findByEmailInsensitive(email);
     if (user) {
+      // Linking by email = taking over that account, so the address must be
+      // proven: an IdP that does not assert email_verified (or an attacker-made
+      // account with someone else's address) must not get in.
+      this.assertVerifiedEmail(profile);
+      const storedId = user.socialLinks?.[provider];
+      if (storedId && storedId !== profile.id) {
+        throw new ForbiddenException({ code: AuthCode.SOCIAL_ACCOUNT_CONFLICT });
+      }
       assertCanSignIn(user);
-      if (profile.id && !user.socialLinks?.[provider]) {
+      if (profile.id && !storedId) {
         await this.usersService.updateSocialId(
           user._id.toString(),
           provider,
@@ -82,6 +100,7 @@ export class SocialProvisioningService {
     const base = this.newUserFields(profile, provider, email);
 
     if (this.isBootstrapOwner(email)) {
+      this.assertVerifiedEmail(profile);
       const ownerRole = await this.roleModel.findOne({ name: 'Owner' }).exec();
       const created = await this.usersService.create({
         ...base,
@@ -113,6 +132,12 @@ export class SocialProvisioningService {
       throw new ForbiddenException({ code: AuthCode.INVITATION_PENDING });
     }
     throw new ForbiddenException({ code: AuthCode.ACCOUNT_NOT_PROVISIONED });
+  }
+
+  private assertVerifiedEmail(profile: SocialProfile): void {
+    if (profile.emailVerified !== true) {
+      throw new UnauthorizedException({ code: AuthCode.SSO_EMAIL_UNVERIFIED });
+    }
   }
 
   private isBootstrapOwner(email: string): boolean {

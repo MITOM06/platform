@@ -161,72 +161,21 @@ export const CATALOG: CatalogEntry[] = [
   },
 ];
 
-/**
- * Bare MCP tool names considered "sensitive" — they send mail or perform
- * external writes/creates. These are filtered out of a user's tool set (and
- * blocked at call time) unless the user holds RUN_SENSITIVE_SKILL. Matched on
- * the bare tool name (the `<tool>` part of `mcp__<provider>__<tool>`), case-
- * insensitively, so naming variants across MCP servers are covered.
- */
-export const SENSITIVE_TOOLS: ReadonlySet<string> = new Set([
-  // Email
-  'send_email',
-  'send_message',
-  // Notion page/database writes
-  'create_page',
-  'update_page',
-  'create_database',
-  'update_database',
-  'create-pages',
-  'update-page',
-  // Generic external writes
-  'create_event',
-  'update_event',
-  'delete_event',
-  'create_file',
-  'update_file',
-  'delete_file',
-]);
+// Tool governance classification lives in ./tool-classification (fail-closed:
+// unknown verbs are writes in the strictest group). Re-exported here so the
+// existing import sites keep working.
+export {
+  ALL_ACTION_GROUPS,
+  SENSITIVE_TOOLS,
+  classifyTool,
+  classifyToolActionGroup,
+  isSensitiveTool,
+} from './tool-classification';
+export type { ActionGroup, ToolAnnotationsLike, ToolClassification } from './tool-classification';
 
-/** True if a bare MCP tool name is tagged sensitive (case-insensitive). */
-export function isSensitiveTool(toolName: string): boolean {
-  return SENSITIVE_TOOLS.has(toolName.toLowerCase());
-}
-
-/**
- * Action groups a connection can grant the AI on a third-party app. Each tool
- * maps to exactly ONE group (the action it performs); a tool is usable only
- * when its group is granted on the connection.
- */
-export type ActionGroup = 'view' | 'create' | 'edit' | 'delete';
-
-export const ALL_ACTION_GROUPS: readonly ActionGroup[] = ['view', 'create', 'edit', 'delete'];
-
-// Explicit overrides for known catalog tools whose name doesn't pattern-match cleanly.
-const TOOL_ACTION_GROUP: ReadonlyMap<string, ActionGroup> = new Map([
-  ['send_email', 'create'],
-  ['send_message', 'create'],
-  ['create_draft', 'create'],
-  ['suggest_time', 'view'],
-  ['search_threads', 'view'],
-  ['list_events', 'view'],
-]);
-
-/**
- * Classify a bare MCP tool name into a single action group. Explicit overrides
- * win; otherwise verb patterns are matched in order of severity
- * (delete > edit > create > view) so e.g. `update_and_notify` reads as `edit`.
- * Unknown/read-like tools default to the least-privileged `view`.
- */
-export function classifyToolActionGroup(toolName: string): ActionGroup {
-  const name = toolName.toLowerCase();
-  const override = TOOL_ACTION_GROUP.get(name);
-  if (override) return override;
-  if (/(^|[_\-])(delete|remove|trash|archive|revoke|cancel)/.test(name)) return 'delete';
-  if (/(^|[_\-])(update|edit|modify|patch|move|rename|replace|set)/.test(name)) return 'edit';
-  if (/(^|[_\-])(create|insert|add|send|compose|write|post|publish|new|upload|draft)/.test(name))
-    return 'create';
-  return 'view';
+/** True when `id` is a built-in catalog connector id (available or not). */
+export function isCatalogId(id: string): boolean {
+  return CATALOG.some((e) => e.id === id);
 }
 
 export function findCatalogEntry(id: string): CatalogEntry | undefined {

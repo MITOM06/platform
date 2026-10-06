@@ -1121,7 +1121,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pinnedMessagesTitle => 'Mensajes fijados';
 
   @override
-  String get pinLimitReached => 'Puedes fijar hasta 2 mensajes';
+  String get pinLimitReached => 'Puedes fijar hasta 5 mensajes';
 
   @override
   String get cannotPinCall => 'Las llamadas no se pueden fijar';
@@ -3631,4 +3631,712 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get callPoorConnection => 'Conexión débil';
+
+  @override
+  String get aiContextLearnedFactsLoadError =>
+      'No se pudo cargar lo que el asistente ha aprendido.';
+
+  @override
+  String get errTooManyRequests =>
+      'Demasiadas solicitudes. Espera un momento y vuelve a intentarlo.';
+
+  @override
+  String get removedFromConversation =>
+      'Ya no eres miembro de esta conversación';
+
+  @override
+  String get errGroupAdminRequired =>
+      'Solo los administradores del grupo pueden hacer esto';
+
+  @override
+  String get errChatUserBlocked => 'No puedes enviar mensajes a esta persona';
+
+  @override
+  String get errReplyTargetInvalid =>
+      'El mensaje al que respondiste ya no está disponible';
+
+  @override
+  String get errMessageTypeNotAllowed =>
+      'Este tipo de mensaje no se puede enviar aquí';
+
+  @override
+  String get errInvalidUrl => 'No se puede previsualizar este enlace';
+
+  @override
+  String get errNotAGroup => 'Esto solo funciona en chats de grupo';
+
+  @override
+  String get errNotAMember => 'Esta persona ya no está en el grupo';
+
+  @override
+  String get errLastAdminCannotBeRemoved =>
+      'Un grupo necesita al menos un administrador';
+
+  @override
+  String get errPublicDepartmentChannel =>
+      'Un grupo de departamento no puede ser un canal público';
+
+  @override
+  String get publicChannelToggle => 'Canal público';
+
+  @override
+  String get publicChannelHint =>
+      'Cualquiera del espacio de trabajo puede encontrarlo en Explorar y unirse';
+
+  @override
+  String get groupMakeAdmin => 'Hacer administrador';
+
+  @override
+  String get groupRemoveAdmin => 'Quitar como administrador';
+
+  @override
+  String get aiErrEmptyResponse =>
+      'El asistente no generó una respuesta. Inténtalo de nuevo.';
+
+  @override
+  String get sysGroupCreatedNoActor => 'Grupo creado';
+
+  @override
+  String get sysMembersAddedNoActor => 'Se añadieron nuevos miembros';
+
+  @override
+  String get sysMemberLeftNoActor => 'Un miembro salió del grupo';
+
+  @override
+  String get sysMemberRemovedNoActor => 'Se eliminó a un miembro';
+
+  @override
+  String get sysMemberJoinedNoActor => 'Se unió un nuevo miembro';
+
+  @override
+  String get sysAutoDeleteOff => 'Mensajes temporales desactivados';
+
+  @override
+  String sysAutoDeleteOn(String duration) {
+    return 'Mensajes temporales configurados en $duration';
+  }
+
+  @override
+  String sysAutoDeleteOffBy(String actorName) {
+    return '$actorName desactivó los mensajes temporales';
+  }
+
+  @override
+  String sysAutoDeleteOnBy(String actorName, String duration) {
+    return '$actorName configuró los mensajes temporales en $duration';
+  }
+
+  @override
+  String sysAdminPromoted(String targetName) {
+    return '$targetName ahora es administrador';
+  }
+
+  @override
+  String sysAdminDemoted(String targetName) {
+    return '$targetName ya no es administrador';
+  }
+
+  @override
+  String sysAdminPromotedBy(String actorName, String targetName) {
+    return '$actorName nombró administrador a $targetName';
+  }
+
+  @override
+  String sysAdminDemotedBy(String actorName, String targetName) {
+    return '$actorName quitó a $targetName como administrador';
+  }
+
+  @override
+  String durationSeconds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count segundos',
+      one: '1 segundo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutos',
+      one: '1 minuto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count horas',
+      one: '1 hora',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count días',
+      one: '1 día',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationShortMinutes(int count) {
+    return '$count min';
+  }
+
+  @override
+  String durationShortHours(int count) {
+    return '$count h';
+  }
+
+  @override
+  String durationShortDays(int count) {
+    return '$count d';
+  }
+
+  @override
+  String get authErrUserBlocked =>
+      'No disponible: uno de los dos ha bloqueado al otro';
+
+  @override
+  String get authErrCurrentPasswordRequired => 'Introduce tu contraseña actual';
+
+  @override
+  String get authErrSsoEmailUnverified =>
+      'Tu proveedor de inicio de sesión no ha verificado este correo';
+
+  @override
+  String get authErrSocialAccountConflict =>
+      'Este correo ya está vinculado a otra cuenta de inicio de sesión';
+
+  @override
+  String get aiActionConfirm => 'Confirmar';
+
+  @override
+  String get aiActionCancel => 'Cancelar';
+
+  @override
+  String get aiActionSendEmail => 'Enviar correo';
+
+  @override
+  String get aiActionDraftEmail => 'Borrador de correo';
+
+  @override
+  String get aiActionCreateEvent => 'Crear evento de calendario';
+
+  @override
+  String get aiActionUpdateEvent => 'Actualizar evento de calendario';
+
+  @override
+  String get aiActionCreatePage => 'Crear página';
+
+  @override
+  String get aiActionUpdatePage => 'Actualizar página';
+
+  @override
+  String get aiActionGeneric => 'Ejecutar una acción';
+
+  @override
+  String aiActionGenericNamed(String tool) {
+    return 'Ejecutar «$tool»';
+  }
+
+  @override
+  String aiActionVia(String connector) {
+    return 'mediante $connector';
+  }
+
+  @override
+  String aiActionWaitingFor(String name) {
+    return 'Esperando a que $name confirme';
+  }
+
+  @override
+  String get aiActionFieldTo => 'Para';
+
+  @override
+  String get aiActionFieldSubject => 'Asunto';
+
+  @override
+  String get aiActionFieldTitle => 'Título';
+
+  @override
+  String get aiActionFieldWhen => 'Cuándo';
+
+  @override
+  String get aiActionStatusConfirmed => 'Hecho';
+
+  @override
+  String get aiActionStatusCancelled => 'Cancelado';
+
+  @override
+  String get aiActionStatusFailed => 'Falló';
+
+  @override
+  String get aiActionStatusExpired => 'Caducado';
+
+  @override
+  String get aiActionStatusHandled => 'Ya gestionado';
+
+  @override
+  String get aiActionErrNotFound => 'Esta acción ya no existe';
+
+  @override
+  String get aiActionErrNotOwner => 'Solo quien lo pidió puede confirmarlo';
+
+  @override
+  String get aiActionErrAlreadyResolved => 'Esta acción ya se gestionó';
+
+  @override
+  String get aiActionErrExpired => 'Esta solicitud caducó';
+
+  @override
+  String get aiActionErrGeneric => 'No se pudo completar esta acción';
+
+  @override
+  String get aiToolWebSearch => 'Buscando en la web';
+
+  @override
+  String get aiToolRememberFact => 'Guardando en la memoria';
+
+  @override
+  String get aiToolCreateReminder => 'Creando un recordatorio';
+
+  @override
+  String get aiToolGetUserInfo => 'Buscando a un compañero';
+
+  @override
+  String get aiToolSearchKnowledgeBase => 'Buscando en la base de conocimiento';
+
+  @override
+  String get aiToolSearchMessages => 'Buscando mensajes';
+
+  @override
+  String get aiToolSummarizeConversation => 'Resumiendo la conversación';
+
+  @override
+  String aiToolOnConnector(String tool, String connector) {
+    return '$tool en $connector';
+  }
+
+  @override
+  String get aiTraceToolAwaiting => 'Esperando confirmación';
+
+  @override
+  String get aiTraceToolDone => 'Hecho';
+
+  @override
+  String get aiTraceToolNotRun => 'No ejecutado';
+
+  @override
+  String aiTraceTokens(String input, String output) {
+    return '$input entrada · $output salida';
+  }
+
+  @override
+  String aiTraceCacheTokens(String read, String written) {
+    return 'caché $read leídos · $written escritos';
+  }
+
+  @override
+  String aiTraceThinkingTokens(String count) {
+    return '$count de razonamiento';
+  }
+
+  @override
+  String aiTraceDuration(String seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String aiTraceSteps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pasos',
+      one: '1 paso',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get connectorGenericName => 'Conector';
+
+  @override
+  String get connectorCustomName => 'Servidor MCP personalizado';
+
+  @override
+  String get connectorReconnect => 'Reconectar';
+
+  @override
+  String get connectorStatusReconnect => 'Hay que reconectar';
+
+  @override
+  String get connectorStatusUnavailable => 'No disponible';
+
+  @override
+  String get connectorDisconnectWorkspaceConfirm =>
+      '¿Desconectar este conector del espacio de trabajo? Todos perderán el acceso a sus herramientas.';
+
+  @override
+  String connectorDisconnected(String name) {
+    return '$name desconectado';
+  }
+
+  @override
+  String get customMcpListTitle => 'Tus servidores MCP';
+
+  @override
+  String get customMcpDelete => 'Quitar';
+
+  @override
+  String get customMcpDeleteConfirm =>
+      '¿Quitar este servidor MCP? La IA dejará de usar sus herramientas.';
+
+  @override
+  String customMcpDeleted(String name) {
+    return '$name quitado';
+  }
+
+  @override
+  String get directoryDeleteConfirm => '¿Eliminar esta entrada del directorio?';
+
+  @override
+  String get directoryAuthOauth => 'Inicio de sesión OAuth';
+
+  @override
+  String get directoryAuthMcpOauth => 'OAuth (servidor MCP)';
+
+  @override
+  String get directoryAuthEnvOauth => 'OAuth (app del espacio de trabajo)';
+
+  @override
+  String get directoryAuthApiKey => 'Clave de API';
+
+  @override
+  String get directoryAuthNone => 'Sin inicio de sesión';
+
+  @override
+  String get scopeEmailSend => 'Enviar correos';
+
+  @override
+  String get scopeEmailDraft => 'Crear borradores';
+
+  @override
+  String get scopeEmailRead => 'Leer correos';
+
+  @override
+  String get scopeEmailManage => 'Gestionar correos';
+
+  @override
+  String get scopeCalendarRead => 'Ver el calendario';
+
+  @override
+  String get scopeCalendarEvents => 'Gestionar eventos';
+
+  @override
+  String get scopeCalendarManage => 'Gestionar calendarios';
+
+  @override
+  String get scopeFilesRead => 'Leer archivos';
+
+  @override
+  String get scopeFilesManage => 'Gestionar archivos';
+
+  @override
+  String get scopeReadContent => 'Leer contenido';
+
+  @override
+  String get scopeInsertContent => 'Añadir contenido';
+
+  @override
+  String get scopeUpdateContent => 'Editar contenido';
+
+  @override
+  String get scopeOther => 'Otros accesos';
+
+  @override
+  String get connErrUnsafeUrl =>
+      'Esa dirección no está permitida. Usa una URL https pública.';
+
+  @override
+  String get connErrDiscoveryFailed =>
+      'No se pudo contactar con ese servidor MCP';
+
+  @override
+  String get connErrInsufficientPermission =>
+      'No tienes permiso para hacer esto';
+
+  @override
+  String get connErrNotAllowed =>
+      'Este conector no está permitido en tu espacio de trabajo';
+
+  @override
+  String get connErrUnavailable => 'Este conector no está disponible ahora';
+
+  @override
+  String get connErrOauthSetup =>
+      'Este conector aún no tiene configurado el inicio de sesión';
+
+  @override
+  String get connErrBotBridgeDisabled =>
+      'El servicio de asistente personal no está configurado';
+
+  @override
+  String get connErrBotNotFound => 'No se encontró el asistente';
+
+  @override
+  String get connErrBotOwnerMismatch =>
+      'Este asistente pertenece a otro miembro';
+
+  @override
+  String get connErrMemberInactive => 'La cuenta de este miembro está inactiva';
+
+  @override
+  String oauthConnected(String name) {
+    return '$name conectado';
+  }
+
+  @override
+  String oauthErrAccessDenied(String name) {
+    return 'Rechazaste el acceso a $name';
+  }
+
+  @override
+  String oauthErrFailed(String name) {
+    return 'No se pudo conectar $name';
+  }
+
+  @override
+  String oauthNotCompleted(String name) {
+    return 'La conexión con $name no se completó';
+  }
+
+  @override
+  String get oauthErrExpired =>
+      'El inicio de sesión tardó demasiado. Inténtalo de nuevo.';
+
+  @override
+  String get tokenUsageDailyChartTitle => 'Uso diario';
+
+  @override
+  String get tokenUsageTotalInRange => 'Total del periodo seleccionado';
+
+  @override
+  String get tokenUsageQuotaBlocked =>
+      'La IA está desactivada en este espacio de trabajo';
+
+  @override
+  String get tokenUsageQuotaExceeded => 'Se alcanzó el límite mensual de IA';
+
+  @override
+  String tokenUsageQuotaResets(String date) {
+    return 'Se restablece el $date';
+  }
+
+  @override
+  String authErrRoleGrantExceedsOwnPermissions(String capabilities) {
+    return 'No puedes conceder permisos que tú no tienes: $capabilities.';
+  }
+
+  @override
+  String get authErrRoleGrantExceedsOwnPermissionsGeneric =>
+      'No puedes conceder permisos que tú no tienes.';
+
+  @override
+  String get authErrCannotEditOwnRole => 'No puedes editar tu propio rol.';
+
+  @override
+  String get authErrPresetRoleRenameForbidden =>
+      'Los roles predefinidos no se pueden renombrar.';
+
+  @override
+  String get authErrRoleNameTaken => 'Ya existe un rol con este nombre.';
+
+  @override
+  String get authErrOwnerRoleImmutable =>
+      'El rol Owner no se puede modificar ni eliminar.';
+
+  @override
+  String get authErrOwnerSsoMappingForbidden =>
+      'Solo un Owner puede asignar grupos SSO al rol Owner.';
+
+  @override
+  String get authErrInsufficientPermission =>
+      'No tienes permiso para hacer esto.';
+
+  @override
+  String get authErrAiContextEntryNotFound =>
+      'Esta entrada de contexto ya no existe.';
+
+  @override
+  String get authErrAiConnectorsNotInAllowList =>
+      'Los conectores de IA seleccionados también deben estar permitidos en la lista de conectores del espacio de trabajo.';
+
+  @override
+  String authErrPasswordTooShortMin(int min) {
+    return 'La contraseña debe tener al menos $min caracteres.';
+  }
+
+  @override
+  String get adminCapManageAiContext => 'Gestionar el contexto de IA';
+
+  @override
+  String get adminCapViewInternalContext => 'Ver el contexto interno';
+
+  @override
+  String get adminCapViewConfidentialContext => 'Ver el contexto confidencial';
+
+  @override
+  String get adminCapUnknown => 'Otro permiso';
+
+  @override
+  String get adminAuditSystem => 'Sistema';
+
+  @override
+  String get adminAuditFormerMember => 'Un antiguo miembro';
+
+  @override
+  String get adminAuditActionOther => 'Otra acción';
+
+  @override
+  String get adminAuditActionWorkspaceUpdate =>
+      'Espacio de trabajo actualizado';
+
+  @override
+  String get adminAuditActionDepartmentCreate => 'Departamento creado';
+
+  @override
+  String get adminAuditActionDepartmentUpdate => 'Departamento actualizado';
+
+  @override
+  String get adminAuditActionDepartmentDelete => 'Departamento eliminado';
+
+  @override
+  String get adminAuditActionMemberUpdate => 'Miembro actualizado';
+
+  @override
+  String get adminAuditActionMemberSsoUpdate => 'Miembro actualizado por SSO';
+
+  @override
+  String get adminAuditActionMemberBlock => 'Miembro bloqueado';
+
+  @override
+  String get adminAuditActionMemberUnblock => 'Miembro desbloqueado';
+
+  @override
+  String get adminAuditActionRoleCreate => 'Rol creado';
+
+  @override
+  String get adminAuditActionRoleUpdate => 'Rol actualizado';
+
+  @override
+  String get adminAuditActionInvitationCreate => 'Invitación enviada';
+
+  @override
+  String get adminAuditActionInvitationResend => 'Invitación reenviada';
+
+  @override
+  String get adminAuditActionInvitationRevoke => 'Invitación revocada';
+
+  @override
+  String get adminAuditActionInvitationAccept => 'Invitación aceptada';
+
+  @override
+  String get adminAuditActionConnectorConnect => 'Conector conectado';
+
+  @override
+  String get adminAuditActionConnectorDisconnect => 'Conector desconectado';
+
+  @override
+  String get adminAuditActionConnectorReplace => 'Conector reconectado';
+
+  @override
+  String get adminAuditActionConnectionPermissionsUpdate =>
+      'Permisos del conector actualizados';
+
+  @override
+  String get adminAuditActionCustomMcpAdd => 'MCP personalizado añadido';
+
+  @override
+  String get adminAuditActionCustomMcpDelete => 'MCP personalizado eliminado';
+
+  @override
+  String get adminAuditActionDirectoryCreate => 'Entrada de directorio añadida';
+
+  @override
+  String get adminAuditActionDirectoryUpdate =>
+      'Entrada de directorio actualizada';
+
+  @override
+  String get adminAuditActionDirectoryDelete =>
+      'Entrada de directorio eliminada';
+
+  @override
+  String get adminAuditActionSensitiveSkillRun =>
+      'Habilidad sensible ejecutada';
+
+  @override
+  String get adminAuditTargetWorkspace => 'Espacio de trabajo';
+
+  @override
+  String get adminAuditTargetMember => 'Un miembro';
+
+  @override
+  String get adminAuditTargetRole => 'Un rol';
+
+  @override
+  String get adminAuditTargetDepartment => 'Un departamento';
+
+  @override
+  String get adminAuditTargetInvitation => 'Una invitación';
+
+  @override
+  String get adminAuditTargetConnector => 'Un conector';
+
+  @override
+  String get adminAuditTargetDirectoryEntry => 'Una entrada de directorio';
+
+  @override
+  String get adminAuditTargetTool => 'Una herramienta';
+
+  @override
+  String get adminAuditTargetOther => 'Otro elemento';
+
+  @override
+  String get adminAiConnectorsAllAllowed =>
+      'La lista de permitidos del espacio de trabajo está vacía, así que se permiten todos los conectores. Elige los que puede usar la IA.';
+
+  @override
+  String get errAssistantSetupIncomplete =>
+      'Añade una personalidad y elige un modelo para terminar de configurar tu asistente.';
+
+  @override
+  String get errAssistantNotConfigured =>
+      'Los asistentes personales aún no están disponibles en este espacio de trabajo. Consulta a tu administrador.';
+
+  @override
+  String get errAssistantUpstreamFailed =>
+      'El servicio del asistente no respondió. Inténtalo de nuevo en un momento.';
+
+  @override
+  String adminBotOwnedBy(String name) {
+    return 'Propiedad de $name';
+  }
+
+  @override
+  String adminRoleCloneDefaultName(String name) {
+    return 'Copia de $name';
+  }
 }

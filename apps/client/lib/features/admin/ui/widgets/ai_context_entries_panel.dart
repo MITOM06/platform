@@ -8,6 +8,7 @@ import '../../../ai_context/data/ai_context_models.dart';
 import '../../../ai_context/data/ai_context_repository.dart';
 import '../../../ai_context/domain/ai_context_providers.dart';
 import '../../state/admin_providers.dart';
+import '../../utils/admin_error.dart';
 
 /// Admin editor for company/department AI-context entries. Mirrors the web
 /// `AiContextEntriesPanel`. CRUD via auth-service; visibility tier maps to a
@@ -126,8 +127,10 @@ class _AiContextEntriesPanelState extends ConsumerState<AiContextEntriesPanel> {
       }
       ref.invalidate(contextEntriesProvider(_key));
       showInfoSnackBar(l.adminToastSaved);
-    } catch (_) {
-      showErrorSnackBar(l.adminToastError);
+    } catch (e) {
+      // AI_CONTEXT_ENTRY_NOT_FOUND / INSUFFICIENT_PERMISSION → their own message.
+      showErrorSnackBar(
+          context.mounted ? adminErrorMessage(context, e) : l.adminToastError);
     }
   }
 
@@ -136,9 +139,11 @@ class _AiContextEntriesPanelState extends ConsumerState<AiContextEntriesPanel> {
     try {
       await ref.read(aiContextRepositoryProvider).deleteEntry(e.id);
       ref.invalidate(contextEntriesProvider(_key));
-      showInfoSnackBar(l.adminToastSaved);
-    } catch (_) {
-      showErrorSnackBar(l.adminToastError);
+      showInfoSnackBar(l.adminToastDeleted);
+    } catch (err) {
+      showErrorSnackBar(context.mounted
+          ? adminErrorMessage(context, err)
+          : l.adminToastError);
     }
   }
 

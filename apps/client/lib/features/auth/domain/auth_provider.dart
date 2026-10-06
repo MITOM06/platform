@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -6,12 +9,14 @@ import '../../../core/utils/global_messenger.dart';
 import '../../chat/domain/chat_provider.dart';
 import '../data/auth_repository.dart';
 import 'auth_state.dart';
+import 'session_reset.dart';
 
 part 'auth_provider.g.dart';
 
 @riverpod
 class AuthNotifier extends _$AuthNotifier {
   String? _lastProcessedOAuthCode;
+  StreamSubscription<String>? _fcmRefreshSub;
 
   @override
   Future<AuthState> build() async {
@@ -28,7 +33,7 @@ class AuthNotifier extends _$AuthNotifier {
     state = await AsyncValue.guard(() async {
       final user =
           await ref.read(authRepositoryProvider).login(email, password);
-      _registerFcmToken();
+      _beginSession();
       return AuthAuthenticated(user);
     });
   }
@@ -48,8 +53,16 @@ class AuthNotifier extends _$AuthNotifier {
     final user = await ref
         .read(authRepositoryProvider)
         .acceptInvitationWithPassword(token, displayName, password);
-    _registerFcmToken();
+    _beginSession();
     state = AsyncData(AuthAuthenticated(user));
+  }
+
+  /// A fresh sign-in is about to commit: drop anything a previous account
+  /// left in memory (process-wide providers, STOMP subscriptions), then
+  /// register this device for pushes.
+  void _beginSession() {
+    resetSessionState(ref);
+    _registerFcmToken();
   }
 
   Future<void> _registerFcmToken() async {
@@ -66,11 +79,39 @@ class AuthNotifier extends _$AuthNotifier {
       if (token != null) {
         await ref.read(authRepositoryProvider).updateFcmToken(token);
       }
-      FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
-        ref.read(authRepositoryProvider).updateFcmToken(newToken);
+      // One listener per session (it used to stack up on every sign-in).
+      await _fcmRefreshSub?.cancel();
+      _fcmRefreshSub =
+          FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+        if (state.valueOrNull is AuthAuthenticated) {
+          ref.read(authRepositoryProvider).updateFcmToken(newToken);
+        }
       });
     } catch (e) {
       // FCM not supported or permissions denied
+    }
+  }
+
+  /// Unregisters this device from the account's pushes: server-side
+  /// (`DELETE /api/users/device-tokens`, needs the still-stored access token)
+  /// and locally (`deleteToken`, so a stale server row can never deliver to
+  /// the next account on this phone). Best-effort; never throws.
+  Future<void> _unregisterPushToken() async {
+    final repo = ref.read(authRepositoryProvider);
+    // Read the access token before the first await so the read is issued
+    // ahead of a forced logout's credential wipe.
+    final accessFuture = repo.readAccessToken();
+    try {
+      final access = await accessFuture;
+      await _fcmRefreshSub?.cancel();
+      _fcmRefreshSub = null;
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null) {
+        await repo.removeFcmToken(token, accessToken: access);
+      }
+      await FirebaseMessaging.instance.deleteToken();
+    } catch (e) {
+      debugPrint('[Auth] push token cleanup skipped: $e');
     }
   }
 
@@ -84,7 +125,7 @@ class AuthNotifier extends _$AuthNotifier {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final user = await ref.read(authRepositoryProvider).exchangeCode(code);
-      _registerFcmToken();
+      _beginSession();
       return AuthAuthenticated(user);
     });
 
@@ -112,8 +153,11 @@ class AuthNotifier extends _$AuthNotifier {
   }
 
   Future<void> logout() async {
+    // Unregister the push token first — it needs the still-valid session.
+    await _unregisterPushToken();
     await ref.read(authRepositoryProvider).logout();
     state = const AsyncData(AuthUnauthenticated());
+    resetSessionState(ref);
   }
 
   /// Called by DioClient / STOMP when the session is dead (refresh rejected,
@@ -123,12 +167,17 @@ class AuthNotifier extends _$AuthNotifier {
   void forceLogout() {
     final code = TokenManager.shared.takeRejectionCode();
     final reason = kLogoutReasons.contains(code) ? code : null;
+    final current = state.valueOrNull;
+    final wasSignedIn = current is AuthAuthenticated;
+    // Push cleanup reads the stored access token, so it is started before the
+    // credentials are wiped (secure-storage calls are issued in order).
+    if (wasSignedIn) unawaited(_unregisterPushToken());
     ref.read(authRepositoryProvider).clearCredentials();
     // Several requests can fail at once; a later reason-less call must not
     // wipe the reason an earlier one already recorded.
-    final current = state.valueOrNull;
     if (current is AuthUnauthenticated && reason == null) return;
     state = AsyncData(AuthUnauthenticated(reason: reason));
+    if (wasSignedIn) resetSessionState(ref);
   }
 
   /// A Google / SSO sign-in came back with `platform://auth?error=CODE`: keep

@@ -4,10 +4,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/api/dio_client.dart';
 import '../../auth/domain/auth_provider.dart';
 
-// ── Quota / pricing config ──────────────────────────────────────────────────
-// Anthropic Claude per-token prices (USD) and the monthly token allowance.
-// Kept in one place so the numbers aren't scattered across the UI.
-const int kMonthlyTokenQuota = 500000;
+// ── Pricing config ──────────────────────────────────────────────────────────
+// Anthropic Claude per-token prices (USD) for the rough cost estimate. The
+// monthly allowance comes from the server (`aiQuotaProvider`), never a constant.
 const double kInputTokenPrice = 0.000003;
 const double kOutputTokenPrice = 0.000015;
 

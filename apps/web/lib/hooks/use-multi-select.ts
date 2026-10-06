@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { chatService } from '@/lib/api/chat'
+import { chatErrorMessage } from '@/lib/api/chat-errors'
 import type { Message, MessageType } from '@/lib/api/types'
 
 type SelectionGroup = 'text' | 'image' | 'file'
@@ -92,14 +93,18 @@ export function useMultiSelect(
   const handleMultiDelete = useCallback(async () => {
     const ids = [...selectedIds]
     if (ids.length === 0) return
-    try {
-      await Promise.all(ids.map((id) => chatService.deleteForMe(id)))
-      ids.forEach((id) => onOptimisticUpdate({ id, deletedFor: ['__me__'] }))
-      exitMultiSelect()
-      toast.success(t('multiDeleted', { count: ids.length }))
-    } catch {
-      toast.error(t('deleteError'))
+    // Settle each request so the ones that succeeded still disappear (the
+    // parent hides a message reported with `deletedFor`).
+    const results = await Promise.allSettled(ids.map((id) => chatService.deleteForMe(id)))
+    const deleted = ids.filter((_, i) => results[i].status === 'fulfilled')
+    deleted.forEach((id) => onOptimisticUpdate({ id, deletedFor: ['__me__'] }))
+    const failure = results.find((r): r is PromiseRejectedResult => r.status === 'rejected')
+    if (failure) {
+      toast.error(chatErrorMessage(failure.reason, t, 'deleteError'))
+      return
     }
+    exitMultiSelect()
+    toast.success(t('multiDeleted', { count: ids.length }))
   }, [selectedIds, onOptimisticUpdate, exitMultiSelect, t])
 
   const handleMultiRecall = useCallback(async () => {
@@ -111,8 +116,8 @@ export function useMultiSelect(
       await Promise.all(own.map((m) => chatService.recallMessage(m.id)))
       exitMultiSelect()
       toast.success(t('multiRecalled', { count: own.length }))
-    } catch {
-      toast.error(t('recallError'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'recallError'))
     }
   }, [selectedIds, messages, currentUserId, exitMultiSelect, t])
 

@@ -28,6 +28,7 @@ import {
 } from '@/lib/hooks/use-admin'
 import { useCapabilities, useHasCapability } from '@/lib/hooks/use-capabilities'
 import { OWNER_ROLE_NAME, assignableRoles, memberRoleLock } from '@/lib/admin/role-guard'
+import { isEmptyMemberUpdate, memberUpdateDiff } from '@/lib/admin/member-diff'
 import { useAuthStore } from '@/lib/store/auth.store'
 import type { Member } from '@/lib/api/admin-types'
 
@@ -35,7 +36,7 @@ const NO_ROLE = '__none__'
 
 export function MembersPanel() {
   const t = useTranslations('admin')
-  const { data: members = [], isLoading } = useMembers()
+  const { data: members = [], isLoading, isError } = useMembers()
   const canRoles = useHasCapability('MANAGE_ROLES')
   const canDepts = useHasCapability('MANAGE_DEPARTMENTS')
   const canManageMembers = useHasCapability('MANAGE_MEMBERS')
@@ -104,20 +105,24 @@ export function MembersPanel() {
 
   const onSubmit = () => {
     if (!editing) return
-    updateMember.mutate(
-      {
-        id: editing._id,
-        input: {
-          // Never send a role for a locked row — only departments change.
-          roleId: roleLock || roleId === NO_ROLE ? undefined : roleId,
-          departmentIds: deptIds,
-        },
-      },
-      { onSuccess: () => setOpen(false) },
+    // Only what really changed (and what this admin may set); a locked row never
+    // sends a role. Nothing changed ⇒ no request at all.
+    const input = memberUpdateDiff(
+      editing,
+      { roleId: roleId === NO_ROLE ? null : roleId, departmentIds: deptIds },
+      { canRoles, canDepts, roleLocked: !!roleLock },
     )
+    if (isEmptyMemberUpdate(input)) {
+      setOpen(false)
+      return
+    }
+    updateMember.mutate({ id: editing._id, input }, { onSuccess: () => setOpen(false) })
   }
 
   if (isLoading) return <Skeleton className="h-64 rounded-xl" />
+  if (isError) {
+    return <p className="py-8 text-center text-sm text-destructive">{t('loadError')}</p>
+  }
 
   return (
     <div className="space-y-2">
@@ -193,7 +198,7 @@ export function MembersPanel() {
         open={open}
         onOpenChange={setOpen}
         title={t('memberEdit')}
-        description={editing ? `${editing.displayName} · ${t('memberRevokeNote')}` : undefined}
+        description={editing ? `${editing.displayName} · ${t('memberClaimsNote')}` : undefined}
         footer={
           <>
             <Button variant="outline" onClick={() => setOpen(false)}>
@@ -214,7 +219,11 @@ export function MembersPanel() {
                   <SelectValue placeholder={t('memberRoleNone')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NO_ROLE}>{t('memberRoleNone')}</SelectItem>
+                  {/* A member can't be set back to "no role" (they fall back to
+                      Member); the item only renders a member who has none yet. */}
+                  <SelectItem value={NO_ROLE} disabled>
+                    {t('memberRoleNone')}
+                  </SelectItem>
                   {roleOptions.map((r) => (
                     <SelectItem key={r._id} value={r._id}>
                       {r.name}

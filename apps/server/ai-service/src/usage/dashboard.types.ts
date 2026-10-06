@@ -87,7 +87,12 @@ export interface DashboardResponse {
 /** Input to the pure cost estimator: per-model raw token sums. */
 export interface PerModelTokens {
   model: string;
+  /** Total prompt tokens (cache writes/reads included). */
   inputTokens: number;
   outputTokens: number;
   requestCount: number;
+  /** Subset of inputTokens written to the prompt cache (priced at 1.25x input). */
+  cacheCreationInputTokens?: number;
+  /** Subset of inputTokens read from the prompt cache (priced at 0.1x input). */
+  cacheReadInputTokens?: number;
 }

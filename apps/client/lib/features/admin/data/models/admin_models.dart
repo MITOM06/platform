@@ -334,6 +334,10 @@ class AuditLogEntry {
   final String action;
   final String targetType;
   final String? targetId;
+
+  /// Server-resolved name of the target (member/role/department…); null when
+  /// it can't be resolved — the UI then shows a generic label, never the id.
+  final String? targetName;
   final DateTime? createdAt;
 
   const AuditLogEntry({
@@ -343,6 +347,7 @@ class AuditLogEntry {
     required this.action,
     required this.targetType,
     this.targetId,
+    this.targetName,
     this.createdAt,
   });
 
@@ -353,6 +358,7 @@ class AuditLogEntry {
         action: json['action'] as String? ?? '',
         targetType: json['targetType'] as String? ?? '',
         targetId: json['targetId']?.toString(),
+        targetName: json['targetName'] as String?,
         createdAt: json['createdAt'] == null
             ? null
             : DateTime.tryParse(json['createdAt'].toString()),

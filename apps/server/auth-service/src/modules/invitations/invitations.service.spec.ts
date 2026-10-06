@@ -228,6 +228,46 @@ describe('InvitationsService (admin)', () => {
       ).resolves.toMatchObject({ emailSent: true });
     });
 
+    it('403 ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS when a non-Owner invites into a role above them', async () => {
+      const superRole = {
+        _id: oid('role-super'),
+        name: 'Owner copy',
+        permissions: { MANAGE_WORKSPACE: true, MANAGE_MEMBERS: true },
+      };
+      roleModel.findById.mockReturnValue(ex(superRole));
+      const narrowAdmin = { sub: 'admin1', role: 'Admin', perms: ['MANAGE_MEMBERS'] };
+      await expect(
+        service.create(
+          narrowAdmin,
+          { email: 'a@b.co', roleId: '64b000000000000000000009' },
+          'en',
+        ),
+      ).rejects.toMatchObject({
+        status: 403,
+        response: {
+          code: 'ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS',
+          params: { capabilities: ['MANAGE_WORKSPACE'] },
+        },
+      });
+      expect(invitationModel.create).not.toHaveBeenCalled();
+
+      // Inside the actor's capabilities → allowed; the Owner is exempt.
+      await expect(
+        service.create(
+          { ...narrowAdmin, perms: ['MANAGE_MEMBERS', 'MANAGE_WORKSPACE'] },
+          { email: 'a@b.co', roleId: '64b000000000000000000009' },
+          'en',
+        ),
+      ).resolves.toMatchObject({ emailSent: true });
+      await expect(
+        service.create(
+          { sub: 'o1', role: 'Owner', perms: [] },
+          { email: 'c@b.co', roleId: '64b000000000000000000009' },
+          'en',
+        ),
+      ).resolves.toMatchObject({ emailSent: true });
+    });
+
     it('mail failure keeps the invitation and reports emailSent:false', async () => {
       mailer.send.mockResolvedValue(false);
       const res = await service.create(admin, { email: 'a@b.co' }, 'en');

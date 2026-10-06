@@ -2,21 +2,13 @@
 
 import { useMemo, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { MessageCircle, Wrench, ShieldAlert } from 'lucide-react'
+import { MessageCircle } from 'lucide-react'
 import { MessageBubble } from '@/components/chat/MessageBubble'
 import { ChatTypingIndicator } from '@/components/chat/ChatTypingIndicator'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { AiStreamState, Message } from '@/lib/api/types'
-
-// Maps backend tool names to localized "in progress" labels (parity with the
-// Flutter StreamingAiBubble); unknown tools fall back to a generic label.
-const TOOL_LABEL_KEYS: Record<string, string> = {
-  search_messages: 'toolSearchMessages',
-  get_user_info: 'toolGetUserInfo',
-  search_knowledge_base: 'toolSearchKnowledgeBase',
-  summarize_conversation: 'toolSummarizeConversation',
-  create_reminder: 'toolCreateReminder',
-}
+import { AiStreamBubble } from '@/components/chat/AiStreamBubble'
+import type { Message } from '@/lib/api/types'
+import type { AiStreamEntry } from '@/lib/ai/stream-routing'
 
 // Gap between consecutive messages beyond which a lightweight time marker is
 // inserted (Messenger-style grouping). Tunable in one place.
@@ -25,7 +17,8 @@ const TIME_GROUP_GAP_MS = 15 * 60 * 1000 // 15 minutes
 type VirtualRow =
   | { kind: 'separator'; isoDate: string }
   | { kind: 'time-separator'; isoDate: string }
-  | { kind: 'message'; msg: Message }
+  /** `firstOfRun`: first bubble of a run by the same sender (group name label). */
+  | { kind: 'message'; msg: Message; firstOfRun: boolean }
 
 function formatSeparatorDate(
   dateStr: string,
@@ -67,7 +60,8 @@ interface Props {
   /** True while the personal assistant bot is preparing its reply (no STOMP
    *  typing event exists for external bots — Bot Factory calls are synchronous). */
   assistantTyping?: boolean
-  aiStream: AiStreamState | null
+  /** Live AI replies, one bubble each (routed by replyId). */
+  aiStreams: AiStreamEntry[]
   onEdit: (message: Message) => void
   onForward: (message: Message) => void
   onReply: (message: Message) => void
@@ -101,7 +95,7 @@ export function MessageList({
   isError,
   typingUserIds,
   assistantTyping = false,
-  aiStream,
+  aiStreams,
   onEdit,
   onForward,
   onReply,
@@ -145,6 +139,7 @@ export function MessageList({
     const result: VirtualRow[] = []
     let lastDate = ''
     let lastTimestamp = 0
+    let lastSender: string | null = null
     for (const msg of messages) {
       const msgDate = new Date(msg.createdAt)
       const dateStr = msgDate.toDateString()
@@ -152,11 +147,14 @@ export function MessageList({
       if (dateStr !== lastDate) {
         result.push({ kind: 'separator', isoDate: msg.createdAt })
         lastDate = dateStr
+        lastSender = null
       } else if (msgTs - lastTimestamp > TIME_GROUP_GAP_MS) {
         result.push({ kind: 'time-separator', isoDate: msg.createdAt })
+        lastSender = null
       }
       lastTimestamp = msgTs
-      result.push({ kind: 'message', msg })
+      result.push({ kind: 'message', msg, firstOfRun: msg.senderId !== lastSender })
+      lastSender = msg.type === 'system' ? null : msg.senderId
     }
     return result
   }, [messages])
@@ -220,6 +218,7 @@ export function MessageList({
                   isPinned={pinnedMessages.includes(row.msg.id)}
                   pinnedCount={pinnedMessages.length}
                   isGroup={isGroup}
+                  showSenderName={isGroup && row.firstOfRun}
                   onEdit={onEdit}
                   onForward={onForward}
                   onReply={onReply}
@@ -243,51 +242,9 @@ export function MessageList({
         <ChatTypingIndicator />
       )}
 
-      {aiStream !== null && (
-        <div className="flex flex-row items-end gap-1 motion-safe:pon-enter">
-          <div className="max-w-[70%] rounded-[14px] rounded-tl-[4px] px-4 py-2.5 text-sm bg-muted/70 border border-border/50">
-            {aiStream.activeTools.length > 0 && (() => {
-              const tool = aiStream.activeTools[aiStream.activeTools.length - 1]
-              const key = TOOL_LABEL_KEYS[tool]
-              const label = key ? t(key) : t('aiToolCalling', { toolName: tool })
-              const isSensitive = aiStream.sensitiveTools.includes(tool)
-              return (
-                <div
-                  className={`flex items-center gap-1.5 mb-1.5 text-[12px] italic ${
-                    isSensitive ? 'text-red-400' : 'text-amber-500'
-                  }`}
-                >
-                  {isSensitive ? (
-                    <ShieldAlert className="size-3 shrink-0" />
-                  ) : (
-                    <Wrench className="size-3 shrink-0" />
-                  )}
-                  <span>{isSensitive ? `${label} · ${t('aiSensitiveAction')}` : label}</span>
-                </div>
-              )
-            })()}
-            {aiStream.content ? (
-              <p className="whitespace-pre-wrap leading-relaxed">
-                {aiStream.content}
-                <span className="ml-0.5 inline-block w-[2px] h-[1.05em] translate-y-0.5 bg-primary/70 animate-pulse" />
-              </p>
-            ) : (
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">{t('aiThinking')}</span>
-                <div className="flex gap-1">
-                  {[0, 1, 2].map((i) => (
-                    <span
-                      key={i}
-                      className="inline-block size-1.5 rounded-full bg-primary/60 animate-bounce"
-                      style={{ animationDelay: `${i * 0.15}s` }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {aiStreams.map((stream) => (
+        <AiStreamBubble key={stream.key} stream={stream} conversationId={conversationId} />
+      ))}
     </div>
   )
 }

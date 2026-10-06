@@ -51,7 +51,11 @@ class ConversationTile extends ConsumerWidget {
               .select((s) => s.valueOrNull?.online ?? false),
         );
 
-    final profileData = otherUserId.isNotEmpty
+    final isAiBot = !isGroup && otherUserId == kAiBotUserId;
+    // Bots are not users — never look them up (it can only fail).
+    final profileData = (otherUserId.isNotEmpty &&
+            !isAiBot &&
+            !otherUserId.startsWith('extbot:'))
         ? ref.watch(
             userProfileProvider(otherUserId).select((s) => s.valueOrNull),
           )
@@ -60,7 +64,6 @@ class ConversationTile extends ConsumerWidget {
     final dmNickname = (!isGroup && otherUserId.isNotEmpty)
         ? nicknames[otherUserId]
         : null;
-    final isAiBot = !isGroup && otherUserId == kAiBotUserId;
     // Bot Factory personal assistants join as `extbot:*` participants — they
     // are never real Mongo users, so `userProfileProvider` can never resolve a
     // name for them and `displayName` would be stuck on the '...' placeholder
@@ -71,12 +74,16 @@ class ConversationTile extends ConsumerWidget {
     final isAnyBot = isAiBot || isExtBot;
     final displayName = isGroup
         ? (conv.name ?? context.l10n.conversationDefault)
-        : (isExtBot
-            ? (ref.watch(assistantProvider).valueOrNull?.name ??
-                context.l10n.assistantDefaultName)
-            : ((dmNickname != null && dmNickname.isNotEmpty)
-                ? dmNickname
-                : (profileData?.displayName ?? '...')));
+        : isAiBot
+            // The built-in assistant has no profile: the '...' placeholder
+            // used to stay forever on the AI chat title.
+            ? context.l10n.aiAssistant
+            : (isExtBot
+                ? (ref.watch(assistantProvider).valueOrNull?.name ??
+                    context.l10n.assistantDefaultName)
+                : ((dmNickname != null && dmNickname.isNotEmpty)
+                    ? dmNickname
+                    : (profileData?.displayName ?? '...')));
     // Unread indicators are meaningless on bot conversations — web hides them
     // entirely (badge, bold title, border highlight) when the peer is a bot.
     final showUnread = conv.unreadCount > 0 && !isAnyBot;
@@ -173,7 +180,7 @@ class ConversationTile extends ConsumerWidget {
                     conv.muteExpiresAt! < ConversationModel.muteForeverSentinel) ...[
                   const SizedBox(width: 2),
                   Text(
-                    _formatMuteExpiry(conv.muteExpiresAt!),
+                    _formatMuteExpiry(context, conv.muteExpiresAt ?? 0),
                     style: TextStyle(
                       fontSize: 10,
                       color: AppTheme.mutedText(context),
@@ -189,7 +196,7 @@ class ConversationTile extends ConsumerWidget {
                   child: Text(
                     _subtitleWithPrefix(
                       context,
-                      conv.lastMessage!.content,
+                      conv.lastMessage!,
                       isGroup: isGroup,
                       sentByMe: !isGroup &&
                           currentUserId.isNotEmpty &&
@@ -243,40 +250,37 @@ class ConversationTile extends ConsumerWidget {
     );
   }
 
-  /// Format remaining mute time as a short string (e.g. "14m", "2h", "1d").
-  String _formatMuteExpiry(int expiresAtMs) {
+  /// Remaining mute time in the largest whole unit, localized ("14 min").
+  String _formatMuteExpiry(BuildContext context, int expiresAtMs) {
+    final l10n = context.l10n;
     final remaining = expiresAtMs - DateTime.now().millisecondsSinceEpoch;
     if (remaining <= 0) return '';
     final mins = (remaining / 60000).ceil();
-    if (mins < 60) return '${mins}m';
+    if (mins < 60) return l10n.durationShortMinutes(mins);
     final hrs = (remaining / 3600000).floor();
-    if (hrs < 24) return '${hrs}h';
-    return '${(hrs / 24).floor()}d';
+    if (hrs < 24) return l10n.durationShortHours(hrs);
+    return l10n.durationShortDays((hrs / 24).floor());
   }
 
   /// Builds the subtitle, optionally prefixing the humanised body with
   /// "You:" for direct chats where the current user sent the last message.
-  /// Groups never get the prefix (matches web behaviour).
+  /// Groups never get the prefix (matches web behaviour). Sanitized through
+  /// the shared preview helper (recalled label, typed media labels, system
+  /// codes, upload URLs, JSON payloads) — never the raw content.
   String _subtitleWithPrefix(
     BuildContext context,
-    String content, {
+    LastMessageModel last, {
     required bool isGroup,
     required bool sentByMe,
   }) {
-    final body = _subtitleText(context, content);
-    if (!isGroup && sentByMe) {
+    final body = lastMessagePreview(context, last);
+    final isSystem =
+        last.type == 'system' || last.content.startsWith('system.');
+    if (!isGroup && sentByMe && !isSystem) {
       return '${context.l10n.youColon} $body';
     }
     return body;
   }
-
-  // Sanitized, localized subtitle. Delegates to the shared content-based
-  // preview helper so the tile, reply quotes, and pinned previews humanize
-  // system codes / media URLs / JSON payloads identically (never leaking a raw
-  // system.* code, upload URL, or file/meeting-summary JSON).
-  String _subtitleText(BuildContext context, String content) =>
-      messagePreviewFromContent(context, content);
-
 }
 
 class _AiBotTileAvatar extends StatelessWidget {

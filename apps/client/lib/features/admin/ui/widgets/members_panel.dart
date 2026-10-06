@@ -7,16 +7,28 @@ import '../../../../core/utils/global_messenger.dart';
 import '../../data/models/admin_models.dart';
 import '../../state/admin_providers.dart';
 import '../../state/capabilities_provider.dart';
+import '../../../ai_context/data/ai_context_models.dart';
 import '../../../ai_context/data/ai_context_repository.dart';
 import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/domain/auth_state.dart';
 import '../../../auth/utils/auth_error.dart';
 import 'admin_confirm_dialog.dart';
+import '../../utils/admin_error.dart';
 import '../../utils/role_guard.dart';
 import 'invite_member_sheet.dart';
+import 'member_ai_context_dialog.dart';
 import 'member_edit_dialog.dart';
 import 'member_tile.dart';
 import 'pending_invitations_section.dart';
+
+/// The awaited list, or empty when it can't load (the dialog still opens).
+Future<List<T>> _loadOrEmpty<T>(Future<List<T>> future) async {
+  try {
+    return await future;
+  } catch (_) {
+    return <T>[];
+  }
+}
 
 /// Members admin — invite members, list users, edit role + departments,
 /// block/unblock. Mirrors the web `MembersPanel`. Saving or blocking revokes
@@ -29,11 +41,15 @@ class MembersPanel extends ConsumerWidget {
     final l10n = context.l10n;
     final canRoles = ref.read(hasCapabilityProvider(Cap.manageRoles));
     final canDepts = ref.read(hasCapabilityProvider(Cap.manageDepartments));
-    final roles =
-        canRoles ? ref.read(rolesProvider).valueOrNull ?? [] : <Role>[];
+    // Await the lists rather than reading whatever is cached — a lazy provider
+    // that hasn't loaded yet opened the dialog with no roles/departments.
+    final roles = canRoles
+        ? await _loadOrEmpty(ref.read(rolesProvider.future))
+        : <Role>[];
     final depts = canDepts
-        ? ref.read(departmentsProvider).valueOrNull ?? []
+        ? await _loadOrEmpty(ref.read(departmentsProvider.future))
         : <Department>[];
+    if (!context.mounted) return;
     final callerIsOwner =
         ref.read(capabilitiesProvider).valueOrNull?.role == 'Owner';
     final targetIsOwner =
@@ -55,97 +71,51 @@ class MembersPanel extends ConsumerWidget {
     );
 
     if (result == null) return;
+    final patch = memberEditPatch(m, result);
+    if (patch.isEmpty) return; // nothing changed — don't revoke sessions for nothing
     try {
-      await ref.read(membersProvider.notifier).updateMember(m.id, {
-        // Locked rows / "no role" never send a role — only departments change.
-        if (result.roleId != null) 'roleId': result.roleId,
-        'departmentIds': result.departmentIds,
-      });
+      await ref.read(membersProvider.notifier).updateMember(m.id, patch);
       showInfoSnackBar(l10n.adminToastSaved);
     } catch (e) {
       // Typed role-guard codes (CANNOT_CHANGE_OWN_ROLE, LAST_OWNER_CANNOT_BE_DEMOTED,
-      // OWNER_ROLE_ASSIGN_FORBIDDEN…) map to their own localized message.
+      // OWNER_ROLE_ASSIGN_FORBIDDEN, ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS…) map to
+      // their own localized message.
       showErrorSnackBar(context.mounted
-          ? authErrorMessage(context, e)
+          ? adminErrorMessage(context, e)
           : l10n.adminToastError);
     }
   }
 
-  Future<void> _editAiContext(BuildContext context, WidgetRef ref, Member m) async {
+  Future<void> _editAiContext(
+      BuildContext context, WidgetRef ref, Member m) async {
     final l10n = context.l10n;
     final repo = ref.read(aiContextRepositoryProvider);
-    final jobCtrl = TextEditingController();
-    final projCtrl = TextEditingController();
+    final AiUserContext current;
     try {
-      final ctx = await repo.getUser(m.id);
-      jobCtrl.text = ctx.jobTitle;
-      projCtrl.text = ctx.projects.join('\n');
-    } catch (_) {
-      // Fresh/empty context — start blank.
+      current = await repo.getUser(m.id);
+    } catch (e) {
+      // Never open a blank editor after a failed load — saving it would wipe
+      // the member's stored job title and projects.
+      if (context.mounted) showErrorSnackBar(adminErrorMessage(context, e));
+      return;
     }
     if (!context.mounted) return;
 
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.adminEditAiContext,
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(m.displayName,
-                  style: TextStyle(color: AppTheme.mutedText(context), fontSize: 12)),
-              const SizedBox(height: 12),
-              TextField(
-                controller: jobCtrl,
-                maxLength: 200,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                decoration: InputDecoration(
-                  labelText: l10n.adminAiContextJobTitle,
-                  labelStyle: TextStyle(color: AppTheme.mutedText(context)),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: projCtrl,
-                maxLines: 4,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                decoration: InputDecoration(
-                  labelText: l10n.adminAiContextProjects,
-                  hintText: l10n.adminAiContextProjectsHint,
-                  labelStyle: TextStyle(color: AppTheme.mutedText(context)),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.adminCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.adminSave,
-                style: TextStyle(color: AppTheme.accent(context))),
-          ),
-        ],
-      ),
+    final result = await MemberAiContextDialog.show(
+      context,
+      displayName: m.displayName,
+      jobTitle: current.jobTitle,
+      projects: current.projects,
     );
-
-    if (saved != true) return;
-    final projects = projCtrl.text
-        .split('\n')
-        .map((p) => p.trim())
-        .where((p) => p.isNotEmpty)
-        .toList();
+    if (result == null) return;
     try {
-      await repo.updateUserHard(m.id, jobTitle: jobCtrl.text, projects: projects);
+      await repo.updateUserHard(m.id,
+          jobTitle: result.jobTitle, projects: result.projects);
       showInfoSnackBar(l10n.adminToastSaved);
-    } catch (_) {
-      showErrorSnackBar(l10n.adminToastError);
+    } catch (e) {
+      showErrorSnackBar(context.mounted
+          ? adminErrorMessage(context, e)
+          : l10n.adminToastError);
     }
   }
 
@@ -169,7 +139,7 @@ class MembersPanel extends ConsumerWidget {
       showInfoSnackBar(
           blocking ? l10n.adminMemberBlocked : l10n.adminMemberUnblocked);
     } catch (e) {
-      if (context.mounted) showErrorSnackBar(authErrorMessage(context, e));
+      if (context.mounted) showErrorSnackBar(adminErrorMessage(context, e));
     }
   }
 

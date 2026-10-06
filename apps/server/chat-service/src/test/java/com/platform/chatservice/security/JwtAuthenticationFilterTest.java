@@ -1,6 +1,7 @@
 package com.platform.chatservice.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import jakarta.servlet.FilterChain;
@@ -20,6 +21,7 @@ class JwtAuthenticationFilterTest {
   private FilterChain chain;
   private MockHttpServletRequest request;
   private MockHttpServletResponse response;
+  private static final Long IAT = 1_700_000_000L;
 
   @BeforeEach
   void setUp() {
@@ -41,6 +43,7 @@ class JwtAuthenticationFilterTest {
     when(jwtUtil.isValid("tok")).thenReturn(true);
     when(jwtUtil.extractUserId("tok")).thenReturn("u1");
     when(jwtUtil.extractSid("tok")).thenReturn(sid);
+    when(jwtUtil.extractIssuedAtSeconds("tok")).thenReturn(IAT);
     when(jwtUtil.extractPerms("tok")).thenReturn(List.of());
     when(jwtUtil.extractDepts("tok")).thenReturn(List.of());
   }
@@ -48,7 +51,7 @@ class JwtAuthenticationFilterTest {
   @Test
   void validSessionAuthenticatesAndContinues() throws Exception {
     token("s1");
-    when(sessionValidator.validate("s1", "u1")).thenReturn(SessionStatus.VALID);
+    when(sessionValidator.validateToken("s1", "u1", IAT)).thenReturn(SessionStatus.VALID);
 
     filter.doFilter(request, response, chain);
 
@@ -59,7 +62,7 @@ class JwtAuthenticationFilterTest {
   @Test
   void revokedSessionReturns401WithCodeAndStopsChain() throws Exception {
     token("s1");
-    when(sessionValidator.validate("s1", "u1")).thenReturn(SessionStatus.SESSION_REVOKED);
+    when(sessionValidator.validateToken("s1", "u1", IAT)).thenReturn(SessionStatus.SESSION_REVOKED);
 
     filter.doFilter(request, response, chain);
 
@@ -73,7 +76,8 @@ class JwtAuthenticationFilterTest {
   @Test
   void missingSessionReturns401SessionNotFound() throws Exception {
     token("s1");
-    when(sessionValidator.validate("s1", "u1")).thenReturn(SessionStatus.SESSION_NOT_FOUND);
+    when(sessionValidator.validateToken("s1", "u1", IAT))
+        .thenReturn(SessionStatus.SESSION_NOT_FOUND);
 
     filter.doFilter(request, response, chain);
 
@@ -84,7 +88,7 @@ class JwtAuthenticationFilterTest {
   @Test
   void tokenWithoutSidReturns401TokenInvalid() throws Exception {
     token(null);
-    when(sessionValidator.validate(null, "u1")).thenReturn(SessionStatus.TOKEN_INVALID);
+    when(sessionValidator.validateToken(null, "u1", IAT)).thenReturn(SessionStatus.TOKEN_INVALID);
 
     filter.doFilter(request, response, chain);
 
@@ -95,7 +99,7 @@ class JwtAuthenticationFilterTest {
   @Test
   void sessionStoreDownReturns503NotA401() throws Exception {
     token("s1");
-    when(sessionValidator.validate("s1", "u1")).thenReturn(SessionStatus.UNAVAILABLE);
+    when(sessionValidator.validateToken("s1", "u1", IAT)).thenReturn(SessionStatus.UNAVAILABLE);
 
     filter.doFilter(request, response, chain);
 
@@ -122,5 +126,31 @@ class JwtAuthenticationFilterTest {
 
     verify(chain).doFilter(request, response);
     verifyNoInteractions(sessionValidator);
+  }
+
+  /** F1: a token minted before the user's claims changed is a refresh signal, never a logout. */
+  @Test
+  void staleClaimsReturn401TokenClaimsStale() throws Exception {
+    token("s1");
+    when(sessionValidator.validateToken("s1", "u1", IAT))
+        .thenReturn(SessionStatus.TOKEN_CLAIMS_STALE);
+
+    filter.doFilter(request, response, chain);
+
+    assertThat(response.getStatus()).isEqualTo(401);
+    assertThat(response.getContentAsString()).isEqualTo("{\"code\":\"TOKEN_CLAIMS_STALE\"}");
+    verifyNoInteractions(chain);
+    assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+  }
+
+  /** REST always runs the claims-aware check — never the socket-only {@code validate}. */
+  @Test
+  void restUsesTheClaimsAwareCheck() throws Exception {
+    token("s1");
+    when(sessionValidator.validateToken("s1", "u1", IAT)).thenReturn(SessionStatus.VALID);
+
+    filter.doFilter(request, response, chain);
+
+    verify(sessionValidator, never()).validate(any(), any());
   }
 }

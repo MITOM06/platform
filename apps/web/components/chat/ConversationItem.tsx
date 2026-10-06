@@ -27,8 +27,10 @@ import { useAssistantName } from '@/lib/hooks/use-capabilities'
 import { useRelationship } from '@/lib/hooks/use-relationship'
 import { useNickname } from '@/lib/nicknames'
 import { chatService } from '@/lib/api/chat'
+import { chatErrorMessage } from '@/lib/api/chat-errors'
 import { authService } from '@/lib/api/auth'
-import { humanizeSystemMessage } from '@/lib/system-messages'
+import { humanizeLastMessage } from '@/lib/system-messages'
+import { useNameResolver } from '@/lib/hooks/use-display-names'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import {
   AI_BOT_ID, MUTE_FOREVER_MS, MUTE_OPTIONS,
@@ -80,15 +82,20 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
   const avatarUrl = conv.avatarUrl ?? otherUser?.avatarUrl
 
   // Sidebar preview: "You: <msg>" for own last message in direct chats, with
-  // system-codes/attachments humanised (mirror Flutter conversation_tile).
+  // system-codes/attachments humanised and recalled messages shown as recalled
+  // (mirror Flutter conversation_tile).
+  const resolveName = useNameResolver(conv.id)
   const lastMessage = conv.lastMessage
-  let previewText = t('noMessagesYet')
-  if (lastMessage?.content) {
-    const humanized = humanizeSystemMessage(lastMessage.content, t, { short: true })
+  const humanized = humanizeLastMessage(lastMessage, t, {
+    resolveName,
+    currentUserId: currentUser?.id,
+  })
+  let previewText = humanized ?? t('noMessagesYet')
+  if (humanized && lastMessage && !lastMessage.recalled) {
     const isOwn = lastMessage.senderId === currentUser?.id
     const isPlainOwn =
       isOwn && conv.type === 'direct' && !lastMessage.content.startsWith('system.')
-    previewText = isPlainOwn ? `${t('youColon')}${humanized}` : humanized
+    if (isPlainOwn) previewText = `${t('youColon')}${humanized}`
   }
 
   const invalidateAll = () => {
@@ -100,8 +107,8 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
     try {
       await fn()
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
-    } catch {
-      toast.error(t(errorKey))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, errorKey))
     }
   }
 
@@ -116,8 +123,8 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
       await chatService.muteConversation(conv.id, seconds)
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       toast.success(t('muteSuccess'))
-    } catch {
-      toast.error(t('actionFailed'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'actionFailed'))
     }
   }
 
@@ -229,7 +236,7 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
                     <VolumeX className="size-3" />
                     {showMuteExpiry && (
                       <span className="text-xs">
-                        {formatMuteExpiry(conv.muteExpiresAt!)}
+                        {formatMuteExpiry(conv.muteExpiresAt!, locale)}
                       </span>
                     )}
                   </span>
@@ -279,7 +286,7 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
             <span>{t('unmuteNotifications')}</span>
             {showMuteExpiry && (
               <span className="ml-auto text-xs text-muted-foreground">
-                {formatMuteExpiry(conv.muteExpiresAt!)}
+                {formatMuteExpiry(conv.muteExpiresAt!, locale)}
               </span>
             )}
           </ContextMenuItem>
@@ -353,16 +360,33 @@ const ConversationItemInner = function ConversationItem({ conversation: conv, is
   )
 }
 
+// Every field the row renders must be compared: the comparator used to ignore
+// name / avatar / participants / recall, so a renamed group or a new group photo
+// never reached the sidebar until a reload. Merged cache updates keep untouched
+// rows referentially equal, so the cheap identity check still skips most renders.
 export const ConversationItem = memo(
   ConversationItemInner,
-  (prev, next) =>
-    prev.conversation.id === next.conversation.id &&
-    prev.conversation.lastMessageAt === next.conversation.lastMessageAt &&
-    prev.conversation.unreadCount === next.conversation.unreadCount &&
-    prev.conversation.lastMessage?.content === next.conversation.lastMessage?.content &&
-    prev.conversation.isMuted === next.conversation.isMuted &&
-    prev.conversation.muteExpiresAt === next.conversation.muteExpiresAt &&
-    prev.conversation.isArchived === next.conversation.isArchived &&
-    prev.conversation.isBlocked === next.conversation.isBlocked &&
-    prev.isBlocked === next.isBlocked,
+  (prev, next) => {
+    if (prev.isBlocked !== next.isBlocked) return false
+    const a = prev.conversation
+    const b = next.conversation
+    if (a === b) return true
+    return (
+      a.id === b.id &&
+      a.name === b.name &&
+      a.avatarUrl === b.avatarUrl &&
+      a.type === b.type &&
+      a.participants.join(',') === b.participants.join(',') &&
+      a.lastMessageAt === b.lastMessageAt &&
+      a.unreadCount === b.unreadCount &&
+      a.lastMessage?.content === b.lastMessage?.content &&
+      a.lastMessage?.senderId === b.lastMessage?.senderId &&
+      a.lastMessage?.type === b.lastMessage?.type &&
+      !!a.lastMessage?.recalled === !!b.lastMessage?.recalled &&
+      a.isMuted === b.isMuted &&
+      a.muteExpiresAt === b.muteExpiresAt &&
+      a.isArchived === b.isArchived &&
+      a.isBlocked === b.isBlocked
+    )
+  },
 )

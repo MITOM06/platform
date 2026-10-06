@@ -8,7 +8,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { isValidObjectId, Model } from 'mongoose';
+import { Model } from 'mongoose';
 import {
   Workspace,
   WorkspaceDocument,
@@ -29,20 +29,26 @@ import {
 } from './dto/department.dto';
 import { UpdateMemberDto, UpdateMemberStatusDto } from './dto/member.dto';
 import { AuthCode } from '../../common/auth-code.enum';
-import { CreateRoleDto, UpdateRoleDto } from './dto/role.dto';
-import { UpdateWorkspaceDto } from './dto/workspace.dto';
+import { isObjectIdString, sameIdSet } from '../../common/ids';
+import {
+  assertCanGrant,
+  isOwnerActor,
+  OWNER_ROLE_NAME,
+  RoleActor,
+} from '../../common/role-grant';
+import { UpdateWorkspaceDto, WorkspaceSsoDto } from './dto/workspace.dto';
 
-/**
- * Admin domain operations for the enterprise foundation: departments, members,
- * roles and the singleton workspace. All mutations are authorized at the
- * controller via @RequirePermission; this service enforces invariants (Owner
- * role immutable, revoke sessions on membership change).
- */
 /** Redis channel ai-service subscribes to so it drops its cached AI settings. */
 export const AI_SETTINGS_INVALIDATE_CHANNEL = 'ai:settings:invalidate';
 
-const OWNER_ROLE_NAME = 'Owner';
-
+/**
+ * Admin domain operations for the enterprise foundation: departments, members
+ * and the singleton workspace (roles live in RolesService). All mutations are
+ * authorized at the controller via @RequirePermission; this service enforces
+ * invariants (Owner protections, no role grant beyond the actor's own
+ * capabilities, mark the member's tokens claims-stale only on a real
+ * membership change).
+ */
 @Injectable()
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
@@ -81,9 +87,11 @@ export class AdminService {
     id: string,
     dto: UpdateDepartmentDto,
   ) {
-    const dept = await this.departmentModel
-      .findByIdAndUpdate(id, { $set: dto }, { new: true })
-      .exec();
+    const dept = isObjectIdString(id)
+      ? await this.departmentModel
+          .findByIdAndUpdate(id, { $set: dto }, { new: true })
+          .exec()
+      : null;
     if (!dept) throw new NotFoundException({ code: AuthCode.DEPARTMENT_NOT_FOUND });
     await this.audit.record({
       actorId,
@@ -95,17 +103,76 @@ export class AdminService {
     return dept;
   }
 
+  /**
+   * Delete a department and every dangling reference to it: members'
+   * `departmentIds` and SSO `groupDeptMap` entries (which would otherwise keep
+   * re-assigning the deleted id on every SSO login).
+   */
   async deleteDepartment(actorId: string, id: string) {
-    const dept = await this.departmentModel.findByIdAndDelete(id).exec();
+    const dept = isObjectIdString(id)
+      ? await this.departmentModel.findByIdAndDelete(id).exec()
+      : null;
     if (!dept) throw new NotFoundException({ code: AuthCode.DEPARTMENT_NOT_FOUND });
+    const membersUpdated = await this.removeDepartmentReferences(id);
     await this.audit.record({
       actorId,
       action: 'department.delete',
       targetType: 'department',
       targetId: id,
-      meta: { name: dept.name },
+      meta: { name: dept.name, membersUpdated },
     });
     return { success: true };
+  }
+
+  /**
+   * Never throws: the department is already gone; a failed cleanup is logged.
+   * Members who lose the department get their tokens marked claims-stale
+   * (their `depts` claim changes).
+   */
+  private async removeDepartmentReferences(id: string): Promise<number> {
+    let membersUpdated = 0;
+    let affected: string[] = [];
+    try {
+      const members = await this.userModel
+        .find({ departmentIds: id }, { _id: 1 })
+        .lean()
+        .exec();
+      affected = (members ?? []).map((u) => String(u._id));
+      const res = await this.userModel
+        .updateMany({ departmentIds: id }, { $pull: { departmentIds: id } })
+        .exec();
+      membersUpdated = res?.modifiedCount ?? 0;
+
+      const ws = await this.workspaceModel
+        .findOne({}, { sso: 1 })
+        .lean()
+        .exec();
+      const map: Record<string, unknown> = ws?.sso?.groupDeptMap ?? {};
+      const kept = Object.fromEntries(
+        Object.entries(map).filter(([, deptId]) => String(deptId) !== id),
+      );
+      if (ws && Object.keys(kept).length !== Object.keys(map).length) {
+        // Whole-map $set: IdP group names may contain '.', which a dot-path
+        // $unset would misread as nesting.
+        await this.workspaceModel
+          .updateOne({ _id: ws._id }, { $set: { 'sso.groupDeptMap': kept } })
+          .exec();
+      }
+    } catch (err) {
+      this.logger.warn(
+        `Department ${id} deleted but reference cleanup failed: ${(err as Error).message}`,
+      );
+    }
+    if (affected.length > 0) {
+      try {
+        await this.session.markClaimsStaleForUsers(affected);
+      } catch (err) {
+        this.logger.warn(
+          `Department ${id} deleted but marking claims stale failed: ${(err as Error).message}`,
+        );
+      }
+    }
+    return membersUpdated;
   }
 
   // ===================== MEMBERS =====================
@@ -117,18 +184,17 @@ export class AdminService {
   }
 
   /**
-   * Assign a member's role and/or departments, then revoke all of their
-   * sessions so stale permissions can't outlive a single access-token lifetime.
-   * A role change (roleId present AND different) is guarded by
-   * assertRoleChangeAllowed; an unchanged roleId is ignored.
+   * Assign a member's role and/or departments. Only a REAL change is written —
+   * the role differs, or the department SET differs (order/duplicates ignored)
+   * — and only then are the member's sessions marked claims-stale: every access
+   * token minted before the change gets 401 TOKEN_CLAIMS_STALE, the client
+   * refreshes into the new claims, nobody is signed out. A no-op Save (the web
+   * always sends departmentIds) touches nothing.
+   *
+   * A non-Owner may not change an Owner's departments (same rule as the role).
    */
-  async updateMember(
-    actorId: string,
-    actorRole: string | undefined,
-    id: string,
-    dto: UpdateMemberDto,
-  ) {
-    const member = isValidObjectId(id)
+  async updateMember(actor: RoleActor, id: string, dto: UpdateMemberDto) {
+    const member = isObjectIdString(id)
       ? await this.userModel.findById(id).exec()
       : null;
     if (!member) throw new NotFoundException({ code: AuthCode.MEMBER_NOT_FOUND });
@@ -136,11 +202,19 @@ export class AdminService {
     const set: Record<string, unknown> = {};
     const currentRoleId = member.roleId?.toString();
     const roleChanged = dto.roleId !== undefined && dto.roleId !== currentRoleId;
+    const nextDepts =
+      dto.departmentIds === undefined ? undefined : [...new Set(dto.departmentIds)];
+    const deptsChanged =
+      nextDepts !== undefined && !sameIdSet(nextDepts, member.departmentIds);
+
     if (roleChanged) {
-      await this.assertRoleChangeAllowed(actorId, actorRole, id, currentRoleId, dto.roleId!);
+      await this.assertRoleChangeAllowed(actor, id, currentRoleId, dto.roleId!);
       set.roleId = dto.roleId;
     }
-    if (dto.departmentIds !== undefined) set.departmentIds = dto.departmentIds;
+    if (deptsChanged) {
+      if (!roleChanged) await this.assertCanTouchMember(actor, currentRoleId);
+      set.departmentIds = nextDepts;
+    }
     if (Object.keys(set).length === 0) return member;
 
     const updated = await this.userModel
@@ -148,9 +222,9 @@ export class AdminService {
       .exec();
     if (!updated) throw new NotFoundException({ code: AuthCode.MEMBER_NOT_FOUND });
 
-    await this.session.revokeAllSessions(id, roleChanged ? 'role_changed' : 'other');
+    await this.session.markClaimsStale(id);
     await this.audit.record({
-      actorId,
+      actorId: actor.sub,
       action: 'member.update',
       targetType: 'member',
       targetId: id,
@@ -159,21 +233,33 @@ export class AdminService {
     return updated;
   }
 
+  /** Owner members can only be modified by an Owner (departments-only path). */
+  private async assertCanTouchMember(
+    actor: RoleActor,
+    targetRoleId: string | undefined,
+  ) {
+    if (isOwnerActor(actor) || !targetRoleId) return;
+    const ownerRole = await this.roleModel.findOne({ name: OWNER_ROLE_NAME }).exec();
+    if (ownerRole && ownerRole._id.toString() === targetRoleId) {
+      throw new ForbiddenException({ code: AuthCode.OWNER_ROLE_ASSIGN_FORBIDDEN });
+    }
+  }
+
   /**
-   * Owner-role guard for PATCH /admin/members/:id (contract A):
+   * Role-change guard for PATCH /admin/members/:id (contract A):
    *  - own role                      → 400 CANNOT_CHANGE_OWN_ROLE
    *  - unknown target role           → 404 ROLE_NOT_FOUND
    *  - grant Owner / touch an Owner  → actor must be Owner, else 403 OWNER_ROLE_ASSIGN_FORBIDDEN
+   *  - role grants a capability the actor lacks → 403 ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS
    *  - demote the last ACTIVE Owner  → 400 LAST_OWNER_CANNOT_BE_DEMOTED
    */
   private async assertRoleChangeAllowed(
-    actorId: string,
-    actorRole: string | undefined,
+    actor: RoleActor,
     targetId: string,
     currentRoleId: string | undefined,
     newRoleId: string,
   ) {
-    if (targetId === actorId) {
+    if (targetId === actor.sub) {
       throw new BadRequestException({ code: AuthCode.CANNOT_CHANGE_OWN_ROLE });
     }
     const newRole = await this.roleModel.findById(newRoleId).exec();
@@ -186,9 +272,10 @@ export class AdminService {
     const ownerRoleId = ownerRole?._id.toString();
     const grantsOwner = newRole.name === OWNER_ROLE_NAME;
     const targetIsOwner = !!ownerRoleId && currentRoleId === ownerRoleId;
-    if ((grantsOwner || targetIsOwner) && actorRole !== OWNER_ROLE_NAME) {
+    if ((grantsOwner || targetIsOwner) && !isOwnerActor(actor)) {
       throw new ForbiddenException({ code: AuthCode.OWNER_ROLE_ASSIGN_FORBIDDEN });
     }
+    assertCanGrant(actor, newRole.permissions);
 
     if (targetIsOwner && !grantsOwner) {
       const otherActiveOwners = await this.userModel
@@ -217,7 +304,7 @@ export class AdminService {
     id: string,
     dto: UpdateMemberStatusDto,
   ) {
-    const member = isValidObjectId(id)
+    const member = isObjectIdString(id)
       ? await this.userModel.findById(id).exec()
       : null;
     if (!member) throw new NotFoundException({ code: AuthCode.MEMBER_NOT_FOUND });
@@ -250,7 +337,14 @@ export class AdminService {
     }
 
     await this.userModel
-      .updateOne({ _id: id }, { $set: { status: dto.status } })
+      .updateOne(
+        { _id: id },
+        // A blocked account's devices must stop receiving push previews of
+        // company messages: drop its FCM tokens with the sessions.
+        dto.status === 'blocked'
+          ? { $set: { status: dto.status, fcmTokens: [] } }
+          : { $set: { status: dto.status } },
+      )
       .exec();
     if (dto.status === 'blocked') await this.session.revokeAllSessions(id, 'blocked');
     await this.audit.record({
@@ -269,52 +363,6 @@ export class AdminService {
       .exec();
   }
 
-  // ===================== ROLES =====================
-  listRoles() {
-    return this.roleModel.find().exec();
-  }
-
-  async createRole(actorId: string, dto: CreateRoleDto) {
-    const role = await this.roleModel.create({
-      name: dto.name,
-      isPreset: false,
-      permissions: dto.permissions ?? {},
-    });
-    await this.audit.record({
-      actorId,
-      action: 'role.create',
-      targetType: 'role',
-      targetId: role._id.toString(),
-      meta: { name: role.name },
-    });
-    return role;
-  }
-
-  /** Edit a role's name/permissions. The Owner role is immutable. */
-  async updateRole(actorId: string, id: string, dto: UpdateRoleDto) {
-    const role = await this.roleModel.findById(id).exec();
-    if (!role) throw new NotFoundException({ code: AuthCode.ROLE_NOT_FOUND });
-    if (role.name === 'Owner') {
-      throw new BadRequestException({ code: AuthCode.OWNER_ROLE_IMMUTABLE });
-    }
-
-    const set: Record<string, unknown> = {};
-    if (dto.name !== undefined) set.name = dto.name;
-    if (dto.permissions !== undefined) set.permissions = dto.permissions;
-
-    const updated = await this.roleModel
-      .findByIdAndUpdate(id, { $set: set }, { new: true })
-      .exec();
-    await this.audit.record({
-      actorId,
-      action: 'role.update',
-      targetType: 'role',
-      targetId: id,
-      meta: { changes: set },
-    });
-    return updated;
-  }
-
   // ===================== WORKSPACE =====================
   async getWorkspace() {
     return this.workspaceModel.findOne().exec();
@@ -331,14 +379,15 @@ export class AdminService {
    * reloads). A 60s TTL on the ai-service side is the safety net if the publish
    * is ever missed.
    */
-  async updateWorkspace(actorId: string, dto: UpdateWorkspaceDto) {
+  async updateWorkspace(actor: RoleActor, dto: UpdateWorkspaceDto) {
+    await this.assertSsoMappingAllowed(actor, dto.sso);
     const { aiSettings, ...rest } = dto;
 
     // Build a flat $set: top-level fields as-is, aiSettings keys as dot-paths so
     // unspecified aiSettings fields are preserved (deep-merge semantics).
     const set: Record<string, unknown> = { ...rest };
     if (aiSettings !== undefined) {
-      await this.validateAiSettings(aiSettings);
+      await this.validateAiSettings(aiSettings, dto.connectorAllowList);
       for (const [key, value] of Object.entries(aiSettings)) {
         if (value === undefined) continue; // skip absent keys; null is meaningful
         set[`aiSettings.${key}`] = value;
@@ -350,7 +399,7 @@ export class AdminService {
       .exec();
 
     await this.audit.record({
-      actorId,
+      actorId: actor.sub,
       action: 'workspace.update',
       targetType: 'workspace',
       targetId: ws?._id?.toString(),
@@ -375,21 +424,60 @@ export class AdminService {
   }
 
   /**
+   * SSO group mappings hand roles out on every SSO login, so they follow the
+   * same anti-escalation rule as assigning a role directly:
+   *  - mapping a group (or `defaultRole`) to the Owner role → Owner only, else
+   *    403 OWNER_SSO_MAPPING_FORBIDDEN;
+   *  - any other mapped role must stay inside the actor's own capabilities,
+   *    else 403 ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS.
+   * `sso` is replaced as a whole by the PATCH, so the payload is the full
+   * resulting mapping. Unknown role names are ignored (they never resolve).
+   */
+  private async assertSsoMappingAllowed(
+    actor: RoleActor,
+    sso: WorkspaceSsoDto | undefined,
+  ): Promise<void> {
+    if (!sso || isOwnerActor(actor)) return;
+    const names = [
+      ...Object.values(sso.groupRoleMap ?? {}),
+      sso.defaultRole,
+    ].filter((n): n is string => typeof n === 'string' && n.length > 0);
+    if (names.length === 0) return;
+    if (names.includes(OWNER_ROLE_NAME)) {
+      throw new ForbiddenException({ code: AuthCode.OWNER_SSO_MAPPING_FORBIDDEN });
+    }
+    const roles = await this.roleModel
+      .find({ name: { $in: [...new Set(names)] } })
+      .lean()
+      .exec();
+    assertCanGrant(actor, ...roles.map((r) => r.permissions));
+  }
+
+  /**
    * Validate AI connector allow-list against the OUTER workspace boundary: the
    * AI list can only NARROW `connectorAllowList`, never widen it. `null` (inherit)
-   * and `[]` (allow none) are always valid.
+   * and `[]` (allow none) are always valid. An EMPTY `connectorAllowList` means
+   * "every connector allowed" (connector-service contract), so any AI list is
+   * inside it. The outer list is the one this same PATCH writes, if it has one.
    */
   private async validateAiSettings(
     aiSettings: UpdateWorkspaceDto['aiSettings'],
+    nextConnectorAllowList: string[] | undefined,
   ): Promise<void> {
     const allowed = aiSettings?.allowedConnectors;
     if (!Array.isArray(allowed) || allowed.length === 0) return;
 
-    const ws = await this.workspaceModel
-      .findOne({}, { connectorAllowList: 1 })
-      .lean()
-      .exec();
-    const outer = new Set(ws?.connectorAllowList ?? []);
+    const outerList =
+      nextConnectorAllowList ??
+      (
+        await this.workspaceModel
+          .findOne({}, { connectorAllowList: 1 })
+          .lean()
+          .exec()
+      )?.connectorAllowList ??
+      [];
+    if (outerList.length === 0) return; // [] = allow all
+    const outer = new Set(outerList);
     const offenders = allowed.filter((c) => !outer.has(c));
     if (offenders.length > 0) {
       throw new BadRequestException({

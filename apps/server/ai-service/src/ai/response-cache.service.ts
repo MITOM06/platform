@@ -10,11 +10,14 @@ interface CachedAnswer {
 }
 
 /**
- * Semantic response cache: reuse a recent answer when the user asks a
+ * Semantic response cache: reuse a recent answer when the SAME user asks a
  * near-identical question in the SAME conversation. Deliberately conservative —
- * OFF by default, very high similarity threshold, per-conversation only, short
- * TTL — because serving a stale/approximate answer is worse than a fresh call.
- * Callers must only STORE deterministic answers (no tool calls / no RAG sources).
+ * OFF by default, very high similarity threshold, per (conversation, requester)
+ * only, short TTL — because serving a stale/approximate answer is worse than a
+ * fresh call. Keyed on the requester too: an answer is built from the asker's
+ * own memory facts / org context, so in a group Bob must never be served the
+ * answer generated for Alice. Callers must only STORE deterministic answers (no
+ * tool calls / no RAG sources).
  *
  * Stored as a small bounded JSON list per conversation in Redis (no extra vector
  * DB). Fails soft on any Redis error.
@@ -41,15 +44,19 @@ export class ResponseCacheService {
     return this.enabled;
   }
 
-  private key(conversationId: string): string {
-    return `ai:respcache:${conversationId}`;
+  private key(conversationId: string, userId: string): string {
+    return `ai:respcache:${conversationId}:${userId}`;
   }
 
   /** Nearest cached answer for the query vector if it clears the threshold + TTL. */
-  async lookup(conversationId: string, queryVector: number[]): Promise<string | null> {
+  async lookup(
+    conversationId: string,
+    userId: string,
+    queryVector: number[],
+  ): Promise<string | null> {
     if (!this.enabled || !queryVector?.length) return null;
     try {
-      const raw = await this.redis.get(this.key(conversationId));
+      const raw = await this.redis.get(this.key(conversationId, userId));
       if (!raw) return null;
       const entries = JSON.parse(raw) as CachedAnswer[];
       const cutoff = Date.now() - this.ttlSec * 1000;
@@ -73,10 +80,15 @@ export class ResponseCacheService {
   }
 
   /** Append an answer (most-recent-first, bounded) with a refreshed TTL. */
-  async store(conversationId: string, queryVector: number[], answer: string): Promise<void> {
+  async store(
+    conversationId: string,
+    userId: string,
+    queryVector: number[],
+    answer: string,
+  ): Promise<void> {
     if (!this.enabled || !queryVector?.length || !answer?.trim()) return;
     try {
-      const k = this.key(conversationId);
+      const k = this.key(conversationId, userId);
       const raw = await this.redis.get(k);
       const entries = raw ? (JSON.parse(raw) as CachedAnswer[]) : [];
       entries.unshift({ v: queryVector, a: answer, t: Date.now() });

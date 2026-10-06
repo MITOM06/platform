@@ -96,14 +96,10 @@ describe('FriendsService', () => {
         { requesterId: 'u3', recipientId: 'u1' },
       ]),
     });
-    userModel.find.mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        exec: jest.fn().mockResolvedValue([
-          { _id: 'u2', displayName: 'B' },
-          { _id: 'u3', displayName: 'C' },
-        ]),
-      }),
-    });
+    userModel.find.mockReturnValue(usersQuery([
+      { _id: 'u2', displayName: 'B' },
+      { _id: 'u3', displayName: 'C' },
+    ]));
     redis.get.mockImplementation((key: string) =>
       key.endsWith('u2') ? Promise.resolve('online') : Promise.resolve(null),
     );
@@ -112,4 +108,130 @@ describe('FriendsService', () => {
 
     expect(online.map((u: any) => u._id)).toEqual(['u2']);
   });
+
+  describe('blocks', () => {
+    it('403 USER_BLOCKED when sending a request while either side has blocked the other (E2E)', async () => {
+      userBlockModel.exists.mockResolvedValue({ _id: 'b1' });
+      await expect(service.sendRequest('u1', 'u2')).rejects.toMatchObject({
+        status: 403,
+        response: { code: 'USER_BLOCKED' },
+      });
+      expect(userBlockModel.exists).toHaveBeenCalledWith({
+        $or: [
+          { blockerId: 'u1', blockedId: 'u2' },
+          { blockerId: 'u2', blockedId: 'u1' },
+        ],
+      });
+      expect(friendshipModel.create).not.toHaveBeenCalled();
+    });
+
+    it('403 USER_BLOCKED when accepting a request across a block', async () => {
+      const save = jest.fn();
+      friendshipModel.findOne.mockReturnValue({
+        exec: jest.fn().mockResolvedValue({ status: 'pending', save }),
+      });
+      userBlockModel.exists.mockResolvedValue({ _id: 'b1' });
+      await expect(service.acceptRequest('u1', 'u2')).rejects.toMatchObject({
+        status: 403,
+        response: { code: 'USER_BLOCKED' },
+      });
+      expect(save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('friend lists use the public-profile projection', () => {
+    const friendDoc = {
+      _id: 'u2',
+      displayName: 'Bob',
+      email: 'bob@qc.test',
+      avatarUrl: 'a.png',
+      phoneNumber: '+84900000000',
+      dateOfBirth: new Date('1990-01-01'),
+      gender: 'male',
+      showPhoneNumber: false,
+      showDateOfBirth: false,
+      showGender: true,
+      fcmTokens: ['secret-token'],
+      trustedDevices: [{ deviceId: 'd' }],
+      socialLinks: { google: 'g-1' },
+      status: 'active',
+      roleId: 'r1',
+    };
+
+    beforeEach(() => {
+      friendshipModel.find.mockReturnValue({
+        exec: jest.fn().mockResolvedValue([{ requesterId: 'u1', recipientId: 'u2' }]),
+      });
+      userModel.find.mockReturnValue(usersQuery([friendDoc]));
+    });
+
+    it('never exposes tokens/devices/links and honours the show* toggles (E2E)', async () => {
+      const [friend] = await service.listFriends('u1');
+      expect(friend).toMatchObject({
+        _id: 'u2',
+        id: 'u2',
+        displayName: 'Bob',
+        email: 'bob@qc.test',
+        avatarUrl: 'a.png',
+        gender: 'male',
+      });
+      for (const hidden of [
+        'fcmTokens',
+        'trustedDevices',
+        'socialLinks',
+        'status',
+        'phoneNumber',
+        'dateOfBirth',
+        'password',
+      ]) {
+        expect(friend).not.toHaveProperty(hidden);
+      }
+    });
+
+    it('hideInfo legacy docs hide phone/DOB/gender when no per-field flag is set', async () => {
+      userModel.find.mockReturnValue(
+        usersQuery([
+          {
+            _id: 'u2',
+            displayName: 'Bob',
+            hideInfo: true,
+            phoneNumber: '+84900000000',
+            gender: 'male',
+          },
+        ]),
+      );
+      const [friend] = await service.listFriends('u1');
+      expect(friend).not.toHaveProperty('phoneNumber');
+      expect(friend).not.toHaveProperty('gender');
+    });
+
+    it('drops friends in a block relationship (legacy rows from before block removed friendships)', async () => {
+      userBlockModel.find.mockResolvedValue([{ blockerId: 'u2', blockedId: 'u1' }]);
+      await expect(service.listFriends('u1')).resolves.toEqual([]);
+    });
+
+    it('incoming requests carry the projected requester profile', async () => {
+      friendshipModel.find.mockReturnValue({
+        exec: jest
+          .fn()
+          .mockResolvedValue([{ _id: 'f1', requesterId: 'u2', recipientId: 'u1' }]),
+      });
+      const [req] = await service.listIncomingRequests('u1');
+      expect(req.friendshipId).toBe('f1');
+      expect(req.requester).toMatchObject({ _id: 'u2', displayName: 'Bob' });
+      expect(req.requester).not.toHaveProperty('fcmTokens');
+      expect(req.requester).not.toHaveProperty('phoneNumber');
+    });
+  });
 });
+
+/** userModel.find(...).select(...).lean().exec() chain. */
+function usersQuery(docs: any[]) {
+  return {
+    select: jest.fn().mockReturnValue({
+      lean: jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(docs),
+      }),
+    }),
+  };
+}

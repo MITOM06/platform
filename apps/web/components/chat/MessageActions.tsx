@@ -12,9 +12,11 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
+import { useQueryClient } from '@tanstack/react-query'
 import { chatService } from '@/lib/api/chat'
+import { MAX_PINNED_MESSAGES, chatErrorMessage } from '@/lib/api/chat-errors'
 import { absoluteMediaUrl, downloadMediaUrl, parseImageUrls } from '@/lib/media'
-import type { Message } from '@/lib/api/types'
+import type { Conversation, Message } from '@/lib/api/types'
 
 const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥']
 
@@ -57,8 +59,15 @@ export function MessageActions({
 }: Props) {
   const [emojiOpen, setEmojiOpen] = useState(false)
   const t = useTranslations('chat')
+  const queryClient = useQueryClient()
 
   const isCallLog = message.type === 'call_log'
+  // Pinning in a group is reserved to its admins (403 GROUP_ADMIN_REQUIRED).
+  const conversation = queryClient.getQueryData<Conversation>(['conversation', message.conversationId])
+  const canPin =
+    !isCallLog &&
+    !message.recalled &&
+    (conversation?.type !== 'group' || !currentUserId || conversation.admins.includes(currentUserId))
 
   const handleReact = async (emoji: string) => {
     setEmojiOpen(false)
@@ -71,16 +80,16 @@ export function MessageActions({
       } else {
         await chatService.addReaction(message.id, emoji)
       }
-    } catch {
-      toast.error(t('reactError'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'reactError'))
     }
   }
 
   const handleRecall = async () => {
     try {
       await chatService.recallMessage(message.id)
-    } catch {
-      toast.error(t('recallError'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'recallError'))
     }
   }
 
@@ -88,8 +97,8 @@ export function MessageActions({
     try {
       await chatService.deleteForMe(message.id)
       onOptimisticUpdate({ id: message.id, deletedFor: ['__me__'] })
-    } catch {
-      toast.error(t('deleteError'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'deleteError'))
     }
   }
 
@@ -123,8 +132,10 @@ export function MessageActions({
   }
 
   const handlePin = async () => {
-    if (!isPinned && pinnedCount >= 2) {
-      toast.warning(t('pinLimitReached'))
+    // The server refuses a 6th pin with 409 PIN_LIMIT_REACHED (it never evicts
+    // the oldest pin silently any more) — check locally first for instant feedback.
+    if (!isPinned && pinnedCount >= MAX_PINNED_MESSAGES) {
+      toast.warning(t('pinLimitReached', { max: MAX_PINNED_MESSAGES }))
       return
     }
     try {
@@ -133,8 +144,8 @@ export function MessageActions({
       } else {
         await chatService.pinMessage(message.id)
       }
-    } catch {
-      toast.error(t('pinError'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'pinError'))
     }
   }
 
@@ -206,16 +217,20 @@ export function MessageActions({
               {t('editAction')}
             </DropdownMenuItem>
           )}
-          {!isCallLog && (
+          {canPin && (
             <DropdownMenuItem onClick={handlePin}>
               {isPinned ? <PinOff className="size-4" /> : <Pin className="size-4" />}
               {isPinned ? t('unpinMessage') : t('pinMessage')}
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onClick={onForward}>
-            <Share2 className="size-4" />
-            {t('forwardAction')}
-          </DropdownMenuItem>
+          {/* chat-service refuses to forward call logs / meeting summaries
+              (MESSAGE_TYPE_NOT_ALLOWED) — don't offer it. */}
+          {!message.recalled && message.type !== 'call_log' && message.type !== 'meeting_summary' && (
+            <DropdownMenuItem onClick={onForward}>
+              <Share2 className="size-4" />
+              {t('forwardAction')}
+            </DropdownMenuItem>
+          )}
           {message.type === 'ai' && (
             <DropdownMenuItem onClick={onAiTrace}>
               <Brain className="size-4" />

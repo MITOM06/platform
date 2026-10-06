@@ -1,6 +1,8 @@
 package com.platform.chatservice.service;
 
+import com.platform.chatservice.exception.BadRequestException;
 import com.platform.chatservice.exception.ConversationNotFoundException;
+import com.platform.chatservice.exception.ErrorCodes;
 import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.exception.MessageNotFoundException;
 import com.platform.chatservice.model.Conversation;
@@ -9,7 +11,10 @@ import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
 import com.platform.chatservice.repository.UserBlockRepository;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -50,18 +55,29 @@ class MessageServiceHelper {
     return message;
   }
 
-  Message.ReplyPreview buildReplyPreview(String replyToId) {
+  /**
+   * Snapshot of the message being replied to. The target must live in the SAME conversation: {@code
+   * replyToId} used to be looked up globally, so replying in one chat with the id of a message from
+   * someone else's private chat copied that message's text into {@code replyPreview}. An unknown or
+   * foreign id is rejected with {@code 400 REPLY_TARGET_INVALID}.
+   */
+  Message.ReplyPreview buildReplyPreview(String replyToId, String conversationId) {
     if (replyToId == null || replyToId.isBlank()) return null;
-    return messageRepository
-        .findById(replyToId)
-        .map(
-            m ->
-                Message.ReplyPreview.builder()
-                    .messageId(m.getId())
-                    .senderId(m.getSenderId())
-                    .content(snippet(m.getContent()))
-                    .build())
-        .orElse(null);
+    Message target =
+        messageRepository
+            .findById(replyToId)
+            .filter(m -> conversationId != null && conversationId.equals(m.getConversationId()))
+            .orElseThrow(
+                () ->
+                    new BadRequestException(
+                        ErrorCodes.REPLY_TARGET_INVALID,
+                        "Reply target is not a message of this conversation"));
+    return Message.ReplyPreview.builder()
+        .messageId(target.getId())
+        .senderId(target.getSenderId())
+        .content(target.isRecalled() ? "" : snippet(target.getContent()))
+        .recalled(target.isRecalled())
+        .build();
   }
 
   private String snippet(String content) {
@@ -88,6 +104,39 @@ class MessageServiceHelper {
       }
     }
     return mentioned;
+  }
+
+  /**
+   * {@code userId → displayName} for every id that resolves, in ONE query ({@code _id $in}). Ids
+   * that are not ObjectIds (bots, "system") or have no name are simply absent — never echoed back.
+   */
+  Map<String, String> lookupDisplayNames(Collection<String> userIds) {
+    if (userIds == null || userIds.isEmpty()) {
+      return Map.of();
+    }
+    List<ObjectId> ids =
+        userIds.stream()
+            .filter(id -> id != null && ObjectId.isValid(id))
+            .distinct()
+            .map(ObjectId::new)
+            .toList();
+    if (ids.isEmpty()) {
+      return Map.of();
+    }
+    try {
+      Query query = new Query(Criteria.where("_id").in(ids));
+      query.fields().include("displayName");
+      Map<String, String> names = new HashMap<>();
+      for (Document doc : mongoTemplate.find(query, Document.class, "users")) {
+        String name = doc.getString("displayName");
+        if (name != null && !name.isBlank() && doc.get("_id") != null) {
+          names.put(doc.get("_id").toString(), name);
+        }
+      }
+      return names;
+    } catch (Exception e) {
+      return Map.of();
+    }
   }
 
   String lookupDisplayName(String userId) {

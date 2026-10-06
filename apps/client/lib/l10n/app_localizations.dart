@@ -2175,7 +2175,7 @@ abstract class AppLocalizations {
   /// No description provided for @pinLimitReached.
   ///
   /// In en, this message translates to:
-  /// **'You can pin up to 2 messages'**
+  /// **'You can pin up to 5 messages'**
   String get pinLimitReached;
 
   /// No description provided for @cannotPinCall.
@@ -6714,6 +6714,1146 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Poor connection'**
   String get callPoorConnection;
+
+  /// Shown in the AI Context screen when the learned-facts (memory) section fails to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load what the assistant has learned.'**
+  String get aiContextLearnedFactsLoadError;
+
+  /// No description provided for @errTooManyRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Please wait a moment and try again.'**
+  String get errTooManyRequests;
+
+  /// No description provided for @removedFromConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'You are no longer a member of this conversation'**
+  String get removedFromConversation;
+
+  /// No description provided for @errGroupAdminRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Only group admins can do this'**
+  String get errGroupAdminRequired;
+
+  /// No description provided for @errChatUserBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t message this person'**
+  String get errChatUserBlocked;
+
+  /// No description provided for @errReplyTargetInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The message you replied to is no longer available'**
+  String get errReplyTargetInvalid;
+
+  /// No description provided for @errMessageTypeNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'This kind of message can\'t be sent here'**
+  String get errMessageTypeNotAllowed;
+
+  /// No description provided for @errInvalidUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'This link can\'t be previewed'**
+  String get errInvalidUrl;
+
+  /// No description provided for @errNotAGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'This only works in group chats'**
+  String get errNotAGroup;
+
+  /// No description provided for @errNotAMember.
+  ///
+  /// In en, this message translates to:
+  /// **'This person is no longer in the group'**
+  String get errNotAMember;
+
+  /// No description provided for @errLastAdminCannotBeRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'A group needs at least one admin'**
+  String get errLastAdminCannotBeRemoved;
+
+  /// No description provided for @errPublicDepartmentChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'A department group can\'t be a public channel'**
+  String get errPublicDepartmentChannel;
+
+  /// No description provided for @publicChannelToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Public channel'**
+  String get publicChannelToggle;
+
+  /// No description provided for @publicChannelHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone in the workspace can find it in Explore and join'**
+  String get publicChannelHint;
+
+  /// No description provided for @groupMakeAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Make admin'**
+  String get groupMakeAdmin;
+
+  /// No description provided for @groupRemoveAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove as admin'**
+  String get groupRemoveAdmin;
+
+  /// No description provided for @aiErrEmptyResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'The assistant didn\'t produce an answer. Please try again.'**
+  String get aiErrEmptyResponse;
+
+  /// No description provided for @sysGroupCreatedNoActor.
+  ///
+  /// In en, this message translates to:
+  /// **'Group created'**
+  String get sysGroupCreatedNoActor;
+
+  /// No description provided for @sysMembersAddedNoActor.
+  ///
+  /// In en, this message translates to:
+  /// **'New members were added'**
+  String get sysMembersAddedNoActor;
+
+  /// No description provided for @sysMemberLeftNoActor.
+  ///
+  /// In en, this message translates to:
+  /// **'A member left the group'**
+  String get sysMemberLeftNoActor;
+
+  /// No description provided for @sysMemberRemovedNoActor.
+  ///
+  /// In en, this message translates to:
+  /// **'A member was removed'**
+  String get sysMemberRemovedNoActor;
+
+  /// No description provided for @sysMemberJoinedNoActor.
+  ///
+  /// In en, this message translates to:
+  /// **'A new member joined'**
+  String get sysMemberJoinedNoActor;
+
+  /// No description provided for @sysAutoDeleteOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Disappearing messages turned off'**
+  String get sysAutoDeleteOff;
+
+  /// No description provided for @sysAutoDeleteOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Disappearing messages set to {duration}'**
+  String sysAutoDeleteOn(String duration);
+
+  /// No description provided for @sysAutoDeleteOffBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} turned off disappearing messages'**
+  String sysAutoDeleteOffBy(String actorName);
+
+  /// No description provided for @sysAutoDeleteOnBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} set disappearing messages to {duration}'**
+  String sysAutoDeleteOnBy(String actorName, String duration);
+
+  /// No description provided for @sysAdminPromoted.
+  ///
+  /// In en, this message translates to:
+  /// **'{targetName} is now an admin'**
+  String sysAdminPromoted(String targetName);
+
+  /// No description provided for @sysAdminDemoted.
+  ///
+  /// In en, this message translates to:
+  /// **'{targetName} is no longer an admin'**
+  String sysAdminDemoted(String targetName);
+
+  /// No description provided for @sysAdminPromotedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} made {targetName} an admin'**
+  String sysAdminPromotedBy(String actorName, String targetName);
+
+  /// No description provided for @sysAdminDemotedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{actorName} removed {targetName} as admin'**
+  String sysAdminDemotedBy(String actorName, String targetName);
+
+  /// No description provided for @durationSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 second} other{{count} seconds}}'**
+  String durationSeconds(int count);
+
+  /// No description provided for @durationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 minute} other{{count} minutes}}'**
+  String durationMinutes(int count);
+
+  /// No description provided for @durationHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hour} other{{count} hours}}'**
+  String durationHours(int count);
+
+  /// No description provided for @durationDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String durationDays(int count);
+
+  /// No description provided for @durationShortMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m'**
+  String durationShortMinutes(int count);
+
+  /// No description provided for @durationShortHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h'**
+  String durationShortHours(int count);
+
+  /// No description provided for @durationShortDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d'**
+  String durationShortDays(int count);
+
+  /// No description provided for @authErrUserBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available — one of you has blocked the other'**
+  String get authErrUserBlocked;
+
+  /// No description provided for @authErrCurrentPasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your current password'**
+  String get authErrCurrentPasswordRequired;
+
+  /// No description provided for @authErrSsoEmailUnverified.
+  ///
+  /// In en, this message translates to:
+  /// **'Your sign-in provider hasn\'t verified this email address'**
+  String get authErrSsoEmailUnverified;
+
+  /// No description provided for @authErrSocialAccountConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already linked to a different sign-in account'**
+  String get authErrSocialAccountConflict;
+
+  /// No description provided for @aiActionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get aiActionConfirm;
+
+  /// No description provided for @aiActionCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get aiActionCancel;
+
+  /// No description provided for @aiActionSendEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Send email'**
+  String get aiActionSendEmail;
+
+  /// No description provided for @aiActionDraftEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft email'**
+  String get aiActionDraftEmail;
+
+  /// No description provided for @aiActionCreateEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Create calendar event'**
+  String get aiActionCreateEvent;
+
+  /// No description provided for @aiActionUpdateEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Update calendar event'**
+  String get aiActionUpdateEvent;
+
+  /// No description provided for @aiActionCreatePage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create page'**
+  String get aiActionCreatePage;
+
+  /// No description provided for @aiActionUpdatePage.
+  ///
+  /// In en, this message translates to:
+  /// **'Update page'**
+  String get aiActionUpdatePage;
+
+  /// No description provided for @aiActionGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Run an action'**
+  String get aiActionGeneric;
+
+  /// No description provided for @aiActionGenericNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Run “{tool}”'**
+  String aiActionGenericNamed(String tool);
+
+  /// No description provided for @aiActionVia.
+  ///
+  /// In en, this message translates to:
+  /// **'via {connector}'**
+  String aiActionVia(String connector);
+
+  /// No description provided for @aiActionWaitingFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for {name} to confirm'**
+  String aiActionWaitingFor(String name);
+
+  /// No description provided for @aiActionFieldTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get aiActionFieldTo;
+
+  /// No description provided for @aiActionFieldSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject'**
+  String get aiActionFieldSubject;
+
+  /// No description provided for @aiActionFieldTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get aiActionFieldTitle;
+
+  /// No description provided for @aiActionFieldWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'When'**
+  String get aiActionFieldWhen;
+
+  /// No description provided for @aiActionStatusConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get aiActionStatusConfirmed;
+
+  /// No description provided for @aiActionStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get aiActionStatusCancelled;
+
+  /// No description provided for @aiActionStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get aiActionStatusFailed;
+
+  /// No description provided for @aiActionStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get aiActionStatusExpired;
+
+  /// No description provided for @aiActionStatusHandled.
+  ///
+  /// In en, this message translates to:
+  /// **'Already handled'**
+  String get aiActionStatusHandled;
+
+  /// No description provided for @aiActionErrNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This action no longer exists'**
+  String get aiActionErrNotFound;
+
+  /// No description provided for @aiActionErrNotOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the person who asked can confirm this'**
+  String get aiActionErrNotOwner;
+
+  /// No description provided for @aiActionErrAlreadyResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'This action was already handled'**
+  String get aiActionErrAlreadyResolved;
+
+  /// No description provided for @aiActionErrExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This request expired'**
+  String get aiActionErrExpired;
+
+  /// No description provided for @aiActionErrGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t complete this action'**
+  String get aiActionErrGeneric;
+
+  /// No description provided for @aiToolWebSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching the web'**
+  String get aiToolWebSearch;
+
+  /// No description provided for @aiToolRememberFact.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving to memory'**
+  String get aiToolRememberFact;
+
+  /// No description provided for @aiToolCreateReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating a reminder'**
+  String get aiToolCreateReminder;
+
+  /// No description provided for @aiToolGetUserInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking up a colleague'**
+  String get aiToolGetUserInfo;
+
+  /// No description provided for @aiToolSearchKnowledgeBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching the knowledge base'**
+  String get aiToolSearchKnowledgeBase;
+
+  /// No description provided for @aiToolSearchMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching messages'**
+  String get aiToolSearchMessages;
+
+  /// No description provided for @aiToolSummarizeConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Summarizing the conversation'**
+  String get aiToolSummarizeConversation;
+
+  /// No description provided for @aiToolOnConnector.
+  ///
+  /// In en, this message translates to:
+  /// **'{tool} on {connector}'**
+  String aiToolOnConnector(String tool, String connector);
+
+  /// No description provided for @aiTraceToolAwaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting confirmation'**
+  String get aiTraceToolAwaiting;
+
+  /// No description provided for @aiTraceToolDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get aiTraceToolDone;
+
+  /// No description provided for @aiTraceToolNotRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Not run'**
+  String get aiTraceToolNotRun;
+
+  /// No description provided for @aiTraceTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'{input} in · {output} out'**
+  String aiTraceTokens(String input, String output);
+
+  /// No description provided for @aiTraceCacheTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'cache {read} read · {written} written'**
+  String aiTraceCacheTokens(String read, String written);
+
+  /// No description provided for @aiTraceThinkingTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} thinking'**
+  String aiTraceThinkingTokens(String count);
+
+  /// No description provided for @aiTraceDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s'**
+  String aiTraceDuration(String seconds);
+
+  /// No description provided for @aiTraceSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 step} other{{count} steps}}'**
+  String aiTraceSteps(int count);
+
+  /// No description provided for @connectorGenericName.
+  ///
+  /// In en, this message translates to:
+  /// **'Connector'**
+  String get connectorGenericName;
+
+  /// No description provided for @connectorCustomName.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom MCP server'**
+  String get connectorCustomName;
+
+  /// No description provided for @connectorReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect'**
+  String get connectorReconnect;
+
+  /// No description provided for @connectorStatusReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect needed'**
+  String get connectorStatusReconnect;
+
+  /// No description provided for @connectorStatusUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get connectorStatusUnavailable;
+
+  /// No description provided for @connectorDisconnectWorkspaceConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect this workspace connector? Everyone in the workspace loses access to its tools.'**
+  String get connectorDisconnectWorkspaceConfirm;
+
+  /// No description provided for @connectorDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} disconnected'**
+  String connectorDisconnected(String name);
+
+  /// No description provided for @customMcpListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your MCP servers'**
+  String get customMcpListTitle;
+
+  /// No description provided for @customMcpDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get customMcpDelete;
+
+  /// No description provided for @customMcpDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this MCP server? The AI will no longer use its tools.'**
+  String get customMcpDeleteConfirm;
+
+  /// No description provided for @customMcpDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} removed'**
+  String customMcpDeleted(String name);
+
+  /// No description provided for @directoryDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this directory entry?'**
+  String get directoryDeleteConfirm;
+
+  /// No description provided for @directoryAuthOauth.
+  ///
+  /// In en, this message translates to:
+  /// **'OAuth sign-in'**
+  String get directoryAuthOauth;
+
+  /// No description provided for @directoryAuthMcpOauth.
+  ///
+  /// In en, this message translates to:
+  /// **'OAuth (MCP server)'**
+  String get directoryAuthMcpOauth;
+
+  /// No description provided for @directoryAuthEnvOauth.
+  ///
+  /// In en, this message translates to:
+  /// **'OAuth (workspace app)'**
+  String get directoryAuthEnvOauth;
+
+  /// No description provided for @directoryAuthApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'API key'**
+  String get directoryAuthApiKey;
+
+  /// No description provided for @directoryAuthNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No sign-in needed'**
+  String get directoryAuthNone;
+
+  /// No description provided for @scopeEmailSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send email'**
+  String get scopeEmailSend;
+
+  /// No description provided for @scopeEmailDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Create drafts'**
+  String get scopeEmailDraft;
+
+  /// No description provided for @scopeEmailRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read email'**
+  String get scopeEmailRead;
+
+  /// No description provided for @scopeEmailManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage email'**
+  String get scopeEmailManage;
+
+  /// No description provided for @scopeCalendarRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read calendar'**
+  String get scopeCalendarRead;
+
+  /// No description provided for @scopeCalendarEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage events'**
+  String get scopeCalendarEvents;
+
+  /// No description provided for @scopeCalendarManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage calendars'**
+  String get scopeCalendarManage;
+
+  /// No description provided for @scopeFilesRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read files'**
+  String get scopeFilesRead;
+
+  /// No description provided for @scopeFilesManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage files'**
+  String get scopeFilesManage;
+
+  /// No description provided for @scopeReadContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Read content'**
+  String get scopeReadContent;
+
+  /// No description provided for @scopeInsertContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Add content'**
+  String get scopeInsertContent;
+
+  /// No description provided for @scopeUpdateContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit content'**
+  String get scopeUpdateContent;
+
+  /// No description provided for @scopeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other access'**
+  String get scopeOther;
+
+  /// No description provided for @connErrUnsafeUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'That address isn’t allowed. Use a public https URL.'**
+  String get connErrUnsafeUrl;
+
+  /// No description provided for @connErrDiscoveryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t reach that MCP server'**
+  String get connErrDiscoveryFailed;
+
+  /// No description provided for @connErrInsufficientPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'You don’t have permission to do this'**
+  String get connErrInsufficientPermission;
+
+  /// No description provided for @connErrNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'This connector isn’t allowed in your workspace'**
+  String get connErrNotAllowed;
+
+  /// No description provided for @connErrUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This connector is unavailable right now'**
+  String get connErrUnavailable;
+
+  /// No description provided for @connErrOauthSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'This connector isn’t set up for sign-in yet'**
+  String get connErrOauthSetup;
+
+  /// No description provided for @connErrBotBridgeDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'The personal assistant service isn’t configured'**
+  String get connErrBotBridgeDisabled;
+
+  /// No description provided for @connErrBotNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant not found'**
+  String get connErrBotNotFound;
+
+  /// No description provided for @connErrBotOwnerMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'This assistant belongs to another member'**
+  String get connErrBotOwnerMismatch;
+
+  /// No description provided for @connErrMemberInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'This member’s account is inactive'**
+  String get connErrMemberInactive;
+
+  /// No description provided for @oauthConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} connected'**
+  String oauthConnected(String name);
+
+  /// No description provided for @oauthErrAccessDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'You declined access to {name}'**
+  String oauthErrAccessDenied(String name);
+
+  /// No description provided for @oauthErrFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t connect {name}'**
+  String oauthErrFailed(String name);
+
+  /// No description provided for @oauthNotCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting {name} wasn’t completed'**
+  String oauthNotCompleted(String name);
+
+  /// No description provided for @oauthErrExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'The sign-in took too long. Please try again.'**
+  String get oauthErrExpired;
+
+  /// No description provided for @tokenUsageDailyChartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily usage'**
+  String get tokenUsageDailyChartTitle;
+
+  /// No description provided for @tokenUsageTotalInRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Total in the selected range'**
+  String get tokenUsageTotalInRange;
+
+  /// No description provided for @tokenUsageQuotaBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is turned off for this workspace'**
+  String get tokenUsageQuotaBlocked;
+
+  /// No description provided for @tokenUsageQuotaExceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly AI limit reached'**
+  String get tokenUsageQuotaExceeded;
+
+  /// No description provided for @tokenUsageQuotaResets.
+  ///
+  /// In en, this message translates to:
+  /// **'Resets on {date}'**
+  String tokenUsageQuotaResets(String date);
+
+  /// No description provided for @authErrRoleGrantExceedsOwnPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t grant permissions you don\'t have yourself: {capabilities}.'**
+  String authErrRoleGrantExceedsOwnPermissions(String capabilities);
+
+  /// No description provided for @authErrRoleGrantExceedsOwnPermissionsGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t grant permissions you don\'t have yourself.'**
+  String get authErrRoleGrantExceedsOwnPermissionsGeneric;
+
+  /// No description provided for @authErrCannotEditOwnRole.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t edit your own role.'**
+  String get authErrCannotEditOwnRole;
+
+  /// No description provided for @authErrPresetRoleRenameForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Built-in roles can\'t be renamed.'**
+  String get authErrPresetRoleRenameForbidden;
+
+  /// No description provided for @authErrRoleNameTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'A role with this name already exists.'**
+  String get authErrRoleNameTaken;
+
+  /// No description provided for @authErrOwnerRoleImmutable.
+  ///
+  /// In en, this message translates to:
+  /// **'The Owner role can\'t be modified or deleted.'**
+  String get authErrOwnerRoleImmutable;
+
+  /// No description provided for @authErrOwnerSsoMappingForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an Owner can map SSO groups to the Owner role.'**
+  String get authErrOwnerSsoMappingForbidden;
+
+  /// No description provided for @authErrInsufficientPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have permission to do this.'**
+  String get authErrInsufficientPermission;
+
+  /// No description provided for @authErrAiContextEntryNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This context entry no longer exists.'**
+  String get authErrAiContextEntryNotFound;
+
+  /// No description provided for @authErrAiConnectorsNotInAllowList.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected AI connectors must also be allowed in the workspace connector list.'**
+  String get authErrAiConnectorsNotInAllowList;
+
+  /// No description provided for @authErrPasswordTooShortMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least {min} characters.'**
+  String authErrPasswordTooShortMin(int min);
+
+  /// No description provided for @adminCapManageAiContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage AI context'**
+  String get adminCapManageAiContext;
+
+  /// No description provided for @adminCapViewInternalContext.
+  ///
+  /// In en, this message translates to:
+  /// **'View internal context'**
+  String get adminCapViewInternalContext;
+
+  /// No description provided for @adminCapViewConfidentialContext.
+  ///
+  /// In en, this message translates to:
+  /// **'View confidential context'**
+  String get adminCapViewConfidentialContext;
+
+  /// No description provided for @adminCapUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Other permission'**
+  String get adminCapUnknown;
+
+  /// No description provided for @adminAuditSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get adminAuditSystem;
+
+  /// No description provided for @adminAuditFormerMember.
+  ///
+  /// In en, this message translates to:
+  /// **'A former member'**
+  String get adminAuditFormerMember;
+
+  /// No description provided for @adminAuditActionOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other action'**
+  String get adminAuditActionOther;
+
+  /// No description provided for @adminAuditActionWorkspaceUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace updated'**
+  String get adminAuditActionWorkspaceUpdate;
+
+  /// No description provided for @adminAuditActionDepartmentCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Department created'**
+  String get adminAuditActionDepartmentCreate;
+
+  /// No description provided for @adminAuditActionDepartmentUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Department updated'**
+  String get adminAuditActionDepartmentUpdate;
+
+  /// No description provided for @adminAuditActionDepartmentDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Department deleted'**
+  String get adminAuditActionDepartmentDelete;
+
+  /// No description provided for @adminAuditActionMemberUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Member updated'**
+  String get adminAuditActionMemberUpdate;
+
+  /// No description provided for @adminAuditActionMemberSsoUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Member updated by SSO'**
+  String get adminAuditActionMemberSsoUpdate;
+
+  /// No description provided for @adminAuditActionMemberBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Member blocked'**
+  String get adminAuditActionMemberBlock;
+
+  /// No description provided for @adminAuditActionMemberUnblock.
+  ///
+  /// In en, this message translates to:
+  /// **'Member unblocked'**
+  String get adminAuditActionMemberUnblock;
+
+  /// No description provided for @adminAuditActionRoleCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Role created'**
+  String get adminAuditActionRoleCreate;
+
+  /// No description provided for @adminAuditActionRoleUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Role updated'**
+  String get adminAuditActionRoleUpdate;
+
+  /// No description provided for @adminAuditActionInvitationCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation sent'**
+  String get adminAuditActionInvitationCreate;
+
+  /// No description provided for @adminAuditActionInvitationResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation resent'**
+  String get adminAuditActionInvitationResend;
+
+  /// No description provided for @adminAuditActionInvitationRevoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation revoked'**
+  String get adminAuditActionInvitationRevoke;
+
+  /// No description provided for @adminAuditActionInvitationAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation accepted'**
+  String get adminAuditActionInvitationAccept;
+
+  /// No description provided for @adminAuditActionConnectorConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connector connected'**
+  String get adminAuditActionConnectorConnect;
+
+  /// No description provided for @adminAuditActionConnectorDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connector disconnected'**
+  String get adminAuditActionConnectorDisconnect;
+
+  /// No description provided for @adminAuditActionConnectorReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Connector reconnected'**
+  String get adminAuditActionConnectorReplace;
+
+  /// No description provided for @adminAuditActionConnectionPermissionsUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Connector permissions updated'**
+  String get adminAuditActionConnectionPermissionsUpdate;
+
+  /// No description provided for @adminAuditActionCustomMcpAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom MCP added'**
+  String get adminAuditActionCustomMcpAdd;
+
+  /// No description provided for @adminAuditActionCustomMcpDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom MCP removed'**
+  String get adminAuditActionCustomMcpDelete;
+
+  /// No description provided for @adminAuditActionDirectoryCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Directory entry added'**
+  String get adminAuditActionDirectoryCreate;
+
+  /// No description provided for @adminAuditActionDirectoryUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Directory entry updated'**
+  String get adminAuditActionDirectoryUpdate;
+
+  /// No description provided for @adminAuditActionDirectoryDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Directory entry removed'**
+  String get adminAuditActionDirectoryDelete;
+
+  /// No description provided for @adminAuditActionSensitiveSkillRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensitive skill run'**
+  String get adminAuditActionSensitiveSkillRun;
+
+  /// No description provided for @adminAuditTargetWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace'**
+  String get adminAuditTargetWorkspace;
+
+  /// No description provided for @adminAuditTargetMember.
+  ///
+  /// In en, this message translates to:
+  /// **'A member'**
+  String get adminAuditTargetMember;
+
+  /// No description provided for @adminAuditTargetRole.
+  ///
+  /// In en, this message translates to:
+  /// **'A role'**
+  String get adminAuditTargetRole;
+
+  /// No description provided for @adminAuditTargetDepartment.
+  ///
+  /// In en, this message translates to:
+  /// **'A department'**
+  String get adminAuditTargetDepartment;
+
+  /// No description provided for @adminAuditTargetInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'An invitation'**
+  String get adminAuditTargetInvitation;
+
+  /// No description provided for @adminAuditTargetConnector.
+  ///
+  /// In en, this message translates to:
+  /// **'A connector'**
+  String get adminAuditTargetConnector;
+
+  /// No description provided for @adminAuditTargetDirectoryEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'A directory entry'**
+  String get adminAuditTargetDirectoryEntry;
+
+  /// No description provided for @adminAuditTargetTool.
+  ///
+  /// In en, this message translates to:
+  /// **'A tool'**
+  String get adminAuditTargetTool;
+
+  /// No description provided for @adminAuditTargetOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Something else'**
+  String get adminAuditTargetOther;
+
+  /// No description provided for @adminAiConnectorsAllAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'The workspace allow-list is empty, so every connector is allowed. Pick the ones the AI may use.'**
+  String get adminAiConnectorsAllAllowed;
+
+  /// No description provided for @errAssistantSetupIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a persona and pick a model to finish setting up your assistant.'**
+  String get errAssistantSetupIncomplete;
+
+  /// No description provided for @errAssistantNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal assistants aren\'t available on this workspace yet. Ask your administrator.'**
+  String get errAssistantNotConfigured;
+
+  /// No description provided for @errAssistantUpstreamFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The assistant service didn\'t respond. Please try again in a moment.'**
+  String get errAssistantUpstreamFailed;
+
+  /// No description provided for @adminBotOwnedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Owned by {name}'**
+  String adminBotOwnedBy(String name);
+
+  /// No description provided for @adminRoleCloneDefaultName.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} copy'**
+  String adminRoleCloneDefaultName(String name);
 }
 
 class _AppLocalizationsDelegate

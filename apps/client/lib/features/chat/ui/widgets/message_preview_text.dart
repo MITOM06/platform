@@ -1,5 +1,7 @@
 import 'package:flutter/widgets.dart';
 import '../../../../core/l10n/l10n_ext.dart';
+import '../../domain/conversation_models.dart';
+import 'system_message_text.dart';
 
 /// Content-only SANITIZED preview text for surfaces that have just a message's
 /// raw `content` string and no structured type field (reply quotes,
@@ -57,39 +59,33 @@ String _attachmentLabelForUrl(BuildContext context, String content) {
   return l10n.attachmentLabel;
 }
 
-/// Localized label for a `system.*` control message. These previews have no
-/// participant name-resolution context, so pin/unpin notices use the generic
-/// actor name — mirroring web's ConversationItem. Unknown codes fall back to a
-/// generic localized system label rather than leaking the raw code + user ids.
-String _systemPreviewLabel(BuildContext context, String content) {
+/// Localized label for a `system.*` control message. Previews have no
+/// participant context, so names are generic; unknown codes fall back to a
+/// generic localized label rather than leaking the raw code + user ids.
+String _systemPreviewLabel(BuildContext context, String content) =>
+    systemPreviewText(context.l10n, content);
+
+/// Sanitized preview of a conversation's last message: recalled → the
+/// localized "message recalled" label; typed media/system/AI previews by
+/// `type` when the server sent one; else the content-sniffing preview.
+String lastMessagePreview(BuildContext context, LastMessageModel last) {
   final l10n = context.l10n;
-  if (content.startsWith('system.nickname.changed:')) {
-    return l10n.systemNicknameChanged;
+  if (last.recalled) return l10n.messageRecalled;
+  switch (last.type) {
+    case 'image':
+      return '[${l10n.attachPhoto}]';
+    case 'video':
+      return '[${l10n.attachVideo}]';
+    case 'file':
+      return '[${l10n.attachFile}]';
+    case 'voice':
+      return '[${l10n.attachVoice}]';
+    case 'sticker':
+      return '[${l10n.attachSticker}]';
+    case 'meeting_summary':
+      return '[${l10n.meetingSummaryTitle}]';
+    case 'system':
+      return systemPreviewText(l10n, last.content);
   }
-  if (content.startsWith('system.theme.changed:')) {
-    return l10n.systemThemeChanged;
-  }
-  if (content.startsWith('system.quick_reaction.changed:')) {
-    return l10n.systemQuickReactionChanged;
-  }
-  if (content.startsWith('system.message.pinned:')) {
-    return l10n.sysPinnedMessage(l10n.someone);
-  }
-  if (content.startsWith('system.message.unpinned:')) {
-    return l10n.sysUnpinnedMessage(l10n.someone);
-  }
-  switch (content) {
-    case 'system.group.created':
-      return l10n.createGroup;
-    case 'system.members.added':
-      return l10n.addMembers;
-    case 'system.member.left':
-      return l10n.leaveGroup;
-    case 'system.member.removed':
-      return l10n.removeMember;
-    case 'system.member.joined':
-      return l10n.joinChannel;
-    default:
-      return l10n.pinnedSystemMessage;
-  }
+  return messagePreviewFromContent(context, last.content);
 }

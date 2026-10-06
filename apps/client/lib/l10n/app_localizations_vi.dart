@@ -1113,7 +1113,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pinnedMessagesTitle => 'Tin nhắn đã ghim';
 
   @override
-  String get pinLimitReached => 'Bạn chỉ có thể ghim tối đa 2 tin nhắn';
+  String get pinLimitReached => 'Bạn chỉ có thể ghim tối đa 5 tin nhắn';
 
   @override
   String get cannotPinCall => 'Không thể ghim cuộc gọi';
@@ -3604,4 +3604,676 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get callPoorConnection => 'Kết nối yếu';
+
+  @override
+  String get aiContextLearnedFactsLoadError =>
+      'Không tải được những điều trợ lý đã ghi nhớ.';
+
+  @override
+  String get errTooManyRequests =>
+      'Quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại.';
+
+  @override
+  String get removedFromConversation =>
+      'Bạn không còn là thành viên của cuộc trò chuyện này';
+
+  @override
+  String get errGroupAdminRequired =>
+      'Chỉ quản trị viên nhóm mới có thể thực hiện việc này';
+
+  @override
+  String get errChatUserBlocked => 'Bạn không thể nhắn tin cho người này';
+
+  @override
+  String get errReplyTargetInvalid => 'Tin nhắn bạn trả lời không còn khả dụng';
+
+  @override
+  String get errMessageTypeNotAllowed =>
+      'Không thể gửi loại tin nhắn này ở đây';
+
+  @override
+  String get errInvalidUrl => 'Không thể xem trước liên kết này';
+
+  @override
+  String get errNotAGroup => 'Chức năng này chỉ dùng được trong nhóm';
+
+  @override
+  String get errNotAMember => 'Người này không còn ở trong nhóm';
+
+  @override
+  String get errLastAdminCannotBeRemoved =>
+      'Nhóm cần có ít nhất một quản trị viên';
+
+  @override
+  String get errPublicDepartmentChannel =>
+      'Nhóm thuộc phòng ban không thể là kênh công khai';
+
+  @override
+  String get publicChannelToggle => 'Kênh công khai';
+
+  @override
+  String get publicChannelHint =>
+      'Mọi người trong workspace có thể tìm thấy trong Khám phá và tham gia';
+
+  @override
+  String get groupMakeAdmin => 'Đặt làm quản trị viên';
+
+  @override
+  String get groupRemoveAdmin => 'Gỡ quyền quản trị viên';
+
+  @override
+  String get aiErrEmptyResponse =>
+      'Trợ lý không đưa ra câu trả lời. Vui lòng thử lại.';
+
+  @override
+  String get sysGroupCreatedNoActor => 'Nhóm đã được tạo';
+
+  @override
+  String get sysMembersAddedNoActor => 'Đã thêm thành viên mới';
+
+  @override
+  String get sysMemberLeftNoActor => 'Một thành viên đã rời nhóm';
+
+  @override
+  String get sysMemberRemovedNoActor => 'Một thành viên đã bị xoá khỏi nhóm';
+
+  @override
+  String get sysMemberJoinedNoActor => 'Một thành viên mới đã tham gia';
+
+  @override
+  String get sysAutoDeleteOff => 'Đã tắt tin nhắn tự huỷ';
+
+  @override
+  String sysAutoDeleteOn(String duration) {
+    return 'Tin nhắn tự huỷ được đặt thành $duration';
+  }
+
+  @override
+  String sysAutoDeleteOffBy(String actorName) {
+    return '$actorName đã tắt tin nhắn tự huỷ';
+  }
+
+  @override
+  String sysAutoDeleteOnBy(String actorName, String duration) {
+    return '$actorName đã đặt tin nhắn tự huỷ thành $duration';
+  }
+
+  @override
+  String sysAdminPromoted(String targetName) {
+    return '$targetName đã trở thành quản trị viên';
+  }
+
+  @override
+  String sysAdminDemoted(String targetName) {
+    return '$targetName không còn là quản trị viên';
+  }
+
+  @override
+  String sysAdminPromotedBy(String actorName, String targetName) {
+    return '$actorName đã đặt $targetName làm quản trị viên';
+  }
+
+  @override
+  String sysAdminDemotedBy(String actorName, String targetName) {
+    return '$actorName đã gỡ quyền quản trị viên của $targetName';
+  }
+
+  @override
+  String durationSeconds(int count) {
+    return '$count giây';
+  }
+
+  @override
+  String durationMinutes(int count) {
+    return '$count phút';
+  }
+
+  @override
+  String durationHours(int count) {
+    return '$count giờ';
+  }
+
+  @override
+  String durationDays(int count) {
+    return '$count ngày';
+  }
+
+  @override
+  String durationShortMinutes(int count) {
+    return '$count phút';
+  }
+
+  @override
+  String durationShortHours(int count) {
+    return '$count giờ';
+  }
+
+  @override
+  String durationShortDays(int count) {
+    return '$count ngày';
+  }
+
+  @override
+  String get authErrUserBlocked =>
+      'Không thể thực hiện — một trong hai người đã chặn người kia';
+
+  @override
+  String get authErrCurrentPasswordRequired =>
+      'Vui lòng nhập mật khẩu hiện tại';
+
+  @override
+  String get authErrSsoEmailUnverified =>
+      'Nhà cung cấp đăng nhập chưa xác minh địa chỉ email này';
+
+  @override
+  String get authErrSocialAccountConflict =>
+      'Email này đã được liên kết với một tài khoản đăng nhập khác';
+
+  @override
+  String get aiActionConfirm => 'Xác nhận';
+
+  @override
+  String get aiActionCancel => 'Huỷ';
+
+  @override
+  String get aiActionSendEmail => 'Gửi email';
+
+  @override
+  String get aiActionDraftEmail => 'Soạn email nháp';
+
+  @override
+  String get aiActionCreateEvent => 'Tạo sự kiện lịch';
+
+  @override
+  String get aiActionUpdateEvent => 'Cập nhật sự kiện lịch';
+
+  @override
+  String get aiActionCreatePage => 'Tạo trang';
+
+  @override
+  String get aiActionUpdatePage => 'Cập nhật trang';
+
+  @override
+  String get aiActionGeneric => 'Thực hiện một thao tác';
+
+  @override
+  String aiActionGenericNamed(String tool) {
+    return 'Thực hiện “$tool”';
+  }
+
+  @override
+  String aiActionVia(String connector) {
+    return 'qua $connector';
+  }
+
+  @override
+  String aiActionWaitingFor(String name) {
+    return 'Đang chờ $name xác nhận';
+  }
+
+  @override
+  String get aiActionFieldTo => 'Gửi tới';
+
+  @override
+  String get aiActionFieldSubject => 'Tiêu đề';
+
+  @override
+  String get aiActionFieldTitle => 'Tên';
+
+  @override
+  String get aiActionFieldWhen => 'Thời gian';
+
+  @override
+  String get aiActionStatusConfirmed => 'Đã thực hiện';
+
+  @override
+  String get aiActionStatusCancelled => 'Đã huỷ';
+
+  @override
+  String get aiActionStatusFailed => 'Thất bại';
+
+  @override
+  String get aiActionStatusExpired => 'Đã hết hạn';
+
+  @override
+  String get aiActionStatusHandled => 'Đã được xử lý';
+
+  @override
+  String get aiActionErrNotFound => 'Thao tác này không còn nữa';
+
+  @override
+  String get aiActionErrNotOwner => 'Chỉ người yêu cầu mới xác nhận được';
+
+  @override
+  String get aiActionErrAlreadyResolved => 'Thao tác này đã được xử lý';
+
+  @override
+  String get aiActionErrExpired => 'Yêu cầu này đã hết hạn';
+
+  @override
+  String get aiActionErrGeneric => 'Không thể hoàn tất thao tác này';
+
+  @override
+  String get aiToolWebSearch => 'Đang tìm trên web';
+
+  @override
+  String get aiToolRememberFact => 'Đang ghi nhớ';
+
+  @override
+  String get aiToolCreateReminder => 'Đang tạo nhắc việc';
+
+  @override
+  String get aiToolGetUserInfo => 'Đang tra cứu đồng nghiệp';
+
+  @override
+  String get aiToolSearchKnowledgeBase => 'Đang tìm trong kho tài liệu';
+
+  @override
+  String get aiToolSearchMessages => 'Đang tìm tin nhắn';
+
+  @override
+  String get aiToolSummarizeConversation => 'Đang tóm tắt cuộc trò chuyện';
+
+  @override
+  String aiToolOnConnector(String tool, String connector) {
+    return '$tool trên $connector';
+  }
+
+  @override
+  String get aiTraceToolAwaiting => 'Đang chờ xác nhận';
+
+  @override
+  String get aiTraceToolDone => 'Xong';
+
+  @override
+  String get aiTraceToolNotRun => 'Chưa chạy';
+
+  @override
+  String aiTraceTokens(String input, String output) {
+    return '$input vào · $output ra';
+  }
+
+  @override
+  String aiTraceCacheTokens(String read, String written) {
+    return 'cache $read đọc · $written ghi';
+  }
+
+  @override
+  String aiTraceThinkingTokens(String count) {
+    return '$count suy luận';
+  }
+
+  @override
+  String aiTraceDuration(String seconds) {
+    return '$seconds giây';
+  }
+
+  @override
+  String aiTraceSteps(int count) {
+    return '$count bước';
+  }
+
+  @override
+  String get connectorGenericName => 'Kết nối';
+
+  @override
+  String get connectorCustomName => 'Máy chủ MCP tự thêm';
+
+  @override
+  String get connectorReconnect => 'Kết nối lại';
+
+  @override
+  String get connectorStatusReconnect => 'Cần kết nối lại';
+
+  @override
+  String get connectorStatusUnavailable => 'Không khả dụng';
+
+  @override
+  String get connectorDisconnectWorkspaceConfirm =>
+      'Ngắt kết nối dùng chung của workspace? Mọi người trong workspace sẽ mất quyền dùng công cụ của nó.';
+
+  @override
+  String connectorDisconnected(String name) {
+    return 'Đã ngắt kết nối $name';
+  }
+
+  @override
+  String get customMcpListTitle => 'Máy chủ MCP của bạn';
+
+  @override
+  String get customMcpDelete => 'Gỡ bỏ';
+
+  @override
+  String get customMcpDeleteConfirm =>
+      'Gỡ máy chủ MCP này? AI sẽ không dùng công cụ của nó nữa.';
+
+  @override
+  String customMcpDeleted(String name) {
+    return 'Đã gỡ $name';
+  }
+
+  @override
+  String get directoryDeleteConfirm => 'Xoá mục này khỏi danh mục?';
+
+  @override
+  String get directoryAuthOauth => 'Đăng nhập OAuth';
+
+  @override
+  String get directoryAuthMcpOauth => 'OAuth (máy chủ MCP)';
+
+  @override
+  String get directoryAuthEnvOauth => 'OAuth (ứng dụng của workspace)';
+
+  @override
+  String get directoryAuthApiKey => 'Khoá API';
+
+  @override
+  String get directoryAuthNone => 'Không cần đăng nhập';
+
+  @override
+  String get scopeEmailSend => 'Gửi email';
+
+  @override
+  String get scopeEmailDraft => 'Tạo thư nháp';
+
+  @override
+  String get scopeEmailRead => 'Đọc email';
+
+  @override
+  String get scopeEmailManage => 'Quản lý email';
+
+  @override
+  String get scopeCalendarRead => 'Xem lịch';
+
+  @override
+  String get scopeCalendarEvents => 'Quản lý sự kiện';
+
+  @override
+  String get scopeCalendarManage => 'Quản lý lịch';
+
+  @override
+  String get scopeFilesRead => 'Đọc tệp';
+
+  @override
+  String get scopeFilesManage => 'Quản lý tệp';
+
+  @override
+  String get scopeReadContent => 'Đọc nội dung';
+
+  @override
+  String get scopeInsertContent => 'Thêm nội dung';
+
+  @override
+  String get scopeUpdateContent => 'Sửa nội dung';
+
+  @override
+  String get scopeOther => 'Quyền khác';
+
+  @override
+  String get connErrUnsafeUrl =>
+      'Địa chỉ này không được phép. Hãy dùng URL https công khai.';
+
+  @override
+  String get connErrDiscoveryFailed => 'Không kết nối được tới máy chủ MCP đó';
+
+  @override
+  String get connErrInsufficientPermission => 'Bạn không có quyền làm việc này';
+
+  @override
+  String get connErrNotAllowed =>
+      'Kết nối này không được phép trong workspace của bạn';
+
+  @override
+  String get connErrUnavailable => 'Kết nối này hiện không khả dụng';
+
+  @override
+  String get connErrOauthSetup => 'Kết nối này chưa được cấu hình đăng nhập';
+
+  @override
+  String get connErrBotBridgeDisabled =>
+      'Dịch vụ trợ lý riêng chưa được cấu hình';
+
+  @override
+  String get connErrBotNotFound => 'Không tìm thấy trợ lý';
+
+  @override
+  String get connErrBotOwnerMismatch => 'Trợ lý này thuộc về thành viên khác';
+
+  @override
+  String get connErrMemberInactive => 'Tài khoản thành viên này đang bị khoá';
+
+  @override
+  String oauthConnected(String name) {
+    return 'Đã kết nối $name';
+  }
+
+  @override
+  String oauthErrAccessDenied(String name) {
+    return 'Bạn đã từ chối cấp quyền cho $name';
+  }
+
+  @override
+  String oauthErrFailed(String name) {
+    return 'Không kết nối được $name';
+  }
+
+  @override
+  String oauthNotCompleted(String name) {
+    return 'Chưa hoàn tất kết nối $name';
+  }
+
+  @override
+  String get oauthErrExpired =>
+      'Quá trình đăng nhập quá lâu. Vui lòng thử lại.';
+
+  @override
+  String get tokenUsageDailyChartTitle => 'Mức dùng theo ngày';
+
+  @override
+  String get tokenUsageTotalInRange => 'Tổng trong khoảng đã chọn';
+
+  @override
+  String get tokenUsageQuotaBlocked => 'AI đang bị tắt cho workspace này';
+
+  @override
+  String get tokenUsageQuotaExceeded => 'Đã dùng hết hạn mức AI của tháng';
+
+  @override
+  String tokenUsageQuotaResets(String date) {
+    return 'Làm mới vào $date';
+  }
+
+  @override
+  String authErrRoleGrantExceedsOwnPermissions(String capabilities) {
+    return 'Bạn không thể cấp quyền mà chính bạn không có: $capabilities.';
+  }
+
+  @override
+  String get authErrRoleGrantExceedsOwnPermissionsGeneric =>
+      'Bạn không thể cấp quyền mà chính bạn không có.';
+
+  @override
+  String get authErrCannotEditOwnRole =>
+      'Bạn không thể chỉnh sửa vai trò của chính mình.';
+
+  @override
+  String get authErrPresetRoleRenameForbidden =>
+      'Không thể đổi tên vai trò mặc định.';
+
+  @override
+  String get authErrRoleNameTaken => 'Đã có vai trò mang tên này.';
+
+  @override
+  String get authErrOwnerRoleImmutable =>
+      'Không thể sửa hoặc xoá vai trò Owner.';
+
+  @override
+  String get authErrOwnerSsoMappingForbidden =>
+      'Chỉ Owner mới được ánh xạ nhóm SSO vào vai trò Owner.';
+
+  @override
+  String get authErrInsufficientPermission =>
+      'Bạn không có quyền thực hiện thao tác này.';
+
+  @override
+  String get authErrAiContextEntryNotFound =>
+      'Mục ngữ cảnh này không còn tồn tại.';
+
+  @override
+  String get authErrAiConnectorsNotInAllowList =>
+      'Các connector AI được chọn phải nằm trong danh sách connector được phép của workspace.';
+
+  @override
+  String authErrPasswordTooShortMin(int min) {
+    return 'Mật khẩu phải có ít nhất $min ký tự.';
+  }
+
+  @override
+  String get adminCapManageAiContext => 'Quản lý ngữ cảnh AI';
+
+  @override
+  String get adminCapViewInternalContext => 'Xem ngữ cảnh nội bộ';
+
+  @override
+  String get adminCapViewConfidentialContext => 'Xem ngữ cảnh bảo mật';
+
+  @override
+  String get adminCapUnknown => 'Quyền khác';
+
+  @override
+  String get adminAuditSystem => 'Hệ thống';
+
+  @override
+  String get adminAuditFormerMember => 'Một thành viên cũ';
+
+  @override
+  String get adminAuditActionOther => 'Thao tác khác';
+
+  @override
+  String get adminAuditActionWorkspaceUpdate => 'Cập nhật workspace';
+
+  @override
+  String get adminAuditActionDepartmentCreate => 'Tạo phòng ban';
+
+  @override
+  String get adminAuditActionDepartmentUpdate => 'Cập nhật phòng ban';
+
+  @override
+  String get adminAuditActionDepartmentDelete => 'Xoá phòng ban';
+
+  @override
+  String get adminAuditActionMemberUpdate => 'Cập nhật thành viên';
+
+  @override
+  String get adminAuditActionMemberSsoUpdate =>
+      'Thành viên được cập nhật qua SSO';
+
+  @override
+  String get adminAuditActionMemberBlock => 'Khoá thành viên';
+
+  @override
+  String get adminAuditActionMemberUnblock => 'Mở khoá thành viên';
+
+  @override
+  String get adminAuditActionRoleCreate => 'Tạo vai trò';
+
+  @override
+  String get adminAuditActionRoleUpdate => 'Cập nhật vai trò';
+
+  @override
+  String get adminAuditActionInvitationCreate => 'Gửi lời mời';
+
+  @override
+  String get adminAuditActionInvitationResend => 'Gửi lại lời mời';
+
+  @override
+  String get adminAuditActionInvitationRevoke => 'Thu hồi lời mời';
+
+  @override
+  String get adminAuditActionInvitationAccept => 'Chấp nhận lời mời';
+
+  @override
+  String get adminAuditActionConnectorConnect => 'Kết nối connector';
+
+  @override
+  String get adminAuditActionConnectorDisconnect => 'Ngắt kết nối connector';
+
+  @override
+  String get adminAuditActionConnectorReplace => 'Kết nối lại connector';
+
+  @override
+  String get adminAuditActionConnectionPermissionsUpdate =>
+      'Cập nhật quyền connector';
+
+  @override
+  String get adminAuditActionCustomMcpAdd => 'Thêm MCP tuỳ chỉnh';
+
+  @override
+  String get adminAuditActionCustomMcpDelete => 'Xoá MCP tuỳ chỉnh';
+
+  @override
+  String get adminAuditActionDirectoryCreate => 'Thêm mục danh bạ connector';
+
+  @override
+  String get adminAuditActionDirectoryUpdate =>
+      'Cập nhật mục danh bạ connector';
+
+  @override
+  String get adminAuditActionDirectoryDelete => 'Xoá mục danh bạ connector';
+
+  @override
+  String get adminAuditActionSensitiveSkillRun => 'Chạy kỹ năng nhạy cảm';
+
+  @override
+  String get adminAuditTargetWorkspace => 'Workspace';
+
+  @override
+  String get adminAuditTargetMember => 'Một thành viên';
+
+  @override
+  String get adminAuditTargetRole => 'Một vai trò';
+
+  @override
+  String get adminAuditTargetDepartment => 'Một phòng ban';
+
+  @override
+  String get adminAuditTargetInvitation => 'Một lời mời';
+
+  @override
+  String get adminAuditTargetConnector => 'Một connector';
+
+  @override
+  String get adminAuditTargetDirectoryEntry => 'Một mục danh bạ';
+
+  @override
+  String get adminAuditTargetTool => 'Một công cụ';
+
+  @override
+  String get adminAuditTargetOther => 'Đối tượng khác';
+
+  @override
+  String get adminAiConnectorsAllAllowed =>
+      'Danh sách connector được phép của workspace đang trống nên mọi connector đều được phép. Chọn những connector AI được dùng.';
+
+  @override
+  String get errAssistantSetupIncomplete =>
+      'Hãy nhập tính cách và chọn mô hình để hoàn tất thiết lập trợ lý.';
+
+  @override
+  String get errAssistantNotConfigured =>
+      'Workspace này chưa bật trợ lý riêng. Hãy liên hệ quản trị viên.';
+
+  @override
+  String get errAssistantUpstreamFailed =>
+      'Dịch vụ trợ lý không phản hồi. Vui lòng thử lại sau giây lát.';
+
+  @override
+  String adminBotOwnedBy(String name) {
+    return 'Thuộc về $name';
+  }
+
+  @override
+  String adminRoleCloneDefaultName(String name) {
+    return '$name (bản sao)';
+  }
 }

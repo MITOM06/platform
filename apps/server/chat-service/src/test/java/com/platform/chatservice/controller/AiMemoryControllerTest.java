@@ -1,8 +1,12 @@
 package com.platform.chatservice.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.platform.chatservice.dto.AiMemoryResponse;
 import com.platform.chatservice.model.AiMemory;
 import com.platform.chatservice.repository.AiMemoryRepository;
@@ -13,11 +17,12 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -26,10 +31,11 @@ import org.springframework.http.ResponseEntity;
 class AiMemoryControllerTest {
 
   @Mock private AiMemoryRepository aiMemoryRepository;
-
+  @Mock private StringRedisTemplate redisTemplate;
   @Mock private Principal principal;
 
-  @InjectMocks private AiMemoryController controller;
+  private final ObjectMapper objectMapper = new ObjectMapper();
+  private AiMemoryController controller;
 
   private static final String USER_ID = "user-001";
   private static final String CONV_ID = "conv-001";
@@ -38,6 +44,7 @@ class AiMemoryControllerTest {
 
   @BeforeEach
   void setUp() {
+    controller = new AiMemoryController(aiMemoryRepository, redisTemplate, objectMapper);
     when(principal.getName()).thenReturn(USER_ID);
     memory =
         AiMemory.builder()
@@ -102,9 +109,11 @@ class AiMemoryControllerTest {
     assertThat(body.messageCount()).isZero();
   }
 
+  /** Memories are per (conversation, user): the lookup must use BOTH keys. */
   @Test
-  void getConversationMemory_ReturnsMemoryForOwner() {
-    when(aiMemoryRepository.findByConversationId(CONV_ID)).thenReturn(Optional.of(memory));
+  void getConversationMemory_returnsTheCallersOwnMemory() {
+    when(aiMemoryRepository.findByConversationIdAndUserId(CONV_ID, USER_ID))
+        .thenReturn(Optional.of(memory));
 
     ResponseEntity<AiMemoryResponse> response =
         controller.getConversationMemory(CONV_ID, principal);
@@ -114,19 +123,11 @@ class AiMemoryControllerTest {
     assertThat(response.getBody().conversationId()).isEqualTo(CONV_ID);
   }
 
+  /** Another member's memory in the same group is simply not the caller's: 404, never exposed. */
   @Test
-  void getConversationMemory_ReturnsNotFoundForWrongUser() {
-    AiMemory otherMemory =
-        AiMemory.builder()
-            .id("mem-2")
-            .conversationId(CONV_ID)
-            .userId("other-user")
-            .summary("Other")
-            .keyFacts(List.of())
-            .messageCount(5)
-            .updatedAt(Instant.now())
-            .build();
-    when(aiMemoryRepository.findByConversationId(CONV_ID)).thenReturn(Optional.of(otherMemory));
+  void getConversationMemory_returnsNotFoundWhenCallerHasNone() {
+    when(aiMemoryRepository.findByConversationIdAndUserId(CONV_ID, USER_ID))
+        .thenReturn(Optional.empty());
 
     ResponseEntity<AiMemoryResponse> response =
         controller.getConversationMemory(CONV_ID, principal);
@@ -135,41 +136,44 @@ class AiMemoryControllerTest {
   }
 
   @Test
-  void deleteMemory_Returns204AndDeletesWhenOwner() {
-    when(aiMemoryRepository.findByConversationId(CONV_ID)).thenReturn(Optional.of(memory));
+  void deleteMemory_deletesOnlyTheCallersDoc_andRequestsVectorCleanup() throws Exception {
+    when(aiMemoryRepository.findByConversationIdAndUserId(CONV_ID, USER_ID))
+        .thenReturn(Optional.of(memory));
 
     ResponseEntity<Void> response = controller.deleteMemory(CONV_ID, principal);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-    verify(aiMemoryRepository).deleteByConversationId(CONV_ID);
+    verify(aiMemoryRepository).deleteByConversationIdAndUserId(CONV_ID, USER_ID);
+    ArgumentCaptor<String> payload = ArgumentCaptor.forClass(String.class);
+    verify(redisTemplate).convertAndSend(eq("ai:memory:delete"), payload.capture());
+    JsonNode json = objectMapper.readTree(payload.getValue());
+    assertThat(json.get("conversationId").asText()).isEqualTo(CONV_ID);
+    assertThat(json.get("userId").asText()).isEqualTo(USER_ID);
   }
 
   @Test
-  void deleteMemory_Returns403WhenNotOwner() {
-    AiMemory otherMemory =
-        AiMemory.builder()
-            .id("mem-2")
-            .conversationId(CONV_ID)
-            .userId("other-user")
-            .summary("Other")
-            .keyFacts(List.of())
-            .messageCount(5)
-            .updatedAt(Instant.now())
-            .build();
-    when(aiMemoryRepository.findByConversationId(CONV_ID)).thenReturn(Optional.of(otherMemory));
-
-    ResponseEntity<Void> response = controller.deleteMemory(CONV_ID, principal);
-
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-    verify(aiMemoryRepository, never()).deleteByConversationId(any());
-  }
-
-  @Test
-  void deleteMemory_Returns404WhenNotFound() {
-    when(aiMemoryRepository.findByConversationId(CONV_ID)).thenReturn(Optional.empty());
+  void deleteMemory_whenNoDoc_returns404_butStillRequestsIdempotentVectorCleanup() {
+    when(aiMemoryRepository.findByConversationIdAndUserId(CONV_ID, USER_ID))
+        .thenReturn(Optional.empty());
 
     ResponseEntity<Void> response = controller.deleteMemory(CONV_ID, principal);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    verify(aiMemoryRepository, never()).deleteByConversationIdAndUserId(anyString(), anyString());
+    verify(redisTemplate).convertAndSend(eq("ai:memory:delete"), anyString());
+  }
+
+  @Test
+  void deleteMemory_whenRedisDown_stillReturns204() {
+    when(aiMemoryRepository.findByConversationIdAndUserId(CONV_ID, USER_ID))
+        .thenReturn(Optional.of(memory));
+    doThrow(new RuntimeException("redis down"))
+        .when(redisTemplate)
+        .convertAndSend(anyString(), anyString());
+
+    ResponseEntity<Void> response = controller.deleteMemory(CONV_ID, principal);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+    verify(aiMemoryRepository).deleteByConversationIdAndUserId(CONV_ID, USER_ID);
   }
 }

@@ -4,10 +4,10 @@ import 'package:intl/intl.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/global_messenger.dart';
-import '../../../auth/utils/auth_error.dart';
 import '../../data/models/invitation_models.dart';
 import '../../state/admin_providers.dart';
 import 'admin_confirm_dialog.dart';
+import '../../utils/admin_error.dart';
 
 /// "Pending invitations" block shown above the members list. Hidden while
 /// loading, on error, or when there is nothing actionable. Mirrors the web
@@ -27,7 +27,7 @@ class PendingInvitationsSection extends ConsumerWidget {
         showErrorSnackBar(l10n.adminInviteEmailFailed);
       }
     } catch (e) {
-      if (context.mounted) showErrorSnackBar(authErrorMessage(context, e));
+      if (context.mounted) showErrorSnackBar(adminErrorMessage(context, e));
     }
   }
 
@@ -45,7 +45,7 @@ class PendingInvitationsSection extends ConsumerWidget {
       await ref.read(invitationsProvider.notifier).revoke(inv.id);
       showInfoSnackBar(l10n.adminInviteRevoked);
     } catch (e) {
-      if (context.mounted) showErrorSnackBar(authErrorMessage(context, e));
+      if (context.mounted) showErrorSnackBar(adminErrorMessage(context, e));
     }
   }
 

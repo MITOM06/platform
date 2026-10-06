@@ -24,11 +24,13 @@ import {
   Plug,
   Sparkles,
   HelpCircle,
+  ShieldCheck,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useNotificationPrefs } from '@/lib/store/notification-prefs'
-import { stompService } from '@/lib/stomp/client'
+import { performLogout } from '@/lib/auth/logout'
+import { useCanAccessAdmin } from '@/lib/hooks/use-capabilities'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { absoluteMediaUrl } from '@/lib/media'
 import { cn } from '@/lib/utils'
@@ -103,7 +105,6 @@ export default function SettingsPage() {
   const t = useTranslations('settings')
   const router = useRouter()
   const user = useAuthStore((s) => s.user)
-  const clearAuth = useAuthStore((s) => s.clearAuth)
   const { theme } = useTheme()
   const locale = useLocale()
   const notificationsEnabled = useNotificationPrefs((s) => s.enabled)
@@ -112,16 +113,14 @@ export default function SettingsPage() {
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
   const [themePickerOpen, setThemePickerOpen] = useState(false)
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false)
+  // The desktop sidebar has its own Admin entry; on phones this is the only way in.
+  const canAccessAdmin = useCanAccessAdmin()
 
   const handleLogout = async () => {
     setLoggingOut(true)
     try {
-      await fetch('/api/auth/clear-cookie', { method: 'POST' })
-      stompService.disconnect()
-      clearAuth()
-      // `?cleared=1` tells the login page to wipe any browser-autofilled
-      // credentials so the next person doesn't see the prior account.
-      router.push('/login?cleared=1')
+      // Revokes the server session, clears cookies + query cache, hard-navigates.
+      await performLogout()
     } catch {
       toast.error(t('logoutError'))
       setLoggingOut(false)
@@ -207,6 +206,15 @@ export default function SettingsPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {canAccessAdmin && (
+                <SettingsCard
+                  icon={<ShieldCheck className="size-5 text-primary" />}
+                  title={t('adminConsole')}
+                  subtitle={t('adminConsoleSubtitle')}
+                  onClick={() => router.push('/admin')}
+                />
+              )}
+
               <SettingsCard
                 icon={<User className="size-5 text-primary" />}
                 title={t('editProfile')}

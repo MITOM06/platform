@@ -30,7 +30,11 @@ describe('GoogleRestAdapter', () => {
     cfg = {
       get: jest.fn().mockReturnValue({ clientId: 'id', clientSecret: 'sec' }),
     };
-    connModel = { updateOne: jest.fn().mockResolvedValue({}) };
+    connModel = {
+      updateOne: jest.fn().mockResolvedValue({}),
+      findById: jest.fn().mockReturnValue({ lean: jest.fn().mockResolvedValue(null) }),
+      exists: jest.fn().mockResolvedValue(null),
+    };
     adapter = new GoogleRestAdapter(vault, cfg, connModel);
     fetchMock = jest.fn();
     global.fetch = fetchMock as any;

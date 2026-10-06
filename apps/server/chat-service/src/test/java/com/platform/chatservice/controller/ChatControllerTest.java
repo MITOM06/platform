@@ -6,8 +6,11 @@ import static org.mockito.Mockito.*;
 import com.platform.chatservice.dto.ChatMessageDto;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
+import com.platform.chatservice.exception.BadRequestException;
+import com.platform.chatservice.exception.ErrorCodes;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.ClusterMessageBroker;
+import com.platform.chatservice.service.ConversationMembershipCache;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.ExternalBotService;
 import com.platform.chatservice.service.MessageNotificationService;
@@ -47,6 +50,8 @@ class ChatControllerTest {
 
   @Mock private ConversationService conversationService;
 
+  @Mock private ConversationMembershipCache membershipCache;
+
   @InjectMocks private ChatController chatController;
 
   private ChatMessageDto chatDto;
@@ -78,6 +83,7 @@ class ChatControllerTest {
   @Test
   void typing_ShouldBroadcastTypingStatus() {
     chatDto.setTyping(true);
+    when(membershipCache.isMember("conv-456", SENDER_ID)).thenReturn(true);
 
     chatController.typing(chatDto, principal);
 
@@ -252,5 +258,67 @@ class ChatControllerTest {
     verify(clusterBroker).convertAndSendToUser(eq("user-789"), eq("/queue/webrtc"), sent.capture());
     org.assertj.core.api.Assertions.assertThat(sent.getValue().getReason()).isEqualTo("declined");
     org.assertj.core.api.Assertions.assertThat(sent.getValue().getSenderId()).isEqualTo(SENDER_ID);
+  }
+
+  /** /app/chat.typing used to relay into any conversation, member or not. */
+  @Test
+  void typing_FromNonMember_IsDropped() {
+    chatDto.setTyping(true);
+    when(membershipCache.isMember("conv-456", SENDER_ID)).thenReturn(false);
+
+    chatController.typing(chatDto, principal);
+
+    verify(clusterBroker, never()).convertAndSend(anyString(), any());
+  }
+
+  /** Stickers / voice notes / file JSON / system codes in a 1-1 AI chat are not prompts. */
+  @Test
+  void send_NonTextInDirectAiConversation_ShouldNotTriggerAiPublisher() throws Exception {
+    ChatMessageDto dto =
+        new ChatMessageDto("conv-456", "https://cdn/sticker.webp", "sticker", false, null, null);
+    MessageResponse response =
+        new MessageResponse(
+            "msg-4",
+            "conv-456",
+            SENDER_ID,
+            "https://cdn/sticker.webp",
+            "sticker",
+            List.of(SENDER_ID),
+            Instant.now());
+    when(messageService.sendMessage(eq(SENDER_ID), any(SendMessageRequest.class)))
+        .thenReturn(response);
+
+    chatController.send(dto, principal);
+
+    Thread.sleep(100);
+    verify(aiRedisPublisher, never())
+        .publishAiRequest(any(), any(), any(), any(), any(), any(), any(), any());
+    verify(conversationService, never()).isDirectAiConversation(any());
+    verify(externalBotService, never()).resolveAssistant(any(), any());
+  }
+
+  /** A refused STOMP send is reported to the sender only, with the stable error code. */
+  @Test
+  @SuppressWarnings("unchecked")
+  void send_WhenRejected_NotifiesSenderWithCode_AndBroadcastsNothing() {
+    when(messageService.sendMessage(eq(SENDER_ID), any(SendMessageRequest.class)))
+        .thenThrow(new BadRequestException(ErrorCodes.MESSAGE_TYPE_NOT_ALLOWED, "nope"));
+
+    chatController.send(chatDto, principal);
+
+    verify(clusterBroker)
+        .convertAndSendToUser(
+            eq(SENDER_ID),
+            eq("/queue/notifications"),
+            argThat(
+                payload ->
+                    payload instanceof Map
+                        && "MESSAGE_REJECTED".equals(((Map<String, Object>) payload).get("type"))
+                        && ErrorCodes.MESSAGE_TYPE_NOT_ALLOWED.equals(
+                            ((Map<String, Object>) payload).get("code"))
+                        && "conv-456"
+                            .equals(((Map<String, Object>) payload).get("conversationId"))));
+    verify(clusterBroker, never()).convertAndSend(anyString(), any());
+    verify(messageNotificationService, never()).notifyNewMessage(any(), any());
   }
 }

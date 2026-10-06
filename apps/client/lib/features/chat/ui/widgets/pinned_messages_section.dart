@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/domain/auth_provider.dart';
+import '../../../auth/domain/auth_state.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 import 'pinned_preview_text.dart';
@@ -30,8 +32,8 @@ class PinnedMessagesSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (pinnedMessages.isEmpty) return const SizedBox.shrink();
 
-    // Spec: show up to 2 pinned messages (cap matches backend max).
-    final visible = pinnedMessages.take(2).toList();
+    // Show every pinned message (the server caps a conversation at 5).
+    final visible = pinnedMessages.take(5).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,9 +78,21 @@ class _PinnedRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.watch(userProfileProvider(pinned.senderId)).valueOrNull;
-    final senderName = profile?.displayName ?? '…';
+    final isBot = pinned.senderId == kAiBotUserId ||
+        pinned.senderId.startsWith('extbot:');
+    final profile = isBot
+        ? null
+        : ref.watch(userProfileProvider(pinned.senderId)).valueOrNull;
+    final senderName = isBot
+        ? context.l10n.aiAssistant
+        : (profile?.displayName ?? '…');
     final preview = pinnedPreviewText(context, pinned);
+    final me = ref.watch(authNotifierProvider.select((s) {
+      final v = s.valueOrNull;
+      return v is AuthAuthenticated ? v.user.id : '';
+    }));
+    final conv = ref.watch(conversationProvider(conversationId));
+    final canUnpin = conv == null || conv.canManage(me);
 
     return ListTile(
       dense: true,
@@ -97,13 +111,16 @@ class _PinnedRow extends ConsumerWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: IconButton(
-        icon: Icon(Icons.close_rounded, size: 18, color: AppTheme.mutedText(context)),
-        tooltip: context.l10n.unpinMessage,
-        onPressed: () => ref
-            .read(chatNotifierProvider(conversationId).notifier)
-            .unpinMessage(pinned.id),
-      ),
+      trailing: canUnpin
+          ? IconButton(
+              icon: Icon(Icons.close_rounded,
+                  size: 18, color: AppTheme.mutedText(context)),
+              tooltip: context.l10n.unpinMessage,
+              onPressed: () => ref
+                  .read(chatNotifierProvider(conversationId).notifier)
+                  .unpinMessage(pinned.id),
+            )
+          : null,
     );
   }
 }

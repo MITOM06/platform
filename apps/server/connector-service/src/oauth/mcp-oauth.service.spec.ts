@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import { BadRequestException } from '@nestjs/common';
 import { McpOAuthService } from './mcp-oauth.service';
+import { resolver } from '../security/url-guard';
 
 function jsonRes(body: unknown, ok = true, status = 200) {
   return {
@@ -19,7 +20,10 @@ describe('McpOAuthService', () => {
     svc = new McpOAuthService();
     fetchMock = jest.fn();
     global.fetch = fetchMock as unknown as typeof fetch;
+    jest.spyOn(resolver, 'lookup').mockResolvedValue([{ address: '93.184.216.34', family: 4 }]);
   });
+
+  afterEach(() => jest.restoreAllMocks());
 
   describe('discoverMetadata', () => {
     it('follows protected-resource → authorization-server metadata', async () => {

@@ -60,7 +60,7 @@ export class AiSessionService {
       },
     );
     // Auto-name from the first user message (fire-and-forget, non-blocking).
-    const session = await this.model.findById(sessionId).select('messages name');
+    const session = await this.model.findById(sessionId).select('messages name userId');
     if (session && session.messages.length === 1 && session.name === 'New conversation') {
       void this.autoNameSession(session);
     }
@@ -123,12 +123,24 @@ export class AiSessionService {
   }
 
   /**
-   * Build the message history to send to Claude. When the session has been
-   * compacted, the rolling summary is prepended as a synthetic user/assistant
-   * exchange so the model retains earlier context.
+   * Build the message history to send to Claude: the last `maxMessages` turns
+   * verbatim (short-term memory sliding window, spec A1 — 0 = no cap). When the
+   * session has been compacted, the rolling summary is prepended as a synthetic
+   * user/assistant exchange so the model retains earlier context; turns older
+   * than the window and newer than the summary stay in Mongo only.
    */
-  async buildMessageHistory(session: AiSessionDocument): Promise<HistoryTurn[]> {
-    const recent = session.messages.map((m) => ({ role: m.role, content: m.content }));
+  async buildMessageHistory(
+    session: AiSessionDocument,
+    maxMessages = 0,
+  ): Promise<HistoryTurn[]> {
+    let messages = session.messages;
+    if (maxMessages > 0 && messages.length > maxMessages) {
+      let start = messages.length - maxMessages;
+      // Open the window on a user turn, never on an orphaned assistant reply.
+      while (start < messages.length && messages[start].role === 'assistant') start++;
+      messages = messages.slice(start);
+    }
+    const recent = messages.map((m) => ({ role: m.role, content: m.content }));
     if (session.summary) {
       return [
         { role: 'user', content: `[Context from earlier conversation]\n${session.summary}` },
@@ -146,7 +158,7 @@ export class AiSessionService {
   private async autoNameSession(session: AiSessionDocument): Promise<void> {
     try {
       const firstMessage = session.messages[0]?.content ?? '';
-      const name = await this.claudeClient.generateTitle(firstMessage);
+      const name = await this.claudeClient.generateTitle(firstMessage, session.userId);
       await this.model.updateOne({ _id: session._id }, { $set: { name } });
     } catch (err) {
       this.logger.warn(`Auto-naming session ${session._id} failed`, err as Error);

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
+import { safeDisplayName } from '@/lib/chat/names'
+import { modelDisplayName } from '@/lib/ai/trace'
 import type {
   UsageDailyPoint,
   UsagePerModelCost,
@@ -204,7 +206,7 @@ export function PerModelCostTable({ rows }: { rows: UsagePerModelCost[] }) {
 
   // Override headers with translated strings at render time
   const columns: ResponsiveColumn<UsagePerModelCost>[] = [
-    { ...perModelColumns[0], header: t('model') },
+    { ...perModelColumns[0], header: t('model'), render: (r) => modelDisplayName(r.model) ?? r.model },
     { ...perModelColumns[1], header: t('inputTokens') },
     { ...perModelColumns[2], header: t('outputTokens') },
     { ...perModelColumns[3], header: t('requests') },
@@ -246,7 +248,12 @@ export function TopUsersTable({ users }: { users: UsageTopUser[] }) {
   const t = useTranslations('usageDashboard')
 
   const columns: ResponsiveColumn<UsageTopUser>[] = [
-    { ...topUsersColumnsBase[0], header: t('user') },
+    {
+      ...topUsersColumnsBase[0],
+      header: t('user'),
+      // The server falls back to the raw userId when the user is gone — never show it.
+      render: (r) => safeDisplayName(r.displayName, r.userId) ?? t('formerMember'),
+    },
     { ...topUsersColumnsBase[1], header: t('tokens') },
     { ...topUsersColumnsBase[2], header: t('requests') },
     { ...topUsersColumnsBase[3], header: t('cost') },

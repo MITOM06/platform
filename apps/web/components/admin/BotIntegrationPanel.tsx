@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
+import { toast } from 'sonner'
 import { Bot, Copy, Check, KeyRound, Trash2 } from 'lucide-react'
 import {
   useMutation,
@@ -13,7 +14,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ResponsiveModal } from '@/components/ui/responsive-modal'
+import { useSenderDisplayName } from '@/lib/hooks/use-display-names'
+import { useExpired } from '@/lib/hooks/use-expired'
 import {
+  botAdminErrorKey,
   botAdminService,
   type BotSessionSummary,
   type ExternalBot,
@@ -81,6 +85,7 @@ function TokenDialog({
     >
       {issued && (
           <div className="space-y-4">
+            {issued.expiresAt && <TokenExpiry expiresAt={issued.expiresAt} />}
             <CopyField
               label={t('copyToken')}
               value={issued.token}
@@ -97,14 +102,44 @@ function TokenDialog({
   )
 }
 
-/** Renders the "last used" line for a bot from its session summary. */
+/** "Expires on …" / "Expired — generate a new token" for a session or issued token. */
+function TokenExpiry({ expiresAt }: { expiresAt: string }) {
+  const t = useTranslations('botAdmin')
+  const locale = useLocale()
+  const parsed = Date.parse(expiresAt)
+  const ms = Number.isFinite(parsed) ? parsed : null
+  const expired = useExpired(ms)
+  if (ms === null) return null
+  return (
+    <p className={expired ? 'text-xs text-destructive' : 'text-xs text-muted-foreground'}>
+      {expired
+        ? t('tokenExpired')
+        : t('tokenExpires', {
+            date: new Date(ms).toLocaleDateString(locale, { dateStyle: 'medium' }),
+          })}
+    </p>
+  )
+}
+
+/** Renders the "last used" + expiry lines for a bot from its session summary. */
 function LastUsed({ session }: { session: BotSessionSummary | undefined }) {
   const t = useTranslations('botAdmin')
+  const locale = useLocale()
   const text =
     session?.lastUsedAt != null
-      ? `${t('lastUsed')}: ${new Date(session.lastUsedAt).toLocaleString()}`
+      ? t('lastUsedAt', {
+          date: new Date(session.lastUsedAt).toLocaleString(locale, {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+          }),
+        })
       : t('neverUsed')
-  return <p className="text-xs text-muted-foreground">{text}</p>
+  return (
+    <>
+      <p className="text-xs text-muted-foreground">{text}</p>
+      {session?.expiresAt && <TokenExpiry expiresAt={session.expiresAt} />}
+    </>
+  )
 }
 
 /** A single registered-bot row with generate/revoke actions. */
@@ -117,6 +152,8 @@ function BotRow({
 }) {
   const t = useTranslations('botAdmin')
   const queryClient = useQueryClient()
+  const ownerName = useSenderDisplayName(bot.ownerUserId, undefined)
+  const onError = (err: unknown) => toast.error(t(botAdminErrorKey(err)))
 
   const sessionsKey = ['bot-sessions', bot.ownerUserId]
   const { data: sessions = [] } = useQuery({
@@ -131,12 +168,16 @@ function BotRow({
       onIssued(issued)
       queryClient.invalidateQueries({ queryKey: sessionsKey })
     },
+    onError,
   })
 
   const revokeMut = useMutation({
     mutationFn: () => botAdminService.revoke(bot.ownerUserId, bot.botUserId),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: sessionsKey }),
+    onSuccess: () => {
+      toast.success(t('tokenRevoked'))
+      queryClient.invalidateQueries({ queryKey: sessionsKey })
+    },
+    onError,
   })
 
   return (
@@ -145,9 +186,12 @@ function BotRow({
         <Bot className="size-5 shrink-0 text-primary" />
         <div className="min-w-0">
           <p className="text-sm font-medium truncate">{bot.name}</p>
-          <p className="text-xs text-muted-foreground truncate font-mono">
-            {bot.botUserId}
-          </p>
+          {/* The bot's synthetic id (`extbot:…`) is never shown — its owner is. */}
+          {ownerName && (
+            <p className="text-xs text-muted-foreground truncate">
+              {t('ownedBy', { name: ownerName })}
+            </p>
+          )}
           <LastUsed session={session} />
         </div>
       </div>
@@ -185,7 +229,7 @@ export function BotIntegrationPanel() {
   const t = useTranslations('botAdmin')
   const [issued, setIssued] = useState<IssuedToken | null>(null)
 
-  const { data: bots = [], isLoading } = useQuery({
+  const { data: bots = [], isLoading, isError } = useQuery({
     queryKey: ['external-bots'],
     queryFn: botAdminService.listExternalBots,
   })
@@ -198,6 +242,8 @@ export function BotIntegrationPanel() {
 
       {isLoading ? (
         <Skeleton className="h-24 rounded-xl" />
+      ) : isError ? (
+        <p className="text-sm text-destructive">{t('loadError')}</p>
       ) : bots.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t('noBotsRegistered')}</p>
       ) : (

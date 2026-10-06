@@ -12,14 +12,21 @@ import { WorkspaceModule } from './modules/workspace/workspace.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { AiContextModule } from './modules/ai-context/ai-context.module';
+import { resolveClientIp } from './common/client-ip';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
-    ThrottlerModule.forRoot([
-      { name: 'short', ttl: 1000, limit: 5 }, // 5 req/s burst protection
-      { name: 'medium', ttl: 60000, limit: 100 }, // 100 req/min per IP
-    ]),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        { name: 'short', ttl: 1000, limit: 5 }, // 5 req/s burst protection
+        { name: 'medium', ttl: 60000, limit: 100 }, // 100 req/min per IP
+      ],
+      // Per CLIENT, not per reverse proxy: the default tracker is req.ip, which
+      // behind Caddy/cloudflared is the proxy's address for every user, so the
+      // whole company shared one bucket (CLIENT_IP_HEADER / TRUST_PROXY).
+      getTracker: (req) => resolveClientIp(req),
+    }),
     DatabaseMongoModule,
     DatabaseRedisModule,
     MailModule,

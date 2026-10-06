@@ -8,6 +8,33 @@ import '../../../../core/widgets/pon_widgets.dart';
 import '../../data/models/admin_models.dart';
 import '../../state/admin_providers.dart';
 import '../../state/capabilities_provider.dart';
+import '../../utils/admin_error.dart';
+
+/// Create/update body for a department. An edit can CLEAR the description
+/// (`''`) and the lead (`null`) — omitting them would keep the stored values;
+/// a create simply omits empty fields. [touchLead] false (lead not picked)
+/// leaves the stored lead alone. Mirrors the web `DepartmentsPanel`.
+Map<String, dynamic> departmentBody({
+  required String name,
+  required String description,
+  required String? leadUserId,
+  required bool isEdit,
+  bool touchLead = true,
+}) {
+  final desc = description.trim();
+  if (!isEdit) {
+    return {
+      'name': name.trim(),
+      if (desc.isNotEmpty) 'description': desc,
+      if (touchLead && leadUserId != null) 'leadUserId': leadUserId,
+    };
+  }
+  return {
+    'name': name.trim(),
+    'description': desc,
+    if (touchLead) 'leadUserId': leadUserId,
+  };
+}
 
 /// Departments admin — list/create/edit/delete + assign a lead. Mirrors the web
 /// `DepartmentsPanel`.
@@ -21,13 +48,27 @@ class DepartmentsPanel extends ConsumerWidget {
   }) async {
     final l10n = context.l10n;
     final canMembers = ref.read(hasCapabilityProvider(Cap.manageMembers));
-    final members =
-        canMembers ? ref.read(membersProvider).valueOrNull ?? [] : <Member>[];
+    // Await the member list — a cached read was empty until the Members tab
+    // had been opened once.
+    var members = <Member>[];
+    if (canMembers) {
+      try {
+        members = await ref.read(membersProvider.future);
+      } catch (_) {
+        // Lead picker just offers "no lead"; the rest of the form still works.
+      }
+      if (!context.mounted) return;
+    }
 
     final nameCtrl = TextEditingController(text: existing?.name ?? '');
     final descCtrl =
         TextEditingController(text: existing?.description ?? '');
-    String? leadId = existing?.leadUserId;
+    // The dropdown requires its value among the items — a lead who left the
+    // workspace (or an unloaded list) would otherwise crash the dialog.
+    final storedLead = existing?.leadUserId;
+    String? leadId =
+        members.any((m) => m.id == storedLead) ? storedLead : null;
+    var leadChanged = false;
 
     final saved = await showDialog<bool>(
       context: context,
@@ -77,7 +118,10 @@ class DepartmentsPanel extends ConsumerWidget {
                         ),
                       ),
                     ],
-                    onChanged: (v) => setState(() => leadId = v),
+                    onChanged: (v) => setState(() {
+                      leadId = v;
+                      leadChanged = true;
+                    }),
                   ),
                 ],
               ],
@@ -99,11 +143,15 @@ class DepartmentsPanel extends ConsumerWidget {
     );
 
     if (saved != true || nameCtrl.text.trim().isEmpty) return;
-    final body = {
-      'name': nameCtrl.text.trim(),
-      if (descCtrl.text.trim().isNotEmpty) 'description': descCtrl.text.trim(),
-      if (leadId != null) 'leadUserId': leadId,
-    };
+    final body = departmentBody(
+      name: nameCtrl.text,
+      description: descCtrl.text,
+      leadUserId: leadId,
+      isEdit: existing != null,
+      // Only send the lead the admin actually picked — a hidden or unloaded
+      // picker must not clear the stored one.
+      touchLead: leadChanged,
+    );
     try {
       final notifier = ref.read(departmentsProvider.notifier);
       if (existing == null) {
@@ -112,8 +160,9 @@ class DepartmentsPanel extends ConsumerWidget {
         await notifier.edit(existing.id, body);
       }
       showInfoSnackBar(l10n.adminToastSaved);
-    } catch (_) {
-      showErrorSnackBar(l10n.adminToastError);
+    } catch (e) {
+      showErrorSnackBar(
+          context.mounted ? adminErrorMessage(context, e) : l10n.adminToastError);
     }
   }
 
@@ -134,7 +183,7 @@ class DepartmentsPanel extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.adminToastDeleted,
+            child: Text(l10n.actionDelete,
                 style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
         ],
@@ -144,8 +193,9 @@ class DepartmentsPanel extends ConsumerWidget {
     try {
       await ref.read(departmentsProvider.notifier).remove(d.id);
       showInfoSnackBar(l10n.adminToastDeleted);
-    } catch (_) {
-      showErrorSnackBar(l10n.adminToastError);
+    } catch (e) {
+      showErrorSnackBar(
+          context.mounted ? adminErrorMessage(context, e) : l10n.adminToastError);
     }
   }
 
@@ -187,7 +237,7 @@ class DepartmentsPanel extends ConsumerWidget {
                           color: AppTheme.accent(context)),
                       title: Text(d.name,
                           style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-                      subtitle: d.description == null
+                      subtitle: (d.description ?? '').trim().isEmpty
                           ? null
                           : Text(d.description!,
                               style: TextStyle(color: AppTheme.mutedText(context))),

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import {
   ArrowLeft,
   AlarmClock,
@@ -33,7 +33,8 @@ function ReminderTile({
   markDoneTitle: string
   deleteTitle: string
 }) {
-  const dateStr = new Date(reminder.remindAt).toLocaleString('vi-VN', {
+  const locale = useLocale()
+  const dateStr = new Date(reminder.remindAt).toLocaleString(locale, {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',

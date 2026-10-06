@@ -72,4 +72,10 @@ describe('AuthService.signAccessToken — RBAC claims', () => {
     const [payload] = jwt.sign.mock.calls[0];
     expect(payload).toEqual({ sub: 'u1', sid: 's1' });
   });
+
+  it('passes an explicit iat through (refresh keeps iat >= the session claimsAt)', () => {
+    service.signAccessToken({ sub: 'u1', sid: 's1', iat: 1_700_000_123 });
+    const [payload] = jwt.sign.mock.calls[0];
+    expect(payload).toEqual({ sub: 'u1', sid: 's1', iat: 1_700_000_123 });
+  });
 });

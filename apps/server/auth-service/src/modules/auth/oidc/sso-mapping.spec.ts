@@ -58,4 +58,32 @@ describe('resolveSsoMapping', () => {
     );
     expect(r.roleId).toBeNull();
   });
+
+  it('a non-existent mapped role never shadows a valid one listed later', () => {
+    const withCustom = new Map([...roleMap, ['Support', 'rid-support']]);
+    const r = resolveSsoMapping(
+      ['ghosts', 'support'],
+      { groupRoleMap: { ghosts: 'Ghost', support: 'Support' }, groupDeptMap: {} },
+      withCustom,
+    );
+    expect(r.roleId).toBe('rid-support');
+  });
+
+  it('ignores a defaultRole that does not exist (no decision instead of null)', () => {
+    const r = resolveSsoMapping(
+      [],
+      { groupRoleMap: {}, groupDeptMap: {}, defaultRole: 'Ghost' },
+      roleMap,
+    );
+    expect(r.roleId).toBeNull();
+  });
+
+  it('only own properties of the maps match (IdP group "__proto__" / "constructor")', () => {
+    const r = resolveSsoMapping(
+      ['__proto__', 'constructor', 'toString'],
+      { groupRoleMap: {}, groupDeptMap: {} },
+      roleMap,
+    );
+    expect(r).toEqual({ roleId: null, departmentIds: [] });
+  });
 });

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -7,6 +6,8 @@ import '../../../../core/utils/global_messenger.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../data/models/connector_models.dart';
 import '../../state/integrations_provider.dart';
+import '../../utils/connector_error.dart';
+import '../../utils/connector_labels.dart';
 
 /// Bottom sheet to create or edit an MCP directory entry — admin only
 /// (MANAGE_WORKSPACE). Mirrors the web `DirectoryAdminDialog`. The slug is
@@ -123,7 +124,7 @@ class _DirectoryAdminSheetState extends ConsumerState<DirectoryAdminSheet> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = friendlyError(e);
+        _error = connectorErrorMessage(context.l10n, e);
       });
     }
   }
@@ -195,7 +196,7 @@ class _DirectoryAdminSheetState extends ConsumerState<DirectoryAdminSheet> {
                     label: l10n.directoryAuthMode,
                     value: _authMode,
                     values: DirectoryAuthMode.values,
-                    labelOf: directoryAuthModeToString,
+                    labelOf: (m) => directoryAuthModeAdminLabel(l10n, m),
                     onChanged: (v) => setState(() => _authMode = v),
                   ),
                 ),
@@ -205,7 +206,7 @@ class _DirectoryAdminSheetState extends ConsumerState<DirectoryAdminSheet> {
                     label: l10n.directoryTier,
                     value: _tier,
                     values: DirectoryTier.values,
-                    labelOf: directoryTierToString,
+                    labelOf: (t) => directoryTierLabel(l10n, t),
                     onChanged: (v) => setState(() => _tier = v),
                   ),
                 ),

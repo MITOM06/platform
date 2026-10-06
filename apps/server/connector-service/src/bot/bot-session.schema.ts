@@ -18,7 +18,14 @@ export class BotSession {
   @Prop({ required: true, index: true }) tokenHash: string;
 
   /** Nullable — set on revoke(). Active sessions have revokedAt: null. */
-  @Prop({ default: null }) revokedAt: Date | null;
+  @Prop({ type: Date, default: null }) revokedAt: Date | null;
+
+  /**
+   * Absolute expiry of the current token (issue time + BOT_SESSION_TTL_DAYS).
+   * Sessions issued before the TTL existed have none and expire at
+   * createdAt + TTL instead.
+   */
+  @Prop({ type: Date }) expiresAt?: Date;
 
   @Prop() lastUsedAt: Date;
   createdAt: Date;

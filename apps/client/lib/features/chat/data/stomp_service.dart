@@ -8,6 +8,8 @@ import '../../../core/config/app_config.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../domain/chat_state.dart';
 import 'conversation_subscription_counter.dart';
+import 'stomp_streams.dart';
+import 'stomp_subscription_registry.dart';
 
 part 'stomp_service.g.dart';
 
@@ -21,86 +23,62 @@ class StompService extends _$StompService {
   // Mutable header maps shared by reference with StompConfig. `beforeConnect`
   // rewrites the Authorization value IN PLACE before every (re)connect, so the
   // STOMP handler (which reads these maps at connect time, after beforeConnect
-  // resolves) always sends a FRESH, non-expired token. This mirrors the web
-  // client's `beforeConnect` token-refresh hook and fixes the dead-token
-  // reconnect loop that silently killed realtime + notifications.
+  // resolves) always sends a FRESH, non-expired token.
   final Map<String, String> _stompHeaders = {};
   final Map<String, dynamic> _wsHeaders = {};
-  final Map<String, StompUnsubscribe> _subs = {};
-  final _pendingConvSubs = <String>{};
-  bool _notifSubPending = false;
-
-  final _messageCtrl = StreamController<MessageModel>.broadcast();
-  final _typingCtrl = StreamController<TypingEvent>.broadcast();
-  final _notifCtrl = StreamController<Map<String, dynamic>>.broadcast();
-  final _readCtrl = StreamController<ReadReceiptEvent>.broadcast();
-  final _reactionCtrl = StreamController<ReactionUpdateEvent>.broadcast();
-  final _recallCtrl = StreamController<RecallEvent>.broadcast();
-  final _editCtrl = StreamController<MessageUpdateEvent>.broadcast();
-  final _convUpdateCtrl = StreamController<ConversationModel>.broadcast();
-  final _webrtcCtrl = StreamController<Map<String, dynamic>>.broadcast();
-  final _presenceCtrl = StreamController<PresenceEvent>.broadcast();
-  final _pinCtrl = StreamController<PinnedMessageEvent>.broadcast();
-  final _aiStreamCtrl = StreamController<Map<String, dynamic>>.broadcast();
-  final _kbStatusCtrl = StreamController<Map<String, dynamic>>.broadcast();
-  // Group-call lifecycle events from the conversation topic (CallEventDto):
-  // call.started / call.roster / call.ended.
-  final _callEventCtrl = StreamController<Map<String, dynamic>>.broadcast();
-  // Emits whenever a STOMP reconnect completes (not on first connect).
-  final _reconnectCtrl = StreamController<void>.broadcast();
-  // Emits on EVERY completed connect, first one included.
-  final _connectedCtrl = StreamController<void>.broadcast();
-  bool _presenceSubPending = false;
+  // Desired vs active subscriptions — re-established on EVERY (re)connect.
+  final _subs = StompSubscriptionRegistry();
+  final _streams = StompStreams();
   // Tracks whether we have successfully connected at least once this session.
   bool _everConnected = false;
   // Set by a STOMP ERROR frame (CONNECT/SEND rejected, or the server's
-  // session-revoked push). chat-service revokes sessions instantly, so the
-  // access token may still look fresh locally while being dead server-side:
-  // the next attempt must FORCE a refresh instead of replaying it. Either the
-  // refresh yields a valid token, or it is rejected → logout. No loop.
+  // session-revoked push). The access token may still look fresh locally while
+  // being dead server-side: the next attempt must FORCE a refresh instead of
+  // replaying it. Either the refresh yields a valid token, or it is rejected →
+  // logout. No loop.
   bool _mustRefresh = false;
 
   @override
   void build() {}
 
-  Stream<MessageModel> get messages => _messageCtrl.stream;
-  Stream<TypingEvent> get typing => _typingCtrl.stream;
-  Stream<Map<String, dynamic>> get notifications => _notifCtrl.stream;
-  Stream<ReadReceiptEvent> get readReceipts => _readCtrl.stream;
-  Stream<ReactionUpdateEvent> get reactionUpdates => _reactionCtrl.stream;
-  Stream<RecallEvent> get recalledMessages => _recallCtrl.stream;
-  Stream<MessageUpdateEvent> get editedMessages => _editCtrl.stream;
-  Stream<ConversationModel> get conversationUpdates => _convUpdateCtrl.stream;
-  Stream<Map<String, dynamic>> get webrtcSignals => _webrtcCtrl.stream;
-  Stream<PresenceEvent> get presence => _presenceCtrl.stream;
-  Stream<PinnedMessageEvent> get pinnedMessageUpdates => _pinCtrl.stream;
-  Stream<Map<String, dynamic>> get aiStreamEvents => _aiStreamCtrl.stream;
-  Stream<Map<String, dynamic>> get kbStatusEvents => _kbStatusCtrl.stream;
+  Stream<MessageModel> get messages => _streams.messageCtrl.stream;
+  Stream<TypingEvent> get typing => _streams.typingCtrl.stream;
+  Stream<Map<String, dynamic>> get notifications => _streams.notifCtrl.stream;
+  Stream<ReadReceiptEvent> get readReceipts => _streams.readCtrl.stream;
+  Stream<ReactionUpdateEvent> get reactionUpdates =>
+      _streams.reactionCtrl.stream;
+  Stream<RecallEvent> get recalledMessages => _streams.recallCtrl.stream;
+  Stream<MessageUpdateEvent> get editedMessages => _streams.editCtrl.stream;
+  Stream<ConversationUpdateEvent> get conversationUpdates =>
+      _streams.convUpdateCtrl.stream;
+  Stream<Map<String, dynamic>> get webrtcSignals => _streams.webrtcCtrl.stream;
+  Stream<PresenceEvent> get presence => _streams.presenceCtrl.stream;
+  Stream<PinnedMessageEvent> get pinnedMessageUpdates =>
+      _streams.pinCtrl.stream;
+  Stream<Map<String, dynamic>> get aiStreamEvents =>
+      _streams.aiStreamCtrl.stream;
+  Stream<Map<String, dynamic>> get kbStatusEvents =>
+      _streams.kbStatusCtrl.stream;
   // Group-call events: {event: call.started|call.roster|call.ended, ...}.
-  Stream<Map<String, dynamic>> get callEvents => _callEventCtrl.stream;
+  Stream<Map<String, dynamic>> get callEvents => _streams.callEventCtrl.stream;
   // Fires whenever the STOMP socket reconnects after a prior disconnect.
-  Stream<void> get reconnects => _reconnectCtrl.stream;
+  Stream<void> get reconnects => _streams.reconnectCtrl.stream;
 
   /// Every completed connect (first and reconnects).
-  Stream<void> get connections => _connectedCtrl.stream;
+  Stream<void> get connections => _streams.connectedCtrl.stream;
 
   bool get isConnected => _client?.connected ?? false;
 
   /// Establishes the STOMP connection. [token] is the initial access token to
   /// seed the connect headers; on every (re)connect thereafter, [beforeConnect]
-  /// proactively refreshes it (decode `exp` → refresh if expiring) so the
-  /// socket never loops forever on an expired token.
+  /// proactively refreshes it so the socket never loops on an expired token.
   Future<void> connect(String token) async {
     if (_client?.connected ?? false) return;
-    // A previous client may exist but be disconnected (e.g. its internal
-    // auto-reconnect loop is retrying with a now-expired token). Tear it down
-    // before creating a fresh client so we don't leak the old looping client
-    // and so the new connection uses the fresh token. _pendingConvSubs /
-    // _notifSubPending are intentionally NOT cleared — _onConnect re-subscribes.
-    if (_client != null) {
-      _client!.deactivate();
-      _client = null;
-    }
+    // A previous client may exist but be disconnected (its internal
+    // auto-reconnect loop retrying with a now-expired token). Tear it down
+    // before creating a fresh one. Desired subscriptions are kept —
+    // _onConnect re-subscribes them.
+    _teardownClient();
     _setAuthHeader(token);
     // Fresh connect with a just-obtained token — a stale flag from a previous
     // session must not force an extra refresh-token rotation.
@@ -109,23 +87,37 @@ class StompService extends _$StompService {
       config: StompConfig(
         url: AppConfig.wsUrl,
         onConnect: _onConnect,
-        onDisconnect: _onDisconnect,
+        onDisconnect: (_) => _subs.onSocketLost(),
+        onWebSocketDone: _subs.onSocketLost,
         onStompError: _onError,
         onWebSocketError: _onWebSocketError,
         beforeConnect: _beforeConnect,
-        // Fast reconnect so realtime recovers quickly after Cloud Run severs
-        // the socket on its request-timeout. Heartbeats (10s/10s, negotiated
-        // with the server) keep the connection alive and detect dead sockets.
+        // Fast reconnect so realtime recovers quickly after the socket is
+        // severed. Heartbeats (10s/10s) keep it alive and detect dead sockets.
         reconnectDelay: const Duration(seconds: 2),
         heartbeatIncoming: const Duration(seconds: 10),
         heartbeatOutgoing: const Duration(seconds: 10),
-        // Same mutable maps the handler reads at connect time — `_beforeConnect`
-        // refreshes the token into these in place before each attempt.
         stompConnectHeaders: _stompHeaders,
         webSocketConnectHeaders: _wsHeaders,
       ),
     );
     _client!.activate();
+  }
+
+  /// Drops the socket and connects again with a fresh token, keeping every
+  /// subscription. Used after `CLAIMS_CHANGED` so the socket's principal
+  /// carries the new role/permissions.
+  Future<void> reconnect() async {
+    final token = await _tokenManager.getValidAccessToken();
+    if (token == null) return;
+    _teardownClient();
+    await connect(token);
+  }
+
+  void _teardownClient() {
+    _client?.deactivate();
+    _client = null;
+    _subs.onSocketLost();
   }
 
   void _setAuthHeader(String token) {
@@ -134,12 +126,10 @@ class StompService extends _$StompService {
     _wsHeaders['Authorization'] = value;
   }
 
-  /// Runs before EVERY connect/reconnect (see StompClient._connect, which
-  /// `await`s this before building the handler that reads the header maps).
-  /// Fetches a fresh, valid access token and writes it into the shared header
-  /// maps in place. If no valid token can be obtained the previous header value
-  /// is left as-is — the CONNECT will be rejected and reconnect will retry,
-  /// which is preferable to crashing the keep-alive provider.
+  /// Runs before EVERY connect/reconnect. Fetches a fresh, valid access token
+  /// and writes it into the shared header maps in place. If no valid token can
+  /// be obtained the previous value is kept — the CONNECT is rejected and the
+  /// reconnect retries, which beats crashing the keep-alive provider.
   Future<void> _beforeConnect() async {
     try {
       final token = _mustRefresh
@@ -169,34 +159,24 @@ class StompService extends _$StompService {
 
   void _onConnect(StompFrame frame) {
     _mustRefresh = false;
-    // Emit on the reconnect stream if this is not the initial connection.
-    if (_everConnected) {
-      _reconnectCtrl.add(null);
-    }
+    final isReconnect = _everConnected;
     _everConnected = true;
-    _connectedCtrl.add(null);
-
-    // Re-establish all pending subscriptions after connect/reconnect
-    if (_notifSubPending) _doSubscribeNotifications();
-    if (_presenceSubPending) _doSubscribePresence();
-    for (final convId in Set<String>.from(_pendingConvSubs)) {
-      _doSubscribeConversation(convId);
+    // Every handle from the previous socket is dead — subscribe all desired
+    // destinations on this one BEFORE announcing the reconnect, so catch-up
+    // fetches never race a missing subscription.
+    final client = _client;
+    if (client != null) {
+      _subs.onConnected((destination, callback) =>
+          client.subscribe(destination: destination, callback: callback));
     }
-  }
-
-  void _onDisconnect(StompFrame frame) {
-    // Clear active subs — they're invalid after disconnect.
-    // _pendingConvSubs and _notifSubPending are kept so _onConnect can re-establish them.
-    _subs.clear();
+    _streams.connectedCtrl.add(null);
+    if (isReconnect) _streams.reconnectCtrl.add(null);
   }
 
   void _onError(StompFrame frame) {
     _mustRefresh = true;
-    // Surface the failure (previously silent) so dead-token / auth rejections
-    // are diagnosable. stomp_dart_client auto-reconnects via reconnectDelay,
-    // and `beforeConnect` force-refreshes the token before the next attempt —
-    // so an expired/revoked token either self-heals or ends in a logout
-    // instead of looping. Debug log only; never shown to the user.
+    // Debug log only; never shown to the user. stomp_dart_client reconnects via
+    // reconnectDelay and `beforeConnect` force-refreshes the token first.
     debugPrint('[STOMP] error frame: command=${frame.command} '
         'message=${frame.headers['message']} body=${frame.body}');
   }
@@ -205,167 +185,96 @@ class StompService extends _$StompService {
     debugPrint('[STOMP] websocket error: $error');
   }
 
-  /// Who holds each conversation topic (chat screen, an active call).
-  final ConversationSubscriptionCounter _convHolders = ConversationSubscriptionCounter();
-
-  void subscribeConversation(String conversationId) {
-    if (!_convHolders.acquire(conversationId)) return; // already subscribed for someone else
-    _pendingConvSubs.add(conversationId);
-    if (_client?.connected ?? false) {
-      _doSubscribeConversation(conversationId);
-    }
+  StompSubscriber? get _liveSubscriber {
+    final client = _client;
+    if (client == null || !client.connected) return null;
+    return (destination, callback) =>
+        client.subscribe(destination: destination, callback: callback);
   }
 
-  void _doSubscribeConversation(String conversationId) {
-    if (_subs.containsKey('msg_$conversationId')) return;
+  /// Who holds each conversation topic (chat screen, an active call).
+  final ConversationSubscriptionCounter _convHolders =
+      ConversationSubscriptionCounter();
 
-    _subs['msg_$conversationId'] = _client!.subscribe(
-      destination: '/topic/conversation/$conversationId',
-      callback: (frame) {
-        if (frame.body == null) return;
-        final data = jsonDecode(frame.body!) as Map<String, dynamic>;
-        // Group-call lifecycle events use the `event` discriminator
-        // (CallEventDto §3): call.started / call.roster / call.ended.
-        final callEvent = data['event'];
-        if (callEvent is String && callEvent.startsWith('call.')) {
-          _callEventCtrl.add(data);
-          return;
+  void subscribeConversation(String conversationId) {
+    // Already subscribed for another holder (e.g. the call while the thread
+    // is open) — only the first holder subscribes.
+    if (!_convHolders.acquire(conversationId)) return;
+    final subscriber = _liveSubscriber;
+    _subs.add(
+      'msg_$conversationId',
+      '/topic/conversation/$conversationId',
+      (frame) {
+        final data = StompStreams.decode(frame.body);
+        if (data != null) {
+          _streams.routeConversationFrame(conversationId, data);
         }
-        // The conversation topic carries both new messages AND read-receipt
-        // events ({type: MESSAGE_READ, messageId, readerId}). Discriminate by
-        // `type` so a read receipt isn't parsed as a MessageModel (would throw
-        // a null-cast on the missing `id`/`content` fields).
-        switch (data['type']) {
-          case 'MESSAGE_READ':
-            _readCtrl.add(ReadReceiptEvent(
-              conversationId: conversationId,
-              messageId: data['messageId'] as String,
-              readerId: data['readerId'] as String,
-            ));
-            return;
-          case 'REACTION_UPDATED':
-            _reactionCtrl.add(ReactionUpdateEvent(
-              conversationId: conversationId,
-              messageId: data['messageId'] as String,
-              reactions: (data['reactions'] as List? ?? [])
-                  .map((e) => ReactionModel.fromJson(e as Map<String, dynamic>))
-                  .toList(),
-            ));
-            return;
-          case 'MESSAGE_RECALLED':
-            _recallCtrl.add(RecallEvent(
-              conversationId: conversationId,
-              messageId: data['messageId'] as String,
-            ));
-            return;
-          case 'MESSAGE_UPDATED':
-            _editCtrl.add(MessageUpdateEvent(
-              conversationId: conversationId,
-              messageId: data['messageId'] as String,
-              content: data['content'] as String? ?? '',
-              editedAt: DateTime.parse(data['editedAt'] as String),
-            ));
-            return;
-          case 'CONVERSATION_UPDATED':
-            _convUpdateCtrl.add(ConversationModel.fromJson(
-                data['conversation'] as Map<String, dynamic>));
-            return;
-          case 'PINNED_MESSAGE':
-            _pinCtrl.add(PinnedMessageEvent(
-              conversationId: data['conversationId'] as String? ?? conversationId,
-              pinnedMessageIds: List<String>.from(
-                  data['pinnedMessages'] as List? ?? []),
-            ));
-            return;
-          case 'AI_STREAM_CHUNK':
-          case 'AI_STREAM_DONE':
-          case 'AI_STREAM_ERROR':
-          case 'AI_TOOL_CALL':
-            _aiStreamCtrl.add(data);
-            return;
-          case 'KB_STATUS_UPDATE':
-            _kbStatusCtrl.add(data);
-            return;
-        }
-        // [CHATDBG] TEMP diagnostic — remove after root-causing message-side bug.
-        assert(() {
-          debugPrint('[CHATDBG] STOMP raw msg senderId="${data['senderId']}" '
-              'type="${data['type']}" content="${data['content']}"');
-          return true;
-        }());
-        _messageCtrl.add(MessageModel.fromJson(data));
       },
+      subscriber: subscriber,
     );
-
-    _subs['typ_$conversationId'] = _client!.subscribe(
-      destination: '/topic/conversation/$conversationId/typing',
-      callback: (frame) {
-        if (frame.body == null) return;
-        final data = jsonDecode(frame.body!) as Map<String, dynamic>;
-        _typingCtrl.add(TypingEvent(
-          userId: data['userId'] as String,
-          conversationId: conversationId,
-          isTyping: data['typing'] as bool,
-        ));
+    _subs.add(
+      'typ_$conversationId',
+      '/topic/conversation/$conversationId/typing',
+      (frame) {
+        final data = StompStreams.decode(frame.body);
+        if (data != null) _streams.routeTypingFrame(conversationId, data);
       },
+      subscriber: subscriber,
     );
   }
 
   void unsubscribeConversation(String conversationId) {
-    if (!_convHolders.release(conversationId)) return; // another holder still needs it
-    _pendingConvSubs.remove(conversationId);
-    _subs.remove('msg_$conversationId')?.call();
-    _subs.remove('typ_$conversationId')?.call();
+    // Another holder still needs the topic — only the last one unsubscribes.
+    if (!_convHolders.release(conversationId)) return;
+    _subs.remove('msg_$conversationId', connected: isConnected);
+    _subs.remove('typ_$conversationId', connected: isConnected);
   }
 
+  /// `/user/queue/notifications` (messages, conversation views, rejections,
+  /// CLAIMS_CHANGED) + `/user/queue/webrtc` (incoming calls). Guarded per key,
+  /// so an existing notification sub never blocks the webrtc one.
   void subscribeNotifications() {
-    _notifSubPending = true;
-    if (_client?.connected ?? false) {
-      _doSubscribeNotifications();
-    }
-  }
-
-  void _doSubscribeNotifications() {
-    // Guard each subscription independently so that an existing 'notif' sub
-    // never blocks (re)establishing the 'webrtc' sub for incoming calls.
-    if (!_subs.containsKey('notif')) {
-      _subs['notif'] = _client!.subscribe(
-        destination: '/user/queue/notifications',
-        callback: (frame) {
-          if (frame.body == null) return;
-          _notifCtrl.add(jsonDecode(frame.body!) as Map<String, dynamic>);
-        },
-      );
-    }
-
-    if (_subs.containsKey('webrtc')) return;
-    _subs['webrtc'] = _client!.subscribe(
-      destination: '/user/queue/webrtc',
-      callback: (frame) {
-        if (frame.body == null) return;
-        _webrtcCtrl.add(jsonDecode(frame.body!) as Map<String, dynamic>);
+    final subscriber = _liveSubscriber;
+    _subs.add(
+      'notif',
+      '/user/queue/notifications',
+      (frame) {
+        final data = StompStreams.decode(frame.body);
+        if (data != null) _streams.routeUserQueueFrame(data);
       },
+      subscriber: subscriber,
+    );
+    _subs.add(
+      'webrtc',
+      '/user/queue/webrtc',
+      (frame) {
+        final data = StompStreams.decode(frame.body);
+        if (data != null) _streams.webrtcCtrl.add(data);
+      },
+      subscriber: subscriber,
     );
   }
 
   void subscribePresence() {
-    _presenceSubPending = true;
-    if (_client?.connected ?? false) {
-      _doSubscribePresence();
-    }
+    _subs.add(
+      'presence',
+      '/topic/presence',
+      (frame) {
+        final data = StompStreams.decode(frame.body);
+        if (data != null) _streams.routePresenceFrame(data);
+      },
+      subscriber: _liveSubscriber,
+    );
   }
 
-  void _doSubscribePresence() {
-    if (_subs.containsKey('presence')) return;
-    _subs['presence'] = _client!.subscribe(
-      destination: '/topic/presence',
-      callback: (frame) {
-        if (frame.body == null) return;
-        _presenceCtrl.add(
-          PresenceEvent.fromJson(jsonDecode(frame.body!) as Map<String, dynamic>),
-        );
-      },
-    );
+  void _send(String destination, Map<String, dynamic> body) {
+    final client = _client;
+    if (client == null || !client.connected) return;
+    try {
+      client.send(destination: destination, body: jsonEncode(body));
+    } catch (e) {
+      debugPrint('[STOMP] send $destination failed: $e');
+    }
   }
 
   void sendMessage(
@@ -374,47 +283,52 @@ class StompService extends _$StompService {
     String type = 'text',
     String? replyToId,
   }) {
-    _client?.send(
-      destination: '/app/chat.send',
-      body: jsonEncode({
-        'conversationId': conversationId,
-        'content': content,
-        'type': type,
-        if (replyToId != null) 'replyToId': replyToId,
-      }),
-    );
+    _send('/app/chat.send', {
+      'conversationId': conversationId,
+      'content': content,
+      'type': type,
+      if (replyToId != null) 'replyToId': replyToId,
+    });
   }
 
   void sendTyping(String conversationId, {required bool isTyping}) {
-    _client?.send(
-      destination: '/app/chat.typing',
-      body: jsonEncode({
-        'conversationId': conversationId,
-        'typing': isTyping,
-      }),
-    );
+    _send('/app/chat.typing', {
+      'conversationId': conversationId,
+      'typing': isTyping,
+    });
   }
 
   /// Marks a message read over STOMP. The server persists `readBy` and
-  /// broadcasts a MESSAGE_READ event back to the conversation topic so the
-  /// original sender sees the read tick update in realtime.
+  /// broadcasts MESSAGE_READ so the sender sees the read tick in realtime.
   void sendRead(String conversationId, String messageId) {
-    _client?.send(
-      destination: '/app/chat.read',
-      body: jsonEncode({
-        'conversationId': conversationId,
-        'messageId': messageId,
-      }),
-    );
+    _send('/app/chat.read', {
+      'conversationId': conversationId,
+      'messageId': messageId,
+    });
   }
 
   void sendRawMessage({required String destination, required String body}) {
-    _client?.send(destination: destination, body: body);
+    final client = _client;
+    if (client == null || !client.connected) return;
+    try {
+      client.send(destination: destination, body: body);
+    } catch (e) {
+      debugPrint('[STOMP] send $destination failed: $e');
+    }
   }
 
-  void disconnect() {
-    _client?.deactivate();
-    _client = null;
+  /// Closes the socket but keeps every desired subscription (app backgrounded;
+  /// the next [connect] re-subscribes them).
+  void disconnect() => _teardownClient();
+
+  /// Logout: close the socket AND forget every subscription, so the next
+  /// account never re-subscribes the previous user's conversations.
+  void resetSession() {
+    _teardownClient();
     _subs.clear();
+    _everConnected = false;
+    _mustRefresh = false;
+    _stompHeaders.clear();
+    _wsHeaders.clear();
   }
 }

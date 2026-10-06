@@ -98,18 +98,33 @@ export const SKILL_CATALOG: readonly SkillSpec[] = [
   },
 ];
 
+/** What an action skill unlocks on one connector provider. */
+export interface SkillToolRequirement {
+  /** connector-service CATALOG id — the `<provider>` of `mcp__<provider>__<tool>`. */
+  provider: string;
+  /**
+   * Bare tool names (the `<tool>` part) this skill unlocks. Omitted ⇒ every
+   * tool of the provider. A tool of a gated provider that no enabled skill
+   * lists stays hidden (deny by default).
+   */
+  tools?: readonly string[];
+}
+
 /**
  * Skill ids that gate real tool access: an "action skill" must be ENABLED for
- * its provider's MCP tools to be exposed to the assistant (Approach A — skill is
- * a mandatory consent layer on top of the connector OAuth + RBAC allow-list).
- * `provider` must match the connector-service CATALOG id (the `<provider>`
- * segment of `mcp__<provider>__<tool>`). Providers NOT listed here are never
- * gated by a skill.
+ * the MCP tools it maps to be exposed to the assistant (Approach A — skill is a
+ * mandatory consent layer on top of the connector OAuth + RBAC allow-list).
+ * Providers NOT listed here are never gated by a skill.
+ *
+ * Gating is per TOOL, not per provider: Gmail is shared by two skills, and a
+ * provider-level gate meant enabling Inbox triage (read) also exposed
+ * `send_email` with Mail writer off. Tool names mirror connector-service's
+ * google-rest adapter.
  */
-export const SKILL_TOOL_REQUIREMENTS: Readonly<Record<string, { provider: string }>> = {
+export const SKILL_TOOL_REQUIREMENTS: Readonly<Record<string, SkillToolRequirement>> = {
   scheduler: { provider: 'calendar' },
-  mailWriter: { provider: 'gmail' },
-  inboxTriage: { provider: 'gmail' },
+  mailWriter: { provider: 'gmail', tools: ['send_email', 'create_draft'] },
+  inboxTriage: { provider: 'gmail', tools: ['search_threads'] },
   projectKeeper: { provider: 'notion' },
 };
 

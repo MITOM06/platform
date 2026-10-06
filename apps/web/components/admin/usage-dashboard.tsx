@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import {
   Coins,
   MessageSquare,
@@ -12,6 +12,7 @@ import {
   AlertCircle,
 } from 'lucide-react'
 import { usageService } from '@/lib/api/usage'
+import { utcMonthLabel, utcMonthOptions } from '@/lib/usage/quota'
 import {
   StatCard,
   DailyBarChart,
@@ -21,19 +22,6 @@ import {
   fmtTokens,
   fmtUsd,
 } from '@/components/admin/usage-dashboard-parts'
-
-// ── month options (current month + previous 11) ─────────────────────────────
-
-function buildMonthOptions(): string[] {
-  const out: string[] = []
-  const now = new Date()
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    const m = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    out.push(m)
-  }
-  return out
-}
 
 // ── Section wrapper ──────────────────────────────────────────────────────────
 
@@ -50,7 +38,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export function UsageDashboard() {
   const t = useTranslations('usageDashboard')
-  const monthOptions = useMemo(() => buildMonthOptions(), [])
+  const locale = useLocale()
+  // Months are UTC calendar months on the server; building them from local time
+  // offered the wrong month around midnight on the 1st (west of UTC).
+  const monthOptions = useMemo(() => utcMonthOptions(new Date()), [])
   const [month, setMonth] = useState(monthOptions[0])
 
   const { data, isLoading, error } = useQuery({
@@ -79,7 +70,7 @@ export function UsageDashboard() {
           >
             {monthOptions.map((m) => (
               <option key={m} value={m}>
-                {m}
+                {utcMonthLabel(m, locale)}
               </option>
             ))}
           </select>

@@ -1,15 +1,14 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/app_error.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../../auth/ui/widgets/password_strength_indicator.dart';
+import '../utils/change_password_error.dart';
 
 /// Dedicated "Password & Security" screen (mirror of web `/settings/security`).
 ///
@@ -180,32 +179,10 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
       _confirmController.clear();
       setState(() => _newPasswordValue = '');
     } catch (e) {
-      if (mounted) setState(() => _errorText = _mapError(context, e));
+      if (mounted) setState(() => _errorText = changePasswordErrorMessage(context, e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  /// Maps the backend's English error strings to localized messages.
-  String _mapError(BuildContext context, Object e) {
-    final l10n = context.l10n;
-    String message = '';
-    if (e is DioException) {
-      final data = e.response?.data;
-      if (data is Map && data['message'] is String) {
-        message = data['message'] as String;
-      }
-    }
-    if (message.contains('Incorrect current password')) {
-      return l10n.errCurrentPasswordIncorrect;
-    }
-    if (message.contains('Current password is required')) {
-      return l10n.valPasswordRequired;
-    }
-    if (message.contains('at least 6')) {
-      return l10n.valPasswordMin6;
-    }
-    return friendlyError(e);
   }
 
   @override

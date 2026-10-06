@@ -52,6 +52,23 @@ throws on its first request. Neither silently picks a host: the previous default
 pointed at Cloud Run, so an unconfigured build talked to production, and then to
 nothing once those hosts were retired.
 
+## Client IP behind the proxy (rate limiting)
+
+auth-service throttles per client (5 req/s everywhere; 5 req/min on login,
+refresh, OTP and invitation routes). Behind a reverse proxy the socket peer is
+the proxy, so without the settings below every user shares **one** bucket — the
+whole company gets 5 logins a minute. Both variables are read by
+`apps/server/auth-service/src/common/client-ip.ts`; unset = Express defaults
+(`req.ip` is the socket peer), which is right only when nothing sits in front.
+
+| Variable | Meaning | Local dev | Production (Mac mini) | Self-host |
+|---|---|---|---|---|
+| `TRUST_PROXY` | Express `trust proxy`: number of proxy hops whose `X-Forwarded-For` is trusted (or an Express preset/CIDR list). A client-supplied `X-Forwarded-For` beyond those hops is ignored. | unset | unset | `1` (Caddy is the public edge and rewrites `X-Forwarded-For`) |
+| `CLIENT_IP_HEADER` | Header a trusted proxy sets **and overwrites** with the real client address; its first value wins over `req.ip` when it is a valid IP. | unset | `cf-connecting-ip` — every request comes through Cloudflare → cloudflared → Caddy, and Caddy is reachable only through the tunnel | unset (set it only if you put Cloudflare or similar in front) |
+
+Never set `CLIENT_IP_HEADER` on a host clients can reach directly: they could
+then pick their own bucket by sending the header.
+
 ## What stops the two from mixing
 
 These run in CI (`.github/workflows/ci.yml`, job *Environment Separation*) and

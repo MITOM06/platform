@@ -81,3 +81,24 @@ export function modelSupportsEffort(model: string): boolean {
   ];
   return EFFORT_MODEL_PREFIXES.some((prefix) => model.startsWith(prefix));
 }
+
+/**
+ * Whether a model takes `thinking: {type: 'adaptive'}` — the 4.6+ generation.
+ * Haiku 4.5, Sonnet 4.5 and Opus 4.5 only know `budget_tokens`, so they never get
+ * the adaptive param. The workspace thinking toggle used to apply only when the
+ * routed model happened to equal ANTHROPIC_MODEL; it now follows this predicate,
+ * so any routed tier that supports thinking honours the toggle.
+ */
+export function modelSupportsAdaptiveThinking(model: string): boolean {
+  const ADAPTIVE_THINKING_PREFIXES = [
+    'claude-opus-4-6',
+    'claude-opus-4-7',
+    'claude-opus-4-8',
+    'claude-opus-5',
+    'claude-sonnet-4-6',
+    'claude-sonnet-5',
+    'claude-fable-5',
+    'claude-mythos-5',
+  ];
+  return ADAPTIVE_THINKING_PREFIXES.some((prefix) => model.startsWith(prefix));
+}

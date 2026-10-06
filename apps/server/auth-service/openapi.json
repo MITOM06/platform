@@ -66,6 +66,7 @@
             "bearer": []
           }
         ],
+        "summary": "Change (or set a first) password; signs out every OTHER session",
         "tags": [
           "users"
         ]
@@ -105,6 +106,35 @@
             "bearer": []
           }
         ],
+        "summary": "Register an FCM token (moved off any other account using it)",
+        "tags": [
+          "users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_removeDeviceToken",
+        "parameters": [
+          {
+            "name": "token",
+            "required": false,
+            "in": "query",
+            "description": "FCM token (alternative to the JSON body { token })",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unregister an FCM token from the caller's account",
         "tags": [
           "users"
         ]
@@ -1414,7 +1444,7 @@
             "bearer": []
           }
         ],
-        "summary": "Create / clone a role",
+        "summary": "Create / clone a role (non-Owners: only capabilities they hold)",
         "tags": [
           "admin"
         ]
@@ -1453,7 +1483,7 @@
             "bearer": []
           }
         ],
-        "summary": "Edit a role (Owner is immutable)",
+        "summary": "Edit a role (Owner immutable; presets keep their name; non-Owners: not their own role, only capabilities they hold)",
         "tags": [
           "admin"
         ]

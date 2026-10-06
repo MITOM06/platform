@@ -202,9 +202,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Never leak the raw system.* code; show the localized label.
+      // Never leak the raw system.* code; show the localized event sentence
+      // (same wording as web's systemGroupCreated).
       expect(find.text('system.group.created'), findsNothing);
-      expect(find.text('Create group'), findsOneWidget);
+      expect(find.text('Group created'), findsOneWidget);
     });
 
     testWidgets('labels a media (upload URL) reply instead of showing the URL',

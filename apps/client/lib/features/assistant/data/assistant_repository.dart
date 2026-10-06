@@ -6,16 +6,25 @@ class AssistantInfo {
   final String name;
   final String? avatarUrl;
 
+  /// The stored persona and model (`GET /api/assistant/me`), so setup/settings
+  /// open pre-filled. Null for a legacy registration Bot Factory can't resolve.
+  final String? systemPrompt;
+  final String? providerId;
+
   const AssistantInfo({
     required this.botUserId,
     required this.name,
     this.avatarUrl,
+    this.systemPrompt,
+    this.providerId,
   });
 
   factory AssistantInfo.fromJson(Map<String, dynamic> json) => AssistantInfo(
         botUserId: json['botUserId'] as String,
         name: json['name'] as String,
         avatarUrl: json['avatarUrl'] as String?,
+        systemPrompt: json['systemPrompt'] as String?,
+        providerId: json['providerId'] as String?,
       );
 }
 
@@ -40,6 +49,22 @@ class AssistantProvider {
         provider: json['provider'] as String,
         model: json['model'] as String,
       );
+}
+
+/// `POST /api/assistant/setup` body — blank persona/model are left out so an
+/// update keeps the stored ones instead of wiping them.
+Map<String, dynamic> assistantSetupBody({
+  required String name,
+  String? systemPrompt,
+  String? providerId,
+}) {
+  final prompt = systemPrompt?.trim() ?? '';
+  final provider = providerId?.trim() ?? '';
+  return {
+    'name': name.trim(),
+    if (prompt.isNotEmpty) 'systemPrompt': prompt,
+    if (provider.isNotEmpty) 'providerId': provider,
+  };
 }
 
 class AssistantRepository {
@@ -70,18 +95,22 @@ class AssistantRepository {
 
   /// Idempotent create-or-update. The response carries only `botUserId`+`name`
   /// (no avatar), so the returned [AssistantInfo] has a null avatarUrl.
+  ///
+  /// A blank [systemPrompt]/[providerId] is omitted: on an update the server
+  /// keeps the stored value (a first setup without them is
+  /// `400 ASSISTANT_SETUP_INCOMPLETE`).
   Future<AssistantInfo> setup({
     required String name,
-    required String systemPrompt,
-    required String providerId,
+    String? systemPrompt,
+    String? providerId,
   }) async {
     final res = await _dio.post<Map<String, dynamic>>(
       '/api/assistant/setup',
-      data: {
-        'name': name,
-        'systemPrompt': systemPrompt,
-        'providerId': providerId,
-      },
+      data: assistantSetupBody(
+        name: name,
+        systemPrompt: systemPrompt,
+        providerId: providerId,
+      ),
     );
     final body = res.data!;
     return AssistantInfo(
