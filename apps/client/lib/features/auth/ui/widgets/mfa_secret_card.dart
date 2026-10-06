@@ -88,7 +88,7 @@ class MfaSecretCard extends StatelessWidget {
           ),
         const SizedBox(height: 16),
         Text(l10n.mfaEnrollManualKey,
-            style: TextStyle(color: muted, fontSize: 12.5)),
+            style: TextStyle(color: muted, fontSize: 12)),
         const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.only(left: 12),
@@ -104,7 +104,7 @@ class MfaSecretCard extends StatelessWidget {
                   key: const ValueKey('mfa-secret'),
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
-                    fontFamily: 'monospace',
+                    fontFamily: AppTheme.fontMono,
                     fontSize: 14,
                     letterSpacing: 1,
                   ),

@@ -119,7 +119,7 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
                     l10n.setPasswordTitle,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: onSurface,
                         ),
                   ),
@@ -179,7 +179,7 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
               key: const ValueKey('set-password-error'),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.error,
-                fontSize: 13,
+                fontSize: 14,
               ),
             ),
             const SizedBox(height: 12),

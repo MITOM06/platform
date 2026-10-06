@@ -111,10 +111,11 @@ class AuthNotifier extends _$AuthNotifier {
   /// the next account on this phone). Best-effort; never throws.
   Future<void> _unregisterPushToken() async {
     final repo = ref.read(authRepositoryProvider);
-    // Read the access token before the first await so the read is issued
-    // ahead of a forced logout's credential wipe.
-    final accessFuture = repo.readAccessToken();
     try {
+      // Read the access token before the first await so the read is issued
+      // ahead of a forced logout's credential wipe. Inside the try: push
+      // cleanup must never stop a sign-out.
+      final accessFuture = repo.readAccessToken();
       final access = await accessFuture;
       await _fcmRefreshSub?.cancel();
       _fcmRefreshSub = null;
