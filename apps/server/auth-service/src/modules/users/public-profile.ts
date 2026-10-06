@@ -20,6 +20,11 @@ export interface PublicProfileOptions {
    * endpoints never did, so they keep omitting it.
    */
   includeEmail?: boolean;
+  /**
+   * The resolved role name (UsersService.getRoleName / getRoleNameMap — `roleId`
+   * has no Mongoose ref, so it can't be populated). Unassigned → 'Member'.
+   */
+  roleName?: string;
 }
 
 export function toPublicProfile(
@@ -56,7 +61,7 @@ export function toPublicProfile(
     hideInfo: doc.hideInfo ?? false, // legacy fallback safety-net
     createdAt: doc.createdAt,
     // Role is always public — no privacy gate. null → client shows "Member".
-    roleName: doc.roleId?.name ?? null,
+    roleName: opts.roleName ?? doc.roleId?.name ?? null,
   };
   if (opts.friendsCount !== undefined) profile.friendsCount = opts.friendsCount;
   if (opts.includeEmail) profile.email = doc.email;

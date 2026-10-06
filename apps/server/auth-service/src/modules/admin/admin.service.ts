@@ -41,6 +41,14 @@ import { UpdateWorkspaceDto, WorkspaceSsoDto } from './dto/workspace.dto';
 /** Redis channel ai-service subscribes to so it drops its cached AI settings. */
 export const AI_SETTINGS_INVALIDATE_CHANNEL = 'ai:settings:invalidate';
 
+/** Member list / status projection; `mfa.enabled` is mapped to `mfaEnabled`. */
+const MEMBER_FIELDS = 'displayName email avatarUrl roleId departmentIds status mfa.enabled';
+
+function toMemberView(doc: UserDocument) {
+  const { mfa, ...rest } = doc.toObject();
+  return { ...rest, mfaEnabled: mfa?.enabled === true };
+}
+
 /**
  * Admin domain operations for the enterprise foundation: departments, members
  * and the singleton workspace (roles live in RolesService). All mutations are
@@ -176,11 +184,13 @@ export class AdminService {
   }
 
   // ===================== MEMBERS =====================
-  listMembers() {
-    return this.userModel
-      .find()
-      .select('displayName email avatarUrl roleId departmentIds status')
+  /** People only — system/bot accounts (e.g. "PON AI") are not members. */
+  async listMembers() {
+    const members = await this.userModel
+      .find({ isBot: { $ne: true } })
+      .select(MEMBER_FIELDS)
       .exec();
+    return members.map(toMemberView);
   }
 
   /**
@@ -197,7 +207,10 @@ export class AdminService {
     const member = isObjectIdString(id)
       ? await this.userModel.findById(id).exec()
       : null;
-    if (!member) throw new NotFoundException({ code: AuthCode.MEMBER_NOT_FOUND });
+    // A bot account is not a member: no role, department or status changes.
+    if (!member || member.isBot) {
+      throw new NotFoundException({ code: AuthCode.MEMBER_NOT_FOUND });
+    }
 
     const set: Record<string, unknown> = {};
     const currentRoleId = member.roleId?.toString();
@@ -307,7 +320,10 @@ export class AdminService {
     const member = isObjectIdString(id)
       ? await this.userModel.findById(id).exec()
       : null;
-    if (!member) throw new NotFoundException({ code: AuthCode.MEMBER_NOT_FOUND });
+    // A bot account is not a member: no role, department or status changes.
+    if (!member || member.isBot) {
+      throw new NotFoundException({ code: AuthCode.MEMBER_NOT_FOUND });
+    }
     if ((member.status ?? 'active') === dto.status) return this.memberView(id);
 
     if (dto.status === 'blocked') {
@@ -356,11 +372,9 @@ export class AdminService {
     return this.memberView(id);
   }
 
-  private memberView(id: string) {
-    return this.userModel
-      .findById(id)
-      .select('displayName email avatarUrl roleId departmentIds status')
-      .exec();
+  private async memberView(id: string) {
+    const member = await this.userModel.findById(id).select(MEMBER_FIELDS).exec();
+    return member ? toMemberView(member) : null;
   }
 
   // ===================== WORKSPACE =====================

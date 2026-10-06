@@ -11,9 +11,10 @@ import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
-import { useAuthStore } from '@/lib/store/auth.store'
 import { parseAuthError, authCodeToI18nKey } from '@/lib/auth/auth-error'
 import { isLoginNotice } from '@/lib/auth/force-logout'
+import { MFA_PATH, isMfaChallenge, savePendingMfa } from '@/lib/auth/mfa'
+import { establishSession } from '@/lib/auth/sign-in'
 import { maybeRequestNotificationPermission } from '@/lib/notifications'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,7 +29,6 @@ type FormData = { email: string; password: string }
 export default function LoginPage() {
   const t = useTranslations('auth')
   const router = useRouter()
-  const setAuth = useAuthStore((s) => s.setAuth)
   const [showPassword, setShowPassword] = useState(false)
   // AUTH_URL always resolves — an absolute host when one is configured, the
   // same-origin '/api/auth' otherwise — so the social/SSO links work in every
@@ -101,18 +101,18 @@ export default function LoginPage() {
   const onSubmit = async (data: FormData) => {
     try {
       const { data: result } = await authService.login(data.email, data.password)
-      const { accessToken, refreshToken, sid, user } = result
+      // Owner / Admin: the password was right but no session exists yet — the
+      // authenticator code (or first-time 2FA setup) is finished on /mfa.
+      if (isMfaChallenge(result)) {
+        savePendingMfa(result)
+        router.push(MFA_PATH)
+        return
+      }
 
-      await fetch('/api/auth/set-cookie', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessToken, refreshToken, sid }),
-      })
-
-      setAuth(user, accessToken)
+      const path = await establishSession(result)
       // Prompt for notification permission only after a successful login.
       void maybeRequestNotificationPermission()
-      router.push('/')
+      router.push(path)
     } catch (err: unknown) {
       const { code, params } = parseAuthError(err)
       toast.error(t(authCodeToI18nKey(code), params))

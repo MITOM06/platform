@@ -175,4 +175,48 @@ void main() {
     await tester.pumpAndSettle();
     expect(_dxFraction(tester, 'login'), 0);
   });
+
+  testWidgets('the forced set-password gate always reads as a forward step',
+      (tester) async {
+    // Google invite accept: invite page → gate → home (or theme onboarding).
+    PageNavDirection.resolve(_invitePath);
+    PageNavDirection.resolve('/set-password');
+    expect(PageNavDirection.isBack, isFalse);
+    PageNavDirection.resolve('/');
+    expect(PageNavDirection.isBack, isFalse);
+
+    PageNavDirection.resolve('/set-password');
+    PageNavDirection.resolve('/theme-onboarding');
+    expect(PageNavDirection.isBack, isFalse);
+
+    // Signing out from the gate.
+    PageNavDirection.resolve('/set-password');
+    PageNavDirection.resolve('/login');
+    expect(PageNavDirection.isBack, isFalse);
+  });
+
+  testWidgets('the 2FA step reads forward, except "Back to sign in"',
+      (tester) async {
+    // Login / Google invite → /mfa → home, set-password or theme onboarding.
+    PageNavDirection.resolve('/login');
+    PageNavDirection.resolve('/mfa');
+    expect(PageNavDirection.isBack, isFalse);
+    PageNavDirection.resolve('/');
+    expect(PageNavDirection.isBack, isFalse);
+
+    PageNavDirection.resolve(_invitePath);
+    PageNavDirection.resolve('/mfa');
+    expect(PageNavDirection.isBack, isFalse);
+    PageNavDirection.resolve('/set-password');
+    expect(PageNavDirection.isBack, isFalse);
+
+    PageNavDirection.resolve('/mfa');
+    PageNavDirection.resolve('/theme-onboarding');
+    expect(PageNavDirection.isBack, isFalse);
+
+    // Abandoning the challenge goes back to the sign-in form.
+    PageNavDirection.resolve('/mfa');
+    PageNavDirection.resolve('/login');
+    expect(PageNavDirection.isBack, isTrue);
+  });
 }

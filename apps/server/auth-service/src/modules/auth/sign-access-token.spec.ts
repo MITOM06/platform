@@ -14,6 +14,7 @@ import { OAuthRedirectService } from './oauth-redirect.service';
 import { LoginAttemptsService } from './login-attempts.service';
 import { SsoMappingService } from './oidc/sso-mapping.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MfaChallengeService } from '../mfa/mfa-challenge.service';
 
 describe('AuthService.signAccessToken — RBAC claims', () => {
   let service: AuthService;
@@ -35,6 +36,7 @@ describe('AuthService.signAccessToken — RBAC claims', () => {
         { provide: LoginAttemptsService, useValue: {} },
         { provide: SsoMappingService, useValue: {} },
         { provide: NotificationsService, useValue: {} },
+        { provide: MfaChallengeService, useValue: {} },
         {
           provide: ConfigService,
           useValue: { get: (k: string) => (k === 'JWT_ACCESS_SECRET' ? 'secret' : undefined) },

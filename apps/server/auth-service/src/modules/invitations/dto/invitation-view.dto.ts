@@ -123,7 +123,7 @@ export class SuccessResponseDto {
   success: boolean;
 }
 
-/** LoginTokens returned by accept-password (same shape as POST /auth/login). */
+/** `user` of LoginTokens (POST /auth/login, accept-password). */
 export class LoginTokensUserDto {
   @ApiProperty()
   id: string;
@@ -133,10 +133,20 @@ export class LoginTokensUserDto {
 
   @ApiProperty()
   displayName: string;
+
+  @ApiProperty({
+    description:
+      'true only for an account created by accepting an invitation with Google: the client must show "create your PON password" before the app',
+  })
+  mustSetPassword: boolean;
 }
 
+/** LoginTokens of POST /auth/login (code LOGIN_SUCCESS) and accept-password (INVITATION_ACCEPTED). */
 export class LoginTokensResponseDto {
-  @ApiProperty({ example: 'INVITATION_ACCEPTED' })
+  @ApiProperty({
+    example: 'LOGIN_SUCCESS',
+    description: 'LOGIN_SUCCESS (login) or INVITATION_ACCEPTED (accept-password)',
+  })
   code: string;
 
   @ApiProperty()

@@ -11,8 +11,35 @@ export const GENERIC_ERROR_CODE = 'GENERIC_ERROR';
 const KNOWN_CODES = new Set<string>(Object.values(AuthCode));
 const LOGIN_CODE_TTL_S = 300;
 
-/** Redis key holding the userId for a one-time login code (read by AuthService.exchangeLoginCode). */
+/** Redis key holding the grant of a one-time login code (read by AuthService.exchangeLoginCode). */
 export const loginCodeKey = (code: string) => `login_code:${code}`;
+
+/** How the user signed in. OIDC SSO is exempt from PON 2FA (the IdP owns MFA). */
+export type LoginCodeVia = 'google' | 'oidc';
+
+export interface LoginCodeGrant {
+  userId: string;
+  /** Undefined for a code minted before 2FA shipped: treated like Google (2FA applies). */
+  via?: LoginCodeVia;
+}
+
+/** Decodes a stored login-code value: `{"userId","via"}` JSON, or a legacy bare userId. */
+export function parseLoginCode(
+  raw: string | null | undefined,
+): LoginCodeGrant | null {
+  if (!raw) return null;
+  if (!raw.startsWith('{')) return { userId: raw };
+  try {
+    const v = JSON.parse(raw) as { userId?: unknown; via?: unknown };
+    if (typeof v.userId !== 'string' || !v.userId) return null;
+    return {
+      userId: v.userId,
+      via: v.via === 'oidc' || v.via === 'google' ? v.via : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Browser-redirect side of OAuth/SSO flows. These endpoints are navigated to by
@@ -29,15 +56,29 @@ export class OAuthRedirectService {
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
-  async createLoginCode(userId: string): Promise<string> {
+  async createLoginCode(
+    userId: string,
+    via: LoginCodeVia = 'google',
+  ): Promise<string> {
     const code = nanoid(32);
-    await this.redis.set(loginCodeKey(code), userId, 'EX', LOGIN_CODE_TTL_S);
+    const grant: LoginCodeGrant = { userId, via };
+    await this.redis.set(
+      loginCodeKey(code),
+      JSON.stringify(grant),
+      'EX',
+      LOGIN_CODE_TTL_S,
+    );
     return code;
   }
 
   /** Mints a one-time login code for a resolved user and redirects back to the client. */
-  async redirectWithLoginCode(userId: string, res: Response, platform: string) {
-    const code = await this.createLoginCode(userId);
+  async redirectWithLoginCode(
+    userId: string,
+    res: Response,
+    platform: string,
+    via: LoginCodeVia = 'google',
+  ) {
+    const code = await this.createLoginCode(userId, via);
     return this.redirectToClient(res, platform, { code });
   }
 

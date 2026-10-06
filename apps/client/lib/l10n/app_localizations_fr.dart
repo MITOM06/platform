@@ -4365,4 +4365,200 @@ class AppLocalizationsFr extends AppLocalizations {
   String adminRoleCloneDefaultName(String name) {
     return 'Copie de $name';
   }
+
+  @override
+  String get setPasswordTitle => 'Créez votre mot de passe PON';
+
+  @override
+  String get setPasswordSubtitle =>
+      'Vous avez rejoint PON avec Google. Créez un mot de passe pour pouvoir aussi vous connecter avec votre adresse e-mail.';
+
+  @override
+  String get setPasswordSubmit => 'Créer le mot de passe';
+
+  @override
+  String get setPasswordSuccess =>
+      'Mot de passe créé. Vous pouvez désormais aussi vous connecter avec votre adresse e-mail.';
+
+  @override
+  String get mfaVerifyTitle => 'Authentification à deux facteurs';
+
+  @override
+  String get mfaVerifySubtitle =>
+      'Saisissez le code à 6 chiffres de votre application d\'authentification pour terminer la connexion.';
+
+  @override
+  String get mfaBackupSubtitle =>
+      'Saisissez l\'un de vos codes de secours (XXXXX-XXXXX). Chaque code ne fonctionne qu\'une fois.';
+
+  @override
+  String get mfaCodeLabel => 'Code à 6 chiffres';
+
+  @override
+  String get mfaBackupCodeLabel => 'Code de secours';
+
+  @override
+  String get mfaVerifyButton => 'Vérifier';
+
+  @override
+  String get mfaUseBackupCode => 'Utiliser un code de secours';
+
+  @override
+  String get mfaUseAuthenticatorCode =>
+      'Utiliser votre application d\'authentification';
+
+  @override
+  String get mfaBackToSignIn => 'Retour à la connexion';
+
+  @override
+  String mfaBackupCodeUsed(int remaining) {
+    return 'Code de secours utilisé. $remaining code(s) restant(s).';
+  }
+
+  @override
+  String get valMfaCodeInvalid => 'Saisissez le code à 6 chiffres.';
+
+  @override
+  String get valMfaBackupCodeInvalid =>
+      'Saisissez un code de secours au format ABCDE-FGHIJ.';
+
+  @override
+  String get mfaEnrollTitle => 'Configurer l\'authentification à deux facteurs';
+
+  @override
+  String get mfaEnrollSubtitle =>
+      'Votre rôle exige un code d\'une application d\'authentification à chaque connexion.';
+
+  @override
+  String get mfaEnrollStepInstall =>
+      '1. Installez Google Authenticator (ou une autre application d\'authentification).';
+
+  @override
+  String get mfaEnrollStepScan =>
+      '2. Scannez ce code QR, ouvrez-le dans l\'application ou saisissez la clé de configuration.';
+
+  @override
+  String get mfaEnrollStepCode =>
+      '3. Saisissez le code à 6 chiffres affiché par l\'application.';
+
+  @override
+  String get mfaEnrollOpenApp =>
+      'Ouvrir dans l\'application d\'authentification';
+
+  @override
+  String get mfaEnrollNoApp =>
+      'Aucune application d\'authentification trouvée. Installez Google Authenticator ou saisissez la clé de configuration manuellement.';
+
+  @override
+  String get mfaEnrollManualKey => 'Clé de configuration';
+
+  @override
+  String get mfaCopyKey => 'Copier la clé';
+
+  @override
+  String get mfaKeyCopied => 'Clé de configuration copiée';
+
+  @override
+  String get mfaQrSemantic =>
+      'Code QR pour votre application d\'authentification';
+
+  @override
+  String get mfaEnrollConfirm => 'Confirmer';
+
+  @override
+  String get mfaBackupCodesTitle => 'Enregistrez vos codes de secours';
+
+  @override
+  String get mfaBackupCodesSubtitle =>
+      'Chaque code vous permet de vous connecter une fois si vous perdez votre téléphone. Ils ne seront plus affichés : conservez-les en lieu sûr.';
+
+  @override
+  String get mfaCopyCodes => 'Copier les codes';
+
+  @override
+  String get mfaCodesCopied => 'Codes de secours copiés';
+
+  @override
+  String get mfaSavedCheckbox => 'J\'ai enregistré mes codes de secours';
+
+  @override
+  String get mfaContinue => 'Continuer';
+
+  @override
+  String get securityMfaOn =>
+      'Un code de votre application d\'authentification est requis à chaque connexion.';
+
+  @override
+  String get securityMfaPending =>
+      'Obligatoire pour votre rôle. Vous la configurerez à votre prochaine connexion.';
+
+  @override
+  String get securityMfaStatusOn => 'Activée';
+
+  @override
+  String get securityMfaStatusOff => 'Non configurée';
+
+  @override
+  String get securityMfaRegenerate => 'Régénérer les codes de secours';
+
+  @override
+  String get securityMfaRegenerateHint =>
+      'Saisissez un code actuel de votre application d\'authentification. Vos anciens codes de secours ne fonctionneront plus.';
+
+  @override
+  String get securityMfaRegenerateSubmit => 'Générer';
+
+  @override
+  String get securityMfaDone => 'Terminé';
+
+  @override
+  String get adminMfaBadge => '2FA activée';
+
+  @override
+  String get adminMfaReset => 'Réinitialiser la 2FA';
+
+  @override
+  String adminMfaResetConfirm(String name) {
+    return 'Réinitialiser l\'authentification à deux facteurs de $name ? Cette personne sera déconnectée partout et devra la reconfigurer à sa prochaine connexion.';
+  }
+
+  @override
+  String get adminMfaResetDone =>
+      '2FA réinitialisée. Cette personne la reconfigurera à sa prochaine connexion.';
+
+  @override
+  String get authMsgMfaRequired =>
+      'Saisissez le code de votre application d\'authentification pour terminer la connexion.';
+
+  @override
+  String get authErrMfaTokenInvalid =>
+      'Votre connexion a expiré. Veuillez vous reconnecter.';
+
+  @override
+  String get authErrMfaCodeInvalid => 'Code incorrect. Veuillez réessayer.';
+
+  @override
+  String authErrMfaCodeInvalidRemaining(int remaining) {
+    return 'Code incorrect. $remaining tentative(s) restante(s).';
+  }
+
+  @override
+  String get authErrMfaTooManyAttempts =>
+      'Trop de codes incorrects. Veuillez vous reconnecter.';
+
+  @override
+  String get authErrMfaNotEnrolled =>
+      'L\'authentification à deux facteurs n\'est pas encore configurée pour ce compte.';
+
+  @override
+  String get authErrMfaAlreadyEnrolled =>
+      'L\'authentification à deux facteurs est déjà configurée pour ce compte.';
+
+  @override
+  String get authErrMfaResetForbidden =>
+      'Seul un Propriétaire peut réinitialiser l\'authentification à deux facteurs.';
+
+  @override
+  String get authErrMfaResetSelfForbidden =>
+      'Vous ne pouvez pas réinitialiser votre propre authentification à deux facteurs.';
 }

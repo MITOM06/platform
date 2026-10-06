@@ -143,6 +143,26 @@ class MembersPanel extends ConsumerWidget {
     }
   }
 
+  /// Owner-only 2FA reset (contract 09): confirm, then the member re-enrolls
+  /// at next sign-in and is signed out everywhere (server-side).
+  Future<void> _resetMfa(BuildContext context, WidgetRef ref, Member m) async {
+    final l10n = context.l10n;
+    final ok = await confirmAdminAction(
+      context,
+      message: l10n.adminMfaResetConfirm(m.displayName),
+      confirmLabel: l10n.adminMfaReset,
+      destructive: true,
+    );
+    if (!ok) return;
+    try {
+      await ref.read(membersProvider.notifier).resetMfa(m.id);
+      showInfoSnackBar(l10n.adminMfaResetDone);
+    } catch (e) {
+      // MFA_RESET_FORBIDDEN / MFA_RESET_SELF_FORBIDDEN / MEMBER_NOT_FOUND.
+      if (context.mounted) showErrorSnackBar(authErrorMessage(context, e));
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -151,6 +171,8 @@ class MembersPanel extends ConsumerWidget {
     final canManageMembers = ref.watch(hasCapabilityProvider(Cap.manageMembers));
     final auth = ref.watch(authNotifierProvider).valueOrNull;
     final selfId = auth is AuthAuthenticated ? auth.user.id : null;
+    final callerIsOwner =
+        ref.watch(capabilitiesProvider).valueOrNull?.role == 'Owner';
 
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -180,16 +202,23 @@ class MembersPanel extends ConsumerWidget {
             return _MembersHeader(canManageMembers: canManageMembers);
           }
           final m = members[i - 1];
-          final roleName =
-              roles.where((r) => r.id == m.roleId).map((r) => r.name).firstOrNull;
+          final role = roles.where((r) => r.id == m.roleId).firstOrNull;
+          final isSelf = m.id == selfId;
           return MemberTile(
             member: m,
-            roleName: roleName,
+            roleName: role?.name,
             canManageMembers: canManageMembers,
-            isSelf: m.id == selfId,
-            onEdit: () => _edit(context, ref, m, isSelf: m.id == selfId),
+            isSelf: isSelf,
+            canResetMfa: canResetMemberMfa(
+              isSelf: isSelf,
+              callerIsOwner: callerIsOwner,
+              targetMfaEnabled: m.mfaEnabled,
+              targetPrivileged: isPrivilegedRole(role),
+            ),
+            onEdit: () => _edit(context, ref, m, isSelf: isSelf),
             onEditAiContext: () => _editAiContext(context, ref, m),
             onToggleBlock: () => _toggleBlock(context, ref, m),
+            onResetMfa: () => _resetMfa(context, ref, m),
           );
         },
       ),

@@ -10,7 +10,6 @@ import {
   KeyRound,
   Eye,
   EyeOff,
-  ShieldCheck,
   AlertTriangle,
   Loader2,
 } from 'lucide-react'
@@ -22,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter'
+import { TwoFactorSection } from '@/components/settings/TwoFactorSection'
 
 export default function SecurityPage() {
   const t = useTranslations('settings.security')
@@ -272,25 +272,7 @@ export default function SecurityPage() {
             </div>
           </section>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="size-9 rounded-full bg-muted flex items-center justify-center">
-                <ShieldCheck className="size-4 text-muted-foreground" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-base text-muted-foreground">
-                  {t('twoFaTitle')}
-                </h2>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {t('twoFaSubtitle')}
-                </p>
-              </div>
-            </div>
-            <div className="rounded-xl border border-dashed bg-muted/30 px-5 py-4 flex items-center gap-3">
-              <ShieldCheck className="size-5 text-muted-foreground shrink-0" />
-              <p className="text-sm text-muted-foreground">{t('twoFaComingSoon')}</p>
-            </div>
-          </section>
+          <TwoFactorSection />
         </div>
       </div>
     </div>

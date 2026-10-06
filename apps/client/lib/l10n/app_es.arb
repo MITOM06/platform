@@ -1446,5 +1446,81 @@
   "errAssistantNotConfigured": "Los asistentes personales aún no están disponibles en este espacio de trabajo. Consulta a tu administrador.",
   "errAssistantUpstreamFailed": "El servicio del asistente no respondió. Inténtalo de nuevo en un momento.",
   "adminBotOwnedBy": "Propiedad de {name}",
-  "adminRoleCloneDefaultName": "Copia de {name}"
+  "adminRoleCloneDefaultName": "Copia de {name}",
+  "setPasswordTitle": "Crea tu contraseña de PON",
+  "setPasswordSubtitle": "Te uniste con Google. Crea una contraseña para poder iniciar sesión también con tu correo electrónico.",
+  "setPasswordSubmit": "Crear contraseña",
+  "setPasswordSuccess": "Contraseña creada. Ahora también puedes iniciar sesión con tu correo electrónico.",
+  "mfaVerifyTitle": "Autenticación de dos factores",
+  "mfaVerifySubtitle": "Introduce el código de 6 dígitos de tu app de autenticación para terminar de iniciar sesión.",
+  "mfaBackupSubtitle": "Introduce uno de tus códigos de respaldo (XXXXX-XXXXX). Cada código solo funciona una vez.",
+  "mfaCodeLabel": "Código de 6 dígitos",
+  "mfaBackupCodeLabel": "Código de respaldo",
+  "mfaVerifyButton": "Verificar",
+  "mfaUseBackupCode": "Usar un código de respaldo",
+  "mfaUseAuthenticatorCode": "Usar tu app de autenticación",
+  "mfaBackToSignIn": "Volver a iniciar sesión",
+  "mfaBackupCodeUsed": "Código de respaldo usado. Quedan {remaining} código(s).",
+  "@mfaBackupCodeUsed": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "valMfaCodeInvalid": "Introduce el código de 6 dígitos.",
+  "valMfaBackupCodeInvalid": "Introduce un código de respaldo como ABCDE-FGHIJ.",
+  "mfaEnrollTitle": "Configura la autenticación de dos factores",
+  "mfaEnrollSubtitle": "Tu rol requiere un código de una app de autenticación cada vez que inicies sesión.",
+  "mfaEnrollStepInstall": "1. Instala Google Authenticator (u otra app de autenticación).",
+  "mfaEnrollStepScan": "2. Escanea este código QR, ábrelo en la app o introduce la clave de configuración.",
+  "mfaEnrollStepCode": "3. Introduce el código de 6 dígitos que muestra la app.",
+  "mfaEnrollOpenApp": "Abrir en la app de autenticación",
+  "mfaEnrollNoApp": "No se encontró ninguna app de autenticación. Instala Google Authenticator o introduce la clave de configuración manualmente.",
+  "mfaEnrollManualKey": "Clave de configuración",
+  "mfaCopyKey": "Copiar clave",
+  "mfaKeyCopied": "Clave de configuración copiada",
+  "mfaQrSemantic": "Código QR para tu app de autenticación",
+  "mfaEnrollConfirm": "Confirmar",
+  "mfaBackupCodesTitle": "Guarda tus códigos de respaldo",
+  "mfaBackupCodesSubtitle": "Cada código te permite iniciar sesión una vez si pierdes tu teléfono. No se volverán a mostrar, así que guárdalos en un lugar seguro.",
+  "mfaCopyCodes": "Copiar códigos",
+  "mfaCodesCopied": "Códigos de respaldo copiados",
+  "mfaSavedCheckbox": "He guardado mis códigos de respaldo",
+  "mfaContinue": "Continuar",
+  "securityMfaOn": "Se requiere un código de tu app de autenticación cada vez que inicias sesión.",
+  "securityMfaPending": "Obligatoria para tu rol. La configurarás en tu próximo inicio de sesión.",
+  "securityMfaStatusOn": "Activada",
+  "securityMfaStatusOff": "Sin configurar",
+  "securityMfaRegenerate": "Regenerar códigos de respaldo",
+  "securityMfaRegenerateHint": "Introduce un código actual de tu app de autenticación. Tus códigos de respaldo anteriores dejarán de funcionar.",
+  "securityMfaRegenerateSubmit": "Generar",
+  "securityMfaDone": "Listo",
+  "adminMfaBadge": "2FA activada",
+  "adminMfaReset": "Restablecer 2FA",
+  "adminMfaResetConfirm": "¿Restablecer la autenticación de dos factores de {name}? Se cerrará su sesión en todos los dispositivos y deberá configurarla de nuevo en su próximo inicio de sesión.",
+  "@adminMfaResetConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminMfaResetDone": "2FA restablecida. La configurará de nuevo en su próximo inicio de sesión.",
+  "authMsgMfaRequired": "Introduce el código de tu app de autenticación para terminar de iniciar sesión.",
+  "authErrMfaTokenInvalid": "Tu inicio de sesión ha caducado. Vuelve a iniciar sesión.",
+  "authErrMfaCodeInvalid": "Código incorrecto. Inténtalo de nuevo.",
+  "authErrMfaCodeInvalidRemaining": "Código incorrecto. Quedan {remaining} intento(s).",
+  "@authErrMfaCodeInvalidRemaining": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "authErrMfaTooManyAttempts": "Demasiados códigos incorrectos. Vuelve a iniciar sesión.",
+  "authErrMfaNotEnrolled": "Esta cuenta aún no tiene configurada la autenticación de dos factores.",
+  "authErrMfaAlreadyEnrolled": "Esta cuenta ya tiene configurada la autenticación de dos factores.",
+  "authErrMfaResetForbidden": "Solo un Propietario puede restablecer la autenticación de dos factores.",
+  "authErrMfaResetSelfForbidden": "No puedes restablecer tu propia autenticación de dos factores."
 }

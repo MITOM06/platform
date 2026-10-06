@@ -36,6 +36,7 @@ export type SessionRevokeReason =
   | 'role_changed'
   | 'password_reset'
   | 'refresh_reuse'
+  | 'mfa_reset'
   | 'other';
 
 /**

@@ -21,7 +21,12 @@ import { SsoMappingService } from './oidc/sso-mapping.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { assertCanSignIn } from './account-status';
 import { LoginAttemptsService } from './login-attempts.service';
-import { loginCodeKey, OAuthRedirectService } from './oauth-redirect.service';
+import {
+  loginCodeKey,
+  OAuthRedirectService,
+  parseLoginCode,
+} from './oauth-redirect.service';
+import { MfaChallengeService } from '../mfa/mfa-challenge.service';
 import {
   SocialProfile,
   SocialProvider,
@@ -34,6 +39,7 @@ interface TokenSubject {
   email: string;
   displayName: string;
   phoneVerified?: boolean;
+  mustSetPassword?: boolean;
 }
 
 @Injectable()
@@ -50,6 +56,7 @@ export class AuthService {
     private readonly oauthRedirect: OAuthRedirectService,
     private readonly loginAttempts: LoginAttemptsService,
     private readonly otp: OtpService,
+    private readonly mfaChallenge: MfaChallengeService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
@@ -125,7 +132,8 @@ export class AuthService {
       // claims: they get 401 TOKEN_CLAIMS_STALE and refresh (no sign-out).
       await this.session.markClaimsStale(userId);
     }
-    return this.oauthRedirect.redirectWithLoginCode(userId, res, platform);
+    // 'oidc' grant: exchange skips PON 2FA (the IdP owns MFA for SSO).
+    return this.oauthRedirect.redirectWithLoginCode(userId, res, platform, 'oidc');
   }
 
   // ===================== LOGIN / LOGOUT =====================
@@ -136,11 +144,9 @@ export class AuthService {
     await this.loginAttempts.checkBruteForce(email);
     const user = await this.usersService.findByEmail(email);
 
-    // ✅ FIX: Kiểm tra user và throw ngay - TypeScript hiểu user không null sau đây
     if (!user) {
-      await this.loginAttempts.handleFailedLogin(email);
-      // handleFailedLogin return type là 'never' → TypeScript biết code dưới không chạy
-      return; // unreachable, nhưng giúp TypeScript yên tâm
+      await this.loginAttempts.handleFailedLogin(email); // always throws
+      return; // unreachable
     }
 
     // Google-only accounts have no local password: a failed attempt, not a 500.
@@ -172,8 +178,12 @@ export class AuthService {
       });
     }
 
-    const tokens = await this.issueTokensForUser(user, 'web-login', 'web');
     await this.loginAttempts.reset(email);
+    // Privileged (Owner / Admin-like) user: no session until the 2FA step passes.
+    const ctx = { deviceId: 'web-login', platform: 'web' };
+    const mfa = await this.mfaChallenge.challengeIfRequired(user, ctx);
+    if (mfa) return mfa;
+    const tokens = await this.issueTokensForUser(user, ctx.deviceId, ctx.platform);
     return { code: AuthCode.LOGIN_SUCCESS, ...tokens };
   }
 
@@ -201,7 +211,12 @@ export class AuthService {
       accessToken,
       refreshToken,
       sid,
-      user: { id: userId, email: user.email, displayName: user.displayName },
+      user: {
+        id: userId,
+        email: user.email,
+        displayName: user.displayName,
+        mustSetPassword: user.mustSetPassword === true,
+      },
     };
   }
 
@@ -300,7 +315,6 @@ export class AuthService {
 
   async resetPassword(rawEmail: string, otp: string, newPass: string) {
     const email = normalizeEmail(rawEmail);
-    // ✅ Verify OTP trước
     await this.verifyOtp(email, otp);
 
     const user = await this.usersService.findByEmail(email);
@@ -309,11 +323,9 @@ export class AuthService {
     const salt = await bcrypt.genSalt(10);
     const hashedPass = await bcrypt.hash(newPass, salt);
 
-    // ✅ Update password và xóa OTP — this consumes the code, so replaying the
-    // same reset afterwards fails with OTP_INVALID.
+    // Also clears the OTP (so replaying the same reset fails with OTP_INVALID)
+    // and the Google-invite `mustSetPassword` flag.
     await this.usersService.updatePassword(user._id.toString(), hashedPass);
-
-    // ✅ IMPROVEMENT: Revoke tất cả sessions cũ khi đổi mật khẩu
     await this.session.revokeAllSessions(user._id.toString(), 'password_reset');
 
     return {
@@ -365,39 +377,35 @@ export class AuthService {
 
   async exchangeLoginCode(code: string, deviceId?: string, platform?: string) {
     // GETDEL: the code is single-use even under concurrent exchanges.
-    const userId = await this.redis.getdel(loginCodeKey(code));
-    if (!userId) {
-      throw new UnauthorizedException({ code: AuthCode.LOGIN_CODE_INVALID });
-    }
+    const grant = parseLoginCode(await this.redis.getdel(loginCodeKey(code)));
+    const invalid = { code: AuthCode.LOGIN_CODE_INVALID };
+    if (!grant) throw new UnauthorizedException(invalid);
+    const userId = grant.userId;
 
     // Re-check the account between OAuth callback and exchange (deleted / blocked).
     const user = await this.usersService.findById(userId);
-    if (!user) {
-      throw new UnauthorizedException({ code: AuthCode.LOGIN_CODE_INVALID });
-    }
+    if (!user) throw new UnauthorizedException(invalid);
     assertCanSignIn(user);
 
-    const { sid, refreshToken } = await this.session.createSession({
-      userId,
-      deviceId: deviceId || 'unknown',
-      platform: platform || 'web',
-    });
-    const accessToken = await this.signAccessTokenWithClaims(userId, sid);
-
-    // Fire-and-forget: nudge the user to set a password / verify their phone.
-    this.triggerSetupNotifications(userId, user.phoneVerified ?? false);
-
+    const ctx = { deviceId: deviceId || 'unknown', platform: platform || 'web' };
+    // Google sign-in of a privileged user → 2FA step; OIDC SSO is exempt.
+    if (grant.via !== 'oidc') {
+      const mfa = await this.mfaChallenge.challengeIfRequired(user, ctx);
+      if (mfa) return mfa;
+    }
+    const tokens = await this.issueTokensForUser(user, ctx.deviceId, ctx.platform);
     return {
       userId,
-      sid,
-      accessToken,
-      refreshToken,
+      sid: tokens.sid,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
       user: {
         id: user._id,
         email: user.email,
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
         isVerified: user.isVerified,
+        mustSetPassword: user.mustSetPassword === true,
       },
     };
   }

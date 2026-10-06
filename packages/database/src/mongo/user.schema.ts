@@ -1,7 +1,21 @@
-import { Prop, Schema as NestSchema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema as NestSchema, SchemaFactory, raw } from '@nestjs/mongoose';
 import { Document, Schema, Types } from 'mongoose';
 
 export type UserDocument = User & Document;
+
+/**
+ * Mandatory 2FA (TOTP) state of a privileged user (auth-service only).
+ * `secretEnc` (AES-256-GCM, see auth-service MfaCryptoService) and
+ * `backupCodeHashes` (sha256) are select:false: they are read only through an
+ * explicit `+mfa.secretEnc` / `+mfa.backupCodeHashes` projection, never via
+ * /me, profile or admin payloads. Missing on users who never enrolled.
+ */
+export interface UserMfa {
+  enabled: boolean;
+  secretEnc?: string;
+  enrolledAt?: Date;
+  backupCodeHashes?: string[];
+}
 
 @NestSchema({ _id: false })
 class TrustedDevice {
@@ -44,8 +58,28 @@ export class User {
   @Prop({ select: false })
   password: string;
 
+  /**
+   * Onboarding flag: true only for an account created by accepting an
+   * invitation with Google. The client gates the app behind a "create your PON
+   * password" step until any password is set (change/reset clears it). It is a
+   * UX step, not a security boundary. Missing on legacy docs => false.
+   */
+  @Prop({ default: false })
+  mustSetPassword: boolean;
+
   @Prop({ default: [] })
   trustedDevices: TrustedDevice[];
+
+  /** 2FA enrollment (Owner / Admin-like roles). Nested paths, so select:false applies per field. */
+  @Prop(
+    raw({
+      enabled: { type: Boolean },
+      secretEnc: { type: String, select: false },
+      enrolledAt: { type: Date },
+      backupCodeHashes: { type: [String], select: false, default: undefined },
+    }),
+  )
+  mfa?: UserMfa;
 
   @Prop({ default: false })
   isVerified: boolean;
@@ -81,6 +115,14 @@ export class User {
 
   @Prop({ default: true })
   showGender: boolean;
+
+  /**
+   * System accounts that are not people (the "PON AI" bot that authors @AI
+   * replies, seeded by ai-service). Hidden from the admin console and never a
+   * target of member management.
+   */
+  @Prop({ default: false })
+  isBot?: boolean;
 
   // ===================== ENTERPRISE RBAC MEMBERSHIP =====================
   // Single-workspace-per-deployment: membership is embedded on the user (no

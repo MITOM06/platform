@@ -138,6 +138,12 @@ String _codeToString(
           ? l10n.authErrPasswordTooShortMin(min)
           : l10n.authErrValPasswordTooShort;
 
+    // ── Password change / first password (`/api/users/me/change-password`) ──
+    case 'CURRENT_PASSWORD_REQUIRED':
+      return l10n.authErrCurrentPasswordRequired;
+    case 'CURRENT_PASSWORD_INCORRECT':
+      return l10n.errCurrentPasswordIncorrect;
+
     // ── Account / login errors ───────────────────────────────────────────────
     case 'ACCOUNT_LOCKED':
       final minutes = _intParam(params, 'minutes');
@@ -218,6 +224,29 @@ String _codeToString(
     case 'AI_CONNECTORS_NOT_IN_ALLOW_LIST':
       return l10n.authErrAiConnectorsNotInAllowList;
 
+    // ── Two-factor authentication (contract 09) ──────────────────────────────
+    case 'MFA_REQUIRED':
+      return l10n.authMsgMfaRequired;
+    case 'MFA_TOKEN_INVALID':
+      return l10n.authErrMfaTokenInvalid;
+    case 'MFA_CODE_INVALID':
+      // `params.remaining` = attempts left on this sign-in; absent on calls
+      // that don't count attempts (e.g. regenerating backup codes).
+      final remaining = params?['remaining'];
+      return remaining is num
+          ? l10n.authErrMfaCodeInvalidRemaining(remaining.toInt())
+          : l10n.authErrMfaCodeInvalid;
+    case 'MFA_TOO_MANY_ATTEMPTS':
+      return l10n.authErrMfaTooManyAttempts;
+    case 'MFA_NOT_ENROLLED':
+      return l10n.authErrMfaNotEnrolled;
+    case 'MFA_ALREADY_ENROLLED':
+      return l10n.authErrMfaAlreadyEnrolled;
+    case 'MFA_RESET_FORBIDDEN':
+      return l10n.authErrMfaResetForbidden;
+    case 'MFA_RESET_SELF_FORBIDDEN':
+      return l10n.authErrMfaResetSelfForbidden;
+
     // ── Token / session errors ───────────────────────────────────────────────
     case 'TOKEN_INVALID':
       return l10n.authErrTokenInvalid;
@@ -258,12 +287,6 @@ String _codeToString(
     // ── Friends / blocking ───────────────────────────────────────────────────
     case 'USER_BLOCKED':
       return l10n.authErrUserBlocked;
-
-    // ── Change password ──────────────────────────────────────────────────────
-    case 'CURRENT_PASSWORD_REQUIRED':
-      return l10n.authErrCurrentPasswordRequired;
-    case 'CURRENT_PASSWORD_INCORRECT':
-      return l10n.errCurrentPasswordIncorrect;
 
     default:
       return l10n.errActionFailed;

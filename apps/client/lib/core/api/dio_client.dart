@@ -213,6 +213,13 @@ class _TokenRefreshInterceptor extends Interceptor {
       return handler.next(err);
     }
 
+    // 401 `MFA_*` (wrong / expired two-factor code — contract 09) is a
+    // business answer, not a dead session: refreshing can't fix it, and
+    // force-logging out would wipe the pending sign-in or a live session.
+    if (_bodyCode(err)?.startsWith('MFA_') == true) {
+      return handler.next(err);
+    }
+
     // Must have refresh credentials to even attempt.
     final refreshToken = await _storage.read(key: _keyRefreshToken);
     final sid = await _storage.read(key: _keySid);

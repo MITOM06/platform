@@ -101,7 +101,8 @@ describe('UsersService.setVerified', () => {
     const { service, userModel } = makeService();
     await service.updatePassword('u1', 'hash');
     expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith('u1', {
-      $set: { password: 'hash' },
+      // Any new password also completes the Google-invite onboarding step.
+      $set: { password: 'hash', mustSetPassword: false },
       $unset: { otpCode: '', otpExpires: '' },
     });
   });
