@@ -108,7 +108,7 @@ class ProdEnvironmentGuardTest {
             "app.livekit.call-transport", "sfu",
             "app.livekit.url", "wss://rtc.example.com",
             "app.livekit.api-key", "APIabc",
-            "app.livekit.api-secret", "0123456789abcdef0123456789abcdef");
+            "app.livekit.api-secret", "0123456789abcdef0123456789abcdef"); // gitleaks:allow
     assertThat(liveKit(env)).isEmpty();
   }
 
@@ -120,7 +120,7 @@ class ProdEnvironmentGuardTest {
             "app.livekit.call-transport", "mesh",
             "app.livekit.url", "wss://rtc.localhost",
             "app.livekit.api-key", "APIabc",
-            "app.livekit.api-secret", "0123456789abcdef0123456789abcdef");
+            "app.livekit.api-secret", "0123456789abcdef0123456789abcdef"); // gitleaks:allow
     assertThat(liveKit(env)).isEmpty();
   }
 
@@ -132,7 +132,7 @@ class ProdEnvironmentGuardTest {
             "app.livekit.call-transport", "sfu",
             "app.livekit.url", "wss://rtc.localhost",
             "app.livekit.api-key", "APIabc",
-            "app.livekit.api-secret", "0123456789abcdef0123456789abcdef");
+            "app.livekit.api-secret", "0123456789abcdef0123456789abcdef"); // gitleaks:allow
     assertThat(liveKit(env)).singleElement().asString().contains("app.livekit.url");
   }
 }
