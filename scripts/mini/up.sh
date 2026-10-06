@@ -195,7 +195,6 @@ if [ "$MODE" = named ]; then
   3) OAUTH CONSOLES — register these once and never again:
 
        $URL/api/auth/auth/google/callback
-       $URL/api/auth/auth/x/callback
        $URL/api/connector/oauth/notion/callback
        $URL/api/connector/oauth/gmail/callback
        $URL/api/connector/oauth/calendar/callback
@@ -244,7 +243,6 @@ else
      so this is manual every time the hostname changes:
 
        $URL/api/auth/auth/google/callback
-       $URL/api/auth/auth/x/callback
        $URL/api/connector/oauth/notion/callback
        $URL/api/connector/oauth/gmail/callback
        $URL/api/connector/oauth/calendar/callback
