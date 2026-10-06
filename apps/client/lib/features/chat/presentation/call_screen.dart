@@ -3,8 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/utils/global_messenger.dart';
+import '../../../l10n/app_localizations.dart';
 import '../data/chat_repository.dart';
+import '../domain/call_end_notice.dart';
+import '../domain/call_rules.dart';
+import '../domain/call_sounds.dart';
+import '../domain/call_transport.dart';
+import '../domain/direct_call_engine.dart';
+import '../domain/sfu_call_service.dart';
 import '../domain/webrtc_service.dart';
+import '../ui/widgets/call_controls.dart';
 
 class CallScreen extends ConsumerStatefulWidget {
   final String targetId;
@@ -14,6 +23,9 @@ class CallScreen extends ConsumerStatefulWidget {
   final bool isVideo;
   final String? initialOfferSdp;
 
+  /// LiveKit (sfu) incoming call: the server's call id. Null on mesh.
+  final String? callId;
+
   const CallScreen({
     super.key,
     required this.targetId,
@@ -22,6 +34,7 @@ class CallScreen extends ConsumerStatefulWidget {
     required this.isCaller,
     this.isVideo = true,
     this.initialOfferSdp,
+    this.callId,
   });
 
   @override
@@ -32,15 +45,35 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
   final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
   Timer? _callTimer;
+  Timer? _ringTimer;
   int _durationSeconds = 0;
   bool _isConnected = false;
   bool _isVideoCall = true;
+  late final CallSounds _sounds;
+
+  /// Captured in didChangeDependencies: the end notice may fire after this
+  /// screen is gone, and l10n cannot be read from context in initState.
+  late AppLocalizations _l10n;
+
+  /// The engine running this call: LiveKit for an sfu ring or a new call while
+  /// the server runs sfu, peer-to-peer otherwise.
+  late final DirectCallEngine _engine = widget.callId != null ||
+          (widget.isCaller && ref.read(callTransportProvider).current == CallTransport.sfu)
+      ? ref.read(sfuCallServiceProvider)
+      : ref.read(webRtcServiceProvider);
 
   @override
   void initState() {
     super.initState();
+    _sounds = ref.read(callSoundsProvider);
     _initRenderers();
     _initWebRTC();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _l10n = context.l10n;
   }
 
   Future<void> _initRenderers() async {
@@ -49,15 +82,35 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   }
 
   Future<void> _initWebRTC() async {
-    final webrtc = ref.read(webRtcServiceProvider);
-    
+    final webrtc = _engine;
+    final peerName = widget.targetName;
+    webrtc.onEndNotice = (reason, byPeer) {
+      unawaited(_sounds.stop());
+      final msg = callEndNotice(_l10n, reason, byPeer: byPeer, peerName: peerName);
+      if (msg == null) return;
+      if (reason == CallEndReason.failed || reason == CallEndReason.mediaError) {
+        showErrorSnackBar(msg);
+      } else {
+        showInfoSnackBar(msg);
+      }
+    };
+
     webrtc.onLocalStream = (stream) {
+      if (!mounted) return;
       setState(() {
         _localRenderer.srcObject = stream;
       });
     };
     
     webrtc.onRemoteStream = (stream) {
+      if (!mounted) return;
+      if (!_isConnected && widget.isCaller) {
+        // The ringback joined the call's audio session; once it stops, hand
+        // routing back to WebRTC (re-applies the call's speaker setting).
+        unawaited(_sounds
+            .stop()
+            .then((_) => webrtc.setSpeakerOn(webrtc.speakerOn)));
+      }
       setState(() {
         _remoteRenderer.srcObject = stream;
         _isConnected = true;
@@ -71,47 +124,92 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       }
     };
 
-    // Persist a call-log system message on hang-up (initiator only).
+    // Persist a call-log system message on hang-up (initiator only). Captured
+    // now: a LiveKit engine may log after this screen is gone (e.g. a busy
+    // reply to a call hung up before it started), when `ref` is unusable.
+    final repo = ref.read(chatRepositoryProvider);
+    final conversationId = widget.conversationId;
     webrtc.onSendCallLog = (content) {
-      ref
-          .read(chatRepositoryProvider)
-          .sendMessageRest(widget.conversationId, content, type: 'system')
+      repo
+          .sendMessageRest(conversationId, content, type: 'system')
           // Best-effort: a failed call log must not block hang-up.
           .ignore();
     };
 
-    // For incoming calls, only open the camera when the offer advertises video.
-    final effectiveVideo = widget.isCaller
+    // For incoming calls, only open the camera when the offer advertises video
+    // (a LiveKit ring carries the media instead of an SDP).
+    final effectiveVideo = widget.isCaller || webrtc is SfuCallService
         ? widget.isVideo
         : WebRTCService.sdpHasVideo(widget.initialOfferSdp);
     _isVideoCall = effectiveVideo;
 
+    if (webrtc is SfuCallService) {
+      if (widget.isCaller) {
+        await webrtc.startOutgoing(
+          targetId: widget.targetId,
+          conversationId: widget.conversationId,
+          isVideo: effectiveVideo,
+        );
+        unawaited(_sounds.play(CallTone.ringback, speaker: effectiveVideo));
+        _ringTimer = Timer(WebRTCService.ringTimeout, _onRingTimeout);
+      } else {
+        webrtc.prepareIncoming(
+          targetId: widget.targetId,
+          conversationId: widget.conversationId,
+          // Non-null: an incoming call only reaches the LiveKit engine through
+          // `widget.callId != null` (see _engine).
+          callId: widget.callId!,
+          isVideo: effectiveVideo,
+        );
+        await webrtc.answer();
+      }
+      return;
+    }
+    final mesh = webrtc as WebRTCService;
+
     try {
-      await webrtc.initialize(
+      await mesh.initialize(
         widget.targetId,
         widget.conversationId,
         isVideo: effectiveVideo,
+        incoming: !widget.isCaller,
       );
 
       if (widget.isCaller) {
-        await webrtc.makeCall();
+        await mesh.makeCall();
+        unawaited(_sounds.play(CallTone.ringback, speaker: effectiveVideo));
+        _ringTimer = Timer(WebRTCService.ringTimeout, _onRingTimeout);
       } else if (widget.initialOfferSdp != null) {
-        await webrtc.handleOffer(widget.initialOfferSdp!);
+        await mesh.handleOffer(widget.initialOfferSdp!);
       }
+    } on CallCancelledException {
+      // The call ended while setup was awaiting (e.g. the caller gave up while
+      // the permission dialog was open): already torn down, nothing to report.
+      return;
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.callMediaError),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-        Navigator.of(context).pop();
+      // Mic/camera denied or missing. The callee tells the caller (and logs a
+      // missed call); a caller whose offer never left just tears down. Both
+      // dispose() → onCallEnded pops this screen; onEndNotice explains why.
+      if (widget.isCaller) {
+        webrtc.failLocally(CallEndReason.mediaError);
+      } else {
+        webrtc.endCall(reason: CallEndReason.mediaError);
       }
     }
   }
 
+  /// Nobody picked up within [WebRTCService.ringTimeout]: give up (which tells
+  /// the callee, logs a missed call and shows "No answer" via onEndNotice).
+  void _onRingTimeout() {
+    if (!mounted || _isConnected) return;
+    _engine.endCall(reason: CallEndReason.noAnswer);
+  }
+
   void _startTimer() {
+    _ringTimer?.cancel();
+    // onTrack fires once per remote track (audio + video): start only once,
+    // or the duration ticks twice per second.
+    if (_callTimer != null) return;
     _callTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         _durationSeconds++;
@@ -126,13 +224,16 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   }
 
   void _endCall() {
-    ref.read(webRtcServiceProvider).endCall(duration: _durationSeconds);
-    Navigator.of(context).pop();
+    // endCall() → dispose() → onCallEnded closes this screen. Popping here as
+    // well used to pop twice, closing the chat screen underneath too.
+    _engine.endCall(duration: _durationSeconds);
   }
 
   @override
   void dispose() {
     _callTimer?.cancel();
+    _ringTimer?.cancel();
+    unawaited(_sounds.stop());
     _localRenderer.dispose();
     _remoteRenderer.dispose();
     super.dispose();
@@ -140,6 +241,19 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Back gesture / button = hang up. Leaving the screen with the call alive
+    // kept the mic open with no UI and made every later caller get "busy".
+    // endCall() → dispose() → onCallEnded pops the route itself.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _endCall();
+      },
+      child: _buildCall(context),
+    );
+  }
+
+  Widget _buildCall(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -211,6 +325,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                     _formattedDuration,
                     style: const TextStyle(color: Colors.white70, fontSize: 16),
                   ),
+                if (_engine case final SfuCallService sfu) _ConnectionNotice(sfu),
               ],
             ),
           ),
@@ -218,22 +333,57 @@ class _CallScreenState extends ConsumerState<CallScreen> {
           // Controls
           Positioned(
             bottom: 40,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FloatingActionButton(
-                  heroTag: 'end_call',
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                  onPressed: _endCall,
-                  child: const Icon(Icons.call_end_rounded, color: Colors.white, size: 32),
-                ),
-              ],
-            ),
+            left: 16,
+            right: 16,
+            child: Builder(builder: (context) {
+              final webrtc = _engine;
+              return CallControls(
+                isVideo: _isVideoCall,
+                micOn: webrtc.micOn,
+                cameraOn: webrtc.cameraOn,
+                speakerOn: webrtc.speakerOn,
+                onToggleMic: () async {
+                  await webrtc.setMicOn(!webrtc.micOn);
+                  if (mounted) setState(() {});
+                },
+                onToggleCamera: () async {
+                  await webrtc.setCameraOn(!webrtc.cameraOn);
+                  if (mounted) setState(() {});
+                },
+                onSwitchCamera: webrtc.switchCamera,
+                onToggleSpeaker: () async {
+                  await webrtc.setSpeakerOn(!webrtc.speakerOn);
+                  if (mounted) setState(() {});
+                },
+                onHangUp: _endCall,
+              );
+            }),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// "Reconnecting…" / "Poor connection" under the call status (LiveKit calls).
+class _ConnectionNotice extends StatelessWidget {
+  final SfuCallService call;
+  const _ConnectionNotice(this.call);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([call.reconnecting, call.poorConnection]),
+      builder: (context, _) {
+        final text = call.reconnecting.value
+            ? context.l10n.callReconnecting
+            : (call.poorConnection.value ? context.l10n.callPoorConnection : null);
+        if (text == null) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(text, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        );
+      },
     );
   }
 }

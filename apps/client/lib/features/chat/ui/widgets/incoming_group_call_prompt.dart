@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
@@ -7,6 +9,8 @@ import '../../domain/call_name_resolver.dart';
 import '../../domain/group_call_controller.dart';
 import '../../domain/group_call_signaling.dart';
 import '../../domain/group_call_state.dart';
+import '../../data/calls_repository.dart';
+import '../../data/stomp_service.dart';
 
 /// Global overlay shown while a `call-ring` incoming group call is pending.
 /// Accept → publish call.join (via controller) + open the call screen.
@@ -28,10 +32,22 @@ class IncomingGroupCallPrompt extends ConsumerWidget {
             isVideo: call.isVideo,
             aiNotetaker: call.aiNotetaker,
             isStarter: false,
+            transport: call.transport,
           );
       ref.read(appRouterProvider).push('/group-call');
     } catch (_) {
       // Media error already surfaces on the call screen; ignore here.
+    }
+  }
+
+  /// On LiveKit the server is told, so the user's other devices stop ringing.
+  void _decline(WidgetRef ref, IncomingGroupCall call) {
+    ref.read(incomingGroupCallNotifierProvider.notifier).clear();
+    if (call.transport == CallTransport.sfu) {
+      ref.read(stompServiceProvider.notifier).sendRawMessage(
+            destination: '/app/call.decline',
+            body: jsonEncode({'callId': call.callId, 'reason': 'declined'}),
+          );
     }
   }
 
@@ -64,9 +80,7 @@ class IncomingGroupCallPrompt extends ConsumerWidget {
                   call: call,
                   caller: caller,
                   onAccept: () => _accept(context, ref, call),
-                  onDecline: () => ref
-                      .read(incomingGroupCallNotifierProvider.notifier)
-                      .clear(),
+                  onDecline: () => _decline(ref, call),
                 ),
               ),
             ),

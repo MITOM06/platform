@@ -272,6 +272,7 @@
   "callCalling": "Llamando a {name}…",
   "callConnecting": "Conectando…",
   "callMediaError": "No se puede acceder a la cámara/micrófono (se requiere HTTPS o localhost)",
+  "callNoAnswer": "Sin respuesta",
   "callUnknownCaller": "Alguien",
   "callToggleMic": "Activar/desactivar micrófono",
   "callToggleCam": "Activar/desactivar cámara",
@@ -1224,5 +1225,24 @@
   "adminMemberUnblockConfirm": "¿Desbloquear a {name}? Podrá volver a iniciar sesión.",
   "adminMemberBlocked": "Miembro bloqueado",
   "adminMemberUnblocked": "Miembro desbloqueado",
-  "adminLoadFailed": "No se pudo cargar esta sección. Inténtalo de nuevo."
+  "adminLoadFailed": "No se pudo cargar esta sección. Inténtalo de nuevo.",
+  "callDeclined": "{name} rechazó la llamada",
+  "@callDeclined": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callBusy": "{name} está en otra llamada",
+  "@callBusy": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callPeerMediaError": "{name} no pudo activar su micrófono o cámara",
+  "@callPeerMediaError": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callEnded": "Llamada finalizada",
+  "callConnectionLost": "La llamada se cortó por pérdida de conexión",
+  "callSpeaker": "Altavoz",
+  "callSwitchCamera": "Cambiar cámara",
+  "callHangUp": "Colgar",
+  "callReconnecting": "Reconectando…",
+  "callPoorConnection": "Conexión débil"
 }

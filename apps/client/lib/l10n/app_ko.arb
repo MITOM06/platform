@@ -272,6 +272,7 @@
   "callCalling": "{name}님에게 전화 거는 중…",
   "callConnecting": "연결 중…",
   "callMediaError": "카메라/마이크에 접근할 수 없습니다 (HTTPS 또는 localhost 필요)",
+  "callNoAnswer": "응답이 없습니다",
   "callUnknownCaller": "누군가",
   "callToggleMic": "마이크 전환",
   "callToggleCam": "카메라 전환",
@@ -1224,5 +1225,24 @@
   "adminMemberUnblockConfirm": "{name}님의 차단을 해제할까요? 다시 로그인할 수 있게 됩니다.",
   "adminMemberBlocked": "멤버를 차단했습니다",
   "adminMemberUnblocked": "멤버 차단을 해제했습니다",
-  "adminLoadFailed": "이 섹션을 불러올 수 없습니다. 다시 시도해 주세요."
+  "adminLoadFailed": "이 섹션을 불러올 수 없습니다. 다시 시도해 주세요.",
+  "callDeclined": "{name}님이 통화를 거절했습니다",
+  "@callDeclined": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callBusy": "{name}님이 다른 통화 중입니다",
+  "@callBusy": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callPeerMediaError": "{name}님의 마이크 또는 카메라를 켤 수 없습니다",
+  "@callPeerMediaError": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callEnded": "통화가 종료되었습니다",
+  "callConnectionLost": "연결이 끊겨 통화가 종료되었습니다",
+  "callSpeaker": "스피커",
+  "callSwitchCamera": "카메라 전환",
+  "callHangUp": "통화 종료",
+  "callReconnecting": "다시 연결하는 중…",
+  "callPoorConnection": "연결 상태가 좋지 않음"
 }

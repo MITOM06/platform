@@ -222,6 +222,7 @@ export default function ConversationPage({ params }: Props) {
           callId={activeCall.callId}
           conversationId={id}
           media={activeCall.media}
+          transport={activeCall.transport}
           aiNotetaker={activeCall.aiNotetaker}
           joinedCount={activeCall.joinedCount}
         />

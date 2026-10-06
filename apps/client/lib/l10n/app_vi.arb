@@ -272,6 +272,7 @@
   "callCalling": "Đang gọi {name}…",
   "callConnecting": "Đang kết nối…",
   "callMediaError": "Không thể truy cập camera/micro (cần HTTPS hoặc localhost)",
+  "callNoAnswer": "Không có người trả lời",
   "callUnknownCaller": "Ai đó",
   "callToggleMic": "Bật/tắt micro",
   "callToggleCam": "Bật/tắt camera",
@@ -1224,5 +1225,24 @@
   "adminMemberUnblockConfirm": "Mở khóa {name}? Người này sẽ có thể đăng nhập lại.",
   "adminMemberBlocked": "Đã khóa thành viên",
   "adminMemberUnblocked": "Đã mở khóa thành viên",
-  "adminLoadFailed": "Không tải được mục này. Vui lòng thử lại."
+  "adminLoadFailed": "Không tải được mục này. Vui lòng thử lại.",
+  "callDeclined": "{name} đã từ chối cuộc gọi",
+  "@callDeclined": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callBusy": "{name} đang bận cuộc gọi khác",
+  "@callBusy": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callPeerMediaError": "{name} không bật được micro hoặc camera",
+  "@callPeerMediaError": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callEnded": "Cuộc gọi đã kết thúc",
+  "callConnectionLost": "Cuộc gọi bị ngắt do mất kết nối",
+  "callSpeaker": "Loa ngoài",
+  "callSwitchCamera": "Đổi camera",
+  "callHangUp": "Kết thúc",
+  "callReconnecting": "Đang kết nối lại…",
+  "callPoorConnection": "Kết nối yếu"
 }

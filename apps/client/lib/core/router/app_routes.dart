@@ -300,6 +300,7 @@ List<RouteBase> buildAppRoutes() {
             isCaller: extra['isCaller'] as bool? ?? false,
             isVideo: extra['isVideo'] as bool? ?? true,
             initialOfferSdp: extra['initialOfferSdp'] as String?,
+            callId: extra['callId'] as String?,
           ),
         );
       },

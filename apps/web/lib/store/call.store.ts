@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { CallMedia, CallParticipant } from '@/lib/api/types'
+import type { CallMedia, CallParticipant, CallTransport } from '@/lib/api/types'
 
 export type CallStatus = 'idle' | 'incoming' | 'outgoing' | 'connected'
 
@@ -11,6 +11,8 @@ export interface IncomingGroupCall {
   startedByName: string
   media: CallMedia
   aiNotetaker: boolean
+  /** Media path of the call (absent from older servers = mesh). */
+  transport?: CallTransport
 }
 
 interface CallState {
@@ -28,6 +30,14 @@ interface CallState {
   cameraEnabled: boolean
   /** True = two-way video call; false = audio-only voice call. */
   video: boolean
+  /** Media path of this call: mesh (P2P) or sfu (LiveKit). */
+  transport: CallTransport
+  /** sfu only: the server's call id (mesh 1-on-1 calls have none). */
+  callId: string | null
+  /** sfu: LiveKit is re-establishing the connection. */
+  reconnecting: boolean
+  /** sfu: our own connection quality is poor. */
+  poorConnection: boolean
 
   // ── Group call (mesh) ───────────────────────────────────────────────────────
   /** Non-null while the local user is in a group call. */
@@ -43,10 +53,33 @@ interface CallState {
   streamsVersion: number
   /** Incoming group-call ring awaiting accept/decline. */
   incomingGroupCall: IncomingGroupCall | null
+  /** Media path of the current group call. */
+  groupTransport: CallTransport
+  /** sfu: identities currently speaking (active-speaker ring). */
+  speakingIds: string[]
 
   // ── 1-on-1 actions ──────────────────────────────────────────────────────────
-  setIncoming: (p: { peerId: string; peerName: string; conversationId: string; sdp: string; video: boolean }) => void
-  setOutgoing: (p: { peerId: string; peerName: string; conversationId: string; video: boolean }) => void
+  setIncoming: (p: {
+    peerId: string
+    peerName: string
+    conversationId: string
+    /** mesh: the offer SDP. sfu rings carry no SDP. */
+    sdp?: string
+    video: boolean
+    callId?: string
+    transport?: CallTransport
+  }) => void
+  setOutgoing: (p: {
+    peerId: string
+    peerName: string
+    conversationId: string
+    video: boolean
+    transport?: CallTransport
+  }) => void
+  setCallId: (callId: string) => void
+  setReconnecting: (on: boolean) => void
+  setPoorConnection: (on: boolean) => void
+  setPeerName: (name: string) => void
   setConnected: () => void
   setDuration: (s: number) => void
   setMic: (on: boolean) => void
@@ -54,7 +87,14 @@ interface CallState {
   reset: () => void
 
   // ── Group actions ─────────────────────────────────────────────────────────
-  startGroupCall: (p: { callId: string; conversationId: string; media: CallMedia; aiNotetaker: boolean }) => void
+  startGroupCall: (p: {
+    callId: string
+    conversationId: string
+    media: CallMedia
+    aiNotetaker: boolean
+    transport?: CallTransport
+  }) => void
+  setSpeaking: (ids: string[]) => void
   setGroupActive: () => void
   setRoster: (participants: CallParticipant[]) => void
   setAiNotetaker: (on: boolean) => void
@@ -73,6 +113,10 @@ const initial = {
   micEnabled: true,
   cameraEnabled: true,
   video: true,
+  transport: 'mesh' as CallTransport,
+  callId: null as string | null,
+  reconnecting: false,
+  poorConnection: false,
 }
 
 const initialGroup = {
@@ -83,7 +127,9 @@ const initialGroup = {
   groupActive: false,
   roster: [] as CallParticipant[],
   streamsVersion: 0,
-  incomingGroupCall: null,
+  incomingGroupCall: null as IncomingGroupCall | null,
+  groupTransport: 'mesh' as CallTransport,
+  speakingIds: [] as string[],
 }
 
 export const useCallStore = create<CallState>((set) => ({
@@ -91,10 +137,36 @@ export const useCallStore = create<CallState>((set) => ({
   ...initialGroup,
 
   // 1-on-1
-  setIncoming: ({ peerId, peerName, conversationId, sdp, video }) =>
-    set({ status: 'incoming', peerId, peerName, conversationId, pendingOfferSdp: sdp, video }),
-  setOutgoing: ({ peerId, peerName, conversationId, video }) =>
-    set({ status: 'outgoing', peerId, peerName, conversationId, pendingOfferSdp: null, video }),
+  setIncoming: ({ peerId, peerName, conversationId, sdp, video, callId, transport }) =>
+    set({
+      status: 'incoming',
+      peerId,
+      peerName,
+      conversationId,
+      pendingOfferSdp: sdp ?? null,
+      video,
+      callId: callId ?? null,
+      transport: transport ?? 'mesh',
+      reconnecting: false,
+      poorConnection: false,
+    }),
+  setOutgoing: ({ peerId, peerName, conversationId, video, transport }) =>
+    set({
+      status: 'outgoing',
+      peerId,
+      peerName,
+      conversationId,
+      pendingOfferSdp: null,
+      video,
+      callId: null,
+      transport: transport ?? 'mesh',
+      reconnecting: false,
+      poorConnection: false,
+    }),
+  setCallId: (callId) => set({ callId }),
+  setReconnecting: (reconnecting) => set({ reconnecting }),
+  setPoorConnection: (poorConnection) => set({ poorConnection }),
+  setPeerName: (peerName) => set({ peerName }),
   setConnected: () => set({ status: 'connected', durationSeconds: 0 }),
   setDuration: (s) => set({ durationSeconds: s }),
   setMic: (on) => set({ micEnabled: on }),
@@ -102,8 +174,12 @@ export const useCallStore = create<CallState>((set) => ({
   reset: () => set({ ...initial }),
 
   // group
-  startGroupCall: ({ callId, conversationId, media, aiNotetaker }) =>
+  startGroupCall: ({ callId, conversationId, media, aiNotetaker, transport }) =>
     set({
+      groupTransport: transport ?? 'mesh',
+      speakingIds: [],
+      reconnecting: false,
+      poorConnection: false,
       groupCallId: callId,
       groupConversationId: conversationId,
       groupMedia: media,
@@ -121,5 +197,6 @@ export const useCallStore = create<CallState>((set) => ({
   setAiNotetaker: (on) => set({ groupAiNotetaker: on }),
   bumpStreams: () => set((s) => ({ streamsVersion: s.streamsVersion + 1 })),
   setIncomingGroupCall: (call) => set({ incomingGroupCall: call }),
+  setSpeaking: (speakingIds) => set({ speakingIds }),
   resetGroup: () => set({ ...initialGroup }),
 }))

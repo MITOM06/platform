@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../data/stomp_service.dart';
+import '../data/calls_repository.dart';
 
 part 'active_call_provider.g.dart';
 
@@ -14,12 +15,16 @@ class ActiveCallInfo {
   final bool aiNotetaker;
   final int participantCount;
 
+  /// Media path of the call (absent from older servers = mesh).
+  final CallTransport transport;
+
   const ActiveCallInfo({
     required this.callId,
     required this.conversationId,
     required this.isVideo,
     required this.aiNotetaker,
     required this.participantCount,
+    this.transport = CallTransport.mesh,
   });
 
   ActiveCallInfo copyWith({int? participantCount}) => ActiveCallInfo(
@@ -28,6 +33,7 @@ class ActiveCallInfo {
         isVideo: isVideo,
         aiNotetaker: aiNotetaker,
         participantCount: participantCount ?? this.participantCount,
+        transport: transport,
       );
 }
 
@@ -55,6 +61,8 @@ class ActiveCalls extends _$ActiveCalls {
     switch (event) {
       case 'call.started':
         if (convId == null) return;
+        // A LiveKit 1-on-1 is not a group call: no "join" banner for it.
+        if (data['kind'] == 'direct') return;
         final participants = (data['participants'] as List? ?? []);
         state = {
           ...state,
@@ -64,6 +72,7 @@ class ActiveCalls extends _$ActiveCalls {
             isVideo: data['media'] == 'video',
             aiNotetaker: data['aiNotetaker'] == true,
             participantCount: participants.length,
+            transport: CallTransport.fromWire(data['transport'] as String?),
           ),
         };
         break;

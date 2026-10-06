@@ -19,6 +19,7 @@ import 'features/auth/domain/auth_provider.dart';
 import 'features/auth/domain/invitation_preview.dart';
 import 'features/chat/data/stomp_service.dart';
 import 'features/chat/ui/widgets/incoming_group_call_prompt.dart';
+import 'features/chat/ui/widgets/incoming_call_prompt.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 
@@ -47,14 +48,16 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform);
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     await initNotifications();
 
     // iOS: allow FCM to show system notifications while app is in foreground
     // badge=true updates icon badge; alert/sound=false — STOMP banners handle UI
-    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
       alert: false,
       badge: true,
       sound: false,
@@ -265,9 +268,10 @@ class _PlatformAppState extends ConsumerState<PlatformApp>
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      // Float the incoming group-call (call-ring) prompt above every route.
-      builder: (context, child) =>
-          IncomingGroupCallPrompt(child: child ?? const SizedBox.shrink()),
+      // Float the incoming 1-on-1 and group-call prompts above every route.
+      builder: (context, child) => IncomingGroupCallPrompt(
+        child: IncomingCallPrompt(child: child ?? const SizedBox.shrink()),
+      ),
     );
   }
 }

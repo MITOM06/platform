@@ -272,6 +272,7 @@
   "callCalling": "正在呼叫 {name}…",
   "callConnecting": "连接中…",
   "callMediaError": "无法访问摄像头/麦克风（需要 HTTPS 或 localhost）",
+  "callNoAnswer": "无人接听",
   "callUnknownCaller": "某人",
   "callToggleMic": "切换麦克风",
   "callToggleCam": "切换摄像头",
@@ -1224,5 +1225,24 @@
   "adminMemberUnblockConfirm": "解除封禁 {name}？对方将可以重新登录。",
   "adminMemberBlocked": "成员已封禁",
   "adminMemberUnblocked": "成员已解除封禁",
-  "adminLoadFailed": "无法加载此部分，请重试。"
+  "adminLoadFailed": "无法加载此部分，请重试。",
+  "callDeclined": "{name} 拒绝了通话",
+  "@callDeclined": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callBusy": "{name} 正在通话中",
+  "@callBusy": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callPeerMediaError": "{name} 无法开启麦克风或摄像头",
+  "@callPeerMediaError": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callEnded": "通话已结束",
+  "callConnectionLost": "连接中断，通话已结束",
+  "callSpeaker": "扬声器",
+  "callSwitchCamera": "切换摄像头",
+  "callHangUp": "挂断",
+  "callReconnecting": "正在重新连接…",
+  "callPoorConnection": "网络连接不佳"
 }

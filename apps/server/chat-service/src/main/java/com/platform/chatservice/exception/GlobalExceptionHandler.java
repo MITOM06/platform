@@ -54,6 +54,19 @@ public class GlobalExceptionHandler {
         .body(Map.of("error", "Bad request", "message", ex.getMessage(), "statusCode", 400));
   }
 
+  @ExceptionHandler(ApiException.class)
+  public ResponseEntity<Map<String, Object>> handleApi(ApiException ex) {
+    return ResponseEntity.status(ex.status())
+        .body(
+            Map.of(
+                "error",
+                ex.status().getReasonPhrase(),
+                "code",
+                ex.code(),
+                "statusCode",
+                ex.status().value()));
+  }
+
   @ExceptionHandler(RateLimitExceededException.class)
   public ResponseEntity<Map<String, Object>> handleRateLimit(RateLimitExceededException ex) {
     return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)

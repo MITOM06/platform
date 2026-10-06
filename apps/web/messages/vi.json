@@ -1363,6 +1363,13 @@
   },
   "call": {
     "peerFallback": "Người dùng",
+    "mediaError": "Không thể truy cập camera hoặc micro. Hãy kiểm tra quyền của trình duyệt.",
+    "noAnswer": "Không có người trả lời",
+    "declined": "{name} đã từ chối cuộc gọi",
+    "busy": "{name} đang bận cuộc gọi khác",
+    "peerMediaError": "{name} không bật được micro hoặc camera",
+    "ended": "Cuộc gọi đã kết thúc",
+    "connectionLost": "Cuộc gọi bị ngắt do mất kết nối",
     "calling": "Đang gọi…",
     "muteMic": "Tắt mic",
     "unmuteMic": "Bật mic",
@@ -1395,7 +1402,9 @@
     "summaryOverview": "Tổng quan",
     "summaryKeyPoints": "Điểm chính",
     "summaryActionItems": "Việc cần làm",
-    "summaryUnavailable": "Không có bản tóm tắt"
+    "summaryUnavailable": "Không có bản tóm tắt",
+    "reconnecting": "Đang kết nối lại…",
+    "poorConnection": "Kết nối yếu"
   },
   "notFound": {
     "title": "Trang không tồn tại",

@@ -62,12 +62,12 @@
 
 | Kênh | Event | Payload |
 |---|---|---|
-| `/topic/conversation/{id}` | `call.started` | như cũ **+** `transport`, `livekitUrl` |
+| `/topic/conversation/{id}` | `call.started` | như cũ **+** `transport`, `kind` (`direct`\|`group`), `livekitUrl` |
 | `/topic/conversation/{id}` | `call.roster` | như cũ (nguồn: webhook) |
 | `/topic/conversation/{id}` | `call.ended` | `{ callId, reason }` — mới, thay cho tín hiệu `end` trên đường sfu |
-| `/user/queue/webrtc` | `call-ring` | như cũ **+** `transport` |
+| `/user/queue/webrtc` | `call-ring` | như cũ **+** `transport`, `kind` |
 | `/user/queue/webrtc` | `call-ring-cancel` | `{ callId, reason }` — mới; gửi tới **mọi phiên** của người nhận khi: người gọi huỷ (`hangup`/`no_answer`), người nhận nghe ở máy khác (`answered_elsewhere`), hoặc từ chối ở máy khác (`declined`) |
-| `/user/queue/webrtc` | `call-declined` | `{ callId, reason, by }` — mới; tới người gọi |
+| `/user/queue/webrtc` | `call-declined` | `{ callId, conversationId, reason, senderId }` (`senderId` = người từ chối; `callId` null khi người nhận đang bận nên không tạo cuộc gọi) — mới; tới người gọi |
 
 ### Redis
 
@@ -84,6 +84,8 @@
 ## Milestones
 
 ### C1 — chat-service: cuộc gọi sfu
+
+> ✅ **Xong 2026-10-05** trên `feat/calls-livekit` — plan step-level `2026-10-05-calls-c1-server.md`; chat-service 277/277 test + spotless.
 
 **Files:**
 - Create: `apps/server/chat-service/src/main/java/com/platform/chatservice/service/SfuCallService.java` — accept/decline/cancel, busy, cấp token, cài `RtcRoomEventHandler` cho `call_*`.
@@ -106,6 +108,8 @@
 
 ### C2 — Web
 
+> ✅ **Xong 2026-10-05** trên `feat/calls-livekit` — plan step-level `2026-10-05-calls-c2-web.md`; web tsc/lint/build sạch, vitest 234/234. Còn chờ test thiết bị thật (C4).
+
 **Files:**
 - `apps/web/package.json` — thêm `livekit-client` (không dùng `@livekit/components-react`: UI tự dựng theo `docs/design-system.md`).
 - Create: `apps/web/lib/rtc/livekit-session.ts` — **dùng chung với Phòng họp**: `connect(url, token, {audio, video})`, `disconnect()`, `setMic/ setCamera/ setScreenShare`, `switchCamera()`, sự kiện → callback: `participants` (identity, name, isSpeaking, micMuted, camMuted, quality, tracks), `reconnecting`/`reconnected`, `disconnected(reason)`. Map lỗi LiveKit → `media_error` | `failed`.
@@ -121,6 +125,8 @@
 **Verify:** `pnpm --filter @platform/web exec tsc --noEmit && pnpm --filter @platform/web lint && pnpm --filter @platform/web test && pnpm --filter @platform/web build`.
 
 ### C3 — Flutter
+
+> ✅ **Xong 2026-10-05** trên `feat/calls-livekit` — plan step-level `2026-10-05-calls-c3-flutter.md`; `flutter analyze` 0 issue, `flutter test` 215 pass, `pod install` + `flutter build apk --debug` OK. Còn chờ test thiết bị thật (C4).
 
 **Files:**
 - `apps/client/pubspec.yaml` — thêm `livekit_client` (tự kéo `flutter_webrtc`; giữ bản `flutter_webrtc` đang dùng cho mesh nếu tương thích, nếu không thì nâng cùng lúc và chạy lại test mesh). iOS deployment target hiện 13.0 — kiểm yêu cầu tối thiểu của bản `livekit_client` chọn trước khi thêm.

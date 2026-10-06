@@ -3,6 +3,7 @@ package com.platform.chatservice.controller;
 import com.platform.chatservice.dto.CallTranscriptDto;
 import com.platform.chatservice.dto.WebRTCSignalDto;
 import com.platform.chatservice.service.CallService;
+import com.platform.chatservice.service.SfuCallService;
 import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Controller;
 public class CallController {
 
   private final CallService callService;
+  private final SfuCallService sfuCallService;
 
   @MessageMapping("/call.start")
   public void start(@Payload WebRTCSignalDto dto, Principal principal) {
@@ -42,6 +44,23 @@ public class CallController {
   @MessageMapping("/call.leave")
   public void leave(@Payload WebRTCSignalDto dto, Principal principal) {
     callService.leaveCall(principal.getName(), dto.getCallId());
+  }
+
+  // ---- LiveKit (sfu) path: the server rings, LiveKit carries the media. ----
+
+  @MessageMapping("/call.accept")
+  public void accept(@Payload WebRTCSignalDto dto, Principal principal) {
+    sfuCallService.accept(principal.getName(), dto.getCallId());
+  }
+
+  @MessageMapping("/call.decline")
+  public void decline(@Payload WebRTCSignalDto dto, Principal principal) {
+    sfuCallService.decline(principal.getName(), dto.getCallId(), dto.getReason());
+  }
+
+  @MessageMapping("/call.cancel")
+  public void cancel(@Payload WebRTCSignalDto dto, Principal principal) {
+    sfuCallService.cancel(principal.getName(), dto.getCallId(), dto.getReason());
   }
 
   @MessageMapping("/call.transcript")

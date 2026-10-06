@@ -19,6 +19,12 @@ public class WebRTCSignalDto {
   private Map<String, Object> candidate;
   private Integer duration;
 
+  /**
+   * Why a 1-on-1 call ended, on {@code type:"end"}: hangup | declined | busy | no_answer |
+   * media_error | failed | answered_elsewhere. Null from older clients means hangup.
+   */
+  private String reason;
+
   // ---- Group-call (mesh) optional fields. Null/absent for legacy 1-on-1 signaling. ----
 
   /** Group-call session id (UUID generated on call.start). */
@@ -35,4 +41,10 @@ public class WebRTCSignalDto {
 
   /** Ring payload: display name of the member who started the call. */
   private String startedByName;
+
+  /** Ring payload: "mesh" | "sfu" — which media path this call uses. */
+  private String transport;
+
+  /** Ring payload: "direct" (1-on-1, Messenger-style UI) | "group". */
+  private String kind;
 }

@@ -23,6 +23,7 @@ class ActiveCallBanner extends ConsumerWidget {
             isVideo: info.isVideo,
             aiNotetaker: info.aiNotetaker,
             isStarter: false,
+            transport: info.transport,
           );
       if (context.mounted) context.push('/group-call');
     } catch (_) {

@@ -53,15 +53,18 @@ function formatLastSeen(
 
 // Lazy-load the WebRTC stack only when the user actually starts a call, so the
 // RTCPeerConnection code stays out of the conversation route's initial bundle.
+// `onMediaError` fires when the camera/mic can't be opened; the call UI has
+// already been reset by then.
 function startCall(
   otherUserId: string,
   displayName: string,
   conversationId: string,
   video: boolean,
+  onMediaError: () => void,
 ) {
-  void import('@/lib/webrtc/call-manager').then((m) =>
-    m.callManager.startCall(otherUserId, displayName, conversationId, video),
-  )
+  void import('@/lib/webrtc/call-manager')
+    .then((m) => m.callManager.startCall(otherUserId, displayName, conversationId, video))
+    .catch(onMediaError)
 }
 
 interface Props {
@@ -130,7 +133,9 @@ export function ConversationHeader({
       toast.error(t('callBlockedByUser'))
       return
     }
-    startCall(otherUserId, displayName, conversationId, video)
+    startCall(otherUserId, displayName, conversationId, video, () =>
+      toast.error(tCall('mediaError')),
+    )
   }
 
   const handleUnpin = (messageId: string) => {
