@@ -46,7 +46,6 @@ services:
       # controller prefix is 'auth', hence the doubled segment in the callbacks.
       BASE_URL: ${PON_API_BASE:?run scripts/mini/up.sh, it fills this}/api/auth
       GOOGLE_CALLBACK_URL: ${PON_API_BASE}/api/auth/auth/google/callback
-      X_CALLBACK_URL: ${PON_API_BASE}/api/auth/auth/x/callback
       # Where the browser lands after social login — the Vercel app, which does
       # not move when the tunnel URL changes.
       WEB_REDIRECT_URL: ${WEB_ORIGIN:?set WEB_ORIGIN to the Vercel URL}/oauth-callback
@@ -69,10 +68,6 @@ services:
       MAIL_PASS: ${MAIL_PASS:-}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      FACEBOOK_APP_ID: ${FACEBOOK_APP_ID:-}
-      FACEBOOK_APP_SECRET: ${FACEBOOK_APP_SECRET:-}
-      X_CLIENT_ID: ${X_CLIENT_ID:-}
-      X_CLIENT_SECRET: ${X_CLIENT_SECRET:-}
       FIREBASE_SERVICE_ACCOUNT_BASE64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:-}
     healthcheck:
       # 127.0.0.1, not localhost: in these images localhost resolves to ::1
