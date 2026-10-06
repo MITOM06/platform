@@ -6,10 +6,13 @@ import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { chatService } from '@/lib/api/chat'
+import { chatErrorMessage } from '@/lib/api/chat-errors'
 import { authService } from '@/lib/api/auth'
+import { applySharedConversationUpdate } from '@/lib/realtime/conversation-cache'
 import { setNickname, nicknameSystemMessage } from '@/lib/nicknames'
 import { setQuickReaction, quickReactionSystemMessage } from '@/lib/quick-reaction'
 import type { Conversation, UserSearchResult } from '@/lib/api/types'
+import { isHumanUserId } from '@/lib/hooks/use-display-names'
 
 interface Args {
   conversation: Conversation
@@ -60,8 +63,8 @@ export function useGroupSettings({ conversation, currentUserId, onClose }: Args)
       invalidate()
       setEditingName(false)
       toast.success(t('groupNameSuccess'))
-    } catch {
-      toast.error(t('groupNameError'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'groupNameError'))
     } finally {
       setSaving(false)
     }
@@ -74,7 +77,7 @@ export function useGroupSettings({ conversation, currentUserId, onClose }: Args)
       const { results } = await authService.searchUsers(q.trim())
       setSearchResults(results.filter((u) => {
         const uid = u._id ?? u.id ?? ''
-        return !conversation.participants.includes(uid)
+        return isHumanUserId(uid) && !conversation.participants.includes(uid)
       }))
     } catch {
       setSearchResults([])
@@ -91,8 +94,8 @@ export function useGroupSettings({ conversation, currentUserId, onClose }: Args)
       setSearchQuery('')
       setSearchResults([])
       toast.success(t('groupAddSuccess', { name: user.displayName }))
-    } catch {
-      toast.error(t('groupAddError'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'groupAddError'))
     } finally {
       setSaving(false)
     }
@@ -104,8 +107,8 @@ export function useGroupSettings({ conversation, currentUserId, onClose }: Args)
       await chatService.removeMember(conversation.id, userId)
       invalidate()
       toast.success(t('groupRemoveSuccess'))
-    } catch {
-      toast.error(t('groupRemoveError'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'groupRemoveError'))
     } finally {
       setSaving(false)
     }
@@ -120,8 +123,8 @@ export function useGroupSettings({ conversation, currentUserId, onClose }: Args)
       onClose()
       router.push('/')
       toast.success(t('groupLeaveSuccess'))
-    } catch {
-      toast.error(t('groupLeaveError'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'groupLeaveError'))
     } finally {
       setSaving(false)
     }
@@ -136,12 +139,45 @@ export function useGroupSettings({ conversation, currentUserId, onClose }: Args)
       await chatService.updateGroup(conversation.id, undefined, uploaded.url)
       invalidate()
       toast.success(t('groupAvatarSuccess'))
-    } catch {
-      toast.error(t('groupAvatarError'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'groupAvatarError'))
     } finally {
       setSaving(false)
     }
   }
+
+  // F4 — promote / demote a group admin. The server answers with the caller's
+  // view; the shared CONVERSATION_UPDATED broadcast keeps everyone else in sync.
+  const changeAdmin = async (userId: string, promote: boolean) => {
+    setSaving(true)
+    try {
+      const updated = promote
+        ? await chatService.promoteAdmin(conversation.id, userId)
+        : await chatService.demoteAdmin(conversation.id, userId)
+      applySharedConversationUpdate(queryClient, updated, currentUserId)
+      toast.success(promote ? t('groupMakeAdminSuccess') : t('groupRemoveAdminSuccess'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'actionError'))
+    } finally {
+      setSaving(false)
+    }
+  }
+  // F5 — admins list / unlist the group in Explore.
+  const handleTogglePublic = async (next: boolean) => {
+    setSaving(true)
+    try {
+      const updated = await chatService.setPublicChannel(conversation.id, next)
+      applySharedConversationUpdate(queryClient, updated, currentUserId)
+      toast.success(next ? t('groupPublicOnSuccess') : t('groupPublicOffSuccess'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'actionError'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handlePromoteAdmin = (userId: string) => changeAdmin(userId, true)
+  const handleDemoteAdmin = (userId: string) => changeAdmin(userId, false)
 
   const handlePickQuickReaction = async (emoji: string) => {
     setQuickReaction(conversation.id, emoji)
@@ -169,5 +205,8 @@ export function useGroupSettings({ conversation, currentUserId, onClose }: Args)
     handleLeaveGroup,
     handleAvatarUpload,
     handlePickQuickReaction,
+    handlePromoteAdmin,
+    handleDemoteAdmin,
+    handleTogglePublic,
   }
 }

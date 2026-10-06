@@ -17,3 +17,44 @@ export class ExchangeDto {
   @IsString()
   platform?: string;
 }
+
+/** `user` of POST /auth/exchange. */
+export class ExchangeUserDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  email: string;
+
+  @ApiProperty()
+  displayName: string;
+
+  @ApiPropertyOptional()
+  avatarUrl?: string;
+
+  @ApiProperty()
+  isVerified: boolean;
+
+  @ApiProperty({
+    description:
+      'true only for an account created by accepting an invitation with Google: the client must show "create your PON password" before the app',
+  })
+  mustSetPassword: boolean;
+}
+
+export class ExchangeResponseDto {
+  @ApiProperty()
+  userId: string;
+
+  @ApiProperty()
+  sid: string;
+
+  @ApiProperty()
+  accessToken: string;
+
+  @ApiProperty()
+  refreshToken: string;
+
+  @ApiProperty({ type: ExchangeUserDto })
+  user: ExchangeUserDto;
+}

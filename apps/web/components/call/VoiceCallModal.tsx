@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { PhoneOff, Mic, MicOff } from 'lucide-react'
 import { useCallStore } from '@/lib/store/call.store'
+import { CallConnectionNotice } from './CallConnectionNotice'
 import { callManager } from '@/lib/webrtc/call-manager'
 import { cn } from '@/lib/utils'
 
@@ -30,10 +31,10 @@ export function VoiceCallModal() {
 
   useEffect(() => {
     callManager.onRemoteStream = (stream) => {
-      if (audioRef.current) audioRef.current.srcObject = stream
+      if (audioRef.current && audioRef.current.srcObject !== stream) audioRef.current.srcObject = stream
     }
     const remote = callManager.getRemoteStream()
-    if (remote && audioRef.current) audioRef.current.srcObject = remote
+    if (remote && audioRef.current && audioRef.current.srcObject !== remote) audioRef.current.srcObject = remote
     return () => {
       callManager.onRemoteStream = null
     }
@@ -52,6 +53,7 @@ export function VoiceCallModal() {
         <p className="text-sm text-white/60">
           {connected ? formatDuration(duration) : t('calling')}
         </p>
+        <CallConnectionNotice />
 
         {/* Animated audio waveform (purely visual) */}
         {connected && (

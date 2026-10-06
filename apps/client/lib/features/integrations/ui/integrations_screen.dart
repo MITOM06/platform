@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
-import '../../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../../../core/widgets/pon_widgets.dart';
+import '../../admin/data/models/admin_models.dart';
+import '../../admin/state/capabilities_provider.dart';
 import '../data/models/connector_models.dart';
 import '../state/integrations_provider.dart';
+import '../state/oauth_flow_provider.dart';
+import '../utils/connector_error.dart';
 import 'widgets/connector_card.dart';
 import 'widgets/connector_permissions_sheet.dart';
+import 'widgets/custom_mcp_list.dart';
 import 'widgets/custom_mcp_sheet.dart';
 import 'widgets/directory_section.dart';
+import 'widgets/disconnect_dialog.dart';
 
 /// Integrations gallery — mirrors web `/integrations`. Lists catalog connectors
-/// with live status, opens OAuth in the system browser, disconnects, and lets
-/// the user add a custom MCP server.
+/// with live status, opens OAuth in the system browser (the result is reported
+/// when the app resumes — see [OAuthFlowNotifier]), disconnects, and manages
+/// custom MCP servers.
 class IntegrationsScreen extends ConsumerStatefulWidget {
   const IntegrationsScreen({super.key});
 
@@ -24,83 +30,42 @@ class IntegrationsScreen extends ConsumerStatefulWidget {
       _IntegrationsScreenState();
 }
 
-class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
-    with WidgetsBindingObserver {
-  String? _busyProvider;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // The OAuth redirect lands in the browser; when the user returns to the
-    // app we refresh so a freshly-completed connection appears.
-    if (state == AppLifecycleState.resumed && _busyProvider != null) {
-      _busyProvider = null;
-      ref.read(integrationsProvider.notifier).refresh();
-    }
-  }
+class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
+  /// Catalog id whose authorize URL is being fetched.
+  String? _starting;
 
   Future<void> _connect(CatalogEntry entry) async {
-    setState(() => _busyProvider = entry.id);
+    setState(() => _starting = entry.id);
+    final l10n = context.l10n;
     try {
       final url =
           await ref.read(integrationsProvider.notifier).startOAuth(entry.id);
-      final uri = Uri.parse(url);
+      ref.read(oauthFlowProvider.notifier).begin(entry.id, entry.name);
       final ok =
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!ok && mounted) {
-        showErrorSnackBar(context.l10n.connectorOpenFailed);
-        setState(() => _busyProvider = null);
+          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      if (!ok) {
+        ref.read(oauthFlowProvider.notifier).clear();
+        showErrorSnackBar(l10n.connectorOpenFailed);
       }
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(friendlyError(e));
-        setState(() => _busyProvider = null);
-      }
+      showErrorSnackBar(connectorErrorMessage(l10n, e));
+    } finally {
+      if (mounted) setState(() => _starting = null);
     }
   }
 
-  Future<void> _manage(ConnectorItem item) async {
+  Future<void> _disconnect(ConnectorItem item) async {
     final conn = item.connection;
     if (conn == null) return;
     final l10n = context.l10n;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(item.entry.name,
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-        content: Text(
-          l10n.connectorDisconnectConfirm,
-          style: TextStyle(color: AppTheme.mutedText(context)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.actionCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.connectorDisconnect,
-                style: TextStyle(color: Theme.of(context).colorScheme.error)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
+    final confirmed = await confirmDisconnect(context, item.entry.name,
+        workspace: conn.isWorkspace);
+    if (!confirmed) return;
     try {
       await ref.read(integrationsProvider.notifier).disconnect(conn.id);
+      showInfoSnackBar(l10n.connectorDisconnected(item.entry.name));
     } catch (e) {
-      if (mounted) showErrorSnackBar(friendlyError(e));
+      showErrorSnackBar(connectorErrorMessage(l10n, e));
     }
   }
 
@@ -108,31 +73,42 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final itemsAsync = ref.watch(integrationsProvider);
+    final flow = ref.watch(oauthFlowProvider);
+    final canAddCustom = ref.watch(hasCapabilityProvider(Cap.addCustomMcp));
+    final canWorkspace =
+        ref.watch(hasCapabilityProvider(Cap.connectWorkspaceConnector));
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
           l10n.integrationsTitle,
           style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600),
+              color: Theme.of(context).colorScheme.onSurface,
+              fontWeight: FontWeight.w600),
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.add_link_rounded, color: AppTheme.accent(context)),
-            tooltip: l10n.customMcpTitle,
-            onPressed: () => CustomMcpSheet.show(context),
-          ),
+          if (canAddCustom)
+            IconButton(
+              icon: Icon(Icons.add_link_rounded,
+                  color: AppTheme.mutedText(context)),
+              tooltip: l10n.customMcpTitle,
+              onPressed: () => CustomMcpSheet.show(context),
+            ),
         ],
       ),
       body: itemsAsync.when(
+        skipLoadingOnReload: true,
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _ErrorState(
-          message: friendlyError(e),
+          message: connectorErrorMessage(l10n, e),
           onRetry: () => ref.read(integrationsProvider.notifier).refresh(),
         ),
         data: (items) => RefreshIndicator(
-          onRefresh: () =>
-              ref.read(integrationsProvider.notifier).refresh(),
+          onRefresh: () async {
+            ref.invalidate(customMcpProvider);
+            await ref.read(directoryProvider.notifier).refresh();
+            await ref.read(integrationsProvider.notifier).refresh();
+          },
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             children: [
@@ -147,21 +123,32 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen>
               const SizedBox(height: 20),
               const DirectorySection(),
               const SizedBox(height: 24),
-              ...items.map(
-                (item) => Padding(
+              ...items.map((item) {
+                final conn = item.connection;
+                // A shared workspace connection may only be removed (or
+                // re-scoped) by holders of CONNECT_WORKSPACE_CONNECTOR.
+                final mayManage =
+                    conn != null && (!conn.isWorkspace || canWorkspace);
+                return Padding(
                   padding: const EdgeInsets.only(bottom: 14),
                   child: ConnectorCard(
                     item: item,
-                    busy: _busyProvider == item.entry.id,
+                    busy: _starting == item.entry.id ||
+                        flow?.slug == item.entry.id,
                     onConnect: () => _connect(item.entry),
-                    onManage: () => _manage(item),
-                    onPermissions: () =>
-                        ConnectorPermissionsSheet.show(context, item),
+                    onManage: mayManage ? () => _disconnect(item) : null,
+                    onPermissions: mayManage
+                        ? () => ConnectorPermissionsSheet.show(context, item)
+                        : null,
                   ),
-                ),
-              ),
+                );
+              }),
               const SizedBox(height: 8),
-              _CustomMcpCta(onTap: () => CustomMcpSheet.show(context)),
+              const CustomMcpList(),
+              if (canAddCustom) ...[
+                const SizedBox(height: 8),
+                _CustomMcpCta(onTap: () => CustomMcpSheet.show(context)),
+              ],
             ],
           ),
         ),
@@ -184,10 +171,7 @@ class _CustomMcpCta extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppTheme.radiusCard),
-          border: Border.all(
-            color: AppTheme.accent(context).withValues(alpha: 0.4),
-            width: 1.2,
-          ),
+          border: Border.all(color: AppTheme.hairline(context)),
         ),
         child: Row(
           children: [
@@ -217,7 +201,8 @@ class _CustomMcpCta extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: AppTheme.mutedText(context)),
+            Icon(Icons.chevron_right_rounded,
+                color: AppTheme.mutedText(context)),
           ],
         ),
       ),

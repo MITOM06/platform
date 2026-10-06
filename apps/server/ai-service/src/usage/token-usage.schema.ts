@@ -9,12 +9,25 @@ export class TokenUsage extends Document {
   @Prop({ required: true })
   date: string; // YYYY-MM-DD
 
+  /**
+   * TOTAL prompt tokens: uncached + prompt-cache writes + prompt-cache reads.
+   * (Rows written before 2026-10 hold only the uncached part.)
+   */
   @Prop({ default: 0 })
   inputTokens: number;
 
   @Prop({ default: 0 })
   outputTokens: number;
 
+  /** Subset of `inputTokens` written to the prompt cache. */
+  @Prop({ default: 0 })
+  cacheCreationInputTokens: number;
+
+  /** Subset of `inputTokens` served from the prompt cache. */
+  @Prop({ default: 0 })
+  cacheReadInputTokens: number;
+
+  /** User-facing AI replies. Side calls (extraction, compaction, …) add tokens, not requests. */
   @Prop({ default: 0 })
   requestCount: number;
 

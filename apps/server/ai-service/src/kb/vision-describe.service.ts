@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
+import { UsageService } from '../usage/usage.service';
 
 /** Anthropic-supported vision media types (claude-api skill: jpeg|png|gif|webp ONLY). */
 export const SUPPORTED_IMAGE_MEDIA_TYPES = [
@@ -49,7 +50,10 @@ export class VisionDescribeService {
   private readonly model: string;
   private readonly maxImageBytes: number;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly usageService?: UsageService,
+  ) {
     const apiKey = this.configService.get<string>('config.anthropic.apiKey');
     if (apiKey) {
       this.anthropic = new Anthropic({ apiKey });
@@ -78,7 +82,7 @@ export class VisionDescribeService {
    * Describe a single image. Validates media type + size cap, then sends a base64
    * image block (no newlines) before the text prompt. Returns the transcription.
    */
-  async describeImage(buffer: Buffer, mimeType: string): Promise<string> {
+  async describeImage(buffer: Buffer, mimeType: string, userId?: string): Promise<string> {
     if (!this.anthropic) throw new Error('VisionDescribeService: no API key configured');
     const mediaType = VisionDescribeService.toSupportedImageMediaType(mimeType);
     if (!mediaType) throw new VisionUnsupportedException(mimeType);
@@ -100,6 +104,8 @@ export class VisionDescribeService {
         },
       ],
     });
+    // KB indexing work is attributed to the uploader (it used to be unrecorded).
+    this.usageService?.recordModelCall(userId, message.usage, 'kb-vision');
     return extractText(message);
   }
 
@@ -108,7 +114,7 @@ export class VisionDescribeService {
    * scanned/image-heavy PDFs whose pdf-parse text is sparse. Per-page
    * rasterization is DEFERRED (no rasterizer dependency this pass).
    */
-  async describePdf(buffer: Buffer): Promise<string> {
+  async describePdf(buffer: Buffer, userId?: string): Promise<string> {
     if (!this.anthropic) throw new Error('VisionDescribeService: no API key configured');
     if (buffer.byteLength > this.maxImageBytes) {
       throw new VisionOversizedException(buffer.byteLength, this.maxImageBytes);
@@ -131,6 +137,7 @@ export class VisionDescribeService {
         },
       ],
     });
+    this.usageService?.recordModelCall(userId, message.usage, 'kb-vision');
     return extractText(message);
   }
 }

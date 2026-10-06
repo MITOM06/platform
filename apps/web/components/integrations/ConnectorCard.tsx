@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl'
 import { Loader2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { connectionState } from '@/lib/integrations/gating'
+import { scopeLabelKeys } from '@/lib/integrations/labels'
 import { ConnectorPermissionsDialog } from './ConnectorPermissionsDialog'
 import type { CatalogEntry, ConnectionView } from '@/lib/api/connector-types'
 
@@ -12,9 +14,11 @@ interface ConnectorCardProps {
   entry: CatalogEntry
   connection?: ConnectionView
   connecting?: boolean
-  disconnecting?: boolean
+  /** The caller holds the capability this connector's tier needs. */
+  canConnect: boolean
   onConnect: (entry: CatalogEntry) => void
-  onDisconnect: (connection: ConnectionView) => void
+  /** Opens the manage dialog (details + confirm-to-disconnect). */
+  onManage: (connection: ConnectionView) => void
 }
 
 /** Inline SVG brand logos by catalog provider id. */
@@ -65,11 +69,11 @@ function ConnectorLogo({ id, size = 26 }: { id: string; size?: number }) {
   }
 }
 
-function StatusPill({
+export function StatusPill({
   variant,
   label,
 }: {
-  variant: 'on' | 'off' | 'beta'
+  variant: 'on' | 'off' | 'beta' | 'warn'
   label: string
 }) {
   return (
@@ -80,6 +84,7 @@ function StatusPill({
           'text-pon-green bg-pon-green/10 border-pon-green/30',
         variant === 'off' && 'text-muted-foreground bg-background border-border',
         variant === 'beta' && 'text-primary bg-primary/10 border-primary/30',
+        variant === 'warn' && 'text-destructive bg-destructive/10 border-destructive/30',
       )}
     >
       {label}
@@ -91,39 +96,43 @@ export function ConnectorCard({
   entry,
   connection,
   connecting,
-  disconnecting,
+  canConnect,
   onConnect,
-  onDisconnect,
+  onManage,
 }: ConnectorCardProps) {
   const t = useTranslations('integrations')
   const [permsOpen, setPermsOpen] = useState(false)
-  const isConnected = connection?.status === 'active'
+  const state = connectionState(connection)
+  const isConnected = state === 'connected'
+  const scopeKeys = scopeLabelKeys(entry.scopes)
 
-  const metaLabel = isConnected
-    ? connection?.accountLabel
-      ? t('metaAccount', { label: connection.accountLabel })
-      : t('metaRemote')
-    : entry.available
-      ? t('metaRemote')
-      : t('metaComingSoon')
+  const metaLabel =
+    state !== 'none'
+      ? connection?.accountLabel
+        ? t('metaAccount', { label: connection.accountLabel })
+        : t('metaRemote')
+      : entry.available
+        ? t('metaRemote')
+        : t('metaComingSoon')
 
   return (
     <div
       className={cn(
-        'relative flex flex-col rounded-xl border p-[18px] overflow-hidden min-h-[158px]',
-        'bg-gradient-to-b from-card to-muted/40',
-        isConnected &&
-          'border-pon-green/40',
+        'relative flex flex-col rounded-xl border bg-card p-[18px] overflow-hidden min-h-[158px]',
+        isConnected && 'border-pon-green/40',
+        state === 'expired' && 'border-destructive/40',
       )}
     >
       <div className="size-[42px] rounded-[11px] grid place-items-center bg-background border mb-[13px] overflow-hidden">
         <ConnectorLogo id={entry.icon} size={26} />
       </div>
 
-      <h3 className="m-0 text-[15.5px] font-semibold flex items-center gap-2">
+      <h3 className="m-0 text-[15.5px] font-semibold flex items-center gap-2 flex-wrap">
         {entry.name}
         {isConnected ? (
           <StatusPill variant="on" label={t('statusConnected')} />
+        ) : state === 'expired' ? (
+          <StatusPill variant="warn" label={t('statusReconnect')} />
         ) : entry.available ? (
           <StatusPill variant="off" label={t('statusAvailable')} />
         ) : (
@@ -135,14 +144,14 @@ export function ConnectorCard({
         {entry.description}
       </p>
 
-      {entry.scopes.length > 0 && (
+      {scopeKeys.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-[11px]">
-          {entry.scopes.map((scope) => (
+          {scopeKeys.map((key) => (
             <span
-              key={scope}
-              className="font-mono text-[10px] text-primary bg-primary/10 border border-primary/20 px-[7px] py-0.5 rounded-md"
+              key={key}
+              className="text-[11px] text-accent-foreground bg-accent border border-primary/20 px-[7px] py-0.5 rounded-md"
             >
-              {scope}
+              {t(key)}
             </span>
           ))}
         </div>
@@ -152,46 +161,47 @@ export function ConnectorCard({
         <span className="font-mono text-[10.5px] text-muted-foreground/70 tracking-wide truncate">
           {metaLabel}
         </span>
-        {isConnected ? (
+        {state !== 'none' && connection ? (
           <div className="flex items-center gap-0.5">
+            {isConnected && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-muted-foreground"
+                onClick={() => setPermsOpen(true)}
+              >
+                <ShieldCheck className="size-4 mr-1" />
+                {t('permManage')}
+              </Button>
+            )}
+            {state === 'expired' && canConnect && (
+              <Button size="sm" disabled={connecting} onClick={() => onConnect(entry)}>
+                {connecting ? <Loader2 className="size-4 animate-spin" /> : t('reconnect')}
+              </Button>
+            )}
             <Button
               size="sm"
               variant="ghost"
               className="text-muted-foreground"
-              onClick={() => setPermsOpen(true)}
+              onClick={() => onManage(connection)}
             >
-              <ShieldCheck className="size-4 mr-1" />
-              {t('permManage')}
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-muted-foreground"
-              disabled={disconnecting}
-              onClick={() => connection && onDisconnect(connection)}
-            >
-              {disconnecting ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                t('manage')
-              )}
+              {t('manage')}
             </Button>
           </div>
         ) : (
           <Button
             size="sm"
-            className="bg-primary text-primary-foreground hover:opacity-90"
-            disabled={!entry.available || connecting}
+            disabled={!entry.available || connecting || !canConnect}
+            title={entry.available && !canConnect ? t('connectNeedsCap') : undefined}
             onClick={() => onConnect(entry)}
           >
-            {connecting ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              t('connect')
-            )}
+            {connecting ? <Loader2 className="size-4 animate-spin" /> : t('connect')}
           </Button>
         )}
       </div>
+      {entry.available && !canConnect && state === 'none' && (
+        <p className="mt-2 text-xs text-muted-foreground">{t('connectNeedsCap')}</p>
+      )}
 
       {isConnected && connection && permsOpen && (
         <ConnectorPermissionsDialog

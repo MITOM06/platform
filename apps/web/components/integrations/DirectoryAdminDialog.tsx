@@ -21,6 +21,7 @@ import type {
   DirectoryEntry,
   DirectoryTier,
 } from '@/lib/api/connector-types'
+import { adminAuthModeLabelKey } from '@/lib/integrations/labels'
 
 interface DirectoryAdminDialogProps {
   open: boolean
@@ -195,7 +196,7 @@ export function DirectoryAdminDialog({
                 <SelectContent>
                   {AUTH_MODES.map((m) => (
                     <SelectItem key={m} value={m}>
-                      {m}
+                      {t(adminAuthModeLabelKey(m))}
                     </SelectItem>
                   ))}
                 </SelectContent>

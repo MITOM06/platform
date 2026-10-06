@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { LogOut, User, Settings, ShieldCheck, ChevronsUpDown } from 'lucide-react'
 import { useAuthStore } from '@/lib/store/auth.store'
-import { stompService } from '@/lib/stomp/client'
+import { performLogout } from '@/lib/auth/logout'
 import { useCanAccessAdmin } from '@/lib/hooks/use-capabilities'
 import { absoluteMediaUrl } from '@/lib/media'
 import { LogoutConfirmDialog } from '@/components/layout/LogoutConfirmDialog'
@@ -36,7 +36,6 @@ export function SidebarProfileBar() {
   const router = useRouter()
   const t = useTranslations('layout')
   const user = useAuthStore((s) => s.user)
-  const clearAuth = useAuthStore((s) => s.clearAuth)
   const canAccessAdmin = useCanAccessAdmin()
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
 
@@ -44,12 +43,8 @@ export function SidebarProfileBar() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/clear-cookie', { method: 'POST' })
-      stompService.disconnect()
-      clearAuth()
-      // `?cleared=1` tells the login page to wipe any browser-autofilled
-      // credentials so the next person doesn't see the prior account.
-      router.push('/login?cleared=1')
+      // Revokes the server session, clears cookies + query cache, hard-navigates.
+      await performLogout()
     } catch {
       toast.error(t('logoutError'))
     }

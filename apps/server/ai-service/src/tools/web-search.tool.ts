@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ToolContext, ToolDefinition } from './tool.interface';
 import { WebSearchService } from './web-search/web-search.service';
 import { wrapUntrusted } from '../ai/injection-guard';
+import { registerWebSource } from '../ai/source-registry';
 
 /**
  * `web_search` — read-only built-in tool. Searches the public web via the
@@ -12,12 +13,12 @@ import { wrapUntrusted } from '../ai/injection-guard';
  * Integration (plan TASK-09 option "a"): web search is a normal custom tool
  * backed by the generic search-API provider; one citation path for KB + web.
  *
- * Citation plumbing: web results are produced INSIDE the agentic loop, AFTER
- * `ctx.ragSources` was built. So the tool ALSO pushes one `RagSource` per result
- * into `ctx.sourceSink` (`{ documentId: 'web:'+i, fileName: title, score, url,
- * type:'web' }`). `_agenticLoop` merges the sink with `ctx.ragSources`
- * (RAG first, web after, contiguous) into the `AI_STREAM_DONE` `sources` array,
- * so the `[Source N]` markers the model emits line up with the rendered chips.
+ * Citation plumbing: web results are produced INSIDE the agentic loop, after the
+ * KB sources were numbered into the system prompt. `ctx.sourceSink` is the
+ * reply-wide citation list (KB sources first); each result is registered there
+ * (`{ documentId: 'web:<n>', fileName: title, score: 1, url, type: 'web' }`,
+ * deduped by URL) and printed with the number it got, so the `[Source N]`
+ * markers line up with the `AI_STREAM_DONE.sources` chips.
  *
  * Untrusted content: web snippets are fenced with `wrapUntrusted` (spotlighting)
  * so a malicious page cannot inject instructions. Never throws — on
@@ -75,22 +76,15 @@ export class WebSearchTool {
       return `No web results found for "${query}".`;
     }
 
-    // Push one source per result into the loop's sink so it reaches AI_STREAM_DONE.
-    // Distinct synthetic `web:<i>` ids survive client dedup-by-documentId.
-    results.forEach((r, i) => {
-      ctx.sourceSink?.push({
-        documentId: `web:${i}`,
-        fileName: r.title || r.url,
-        score: 1,
-        url: r.url,
-        type: 'web',
-      });
-    });
-
-    // Format [Source N] blocks; fence the untrusted snippet text (spotlighting).
+    // Register each result in the reply-wide citation list and print the number
+    // it gets, so `[Source N]` lines up with AI_STREAM_DONE.sources (KB sources
+    // come first). Without a sink (no agentic loop) results number from 1.
     const body = results
       .map((r, i) => {
-        const header = `[Source ${i + 1}] ${r.title || r.url} — ${r.url}`;
+        const n = ctx.sourceSink
+          ? registerWebSource(ctx.sourceSink, { title: r.title || r.url, url: r.url })
+          : i + 1;
+        const header = `[Source ${n}] ${r.title || r.url} — ${r.url}`;
         const snippet = (r.snippet ?? '').trim();
         return snippet ? `${header}\n${snippet}` : header;
       })

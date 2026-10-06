@@ -4,6 +4,7 @@ import { EmbeddingService } from '../kb/embedding.service';
 import { VectorStoreService } from '../kb/vector-store.service';
 import { KbProcessorService } from '../kb/kb-processor.service';
 import { ToolContext, ToolDefinition } from './tool.interface';
+import { registerKbSource } from '../ai/source-registry';
 
 @Injectable()
 export class SearchKnowledgeBaseTool {
@@ -38,7 +39,7 @@ export class SearchKnowledgeBaseTool {
       this.configService.get<string>('config.kb.qdrantCollection') ?? 'knowledge';
     this.defaultTopK = this.configService.get<number>('config.kb.topK') ?? 4;
     this.overFetch = this.configService.get<number>('config.kb.overFetch') ?? 8;
-    this.scoreThreshold = this.configService.get<number>('config.kb.scoreThreshold') ?? 0.5;
+    this.scoreThreshold = this.configService.get<number>('config.kb.scoreThreshold') ?? 0.2;
   }
 
   async execute(input: Record<string, unknown>, ctx: ToolContext): Promise<string> {
@@ -72,8 +73,23 @@ export class SearchKnowledgeBaseTool {
       return 'No relevant context: no document chunk cleared the confidence threshold for this query.';
     }
 
+    // Number hits in the reply-wide citation list (KB sources of the system
+    // prompt first; a document already cited keeps its number) so `[Source N]`
+    // matches AI_STREAM_DONE.sources. Without a sink, number from 1.
+    const fileNames = ctx.sourceSink
+      ? await this.kbProcessor.getFileNames(relevant.map((r) => r.documentId))
+      : new Map<string, string>();
     return relevant
-      .map((r, i) => `[Source ${i + 1}] (score ${r.score.toFixed(2)}) ${r.text}`)
+      .map((r, i) => {
+        const n = ctx.sourceSink
+          ? registerKbSource(ctx.sourceSink, {
+              documentId: r.documentId,
+              fileName: fileNames.get(r.documentId) ?? '',
+              score: r.score,
+            })
+          : i + 1;
+        return `[Source ${n}] (score ${r.score.toFixed(2)}) ${r.text}`;
+      })
       .join('\n\n');
   }
 }

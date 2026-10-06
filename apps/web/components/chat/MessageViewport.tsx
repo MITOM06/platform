@@ -4,7 +4,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useLocale } from 'next-intl'
 import { Loader2 } from 'lucide-react'
 import { MessageList } from '@/components/chat/MessageList'
-import type { AiStreamState, Message } from '@/lib/api/types'
+import type { Message } from '@/lib/api/types'
+import type { AiStreamEntry } from '@/lib/ai/stream-routing'
 
 // Synchronous-before-paint on the client (so scroll jumps never flash), plain
 // effect on the server to avoid React's SSR useLayoutEffect warning.
@@ -24,7 +25,7 @@ interface Props {
   fetchNextPage: () => void
   typingUserIds: string[]
   assistantTyping?: boolean
-  aiStream: AiStreamState | null
+  aiStreams: AiStreamEntry[]
   onEdit: (message: Message) => void
   onForward: (message: Message) => void
   onReply: (message: Message) => void
@@ -57,7 +58,7 @@ const FOLLOW_THRESHOLD_PX = 220
  * measurement.
  */
 export function MessageViewport(props: Props) {
-  const { messages, hasNextPage, isFetchingNextPage, fetchNextPage, aiStream } = props
+  const { messages, hasNextPage, isFetchingNextPage, fetchNextPage, aiStreams } = props
   const locale = useLocale()
 
   // Exact timestamp of the message whose actions menu is currently open — shown
@@ -134,7 +135,7 @@ export function MessageViewport(props: Props) {
     if (distanceFromBottom < FOLLOW_THRESHOLD_PX) {
       el.scrollTop = el.scrollHeight
     }
-  }, [messages.length, aiStream])
+  }, [messages.length, aiStreams])
 
   return (
     <div className="absolute inset-0 z-10">

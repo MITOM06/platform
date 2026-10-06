@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
@@ -48,7 +49,7 @@ class UsageDashboardPanel extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           children: [
-            _RangeLabel(label: d.range.label),
+            _RangeLabel(range: d.range),
             const SizedBox(height: 12),
             _HeadlineCards(totals: d.totals, feedback: d.feedback),
             const SizedBox(height: 24),
@@ -68,14 +69,17 @@ class UsageDashboardPanel extends ConsumerWidget {
 }
 
 class _RangeLabel extends StatelessWidget {
-  final String? label;
-  const _RangeLabel({required this.label});
+  final UsageRange range;
+  const _RangeLabel({required this.range});
 
   @override
   Widget build(BuildContext context) {
-    final text = (label != null && label!.isNotEmpty)
-        ? label!
-        : context.l10n.usageThisMonth;
+    // The server's `label` is a raw English token ("last 30d") — show the
+    // localized month of the range instead.
+    final from = range.from == null ? null : DateTime.tryParse(range.from!);
+    final text = from == null
+        ? context.l10n.usageThisMonth
+        : DateFormat.yMMMM(context.l10n.localeName).format(from.toUtc());
     return Row(
       children: [
         Icon(Icons.calendar_month_rounded,

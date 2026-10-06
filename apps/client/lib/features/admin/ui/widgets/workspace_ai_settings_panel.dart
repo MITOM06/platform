@@ -10,6 +10,16 @@ import '../../data/models/admin_models.dart';
 import '../../state/admin_providers.dart';
 import 'ai_settings_controls.dart';
 import 'workspace_panel.dart' show adminCatalogProvider;
+import '../../utils/admin_error.dart';
+
+/// The AI connector selection to save: a selection outside a NON-empty
+/// workspace allow-list is dropped (the server rejects it with
+/// `AI_CONNECTORS_NOT_IN_ALLOW_LIST`); an empty allow-list allows everything.
+List<String> allowedWithinAllowList(
+        List<String> selected, List<String> allowList) =>
+    allowList.isEmpty
+        ? List<String>.from(selected)
+        : selected.where(allowList.contains).toList();
 
 /// Workspace-level AI defaults (TASK-12). Mirrors the web `WorkspaceAiSettings`
 /// panel and the existing [WorkspacePanel] — gated by `MANAGE_WORKSPACE`, reads
@@ -41,6 +51,7 @@ class _WorkspaceAiSettingsPanelState
   // is null (inherit connectorAllowList). When true ⇒ explicit list (possibly []).
   bool _restrictConnectors = false;
   List<String> _allowed = [];
+  List<String> _connectorAllowList = const [];
   bool _seeded = false;
   bool _saving = false;
 
@@ -77,11 +88,14 @@ class _WorkspaceAiSettingsPanelState
       'webSearchEnabled': _webSearchEnabled,
       'thinkingEnabled': _thinkingEnabled,
       'dailyDigestEnabled': _dailyDigestEnabled,
-      // Only send an explicit hour when the digest is on; otherwise null = inherit.
-      'dailyDigestHour': _dailyDigestEnabled == true ? _dailyDigestHour : null,
+      // The hour is independent of the switch — sending null when the digest
+      // is off/inherited wiped an hour set on web.
+      'dailyDigestHour': _dailyDigestHour,
       'monthlyTokenLimit': limitText.isEmpty ? null : int.tryParse(limitText),
       // null = inherit connectorAllowList; [] = allow none; [...] = explicit subset.
-      'allowedConnectors': _restrictConnectors ? _allowed : null,
+      'allowedConnectors': _restrictConnectors
+          ? allowedWithinAllowList(_allowed, _connectorAllowList)
+          : null,
     };
   }
 
@@ -94,7 +108,7 @@ class _WorkspaceAiSettingsPanelState
           .save({'aiSettings': _buildAiSettings()});
       if (mounted) showInfoSnackBar(l10n.adminToastSaved);
     } catch (e) {
-      if (mounted) showErrorSnackBar(l10n.adminToastError);
+      if (mounted) showErrorSnackBar(adminErrorMessage(context, e));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -127,6 +141,7 @@ class _WorkspaceAiSettingsPanelState
       error: (e, _) => AiErrorView(message: friendlyError(e)),
       data: (ws) {
         _seed(ws.aiSettings);
+        _connectorAllowList = ws.connectorAllowList;
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           children: [
@@ -188,7 +203,7 @@ class _WorkspaceAiSettingsPanelState
             AiHourPicker(
               label: l10n.adminAiDailyDigestHour,
               value: _dailyDigestHour ?? _digestDefaultHour,
-              enabled: _dailyDigestEnabled == true,
+              enabled: _dailyDigestEnabled != false,
               onChanged: (h) => setState(() => _dailyDigestHour = h),
             ),
             const SizedBox(height: 6),

@@ -10,21 +10,18 @@ import {
   KeyRound,
   Eye,
   EyeOff,
-  ShieldCheck,
   AlertTriangle,
   Loader2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { authService } from '@/lib/api/auth'
+import { passwordChangeErrorKey } from '@/lib/auth/password-change-error'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter'
-
-interface ServerError {
-  response?: { data?: { message?: string } }
-}
+import { TwoFactorSection } from '@/components/settings/TwoFactorSection'
 
 export default function SecurityPage() {
   const t = useTranslations('settings.security')
@@ -86,17 +83,10 @@ export default function SecurityPage() {
       setNewPw('')
       setConfirmPw('')
     } catch (e: unknown) {
-      // An unrecognised server message falls back to the generic localized copy. Assigning
-      // `serverMsg` here would print raw English backend text into the UI regardless of locale
+      // Mapped by error `code`, never the raw English server text
       // (.claude/rules/no-raw-system-data-in-ui.md).
-      let msg = t('genericError')
-      const serverMsg = (e as ServerError)?.response?.data?.message
-      if (serverMsg?.includes('Incorrect current password')) {
-        msg = t('incorrectCurrent')
-      } else if (serverMsg?.includes('Current password is required')) {
-        msg = t('currentRequired')
-      }
-      setError(msg)
+      const { key, values } = passwordChangeErrorKey(e)
+      setError(t(key, values))
     } finally {
       setSaving(false)
     }
@@ -265,7 +255,10 @@ export default function SecurityPage() {
               </div>
 
               <div className="flex items-center justify-between pt-1">
-                <p className="text-xs text-muted-foreground">{t('staySignedIn')}</p>
+                {/* Changing the password signs every OTHER device out (server-side). */}
+                <p className="text-xs text-muted-foreground">
+                  {hasPassword ? t('otherDevicesSignedOut') : t('staySignedIn')}
+                </p>
                 <div className="flex gap-2">
                   <Button variant="ghost" onClick={reset} disabled={saving}>
                     {tCommon('cancel')}
@@ -279,25 +272,7 @@ export default function SecurityPage() {
             </div>
           </section>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="size-9 rounded-full bg-muted flex items-center justify-center">
-                <ShieldCheck className="size-4 text-muted-foreground" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-base text-muted-foreground">
-                  {t('twoFaTitle')}
-                </h2>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {t('twoFaSubtitle')}
-                </p>
-              </div>
-            </div>
-            <div className="rounded-xl border border-dashed bg-muted/30 px-5 py-4 flex items-center gap-3">
-              <ShieldCheck className="size-5 text-muted-foreground shrink-0" />
-              <p className="text-sm text-muted-foreground">{t('twoFaComingSoon')}</p>
-            </div>
-          </section>
+          <TwoFactorSection />
         </div>
       </div>
     </div>

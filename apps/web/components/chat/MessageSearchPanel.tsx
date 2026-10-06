@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Search, X, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { chatService } from '@/lib/api/chat'
@@ -15,8 +16,8 @@ interface Props {
   onSelectMessage?: (messageId: string) => void
 }
 
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleString('vi-VN', {
+function formatTime(iso: string, locale: string) {
+  return new Date(iso).toLocaleString(locale, {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
@@ -24,8 +25,26 @@ function formatTime(iso: string) {
   })
 }
 
-export function MessageSearchPanel({ conversationId, onClose }: Props) {
+/** Scroll the thread to a message (when loaded) and flash it; false when not loaded. */
+function jumpToMessage(messageId: string): boolean {
+  const el = document.getElementById(`message-${messageId}`)
+  if (!el) return false
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  el.classList.add('bg-primary/20', 'transition-all', 'duration-500', 'ring-2', 'ring-primary/40')
+  setTimeout(() => el.classList.remove('bg-primary/20', 'ring-2', 'ring-primary/40'), 2000)
+  return true
+}
+
+export function MessageSearchPanel({ conversationId, onClose, onSelectMessage }: Props) {
   const t = useTranslations('chat')
+  const locale = useLocale()
+  const handleSelect = (messageId: string) => {
+    if (onSelectMessage) {
+      onSelectMessage(messageId)
+      return
+    }
+    if (!jumpToMessage(messageId)) toast.info(t('pinnedScrollHint'))
+  }
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
@@ -77,18 +96,20 @@ export function MessageSearchPanel({ conversationId, onClose }: Props) {
             </div>
           )}
           {!loading && results.map((msg) => (
-            <div
+            <button
+              type="button"
               key={msg.id}
-              className="px-2 py-1.5 rounded-md hover:bg-muted/60 cursor-pointer"
+              onClick={() => handleSelect(msg.id)}
+              className="block w-full text-left px-2 py-1.5 rounded-md hover:bg-muted/60 cursor-pointer"
             >
-              <p className="text-xs text-muted-foreground">{formatTime(msg.createdAt)}</p>
+              <p className="text-xs text-muted-foreground">{formatTime(msg.createdAt, locale)}</p>
               {/* Search hits are rendered from raw `content`, so a matching system event or
                   file message would otherwise print its code / JSON payload
                   (.claude/rules/no-raw-system-data-in-ui.md). */}
               <p className="text-sm truncate">
-                {humanizeMessagePreview(msg.content, msg.type, t)}
+                {msg.recalled ? t('recalled') : humanizeMessagePreview(msg.content, msg.type, t)}
               </p>
-            </div>
+            </button>
           ))}
           {!loading && query.trim() && results.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-3">{t('messageSearchNoResults')}</p>

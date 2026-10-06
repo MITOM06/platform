@@ -4,20 +4,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:app_links/app_links.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_provider.dart';
+import 'core/api/token_manager.dart';
 import 'core/router/app_router.dart';
 import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/app_error.dart';
 import 'core/utils/global_messenger.dart';
 import 'features/auth/domain/auth_provider.dart';
+import 'features/auth/domain/auth_state.dart';
+import 'features/admin/state/capabilities_provider.dart';
 import 'features/auth/domain/invitation_preview.dart';
 import 'features/chat/data/stomp_service.dart';
+import 'features/chat/domain/conversations_realtime_handlers.dart'
+    show displayableSenderName;
 import 'features/chat/ui/widgets/incoming_group_call_prompt.dart';
+import 'features/chat/ui/widgets/incoming_call_prompt.dart';
+import 'features/integrations/state/oauth_flow_provider.dart';
+import 'features/notifications/domain/notifications_provider.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 
@@ -29,9 +37,13 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (message.notification != null) return;
 
   await initNotifications();
+  // Background isolate: no widget tree, so resolve the strings from the
+  // language the user picked (persisted by LocaleNotifier).
+  final l10n = await _backgroundL10n();
   final data = message.data;
-  final title = data['senderName'] ?? 'New Message';
-  final body = data['content'] ?? '';
+  final title = displayableSenderName(data['senderName'], data['senderId']) ??
+      l10n.newNotificationTitle;
+  final body = safePushBody(l10n, data['content']);
   final conversationId = data['conversationId'] ?? '';
   if (conversationId.isNotEmpty) {
     await showMessageNotification(
@@ -42,18 +54,47 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   }
 }
 
+Future<AppLocalizations> _backgroundL10n() async {
+  var code = 'en';
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString('app_locale');
+    if (saved != null &&
+        AppLocalizations.supportedLocales.any((l) => l.languageCode == saved)) {
+      code = saved;
+    }
+  } catch (_) {}
+  return lookupAppLocalizations(Locale(code));
+}
+
+String? _nonEmpty(String? v) => (v == null || v.trim().isEmpty) ? null : v;
+
+/// Push body for a data-only message, sanitized: a system code, an upload
+/// URL or a JSON payload never reaches the lock screen.
+String safePushBody(AppLocalizations l10n, String? content) {
+  final c = content?.trim() ?? '';
+  if (c.isEmpty) return '';
+  if (c.startsWith('system.')) return l10n.pinnedSystemMessage;
+  if (c.startsWith('{') || c.startsWith('[') || c.contains('/api/uploads/')) {
+    return l10n.attachmentLabel;
+  }
+  return c;
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform);
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     await initNotifications();
 
     // iOS: allow FCM to show system notifications while app is in foreground
     // badge=true updates icon badge; alert/sound=false — STOMP banners handle UI
-    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
       alert: false,
       badge: true,
       sound: false,
@@ -141,15 +182,26 @@ class _PlatformAppState extends ConsumerState<PlatformApp>
       stomp.disconnect();
     } else if (state == AppLifecycleState.resumed) {
       _reconnectStomp();
+      // Back from a connector's OAuth page in the browser: report the result.
+      ref.read(oauthFlowProvider.notifier).onResume();
     }
   }
 
   Future<void> _reconnectStomp() async {
-    const storage = FlutterSecureStorage();
-    final token = await storage.read(key: 'accessToken');
+    // Signed out → nothing to reconnect. Otherwise a VALID token (refreshed
+    // if it expired while backgrounded) — a stale one is CONNECT-rejected.
+    if (ref.read(authNotifierProvider).valueOrNull is! AuthAuthenticated) {
+      return;
+    }
+    final token = await TokenManager.shared.getValidAccessToken();
     if (token != null) {
       await ref.read(stompServiceProvider.notifier).connect(token);
     }
+    // Pick up notifications that arrived while the app was in background.
+    ref.read(notificationsProvider.notifier).refreshSilently();
+    // Role / permission changes made while backgrounded: menus must follow
+    // without a re-login (a CLAIMS_CHANGED may have been missed offline).
+    ref.read(capabilitiesProvider.notifier).refreshSilently();
   }
 
   /// Show a local notification for foreground FCM messages when STOMP is not
@@ -161,8 +213,11 @@ class _PlatformAppState extends ConsumerState<PlatformApp>
 
       final notification = message.notification;
       final data = message.data;
-      final title = notification?.title ?? data['senderName'] ?? 'New Message';
-      final body = notification?.body ?? data['content'] ?? '';
+      final l10n = appL10n();
+      final title = _nonEmpty(notification?.title) ??
+          displayableSenderName(data['senderName'], data['senderId']) ??
+          l10n.newNotificationTitle;
+      final body = notification?.body ?? safePushBody(l10n, data['content']);
       final conversationId = data['conversationId'] ?? '';
       if (conversationId.isNotEmpty) {
         showMessageNotification(
@@ -212,6 +267,12 @@ class _PlatformAppState extends ConsumerState<PlatformApp>
       if (code != null && code.isNotEmpty) {
         ref.read(authNotifierProvider.notifier).loginWithCode(code);
       }
+    } else if (uri.host == 'integrations') {
+      // Connector OAuth return, if the deployment redirects to the app:
+      // platform://integrations?connected=<slug> | ?error=<CODE>&provider=<slug>.
+      if (ref.read(authNotifierProvider).valueOrNull is AuthAuthenticated) {
+        ref.read(oauthFlowProvider.notifier).onDeepLink(uri);
+      }
     } else if (uri.host == 'invite') {
       // "Open in the PON app" from the web invite page.
       final token = uri.queryParameters['token'];
@@ -257,9 +318,10 @@ class _PlatformAppState extends ConsumerState<PlatformApp>
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      // Float the incoming group-call (call-ring) prompt above every route.
-      builder: (context, child) =>
-          IncomingGroupCallPrompt(child: child ?? const SizedBox.shrink()),
+      // Float the incoming 1-on-1 and group-call prompts above every route.
+      builder: (context, child) => IncomingGroupCallPrompt(
+        child: IncomingCallPrompt(child: child ?? const SizedBox.shrink()),
+      ),
     );
   }
 }

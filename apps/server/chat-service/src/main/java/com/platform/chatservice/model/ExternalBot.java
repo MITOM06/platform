@@ -18,7 +18,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
  */
 @Document(collection = "external_bots")
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExternalBot {
@@ -35,6 +35,16 @@ public class ExternalBot {
   private String name;
 
   private String avatarUrl;
+
+  /**
+   * Last persona (system prompt) the owner set through BotFather Zone — mirrored from Bot Factory
+   * so {@code GET /api/assistant/me} can pre-fill the settings screen. Null on legacy registrations
+   * (then fetched from Bot Factory on demand and back-filled).
+   */
+  private String systemPrompt;
+
+  /** Bot Factory provider (model) id last picked by the owner; null on legacy registrations. */
+  private String providerId;
 
   @Builder.Default private boolean enabled = true;
 

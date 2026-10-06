@@ -16,8 +16,8 @@ import {
   QueryClientProvider,
   type InfiniteData,
 } from '@tanstack/react-query'
-import { useMessageCache } from '@/lib/hooks/use-message-cache'
-import type { Message, MessagesResponse } from '@/lib/api/types'
+import { reconcileThread, useMessageCache } from '@/lib/hooks/use-message-cache'
+import type { ConversationsResponse, Message, MessagesResponse } from '@/lib/api/types'
 
 const CONV = 'conv-1'
 const KEY = ['messages', CONV] as const
@@ -146,5 +146,86 @@ describe('useMessageCache', () => {
   it('is a no-op on an empty cache (undefined data short-circuits)', () => {
     act(() => env.result.current.patchMessage('missing', { recalled: true }))
     expect(env.qc.getQueryData(KEY)).toBeUndefined()
+  })
+
+  // ── removeMessage ("Delete for me") ─────────────────────────────────────────
+
+  it('removes a message deleted for me from the thread', () => {
+    seed(env.qc, [msg('m1'), msg('m2')])
+    act(() => env.result.current.removeMessage('m1'))
+    expect(read(env.qc).map((m) => m.id)).toEqual(['m2'])
+  })
+
+  // ── recallMessage ───────────────────────────────────────────────────────────
+
+  it('recall flips the message, its reply quotes and the sidebar preview', () => {
+    seed(env.qc, [
+      msg('m2', { replyPreview: { messageId: 'm1', senderId: 'user-1', content: 'secret' } }),
+      msg('m1', { content: 'secret' }),
+    ])
+    env.qc.setQueryData<ConversationsResponse>(['conversations'], {
+      content: [{
+        id: CONV, participants: ['user-1'], type: 'direct', name: null, avatarUrl: null, wallpaper: null,
+        admins: [], createdBy: 'user-1', isPublic: false, status: 'accepted', isMuted: false,
+        isArchived: false, pinnedMessages: [], autoDeleteSeconds: null, unreadCount: 0,
+        lastMessage: { content: 'secret', senderId: 'user-1', createdAt: '2026-06-19T10:00:00.000Z', messageId: 'm1' },
+        lastMessageAt: '2026-06-19T10:00:00.000Z',
+      }],
+      page: 0, size: 1, totalElements: 1,
+    })
+
+    act(() => env.result.current.recallMessage('m1'))
+
+    const all = read(env.qc)
+    expect(all.find((m) => m.id === 'm1')?.recalled).toBe(true)
+    expect(all.find((m) => m.id === 'm2')?.replyPreview).toMatchObject({ recalled: true, content: '' })
+    const preview = env.qc.getQueryData<ConversationsResponse>(['conversations'])?.content[0].lastMessage
+    expect(preview).toMatchObject({ recalled: true, content: '' })
+  })
+
+  // ── reconcileMessages (reconnect re-sync) ───────────────────────────────────
+
+  it('replaces stale copies (edits / recalls) and adds missed messages, newest first', () => {
+    seed(env.qc, [msg('m2', { content: 'old', createdAt: '2026-06-19T10:02:00.000Z' }), msg('m1')])
+    act(() =>
+      env.result.current.reconcileMessages([
+        msg('m2', { content: 'edited while offline', editedAt: '2026-06-19T10:05:00.000Z', createdAt: '2026-06-19T10:02:00.000Z' }),
+        msg('m4', { createdAt: '2026-06-19T10:04:00.000Z' }),
+        msg('m3', { createdAt: '2026-06-19T10:03:00.000Z' }),
+        msg('m4', { createdAt: '2026-06-19T10:04:00.000Z' }), // duplicate from the second fetch
+      ]),
+    )
+    const all = read(env.qc)
+    expect(all.map((m) => m.id)).toEqual(['m4', 'm3', 'm2', 'm1'])
+    expect(all.find((m) => m.id === 'm2')?.content).toBe('edited while offline')
+  })
+
+  it('re-inserts the sidebar row by recency instead of always moving it to the top', () => {
+    const row = (id: string, at: string) => ({
+      id, participants: ['user-1'], type: 'direct' as const, name: null, avatarUrl: null, wallpaper: null,
+      admins: [], createdBy: 'user-1', isPublic: false, status: 'accepted' as const, isMuted: false,
+      isArchived: false, pinnedMessages: [], autoDeleteSeconds: null, unreadCount: 0,
+      lastMessage: { content: 'x', senderId: 'user-1', createdAt: at, messageId: `last-${id}` },
+      lastMessageAt: at,
+    })
+    env.qc.setQueryData<ConversationsResponse>(['conversations'], {
+      content: [row('newer', '2026-06-19T12:00:00.000Z'), row(CONV, '2026-06-19T09:00:00.000Z')],
+      page: 0, size: 2, totalElements: 2,
+    })
+    seed(env.qc, [])
+    // A catch-up message older than the other chat's activity keeps its place.
+    act(() => env.result.current.appendMessage(msg('m9', { createdAt: '2026-06-19T10:00:00.000Z' })))
+    const ids = env.qc.getQueryData<ConversationsResponse>(['conversations'])?.content.map((c) => c.id)
+    expect(ids).toEqual(['newer', CONV])
+  })
+
+  it('keeps locally attached AI sources when the server copy has none', () => {
+    const sources = [{ documentId: 'd1', fileName: 'a.pdf', score: 0.9 }]
+    const old = {
+      pages: [{ content: [msg('a1', { type: 'ai', sources })], page: 0, size: 1, totalElements: 1, hasNext: false }],
+      pageParams: [undefined],
+    }
+    const next = reconcileThread(old, [msg('a1', { type: 'ai', content: 'final' })])
+    expect(next?.pages[0].content[0]).toMatchObject({ content: 'final', sources })
   })
 })

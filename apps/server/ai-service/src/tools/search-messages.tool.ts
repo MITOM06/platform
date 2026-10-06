@@ -1,7 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
+import { toObjectIds } from '../common/object-id';
 import { ToolContext, ToolDefinition } from './tool.interface';
+
+function senderLabel(senderId: string, names: Map<string, string>): string {
+  const name = names.get(senderId);
+  if (name) return name;
+  if (senderId?.startsWith('extbot:')) return 'Personal assistant bot';
+  return 'Unknown user';
+}
+
+/** The query is model/user text — match it literally, never as a pattern. */
+function escapeRegex(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 @Injectable()
 export class SearchMessagesTool {
@@ -29,7 +42,7 @@ export class SearchMessagesTool {
     const results = await messages
       .find({
         conversationId: ctx.conversationId,
-        content: { $regex: query, $options: 'i' },
+        content: { $regex: escapeRegex(query), $options: 'i' },
         type: { $in: ['text', 'ai'] },
         recalled: { $ne: true },
       })
@@ -43,13 +56,20 @@ export class SearchMessagesTool {
 
     const users = this.connection.collection('users');
     const senderIds = [...new Set(results.map((m) => m['senderId'] as string))];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userDocs = await users.find({ _id: { $in: senderIds } } as any).toArray();
+    const userDocs = await users
+      // Real users are keyed by ObjectId; the seeded AI bot user by its string id.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .find({ _id: { $in: [...toObjectIds(senderIds), ...senderIds] } } as any, {
+        projection: { displayName: 1 },
+      })
+      .toArray();
     const nameMap = new Map(userDocs.map((u) => [String(u['_id']), u['displayName'] as string]));
 
+    // Never hand the model a raw id: it repeats it verbatim to the user
+    // (.claude/rules/no-raw-system-data-in-ui.md).
     const formatted = results.map((m) => ({
       content: m['content'],
-      senderDisplayName: nameMap.get(m['senderId'] as string) ?? m['senderId'],
+      senderDisplayName: senderLabel(m['senderId'] as string, nameMap),
       createdAt: m['createdAt'],
     }));
 

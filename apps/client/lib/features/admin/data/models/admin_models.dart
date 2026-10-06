@@ -277,6 +277,9 @@ class Member {
   /// `active` | `blocked` | `pending` (legacy). Missing → `active`.
   final String status;
 
+  /// Two-factor authentication enrolled (contract 09). Missing → `false`.
+  final bool mfaEnabled;
+
   const Member({
     required this.id,
     required this.displayName,
@@ -285,9 +288,22 @@ class Member {
     this.roleId,
     required this.departmentIds,
     this.status = 'active',
+    this.mfaEnabled = false,
   });
 
   bool get isBlocked => status == 'blocked';
+
+  /// This row after an Owner reset its 2FA (re-enrolls at next sign-in).
+  Member withMfaReset() => Member(
+        id: id,
+        displayName: displayName,
+        email: email,
+        avatarUrl: avatarUrl,
+        roleId: roleId,
+        departmentIds: departmentIds,
+        status: status,
+        mfaEnabled: false,
+      );
 
   factory Member.fromJson(Map<String, dynamic> json) => Member(
         id: json['_id'] as String? ?? json['id'] as String,
@@ -297,6 +313,7 @@ class Member {
         roleId: json['roleId']?.toString(),
         departmentIds: _stringList(json['departmentIds']),
         status: json['status'] as String? ?? 'active',
+        mfaEnabled: json['mfaEnabled'] == true,
       );
 }
 
@@ -334,6 +351,10 @@ class AuditLogEntry {
   final String action;
   final String targetType;
   final String? targetId;
+
+  /// Server-resolved name of the target (member/role/department…); null when
+  /// it can't be resolved — the UI then shows a generic label, never the id.
+  final String? targetName;
   final DateTime? createdAt;
 
   const AuditLogEntry({
@@ -343,6 +364,7 @@ class AuditLogEntry {
     required this.action,
     required this.targetType,
     this.targetId,
+    this.targetName,
     this.createdAt,
   });
 
@@ -353,6 +375,7 @@ class AuditLogEntry {
         action: json['action'] as String? ?? '',
         targetType: json['targetType'] as String? ?? '',
         targetId: json['targetId']?.toString(),
+        targetName: json['targetName'] as String?,
         createdAt: json['createdAt'] == null
             ? null
             : DateTime.tryParse(json['createdAt'].toString()),

@@ -16,6 +16,18 @@ class CapabilitiesNotifier extends AsyncNotifier<MeCapabilities> {
       () => ref.read(adminRepositoryProvider).capabilities(),
     );
   }
+
+  /// Re-fetch without a loading flash (app resume). A failure keeps the last
+  /// known capabilities — the server still enforces every route.
+  Future<void> refreshSilently() async {
+    try {
+      final fresh = await ref.read(adminRepositoryProvider).capabilities();
+      state = AsyncData(fresh);
+    } catch (_) {
+      // Offline / transient: keep the current value; the next resume or
+      // CLAIMS_CHANGED retries.
+    }
+  }
 }
 
 final capabilitiesProvider =

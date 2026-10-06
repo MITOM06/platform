@@ -7,7 +7,9 @@ import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { chatService } from '@/lib/api/chat'
 import { absoluteMediaUrl } from '@/lib/media'
-import { humanizeSystemMessage } from '@/lib/system-messages'
+import { humanizeLastMessage } from '@/lib/system-messages'
+import { useNameResolver } from '@/lib/hooks/use-display-names'
+import { ARCHIVED_CONVERSATIONS_KEY } from '@/lib/realtime/conversation-cache'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useUser } from '@/lib/hooks/use-user'
 import { Button } from '@/components/ui/button'
@@ -49,10 +51,10 @@ function ArchivedConversationRow({ conv, onUnarchive, isUnarchiving }: RowProps)
     (isGroup ? t('groupFallback') : (otherUser?.displayName ?? t('defaultName')))
   const avatar = conv.avatarUrl ? absoluteMediaUrl(conv.avatarUrl) : null
 
-  let previewText = tChat('noMessagesYet')
-  if (conv.lastMessage?.content) {
-    previewText = humanizeSystemMessage(conv.lastMessage.content, tChat, { short: true })
-  }
+  const resolveName = useNameResolver(conv.id)
+  const previewText =
+    humanizeLastMessage(conv.lastMessage, tChat, { resolveName, currentUserId: currentUser?.id }) ??
+    tChat('noMessagesYet')
 
   return (
     <div
@@ -101,7 +103,8 @@ export function ArchivedConversationList({ searchQuery = '' }: Props) {
   const queryClient = useQueryClient()
 
   const { data: response, isLoading } = useQuery({
-    queryKey: ['conversations', 'archived'],
+    // Every archived chat (all pages) — the server filters `?archived=true`.
+    queryKey: ARCHIVED_CONVERSATIONS_KEY,
     queryFn: () => chatService.getConversations(true),
   })
 

@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { REDIS_CLIENT, Redis } from '@platform/database';
+import { REDIS_CLIENT, Redis, isTokenClaimsStale } from '@platform/database';
 import { Request } from 'express';
 import { AuthCode } from '../../../common/auth-code.enum';
 
@@ -62,6 +62,13 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     // Verify userId in token matches userId in session
     if (sessionData.userId !== payload.sub) {
       throw new UnauthorizedException({ code: AuthCode.TOKEN_SESSION_MISMATCH });
+    }
+
+    // Role / departments / permissions changed after this token was minted
+    // (SessionService.markClaimsStale): the session is fine, the claims are
+    // not — the client refreshes (POST /auth/refresh) and retries.
+    if (isTokenClaimsStale(payload.iat, sessionData.claimsAt)) {
+      throw new UnauthorizedException({ code: AuthCode.TOKEN_CLAIMS_STALE });
     }
 
     // ✅ Update lastSeenAt (optional - để track user activity).

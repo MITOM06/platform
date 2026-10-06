@@ -16,6 +16,17 @@ each has its own compose file and its own env template.
 | Data tier | containers on this machine | Atlas · Upstash · CloudAMQP · Qdrant Cloud | containers in the same stack |
 | Web app | `next dev`, `.env.development.local` | Vercel, `NEXT_PUBLIC_API_BASE` | served by Caddy, no variable needed |
 | Mobile | `--dart-define=PON_CHAT_URL=http://…` | `--dart-define=PON_DOMAIN=<host>` | `--dart-define=PON_DOMAIN=<domain>` |
+| LiveKit (calls + meetings) | container `livekit` on `dev` (`ws://localhost:7880`) | separate media host, `infra/livekit/` (the tunnel carries no UDP) | `livekit` service in `compose.prod.yml` (`wss://rtc.<DOMAIN>`) |
+
+## Calls and meetings — LiveKit
+
+`CALL_TRANSPORT` picks the media path for calls: `mesh` (peer-to-peer, the
+default) or `sfu` (through LiveKit, works behind 4G and corporate NAT).
+Rollback is setting it back to `mesh`. Meetings always use LiveKit. chat-service
+reads `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` (32+ characters) and
+optionally `LIVEKIT_API_URL`; all blank means calls stay peer-to-peer and
+meetings report themselves unavailable. Runbooks:
+`docs/superpowers/runbooks/livekit.md`, `docs/superpowers/runbooks/self-host.md`.
 
 ## The one variable
 
@@ -40,6 +51,23 @@ self-host, wrong on Vercel — the build says so), while a **release** mobile bu
 throws on its first request. Neither silently picks a host: the previous defaults
 pointed at Cloud Run, so an unconfigured build talked to production, and then to
 nothing once those hosts were retired.
+
+## Client IP behind the proxy (rate limiting)
+
+auth-service throttles per client (5 req/s everywhere; 5 req/min on login,
+refresh, OTP and invitation routes). Behind a reverse proxy the socket peer is
+the proxy, so without the settings below every user shares **one** bucket — the
+whole company gets 5 logins a minute. Both variables are read by
+`apps/server/auth-service/src/common/client-ip.ts`; unset = Express defaults
+(`req.ip` is the socket peer), which is right only when nothing sits in front.
+
+| Variable | Meaning | Local dev | Production (Mac mini) | Self-host |
+|---|---|---|---|---|
+| `TRUST_PROXY` | Express `trust proxy`: number of proxy hops whose `X-Forwarded-For` is trusted (or an Express preset/CIDR list). A client-supplied `X-Forwarded-For` beyond those hops is ignored. | unset | unset | `1` (Caddy is the public edge and rewrites `X-Forwarded-For`) |
+| `CLIENT_IP_HEADER` | Header a trusted proxy sets **and overwrites** with the real client address; its first value wins over `req.ip` when it is a valid IP. | unset | `cf-connecting-ip` — every request comes through Cloudflare → cloudflared → Caddy, and Caddy is reachable only through the tunnel | unset (set it only if you put Cloudflare or similar in front) |
+
+Never set `CLIENT_IP_HEADER` on a host clients can reach directly: they could
+then pick their own bucket by sending the header.
 
 ## What stops the two from mixing
 

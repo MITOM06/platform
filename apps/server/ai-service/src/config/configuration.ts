@@ -15,15 +15,28 @@ export function priceEnvKey(model: string): string {
 
 /**
  * Builds the seeded per-model price map for TASK-13. Defaults reflect public
- * list prices (USD / 1M tokens) for the three router models; each entry is
- * overridable via `AI_PRICE_<MODELKEY>_IN` / `_OUT`. Unknown models (not in this
- * map) fall back to `defaultInputPerMTok` / `defaultOutputPerMTok` at cost time.
+ * list prices (USD / 1M tokens); each entry is overridable via
+ * `AI_PRICE_<MODELKEY>_IN` / `_OUT`. Keys are BARE model ids — the cost
+ * estimator normalizes dated snapshots (`claude-haiku-4-5-20251001`) to the bare
+ * id before the lookup. Unknown models fall back to `defaultInputPerMTok` /
+ * `defaultOutputPerMTok` at cost time.
  */
 function buildPriceMap(): Record<string, ModelPrice> {
   const seeds: Record<string, ModelPrice> = {
     'claude-haiku-4-5': { inputPerMTok: 1, outputPerMTok: 5 },
+    'claude-sonnet-4-5': { inputPerMTok: 3, outputPerMTok: 15 },
     'claude-sonnet-4-6': { inputPerMTok: 3, outputPerMTok: 15 },
-    'claude-opus-4-8': { inputPerMTok: 15, outputPerMTok: 75 },
+    'claude-sonnet-5': { inputPerMTok: 2, outputPerMTok: 10 },
+    'claude-sonnet-5-5': { inputPerMTok: 2, outputPerMTok: 10 },
+    'claude-opus-4-5': { inputPerMTok: 5, outputPerMTok: 25 },
+    'claude-opus-4-6': { inputPerMTok: 5, outputPerMTok: 25 },
+    'claude-opus-4-7': { inputPerMTok: 5, outputPerMTok: 25 },
+    // Was seeded at the Opus 4.1 rate (15/75) — 3x the real Opus 4.8 list price.
+    'claude-opus-4-8': { inputPerMTok: 5, outputPerMTok: 25 },
+    'claude-opus-5': { inputPerMTok: 5, outputPerMTok: 25 },
+    'claude-opus-5-5': { inputPerMTok: 4, outputPerMTok: 20 },
+    'claude-fable-5': { inputPerMTok: 10, outputPerMTok: 50 },
+    'claude-fable-5-1': { inputPerMTok: 10, outputPerMTok: 50 },
   };
   const map: Record<string, ModelPrice> = {};
   for (const [model, seed] of Object.entries(seeds)) {
@@ -91,8 +104,14 @@ export default registerAs('config', () => ({
     // Over-fetch this many candidates, then rerank/keep the best `topK`.
     topK: parseInt(process.env.KB_TOP_K ?? '4', 10),
     overFetch: parseInt(process.env.KB_OVERFETCH ?? '8', 10),
-    // Minimum cosine score for a chunk to be considered grounded context.
-    scoreThreshold: parseFloat(process.env.KB_SCORE_THRESHOLD ?? '0.5'),
+    // Recall floor on cosine score before rerank, NOT a precision gate. Measured
+    // with voyage-4-lite on Vietnamese + English docs (2026-10-03): chunks that
+    // actually answer the question scored 0.26–0.64 (9 of 12 below 0.5), while
+    // off-topic queries scored 0.07–0.43 — the ranges overlap, so no single
+    // cosine cut separates them and 0.5 dropped most real answers. Keep the floor
+    // low, let BM25/Cohere pick the top-K, and let the prompt's "say you don't
+    // have that information" rule handle a weak match.
+    scoreThreshold: parseFloat(process.env.KB_SCORE_THRESHOLD ?? '0.2'),
     // voyage-4-lite, not voyage-3.5: the 4-series carries Voyage's 200M free
     // tokens and the older models carry none, so the default decides whether a
     // fresh deployment embeds for free or bills from the first request. Same
@@ -150,7 +169,15 @@ export default registerAs('config', () => ({
     enableThinking: process.env.AI_ENABLE_THINKING === 'true',
     // IANA zone the assistant tells the time in, so "8pm tonight" becomes a real
     // datetime for create_reminder. One deployment = one company, so one zone.
+    // Also the zone of the daily-digest hour/day window and of reminder times
+    // given without an offset (containers run in UTC).
     timeZone: process.env.AI_TIMEZONE ?? 'Asia/Ho_Chi_Minh',
+    // Short-term memory (spec A1): how many of the latest session turns are sent
+    // verbatim. Older turns only reach the model through the compacted summary.
+    historyWindow: parseInt(process.env.AI_HISTORY_WINDOW ?? '20', 10),
+    // How many of the latest messages of a shared chat (group / human DM) are
+    // shown to the AI as "recent conversation" context when it is @mentioned.
+    groupContextMessages: parseInt(process.env.AI_GROUP_CONTEXT_MESSAGES ?? '20', 10),
   },
   cache: {
     // Anthropic prompt caching of the stable persona/tools prefix. On by default
@@ -197,6 +224,17 @@ export default registerAs('config', () => ({
     // connector-service internal API base for per-user MCP tools.
     internalUrl: process.env.CONNECTOR_INTERNAL_URL ?? 'http://localhost:3003',
     internalApiKey: process.env.INTERNAL_API_KEY,
+    // Tool listing + read-only calls fail fast. Writes (send/create/update…) get
+    // longer: aborting a send that the provider is still completing reported a
+    // failure for an action that actually happened, inviting a duplicate retry.
+    readTimeoutMs: parseInt(process.env.CONNECTOR_READ_TIMEOUT_MS ?? '5000', 10),
+    writeTimeoutMs: parseInt(process.env.CONNECTOR_WRITE_TIMEOUT_MS ?? '30000', 10),
+  },
+  actions: {
+    // How long a connector write the AI prepared waits for the requester's
+    // in-chat confirmation (`expiresAt`). The Redis record outlives it by a
+    // short grace so a late click gets 410 ACTION_EXPIRED instead of 404.
+    pendingTtlSec: parseInt(process.env.AI_PENDING_ACTION_TTL_SEC ?? '600', 10),
   },
   chat: {
     // chat-service base used to resolve RELATIVE `/api/uploads/{id}` refs — both
@@ -213,6 +251,9 @@ export default registerAs('config', () => ({
     visionMaxImages: parseInt(process.env.CHAT_VISION_MAX_IMAGES ?? '4', 10),
     // Per-image base64 size cap (~5MB) per the Anthropic vision constraint.
     visionMaxImageBytes: parseInt(process.env.CHAT_VISION_MAX_IMAGE_BYTES ?? '5000000', 10),
+    // Per-image fetch budget (connect + full body). A stalled upload fetch must
+    // not hold the AI request (and its concurrency slot) open indefinitely.
+    visionFetchTimeoutMs: parseInt(process.env.CHAT_VISION_FETCH_TIMEOUT_MS ?? '10000', 10),
   },
   pricing: {
     // Per-model token price map for the usage/cost dashboard (TASK-13). Values
@@ -225,9 +266,9 @@ export default registerAs('config', () => ({
     // default prices below (cost is never silently dropped).
     defaultInputPerMTok: parseFloat(process.env.AI_PRICE_DEFAULT_IN ?? '3'),
     defaultOutputPerMTok: parseFloat(process.env.AI_PRICE_DEFAULT_OUT ?? '15'),
-    // Seeded defaults for the three router models (configuration.ts router block:
-    // simple=haiku-4-5, mid=sonnet-4-6, complex=opus-4-8). Each is still
-    // overridable by its AI_PRICE_<MODELKEY>_IN/_OUT env var.
+    // Seeded list prices for the current Claude models (see buildPriceMap). Each
+    // is still overridable by its AI_PRICE_<MODELKEY>_IN/_OUT env var. Prompt
+    // cache writes/reads are priced at 1.25x / 0.1x the input price.
     models: buildPriceMap(),
   },
   webSearch: {

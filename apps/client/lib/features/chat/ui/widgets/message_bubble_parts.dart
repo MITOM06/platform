@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/motion.dart';
 import '../../../profile/ui/widgets/user_profile_dialog.dart';
@@ -80,7 +81,10 @@ class ReplyQuote extends StatelessWidget {
         // Sanitize per no-raw-system-data-in-ui: a reply can quote a media
         // message (raw /api/uploads/… URL or file JSON) or a system message
         // (raw system.* code). Humanize/label instead of showing it verbatim.
-        messagePreviewFromContent(context, preview.content),
+        // A recalled original shows the recalled label, never its old text.
+        preview.recalled
+            ? context.l10n.messageRecalled
+            : messagePreviewFromContent(context, preview.content),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(

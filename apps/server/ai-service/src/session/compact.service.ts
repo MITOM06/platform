@@ -69,6 +69,7 @@ export class CompactService {
 
     const summary = await this.claudeClient.summarize(
       toSummarize.map((m) => `${m.role}: ${m.content}`).join('\n\n'),
+      session.userId,
     );
 
     // The model can return no text block (empty string, NOT an exception). Treat

@@ -128,7 +128,12 @@ export interface CreateDepartmentInput {
   leadUserId?: string
 }
 
-export type UpdateDepartmentInput = Partial<CreateDepartmentInput>
+/** `PATCH /admin/departments/:id` — `description: ''` / `leadUserId: null` clear the field. */
+export interface UpdateDepartmentInput {
+  name?: string
+  description?: string
+  leadUserId?: string | null
+}
 
 /** Account status. `blocked` users cannot sign in; `pending` is legacy-only. */
 export type MemberStatus = 'active' | 'blocked' | 'pending'
@@ -142,6 +147,8 @@ export interface Member {
   roleId?: string
   departmentIds?: string[]
   status?: MemberStatus
+  /** 2FA (authenticator app) is set up for this member. */
+  mfaEnabled?: boolean
 }
 
 /** `PATCH /admin/members/:id/status` — only these two values are settable. */
@@ -221,11 +228,18 @@ export interface UpdateRoleInput {
 /** `GET /admin/audit` item. */
 export interface AuditLogEntry {
   id: string
+  /** `'system'` for automated actions (bootstrap invitation…) — shown as "System". */
   actorId: string
+  /** null for `system` or a deleted user. */
   actorName: string | null
   action: string
   targetType: string
   targetId: string | null
+  /**
+   * Human label of the target (member name, role / department name, invitation
+   * email); null for anything else — never render `targetId` instead.
+   */
+  targetName?: string | null
   meta: Record<string, unknown>
   createdAt: string
 }

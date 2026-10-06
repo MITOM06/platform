@@ -166,7 +166,12 @@ export default function ForgotPasswordPage() {
       const key = authCodeToI18nKey(code)
       toast.error(tAuth(key, params))
       // If OTP is wrong/expired the backend will reject here — send user back to OTP step.
-      if (code === 'OTP_INVALID' || code === 'OTP_EXPIRED' || code === 'OTP_MAX_ATTEMPTS') {
+      if (
+        code === 'OTP_INVALID' ||
+        code === 'OTP_EXPIRED' ||
+        code === 'OTP_ATTEMPTS_EXCEEDED' ||
+        code === 'OTP_WRONG_WITH_REMAINING'
+      ) {
         setOtp(Array(OTP_LENGTH).fill(''))
         setCollectedOtp('')
         setStep('otp')

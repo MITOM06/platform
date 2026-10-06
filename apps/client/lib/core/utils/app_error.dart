@@ -11,7 +11,7 @@ import 'global_messenger.dart';
 /// global error banners), so we reach for the localized strings via the root
 /// navigator key. If no element is mounted yet (very early startup), we fall
 /// back to the English strings so the message is never raw Vietnamese.
-AppLocalizations _l10n() {
+AppLocalizations appL10n() {
   final ctx = rootNavigatorKey.currentContext;
   if (ctx != null) {
     return AppLocalizations.of(ctx);
@@ -20,7 +20,7 @@ AppLocalizations _l10n() {
 }
 
 String friendlyError(Object error) {
-  final l10n = _l10n();
+  final l10n = appL10n();
   if (error is DioException) {
     switch (error.type) {
       case DioExceptionType.connectionError:
@@ -36,6 +36,7 @@ String friendlyError(Object error) {
         if (code == 404) return l10n.errNotFound;
         if (code == 409) return l10n.errConflict;
         if (code == 422) return l10n.errInvalidData;
+        if (code == 429) return l10n.errTooManyRequests;
         if (code != null && code >= 500) return l10n.errServer;
         return l10n.errRequestFailed(code?.toString() ?? 'unknown');
       case DioExceptionType.cancel:

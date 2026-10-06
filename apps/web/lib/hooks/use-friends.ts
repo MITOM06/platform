@@ -1,7 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { friendsService } from '@/lib/api/friends'
+import { parseChatError } from '@/lib/api/chat-errors'
 import { toast } from 'sonner'
+
+/** `friends.*` key for a friend-action failure (403 USER_BLOCKED has its own text). */
+export function friendErrorKey(err: unknown, fallbackKey: string): string {
+  const { code, status, network } = parseChatError(err)
+  if (code === 'USER_BLOCKED') return 'errUserBlocked'
+  if (status === 429) return 'errRateLimited'
+  if (network) return 'errNetwork'
+  return fallbackKey
+}
 
 export function useFriends() {
   return useQuery({
@@ -34,7 +44,7 @@ export function useFriendActions() {
       toast.success(t('sendRequestSuccess'))
       invalidateAll()
     },
-    onError: () => toast.error(t('sendRequestError')),
+    onError: (err) => toast.error(t(friendErrorKey(err, 'sendRequestError'))),
   })
 
   const acceptRequest = useMutation({
@@ -43,7 +53,7 @@ export function useFriendActions() {
       toast.success(t('acceptRequestSuccess'))
       invalidateAll()
     },
-    onError: () => toast.error(t('acceptRequestError')),
+    onError: (err) => toast.error(t(friendErrorKey(err, 'acceptRequestError'))),
   })
 
   const removeFriend = useMutation({
@@ -52,7 +62,7 @@ export function useFriendActions() {
       toast.success(t('removeFriendSuccess'))
       invalidateAll()
     },
-    onError: () => toast.error(t('removeFriendError')),
+    onError: (err) => toast.error(t(friendErrorKey(err, 'removeFriendError'))),
   })
 
   return {

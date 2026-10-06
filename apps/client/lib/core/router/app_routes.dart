@@ -1,9 +1,11 @@
 import 'package:go_router/go_router.dart';
 import '../../features/auth/ui/login_screen.dart';
+import '../../features/auth/ui/mfa_screen.dart';
 import '../../features/auth/ui/accept_invite_screen.dart';
 import '../../features/auth/ui/verify_otp_screen.dart';
 import '../../features/auth/ui/forgot_password_screen.dart';
 import '../../features/auth/ui/new_password_screen.dart';
+import '../../features/auth/ui/set_password_screen.dart';
 import '../../features/auth/ui/theme_onboarding_screen.dart';
 import '../../features/chat/ui/chat_screen.dart';
 import '../../features/chat/ui/archived_chats_screen.dart';
@@ -34,6 +36,7 @@ import '../../features/admin/ui/admin_screen.dart';
 import '../../features/settings/ui/token_usage_screen.dart';
 import '../../features/settings/ui/legal_screen.dart';
 import '../../features/help/ui/help_screen.dart';
+import '../l10n/l10n_ext.dart';
 import '../utils/global_messenger.dart';
 import 'page_transitions.dart';
 
@@ -90,7 +93,24 @@ List<RouteBase> buildAppRoutes() {
       },
     ),
 
+    // Two-factor step of a privileged sign-in (contract 09). The redirect in
+    // app_router.dart makes it reachable only while a challenge is pending.
+    GoRoute(
+      path: '/mfa',
+      name: 'mfa',
+      pageBuilder: (context, state) => slidePage(state, const MfaScreen()),
+    ),
+
     // ── Protected ───────────────────────────────────────────────────────
+    // Forced first-password step (Google-invite onboarding). The redirect in
+    // app_router.dart makes it the only reachable route while
+    // `user.mustSetPassword` is true and bounces off it once it is false.
+    GoRoute(
+      path: '/set-password',
+      name: 'set-password',
+      pageBuilder: (context, state) =>
+          slidePage(state, const SetPasswordScreen()),
+    ),
     GoRoute(
       path: '/theme-onboarding',
       name: 'theme-onboarding',
@@ -295,11 +315,13 @@ List<RouteBase> buildAppRoutes() {
           state,
           CallScreen(
             targetId: extra['targetId'] as String? ?? '',
-            targetName: extra['targetName'] as String? ?? 'User',
+            targetName:
+                extra['targetName'] as String? ?? context.l10n.someone,
             conversationId: extra['conversationId'] as String? ?? '',
             isCaller: extra['isCaller'] as bool? ?? false,
             isVideo: extra['isVideo'] as bool? ?? true,
             initialOfferSdp: extra['initialOfferSdp'] as String?,
+            callId: extra['callId'] as String?,
           ),
         );
       },

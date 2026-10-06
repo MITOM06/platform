@@ -7,6 +7,7 @@ import '../../../../core/utils/global_messenger.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../data/models/admin_models.dart';
 import '../../state/admin_providers.dart';
+import '../../utils/admin_error.dart';
 
 class _Row {
   String group;
@@ -78,7 +79,7 @@ class _SsoPanelState extends ConsumerState<SsoPanel> {
       });
       if (mounted) showInfoSnackBar(l10n.adminToastSaved);
     } catch (e) {
-      if (mounted) showErrorSnackBar(l10n.adminToastError);
+      if (mounted) showErrorSnackBar(adminErrorMessage(context, e));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -136,6 +137,9 @@ class _SsoPanelState extends ConsumerState<SsoPanel> {
             const SizedBox(height: 24),
             _Title(l10n.adminSsoGroupRoleMap),
             ..._roleRows.asMap().entries.map((e) => _MapRow(
+                  // Keyed by the row object so deleting a row doesn't hand its
+                  // text-field state to the next one.
+                  key: ObjectKey(e.value),
                   row: e.value,
                   noneLabel: l10n.adminSsoNone,
                   placeholder: l10n.adminSsoGroupPlaceholder,
@@ -151,6 +155,9 @@ class _SsoPanelState extends ConsumerState<SsoPanel> {
             const SizedBox(height: 24),
             _Title(l10n.adminSsoGroupDeptMap),
             ..._deptRows.asMap().entries.map((e) => _MapRow(
+                  // Keyed by the row object so deleting a row doesn't hand its
+                  // text-field state to the next one.
+                  key: ObjectKey(e.value),
                   row: e.value,
                   noneLabel: l10n.adminSsoNone,
                   placeholder: l10n.adminSsoGroupPlaceholder,
@@ -223,6 +230,7 @@ class _MapRow extends StatelessWidget {
   final VoidCallback onChanged;
   final VoidCallback onRemove;
   const _MapRow({
+    super.key,
     required this.row,
     required this.noneLabel,
     required this.placeholder,

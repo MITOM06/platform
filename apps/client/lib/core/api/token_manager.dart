@@ -13,6 +13,9 @@ const _keySid = 'sid';
 /// `isTokenExpiredOrExpiringSoon` 60-second skew.
 const _expirySkew = Duration(seconds: 60);
 
+/// Upper bound for one `/auth/refresh` round-trip.
+const _refreshTimeout = Duration(seconds: 15);
+
 /// Thrown by [TokenManager] when a refresh fails because the SERVER genuinely
 /// rejected the refresh token (HTTP 401/403 — expired/rotated/revoked/reused).
 /// This is the ONLY condition under which the user should be logged out.
@@ -152,9 +155,15 @@ class TokenManager {
     if (refreshToken == null || sid == null) return null;
 
     try {
-      // Bare Dio — no interceptors — to avoid refresh/401 loops.
-      final dio =
-          _refreshDio ?? Dio(BaseOptions(baseUrl: AppConfig.authBaseUrl));
+      // Bare Dio — no interceptors — to avoid refresh/401 loops. Bounded so a
+      // hung refresh can't stall every request (and the STOMP reconnect) that
+      // is coalesced onto it; a timeout is a transient failure (null below).
+      final dio = _refreshDio ??
+          Dio(BaseOptions(
+            baseUrl: AppConfig.authBaseUrl,
+            connectTimeout: _refreshTimeout,
+            receiveTimeout: _refreshTimeout,
+          ));
       final res = await dio.post('/auth/refresh', data: {
         'sid': sid,
         'refreshToken': refreshToken,

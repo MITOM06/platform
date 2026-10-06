@@ -129,7 +129,10 @@ export class RerankerService {
   }
 
   private tokenize(text: string): string[] {
-    const matches = text.toLowerCase().match(/[a-z0-9]+/gi);
+    // Unicode letters, not [a-z]: an ASCII class split every accented Vietnamese
+    // word ("phép" → "ph"), so keyword matching never worked on Vietnamese docs.
+    // NFC so a precomposed "é" in the query matches a decomposed one in a PDF.
+    const matches = text.normalize('NFC').toLowerCase().match(/[\p{L}\p{N}]+/gu);
     return (matches ?? []).filter((t: string) => t.length > 1);
   }
 

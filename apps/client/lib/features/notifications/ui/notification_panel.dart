@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/app_error.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../../../core/utils/media_url.dart';
+import '../../auth/utils/auth_error.dart';
 import '../../friends/data/friends_repository.dart';
 import '../../friends/domain/friends_provider.dart';
 import '../data/notification_model.dart';
@@ -185,7 +186,8 @@ class _NotificationTileState extends ConsumerState<_NotificationTile> {
       ref.invalidate(friendRequestsProvider);
       ref.invalidate(friendsListProvider);
     } catch (e) {
-      showErrorSnackBar(friendlyError(e));
+      // USER_BLOCKED and friends map to their specific localized text.
+      if (mounted) showErrorSnackBar(authErrorMessage(context, e));
     } finally {
       if (mounted) setState(() => _acting = false);
     }

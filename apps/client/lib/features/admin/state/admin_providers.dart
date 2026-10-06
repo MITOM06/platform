@@ -88,6 +88,20 @@ class MembersNotifier extends AsyncNotifier<List<Member>> {
       for (final m in current) m.id == id ? updated : m,
     ]);
   }
+
+  /// Owner-only 2FA reset. Patches the row in place (`mfaEnabled: false`).
+  /// Errors propagate to the caller.
+  Future<void> resetMfa(String id) async {
+    await ref.read(adminRepositoryProvider).resetMemberMfa(id);
+    final current = state.valueOrNull;
+    if (current == null) {
+      ref.invalidateSelf();
+      return;
+    }
+    state = AsyncData([
+      for (final m in current) m.id == id ? m.withMfaReset() : m,
+    ]);
+  }
 }
 
 final membersProvider =

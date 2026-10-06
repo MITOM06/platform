@@ -97,7 +97,10 @@ public class MessageNotificationService {
               "senderId", senderId,
               "senderName", senderDisplayName,
               "content", content,
-              "messageType", type);
+              "messageType", type,
+              // Lets clients update the list row in place instead of refetching it.
+              "messageId", response.id() != null ? response.id() : "",
+              "createdAt", response.createdAt() != null ? response.createdAt().toString() : "");
       clusterBroker.convertAndSendToUser(participantId, "/queue/notifications", notification);
 
       if (!muted) {
@@ -148,7 +151,9 @@ public class MessageNotificationService {
    */
   private String pushBody(String content, String type) {
     return switch (type) {
-      case "text", "ai" -> content;
+        // FCM rejects payloads over 4 KB — and sendAsync swallows that — so a long text message
+        // (up to 10,000 chars) silently produced no push at all. Always send a preview.
+      case "text", "ai" -> preview(content);
       case "image" -> "[Photo]";
       case "video" -> "[Video]";
       case "voice" -> "[Voice message]";

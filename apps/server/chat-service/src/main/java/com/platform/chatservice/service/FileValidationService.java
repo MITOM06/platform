@@ -190,6 +190,32 @@ public class FileValidationService {
     // text/*, application/json, text/csv, text/plain — no strict binary signature enforced
   }
 
+  /**
+   * True iff {@code header} (the first bytes of a stored file) carries a signature of the media
+   * family {@code contentType} claims — used at download time so the decision to render a file
+   * INLINE never rests on the client-declared type alone. Only the inline-capable families (raster
+   * images, audio, video, PDF) can match; SVG and everything else never does.
+   */
+  public boolean matchesInlineSignature(String contentType, byte[] header) {
+    if (contentType == null || header == null || header.length < 4) {
+      return false;
+    }
+    String lower = contentType.toLowerCase();
+    if (lower.startsWith("image/")) {
+      return !lower.contains("svg") && isAllowedImage(header);
+    }
+    if (lower.startsWith("video/")) {
+      return isAllowedVideo(header);
+    }
+    if (lower.startsWith("audio/")) {
+      return isAllowedAudio(header);
+    }
+    if (lower.equals("application/pdf")) {
+      return startsWith(header, 0x25, 0x50, 0x44, 0x46); // %PDF
+    }
+    return false;
+  }
+
   /** Logs the magic-bytes mismatch (at WARN) then rejects with a 400. */
   private void rejectMagicBytes(
       MultipartFile file, String contentType, String declaredKind, byte[] header) {

@@ -16,11 +16,17 @@ import { OtpService } from './otp.service';
 import { BadRequestException } from '@nestjs/common/exceptions/bad-request.exception';
 import { Response } from 'express';
 import { AuthCode } from '../../common/auth-code.enum';
+import { normalizeEmail } from '../../common/email';
 import { SsoMappingService } from './oidc/sso-mapping.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { assertCanSignIn } from './account-status';
 import { LoginAttemptsService } from './login-attempts.service';
-import { loginCodeKey, OAuthRedirectService } from './oauth-redirect.service';
+import {
+  loginCodeKey,
+  OAuthRedirectService,
+  parseLoginCode,
+} from './oauth-redirect.service';
+import { MfaChallengeService } from '../mfa/mfa-challenge.service';
 import {
   SocialProfile,
   SocialProvider,
@@ -33,6 +39,7 @@ interface TokenSubject {
   email: string;
   displayName: string;
   phoneVerified?: boolean;
+  mustSetPassword?: boolean;
 }
 
 @Injectable()
@@ -49,6 +56,7 @@ export class AuthService {
     private readonly oauthRedirect: OAuthRedirectService,
     private readonly loginAttempts: LoginAttemptsService,
     private readonly otp: OtpService,
+    private readonly mfaChallenge: MfaChallengeService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
@@ -87,7 +95,13 @@ export class AuthService {
 
   // ===================== OIDC SSO =====================
   async handleOidcLogin(
-    profile: { email: string; displayName: string; id: string; groups: string[] },
+    profile: {
+      email: string;
+      displayName: string;
+      id: string;
+      groups: string[];
+      emailVerified?: boolean;
+    },
     res: Response,
     platform: string,
   ) {
@@ -114,36 +128,39 @@ export class AuthService {
       profile.groups,
     );
     if (changed) {
-      // role/dept changed → invalidate existing sessions so new claims take effect.
-      await this.session.revokeAllSessions(userId, 'role_changed');
+      // role/dept changed → tokens on the user's other devices carry stale
+      // claims: they get 401 TOKEN_CLAIMS_STALE and refresh (no sign-out).
+      await this.session.markClaimsStale(userId);
     }
-    return this.oauthRedirect.redirectWithLoginCode(userId, res, platform);
+    // 'oidc' grant: exchange skips PON 2FA (the IdP owns MFA for SSO).
+    return this.oauthRedirect.redirectWithLoginCode(userId, res, platform, 'oidc');
   }
 
   // ===================== LOGIN / LOGOUT =====================
   async login(dto: LoginDto, locale: string = 'en') {
-    await this.loginAttempts.checkBruteForce(dto.email);
-    const user = await this.usersService.findByEmail(dto.email);
+    // One canonical form for the lookup AND every brute-force key, so case
+    // variants (`Bob@acme.com`) neither miss the account nor get extra guesses.
+    const email = normalizeEmail(dto.email);
+    await this.loginAttempts.checkBruteForce(email);
+    const user = await this.usersService.findByEmail(email);
 
-    // ✅ FIX: Kiểm tra user và throw ngay - TypeScript hiểu user không null sau đây
     if (!user) {
-      await this.loginAttempts.handleFailedLogin(dto.email);
-      // handleFailedLogin return type là 'never' → TypeScript biết code dưới không chạy
-      return; // unreachable, nhưng giúp TypeScript yên tâm
+      await this.loginAttempts.handleFailedLogin(email); // always throws
+      return; // unreachable
     }
 
     // Google-only accounts have no local password: a failed attempt, not a 500.
     const isMatch =
       !!user.password && (await bcrypt.compare(dto.password, user.password));
     if (!isMatch) {
-      await this.loginAttempts.handleFailedLogin(dto.email);
+      await this.loginAttempts.handleFailedLogin(email);
       return; // unreachable
     }
 
     // Correct credentials but a blocked / not-yet-accepted account: the attempt
     // was not a guess, so clear the counter, then refuse (403).
     if (user.status === 'blocked' || user.status === 'pending') {
-      await this.loginAttempts.reset(dto.email);
+      await this.loginAttempts.reset(email);
       assertCanSignIn(user);
     }
 
@@ -161,8 +178,12 @@ export class AuthService {
       });
     }
 
-    const tokens = await this.issueTokensForUser(user, 'web-login', 'web');
-    await this.loginAttempts.reset(dto.email);
+    await this.loginAttempts.reset(email);
+    // Privileged (Owner / Admin-like) user: no session until the 2FA step passes.
+    const ctx = { deviceId: 'web-login', platform: 'web' };
+    const mfa = await this.mfaChallenge.challengeIfRequired(user, ctx);
+    if (mfa) return mfa;
+    const tokens = await this.issueTokensForUser(user, ctx.deviceId, ctx.platform);
     return { code: AuthCode.LOGIN_SUCCESS, ...tokens };
   }
 
@@ -190,10 +211,16 @@ export class AuthService {
       accessToken,
       refreshToken,
       sid,
-      user: { id: userId, email: user.email, displayName: user.displayName },
+      user: {
+        id: userId,
+        email: user.email,
+        displayName: user.displayName,
+        mustSetPassword: user.mustSetPassword === true,
+      },
     };
   }
 
+  /** Revokes the CALLER's own session (sid from the verified access token). */
   async logout(userId: string, sid: string) {
     await this.session.revokeSession(userId, sid);
     return {
@@ -211,7 +238,7 @@ export class AuthService {
    * one window. Guards against multi-IP spam that the global IP throttler misses.
    */
   private async enforceForgotOtpRateLimit(email: string): Promise<void> {
-    const rateKey = `forgot_otp_rate:${email.toLowerCase()}`;
+    const rateKey = `forgot_otp_rate:${normalizeEmail(email)}`;
     const sends = await this.redis.incr(rateKey);
     if (sends === 1) {
       await this.redis.expire(rateKey, 600); // 10 min window
@@ -226,7 +253,8 @@ export class AuthService {
     if (user.status === 'blocked') assertCanSignIn(user);
   }
 
-  async forgotPassword(email: string, locale: string = 'en') {
+  async forgotPassword(rawEmail: string, locale: string = 'en') {
+    const email = normalizeEmail(rawEmail);
     // ── Per-email rate limit: max 3 OTP sends per 10 minutes ──
     await this.enforceForgotOtpRateLimit(email);
 
@@ -234,11 +262,18 @@ export class AuthService {
     if (!user) throw new NotFoundException({ code: AuthCode.EMAIL_NOT_FOUND });
     this.assertNotBlocked(user);
 
-    await this.otp.issue(user._id, email, locale);
+    // Mail the address on file (legacy rows may differ in case from the input).
+    await this.otp.issue(user._id, user.email, locale);
     return { success: true, code: AuthCode.OTP_SENT };
   }
 
-  async verifyOtp(email: string, otp: string) {
+  /**
+   * Check an emailed OTP. Does NOT consume it: the mobile forgot-password flow
+   * calls verify-otp and then reset-password with the same code. The code is
+   * consumed by a successful reset (updatePassword unsets it) or expires.
+   */
+  async verifyOtp(rawEmail: string, otp: string) {
+    const email = normalizeEmail(rawEmail);
     const maxAttempts = Number(this.configService.get('MAX_OTP_ATTEMPTS', 5));
     const attemptsTTL = Number(this.configService.get('OTP_ATTEMPTS_TTL', 300));
 
@@ -272,14 +307,14 @@ export class AuthService {
       });
     }
 
-    // OTP correct → reset counter + mark verified
+    // OTP correct → reset counter + mark verified (the code stays valid)
     await this.redis.del(attemptKey);
     await this.usersService.setVerified(user._id.toString());
     return { success: true, code: AuthCode.OTP_VALID };
   }
 
-  async resetPassword(email: string, otp: string, newPass: string) {
-    // ✅ Verify OTP trước
+  async resetPassword(rawEmail: string, otp: string, newPass: string) {
+    const email = normalizeEmail(rawEmail);
     await this.verifyOtp(email, otp);
 
     const user = await this.usersService.findByEmail(email);
@@ -288,10 +323,9 @@ export class AuthService {
     const salt = await bcrypt.genSalt(10);
     const hashedPass = await bcrypt.hash(newPass, salt);
 
-    // ✅ Update password và xóa OTP
+    // Also clears the OTP (so replaying the same reset fails with OTP_INVALID)
+    // and the Google-invite `mustSetPassword` flag.
     await this.usersService.updatePassword(user._id.toString(), hashedPass);
-
-    // ✅ IMPROVEMENT: Revoke tất cả sessions cũ khi đổi mật khẩu
     await this.session.revokeAllSessions(user._id.toString(), 'password_reset');
 
     return {
@@ -307,6 +341,11 @@ export class AuthService {
     role?: string;
     perms?: string[];
     depts?: string[];
+    /**
+     * Explicit issued-at (unix seconds). Only set by refresh to keep the new
+     * token at or after the session's `claimsAt` (see `refresh`).
+     */
+    iat?: number;
   }) {
     const secret = this.configService.get<string>('JWT_ACCESS_SECRET');
     // Fall back to 15m so a missing JWT_ACCESS_EXPIRES env never breaks token signing
@@ -320,51 +359,53 @@ export class AuthService {
     if (payload.role !== undefined) claims.role = payload.role;
     if (payload.perms !== undefined) claims.perms = payload.perms;
     if (payload.depts !== undefined) claims.depts = payload.depts;
+    // jsonwebtoken honours a numeric payload.iat and computes `exp` from it.
+    if (payload.iat !== undefined) claims.iat = payload.iat;
 
     return this.jwt.sign(claims, options);
   }
 
   // Resolve the user's RBAC claims and sign a token that carries them.
-  private async signAccessTokenWithClaims(sub: string, sid: string) {
+  private async signAccessTokenWithClaims(
+    sub: string,
+    sid: string,
+    iat?: number,
+  ) {
     const { role, perms, depts } = await this.claims.resolve(sub);
-    return this.signAccessToken({ sub, sid, role, perms, depts });
+    return this.signAccessToken({ sub, sid, role, perms, depts, iat });
   }
 
   async exchangeLoginCode(code: string, deviceId?: string, platform?: string) {
     // GETDEL: the code is single-use even under concurrent exchanges.
-    const userId = await this.redis.getdel(loginCodeKey(code));
-    if (!userId) {
-      throw new UnauthorizedException({ code: AuthCode.LOGIN_CODE_INVALID });
-    }
+    const grant = parseLoginCode(await this.redis.getdel(loginCodeKey(code)));
+    const invalid = { code: AuthCode.LOGIN_CODE_INVALID };
+    if (!grant) throw new UnauthorizedException(invalid);
+    const userId = grant.userId;
 
     // Re-check the account between OAuth callback and exchange (deleted / blocked).
     const user = await this.usersService.findById(userId);
-    if (!user) {
-      throw new UnauthorizedException({ code: AuthCode.LOGIN_CODE_INVALID });
-    }
+    if (!user) throw new UnauthorizedException(invalid);
     assertCanSignIn(user);
 
-    const { sid, refreshToken } = await this.session.createSession({
-      userId,
-      deviceId: deviceId || 'unknown',
-      platform: platform || 'web',
-    });
-    const accessToken = await this.signAccessTokenWithClaims(userId, sid);
-
-    // Fire-and-forget: nudge the user to set a password / verify their phone.
-    this.triggerSetupNotifications(userId, user.phoneVerified ?? false);
-
+    const ctx = { deviceId: deviceId || 'unknown', platform: platform || 'web' };
+    // Google sign-in of a privileged user → 2FA step; OIDC SSO is exempt.
+    if (grant.via !== 'oidc') {
+      const mfa = await this.mfaChallenge.challengeIfRequired(user, ctx);
+      if (mfa) return mfa;
+    }
+    const tokens = await this.issueTokensForUser(user, ctx.deviceId, ctx.platform);
     return {
       userId,
-      sid,
-      accessToken,
-      refreshToken,
+      sid: tokens.sid,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
       user: {
         id: user._id,
         email: user.email,
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
         isVerified: user.isVerified,
+        mustSetPassword: user.mustSetPassword === true,
       },
     };
   }
@@ -373,11 +414,17 @@ export class AuthService {
     // Status BEFORE session validity: blocking revokes every session, so rotating
     // first would answer SESSION_REVOKED instead of 403 ACCOUNT_BLOCKED.
     await this.assertRefreshOwnerCanSignIn(sid, refreshToken);
-    const { userId, newRefreshToken } = await this.session.rotateRefreshToken({
-      sid,
-      refreshToken,
-    });
-    const accessToken = await this.signAccessTokenWithClaims(userId, sid);
+    const { userId, newRefreshToken, claimsAt } =
+      await this.session.rotateRefreshToken({ sid, refreshToken });
+    // Works on a claims-stale session (role / departments / permissions
+    // changed): the claims are resolved fresh right here. The new token's iat
+    // never predates the session's claimsAt — under clock skew between
+    // instances a plain `now` could, and the client would loop on
+    // TOKEN_CLAIMS_STALE.
+    const nowSec = Math.floor(Date.now() / 1000);
+    const iat =
+      claimsAt !== undefined && claimsAt > nowSec ? claimsAt : undefined;
+    const accessToken = await this.signAccessTokenWithClaims(userId, sid, iat);
     return { accessToken, refreshToken: newRefreshToken };
   }
 
@@ -402,7 +449,8 @@ export class AuthService {
     assertCanSignIn(user);
   }
 
-  async resendOtp(email: string, locale: string = 'en') {
+  async resendOtp(rawEmail: string, locale: string = 'en') {
+    const email = normalizeEmail(rawEmail);
     // ── Per-email rate limit (shared window with forgotPassword) ──
     await this.enforceForgotOtpRateLimit(email);
 
@@ -421,10 +469,11 @@ export class AuthService {
     if (!user) throw new NotFoundException({ code: AuthCode.EMAIL_NOT_FOUND });
     this.assertNotBlocked(user);
 
-    await this.otp.issue(user._id, email, locale);
+    await this.otp.issue(user._id, user.email, locale);
 
-    // Reset attempt counter khi gửi lại OTP mới
-    await this.redis.del(`otp_attempts:${email}`);
+    // The wrong-guess counter (otp_attempts:<email>) is NOT reset here: it
+    // keeps counting across resends until its own TTL, otherwise every resend
+    // would hand out a fresh batch of guesses.
     await this.redis.set(cooldownKey, '1', 'EX', cooldownTTL);
 
     return { success: true, code: AuthCode.OTP_RESENT };

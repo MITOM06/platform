@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/api/dio_client.dart';
 import '../../auth/domain/auth_provider.dart';
 import 'models/connector_models.dart';
+import 'models/custom_mcp_models.dart';
 
 /// Talks to the connector-service (:3003) over [connectorDio]. All MCP /
 /// integration REST endpoints live here — never call Dio from widgets.
@@ -103,6 +104,22 @@ class ConnectorRepository {
       'authType': connectorAuthTypeToString(authType),
       if (credential != null && credential.isNotEmpty) 'credential': credential,
     });
+  }
+
+  /// `GET /custom-mcp` — the caller's own custom servers (no secrets).
+  Future<List<CustomMcpServer>> listCustom() async {
+    final response = await _dio.get('/custom-mcp');
+    final data = response.data;
+    if (data is! List) return const [];
+    return data
+        .map(CustomMcpServer.tryParse)
+        .whereType<CustomMcpServer>()
+        .toList();
+  }
+
+  /// `DELETE /custom-mcp/:id` — owner only, idempotent (`{deleted}`).
+  Future<void> deleteCustom(String id) async {
+    await _dio.delete('/custom-mcp/${Uri.encodeComponent(id)}');
   }
 
   // ── MCP Directory ───────────────────────────────────────────────────────

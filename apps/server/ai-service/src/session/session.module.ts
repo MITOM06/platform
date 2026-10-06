@@ -5,6 +5,7 @@ import { AiSessionService } from './ai-session.service';
 import { CompactService } from './compact.service';
 import { ClaudeClientService } from './claude-client.service';
 import { SessionController } from './session.controller';
+import { UsageModule } from '../usage/usage.module';
 
 const sessionFeature = MongooseModule.forFeature([
   { name: AiSession.name, schema: AiSessionSchema },
@@ -16,7 +17,8 @@ const sessionFeature = MongooseModule.forFeature([
  * Exports the services so AiService can integrate sessions into the main flow.
  */
 @Module({
-  imports: [sessionFeature],
+  // UsageModule: ClaudeClientService records the title/compaction model calls.
+  imports: [sessionFeature, UsageModule],
   controllers: [SessionController],
   providers: [AiSessionService, CompactService, ClaudeClientService],
   exports: [AiSessionService, CompactService],

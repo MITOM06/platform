@@ -305,9 +305,10 @@ describe('AuthController — Google callback (invite accept + error redirects)',
       req.user,
     );
     expect(handleSocialLogin).not.toHaveBeenCalled();
+    // Google invite accept → a Google grant, so 2FA applies at exchange.
     expect(redis.set).toHaveBeenCalledWith(
       'login_code:test-id',
-      'new-user-id',
+      JSON.stringify({ userId: 'new-user-id', via: 'google' }),
       'EX',
       300,
     );
@@ -410,4 +411,47 @@ describe('AuthController — Google callback (invite accept + error redirects)',
       `${WEB}?error=SSO_DOMAIN_NOT_ALLOWED`,
     );
   });
+});
+
+describe('AuthController — logout revokes only the caller session', () => {
+  it("uses the access token's sid and ignores a sid in the body (E2E: eve revoked carol's session)", async () => {
+    const logout = jest.fn().mockResolvedValue({ success: true, code: 'LOGOUT_SUCCESS' });
+    const { controller } = await buildController({ auth: { logout } });
+
+    await controller.logout({
+      user: { sub: 'eve', sid: 's-eve' },
+      body: { sid: 's-carol' },
+    });
+
+    expect(logout).toHaveBeenCalledWith('eve', 's-eve');
+  });
+});
+
+describe('AuthController — SSO email verification errors redirect with a typed code', () => {
+  it.each([AuthCode.SSO_EMAIL_UNVERIFIED, AuthCode.SOCIAL_ACCOUNT_CONFLICT])(
+    '%s is passed through to the client (not collapsed to GENERIC_ERROR)',
+    async (code) => {
+      const handleCallback = jest.fn().mockResolvedValue({
+        platform: 'web',
+        email: 'a@b.com',
+        displayName: 'A',
+        id: 's',
+        groups: [],
+        emailVerified: false,
+      });
+      const handleOidcLogin = jest
+        .fn()
+        .mockRejectedValue(new UnauthorizedException({ code }));
+      const { controller } = await buildController({
+        oidc: { handleCallback },
+        auth: { handleOidcLogin },
+      });
+      const redirect = jest.fn();
+      const res = { redirect, send: jest.fn(), clearCookie: jest.fn() } as unknown as Response;
+
+      await controller.oidcCallback({ query: {} }, res);
+
+      expect(redirect).toHaveBeenCalledWith(`${WEB}?error=${code}`);
+    },
+  );
 });

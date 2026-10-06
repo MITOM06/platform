@@ -46,7 +46,6 @@ services:
       # controller prefix is 'auth', hence the doubled segment in the callbacks.
       BASE_URL: ${PON_API_BASE:?run scripts/mini/up.sh, it fills this}/api/auth
       GOOGLE_CALLBACK_URL: ${PON_API_BASE}/api/auth/auth/google/callback
-      X_CALLBACK_URL: ${PON_API_BASE}/api/auth/auth/x/callback
       # Where the browser lands after social login — the Vercel app, which does
       # not move when the tunnel URL changes.
       WEB_REDIRECT_URL: ${WEB_ORIGIN:?set WEB_ORIGIN to the Vercel URL}/oauth-callback
@@ -54,6 +53,14 @@ services:
       # main.ts refuses to boot in production without this rather than falling
       # back to a list containing http://localhost:3000.
       CORS_ORIGINS: ${WEB_ORIGIN}
+      # --- client IP (rate limiting) ---
+      # Every request reaches auth-service through Cloudflare -> cloudflared ->
+      # Caddy, so the socket peer (req.ip) is Caddy for every user and the whole
+      # company shared ONE throttle bucket (5 logins/min for everybody). Cloudflare
+      # sets CF-Connecting-IP to the real client and overwrites any value a client
+      # sends, and Caddy here is reachable only through the tunnel (plus loopback
+      # on the mini itself), so the header can be trusted. See docs/environments.md.
+      CLIENT_IP_HEADER: cf-connecting-ip
       # --- optional integrations (blank = feature off) ---
       MAIL_HOST: ${MAIL_HOST:-}
       MAIL_PORT: ${MAIL_PORT:-587}
@@ -61,10 +68,6 @@ services:
       MAIL_PASS: ${MAIL_PASS:-}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      FACEBOOK_APP_ID: ${FACEBOOK_APP_ID:-}
-      FACEBOOK_APP_SECRET: ${FACEBOOK_APP_SECRET:-}
-      X_CLIENT_ID: ${X_CLIENT_ID:-}
-      X_CLIENT_SECRET: ${X_CLIENT_SECRET:-}
       FIREBASE_SERVICE_ACCOUNT_BASE64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:-}
     healthcheck:
       # 127.0.0.1, not localhost: in these images localhost resolves to ::1
@@ -104,6 +107,16 @@ services:
       ALLOWED_ORIGINS: ${WEB_ORIGIN:?required}
       BOTFACTORY_BASE_URL: ${BOTFACTORY_BASE_URL:-}
       BOTFACTORY_WORKER_TOKEN: ${BOTFACTORY_WORKER_TOKEN:-}
+      # LiveKit media host (infra/livekit/, runbook docs/superpowers/runbooks/livekit.md).
+      # Blank = calls stay peer-to-peer and meetings report unavailable.
+      LIVEKIT_URL: ${LIVEKIT_URL:-}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-}
+      CALL_TRANSPORT: ${CALL_TRANSPORT:-mesh}
+      # Personal-assistant setup issues the bot's MCP token through
+      # connector-service's internal API. Unset, every setup answered 503.
+      CONNECTOR_SERVICE_BASE_URL: http://connector-service:3003
+      CONNECTOR_INTERNAL_KEY: ${INTERNAL_API_KEY:?required}
       MAIL_HOST: ${MAIL_HOST:-}
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USER: ${MAIL_USER:-}
@@ -177,6 +190,9 @@ services:
       # With a quick tunnel it changes on every restart and must be re-registered
       # in each provider's console — see the runbook.
       OAUTH_REDIRECT_BASE: ${PON_API_BASE:?required}/api/connector
+      # Public MCP endpoint handed to Bot Factory assistants. Unset, they were
+      # given http://localhost:3003/mcp, which is unreachable from Bot Factory.
+      MCP_SERVER_URL: ${PON_API_BASE:?required}/api/connector/mcp
       CLIENT_REDIRECT_URL: ${WEB_ORIGIN:?required}/integrations
       # Explicit allow-list — main.ts refuses to boot in production without one.
       CORS_ORIGINS: ${WEB_ORIGIN:?required}

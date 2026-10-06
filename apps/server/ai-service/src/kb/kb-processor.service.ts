@@ -74,7 +74,7 @@ export class KbProcessorService {
       const buffer = Buffer.from(arrayBuffer);
 
       // Extract text (image uploads & sparse/scanned PDFs route through vision).
-      const text = await this.resolveText(buffer, mimeType);
+      const text = await this.resolveText(buffer, mimeType, userId);
 
       // Chunk
       const chunkSize = this.configService.get<number>('config.kb.chunkSize') ?? 512;
@@ -209,14 +209,14 @@ export class KbProcessorService {
    * falls back to today's behavior (image → throw so the doc errors; sparse PDF
    * → index the sparse text it has).
    */
-  private async resolveText(buffer: Buffer, mimeType: string): Promise<string> {
+  private async resolveText(buffer: Buffer, mimeType: string, userId?: string): Promise<string> {
     const visionUsable = this.visionEnabled && this.visionDescribe.isAvailable();
 
     // (a) Direct image upload.
     if (this.documentExtractor.isImage(mimeType)) {
       if (visionUsable && this.documentExtractor.isVisionSupportedImage(mimeType)) {
         try {
-          const description = await this.visionDescribe.describeImage(buffer, mimeType);
+          const description = await this.visionDescribe.describeImage(buffer, mimeType, userId);
           if (description.trim()) return description;
           this.logger.warn(`Vision returned empty description for image (${mimeType})`);
         } catch (err) {
@@ -242,7 +242,7 @@ export class KbProcessorService {
       text.trim().length < this.visionMinTextChars
     ) {
       try {
-        const description = await this.visionDescribe.describePdf(buffer);
+        const description = await this.visionDescribe.describePdf(buffer, userId);
         if (description.trim()) return description;
         this.logger.warn('PDF vision returned empty description, falling back to sparse text');
       } catch (err) {

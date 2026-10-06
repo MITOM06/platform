@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
-import '../../../core/utils/app_error.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../../friends/domain/friends_provider.dart';
@@ -11,6 +10,7 @@ import '../data/chat_repository.dart';
 import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
 import '../domain/staged_attachments_provider.dart';
+import '../utils/chat_error.dart';
 import 'chat_screen_helpers.dart';
 import 'widgets/active_call_banner.dart';
 import 'widgets/chat_app_bar.dart';
@@ -41,9 +41,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _scrollCtrl = ScrollController()..addListener(_onScroll);
     _textCtrl = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref
-          .read(conversationsNotifierProvider.notifier)
-          .markConversationRead(widget.conversationId);
+      final conversations = ref.read(conversationsNotifierProvider.notifier);
+      // Opening a chat reads it on the server too (badge parity with web) —
+      // and pulls it into the list when it lies beyond the loaded page, so the
+      // header / composer / realtime merges work for it.
+      conversations.markConversationReadServer(widget.conversationId);
+      conversations.ensureLoaded(widget.conversationId);
       ref.listenManual(chatSearchActiveProvider, (_, __) {
         if (mounted) setState(() => _isSearching = true);
       });
@@ -193,7 +196,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(friendlyError(e))),
+          SnackBar(content: Text(chatErrorMessage(context.l10n, e))),
         );
       }
     }
@@ -208,7 +211,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(friendlyError(e))),
+          SnackBar(content: Text(chatErrorMessage(context.l10n, e))),
         );
       }
     }
@@ -236,7 +239,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           .read(chatRepositoryProvider)
           .clearHistory(widget.conversationId);
       ref.invalidate(chatNotifierProvider(widget.conversationId));
-    } catch (_) {}
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(chatErrorMessage(context.l10n, e))),
+        );
+      }
+    }
   }
 
   Future<void> _deleteConversation() async {
@@ -273,20 +282,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final currentUserId =
         authState is AuthAuthenticated ? authState.user.id : '';
 
-    // [CHATDBG] TEMP diagnostic — remove after root-causing message-side bug.
-    assert(() {
-      debugPrint('[CHATDBG] authState=${authState.runtimeType} '
-          'currentUserId="$currentUserId" '
-          'conv=${widget.conversationId}');
-      return true;
-    }());
-
-    final conversations =
-        ref.watch(conversationsNotifierProvider).valueOrNull ?? [];
-    final ConversationModel? conv = conversations
-        .where((c) => c.id == widget.conversationId)
-        .cast<ConversationModel?>()
-        .firstOrNull;
+    final ConversationModel? conv =
+        ref.watch(conversationProvider(widget.conversationId));
     final others =
         conv?.participants.where((p) => p != currentUserId).toList();
     final String? otherUserId =
@@ -312,8 +309,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         currentUserId: currentUserId,
         onSearch: () => setState(() => _isSearching = true),
         onClearHistory: _clearHistory,
-        onChooseAutoDelete: () =>
-            showAutoDeletePicker(context, ref, widget.conversationId),
         onDeleteConversation: _deleteConversation,
       ),
       body: ChatWallpaperBackground(

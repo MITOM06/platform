@@ -10,6 +10,11 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import type Redis from 'ioredis';
 import { REDIS_CLIENT } from '../redis/redis.module';
 import { JwtUser } from './jwt-user.interface';
+import {
+  SESSION_CLAIMS_AT_FIELD,
+  TOKEN_CLAIMS_STALE,
+  isTokenClaimsStale,
+} from './claims-stale';
 
 /**
  * Shared passport-jwt strategy used by every NestJS service EXCEPT auth-service
@@ -19,14 +24,18 @@ import { JwtUser } from './jwt-user.interface';
  * (instant block — no access-token grace window):
  *
  *   `sess:{sid}` exists AND its `userId === sub` AND `revoked !== '1'`
+ *   AND NOT (`claimsAt` set AND token `iat < claimsAt`)
  *
  * Failures → 401 `{ code: SESSION_NOT_FOUND | SESSION_REVOKED |
- * TOKEN_SESSION_MISMATCH | TOKEN_INVALID }`, which the clients' 401 → refresh →
- * logout path already handles. A Redis outage fails CLOSED with 503
- * `SESSION_CHECK_UNAVAILABLE` (not 401, so a Redis blip never logs users out).
+ * TOKEN_SESSION_MISMATCH | TOKEN_CLAIMS_STALE | TOKEN_INVALID }`, which the
+ * clients' 401 → refresh path already handles (`TOKEN_CLAIMS_STALE` = the role /
+ * departments / permissions changed after the token was minted: the session is
+ * still valid, a refresh mints a token with the fresh claims — never a logout).
+ * A Redis outage fails CLOSED with 503 `SESSION_CHECK_UNAVAILABLE` (not 401, so
+ * a Redis blip never logs users out).
  *
- * No local cache: one HMGET per request, so a revocation (block, role change,
- * password reset) takes effect on the very next request.
+ * No local cache: one HMGET per request, so a revocation (block, password
+ * reset) or a claims change takes effect on the very next request.
  *
  * Requires `REDIS_CLIENT` in the DI container — import `DatabaseRedisModule`
  * (global) in the service's root module alongside `PassportModule`. It is NOT
@@ -53,7 +62,7 @@ export class SharedJwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     if (!payload?.sub || !payload?.sid) {
       throw new UnauthorizedException({ code: 'TOKEN_INVALID' });
     }
-    await this.assertSessionActive(payload.sub, payload.sid);
+    await this.assertSessionActive(payload.sub, payload.sid, payload.iat);
     return {
       sub: payload.sub,
       sid: payload.sid,
@@ -65,14 +74,20 @@ export class SharedJwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     };
   }
 
-  private async assertSessionActive(sub: string, sid: string): Promise<void> {
+  private async assertSessionActive(
+    sub: string,
+    sid: string,
+    iat: number | undefined,
+  ): Promise<void> {
     let userId: string | null;
     let revoked: string | null;
+    let claimsAt: string | null;
     try {
-      [userId, revoked] = await this.redis.hmget(
+      [userId, revoked, claimsAt] = await this.redis.hmget(
         `sess:${sid}`,
         'userId',
         'revoked',
+        SESSION_CLAIMS_AT_FIELD,
       );
     } catch (err) {
       this.logger.error(`Session check failed: ${(err as Error).message}`);
@@ -88,6 +103,9 @@ export class SharedJwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     }
     if (userId !== sub) {
       throw new UnauthorizedException({ code: 'TOKEN_SESSION_MISMATCH' });
+    }
+    if (isTokenClaimsStale(iat, claimsAt)) {
+      throw new UnauthorizedException({ code: TOKEN_CLAIMS_STALE });
     }
   }
 }

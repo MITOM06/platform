@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/global_messenger.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../data/models/connector_models.dart';
+import '../../../chat/utils/ai_tool_names.dart';
 import '../../state/integrations_provider.dart';
+import '../../utils/connector_error.dart';
 
 /// Bottom sheet for adding a custom MCP server: enter URL + auth, discover its
 /// tools, then save. Mirrors the web `CustomMcpPanel`.
@@ -67,7 +68,7 @@ class _CustomMcpSheetState extends ConsumerState<CustomMcpSheet> {
       setState(() => _tools = tools);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = friendlyError(e));
+      setState(() => _error = connectorErrorMessage(context.l10n, e));
     } finally {
       if (mounted) setState(() => _discovering = false);
     }
@@ -93,7 +94,7 @@ class _CustomMcpSheetState extends ConsumerState<CustomMcpSheet> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = friendlyError(e);
+        _error = connectorErrorMessage(context.l10n, e);
       });
     }
   }
@@ -261,9 +262,9 @@ class _ToolsPreview extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.accent(context).withValues(alpha: 0.06),
+        color: AppTheme.mutedSurface(context),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppTheme.accent(context).withValues(alpha: 0.22)),
+        border: Border.all(color: AppTheme.hairline(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,7 +272,7 @@ class _ToolsPreview extends StatelessWidget {
           Text(
             context.l10n.customMcpToolsFound(tools.length),
             style: TextStyle(
-              color: AppTheme.accent(context),
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.w600,
               fontSize: 12,
             ),
@@ -281,11 +282,10 @@ class _ToolsPreview extends StatelessWidget {
                 (t) => Padding(
                   padding: const EdgeInsets.symmetric(vertical: 2),
                   child: Text(
-                    '• ${t.name}',
+                    '• ${humanizeToolName(t.name)}',
                     style: TextStyle(
                       color: AppTheme.mutedText(context),
                       fontSize: 12,
-                      fontFamily: AppTheme.fontMono,
                     ),
                   ),
                 ),

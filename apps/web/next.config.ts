@@ -104,7 +104,10 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com",
               "style-src 'self' 'unsafe-inline'",
-              `img-src 'self' data: blob: ${imgSrc.join(' ')} https://lh3.googleusercontent.com https://images.unsplash.com https://www.notion.so https://linear.app https://sentry.io https://atlassian.com https://github.com https://stripe.com https://huggingface.co https://asana.com https://ssl.gstatic.com https://calendar.google.com`,
+              // `https:` — link-preview cards show the og:image of ANY site a member
+              // links, so a host allow-list blocked nearly every preview image.
+              // Images cannot execute; scripts/connect stay locked to known origins.
+              `img-src 'self' data: blob: ${imgSrc.join(' ')} https:`,
               // media-src is required for <audio>/<video> (voice messages, video, AI voice
               // replies). Without it these fall back to default-src 'self' and get blocked.
               `media-src 'self' data: blob: ${mediaSrc.join(' ')}`,

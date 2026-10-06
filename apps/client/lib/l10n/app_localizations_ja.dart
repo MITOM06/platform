@@ -858,6 +858,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get callMediaError => 'カメラ/マイクにアクセスできません（HTTPS または localhost が必要）';
 
   @override
+  String get callNoAnswer => '応答がありません';
+
+  @override
   String get callUnknownCaller => '誰か';
 
   @override
@@ -1097,7 +1100,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pinnedMessagesTitle => 'ピン留めしたメッセージ';
 
   @override
-  String get pinLimitReached => 'ピン留めできるメッセージは2件までです';
+  String get pinLimitReached => 'ピン留めできるメッセージは5件までです';
 
   @override
   String get cannotPinCall => '通話はピン留めできません';
@@ -3487,4 +3490,863 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get adminLoadFailed => 'このセクションを読み込めませんでした。もう一度お試しください。';
+
+  @override
+  String callDeclined(String name) {
+    return '$nameさんが通話を拒否しました';
+  }
+
+  @override
+  String callBusy(String name) {
+    return '$nameさんは別の通話中です';
+  }
+
+  @override
+  String callPeerMediaError(String name) {
+    return '$nameさんのマイクまたはカメラを起動できませんでした';
+  }
+
+  @override
+  String get callEnded => '通話が終了しました';
+
+  @override
+  String get callConnectionLost => '接続が切れたため通話が終了しました';
+
+  @override
+  String get callSpeaker => 'スピーカー';
+
+  @override
+  String get callSwitchCamera => 'カメラを切り替え';
+
+  @override
+  String get callHangUp => '通話を終了';
+
+  @override
+  String get callReconnecting => '再接続中…';
+
+  @override
+  String get callPoorConnection => '接続が不安定です';
+
+  @override
+  String get aiContextLearnedFactsLoadError => 'アシスタントが記憶した内容を読み込めませんでした。';
+
+  @override
+  String get errTooManyRequests => 'リクエストが多すぎます。しばらくしてからもう一度お試しください。';
+
+  @override
+  String get removedFromConversation => 'この会話のメンバーではなくなりました';
+
+  @override
+  String get errGroupAdminRequired => 'この操作はグループ管理者のみ行えます';
+
+  @override
+  String get errChatUserBlocked => 'この相手にはメッセージを送信できません';
+
+  @override
+  String get errReplyTargetInvalid => '返信先のメッセージは利用できなくなりました';
+
+  @override
+  String get errMessageTypeNotAllowed => 'この種類のメッセージはここでは送信できません';
+
+  @override
+  String get errInvalidUrl => 'このリンクはプレビューできません';
+
+  @override
+  String get errNotAGroup => 'この機能はグループチャットでのみ使えます';
+
+  @override
+  String get errNotAMember => 'この人はもうグループにいません';
+
+  @override
+  String get errLastAdminCannotBeRemoved => 'グループには少なくとも1人の管理者が必要です';
+
+  @override
+  String get errPublicDepartmentChannel => '部署のグループは公開チャンネルにできません';
+
+  @override
+  String get publicChannelToggle => '公開チャンネル';
+
+  @override
+  String get publicChannelHint => 'ワークスペースの誰でも「探索」で見つけて参加できます';
+
+  @override
+  String get groupMakeAdmin => '管理者にする';
+
+  @override
+  String get groupRemoveAdmin => '管理者を解除';
+
+  @override
+  String get aiErrEmptyResponse => 'アシスタントから回答がありませんでした。もう一度お試しください。';
+
+  @override
+  String get sysGroupCreatedNoActor => 'グループが作成されました';
+
+  @override
+  String get sysMembersAddedNoActor => '新しいメンバーが追加されました';
+
+  @override
+  String get sysMemberLeftNoActor => 'メンバーがグループを退出しました';
+
+  @override
+  String get sysMemberRemovedNoActor => 'メンバーが削除されました';
+
+  @override
+  String get sysMemberJoinedNoActor => '新しいメンバーが参加しました';
+
+  @override
+  String get sysAutoDeleteOff => '消えるメッセージをオフにしました';
+
+  @override
+  String sysAutoDeleteOn(String duration) {
+    return '消えるメッセージを$durationに設定しました';
+  }
+
+  @override
+  String sysAutoDeleteOffBy(String actorName) {
+    return '$actorNameさんが消えるメッセージをオフにしました';
+  }
+
+  @override
+  String sysAutoDeleteOnBy(String actorName, String duration) {
+    return '$actorNameさんが消えるメッセージを$durationに設定しました';
+  }
+
+  @override
+  String sysAdminPromoted(String targetName) {
+    return '$targetNameさんが管理者になりました';
+  }
+
+  @override
+  String sysAdminDemoted(String targetName) {
+    return '$targetNameさんは管理者ではなくなりました';
+  }
+
+  @override
+  String sysAdminPromotedBy(String actorName, String targetName) {
+    return '$actorNameさんが$targetNameさんを管理者にしました';
+  }
+
+  @override
+  String sysAdminDemotedBy(String actorName, String targetName) {
+    return '$actorNameさんが$targetNameさんの管理者を解除しました';
+  }
+
+  @override
+  String durationSeconds(int count) {
+    return '$count秒';
+  }
+
+  @override
+  String durationMinutes(int count) {
+    return '$count分';
+  }
+
+  @override
+  String durationHours(int count) {
+    return '$count時間';
+  }
+
+  @override
+  String durationDays(int count) {
+    return '$count日';
+  }
+
+  @override
+  String durationShortMinutes(int count) {
+    return '$count分';
+  }
+
+  @override
+  String durationShortHours(int count) {
+    return '$count時間';
+  }
+
+  @override
+  String durationShortDays(int count) {
+    return '$count日';
+  }
+
+  @override
+  String get authErrUserBlocked => 'ご利用いただけません — どちらかが相手をブロックしています';
+
+  @override
+  String get authErrCurrentPasswordRequired => '現在のパスワードを入力してください';
+
+  @override
+  String get authErrSsoEmailUnverified => 'サインインプロバイダーでこのメールアドレスが確認されていません';
+
+  @override
+  String get authErrSocialAccountConflict => 'このメールは別のサインインアカウントに既にリンクされています';
+
+  @override
+  String get aiActionConfirm => '確認';
+
+  @override
+  String get aiActionCancel => 'キャンセル';
+
+  @override
+  String get aiActionSendEmail => 'メールを送信';
+
+  @override
+  String get aiActionDraftEmail => 'メールの下書き';
+
+  @override
+  String get aiActionCreateEvent => 'カレンダーの予定を作成';
+
+  @override
+  String get aiActionUpdateEvent => 'カレンダーの予定を更新';
+
+  @override
+  String get aiActionCreatePage => 'ページを作成';
+
+  @override
+  String get aiActionUpdatePage => 'ページを更新';
+
+  @override
+  String get aiActionGeneric => '操作を実行';
+
+  @override
+  String aiActionGenericNamed(String tool) {
+    return '「$tool」を実行';
+  }
+
+  @override
+  String aiActionVia(String connector) {
+    return '$connector 経由';
+  }
+
+  @override
+  String aiActionWaitingFor(String name) {
+    return '$name の確認待ち';
+  }
+
+  @override
+  String get aiActionFieldTo => '宛先';
+
+  @override
+  String get aiActionFieldSubject => '件名';
+
+  @override
+  String get aiActionFieldTitle => 'タイトル';
+
+  @override
+  String get aiActionFieldWhen => '日時';
+
+  @override
+  String get aiActionStatusConfirmed => '完了';
+
+  @override
+  String get aiActionStatusCancelled => 'キャンセル済み';
+
+  @override
+  String get aiActionStatusFailed => '失敗';
+
+  @override
+  String get aiActionStatusExpired => '期限切れ';
+
+  @override
+  String get aiActionStatusHandled => '処理済み';
+
+  @override
+  String get aiActionErrNotFound => 'この操作はもう存在しません';
+
+  @override
+  String get aiActionErrNotOwner => '依頼した本人だけが確認できます';
+
+  @override
+  String get aiActionErrAlreadyResolved => 'この操作はすでに処理されています';
+
+  @override
+  String get aiActionErrExpired => 'このリクエストは期限切れです';
+
+  @override
+  String get aiActionErrGeneric => 'この操作を完了できませんでした';
+
+  @override
+  String get aiToolWebSearch => 'ウェブを検索中';
+
+  @override
+  String get aiToolRememberFact => '記憶に保存中';
+
+  @override
+  String get aiToolCreateReminder => 'リマインダーを作成中';
+
+  @override
+  String get aiToolGetUserInfo => '同僚を検索中';
+
+  @override
+  String get aiToolSearchKnowledgeBase => 'ナレッジベースを検索中';
+
+  @override
+  String get aiToolSearchMessages => 'メッセージを検索中';
+
+  @override
+  String get aiToolSummarizeConversation => '会話を要約中';
+
+  @override
+  String aiToolOnConnector(String tool, String connector) {
+    return '$connector で$tool';
+  }
+
+  @override
+  String get aiTraceToolAwaiting => '確認待ち';
+
+  @override
+  String get aiTraceToolDone => '完了';
+
+  @override
+  String get aiTraceToolNotRun => '未実行';
+
+  @override
+  String aiTraceTokens(String input, String output) {
+    return '入力 $input · 出力 $output';
+  }
+
+  @override
+  String aiTraceCacheTokens(String read, String written) {
+    return 'キャッシュ 読込 $read · 書込 $written';
+  }
+
+  @override
+  String aiTraceThinkingTokens(String count) {
+    return '思考 $count';
+  }
+
+  @override
+  String aiTraceDuration(String seconds) {
+    return '$seconds 秒';
+  }
+
+  @override
+  String aiTraceSteps(int count) {
+    return '$count ステップ';
+  }
+
+  @override
+  String get connectorGenericName => 'コネクタ';
+
+  @override
+  String get connectorCustomName => 'カスタム MCP サーバー';
+
+  @override
+  String get connectorReconnect => '再接続';
+
+  @override
+  String get connectorStatusReconnect => '再接続が必要です';
+
+  @override
+  String get connectorStatusUnavailable => '利用できません';
+
+  @override
+  String get connectorDisconnectWorkspaceConfirm =>
+      'このワークスペースのコネクタを切断しますか？ワークスペース全員がそのツールを使えなくなります。';
+
+  @override
+  String connectorDisconnected(String name) {
+    return '$name を切断しました';
+  }
+
+  @override
+  String get customMcpListTitle => 'あなたの MCP サーバー';
+
+  @override
+  String get customMcpDelete => '削除';
+
+  @override
+  String get customMcpDeleteConfirm => 'この MCP サーバーを削除しますか？AI はそのツールを使わなくなります。';
+
+  @override
+  String customMcpDeleted(String name) {
+    return '$name を削除しました';
+  }
+
+  @override
+  String get directoryDeleteConfirm => 'このディレクトリ項目を削除しますか？';
+
+  @override
+  String get directoryAuthOauth => 'OAuth サインイン';
+
+  @override
+  String get directoryAuthMcpOauth => 'OAuth（MCP サーバー）';
+
+  @override
+  String get directoryAuthEnvOauth => 'OAuth（ワークスペースのアプリ）';
+
+  @override
+  String get directoryAuthApiKey => 'API キー';
+
+  @override
+  String get directoryAuthNone => 'サインイン不要';
+
+  @override
+  String get scopeEmailSend => 'メールの送信';
+
+  @override
+  String get scopeEmailDraft => '下書きの作成';
+
+  @override
+  String get scopeEmailRead => 'メールの閲覧';
+
+  @override
+  String get scopeEmailManage => 'メールの管理';
+
+  @override
+  String get scopeCalendarRead => 'カレンダーの閲覧';
+
+  @override
+  String get scopeCalendarEvents => '予定の管理';
+
+  @override
+  String get scopeCalendarManage => 'カレンダーの管理';
+
+  @override
+  String get scopeFilesRead => 'ファイルの閲覧';
+
+  @override
+  String get scopeFilesManage => 'ファイルの管理';
+
+  @override
+  String get scopeReadContent => 'コンテンツの閲覧';
+
+  @override
+  String get scopeInsertContent => 'コンテンツの追加';
+
+  @override
+  String get scopeUpdateContent => 'コンテンツの編集';
+
+  @override
+  String get scopeOther => 'その他のアクセス';
+
+  @override
+  String get connErrUnsafeUrl => 'このアドレスは使用できません。公開されている https の URL を使ってください。';
+
+  @override
+  String get connErrDiscoveryFailed => 'その MCP サーバーに接続できませんでした';
+
+  @override
+  String get connErrInsufficientPermission => 'この操作を行う権限がありません';
+
+  @override
+  String get connErrNotAllowed => 'このコネクタはワークスペースで許可されていません';
+
+  @override
+  String get connErrUnavailable => 'このコネクタは現在利用できません';
+
+  @override
+  String get connErrOauthSetup => 'このコネクタはまだサインインが設定されていません';
+
+  @override
+  String get connErrBotBridgeDisabled => 'パーソナルアシスタントのサービスが設定されていません';
+
+  @override
+  String get connErrBotNotFound => 'アシスタントが見つかりません';
+
+  @override
+  String get connErrBotOwnerMismatch => 'このアシスタントは別のメンバーのものです';
+
+  @override
+  String get connErrMemberInactive => 'このメンバーのアカウントは無効です';
+
+  @override
+  String oauthConnected(String name) {
+    return '$name に接続しました';
+  }
+
+  @override
+  String oauthErrAccessDenied(String name) {
+    return '$name へのアクセスを拒否しました';
+  }
+
+  @override
+  String oauthErrFailed(String name) {
+    return '$name に接続できませんでした';
+  }
+
+  @override
+  String oauthNotCompleted(String name) {
+    return '$name の接続が完了していません';
+  }
+
+  @override
+  String get oauthErrExpired => 'サインインに時間がかかりすぎました。もう一度お試しください。';
+
+  @override
+  String get tokenUsageDailyChartTitle => '日別の使用量';
+
+  @override
+  String get tokenUsageTotalInRange => '選択期間の合計';
+
+  @override
+  String get tokenUsageQuotaBlocked => 'このワークスペースでは AI がオフになっています';
+
+  @override
+  String get tokenUsageQuotaExceeded => '今月の AI 上限に達しました';
+
+  @override
+  String tokenUsageQuotaResets(String date) {
+    return '$date にリセット';
+  }
+
+  @override
+  String authErrRoleGrantExceedsOwnPermissions(String capabilities) {
+    return '自分が持っていない権限は付与できません: $capabilities。';
+  }
+
+  @override
+  String get authErrRoleGrantExceedsOwnPermissionsGeneric =>
+      '自分が持っていない権限は付与できません。';
+
+  @override
+  String get authErrCannotEditOwnRole => '自分のロールは編集できません。';
+
+  @override
+  String get authErrPresetRoleRenameForbidden => '組み込みロールの名前は変更できません。';
+
+  @override
+  String get authErrRoleNameTaken => 'この名前のロールは既に存在します。';
+
+  @override
+  String get authErrOwnerRoleImmutable => 'Owner ロールは変更・削除できません。';
+
+  @override
+  String get authErrOwnerSsoMappingForbidden =>
+      'SSO グループを Owner ロールに割り当てられるのは Owner のみです。';
+
+  @override
+  String get authErrInsufficientPermission => 'この操作を行う権限がありません。';
+
+  @override
+  String get authErrAiContextEntryNotFound => 'このコンテキスト項目は既に存在しません。';
+
+  @override
+  String get authErrAiConnectorsNotInAllowList =>
+      '選択した AI コネクタはワークスペースの許可リストに含まれている必要があります。';
+
+  @override
+  String authErrPasswordTooShortMin(int min) {
+    return 'パスワードは $min 文字以上にしてください。';
+  }
+
+  @override
+  String get adminCapManageAiContext => 'AI コンテキストを管理';
+
+  @override
+  String get adminCapViewInternalContext => '社内コンテキストを閲覧';
+
+  @override
+  String get adminCapViewConfidentialContext => '機密コンテキストを閲覧';
+
+  @override
+  String get adminCapUnknown => 'その他の権限';
+
+  @override
+  String get adminAuditSystem => 'システム';
+
+  @override
+  String get adminAuditFormerMember => '元メンバー';
+
+  @override
+  String get adminAuditActionOther => 'その他の操作';
+
+  @override
+  String get adminAuditActionWorkspaceUpdate => 'ワークスペースを更新';
+
+  @override
+  String get adminAuditActionDepartmentCreate => '部署を作成';
+
+  @override
+  String get adminAuditActionDepartmentUpdate => '部署を更新';
+
+  @override
+  String get adminAuditActionDepartmentDelete => '部署を削除';
+
+  @override
+  String get adminAuditActionMemberUpdate => 'メンバーを更新';
+
+  @override
+  String get adminAuditActionMemberSsoUpdate => 'SSO によりメンバーを更新';
+
+  @override
+  String get adminAuditActionMemberBlock => 'メンバーをブロック';
+
+  @override
+  String get adminAuditActionMemberUnblock => 'メンバーのブロックを解除';
+
+  @override
+  String get adminAuditActionRoleCreate => 'ロールを作成';
+
+  @override
+  String get adminAuditActionRoleUpdate => 'ロールを更新';
+
+  @override
+  String get adminAuditActionInvitationCreate => '招待を送信';
+
+  @override
+  String get adminAuditActionInvitationResend => '招待を再送信';
+
+  @override
+  String get adminAuditActionInvitationRevoke => '招待を取り消し';
+
+  @override
+  String get adminAuditActionInvitationAccept => '招待を承諾';
+
+  @override
+  String get adminAuditActionConnectorConnect => 'コネクタを接続';
+
+  @override
+  String get adminAuditActionConnectorDisconnect => 'コネクタを切断';
+
+  @override
+  String get adminAuditActionConnectorReplace => 'コネクタを再接続';
+
+  @override
+  String get adminAuditActionConnectionPermissionsUpdate => 'コネクタの権限を更新';
+
+  @override
+  String get adminAuditActionCustomMcpAdd => 'カスタム MCP を追加';
+
+  @override
+  String get adminAuditActionCustomMcpDelete => 'カスタム MCP を削除';
+
+  @override
+  String get adminAuditActionDirectoryCreate => 'ディレクトリ項目を追加';
+
+  @override
+  String get adminAuditActionDirectoryUpdate => 'ディレクトリ項目を更新';
+
+  @override
+  String get adminAuditActionDirectoryDelete => 'ディレクトリ項目を削除';
+
+  @override
+  String get adminAuditActionSensitiveSkillRun => '機密スキルを実行';
+
+  @override
+  String get adminAuditTargetWorkspace => 'ワークスペース';
+
+  @override
+  String get adminAuditTargetMember => 'メンバー';
+
+  @override
+  String get adminAuditTargetRole => 'ロール';
+
+  @override
+  String get adminAuditTargetDepartment => '部署';
+
+  @override
+  String get adminAuditTargetInvitation => '招待';
+
+  @override
+  String get adminAuditTargetConnector => 'コネクタ';
+
+  @override
+  String get adminAuditTargetDirectoryEntry => 'ディレクトリ項目';
+
+  @override
+  String get adminAuditTargetTool => 'ツール';
+
+  @override
+  String get adminAuditTargetOther => 'その他';
+
+  @override
+  String get adminAiConnectorsAllAllowed =>
+      'ワークスペースの許可リストが空のため、すべてのコネクタが許可されています。AI が使用できるものを選んでください。';
+
+  @override
+  String get errAssistantSetupIncomplete =>
+      'アシスタントの設定を完了するには、ペルソナを入力してモデルを選んでください。';
+
+  @override
+  String get errAssistantNotConfigured =>
+      'このワークスペースではまだ個人アシスタントを利用できません。管理者にお問い合わせください。';
+
+  @override
+  String get errAssistantUpstreamFailed =>
+      'アシスタントサービスが応答しませんでした。しばらくしてからもう一度お試しください。';
+
+  @override
+  String adminBotOwnedBy(String name) {
+    return '所有者: $name';
+  }
+
+  @override
+  String adminRoleCloneDefaultName(String name) {
+    return '$name のコピー';
+  }
+
+  @override
+  String get setPasswordTitle => 'PON のパスワードを作成';
+
+  @override
+  String get setPasswordSubtitle =>
+      'Google で参加しました。メールアドレスでもサインインできるよう、パスワードを作成してください。';
+
+  @override
+  String get setPasswordSubmit => 'パスワードを作成';
+
+  @override
+  String get setPasswordSuccess => 'パスワードを作成しました。メールアドレスでもサインインできるようになりました。';
+
+  @override
+  String get mfaVerifyTitle => '二要素認証';
+
+  @override
+  String get mfaVerifySubtitle => 'サインインを完了するには、認証アプリに表示される6桁のコードを入力してください。';
+
+  @override
+  String get mfaBackupSubtitle =>
+      'バックアップコード（XXXXX-XXXXX）を1つ入力してください。各コードは1回のみ使用できます。';
+
+  @override
+  String get mfaCodeLabel => '6桁のコード';
+
+  @override
+  String get mfaBackupCodeLabel => 'バックアップコード';
+
+  @override
+  String get mfaVerifyButton => '確認';
+
+  @override
+  String get mfaUseBackupCode => 'バックアップコードを使用';
+
+  @override
+  String get mfaUseAuthenticatorCode => '認証アプリを使用';
+
+  @override
+  String get mfaBackToSignIn => 'サインインに戻る';
+
+  @override
+  String mfaBackupCodeUsed(int remaining) {
+    return 'バックアップコードを使用しました。残り$remaining個です。';
+  }
+
+  @override
+  String get valMfaCodeInvalid => '6桁のコードを入力してください。';
+
+  @override
+  String get valMfaBackupCodeInvalid => 'ABCDE-FGHIJ の形式でバックアップコードを入力してください。';
+
+  @override
+  String get mfaEnrollTitle => '二要素認証を設定';
+
+  @override
+  String get mfaEnrollSubtitle => 'あなたのロールでは、サインインのたびに認証アプリのコードが必要です。';
+
+  @override
+  String get mfaEnrollStepInstall =>
+      '1. Google Authenticator（または他の認証アプリ）をインストールします。';
+
+  @override
+  String get mfaEnrollStepScan => '2. このQRコードをスキャンするか、アプリで開くか、セットアップキーを入力します。';
+
+  @override
+  String get mfaEnrollStepCode => '3. アプリに表示される6桁のコードを入力します。';
+
+  @override
+  String get mfaEnrollOpenApp => '認証アプリで開く';
+
+  @override
+  String get mfaEnrollNoApp =>
+      '認証アプリが見つかりません。Google Authenticator をインストールするか、セットアップキーを手動で入力してください。';
+
+  @override
+  String get mfaEnrollManualKey => 'セットアップキー';
+
+  @override
+  String get mfaCopyKey => 'キーをコピー';
+
+  @override
+  String get mfaKeyCopied => 'セットアップキーをコピーしました';
+
+  @override
+  String get mfaQrSemantic => '認証アプリ用のQRコード';
+
+  @override
+  String get mfaEnrollConfirm => '確認';
+
+  @override
+  String get mfaBackupCodesTitle => 'バックアップコードを保存';
+
+  @override
+  String get mfaBackupCodesSubtitle =>
+      'スマートフォンを紛失した場合、各コードで1回サインインできます。再表示されないため、安全な場所に保管してください。';
+
+  @override
+  String get mfaCopyCodes => 'コードをコピー';
+
+  @override
+  String get mfaCodesCopied => 'バックアップコードをコピーしました';
+
+  @override
+  String get mfaSavedCheckbox => 'バックアップコードを保存しました';
+
+  @override
+  String get mfaContinue => '続行';
+
+  @override
+  String get securityMfaOn => 'サインインのたびに認証アプリのコードが必要です。';
+
+  @override
+  String get securityMfaPending => 'あなたのロールでは必須です。次回のサインイン時に設定します。';
+
+  @override
+  String get securityMfaStatusOn => 'オン';
+
+  @override
+  String get securityMfaStatusOff => '未設定';
+
+  @override
+  String get securityMfaRegenerate => 'バックアップコードを再生成';
+
+  @override
+  String get securityMfaRegenerateHint =>
+      '認証アプリに表示されている現在のコードを入力してください。古いバックアップコードは使えなくなります。';
+
+  @override
+  String get securityMfaRegenerateSubmit => '生成';
+
+  @override
+  String get securityMfaDone => '完了';
+
+  @override
+  String get adminMfaBadge => '2FA オン';
+
+  @override
+  String get adminMfaReset => '2FA をリセット';
+
+  @override
+  String adminMfaResetConfirm(String name) {
+    return '$name さんの二要素認証をリセットしますか？すべての端末からサインアウトされ、次回のサインイン時に再設定が必要になります。';
+  }
+
+  @override
+  String get adminMfaResetDone => '2FA をリセットしました。次回のサインイン時に再設定されます。';
+
+  @override
+  String get authMsgMfaRequired => 'サインインを完了するには、認証アプリのコードを入力してください。';
+
+  @override
+  String get authErrMfaTokenInvalid => 'サインインの有効期限が切れました。もう一度サインインしてください。';
+
+  @override
+  String get authErrMfaCodeInvalid => 'コードが正しくありません。もう一度お試しください。';
+
+  @override
+  String authErrMfaCodeInvalidRemaining(int remaining) {
+    return 'コードが正しくありません。残り$remaining回の試行があります。';
+  }
+
+  @override
+  String get authErrMfaTooManyAttempts => 'コードの誤りが多すぎます。もう一度サインインしてください。';
+
+  @override
+  String get authErrMfaNotEnrolled => 'このアカウントでは二要素認証がまだ設定されていません。';
+
+  @override
+  String get authErrMfaAlreadyEnrolled => 'このアカウントでは二要素認証がすでに設定されています。';
+
+  @override
+  String get authErrMfaResetForbidden => '二要素認証をリセットできるのはオーナーのみです。';
+
+  @override
+  String get authErrMfaResetSelfForbidden => '自分の二要素認証はリセットできません。';
 }

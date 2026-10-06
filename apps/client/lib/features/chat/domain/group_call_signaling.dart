@@ -7,6 +7,9 @@ import '../../auth/domain/auth_state.dart';
 import '../data/stomp_service.dart';
 import 'group_call_controller.dart';
 import 'group_call_state.dart';
+import '../data/calls_repository.dart';
+import 'call_transport.dart';
+import 'sfu_call_signals.dart';
 
 part 'group_call_signaling.g.dart';
 
@@ -32,19 +35,27 @@ class IncomingGroupCallNotifier extends _$IncomingGroupCallNotifier {
 class GroupCallSignaling extends _$GroupCallSignaling {
   StreamSubscription<Map<String, dynamic>>? _webrtcSub;
   StreamSubscription<Map<String, dynamic>>? _callEventSub;
+  StreamSubscription<void>? _connectionSub;
 
   @override
   void build() {
     final stomp = ref.read(stompServiceProvider.notifier);
     _webrtcSub = stomp.webrtcSignals.listen(_onWebRtc);
     _callEventSub = stomp.callEvents.listen(_onCallEvent);
+    // Which media path new calls take (mesh / LiveKit) — re-read on every
+    // (re)connect, so a server switching CALL_TRANSPORT is picked up.
+    _connectionSub = stomp.connections.listen((_) {
+      ref.read(callTransportProvider).refresh(ref.read(callsRepositoryProvider));
+    });
     ref.onDispose(() {
       _webrtcSub?.cancel();
       _callEventSub?.cancel();
+      _connectionSub?.cancel();
     });
   }
 
   void _onWebRtc(Map<String, dynamic> signal) {
+    if (handleSfuCallSignal(ref, signal)) return;
     final type = signal['type'] as String?;
     final callId = signal['callId'] as String?;
 
@@ -60,6 +71,7 @@ class GroupCallSignaling extends _$GroupCallSignaling {
               startedByName: (signal['startedByName'] ?? '').toString(),
               isVideo: signal['media'] == 'video',
               aiNotetaker: signal['aiNotetaker'] == true,
+              transport: CallTransport.fromWire(signal['transport'] as String?),
             ),
           );
       return;
@@ -100,6 +112,7 @@ class GroupCallSignaling extends _$GroupCallSignaling {
     required String conversationId,
     required bool isVideo,
     required bool aiNotetaker,
+    required CallTransport transport,
   }) async {
     try {
       await controller.join(
@@ -108,6 +121,7 @@ class GroupCallSignaling extends _$GroupCallSignaling {
         isVideo: isVideo,
         aiNotetaker: aiNotetaker,
         isStarter: true,
+        transport: transport,
       );
       ref.read(appRouterProvider).push('/group-call');
     } catch (e) {
@@ -130,13 +144,16 @@ class GroupCallSignaling extends _$GroupCallSignaling {
         final startedBy = data['startedBy'] as String?;
         final convId = data['conversationId'] as String?;
         final active = ref.read(groupCallControllerProvider);
-        if (startedBy == selfId && convId != null && !active.isActive) {
+        // A LiveKit 1-on-1 is run by SfuCallService, never as a group call.
+        final direct = data['kind'] == 'direct';
+        if (!direct && startedBy == selfId && convId != null && !active.isActive) {
           _starterAutoJoin(
             controller,
             callId: callId,
             conversationId: convId,
             isVideo: data['media'] == 'video',
             aiNotetaker: data['aiNotetaker'] == true,
+            transport: CallTransport.fromWire(data['transport'] as String?),
           );
         }
         break;

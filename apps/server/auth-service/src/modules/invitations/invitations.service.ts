@@ -23,6 +23,7 @@ import {
   RoleDocument,
 } from '@platform/database';
 import { AuthCode } from '../../common/auth-code.enum';
+import { assertCanGrant } from '../../common/role-grant';
 import { AuditService } from '../audit/audit.service';
 import { UsersService } from '../users/users.service';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
@@ -89,6 +90,9 @@ export class InvitationsService {
         code: AuthCode.OWNER_ROLE_ASSIGN_FORBIDDEN,
       });
     }
+    // Inviting with a role = granting it: a non-Owner can't invite into a role
+    // carrying capabilities they don't hold (403 ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS).
+    assertCanGrant(actor, role.permissions);
 
     const departmentIds = [...new Set(dto.departmentIds ?? [])];
     if (departmentIds.length > 0) {

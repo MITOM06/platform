@@ -56,9 +56,26 @@
       "post": {
         "operationId": "UsersController_changePassword",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangePasswordResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -66,6 +83,7 @@
             "bearer": []
           }
         ],
+        "summary": "Change (or set a first) password — also clears mustSetPassword; signs out every OTHER session",
         "tags": [
           "users"
         ]
@@ -105,6 +123,35 @@
             "bearer": []
           }
         ],
+        "summary": "Register an FCM token (moved off any other account using it)",
+        "tags": [
+          "users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_removeDeviceToken",
+        "parameters": [
+          {
+            "name": "token",
+            "required": false,
+            "in": "query",
+            "description": "FCM token (alternative to the JSON body { token })",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unregister an FCM token from the caller's account",
         "tags": [
           "users"
         ]
@@ -680,7 +727,21 @@
         },
         "responses": {
           "201": {
-            "description": "Access + refresh tokens issued"
+            "description": "Tokens issued, or MFA_REQUIRED (privileged user, Google sign-in)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ExchangeResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MfaRequiredResponseDto"
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "summary": "Exchange a one-time login code for tokens",
@@ -742,7 +803,21 @@
         },
         "responses": {
           "201": {
-            "description": "Login succeeded; tokens issued"
+            "description": "LOGIN_SUCCESS + tokens, or MFA_REQUIRED (privileged user)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/LoginTokensResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MfaRequiredResponseDto"
+                    }
+                  ]
+                }
+              }
+            }
           },
           "401": {
             "description": "Invalid credentials"
@@ -964,6 +1039,184 @@
         ]
       }
     },
+    "/auth/mfa/enroll/start": {
+      "post": {
+        "operationId": "MfaLoginController_enrollStart",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaEnrollStartDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaEnrollStartResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Start authenticator enrollment (QR + manual key)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/mfa/enroll/confirm": {
+      "post": {
+        "operationId": "MfaLoginController_enrollConfirm",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaEnrollConfirmDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaEnrollConfirmResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "MFA_TOKEN_INVALID / MFA_CODE_INVALID / MFA_TOO_MANY_ATTEMPTS"
+          }
+        },
+        "summary": "Confirm enrollment with one code; returns the backup codes, NO session yet",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/mfa/enroll/codes": {
+      "post": {
+        "operationId": "MfaLoginController_enrollCodes",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaEnrollCodesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaEnrollCodesResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MFA_NOT_ENROLLED (wrong step)"
+          },
+          "401": {
+            "description": "MFA_TOKEN_INVALID"
+          }
+        },
+        "summary": "The backup codes of a confirmed enrollment again (after a reload)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/mfa/enroll/complete": {
+      "post": {
+        "operationId": "MfaLoginController_enrollComplete",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaEnrollCompleteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaEnrollCompleteResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MFA_NOT_ENROLLED (wrong step)"
+          },
+          "401": {
+            "description": "MFA_TOKEN_INVALID"
+          }
+        },
+        "summary": "Backup codes saved: finish enrollment and sign in (single use)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/mfa/verify": {
+      "post": {
+        "operationId": "MfaLoginController_verify",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaVerifyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaVerifyResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "MFA_TOKEN_INVALID / MFA_CODE_INVALID / MFA_TOO_MANY_ATTEMPTS"
+          }
+        },
+        "summary": "Verify a TOTP or backup code; signs in",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/admin/invitations": {
       "post": {
         "operationId": "AdminInvitationsController_create",
@@ -1122,6 +1375,79 @@
           }
         ],
         "summary": "Revoke a pending/expired invitation",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/users/me/mfa/backup-codes": {
+      "post": {
+        "operationId": "MfaSelfController_regenerateBackupCodes",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegenerateBackupCodesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupCodesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace the backup codes (needs the current authenticator code)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/admin/members/{id}/mfa/reset": {
+      "post": {
+        "operationId": "MfaAdminController_reset",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Owner only: reset a member's 2FA and revoke their sessions",
         "tags": [
           "admin"
         ]
@@ -1414,7 +1740,7 @@
             "bearer": []
           }
         ],
-        "summary": "Create / clone a role",
+        "summary": "Create / clone a role (non-Owners: only capabilities they hold)",
         "tags": [
           "admin"
         ]
@@ -1453,7 +1779,7 @@
             "bearer": []
           }
         ],
-        "summary": "Edit a role (Owner is immutable)",
+        "summary": "Edit a role (Owner immutable; presets keep their name; non-Owners: not their own role, only capabilities they hold)",
         "tags": [
           "admin"
         ]
@@ -1815,6 +2141,35 @@
       }
     },
     "schemas": {
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "description": "Required only when the account already has a password (omit when setting the first one)"
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 8,
+            "example": "N3wP@ssw0rd"
+          }
+        },
+        "required": [
+          "newPassword"
+        ]
+      },
+      "ChangePasswordResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "success"
+        ]
+      },
       "FriendRequestDto": {
         "type": "object",
         "properties": {
@@ -1837,6 +2192,165 @@
         },
         "required": [
           "requesterId"
+        ]
+      },
+      "ExchangeUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string"
+          },
+          "isVerified": {
+            "type": "boolean"
+          },
+          "mustSetPassword": {
+            "type": "boolean",
+            "description": "true only for an account created by accepting an invitation with Google: the client must show \"create your PON password\" before the app"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "displayName",
+          "isVerified",
+          "mustSetPassword"
+        ]
+      },
+      "ExchangeResponseDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "sid": {
+            "type": "string"
+          },
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/ExchangeUserDto"
+          }
+        },
+        "required": [
+          "userId",
+          "sid",
+          "accessToken",
+          "refreshToken",
+          "user"
+        ]
+      },
+      "LoginTokensUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "mustSetPassword": {
+            "type": "boolean",
+            "description": "true only for an account created by accepting an invitation with Google: the client must show \"create your PON password\" before the app"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "displayName",
+          "mustSetPassword"
+        ]
+      },
+      "LoginTokensResponseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "LOGIN_SUCCESS",
+            "description": "LOGIN_SUCCESS (login) or INVITATION_ACCEPTED (accept-password)"
+          },
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "sid": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/LoginTokensUserDto"
+          }
+        },
+        "required": [
+          "code",
+          "accessToken",
+          "refreshToken",
+          "sid",
+          "user"
+        ]
+      },
+      "MfaUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "displayName"
+        ]
+      },
+      "MfaRequiredResponseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "MFA_REQUIRED"
+            ],
+            "example": "MFA_REQUIRED"
+          },
+          "mfaToken": {
+            "type": "string",
+            "description": "Opaque, single-use, valid for 5 minutes"
+          },
+          "enrollmentRequired": {
+            "type": "boolean",
+            "description": "true = first sign-in since becoming privileged: enroll an authenticator first"
+          },
+          "user": {
+            "$ref": "#/components/schemas/MfaUserDto"
+          }
+        },
+        "required": [
+          "code",
+          "mfaToken",
+          "enrollmentRequired",
+          "user"
         ]
       },
       "ExchangeDto": {
@@ -2029,31 +2543,150 @@
           "password"
         ]
       },
-      "LoginTokensUserDto": {
+      "MfaEnrollStartDto": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "displayName": {
-            "type": "string"
+          "mfaToken": {
+            "type": "string",
+            "description": "mfaToken from the MFA_REQUIRED sign-in answer"
           }
         },
         "required": [
-          "id",
-          "email",
-          "displayName"
+          "mfaToken"
         ]
       },
-      "LoginTokensResponseDto": {
+      "MfaEnrollStartResponseDto": {
+        "type": "object",
+        "properties": {
+          "otpauthUrl": {
+            "type": "string",
+            "example": "otpauth://totp/PON:jane%40acme.com?secret=...&issuer=PON"
+          },
+          "secret": {
+            "type": "string",
+            "description": "Base32 secret for manual entry"
+          },
+          "qrDataUrl": {
+            "type": "string",
+            "description": "QR code of otpauthUrl as a data:image/png;base64 URL"
+          }
+        },
+        "required": [
+          "otpauthUrl",
+          "secret",
+          "qrDataUrl"
+        ]
+      },
+      "MfaEnrollConfirmDto": {
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "description": "Device identifier for the issued session"
+          },
+          "platform": {
+            "type": "string",
+            "description": "Originating platform",
+            "example": "web"
+          },
+          "mfaToken": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "example": "123456",
+            "description": "6-digit code from the authenticator app"
+          }
+        },
+        "required": [
+          "mfaToken",
+          "code"
+        ]
+      },
+      "MfaEnrollConfirmResponseDto": {
         "type": "object",
         "properties": {
           "code": {
             "type": "string",
-            "example": "INVITATION_ACCEPTED"
+            "enum": [
+              "MFA_BACKUP_CODES_ISSUED"
+            ],
+            "example": "MFA_BACKUP_CODES_ISSUED"
+          },
+          "backupCodes": {
+            "example": [
+              "ABCDE-FGH23"
+            ],
+            "description": "10 single-use backup codes (stored hashed). Re-readable via enroll/codes until enroll/complete, at most 10 minutes.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "backupCodes"
+        ]
+      },
+      "MfaEnrollCodesDto": {
+        "type": "object",
+        "properties": {
+          "mfaToken": {
+            "type": "string",
+            "description": "mfaToken of the confirmed enrollment"
+          }
+        },
+        "required": [
+          "mfaToken"
+        ]
+      },
+      "MfaEnrollCodesResponseDto": {
+        "type": "object",
+        "properties": {
+          "backupCodes": {
+            "example": [
+              "ABCDE-FGH23"
+            ],
+            "description": "The same 10 backup codes enroll/confirm returned",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "backupCodes"
+        ]
+      },
+      "MfaEnrollCompleteDto": {
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "description": "Device identifier for the issued session"
+          },
+          "platform": {
+            "type": "string",
+            "description": "Originating platform",
+            "example": "web"
+          },
+          "mfaToken": {
+            "type": "string",
+            "description": "mfaToken of the confirmed enrollment"
+          }
+        },
+        "required": [
+          "mfaToken"
+        ]
+      },
+      "MfaEnrollCompleteResponseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "LOGIN_SUCCESS",
+            "description": "LOGIN_SUCCESS (login) or INVITATION_ACCEPTED (accept-password)"
           },
           "accessToken": {
             "type": "string"
@@ -2074,6 +2707,70 @@
           "refreshToken",
           "sid",
           "user"
+        ]
+      },
+      "MfaVerifyDto": {
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "description": "Device identifier for the issued session"
+          },
+          "platform": {
+            "type": "string",
+            "description": "Originating platform",
+            "example": "web"
+          },
+          "mfaToken": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "example": "123456",
+            "description": "6-digit authenticator code (send exactly one of code / backupCode)"
+          },
+          "backupCode": {
+            "type": "string",
+            "example": "ABCDE-FGH23",
+            "description": "Single-use backup code (send exactly one of code / backupCode)"
+          }
+        },
+        "required": [
+          "mfaToken"
+        ]
+      },
+      "MfaVerifyResponseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "LOGIN_SUCCESS",
+            "description": "LOGIN_SUCCESS (login) or INVITATION_ACCEPTED (accept-password)"
+          },
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "sid": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/LoginTokensUserDto"
+          },
+          "backupCodesRemaining": {
+            "type": "number",
+            "description": "Unused backup codes left after this sign-in"
+          }
+        },
+        "required": [
+          "code",
+          "accessToken",
+          "refreshToken",
+          "sid",
+          "user",
+          "backupCodesRemaining"
         ]
       },
       "CreateInvitationDto": {
@@ -2241,6 +2938,34 @@
           "success"
         ]
       },
+      "RegenerateBackupCodesDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "123456",
+            "description": "Current authenticator code"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "BackupCodesResponseDto": {
+        "type": "object",
+        "properties": {
+          "backupCodes": {
+            "description": "10 new single-use backup codes (the old ones stop working). Shown once.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "backupCodes"
+        ]
+      },
       "CreateDepartmentDto": {
         "type": "object",
         "properties": {
@@ -2305,6 +3030,10 @@
               "blocked",
               "pending"
             ]
+          },
+          "mfaEnabled": {
+            "type": "boolean",
+            "description": "The member has an enrolled authenticator (2FA)"
           }
         },
         "required": [
@@ -2312,7 +3041,8 @@
           "displayName",
           "email",
           "departmentIds",
-          "status"
+          "status",
+          "mfaEnabled"
         ]
       },
       "UpdateMemberDto": {

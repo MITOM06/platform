@@ -1,4 +1,5 @@
 import { getModelToken } from '@nestjs/mongoose';
+import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { createHash } from 'crypto';
 import { BotSessionService } from './bot-session.service';
@@ -11,6 +12,7 @@ const mockModel = () => ({
   find: jest.fn(),
   create: jest.fn(),
 });
+const DAY = 24 * 60 * 60 * 1000;
 
 describe('BotSessionService', () => {
   let service: BotSessionService;
@@ -22,36 +24,49 @@ describe('BotSessionService', () => {
       providers: [
         BotSessionService,
         { provide: getModelToken(BotSession.name), useValue: model },
+        { provide: ConfigService, useValue: { get: (k: string) => (k === 'botSessionTtlDays' ? 30 : undefined) } },
       ],
     }).compile();
     service = module.get(BotSessionService);
+    model.updateOne.mockReturnValue({ catch: jest.fn().mockResolvedValue(undefined) });
   });
 
-  it('issue() returns a 32-byte hex token and stores its SHA-256 hash', async () => {
-    model.findOneAndUpdate.mockResolvedValue({ userId: 'u1', botUserId: 'extbot:b1' });
-    const token = await service.issue('u1', 'extbot:b1');
-    expect(token).toHaveLength(64); // 32 bytes = 64 hex chars
-    const [call] = model.findOneAndUpdate.mock.calls;
-    const hash = createHash('sha256').update(token).digest('hex');
-    expect(call[1].$set.tokenHash).toBe(hash);
-  });
-
-  it('validate() returns userId+botUserId for a valid token', async () => {
-    const token = 'a'.repeat(64);
+  const sessionFor = (token: string, extra: Record<string, unknown>) => {
     const hash = createHash('sha256').update(token).digest('hex');
     model.findOne.mockReturnValue({
-      lean: jest.fn().mockResolvedValue({
-        _id: 'id1',
-        userId: 'u1',
-        botUserId: 'extbot:b1',
-        tokenHash: hash,
-      }),
+      lean: jest.fn().mockResolvedValue({ _id: 'id1', userId: 'u1', botUserId: 'extbot:b1', tokenHash: hash, ...extra }),
     });
-    model.updateOne.mockReturnValue({
-      catch: jest.fn().mockResolvedValue(undefined),
-    });
-    const result = await service.validate(token);
-    expect(result).toEqual({ userId: 'u1', botUserId: 'extbot:b1' });
+  };
+
+  it('issue() returns a 32-byte hex token, stores its SHA-256 hash and an expiry (TTL)', async () => {
+    model.findOneAndUpdate.mockResolvedValue({});
+    const before = Date.now();
+    const { token, expiresAt } = await service.issue('u1', 'extbot:b1');
+    expect(token).toHaveLength(64);
+    const [, update] = model.findOneAndUpdate.mock.calls[0];
+    expect(update.$set.tokenHash).toBe(createHash('sha256').update(token).digest('hex'));
+    expect(expiresAt.getTime()).toBeGreaterThanOrEqual(before + 30 * DAY);
+    expect(update.$set.expiresAt).toEqual(expiresAt);
+  });
+
+  it('validate() returns userId+botUserId for a valid, unexpired token', async () => {
+    const token = 'a'.repeat(64);
+    sessionFor(token, { expiresAt: new Date(Date.now() + DAY) });
+    expect(await service.validate(token)).toEqual({ userId: 'u1', botUserId: 'extbot:b1' });
+  });
+
+  it('validate() rejects an expired token', async () => {
+    const token = 'b'.repeat(64);
+    sessionFor(token, { expiresAt: new Date(Date.now() - 1000) });
+    expect(await service.validate(token)).toBeNull();
+  });
+
+  it('validate() expires legacy sessions (no expiresAt) at createdAt + TTL', async () => {
+    const token = 'c'.repeat(64);
+    sessionFor(token, { createdAt: new Date(Date.now() - 31 * DAY) });
+    expect(await service.validate(token)).toBeNull();
+    sessionFor(token, { createdAt: new Date(Date.now() - 2 * DAY) });
+    expect(await service.validate(token)).toEqual({ userId: 'u1', botUserId: 'extbot:b1' });
   });
 
   it('validate() returns null for unknown token', async () => {

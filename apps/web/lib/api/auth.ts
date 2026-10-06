@@ -5,8 +5,20 @@ import type {
   UserSearchResponse,
   LoginRequest,
   VerifyOtpRequest,
+  ChangePasswordRequest,
   AcceptInvitationRequest,
   InvitationPreview,
+  MfaChallenge,
+  MfaEnrollStartRequest,
+  MfaEnrollStartResponse,
+  MfaEnrollConfirmRequest,
+  MfaEnrollConfirmResponse,
+  MfaEnrollCodesRequest,
+  MfaEnrollCodesResponse,
+  MfaEnrollCompleteRequest,
+  MfaVerifyRequest,
+  MfaBackupCodesResponse,
+  RegenerateBackupCodesRequest,
 } from './types'
 
 /** Profile gender — kept as a loose string union to mirror the auth-service
@@ -33,6 +45,10 @@ export interface UserProfile extends AuthUser {
   showPhoneNumber?: boolean
   showGender?: boolean
   friendsCount?: number
+  /** Self only: 2FA (authenticator app) is set up for this account. */
+  mfaEnabled?: boolean
+  /** Self only: the role is privileged, so every sign-in needs a 2FA code. */
+  mfaRequired?: boolean
   /** Workspace role name (Owner/Admin/Manager/Member or custom). Null/undefined
    *  = user has no assigned role → client renders the default "Member". Always
    *  public (no privacy gate), but omitted on blocked-by-owner minimal profiles. */
@@ -59,11 +75,24 @@ export interface UpdateProfilePayload {
 }
 
 export interface LoginResponse {
+  code?: string
   accessToken: string
   refreshToken: string
   sid: string
   user: AuthUser
 }
+
+/**
+ * `POST /auth/login` / `POST /auth/exchange`: tokens, or — for a privileged
+ * user — a 2FA challenge to finish on `/mfa` (see `lib/auth/mfa.ts`).
+ */
+export type SignInResponse = LoginResponse | MfaChallenge
+
+/** `POST /auth/mfa/verify`: a normal sign-in plus how many backup codes are left. */
+export type MfaVerifyResponse = LoginResponse & { backupCodesRemaining?: number }
+
+/** Second-step proof for `POST /auth/mfa/verify`: an authenticator code or a backup code. */
+export type MfaProof = { code: string } | { backupCode: string }
 
 export interface VerifyOtpResponse {
   message: string
@@ -79,7 +108,54 @@ export const authService = {
   // Request bodies are typed from the OpenAPI-derived DTOs (see lib/api/types.ts)
   // so the client payloads stay in lockstep with the auth-service contract.
   login: (email: string, password: string) =>
-    authApi.post<LoginResponse>('/auth/login', { email, password } satisfies LoginRequest),
+    authApi.post<SignInResponse>('/auth/login', { email, password } satisfies LoginRequest),
+
+  // ── Two-factor authentication (public, no JWT — the mfaToken is the proof) ──
+  mfaEnrollStart: (mfaToken: string) =>
+    authApi
+      .post<MfaEnrollStartResponse>('/auth/mfa/enroll/start', { mfaToken } satisfies MfaEnrollStartRequest)
+      .then((r) => r.data),
+
+  /** Turns 2FA on and returns the 10 backup codes — no session yet (see `mfaEnrollComplete`). */
+  mfaEnrollConfirm: (mfaToken: string, code: string) =>
+    authApi
+      .post<MfaEnrollConfirmResponse>('/auth/mfa/enroll/confirm', {
+        mfaToken,
+        code,
+      } satisfies MfaEnrollConfirmRequest)
+      .then((r) => r.data),
+
+  /** The same backup codes again while the enrollment waits for `complete` (reload of `/mfa`). */
+  mfaEnrollCodes: (mfaToken: string) =>
+    authApi
+      .post<MfaEnrollCodesResponse>('/auth/mfa/enroll/codes', { mfaToken } satisfies MfaEnrollCodesRequest)
+      .then((r) => r.data),
+
+  /** The codes were acknowledged: issue the session. Single use. */
+  mfaEnrollComplete: (mfaToken: string) =>
+    authApi
+      .post<LoginResponse>('/auth/mfa/enroll/complete', {
+        mfaToken,
+        deviceId: 'web',
+        platform: 'web',
+      } satisfies MfaEnrollCompleteRequest)
+      .then((r) => r.data),
+
+  mfaVerify: (mfaToken: string, proof: MfaProof) =>
+    authApi
+      .post<MfaVerifyResponse>('/auth/mfa/verify', {
+        mfaToken,
+        ...proof,
+        deviceId: 'web',
+        platform: 'web',
+      } satisfies MfaVerifyRequest)
+      .then((r) => r.data),
+
+  /** Replace the backup codes (needs the current authenticator code). JWT-authenticated. */
+  regenerateBackupCodes: (code: string) =>
+    authApi
+      .post<MfaBackupCodesResponse>('/api/users/me/mfa/backup-codes', { code } satisfies RegenerateBackupCodesRequest)
+      .then((r) => r.data),
 
   // ── Invitations (public, no JWT) ──────────────────────────────────────────
   // The raw token only travels in the path (URL-encoded); it is never logged.
@@ -110,7 +186,7 @@ export const authService = {
     authApi.post('/auth/reset-password', { email, otp, password }).then((r) => r.data),
 
   exchangeCode: (code: string, deviceId?: string) =>
-    authApi.post<LoginResponse>('/auth/exchange', { code, deviceId: deviceId ?? 'web', platform: 'web' }),
+    authApi.post<SignInResponse>('/auth/exchange', { code, deviceId: deviceId ?? 'web', platform: 'web' }),
 
   // Public: tells the login page whether to render the "Sign in with SSO" button.
   getSsoInfo: () => authApi.get<SsoInfo>('/auth/sso/info').then((r) => r.data),
@@ -185,5 +261,5 @@ export const authService = {
   // `currentPassword` is optional: OAuth-only users setting their first password
   // omit it (the endpoint only requires it when a local password already exists).
   changePassword: (currentPassword: string | undefined, newPassword: string) =>
-    authApi.post('/api/users/me/change-password', { currentPassword, newPassword }),
+    authApi.post('/api/users/me/change-password', { currentPassword, newPassword } satisfies ChangePasswordRequest),
 }

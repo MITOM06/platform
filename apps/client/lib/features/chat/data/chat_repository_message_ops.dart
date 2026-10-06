@@ -33,21 +33,33 @@ mixin ChatRepositoryMessageOps {
     );
   }
 
-  /// Catch-up fetch (Task 55): returns messages with createdAt > [afterTimestamp],
-  /// oldest first. Called after STOMP reconnects to sync missed messages.
-  Future<List<MessageModel>> getMessagesSince(
+  /// Catch-up page (Task 55): up to 50 messages created after
+  /// [afterTimestamp] (and after [afterId] at the same instant), OLDEST first,
+  /// with an exact `hasNext`. Callers loop, moving the cursor to the last item
+  /// of each page, until `hasNext` is false.
+  Future<PagedResult<MessageModel>> getMessagesSince(
     String conversationId,
-    DateTime afterTimestamp,
-  ) async {
+    DateTime afterTimestamp, {
+    String? afterId,
+  }) async {
     final response = await _dio.get(
       '/api/conversations/$conversationId/messages',
-      queryParameters: {'after': afterTimestamp.toUtc().toIso8601String()},
+      queryParameters: {
+        'after': afterTimestamp.toUtc().toIso8601String(),
+        if (afterId != null) 'afterId': afterId,
+      },
     );
     final data = response.data as Map<String, dynamic>;
     final content = (data['content'] as List)
         .map((e) => MessageModel.fromJson(e as Map<String, dynamic>))
         .toList();
-    return content;
+    return PagedResult(
+      content: content,
+      page: 0,
+      size: content.length,
+      totalElements: content.length,
+      hasNext: data['hasNext'] as bool? ?? false,
+    );
   }
 
   /// Search messages within a conversation by text (Task 50).

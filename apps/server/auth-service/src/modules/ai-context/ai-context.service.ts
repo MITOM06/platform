@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
@@ -12,6 +16,8 @@ import {
   User,
   UserDocument,
 } from '@platform/database';
+import { AuthCode } from '../../common/auth-code.enum';
+import { isObjectIdString } from '../../common/ids';
 
 export interface Actor {
   sub: string;
@@ -60,6 +66,29 @@ export class AiContextService {
     return (doc as AiUserContext) ?? EMPTY_CONTEXT(userId);
   }
 
+  /**
+   * GET /ai-context/users/:userId — a member's AI profile (job title, projects,
+   * personal style/preferences). Readable by the member themselves or by
+   * whoever may edit their hard fields (MANAGE_MEMBERS or their department
+   * lead); anyone else gets 403 instead of a colleague's preferences.
+   */
+  async getUserContextFor(actor: Actor, userId: string): Promise<AiUserContext> {
+    if (userId !== actor.sub) {
+      const target = await this.loadUser(userId);
+      if (!target) throw new NotFoundException({ code: AuthCode.USER_NOT_FOUND });
+      if (!(await this.canManageMemberHardFields(actor, userId, target))) {
+        throw new ForbiddenException({ code: AuthCode.INSUFFICIENT_PERMISSION });
+      }
+    }
+    return this.getUserContext(userId);
+  }
+
+  /** Lean user by id; null for an unknown OR malformed id (never a CastError). */
+  private async loadUser(userId: string) {
+    if (!isObjectIdString(userId)) return null;
+    return this.userModel.findById(userId).lean().exec();
+  }
+
   async updateSoftContext(
     actorId: string,
     dto: { style?: string; preferences?: string },
@@ -78,8 +107,10 @@ export class AiContextService {
     targetUserId: string,
     dto: { jobTitle?: string; projects?: string[] },
   ): Promise<AiUserContext> {
-    if (!(await this.canManageMemberHardFields(actor, targetUserId))) {
-      throw new ForbiddenException({ code: 'INSUFFICIENT_PERMISSION' });
+    const target = await this.loadUser(targetUserId);
+    if (!target) throw new NotFoundException({ code: AuthCode.USER_NOT_FOUND });
+    if (!(await this.canManageMemberHardFields(actor, targetUserId, target))) {
+      throw new ForbiddenException({ code: AuthCode.INSUFFICIENT_PERMISSION });
     }
     const set: Record<string, unknown> = { updatedBy: actor.sub };
     if (dto.jobTitle !== undefined) set.jobTitle = dto.jobTitle;
@@ -90,12 +121,18 @@ export class AiContextService {
       .exec() as Promise<AiUserContext>;
   }
 
+  /**
+   * MANAGE_MEMBERS, or lead of one of the target's departments. `preloaded`
+   * skips the user lookup when the caller already has the target (null = gone).
+   */
   async canManageMemberHardFields(
     actor: Actor,
     targetUserId: string,
+    preloaded?: unknown,
   ): Promise<boolean> {
     if (actor.perms.includes(Capability.MANAGE_MEMBERS)) return true;
-    const target = await this.userModel.findById(targetUserId).lean().exec();
+    const target =
+      preloaded !== undefined ? preloaded : await this.loadUser(targetUserId);
     if (!target) return false;
     const targetDeptIds = (
       (target as unknown as { departmentIds?: unknown[] }).departmentIds ?? []
@@ -113,7 +150,9 @@ export class AiContextService {
     scopeId?: string | null,
   ): Promise<boolean> {
     if (actor.perms.includes(Capability.MANAGE_AI_CONTEXT)) return true;
-    if (scope === 'department' && scopeId) {
+    // A malformed scopeId can't be a department the actor leads (and must not
+    // reach findById, which would CastError into a 500).
+    if (scope === 'department' && isObjectIdString(scopeId)) {
       const dept = await this.deptModel.findById(scopeId).lean().exec();
       return (
         !!dept &&
@@ -136,6 +175,12 @@ export class AiContextService {
       .exec() as Promise<AiContextEntry[]>;
   }
 
+  /**
+   * Create (no id) or replace (id) an entry. On update the STORED entry's scope
+   * is authorized too, not just the new one: a department lead could otherwise
+   * "move" a company entry into their department (or overwrite it) because only
+   * the target scope was checked.
+   */
   async upsertEntry(
     actor: Actor,
     dto: {
@@ -147,8 +192,17 @@ export class AiContextService {
     },
     id?: string,
   ): Promise<AiContextEntry> {
+    if (id !== undefined) {
+      const existing = await this.findEntry(id);
+      if (!existing) {
+        throw new NotFoundException({ code: AuthCode.AI_CONTEXT_ENTRY_NOT_FOUND });
+      }
+      if (!(await this.canManageEntryScope(actor, existing.scope, existing.scopeId))) {
+        throw new ForbiddenException({ code: AuthCode.INSUFFICIENT_PERMISSION });
+      }
+    }
     if (!(await this.canManageEntryScope(actor, dto.scope, dto.scopeId))) {
-      throw new ForbiddenException({ code: 'INSUFFICIENT_PERMISSION' });
+      throw new ForbiddenException({ code: AuthCode.INSUFFICIENT_PERMISSION });
     }
     const base = {
       scope: dto.scope,
@@ -158,11 +212,15 @@ export class AiContextService {
       requiredCapability: dto.requiredCapability ?? null,
       updatedBy: actor.sub,
     };
-    if (id) {
-      return this.entryModel
+    if (id !== undefined) {
+      const updated = await this.entryModel
         .findByIdAndUpdate(id, { $set: base }, { new: true })
         .lean()
-        .exec() as Promise<AiContextEntry>;
+        .exec();
+      if (!updated) {
+        throw new NotFoundException({ code: AuthCode.AI_CONTEXT_ENTRY_NOT_FOUND });
+      }
+      return updated as AiContextEntry;
     }
     return this.entryModel.create({
       ...base,
@@ -170,17 +228,28 @@ export class AiContextService {
     }) as unknown as Promise<AiContextEntry>;
   }
 
+  /** Malformed id → 404 (not a CastError 500); a missing entry stays a no-op (idempotent). */
   async deleteEntry(actor: Actor, id: string): Promise<void> {
-    const entry = await this.entryModel.findById(id).lean().exec();
-    if (!entry) return;
-    const e = entry as unknown as {
-      scope: 'company' | 'department';
-      scopeId?: string | null;
-    };
+    if (!isObjectIdString(id)) {
+      throw new NotFoundException({ code: AuthCode.AI_CONTEXT_ENTRY_NOT_FOUND });
+    }
+    const e = await this.findEntry(id);
+    if (!e) return;
     if (!(await this.canManageEntryScope(actor, e.scope, e.scopeId))) {
-      throw new ForbiddenException({ code: 'INSUFFICIENT_PERMISSION' });
+      throw new ForbiddenException({ code: AuthCode.INSUFFICIENT_PERMISSION });
     }
     await this.entryModel.deleteOne({ _id: id }).exec();
+  }
+
+  private async findEntry(
+    id: string,
+  ): Promise<{ scope: 'company' | 'department'; scopeId?: string | null } | null> {
+    if (!isObjectIdString(id)) return null;
+    const entry = await this.entryModel.findById(id).lean().exec();
+    return (entry as unknown as {
+      scope: 'company' | 'department';
+      scopeId?: string | null;
+    } | null) ?? null;
   }
 
   async getVisibleEntriesForUser(

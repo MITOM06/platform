@@ -52,13 +52,58 @@ function inferContentType(filename: string): string {
 export const MAX_UPLOAD_BYTES = 30 * 1024 * 1024
 export const FILE_TOO_LARGE = 'FILE_TOO_LARGE'
 
+// Conversation lists: the server caps `size` at 100 and filters archived /
+// hidden / blocked rows in the query, so paging is exact. Load every page (up to
+// a sane cap) so users with more than one page of chats — and the Archived tab —
+// see all of them; previously only page 0 (20 rows) was ever fetched.
+const CONVERSATION_PAGE_SIZE = 100
+const MAX_CONVERSATION_PAGES = 20
+
+async function listAllConversations(
+  params: Record<string, string | number | boolean>,
+): Promise<ConversationsResponse> {
+  const all: Conversation[] = []
+  let last: ConversationsResponse | null = null
+  for (let page = 0; page < MAX_CONVERSATION_PAGES; page++) {
+    const { data } = await chatApi.get<ConversationsResponse>('/api/conversations', {
+      params: { ...params, page, size: CONVERSATION_PAGE_SIZE },
+    })
+    last = data
+    all.push(...data.content)
+    const more = data.hasNext ?? (page + 1) * data.size < data.totalElements
+    if (!more || data.content.length === 0) break
+  }
+  // De-dupe by id: activity between page requests can shift a row across pages.
+  const unique = [...new Map(all.map((c) => [c.id, c])).values()]
+  return {
+    content: unique,
+    page: 0,
+    size: unique.length,
+    totalElements: last?.totalElements ?? unique.length,
+    hasNext: false,
+  }
+}
+
+/** Upper bound on catch-up pages after a reconnect (50 rows each). */
+const MAX_CATCHUP_PAGES = 20
+
+function fetchMessagesSince(
+  conversationId: string,
+  afterIso: string,
+  afterId?: string,
+): Promise<MessagesResponse> {
+  return chatApi
+    .get<MessagesResponse>(`/api/conversations/${conversationId}/messages`, {
+      params: { after: afterIso, ...(afterId ? { afterId } : {}) },
+    })
+    .then((r) => r.data)
+}
+
 export const chatService = {
   // ── Conversations ──────────────────────────────────────────────────────────
 
-  getConversations: (archived = false) =>
-    chatApi
-      .get<ConversationsResponse>('/api/conversations', { params: { archived } })
-      .then((r) => r.data),
+  /** All of the caller's conversations; `archived=true` → only the archived ones. */
+  getConversations: (archived = false) => listAllConversations({ archived }),
 
   getConversation: (id: string) =>
     chatApi.get<Conversation>(`/api/conversations/${id}`).then((r) => r.data),
@@ -76,13 +121,30 @@ export const chatService = {
       .post<Conversation>('/api/conversations/group', {
         name,
         participantIds,
-        ...(isPublic ? { publicChannel: isPublic } : {}),
+        // A public channel is listed in Explore (GET /api/conversations/public).
+        publicChannel: isPublic,
         ...(departmentId ? { departmentId } : {}),
       })
       .then((r) => r.data),
 
+  /** Make a member a group admin (caller must be an admin; idempotent). */
+  promoteAdmin: (conversationId: string, userId: string) =>
+    chatApi
+      .post<Conversation>(`/api/conversations/${conversationId}/admins/${userId}`)
+      .then((r) => r.data),
+
+  /** Remove a member's admin rights (409 LAST_ADMIN_CANNOT_BE_REMOVED for the last one). */
+  demoteAdmin: (conversationId: string, userId: string) =>
+    chatApi
+      .delete<Conversation>(`/api/conversations/${conversationId}/admins/${userId}`)
+      .then((r) => r.data),
+
   updateGroup: (id: string, name?: string, avatarUrl?: string) =>
     chatApi.put<Conversation>(`/api/conversations/${id}`, { name, avatarUrl }).then((r) => r.data),
+
+  /** Group admins: list / unlist the group in Explore (400 for a department group). */
+  setPublicChannel: (id: string, publicChannel: boolean) =>
+    chatApi.put<Conversation>(`/api/conversations/${id}`, { publicChannel }).then((r) => r.data),
 
   /**
    * Set the shared conversation wallpaper (direct + group). Any participant may
@@ -135,10 +197,7 @@ export const chatService = {
   // wrapper here; the duplicate caused confusion about which service owns blocks.
 
   /** GET /api/conversations?blocked=true — returns conversations in the Blocked section */
-  getBlockedConversations: () =>
-    chatApi
-      .get<ConversationsResponse>('/api/conversations', { params: { blocked: true } })
-      .then((r) => r.data),
+  getBlockedConversations: () => listAllConversations({ blocked: true }),
 
   /** Move conversation to the Blocked section (call after blockUser) */
   blockArchiveConversation: (id: string) =>
@@ -182,16 +241,35 @@ export const chatService = {
   },
 
   /**
-   * Catch-up fetch (Task 55, parity with Flutter chat_repository.getMessagesSince):
-   * returns messages with createdAt > `afterIso`, oldest-first. Called after a
-   * STOMP reconnect to pull in messages missed while the socket was down.
+   * One catch-up page (Task 55, parity with Flutter chat_repository.getMessagesSince):
+   * up to 50 messages newer than (`afterIso`, `afterId`), oldest-first, with an exact
+   * `hasNext`. `afterId` is the same-millisecond tiebreaker.
    */
-  getMessagesSince: (conversationId: string, afterIso: string) =>
-    chatApi
-      .get<MessagesResponse>(`/api/conversations/${conversationId}/messages`, {
-        params: { after: afterIso },
-      })
-      .then((r) => r.data.content),
+  getMessagesSince: fetchMessagesSince,
+
+  /**
+   * Every message missed since (`afterIso`, `afterId`): loops the catch-up pages,
+   * advancing the cursor to the last row, until `hasNext` is false. A user who was
+   * offline for a busy hour used to lose everything past the first 50.
+   */
+  getAllMessagesSince: async (
+    conversationId: string,
+    afterIso: string,
+    afterId?: string,
+  ): Promise<Message[]> => {
+    const missed: Message[] = []
+    let cursorAt = afterIso
+    let cursorId = afterId
+    for (let i = 0; i < MAX_CATCHUP_PAGES; i++) {
+      const page = await fetchMessagesSince(conversationId, cursorAt, cursorId)
+      missed.push(...page.content)
+      const lastRow = page.content[page.content.length - 1]
+      if (!page.hasNext || !lastRow) break
+      cursorAt = lastRow.createdAt
+      cursorId = lastRow.id
+    }
+    return missed
+  },
 
   sendMessage: (
     conversationId: string,

@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/app_error.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../../../core/widgets/pon_widgets.dart';
+import '../data/assistant_error.dart';
 import '../data/assistant_repository.dart';
 import '../state/assistant_provider.dart';
 import 'widgets/assistant_setup_steps.dart';
@@ -45,11 +45,10 @@ class _AssistantSettingsScreenState
     super.dispose();
   }
 
+  // A legacy assistant may have no resolvable model — saving then keeps the
+  // stored one (blank fields are omitted, see [assistantSetupBody]).
   bool get _canSave =>
-      _nameCtrl.text.trim().isNotEmpty &&
-      _providerId != null &&
-      !_saving &&
-      !_deleting;
+      _nameCtrl.text.trim().isNotEmpty && !_saving && !_deleting;
 
   Future<void> _save() async {
     if (!_canSave) return;
@@ -57,16 +56,19 @@ class _AssistantSettingsScreenState
     try {
       await ref.read(assistantRepositoryProvider).setup(
             name: _nameCtrl.text.trim(),
-            systemPrompt: _personaCtrl.text.trim(),
-            providerId: _providerId!,
+            // Blank keeps the stored persona instead of wiping it.
+            systemPrompt: _personaCtrl.text,
+            providerId: _providerId,
           );
       ref.invalidate(assistantProvider);
       if (!mounted) return;
       showInfoSnackBar(context.l10n.assistantSetupSuccess);
       context.go('/');
     } catch (e) {
-      showErrorSnackBar(friendlyError(e));
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        showErrorSnackBar(assistantErrorMessage(context.l10n, e));
+        setState(() => _saving = false);
+      }
     }
   }
 
@@ -101,8 +103,10 @@ class _AssistantSettingsScreenState
       if (!mounted) return;
       context.go('/');
     } catch (e) {
-      showErrorSnackBar(friendlyError(e));
-      if (mounted) setState(() => _deleting = false);
+      if (mounted) {
+        showErrorSnackBar(assistantErrorMessage(context.l10n, e));
+        setState(() => _deleting = false);
+      }
     }
   }
 
@@ -124,7 +128,11 @@ class _AssistantSettingsScreenState
               return const SizedBox.shrink();
             }
             if (!_prefilled) {
+              // Pre-fill persona + model too, so saving a rename doesn't
+              // send an empty persona.
               _nameCtrl.text = assistant.name;
+              _personaCtrl.text = assistant.systemPrompt ?? '';
+              _providerId = assistant.providerId;
               _prefilled = true;
             }
             return _buildForm(context);

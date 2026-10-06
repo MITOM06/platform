@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/app_error.dart';
+import '../../../../core/utils/global_messenger.dart';
 import '../../domain/ai_session_model.dart';
 import '../../domain/ai_session_provider.dart';
 
@@ -36,9 +38,9 @@ class AiSessionPanel extends ConsumerWidget {
               icon: const Icon(Icons.add_rounded, size: 16),
               label: Text(context.l10n.aiNewSession),
               style: TextButton.styleFrom(foregroundColor: AppTheme.accent(context)),
-              onPressed: () => ref
+              onPressed: () => reportAiSessionFailure(ref
                   .read(aiSessionsProvider(conversationId).notifier)
-                  .createNew(),
+                  .createNew()),
             ),
           ),
         ),
@@ -114,6 +116,13 @@ class _SessionList extends ConsumerWidget {
   }
 }
 
+/// Shows a localized error when a session create/resume failed (the notifier
+/// returns the failure instead of throwing).
+Future<void> reportAiSessionFailure(Future<Object?> action) async {
+  final failure = await action;
+  if (failure != null) showErrorSnackBar(friendlyError(failure));
+}
+
 class _SessionTile extends ConsumerWidget {
   final AiSessionModel session;
   final String conversationId;
@@ -140,7 +149,7 @@ class _SessionTile extends ConsumerWidget {
           : null,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       title: Text(
-        session.name,
+        session.name.isEmpty ? context.l10n.aiNewSession : session.name,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
@@ -157,15 +166,15 @@ class _SessionTile extends ConsumerWidget {
           : IconButton(
               icon: const Icon(Icons.restore_rounded, size: 18),
               tooltip: context.l10n.aiSessionResume,
-              onPressed: () => ref
+              onPressed: () => reportAiSessionFailure(ref
                   .read(aiSessionsProvider(conversationId).notifier)
-                  .resume(session.id),
+                  .resume(session.id)),
             ),
       onTap: session.isActive
           ? null
-          : () => ref
+          : () => reportAiSessionFailure(ref
               .read(aiSessionsProvider(conversationId).notifier)
-              .resume(session.id),
+              .resume(session.id)),
     );
   }
 }

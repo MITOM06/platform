@@ -13,6 +13,9 @@ export interface RelevantFact {
   createdAt: number;
 }
 
+/** How many of a user's facts the canonical `keyFacts` list on each memory doc holds. */
+const KEY_FACTS_LIMIT = 50;
+
 @Injectable()
 export class MemoryService {
   private readonly logger = new Logger(MemoryService.name);
@@ -34,8 +37,17 @@ export class MemoryService {
     this.halfLifeMs = halfLifeDays * 24 * 60 * 60 * 1000;
   }
 
-  async getMemory(conversationId: string): Promise<AiMemory | null> {
-    return this.memoryModel.findOne({ conversationId }).lean().exec() as Promise<AiMemory | null>;
+  /**
+   * The memory doc of ONE user in ONE conversation. Docs are keyed by
+   * (conversationId, userId) — unique index in ai-memory.schema — because
+   * `keyFacts` holds that user's private global facts: a conversation-only key
+   * let Bob's "@AI /memory" in a group print Alice's facts to everyone.
+   */
+  async getMemory(conversationId: string, userId: string): Promise<AiMemory | null> {
+    return this.memoryModel
+      .findOne({ conversationId, userId })
+      .lean()
+      .exec() as Promise<AiMemory | null>;
   }
 
   /**
@@ -150,18 +162,23 @@ export class MemoryService {
     }
 
     // Rebuild canonical fact list from the vector store for client REST/STOMP.
-    const all = await this.vectorStore.listFacts(userId);
-    const keyFacts = all
-      .sort((a, b) => b.createdAt - a.createdAt)
-      .map((f) => f.text)
-      .slice(0, 50);
+    const keyFacts = await this.canonicalKeyFacts(userId);
 
     await this.memoryModel.findOneAndUpdate(
-      { conversationId },
-      { $set: { userId, summary: safeSummary, keyFacts, messageCount, updatedAt: new Date() } },
+      { conversationId, userId },
+      { $set: { summary: safeSummary, keyFacts, messageCount, updatedAt: new Date() } },
       { upsert: true, new: true },
     );
     return stored;
+  }
+
+  /** The user's newest facts (all conversations) — the `keyFacts` list clients show. */
+  private async canonicalKeyFacts(userId: string): Promise<string[]> {
+    const all = await this.vectorStore.listFacts(userId);
+    return all
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .map((f) => f.text)
+      .slice(0, KEY_FACTS_LIMIT);
   }
 
   /**
@@ -176,15 +193,28 @@ export class MemoryService {
     messageCount: number,
   ): Promise<void> {
     await this.memoryModel.findOneAndUpdate(
-      { conversationId },
-      { $set: { userId, summary, keyFacts, messageCount, updatedAt: new Date() } },
+      { conversationId, userId },
+      { $set: { summary, keyFacts, messageCount, updatedAt: new Date() } },
       { upsert: true, new: true },
     );
   }
 
-  async deleteMemory(conversationId: string): Promise<void> {
-    await this.memoryModel.deleteOne({ conversationId });
-    await this.vectorStore.deleteConversation(conversationId);
+  /**
+   * Forget what ONE user's memory holds from ONE conversation (driven by
+   * chat-service's `ai:memory:delete` after it deleted the Mongo doc). Deletes
+   * that user's fact vectors learned in the conversation — the facts the AI
+   * actually recalls — and re-derives `keyFacts` on the user's remaining docs so
+   * the deleted facts disappear from every memory screen, not just this one.
+   * The doc delete is repeated here so the operation is idempotent on its own.
+   */
+  async forgetConversation(conversationId: string, userId: string): Promise<boolean> {
+    await this.memoryModel.deleteOne({ conversationId, userId });
+    const vectorsDeleted = await this.vectorStore.deleteUserConversation(userId, conversationId);
+    if (vectorsDeleted) {
+      const keyFacts = await this.canonicalKeyFacts(userId);
+      await this.memoryModel.updateMany({ userId }, { $set: { keyFacts } });
+    }
+    return vectorsDeleted;
   }
 
   /**
@@ -196,9 +226,10 @@ export class MemoryService {
     return this.vectorStore.deleteOlderThan(cutoffMs);
   }
 
-  async incrementMessageCount(conversationId: string): Promise<number> {
+  /** Per-user turn counter in a conversation (drives the fact-extraction cadence). */
+  async incrementMessageCount(conversationId: string, userId: string): Promise<number> {
     const result = await this.memoryModel.findOneAndUpdate(
-      { conversationId },
+      { conversationId, userId },
       { $inc: { messageCount: 1 } },
       { upsert: true, new: true },
     );

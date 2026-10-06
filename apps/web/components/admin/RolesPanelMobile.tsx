@@ -23,6 +23,14 @@ interface RolesPanelMobileProps {
   /** Humanizer for a capability key → display label. */
   capLabel: (cap: Capability) => string
   isPending?: boolean
+  /** Whether this switch may change (role lock + capabilities the caller lacks). */
+  canToggle: (role: Role, cap: Capability) => boolean
+  /** Owner role, or the caller's own role (non-Owner): read-only. */
+  isLocked: (role: Role) => boolean
+  /** Why the role can't be saved as edited, or null. */
+  lockHint: (role: Role) => string | null
+  /** False while saving would exceed the caller's own permissions. */
+  canSave: (role: Role) => boolean
 }
 
 const OWNER = 'Owner'
@@ -36,16 +44,21 @@ export function RolesPanelMobile({
   saveRole,
   capLabel,
   isPending,
+  canToggle,
+  isLocked,
+  lockHint,
+  canSave,
 }: RolesPanelMobileProps) {
   const t = useTranslations('admin')
   const [selectedId, setSelectedId] = useState(roles[0]?._id ?? '')
   const role = roles.find((r) => r._id === selectedId) ?? roles[0]
   if (!role) return null
 
-  const readOnly = role.name === OWNER
+  const readOnly = isLocked(role)
+  const hint = lockHint(role)
 
   const valueFor = (cap: Capability): boolean => {
-    if (readOnly) return true
+    if (role.name === OWNER) return true
     const editedMatrix = edited[role._id]
     if (editedMatrix !== undefined && cap in editedMatrix) {
       return editedMatrix[cap] ?? false
@@ -71,7 +84,7 @@ export function RolesPanelMobile({
         {!readOnly && (
           <Button
             size="sm"
-            disabled={!isDirty(role) || isPending}
+            disabled={!isDirty(role) || isPending || !canSave(role)}
             onClick={() => saveRole(role)}
           >
             {t('save')}
@@ -79,13 +92,15 @@ export function RolesPanelMobile({
         )}
       </div>
 
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+
       <ul className="flex flex-col divide-y rounded-lg border">
         {capabilities.map((cap) => (
           <li key={cap} className="flex items-center justify-between gap-3 p-3">
             <span className="text-sm">{capLabel(cap)}</span>
             <Switch
               checked={valueFor(cap)}
-              disabled={readOnly}
+              disabled={!canToggle(role, cap)}
               onCheckedChange={() => toggle(role._id, cap)}
             />
           </li>

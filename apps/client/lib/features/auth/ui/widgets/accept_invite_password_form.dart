@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../domain/auth_provider.dart';
 import '../../utils/auth_error.dart';
+import '../../utils/password_policy.dart';
 import 'password_strength_indicator.dart';
 
 /// Display name + password form of the invitation accept screen. Validation
@@ -71,16 +72,8 @@ class _AcceptInvitePasswordFormState
     }
   }
 
-  String? _validatePassword(String? v) {
-    final l10n = context.l10n;
-    if (v == null || v.isEmpty) return l10n.valPasswordRequired;
-    if (v.length < 8) return l10n.valPasswordMin8;
-    if (!v.contains(RegExp(r'[A-Z]'))) return l10n.valPasswordUppercase;
-    if (!v.contains(RegExp(r'[a-z]'))) return l10n.valPasswordLowercase;
-    if (!v.contains(RegExp(r'[0-9]'))) return l10n.valPasswordDigit;
-    if (!v.contains(RegExp(r'[!@#$%^&*]'))) return l10n.valPasswordSpecial;
-    return null;
-  }
+  String? _validatePassword(String? v) =>
+      newPasswordPolicyError(context.l10n, v);
 
   @override
   Widget build(BuildContext context) {

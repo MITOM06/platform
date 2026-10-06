@@ -416,6 +416,7 @@
   },
   "callConnecting": "Connecting…",
   "callMediaError": "Cannot access camera/microphone (HTTPS or localhost required)",
+  "callNoAnswer": "No answer",
   "callUnknownCaller": "Someone",
   "callToggleMic": "Toggle microphone",
   "callToggleCam": "Toggle camera",
@@ -540,7 +541,7 @@
   "pinMessage": "Pin",
   "unpinMessage": "Unpin",
   "pinnedMessagesTitle": "Pinned Messages",
-  "pinLimitReached": "You can pin up to 2 messages",
+  "pinLimitReached": "You can pin up to 5 messages",
   "cannotPinCall": "Calls can't be pinned",
   "forwardMessage": "Forward",
   "messageForwarded": "Message forwarded",
@@ -1678,5 +1679,561 @@
   },
   "adminMemberBlocked": "Member blocked",
   "adminMemberUnblocked": "Member unblocked",
-  "adminLoadFailed": "Couldn't load this section. Please try again."
+  "adminLoadFailed": "Couldn't load this section. Please try again.",
+  "callDeclined": "{name} declined the call",
+  "@callDeclined": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callBusy": "{name} is on another call",
+  "@callBusy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callPeerMediaError": "{name} couldn't turn on their microphone or camera",
+  "@callPeerMediaError": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callEnded": "Call ended",
+  "callConnectionLost": "Call dropped — connection lost",
+  "callSpeaker": "Speaker",
+  "callSwitchCamera": "Switch camera",
+  "callHangUp": "End call",
+  "callReconnecting": "Reconnecting…",
+  "callPoorConnection": "Poor connection",
+  "aiContextLearnedFactsLoadError": "Couldn't load what the assistant has learned.",
+  "@aiContextLearnedFactsLoadError": {
+    "description": "Shown in the AI Context screen when the learned-facts (memory) section fails to load."
+  },
+  "errTooManyRequests": "Too many requests. Please wait a moment and try again.",
+  "removedFromConversation": "You are no longer a member of this conversation",
+  "errGroupAdminRequired": "Only group admins can do this",
+  "errChatUserBlocked": "You can't message this person",
+  "errReplyTargetInvalid": "The message you replied to is no longer available",
+  "errMessageTypeNotAllowed": "This kind of message can't be sent here",
+  "errInvalidUrl": "This link can't be previewed",
+  "errNotAGroup": "This only works in group chats",
+  "errNotAMember": "This person is no longer in the group",
+  "errLastAdminCannotBeRemoved": "A group needs at least one admin",
+  "errPublicDepartmentChannel": "A department group can't be a public channel",
+  "publicChannelToggle": "Public channel",
+  "publicChannelHint": "Anyone in the workspace can find it in Explore and join",
+  "groupMakeAdmin": "Make admin",
+  "groupRemoveAdmin": "Remove as admin",
+  "aiErrEmptyResponse": "The assistant didn't produce an answer. Please try again.",
+  "sysGroupCreatedNoActor": "Group created",
+  "sysMembersAddedNoActor": "New members were added",
+  "sysMemberLeftNoActor": "A member left the group",
+  "sysMemberRemovedNoActor": "A member was removed",
+  "sysMemberJoinedNoActor": "A new member joined",
+  "sysAutoDeleteOff": "Disappearing messages turned off",
+  "sysAutoDeleteOn": "Disappearing messages set to {duration}",
+  "@sysAutoDeleteOn": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "sysAutoDeleteOffBy": "{actorName} turned off disappearing messages",
+  "@sysAutoDeleteOffBy": {
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      }
+    }
+  },
+  "sysAutoDeleteOnBy": "{actorName} set disappearing messages to {duration}",
+  "@sysAutoDeleteOnBy": {
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "sysAdminPromoted": "{targetName} is now an admin",
+  "@sysAdminPromoted": {
+    "placeholders": {
+      "targetName": {
+        "type": "String"
+      }
+    }
+  },
+  "sysAdminDemoted": "{targetName} is no longer an admin",
+  "@sysAdminDemoted": {
+    "placeholders": {
+      "targetName": {
+        "type": "String"
+      }
+    }
+  },
+  "sysAdminPromotedBy": "{actorName} made {targetName} an admin",
+  "@sysAdminPromotedBy": {
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      },
+      "targetName": {
+        "type": "String"
+      }
+    }
+  },
+  "sysAdminDemotedBy": "{actorName} removed {targetName} as admin",
+  "@sysAdminDemotedBy": {
+    "placeholders": {
+      "actorName": {
+        "type": "String"
+      },
+      "targetName": {
+        "type": "String"
+      }
+    }
+  },
+  "durationSeconds": "{count, plural, =1{1 second} other{{count} seconds}}",
+  "@durationSeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutes": "{count, plural, =1{1 minute} other{{count} minutes}}",
+  "@durationMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHours": "{count, plural, =1{1 hour} other{{count} hours}}",
+  "@durationHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationDays": "{count, plural, =1{1 day} other{{count} days}}",
+  "@durationDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationShortMinutes": "{count}m",
+  "@durationShortMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationShortHours": "{count}h",
+  "@durationShortHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationShortDays": "{count}d",
+  "@durationShortDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "authErrUserBlocked": "Not available — one of you has blocked the other",
+  "authErrCurrentPasswordRequired": "Enter your current password",
+  "authErrSsoEmailUnverified": "Your sign-in provider hasn't verified this email address",
+  "authErrSocialAccountConflict": "This email is already linked to a different sign-in account",
+  "aiActionConfirm": "Confirm",
+  "aiActionCancel": "Cancel",
+  "aiActionSendEmail": "Send email",
+  "aiActionDraftEmail": "Draft email",
+  "aiActionCreateEvent": "Create calendar event",
+  "aiActionUpdateEvent": "Update calendar event",
+  "aiActionCreatePage": "Create page",
+  "aiActionUpdatePage": "Update page",
+  "aiActionGeneric": "Run an action",
+  "aiActionGenericNamed": "Run “{tool}”",
+  "@aiActionGenericNamed": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "aiActionVia": "via {connector}",
+  "@aiActionVia": {
+    "placeholders": {
+      "connector": {
+        "type": "String"
+      }
+    }
+  },
+  "aiActionWaitingFor": "Waiting for {name} to confirm",
+  "@aiActionWaitingFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "aiActionFieldTo": "To",
+  "aiActionFieldSubject": "Subject",
+  "aiActionFieldTitle": "Title",
+  "aiActionFieldWhen": "When",
+  "aiActionStatusConfirmed": "Done",
+  "aiActionStatusCancelled": "Cancelled",
+  "aiActionStatusFailed": "Failed",
+  "aiActionStatusExpired": "Expired",
+  "aiActionStatusHandled": "Already handled",
+  "aiActionErrNotFound": "This action no longer exists",
+  "aiActionErrNotOwner": "Only the person who asked can confirm this",
+  "aiActionErrAlreadyResolved": "This action was already handled",
+  "aiActionErrExpired": "This request expired",
+  "aiActionErrGeneric": "Couldn’t complete this action",
+  "aiToolWebSearch": "Searching the web",
+  "aiToolRememberFact": "Saving to memory",
+  "aiToolCreateReminder": "Creating a reminder",
+  "aiToolGetUserInfo": "Looking up a colleague",
+  "aiToolSearchKnowledgeBase": "Searching the knowledge base",
+  "aiToolSearchMessages": "Searching messages",
+  "aiToolSummarizeConversation": "Summarizing the conversation",
+  "aiToolOnConnector": "{tool} on {connector}",
+  "@aiToolOnConnector": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      },
+      "connector": {
+        "type": "String"
+      }
+    }
+  },
+  "aiTraceToolAwaiting": "Awaiting confirmation",
+  "aiTraceToolDone": "Done",
+  "aiTraceToolNotRun": "Not run",
+  "aiTraceTokens": "{input} in · {output} out",
+  "@aiTraceTokens": {
+    "placeholders": {
+      "input": {
+        "type": "String"
+      },
+      "output": {
+        "type": "String"
+      }
+    }
+  },
+  "aiTraceCacheTokens": "cache {read} read · {written} written",
+  "@aiTraceCacheTokens": {
+    "placeholders": {
+      "read": {
+        "type": "String"
+      },
+      "written": {
+        "type": "String"
+      }
+    }
+  },
+  "aiTraceThinkingTokens": "{count} thinking",
+  "@aiTraceThinkingTokens": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "aiTraceDuration": "{seconds}s",
+  "@aiTraceDuration": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "aiTraceSteps": "{count, plural, =1{1 step} other{{count} steps}}",
+  "@aiTraceSteps": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "connectorGenericName": "Connector",
+  "connectorCustomName": "Custom MCP server",
+  "connectorReconnect": "Reconnect",
+  "connectorStatusReconnect": "Reconnect needed",
+  "connectorStatusUnavailable": "Unavailable",
+  "connectorDisconnectWorkspaceConfirm": "Disconnect this workspace connector? Everyone in the workspace loses access to its tools.",
+  "connectorDisconnected": "{name} disconnected",
+  "@connectorDisconnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "customMcpListTitle": "Your MCP servers",
+  "customMcpDelete": "Remove",
+  "customMcpDeleteConfirm": "Remove this MCP server? The AI will no longer use its tools.",
+  "customMcpDeleted": "{name} removed",
+  "@customMcpDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "directoryDeleteConfirm": "Delete this directory entry?",
+  "directoryAuthOauth": "OAuth sign-in",
+  "directoryAuthMcpOauth": "OAuth (MCP server)",
+  "directoryAuthEnvOauth": "OAuth (workspace app)",
+  "directoryAuthApiKey": "API key",
+  "directoryAuthNone": "No sign-in needed",
+  "scopeEmailSend": "Send email",
+  "scopeEmailDraft": "Create drafts",
+  "scopeEmailRead": "Read email",
+  "scopeEmailManage": "Manage email",
+  "scopeCalendarRead": "Read calendar",
+  "scopeCalendarEvents": "Manage events",
+  "scopeCalendarManage": "Manage calendars",
+  "scopeFilesRead": "Read files",
+  "scopeFilesManage": "Manage files",
+  "scopeReadContent": "Read content",
+  "scopeInsertContent": "Add content",
+  "scopeUpdateContent": "Edit content",
+  "scopeOther": "Other access",
+  "connErrUnsafeUrl": "That address isn’t allowed. Use a public https URL.",
+  "connErrDiscoveryFailed": "Couldn’t reach that MCP server",
+  "connErrInsufficientPermission": "You don’t have permission to do this",
+  "connErrNotAllowed": "This connector isn’t allowed in your workspace",
+  "connErrUnavailable": "This connector is unavailable right now",
+  "connErrOauthSetup": "This connector isn’t set up for sign-in yet",
+  "connErrBotBridgeDisabled": "The personal assistant service isn’t configured",
+  "connErrBotNotFound": "Assistant not found",
+  "connErrBotOwnerMismatch": "This assistant belongs to another member",
+  "connErrMemberInactive": "This member’s account is inactive",
+  "oauthConnected": "{name} connected",
+  "@oauthConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "oauthErrAccessDenied": "You declined access to {name}",
+  "@oauthErrAccessDenied": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "oauthErrFailed": "Couldn’t connect {name}",
+  "@oauthErrFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "oauthNotCompleted": "Connecting {name} wasn’t completed",
+  "@oauthNotCompleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "oauthErrExpired": "The sign-in took too long. Please try again.",
+  "tokenUsageDailyChartTitle": "Daily usage",
+  "tokenUsageTotalInRange": "Total in the selected range",
+  "tokenUsageQuotaBlocked": "AI is turned off for this workspace",
+  "tokenUsageQuotaExceeded": "Monthly AI limit reached",
+  "tokenUsageQuotaResets": "Resets on {date}",
+  "@tokenUsageQuotaResets": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "authErrRoleGrantExceedsOwnPermissions": "You can't grant permissions you don't have yourself: {capabilities}.",
+  "@authErrRoleGrantExceedsOwnPermissions": {
+    "placeholders": {
+      "capabilities": {
+        "type": "String"
+      }
+    }
+  },
+  "authErrRoleGrantExceedsOwnPermissionsGeneric": "You can't grant permissions you don't have yourself.",
+  "authErrCannotEditOwnRole": "You can't edit your own role.",
+  "authErrPresetRoleRenameForbidden": "Built-in roles can't be renamed.",
+  "authErrRoleNameTaken": "A role with this name already exists.",
+  "authErrOwnerRoleImmutable": "The Owner role can't be modified or deleted.",
+  "authErrOwnerSsoMappingForbidden": "Only an Owner can map SSO groups to the Owner role.",
+  "authErrInsufficientPermission": "You don't have permission to do this.",
+  "authErrAiContextEntryNotFound": "This context entry no longer exists.",
+  "authErrAiConnectorsNotInAllowList": "The selected AI connectors must also be allowed in the workspace connector list.",
+  "authErrPasswordTooShortMin": "Password must be at least {min} characters.",
+  "@authErrPasswordTooShortMin": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "adminCapManageAiContext": "Manage AI context",
+  "adminCapViewInternalContext": "View internal context",
+  "adminCapViewConfidentialContext": "View confidential context",
+  "adminCapUnknown": "Other permission",
+  "adminAuditSystem": "System",
+  "adminAuditFormerMember": "A former member",
+  "adminAuditActionOther": "Other action",
+  "adminAuditActionWorkspaceUpdate": "Workspace updated",
+  "adminAuditActionDepartmentCreate": "Department created",
+  "adminAuditActionDepartmentUpdate": "Department updated",
+  "adminAuditActionDepartmentDelete": "Department deleted",
+  "adminAuditActionMemberUpdate": "Member updated",
+  "adminAuditActionMemberSsoUpdate": "Member updated by SSO",
+  "adminAuditActionMemberBlock": "Member blocked",
+  "adminAuditActionMemberUnblock": "Member unblocked",
+  "adminAuditActionRoleCreate": "Role created",
+  "adminAuditActionRoleUpdate": "Role updated",
+  "adminAuditActionInvitationCreate": "Invitation sent",
+  "adminAuditActionInvitationResend": "Invitation resent",
+  "adminAuditActionInvitationRevoke": "Invitation revoked",
+  "adminAuditActionInvitationAccept": "Invitation accepted",
+  "adminAuditActionConnectorConnect": "Connector connected",
+  "adminAuditActionConnectorDisconnect": "Connector disconnected",
+  "adminAuditActionConnectorReplace": "Connector reconnected",
+  "adminAuditActionConnectionPermissionsUpdate": "Connector permissions updated",
+  "adminAuditActionCustomMcpAdd": "Custom MCP added",
+  "adminAuditActionCustomMcpDelete": "Custom MCP removed",
+  "adminAuditActionDirectoryCreate": "Directory entry added",
+  "adminAuditActionDirectoryUpdate": "Directory entry updated",
+  "adminAuditActionDirectoryDelete": "Directory entry removed",
+  "adminAuditActionSensitiveSkillRun": "Sensitive skill run",
+  "adminAuditTargetWorkspace": "Workspace",
+  "adminAuditTargetMember": "A member",
+  "adminAuditTargetRole": "A role",
+  "adminAuditTargetDepartment": "A department",
+  "adminAuditTargetInvitation": "An invitation",
+  "adminAuditTargetConnector": "A connector",
+  "adminAuditTargetDirectoryEntry": "A directory entry",
+  "adminAuditTargetTool": "A tool",
+  "adminAuditTargetOther": "Something else",
+  "adminAiConnectorsAllAllowed": "The workspace allow-list is empty, so every connector is allowed. Pick the ones the AI may use.",
+  "errAssistantSetupIncomplete": "Add a persona and pick a model to finish setting up your assistant.",
+  "errAssistantNotConfigured": "Personal assistants aren't available on this workspace yet. Ask your administrator.",
+  "errAssistantUpstreamFailed": "The assistant service didn't respond. Please try again in a moment.",
+  "adminBotOwnedBy": "Owned by {name}",
+  "@adminBotOwnedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminRoleCloneDefaultName": "{name} copy",
+  "@adminRoleCloneDefaultName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "setPasswordTitle": "Create your PON password",
+  "setPasswordSubtitle": "You joined with Google. Create a password so you can also sign in with your email.",
+  "setPasswordSubmit": "Create password",
+  "setPasswordSuccess": "Password created. You can now also sign in with your email.",
+  "mfaVerifyTitle": "Two-factor authentication",
+  "mfaVerifySubtitle": "Enter the 6-digit code from your authenticator app to finish signing in.",
+  "mfaBackupSubtitle": "Enter one of your backup codes (XXXXX-XXXXX). Each code works only once.",
+  "mfaCodeLabel": "6-digit code",
+  "mfaBackupCodeLabel": "Backup code",
+  "mfaVerifyButton": "Verify",
+  "mfaUseBackupCode": "Use a backup code",
+  "mfaUseAuthenticatorCode": "Use your authenticator app instead",
+  "mfaBackToSignIn": "Back to sign in",
+  "mfaBackupCodeUsed": "Backup code used. {remaining} backup code(s) left.",
+  "@mfaBackupCodeUsed": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "valMfaCodeInvalid": "Enter the 6-digit code.",
+  "valMfaBackupCodeInvalid": "Enter a backup code like ABCDE-FGHIJ.",
+  "mfaEnrollTitle": "Set up two-factor authentication",
+  "mfaEnrollSubtitle": "Your role requires a code from an authenticator app every time you sign in.",
+  "mfaEnrollStepInstall": "1. Install Google Authenticator (or another authenticator app).",
+  "mfaEnrollStepScan": "2. Scan this QR code, open it in the app, or enter the setup key.",
+  "mfaEnrollStepCode": "3. Enter the 6-digit code the app shows.",
+  "mfaEnrollOpenApp": "Open in authenticator app",
+  "mfaEnrollNoApp": "No authenticator app found. Install Google Authenticator or enter the setup key manually.",
+  "mfaEnrollManualKey": "Setup key",
+  "mfaCopyKey": "Copy key",
+  "mfaKeyCopied": "Setup key copied",
+  "mfaQrSemantic": "QR code for your authenticator app",
+  "mfaEnrollConfirm": "Confirm",
+  "mfaBackupCodesTitle": "Save your backup codes",
+  "mfaBackupCodesSubtitle": "Each code lets you sign in once if you lose your phone. They won't be shown again, so keep them somewhere safe.",
+  "mfaCopyCodes": "Copy codes",
+  "mfaCodesCopied": "Backup codes copied",
+  "mfaSavedCheckbox": "I saved my backup codes",
+  "mfaContinue": "Continue",
+  "securityMfaOn": "A code from your authenticator app is required every time you sign in.",
+  "securityMfaPending": "Required for your role. You'll set it up at your next sign-in.",
+  "securityMfaStatusOn": "On",
+  "securityMfaStatusOff": "Not set up",
+  "securityMfaRegenerate": "Regenerate backup codes",
+  "securityMfaRegenerateHint": "Enter a current code from your authenticator app. Your old backup codes will stop working.",
+  "securityMfaRegenerateSubmit": "Generate",
+  "securityMfaDone": "Done",
+  "adminMfaBadge": "2FA on",
+  "adminMfaReset": "Reset 2FA",
+  "adminMfaResetConfirm": "Reset two-factor authentication for {name}? They will be signed out everywhere and must set it up again at their next sign-in.",
+  "@adminMfaResetConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminMfaResetDone": "2FA reset. They'll set it up again at their next sign-in.",
+  "authMsgMfaRequired": "Enter the code from your authenticator app to finish signing in.",
+  "authErrMfaTokenInvalid": "Your sign-in has expired. Please sign in again.",
+  "authErrMfaCodeInvalid": "Incorrect code. Please try again.",
+  "authErrMfaCodeInvalidRemaining": "Incorrect code. {remaining} attempt(s) remaining.",
+  "@authErrMfaCodeInvalidRemaining": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "authErrMfaTooManyAttempts": "Too many incorrect codes. Please sign in again.",
+  "authErrMfaNotEnrolled": "Two-factor authentication isn't set up for this account yet.",
+  "authErrMfaAlreadyEnrolled": "Two-factor authentication is already set up for this account.",
+  "authErrMfaResetForbidden": "Only an Owner can reset two-factor authentication.",
+  "authErrMfaResetSelfForbidden": "You can't reset your own two-factor authentication."
 }

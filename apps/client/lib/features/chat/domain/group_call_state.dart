@@ -1,4 +1,5 @@
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import '../data/calls_repository.dart';
 
 /// A participant currently in (or invited to) a group call. Mirrors the
 /// `call.roster` participant shape from the cross-platform contract (§3).
@@ -67,6 +68,9 @@ class GroupCallState {
   /// Whether client-side speech-to-text is actively transcribing.
   final bool sttActive;
 
+  /// Media path of this call: peer-to-peer mesh or LiveKit.
+  final CallTransport transport;
+
   const GroupCallState({
     this.callId,
     this.conversationId = '',
@@ -78,6 +82,7 @@ class GroupCallState {
     this.joined = false,
     this.roster = const [],
     this.sttActive = false,
+    this.transport = CallTransport.mesh,
   });
 
   bool get isActive => callId != null;
@@ -97,6 +102,7 @@ class GroupCallState {
     bool? joined,
     List<CallParticipant>? roster,
     bool? sttActive,
+    CallTransport? transport,
   }) {
     return GroupCallState(
       callId: clearCallId ? null : (callId ?? this.callId),
@@ -109,6 +115,7 @@ class GroupCallState {
       joined: joined ?? this.joined,
       roster: roster ?? this.roster,
       sttActive: sttActive ?? this.sttActive,
+      transport: transport ?? this.transport,
     );
   }
 }
@@ -122,6 +129,9 @@ class IncomingGroupCall {
   final bool isVideo;
   final bool aiNotetaker;
 
+  /// Media path of the call (absent from older servers = mesh).
+  final CallTransport transport;
+
   const IncomingGroupCall({
     required this.callId,
     required this.conversationId,
@@ -129,5 +139,6 @@ class IncomingGroupCall {
     required this.startedByName,
     required this.isVideo,
     required this.aiNotetaker,
+    this.transport = CallTransport.mesh,
   });
 }

@@ -6,9 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/global_messenger.dart';
 import '../data/chat_repository.dart';
 import '../domain/chat_provider.dart';
 import '../domain/staged_attachments_provider.dart';
+import '../utils/chat_error.dart';
+import '../utils/duration_text.dart';
 
 /// Uploads a locally recorded audio file and sends it as a voice message,
 /// then runs [onSent] (e.g. to scroll to the bottom). Extracted from
@@ -141,15 +144,20 @@ Future<bool> flushStagedAttachments(
   return false;
 }
 
-/// Show the auto-delete duration picker sheet.
+/// Disappearing-messages picker (direct chats: both people; groups: admins
+/// only — the server answers 403 GROUP_ADMIN_REQUIRED otherwise). Shows the
+/// current timer, then a localized confirmation or the specific error.
 Future<void> showAutoDeletePicker(
   BuildContext context,
   WidgetRef ref,
-  String conversationId,
-) async {
+  String conversationId, {
+  int? currentSeconds,
+}) async {
   final l10n = context.l10n;
   final textColor = Theme.of(context).colorScheme.onSurface;
-  final seconds = await showModalBottomSheet<int?>(
+  final accent = AppTheme.accent(context);
+  final current = currentSeconds ?? 0;
+  final seconds = await showModalBottomSheet<int>(
     context: context,
     builder: (ctx) => SafeArea(
       child: Column(
@@ -160,31 +168,36 @@ Future<void> showAutoDeletePicker(
               style: TextStyle(
                   color: textColor, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
-          ListTile(
-            title: Text(l10n.disappearingOff,
-                style: TextStyle(color: textColor)),
-            onTap: () => Navigator.pop(ctx, 0),
-          ),
-          ListTile(
-            title: Text(l10n.disappearing24h,
-                style: TextStyle(color: textColor)),
-            onTap: () => Navigator.pop(ctx, 86400),
-          ),
-          ListTile(
-            title: Text(l10n.disappearing7d,
-                style: TextStyle(color: textColor)),
-            onTap: () => Navigator.pop(ctx, 604800),
-          ),
+          for (final option in kAutoDeleteOptions)
+            ListTile(
+              title: Text(
+                option == 0 ? l10n.disappearingOff : durationText(l10n, option),
+                style: TextStyle(color: textColor),
+              ),
+              trailing: option == current
+                  ? Icon(Icons.check_rounded, color: accent)
+                  : null,
+              onTap: () => Navigator.pop(ctx, option),
+            ),
         ],
       ),
     ),
   );
-  if (seconds == null) return;
+  if (seconds == null || seconds == current) return;
   try {
-    await ref
+    final updated = await ref
         .read(chatRepositoryProvider)
         .setAutoDelete(conversationId, seconds == 0 ? null : seconds);
-  } catch (_) {}
+    showInfoSnackBar(
+      seconds == 0
+          ? l10n.sysAutoDeleteOff
+          : l10n.sysAutoDeleteOn(durationText(l10n, seconds)),
+    );
+    // The shared CONVERSATION_UPDATED also arrives; apply the response now.
+    ref.read(conversationsNotifierProvider.notifier).applyServerCopy(updated);
+  } catch (e) {
+    showErrorSnackBar(chatErrorMessage(l10n, e));
+  }
 }
 
 /// Show a simple confirmation dialog. Returns true when the user confirms.

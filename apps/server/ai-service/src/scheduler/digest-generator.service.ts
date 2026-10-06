@@ -5,7 +5,13 @@ import { Connection } from 'mongoose';
 import Anthropic from '@anthropic-ai/sdk';
 import { RedisPublisherService } from '../redis/redis-publisher.service';
 import { ResolvedAiSettings } from '../settings/resolved-ai-settings';
+import { UsageService } from '../usage/usage.service';
 import { yesterdayWindow } from './digest-date.util';
+import { safeTimeZone } from '../common/time-zone';
+import { resolveDisplayNames, UNKNOWN_MEMBER_LABEL } from '../common/user-names';
+
+const DEFAULT_TIME_ZONE = 'Asia/Ho_Chi_Minh';
+const DEFAULT_BOT_USER_ID = 'ai-bot-000000000000000000000001';
 
 /** One transcript row pulled from the shared `messages` collection. */
 interface TranscriptRow {
@@ -20,22 +26,32 @@ interface TranscriptRow {
  * normal `type:"ai"` message (TASK-11, Decision 1/4). Mirrors
  * `CallSummaryService.generateSummary()`'s non-streaming Anthropic call.
  *
- * Reads the shared `messages` collection the same way `SearchMessagesTool` does
- * (`connection.collection('messages')`) — ai-service owns no `messages` model.
+ * "Yesterday" is the workspace-zone day (`AI_TIMEZONE`), and the transcript is
+ * HUMAN text only — the bot's own messages (incl. the previous digest) are not
+ * summarized again. Reads the shared `messages` collection the same way
+ * `SearchMessagesTool` does — ai-service owns no `messages` model.
  */
 @Injectable()
 export class DigestGeneratorService {
   private readonly logger = new Logger(DigestGeneratorService.name);
   private readonly anthropic: Anthropic;
+  private readonly timeZone: string;
+  private readonly botUserId: string;
 
   constructor(
     @InjectConnection() private readonly connection: Connection,
     private readonly publisher: RedisPublisherService,
     private readonly configService: ConfigService,
+    private readonly usageService?: UsageService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
     });
+    this.timeZone = safeTimeZone(
+      this.configService.get<string>('config.ai.timeZone') ?? DEFAULT_TIME_ZONE,
+      DEFAULT_TIME_ZONE,
+    );
+    this.botUserId = this.configService.get<string>('config.bot.userId') ?? DEFAULT_BOT_USER_ID;
   }
 
   /**
@@ -56,6 +72,7 @@ export class DigestGeneratorService {
     }
 
     const transcript = await this.renderTranscript(rows);
+    if (!transcript.trim()) return false;
     const digestText = await this.summarize(transcript, settings);
     if (!digestText.trim()) {
       this.logger.warn(`Empty digest for ${conversationId}; not delivering.`);
@@ -72,15 +89,16 @@ export class DigestGeneratorService {
     return true;
   }
 
-  /** Read yesterday's user/ai messages for the conversation (local-day window). */
+  /** Yesterday's (workspace zone) human text messages of the conversation, oldest first. */
   private async loadYesterday(conversationId: string, now: Date): Promise<TranscriptRow[]> {
-    const { start, end } = yesterdayWindow(now);
+    const { start, end } = yesterdayWindow(now, this.timeZone);
     const messages = this.connection.collection('messages');
     const docs = await messages
       .find({
         conversationId,
         createdAt: { $gte: start, $lt: end },
-        type: { $in: ['text', 'ai'] },
+        type: 'text',
+        senderId: { $ne: this.botUserId },
         recalled: { $ne: true },
       })
       .sort({ createdAt: 1 })
@@ -91,16 +109,19 @@ export class DigestGeneratorService {
     }));
   }
 
-  /** Resolve senderIds → display names (one query) and render `Name: text` lines. */
+  /**
+   * Resolve senderIds → display names (one ObjectId-aware query) and render
+   * `Name: text` lines. An unresolvable sender is a generic label, never the raw
+   * id — the model would copy it into the digest the members read.
+   */
   private async renderTranscript(rows: TranscriptRow[]): Promise<string> {
-    const users = this.connection.collection('users');
-    const senderIds = [...new Set(rows.map((r) => r.senderId).filter(Boolean))];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userDocs = await users.find({ _id: { $in: senderIds } } as any).toArray();
-    const nameMap = new Map(userDocs.map((u) => [String(u['_id']), String(u['displayName'] ?? '')]));
+    const nameMap = await resolveDisplayNames(
+      this.connection,
+      rows.map((r) => r.senderId),
+    );
     return rows
       .filter((r) => r.content.trim() !== '')
-      .map((r) => `${nameMap.get(r.senderId) || r.senderId || 'Unknown'}: ${r.content}`)
+      .map((r) => `${nameMap.get(r.senderId) || UNKNOWN_MEMBER_LABEL}: ${r.content}`)
       .join('\n');
   }
 
@@ -143,6 +164,8 @@ export class DigestGeneratorService {
         system,
         messages: [{ role: 'user', content: `Transcript:\n\n${transcript}` }],
       });
+      // Workspace-level job: attributed to the bot user (dashboard totals, no member's quota).
+      this.usageService?.recordModelCall(this.botUserId, res.usage, 'daily-digest');
       return res.content
         .filter((b): b is Anthropic.TextBlock => b.type === 'text')
         .map((b) => b.text)

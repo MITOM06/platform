@@ -64,6 +64,9 @@ export function authCodeToI18nKey(code: string): string {
     LOGIN_CODE_INVALID: 'errLoginCodeInvalid',
     EMAIL_NOT_FOUND: 'errEmailNotFound',
     USER_NOT_FOUND: 'errUserNotFound',
+    // Change / first set password (POST /api/users/me/change-password)
+    CURRENT_PASSWORD_REQUIRED: 'errCurrentPasswordRequired',
+    CURRENT_PASSWORD_INCORRECT: 'errCurrentPasswordIncorrect',
     // Invite-only onboarding / account status
     ACCOUNT_NOT_PROVISIONED: 'errAccountNotProvisioned',
     ACCOUNT_BLOCKED: 'errAccountBlocked',
@@ -88,9 +91,36 @@ export function authCodeToI18nKey(code: string): string {
     CANNOT_BLOCK_SELF: 'errCannotBlockSelf',
     OWNER_BLOCK_FORBIDDEN: 'errOwnerBlockForbidden',
     LAST_OWNER_CANNOT_BE_BLOCKED: 'errLastOwnerCannotBeBlocked',
+    // Role / permission governance (2026-10-05)
+    ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS: 'errRoleGrantExceedsOwnPermissionsGeneric',
+    CANNOT_EDIT_OWN_ROLE: 'errCannotEditOwnRole',
+    PRESET_ROLE_RENAME_FORBIDDEN: 'errPresetRoleRenameForbidden',
+    ROLE_NAME_TAKEN: 'errRoleNameTaken',
+    OWNER_ROLE_IMMUTABLE: 'errOwnerRoleImmutable',
+    OWNER_SSO_MAPPING_FORBIDDEN: 'errOwnerSsoMappingForbidden',
+    INSUFFICIENT_PERMISSION: 'errInsufficientPermission',
+    AI_CONTEXT_ENTRY_NOT_FOUND: 'errAiContextEntryNotFound',
+    AI_CONNECTORS_NOT_IN_ALLOW_LIST: 'errAiConnectorsNotInAllowList',
+    // Two-factor authentication (contract 09). MFA_CODE_INVALID with
+    // `params.remaining` uses errMfaCodeInvalidWithRemaining (lib/auth/mfa.ts).
+    MFA_REQUIRED: 'msgMfaRequired',
+    MFA_TOKEN_INVALID: 'errMfaTokenInvalid',
+    MFA_CODE_INVALID: 'errMfaCodeInvalid',
+    MFA_TOO_MANY_ATTEMPTS: 'errMfaTooManyAttempts',
+    MFA_NOT_ENROLLED: 'errMfaNotEnrolled',
+    MFA_ALREADY_ENROLLED: 'errMfaAlreadyEnrolled',
+    MFA_RESET_FORBIDDEN: 'errMfaResetForbidden',
+    MFA_RESET_SELF_FORBIDDEN: 'errMfaResetSelfForbidden',
     // SSO
     SSO_DISABLED: 'errSsoDisabled',
     SSO_DOMAIN_NOT_ALLOWED: 'errSsoDomainNotAllowed',
+    SSO_EMAIL_UNVERIFIED: 'errSsoEmailUnverified',
+    OIDC_EMAIL_UNVERIFIED: 'errSsoEmailUnverified',
+    SOCIAL_ACCOUNT_CONFLICT: 'errSocialAccountConflict',
+    SOCIAL_PROVIDER_UNSUPPORTED: 'errSocialProviderUnsupported',
+    OIDC_NO_STATE: 'errSsoStateInvalid',
+    OIDC_BAD_STATE: 'errSsoStateInvalid',
+    OIDC_EXCHANGE_FAILED: 'errSsoExchangeFailed',
     // Validation codes
     VAL_EMAIL_INVALID: 'errValEmailInvalid',
     VAL_EMAIL_REQUIRED: 'errValEmailRequired',

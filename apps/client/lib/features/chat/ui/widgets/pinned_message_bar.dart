@@ -8,13 +8,15 @@ import 'pinned_preview_text.dart';
 class PinnedMessageBar extends StatelessWidget {
   final PinnedMessageModel pinned;
   final VoidCallback onTap;
-  final VoidCallback onDismiss;
+
+  /// Unpin action; null hides the close button (no permission to unpin).
+  final VoidCallback? onDismiss;
 
   const PinnedMessageBar({
     super.key,
     required this.pinned,
     required this.onTap,
-    required this.onDismiss,
+    this.onDismiss,
   });
 
   @override
@@ -55,12 +57,14 @@ class PinnedMessageBar extends StatelessWidget {
                 ],
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.close_rounded, size: 16),
-              onPressed: onDismiss,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-            ),
+            if (onDismiss != null)
+              IconButton(
+                icon: const Icon(Icons.close_rounded, size: 16),
+                tooltip: context.l10n.unpinMessage,
+                onPressed: onDismiss,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+              ),
           ],
         ),
       ),

@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useWorkspace, useUpdateWorkspace } from '@/lib/hooks/use-admin'
 import { useCatalog } from '@/lib/hooks/use-connectors'
+import { humanizeFlagKey } from '@/lib/admin/feature-flags'
 
 // Fallback brand colour for a workspace that has not set one. Was the old
 // neon cyan #00e5ff, so a fresh deployment branded itself off-palette.
@@ -118,7 +119,7 @@ export function WorkspaceSettings() {
                 key={key}
                 className="flex items-center justify-between rounded-lg border px-4 py-2.5"
               >
-                <span className="text-sm font-medium">{key}</span>
+                <span className="text-sm font-medium">{humanizeFlagKey(key)}</span>
                 <Switch
                   checked={features[key]}
                   onCheckedChange={(v) =>
@@ -135,6 +136,11 @@ export function WorkspaceSettings() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">{t('wsAllowList')}</h2>
         <p className="text-sm text-muted-foreground">{t('wsAllowListDesc')}</p>
+        {/* `connectorAllowList: []` means EVERY connector is allowed — say so
+            instead of showing "nothing checked" as if nothing were allowed. */}
+        <p className="text-sm text-muted-foreground" data-testid="allow-list-state">
+          {allowList.length === 0 ? t('wsAllowListAll') : t('wsAllowListSome')}
+        </p>
         {catalog.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t('wsNoCatalog')}</p>
         ) : (

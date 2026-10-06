@@ -1,6 +1,9 @@
 import {
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Query,
   Req,
@@ -10,10 +13,24 @@ import {
   Post,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { BadRequestException } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { PasswordChangeService } from './password-change.service';
 import { FriendsService } from '../friends/friends.service';
+import { AuthCode } from '../../common/auth-code.enum';
+import { toPublicProfile } from './public-profile';
+import {
+  ChangePasswordDto,
+  ChangePasswordResponseDto,
+} from './dto/change-password.dto';
+import { isMfaPrivileged } from '../mfa/mfa-policy';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -22,6 +39,7 @@ import { FriendsService } from '../friends/friends.service';
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
+    private readonly passwordChange: PasswordChangeService,
     private readonly friendsService: FriendsService,
   ) {}
 
@@ -34,12 +52,18 @@ export class UsersController {
     ]);
     if (!user) return null;
     // user is a Mongoose Document — spread via toObject() so we can add hasPassword.
-    const doc = user.toObject();
+    // The raw 2FA sub-document never leaves the server; only the two flags do.
+    const { mfa, ...doc } = user.toObject();
     return {
       ...doc,
       hasPassword,
-      // Role is populated on findById; expose the name (null → client shows "Member").
-      roleName: (doc.roleId as any)?.name ?? null,
+      // 2FA: enrolled, and required (Owner / Admin-like role, from the token claims).
+      mfaEnabled: mfa?.enabled === true,
+      mfaRequired: isMfaPrivileged(req.user),
+      // Google-invite onboarding gate (clients force "create your PON password").
+      mustSetPassword: doc.mustSetPassword === true,
+      // Effective role: Owner / Admin / Manager / Member (unassigned → Member).
+      roleName: await this.usersService.getRoleName(doc.roleId),
     };
   }
 
@@ -65,12 +89,15 @@ export class UsersController {
   }
 
   @Post('me/change-password')
-  changePassword(
-    @Req() req: any,
-    @Body() body: { currentPassword?: string; newPassword?: string },
-  ) {
-    return this.usersService.changePassword(
+  @ApiOperation({
+    summary:
+      'Change (or set a first) password — also clears mustSetPassword; signs out every OTHER session',
+  })
+  @ApiCreatedResponse({ type: ChangePasswordResponseDto })
+  changePassword(@Req() req: any, @Body() body: ChangePasswordDto) {
+    return this.passwordChange.changePassword(
       req.user.sub,
+      req.user.sid,
       body.currentPassword,
       body.newPassword,
     );
@@ -95,8 +122,40 @@ export class UsersController {
   }
 
   @Post('device-tokens')
+  @ApiOperation({
+    summary: 'Register an FCM token (moved off any other account using it)',
+  })
   addDeviceToken(@Req() req: any, @Body('token') token: string) {
     return this.usersService.addDeviceToken(req.user.sub, token);
+  }
+
+  /**
+   * Unregister an FCM token before logout so the device stops receiving this
+   * account's pushes. `token` in the JSON body or, for clients that cannot send
+   * a DELETE body, `?token=`. Idempotent: 200 even when it was not registered.
+   */
+  @Delete('device-tokens')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Unregister an FCM token from the caller's account" })
+  @ApiQuery({
+    name: 'token',
+    required: false,
+    type: String,
+    description: 'FCM token (alternative to the JSON body { token })',
+  })
+  async removeDeviceToken(
+    @Req() req: any,
+    @Body('token') bodyToken?: unknown,
+    @Query('token') queryToken?: unknown,
+  ) {
+    const token = [bodyToken, queryToken].find(
+      (t): t is string => typeof t === 'string' && t.trim().length > 0,
+    );
+    if (!token) {
+      throw new BadRequestException({ code: AuthCode.DEVICE_TOKEN_REQUIRED });
+    }
+    await this.usersService.removeDeviceToken(req.user.sub, token);
+    return { success: true };
   }
 
   @Get('search')
@@ -182,95 +241,35 @@ export class UsersController {
       throw new BadRequestException('Too many ids — max 100 per request');
     }
 
-    const [users, counts] = await Promise.all([
+    const [users, counts, roleNames] = await Promise.all([
       this.usersService.findManyByIds(unique),
       this.friendsService.countAcceptedForMany(unique),
+      this.usersService.getRoleNameMap(),
     ]);
 
-    return users.map((user) =>
-      this.toProfile(user.toObject(), req.user.sub, counts.get(String(user._id)) ?? 0),
-    );
+    return users.map((user) => {
+      const doc = user.toObject();
+      return toPublicProfile(doc, req.user.sub, {
+        friendsCount: counts.get(String(user._id)) ?? 0,
+        roleName: roleNames.get(String(doc.roleId ?? '')) ?? 'Member',
+      });
+    });
   }
 
   @Get(':id')
   async findById(@Req() req: any, @Param('id') id: string) {
     const user = await this.usersService.findById(id);
     if (!user) return user;
-    const [friendsCount, isBlockedByOwner] = await Promise.all([
+    const doc = user.toObject();
+    const [friendsCount, isBlockedByOwner, roleName] = await Promise.all([
       this.friendsService.countAccepted(id),
       this.usersService.isBlockedBy(id, req.user.sub),
+      this.usersService.getRoleName(doc.roleId),
     ]);
-    return this.toProfile(user.toObject(), req.user.sub, friendsCount, isBlockedByOwner);
-  }
-
-  // Shared public-profile mapping used by both the single (`:id`) and batch
-  // endpoints so they return the identical UserProfile DTO shape.
-  // NOTE: isBlockedByOwner is only set for single GET /api/users/:id — batch
-  // endpoint (findManyByIds) intentionally omits it to avoid breaking
-  // conversation participant rendering.
-  private toProfile(
-    doc: any,
-    callerId: string,
-    friendsCount: number,
-    isBlockedByOwner = false,
-  ): any {
-    const isSelf = callerId === String(doc._id);
-
-    // Caller is blocked by the profile owner → return minimal public info only.
-    // Tells the client to hide action buttons and sensitive profile details.
-    if (!isSelf && isBlockedByOwner) {
-      return {
-        _id: doc._id,
-        id: doc._id,
-        displayName: doc.displayName,
-        avatarUrl: doc.avatarUrl ?? '',
-        coverPhoto: doc.coverPhoto ?? '',
-        email: doc.email,
-        isVerified: doc.isVerified ?? false,
-        friendsCount: 0,
-        bio: '',
-        isBlockedByOwner: true,
-      };
-    }
-
-    // Explicit public-profile whitelist. NEVER expose fcmTokens, blockedUsers,
-    // trustedDevices, socialLinks, status, password, otpCode, otpExpires.
-    const profile: any = {
-      _id: doc._id,
-      id: doc._id,
-      displayName: doc.displayName,
-      avatarUrl: doc.avatarUrl ?? '',
-      coverPhoto: doc.coverPhoto ?? '',
-      isVerified: doc.isVerified ?? false,
-      hideInfo: doc.hideInfo ?? false, // legacy fallback safety-net
-      createdAt: doc.createdAt,
+    return toPublicProfile(doc, req.user.sub, {
       friendsCount,
-      // Role is always public — no privacy gate. null → client shows "Member".
-      roleName: (doc.roleId as any)?.name ?? null,
-    };
-
-    // Per-field visibility. New per-field flags win; when absent on legacy
-    // docs, fall back to the legacy `!hideInfo` behaviour.
-    const showDob = doc.showDateOfBirth ?? !doc.hideInfo;
-    const showPhone = doc.showPhoneNumber ?? !doc.hideInfo;
-    const showGen = doc.showGender ?? !doc.hideInfo;
-
-    // bio is never gated — always public.
-    profile.bio = doc.bio;
-
-    if (isSelf) {
-      // Self gets everything + the toggle flags to seed the edit form.
-      profile.email = doc.email;
-      profile.phoneVerified = doc.phoneVerified ?? false;
-      profile.showDateOfBirth = showDob;
-      profile.showPhoneNumber = showPhone;
-      profile.showGender = showGen;
-    }
-
-    if (isSelf || showDob) profile.dateOfBirth = doc.dateOfBirth;
-    if (isSelf || showPhone) profile.phoneNumber = doc.phoneNumber;
-    if (isSelf || showGen) profile.gender = doc.gender;
-
-    return profile;
+      isBlockedByOwner,
+      roleName,
+    });
   }
 }

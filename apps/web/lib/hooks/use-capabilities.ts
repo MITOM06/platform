@@ -35,18 +35,26 @@ export function useAssistantName(): string | null {
   return data?.workspace.assistantName ?? null
 }
 
-/** Capabilities that grant access to at least one admin console section. */
+/**
+ * Capabilities that grant access to at least one admin console section — keep in
+ * sync with `ADMIN_SECTIONS` in `components/admin/AdminShell.tsx` (a test checks).
+ */
 export const ADMIN_SECTION_CAPS: Capability[] = [
   'MANAGE_WORKSPACE',
   'MANAGE_DEPARTMENTS',
   'MANAGE_MEMBERS',
   'MANAGE_ROLES',
+  'MANAGE_AI_CONTEXT',
   'VIEW_AUDIT_LOG',
 ]
+
+/** True when [perms] open at least one admin section. */
+export function canAccessAdmin(perms: readonly Capability[] | undefined): boolean {
+  return !!perms && ADMIN_SECTION_CAPS.some((c) => perms.includes(c))
+}
 
 /** True if the caller can see the Admin area at all (holds any section cap). */
 export function useCanAccessAdmin(): boolean {
   const { data } = useCapabilities()
-  if (!data) return false
-  return ADMIN_SECTION_CAPS.some((c) => data.perms.includes(c))
+  return canAccessAdmin(data?.perms)
 }

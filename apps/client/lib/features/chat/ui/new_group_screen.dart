@@ -10,6 +10,7 @@ import '../../admin/data/models/admin_models.dart';
 import '../../admin/state/admin_providers.dart';
 import '../../admin/state/capabilities_provider.dart';
 import '../data/chat_repository.dart';
+import '../utils/chat_error.dart';
 import '../domain/chat_provider.dart';
 import 'widgets/conversation_avatar.dart';
 
@@ -27,6 +28,9 @@ class _NewGroupScreenState extends ConsumerState<NewGroupScreen> {
   final Set<String> _selected = {};
   bool _busy = false;
   String? _departmentId; // P6: optional owning department (admins only)
+  // Listed in Explore for everyone to find and join. Not combinable with a
+  // department (server: 400 PUBLIC_DEPARTMENT_CHANNEL_NOT_ALLOWED).
+  bool _publicChannel = false;
 
   @override
   void dispose() {
@@ -44,9 +48,9 @@ class _NewGroupScreenState extends ConsumerState<NewGroupScreen> {
       );
       return;
     }
-    // Group needs the creator + at least 2 others to be meaningful; the backend
-    // requires >= 2 members total, so require at least 2 selected friends.
-    if (_selected.length < 2) {
+    // The backend needs >= 2 members including the creator, so one selected
+    // friend is enough (same as web).
+    if (_selected.isEmpty) {
       messenger.showSnackBar(
         SnackBar(content: Text(l10n.valSelectMembers)),
       );
@@ -54,14 +58,17 @@ class _NewGroupScreenState extends ConsumerState<NewGroupScreen> {
     }
     setState(() => _busy = true);
     try {
-      final conv = await ref
-          .read(chatRepositoryProvider)
-          .createGroup(name, _selected.toList(), departmentId: _departmentId);
+      final conv = await ref.read(chatRepositoryProvider).createGroup(
+            name,
+            _selected.toList(),
+            departmentId: _departmentId,
+            publicChannel: _publicChannel && _departmentId == null,
+          );
       ref.read(conversationsNotifierProvider.notifier).refresh();
       if (mounted) context.go('/chat/${conv.id}');
     } catch (e) {
       messenger.showSnackBar(
-        SnackBar(content: Text(friendlyError(e))),
+        SnackBar(content: Text(chatErrorMessage(l10n, e))),
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -118,9 +125,31 @@ class _NewGroupScreenState extends ConsumerState<NewGroupScreen> {
                     ),
                   ),
                 ],
-                onChanged: (v) => setState(() => _departmentId = v),
+                onChanged: (v) => setState(() {
+                  _departmentId = v;
+                  // A department group can't be a public channel.
+                  if (v != null) _publicChannel = false;
+                }),
               ),
             ),
+          SwitchListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            secondary: const Icon(Icons.public_rounded),
+            title: Text(context.l10n.publicChannelToggle),
+            subtitle: Text(
+              _departmentId == null
+                  ? context.l10n.publicChannelHint
+                  : context.l10n.errPublicDepartmentChannel,
+              style: TextStyle(
+                fontSize: 12,
+                color: AppTheme.mutedText(context),
+              ),
+            ),
+            value: _publicChannel && _departmentId == null,
+            onChanged: _departmentId == null
+                ? (v) => setState(() => _publicChannel = v)
+                : null,
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Align(

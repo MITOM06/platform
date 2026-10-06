@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   Logger,
@@ -18,6 +19,28 @@ import {
   DirectoryEntryView,
   UpdateDirectoryEntryDto,
 } from './dto/directory.dto';
+import { assertSafeUrl, checkUrlSyntax } from '../security/url-guard';
+import { EnvOAuthConfig, envOAuthProblems } from './env-oauth-policy';
+
+const ENV_OAUTH_FIELDS = ['authMode', 'envClientIdName', 'envClientSecretName', 'authorizeUrl', 'tokenUrl'];
+
+/**
+ * Validate the parts of an entry a server-side request (or the user's browser)
+ * will be sent to. Throws 400 `UNSAFE_URL` / `INVALID_ENV_OAUTH`.
+ */
+export async function assertDirectoryEntrySafe(
+  entry: EnvOAuthConfig & { mcpUrl?: string; authMode?: string },
+  touched: { mcpUrl: boolean; envOAuth: boolean } = { mcpUrl: true, envOAuth: true },
+): Promise<void> {
+  if (touched.mcpUrl && entry.mcpUrl) await assertSafeUrl(entry.mcpUrl);
+  if (!touched.envOAuth || entry.authMode !== 'env-oauth') return;
+  const problems = envOAuthProblems(entry, { allowHttp: process.env.NODE_ENV !== 'production' });
+  if (problems.length) {
+    throw new BadRequestException({ code: 'INVALID_ENV_OAUTH', problems });
+  }
+  checkUrlSyntax(entry.authorizeUrl!); // the browser is sent here
+  await assertSafeUrl(entry.tokenUrl!); // we POST the client secret here
+}
 
 /**
  * Owns the dynamic MCP connector directory (`mcp_directory` collection):
@@ -82,6 +105,7 @@ export class DirectoryService implements OnModuleInit {
     if (exists) {
       throw new ConflictException(`Directory slug already exists: ${dto.slug}`);
     }
+    await assertDirectoryEntrySafe(dto);
     const created = await this.model.create({
       slug: dto.slug,
       name: dto.name,
@@ -114,6 +138,17 @@ export class DirectoryService implements OnModuleInit {
     id: string,
     dto: UpdateDirectoryEntryDto,
   ): Promise<DirectoryEntryView> {
+    const current = await this.model.findById(id).lean();
+    if (!current) {
+      throw new NotFoundException('Directory entry not found');
+    }
+    const fields = Object.keys(dto).filter((k) => (dto as Record<string, unknown>)[k] !== undefined);
+    // Only re-validate what this update touches, so a harmless rename of a
+    // legacy entry is not blocked (connect-time checks still apply to it).
+    await assertDirectoryEntrySafe(
+      { ...current, ...dto },
+      { mcpUrl: fields.includes('mcpUrl'), envOAuth: fields.some((f) => ENV_OAUTH_FIELDS.includes(f)) },
+    );
     const updated = await this.model
       .findByIdAndUpdate(id, { $set: dto }, { new: true })
       .lean();

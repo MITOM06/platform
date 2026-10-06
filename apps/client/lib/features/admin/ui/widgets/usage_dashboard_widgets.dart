@@ -109,7 +109,7 @@ class UsageTopUsersList extends StatelessWidget {
         for (var i = 0; i < top.length; i++)
           UsageListTileCard(
             leading: '${i + 1}',
-            title: top[i].label,
+            title: top[i].safeName ?? context.l10n.someone,
             trailing: fmtCount(top[i].totalTokens),
             subtitle: context.l10n.usageUserRequests(top[i].requestCount),
             accent: AppTheme.accent(context),

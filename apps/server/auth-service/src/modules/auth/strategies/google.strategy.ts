@@ -15,22 +15,31 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   }
 
   async validate(_at: string, _rt: string, profile: any, done: VerifyCallback) {
-    const { id, name, emails, photos, displayName } = profile;
-    const email = emails?.[0]?.value;
-    const fallbackName = email ? email.split('@')[0] : 'User';
-
-    const user = {
-      id,
-      email,
-      displayName:
-        displayName ||
-        (name?.givenName
-          ? `${name.givenName} ${name.familyName || ''}`.trim()
-          : null) ||
-        fallbackName,
-      avatar: photos?.[0]?.value || '',
-    };
-
-    done(null, user);
+    done(null, toGoogleSocialProfile(profile));
   }
+}
+
+/**
+ * Normalize a passport-google-oauth20 profile. `emailVerified` is true only
+ * when Google asserts it (`emails[0].verified` / userinfo `email_verified`);
+ * linking an existing PON account by email requires it.
+ */
+export function toGoogleSocialProfile(profile: any) {
+  const { id, name, emails, photos, displayName } = profile ?? {};
+  const email = emails?.[0]?.value;
+  const fallbackName = email ? email.split('@')[0] : 'User';
+  const verifiedFlag = emails?.[0]?.verified ?? profile?._json?.email_verified;
+
+  return {
+    id,
+    email,
+    emailVerified: verifiedFlag === true || verifiedFlag === 'true',
+    displayName:
+      displayName ||
+      (name?.givenName
+        ? `${name.givenName} ${name.familyName || ''}`.trim()
+        : null) ||
+      fallbackName,
+    avatar: photos?.[0]?.value || '',
+  };
 }

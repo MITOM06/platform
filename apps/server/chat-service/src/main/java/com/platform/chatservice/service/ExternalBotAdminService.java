@@ -6,11 +6,13 @@ import com.platform.chatservice.repository.ExternalBotRepository;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /** Registers member→Bot Factory bot mappings and resolves a member's personal assistant. */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ExternalBotAdminService {
 
   private final ExternalBotRepository repo;
@@ -21,6 +23,30 @@ public class ExternalBotAdminService {
    */
   public ExternalBotResponse register(
       String ownerUserId, String factoryBotId, String name, String avatarUrl) {
+    return toResponse(save(ownerUserId, factoryBotId, name, avatarUrl, null, null));
+  }
+
+  /**
+   * {@link #register} for the BotFather Zone flow, also mirroring the persona and model. A null
+   * {@code systemPrompt} / {@code providerId} keeps the stored value.
+   */
+  public ExternalBotResponse registerAssistant(
+      String ownerUserId,
+      String factoryBotId,
+      String name,
+      String avatarUrl,
+      String systemPrompt,
+      String providerId) {
+    return toResponse(save(ownerUserId, factoryBotId, name, avatarUrl, systemPrompt, providerId));
+  }
+
+  private ExternalBot save(
+      String ownerUserId,
+      String factoryBotId,
+      String name,
+      String avatarUrl,
+      String systemPrompt,
+      String providerId) {
     String botUserId = "extbot:" + factoryBotId;
     ExternalBot bot =
         repo.findByBotUserId(botUserId)
@@ -29,12 +55,52 @@ public class ExternalBotAdminService {
     bot.setFactoryBotId(factoryBotId);
     bot.setName(name);
     bot.setAvatarUrl(avatarUrl);
+    if (systemPrompt != null) {
+      bot.setSystemPrompt(systemPrompt);
+    }
+    if (providerId != null) {
+      bot.setProviderId(providerId);
+    }
     bot.setEnabled(true);
-    return toResponse(repo.save(bot));
+    return repo.save(bot);
   }
 
   public Optional<ExternalBotResponse> findAssistantFor(String ownerUserId) {
-    return repo.findByOwnerUserIdAndEnabledTrue(ownerUserId).map(this::toResponse);
+    return findAssistantRecord(ownerUserId).map(this::toResponse);
+  }
+
+  /**
+   * The member's assistant mapping (the newest enabled one). Duplicates should not exist, but a
+   * duplicate used to make every call throw {@code IncorrectResultSizeDataAccessException}.
+   */
+  Optional<ExternalBot> findAssistantRecord(String ownerUserId) {
+    List<ExternalBot> bots = repo.findByOwnerUserIdAndEnabledTrueOrderByCreatedAtDesc(ownerUserId);
+    if (bots.size() > 1) {
+      log.warn(
+          "Member {} has {} enabled assistant mappings; using the newest ({})",
+          ownerUserId,
+          bots.size(),
+          bots.get(0).getBotUserId());
+    }
+    return bots.stream().findFirst();
+  }
+
+  /**
+   * Back-fill the mirrored persona/model of a legacy registration (null keeps the stored value).
+   */
+  void updatePersona(ExternalBot bot, String systemPrompt, String providerId) {
+    boolean changed = false;
+    if (systemPrompt != null && !systemPrompt.equals(bot.getSystemPrompt())) {
+      bot.setSystemPrompt(systemPrompt);
+      changed = true;
+    }
+    if (providerId != null && !providerId.equals(bot.getProviderId())) {
+      bot.setProviderId(providerId);
+      changed = true;
+    }
+    if (changed) {
+      repo.save(bot);
+    }
   }
 
   /** Workspace-wide list of all registered external bots, for the admin UI. */

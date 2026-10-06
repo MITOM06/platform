@@ -1,22 +1,24 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/app_error.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../../auth/ui/widgets/password_strength_indicator.dart';
+import '../utils/change_password_error.dart';
+import '../../auth/utils/password_policy.dart';
+import 'widgets/two_factor_section.dart';
 
 /// Dedicated "Password & Security" screen (mirror of web `/settings/security`).
 ///
 /// - Amber warning card when the account has no local password (OAuth-only).
 /// - Password form: 2 fields (new + confirm) when no password exists yet,
 ///   3 fields (current + new + confirm) when changing an existing one.
-/// - 2FA placeholder ListTile (disabled / "Coming soon").
+/// - Two-factor authentication status + "Regenerate backup codes", only for
+///   members whose role requires 2FA ([TwoFactorSection]).
 class SecuritySettingsScreen extends ConsumerWidget {
   const SecuritySettingsScreen({super.key});
 
@@ -46,8 +48,8 @@ class SecuritySettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
                 ],
                 _PasswordForm(hasPassword: user.hasPassword, isDark: isDark),
-                const SizedBox(height: 24),
-                _TwoFaPlaceholder(isDark: isDark),
+                // Renders nothing unless the member's role requires 2FA.
+                const TwoFactorSection(),
               ],
             ),
     );
@@ -133,14 +135,8 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
   /// Validates the new password against the same rules as the invitation accept form.
   String? _validate(BuildContext context, String newPass, String confirm) {
     final l10n = context.l10n;
-    if (newPass.isEmpty) return l10n.valPasswordRequired;
-    if (newPass.length < 8) return l10n.valPasswordMin8;
-    if (!newPass.contains(RegExp(r'[A-Z]'))) return l10n.valPasswordUppercase;
-    if (!newPass.contains(RegExp(r'[a-z]'))) return l10n.valPasswordLowercase;
-    if (!newPass.contains(RegExp(r'[0-9]'))) return l10n.valPasswordDigit;
-    if (!newPass.contains(RegExp(r'[!@#$%^&*]'))) {
-      return l10n.valPasswordSpecial;
-    }
+    final policyError = newPasswordPolicyError(l10n, newPass);
+    if (policyError != null) return policyError;
     if (newPass != confirm) return l10n.valPasswordMismatch;
     return null;
   }
@@ -162,11 +158,12 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
     });
 
     try {
-      // For first-time setup there is no current password; the server only
-      // enforces the current-password check for accounts that already have one.
+      // For first-time setup there is no current password (omitted from the
+      // body); the server only enforces the current-password check for
+      // accounts that already have one.
       await ref
           .read(authRepositoryProvider)
-          .changePassword(widget.hasPassword ? current : '', newPass);
+          .changePassword(widget.hasPassword ? current : null, newPass);
       // Re-fetch the user so `hasPassword` flips and the UI updates.
       await ref.read(authNotifierProvider.notifier).refreshUser();
       if (!mounted) return;
@@ -180,32 +177,10 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
       _confirmController.clear();
       setState(() => _newPasswordValue = '');
     } catch (e) {
-      if (mounted) setState(() => _errorText = _mapError(context, e));
+      if (mounted) setState(() => _errorText = changePasswordErrorMessage(context, e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  /// Maps the backend's English error strings to localized messages.
-  String _mapError(BuildContext context, Object e) {
-    final l10n = context.l10n;
-    String message = '';
-    if (e is DioException) {
-      final data = e.response?.data;
-      if (data is Map && data['message'] is String) {
-        message = data['message'] as String;
-      }
-    }
-    if (message.contains('Incorrect current password')) {
-      return l10n.errCurrentPasswordIncorrect;
-    }
-    if (message.contains('Current password is required')) {
-      return l10n.valPasswordRequired;
-    }
-    if (message.contains('at least 6')) {
-      return l10n.valPasswordMin6;
-    }
-    return friendlyError(e);
   }
 
   @override
@@ -329,62 +304,6 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
                     ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Disabled / "Coming soon" two-factor authentication section.
-class _TwoFaPlaceholder extends StatelessWidget {
-  final bool isDark;
-  const _TwoFaPlaceholder({required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    final muted = AppTheme.mutedText(context);
-    return PonCard(
-      child: Opacity(
-        opacity: 0.7,
-        child: ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-          enabled: false,
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: muted.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.shield_rounded, color: muted, size: 20),
-          ),
-          title: Text(
-            context.l10n.securityTwoFaTitle,
-            style: TextStyle(
-              color: muted,
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-            ),
-          ),
-          subtitle: Text(
-            context.l10n.securityTwoFaComingSoon,
-            style: TextStyle(color: muted, fontSize: 12),
-          ),
-          trailing: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: muted.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppTheme.radiusCard),
-            ),
-            child: Text(
-              context.l10n.securityComingSoon,
-              style: TextStyle(
-                color: muted,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
         ),
       ),
     );

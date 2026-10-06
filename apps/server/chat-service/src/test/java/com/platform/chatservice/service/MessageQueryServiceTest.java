@@ -36,6 +36,7 @@ class MessageQueryServiceTest {
   @Mock private ConversationRepository conversationRepository;
   @Mock private MongoTemplate mongoTemplate;
   @Mock private MessageServiceHelper messageServiceHelper;
+  @Mock private SenderNameResolver senderNameResolver;
 
   private MessageQueryService messageQueryService;
 
@@ -56,7 +57,8 @@ class MessageQueryServiceTest {
             conversationRepository,
             mongoTemplate,
             messageServiceHelper,
-            messageMapper);
+            messageMapper,
+            senderNameResolver);
 
     conversation =
         Conversation.builder().id(CONV_ID).participants(List.of(SENDER_ID, OTHER_ID)).build();
@@ -159,14 +161,45 @@ class MessageQueryServiceTest {
             .createdAt(Instant.now())
             .build();
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
-    when(messageRepository.findByConversationIdAndCreatedAtGreaterThanOrderByCreatedAtAsc(
-            eq(CONV_ID), eq(after), any()))
-        .thenReturn(List.of(newer));
+    when(mongoTemplate.find(any(Query.class), eq(Message.class))).thenReturn(List.of(newer));
 
-    List<MessageResponse> results = messageQueryService.getMessagesSince(SENDER_ID, CONV_ID, after);
+    PageResponse<MessageResponse> results =
+        messageQueryService.getMessagesSince(SENDER_ID, CONV_ID, after, null);
 
-    assertThat(results).hasSize(1);
-    assertThat(results.get(0).id()).isEqualTo("msg-new");
+    assertThat(results.content()).hasSize(1);
+    assertThat(results.content().get(0).id()).isEqualTo("msg-new");
+    assertThat(results.hasNext()).isFalse();
+  }
+
+  /** Catch-up used to stop at 50 rows with no way to know more existed. */
+  @Test
+  void getMessagesSince_WhenMoreThanAPage_ReportsHasNext_AndReturnsOldestFirstPage() {
+    Instant after = Instant.parse("2026-10-05T00:00:00Z");
+    List<Message> rows = new java.util.ArrayList<>();
+    for (int i = 0; i < MessageQueryService.CATCH_UP_PAGE_SIZE + 1; i++) {
+      rows.add(
+          Message.builder()
+              .id("m-" + i)
+              .conversationId(CONV_ID)
+              .senderId(OTHER_ID)
+              .content("c" + i)
+              .type("text")
+              .createdAt(after.plusSeconds(i + 1))
+              .build());
+    }
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+    org.mockito.ArgumentCaptor<Query> query = org.mockito.ArgumentCaptor.forClass(Query.class);
+    when(mongoTemplate.find(query.capture(), eq(Message.class))).thenReturn(rows);
+
+    PageResponse<MessageResponse> page =
+        messageQueryService.getMessagesSince(SENDER_ID, CONV_ID, after, "m-prev");
+
+    assertThat(page.content()).hasSize(MessageQueryService.CATCH_UP_PAGE_SIZE);
+    assertThat(page.content().get(0).id()).isEqualTo("m-0");
+    assertThat(page.hasNext()).isTrue();
+    // over-fetch by one, oldest first, visibility pushed into the query
+    assertThat(query.getValue().getLimit()).isEqualTo(MessageQueryService.CATCH_UP_PAGE_SIZE + 1);
+    assertThat(query.getValue().getQueryObject().toString()).contains("deletedFor");
   }
 
   @Test
@@ -174,7 +207,8 @@ class MessageQueryServiceTest {
     when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
 
     assertThatThrownBy(
-            () -> messageQueryService.getMessagesSince("intruder-999", CONV_ID, Instant.now()))
+            () ->
+                messageQueryService.getMessagesSince("intruder-999", CONV_ID, Instant.now(), null))
         .isInstanceOf(ConversationNotFoundException.class);
 
     verifyNoInteractions(messageRepository);
@@ -294,5 +328,70 @@ class MessageQueryServiceTest {
     // JSON-array second
     assertThat(history.get(1).type()).isEqualTo("image");
     assertThat(history.get(1).imageUrls()).containsExactly("/api/uploads/a", "/api/uploads/b");
+  }
+
+  // Round 2 — history entries carry senderId + senderName (never an id as a name)
+  @Test
+  void getAiHistory_AttributesEverySender_WithResolvedNamesOnly() {
+    Message fromAlice =
+        Message.builder()
+            .id("a1")
+            .conversationId(CONV_ID)
+            .senderId(SENDER_ID)
+            .content("Shall we ship Friday?")
+            .type("text")
+            .createdAt(Instant.now().minusSeconds(30))
+            .build();
+    Message fromUnknown =
+        Message.builder()
+            .id("a2")
+            .conversationId(CONV_ID)
+            .senderId(OTHER_ID)
+            .content("Fine by me")
+            .type("text")
+            .createdAt(Instant.now().minusSeconds(20))
+            .build();
+    Message fromBot =
+        Message.builder()
+            .id("a3")
+            .conversationId(CONV_ID)
+            .senderId(AiConstants.AI_BOT_USER_ID)
+            .content("Noted.")
+            .type("ai")
+            .createdAt(Instant.now().minusSeconds(10))
+            .build();
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+    when(mongoTemplate.find(any(Query.class), eq(Message.class)))
+        .thenReturn(List.of(fromBot, fromUnknown, fromAlice));
+    // OTHER_ID does not resolve → absent from the map.
+    when(senderNameResolver.displayNames(eq(CONV_ID), anyCollection()))
+        .thenReturn(
+            new java.util.HashMap<>(
+                java.util.Map.of(SENDER_ID, "Alice", AiConstants.AI_BOT_USER_ID, "Lumi")));
+
+    List<AiHistoryEntry> history = messageQueryService.getAiHistory(SENDER_ID, CONV_ID);
+
+    assertThat(history)
+        .extracting(AiHistoryEntry::senderId)
+        .containsExactly(SENDER_ID, OTHER_ID, AiConstants.AI_BOT_USER_ID);
+    assertThat(history)
+        .extracting(AiHistoryEntry::senderName)
+        .containsExactly("Alice", null, "Lumi");
+    // one batched resolution for all senders
+    verify(senderNameResolver, times(1)).displayNames(eq(CONV_ID), anyCollection());
+  }
+
+  @Test
+  void getAiHistory_NameLookupFailure_KeepsTheHistoryWithoutNames() {
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+    when(mongoTemplate.find(any(Query.class), eq(Message.class))).thenReturn(List.of(savedMessage));
+    when(senderNameResolver.displayNames(any(), anyCollection()))
+        .thenThrow(new RuntimeException("users down"));
+
+    List<AiHistoryEntry> history = messageQueryService.getAiHistory(SENDER_ID, CONV_ID);
+
+    assertThat(history).hasSize(1);
+    assertThat(history.get(0).senderId()).isEqualTo(SENDER_ID);
+    assertThat(history.get(0).senderName()).isNull();
   }
 }

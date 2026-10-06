@@ -32,6 +32,8 @@ import { applyNicknameSystemMessage } from '@/lib/nicknames'
 import { applyQuickReactionSystemMessage } from '@/lib/quick-reaction'
 import type { Message, MessageType } from '@/lib/api/types'
 import { isExternalBot } from '@/lib/api/types'
+import { chatErrorMessage, parseChatError } from '@/lib/api/chat-errors'
+import { ReportedSendError } from '@/lib/chat/send-error'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -80,10 +82,10 @@ export default function ConversationPage({ params }: Props) {
 
   // Real-time wiring (STOMP subscriptions, AI streaming, group-call lifecycle,
   // typing + read receipts). Patches the TanStack Query cache, not refetch.
-  const { typingUserIds, aiStream, setAiStream, activeCall, armAiWatchdog, clearAiStream } =
+  const { typingUserIds, aiStreams, activeCall, startLocalAiStream, dropLocalAiStream } =
     useConversationStomp({ id, messages, currentUserId: currentUser?.id })
 
-  const { patchMessage, appendMessage } = useMessageCache(id)
+  const { patchMessage, appendMessage, removeMessage } = useMessageCache(id)
 
   // Personal assistant (Bot Factory) replies are synchronous (2–10s) with no
   // STOMP typing event, so synthesise one: if this is an external-bot DM and the
@@ -126,16 +128,18 @@ export default function ConversationPage({ params }: Props) {
       // group — so the indicator appears before the first stream chunk (parity
       // with Flutter, which creates the placeholder on send).
       const triggersAi = type === 'text' && (isAI || /@(?:AI|ponai)\b/i.test(content))
-      if (triggersAi) {
-        setAiStream({ content: '', thinking: true, activeTools: [], sensitiveTools: [] })
-        armAiWatchdog()
-      }
+      if (triggersAi) startLocalAiStream()
       const sent = await chatService.sendMessage(id, finalContent, type, replyingTo?.id)
       appendMessage(sent)
       setReplyingTo(null)
-    } catch {
-      clearAiStream()
-      toast.error(t('sendMessageError'))
+    } catch (err) {
+      dropLocalAiStream()
+      // Specific, localized reason (blocked, admin-only, rate limited, offline…),
+      // never the raw server text. The quoted message is gone → drop the quote.
+      toast.error(chatErrorMessage(err, t, 'sendMessageError'))
+      if (parseChatError(err).code === 'REPLY_TARGET_INVALID') setReplyingTo(null)
+      // Rethrow so the composer keeps the draft (text / staged attachments).
+      throw new ReportedSendError()
     }
   }
 
@@ -145,16 +149,23 @@ export default function ConversationPage({ params }: Props) {
       await chatService.editMessage(editingMessage.id, content)
       // STOMP MESSAGE_UPDATED will update the cache
       setEditingMessage(null)
-    } catch {
-      toast.error(t('editMessageError'))
+    } catch (err) {
+      toast.error(chatErrorMessage(err, t, 'editMessageError'))
+      throw new ReportedSendError()
     }
   }
 
   const handleOptimisticUpdate = useCallback(
     (updated: Partial<Message> & { id: string }) => {
+      // "Delete for me" (single or multi-select) reports `deletedFor`: the
+      // message disappears from this user's thread right away.
+      if (updated.deletedFor) {
+        removeMessage(updated.id)
+        return
+      }
       patchMessage(updated.id, updated)
     },
-    [patchMessage],
+    [patchMessage, removeMessage],
   )
 
   // Multi-select thread mode (bulk forward / delete / recall).
@@ -222,6 +233,7 @@ export default function ConversationPage({ params }: Props) {
           callId={activeCall.callId}
           conversationId={id}
           media={activeCall.media}
+          transport={activeCall.transport}
           aiNotetaker={activeCall.aiNotetaker}
           joinedCount={activeCall.joinedCount}
         />
@@ -283,7 +295,7 @@ export default function ConversationPage({ params }: Props) {
           fetchNextPage={fetchNextPage}
           typingUserIds={typingUserIds}
           assistantTyping={isAssistantTyping}
-          aiStream={aiStream}
+          aiStreams={aiStreams}
           onEdit={setEditingMessage}
           onForward={setForwardMessage}
           onReply={setReplyingTo}
@@ -316,7 +328,8 @@ export default function ConversationPage({ params }: Props) {
         />
       ) : (
         <MessageInput
-          onSend={editingMessage ? handleEditSend : handleSend}
+          onSend={handleSend}
+          onEditSubmit={handleEditSend}
           onTypingChange={handleTypingChange}
           editingMessage={editingMessage}
           onCancelEdit={() => setEditingMessage(null)}

@@ -18,7 +18,9 @@ export class SummarizeConversationTool {
   constructor(private readonly memoryService: MemoryService) {}
 
   async execute(_input: Record<string, unknown>, ctx: ToolContext): Promise<string> {
-    const memory = await this.memoryService.getMemory(ctx.conversationId);
+    // The REQUESTER's memory only: in a group every member has their own doc,
+    // and another member's summary/facts must never reach this reply.
+    const memory = await this.memoryService.getMemory(ctx.conversationId, ctx.userId);
     if (!memory) return 'No conversation summary available yet';
 
     let result = `Summary: ${memory.summary}`;

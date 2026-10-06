@@ -1,0 +1,8 @@
+# Fake LiveKit API secret ("0123456789abcdef…") used only in tests and the plan
+# doc's code samples — not a credential. Fingerprints: <commit>:<file>:<rule>:<line>.
+9b5ef7b020805f397bf76158712f113dba7414e1:apps/server/chat-service/src/test/java/com/platform/chatservice/config/ProdEnvironmentGuardTest.java:generic-api-key:111
+e844761453e35733f0986d9ef2753b11dca8431d:apps/server/chat-service/src/test/java/com/platform/chatservice/service/rtc/LiveKitWebhookVerifierTest.java:generic-api-key:19
+dd8a756886dd037a4bab0488e4c82a6fbe549a17:apps/server/chat-service/src/test/java/com/platform/chatservice/config/ProdEnvironmentGuardTest.java:generic-api-key:123
+dd8a756886dd037a4bab0488e4c82a6fbe549a17:apps/server/chat-service/src/test/java/com/platform/chatservice/config/ProdEnvironmentGuardTest.java:generic-api-key:135
+ab3b297bbad36029a6706867fc31e5e42ad59f87:docs/superpowers/plans/2026-10-05-rtc-foundation-livekit.md:generic-api-key:652
+ab3b297bbad36029a6706867fc31e5e42ad59f87:docs/superpowers/plans/2026-10-05-rtc-foundation-livekit.md:generic-api-key:1679

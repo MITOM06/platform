@@ -1,99 +1,90 @@
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Capability } from '@platform/database';
 import { ConnectionsService } from './connections.service';
+
+const ID = '6650c0ffee0123456789abcd';
+const user = (perms: string[] = []) => ({ sub: 'u1', sid: 's', perms }) as any;
 
 describe('ConnectionsService', () => {
   let svc: ConnectionsService;
   let connModel: any;
-  let customModel: any;
-  let skillModel: any;
-  let vault: any;
-  let mcp: any;
+  let adapter: { revoke: jest.Mock };
+  let audit: { record: jest.Mock };
+
+  const lean = (v: unknown) => ({ lean: jest.fn().mockResolvedValue(v) });
 
   beforeEach(() => {
     connModel = {
-      find: jest.fn().mockReturnValue({
-        lean: jest.fn().mockResolvedValue([
+      find: jest.fn().mockReturnValue(
+        lean([
           {
             _id: 'c1',
             userId: 'u1',
             provider: 'notion',
-            status: 'active',
+            status: 'expired',
             scopes: ['read_content'],
             accountLabel: 'My Workspace',
             lastUsedAt: new Date('2026-06-19T00:00:00Z'),
             encryptedTokens: { iv: 'x', tag: 'y', data: 'z' },
           },
         ]),
-      }),
+      ),
+      findOne: jest.fn(),
       deleteOne: jest.fn().mockResolvedValue({ deletedCount: 1 }),
     };
-    customModel = { create: jest.fn().mockResolvedValue({ _id: 'm1' }) };
-    skillModel = {};
-    vault = { encrypt: jest.fn().mockReturnValue({ iv: 'i', tag: 't', data: 'd' }) };
-    mcp = {
-      listTools: jest.fn().mockResolvedValue([
-        { name: 'create_page', description: 'Create', inputSchema: {} },
-        { name: 'search', description: 'Find', inputSchema: {} },
-      ]),
-    };
-    const audit = { record: jest.fn().mockResolvedValue(undefined) };
-    svc = new ConnectionsService(
-      connModel,
-      customModel,
-      skillModel,
-      vault,
-      mcp,
-      audit as any,
-    );
+    adapter = { revoke: jest.fn().mockResolvedValue('revoked') };
+    audit = { record: jest.fn().mockResolvedValue(undefined) };
+    svc = new ConnectionsService(connModel, {} as any, { forProvider: () => adapter } as any, audit as any);
   });
 
-  it('listConnections never returns encryptedTokens', async () => {
+  it('listConnections never returns encryptedTokens and exposes status', async () => {
     const views = await svc.listConnections('u1');
     expect(views).toHaveLength(1);
-    expect(views[0].id).toBe('c1');
-    expect(views[0].provider).toBe('notion');
-    expect((views[0] as any).encryptedTokens).toBeUndefined();
+    expect(views[0]).toMatchObject({ id: 'c1', provider: 'notion', status: 'expired' });
     expect(JSON.stringify(views)).not.toContain('encryptedTokens');
   });
 
   it('listConnections returns the caller personal connections PLUS workspace-scoped ones', async () => {
     await svc.listConnections('u1');
-    // The Mongo filter must include workspace-scoped connections owned by anyone.
-    const filter = connModel.find.mock.calls[0][0];
-    expect(filter).toEqual({
-      $or: [{ userId: 'u1' }, { scope: 'workspace' }],
-    });
+    expect(connModel.find.mock.calls[0][0]).toEqual({ $or: [{ userId: 'u1' }, { scope: 'workspace' }] });
   });
 
-  it('discover delegates to McpClientService.listTools and returns tool names', async () => {
-    const res = await svc.discoverCustom({
-      url: 'https://mcp.example/sse',
-      authType: 'none',
-    });
-    expect(mcp.listTools).toHaveBeenCalled();
-    expect(res.tools.map((t) => t.name)).toEqual(['create_page', 'search']);
+  it('owner deletes a personal connection after a best-effort provider revoke', async () => {
+    connModel.findOne.mockReturnValue(lean({ _id: ID, userId: 'u1', provider: 'gmail', scope: 'personal' }));
+    expect(await svc.deleteConnection(user(), ID)).toEqual({ deleted: true });
+    expect(adapter.revoke).toHaveBeenCalledWith(expect.objectContaining({ provider: 'gmail', userId: 'u1' }));
+    expect(connModel.deleteOne).toHaveBeenCalledWith({ _id: ID });
+    expect(audit.record).not.toHaveBeenCalled();
   });
 
-  it('saveCustom encrypts the credential when provided', async () => {
-    await svc.saveCustom('u1', {
-      name: 'My MCP',
-      url: 'https://mcp.example/sse',
-      authType: 'apikey',
-      credential: 'sk-123',
-    });
-    expect(vault.encrypt).toHaveBeenCalledWith('sk-123');
-    const arg = customModel.create.mock.calls[0][0];
-    expect(arg.encryptedCredential).toEqual({ iv: 'i', tag: 't', data: 'd' });
-    expect(arg.credential).toBeUndefined();
+  it('a workspace connection needs CONNECT_WORKSPACE_CONNECTOR to delete (403 otherwise)', async () => {
+    connModel.findOne.mockReturnValue(lean({ _id: ID, userId: 'admin', provider: 'stripe', scope: 'workspace' }));
+    await expect(svc.deleteConnection(user(), ID)).rejects.toBeInstanceOf(ForbiddenException);
+    expect(connModel.deleteOne).not.toHaveBeenCalled();
   });
 
-  it('saveCustom omits credential blob when authType is none', async () => {
-    await svc.saveCustom('u1', {
-      name: 'Open MCP',
-      url: 'https://mcp.example/sse',
-      authType: 'none',
-    });
-    expect(vault.encrypt).not.toHaveBeenCalled();
-    const arg = customModel.create.mock.calls[0][0];
-    expect(arg.encryptedCredential).toBeUndefined();
+  it('a CONNECT_WORKSPACE_CONNECTOR holder deletes a workspace connection (audited)', async () => {
+    connModel.findOne.mockReturnValue(lean({ _id: ID, userId: 'admin', provider: 'stripe', scope: 'workspace' }));
+    adapter.revoke.mockResolvedValue('unsupported');
+    expect(await svc.deleteConnection(user([Capability.CONNECT_WORKSPACE_CONNECTOR]), ID)).toEqual({ deleted: true });
+    expect(audit.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'connector.disconnect',
+        targetId: 'stripe',
+        meta: expect.objectContaining({ scope: 'workspace', ownerId: 'admin', revoke: 'unsupported' }),
+      }),
+    );
+  });
+
+  it('a failing revoke never blocks the delete', async () => {
+    connModel.findOne.mockReturnValue(lean({ _id: ID, userId: 'u1', provider: 'gmail', scope: 'personal' }));
+    adapter.revoke.mockRejectedValue(new Error('google down'));
+    expect(await svc.deleteConnection(user(), ID)).toEqual({ deleted: true });
+  });
+
+  it('404s an unknown/foreign connection and a malformed id', async () => {
+    connModel.findOne.mockReturnValue(lean(null));
+    await expect(svc.deleteConnection(user(), ID)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(svc.deleteConnection(user(), 'not-an-id')).rejects.toBeInstanceOf(NotFoundException);
   });
 });

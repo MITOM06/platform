@@ -8,7 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { chatService } from '@/lib/api/chat'
 import { absoluteMediaUrl } from '@/lib/media'
-import { humanizeSystemMessage } from '@/lib/system-messages'
+import { humanizeLastMessage } from '@/lib/system-messages'
+import { useNameResolver } from '@/lib/hooks/use-display-names'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useUser } from '@/lib/hooks/use-user'
 import { useNickname } from '@/lib/nicknames'
@@ -48,11 +49,11 @@ export function ConversationRequestItem({ conversation: conv }: Props) {
 
   const subtitle = isGroupInvite ? t('groupInviteSubtitle') : t('dmRequestSubtitle')
 
-  // Humanize last-message preview — never render raw system codes or IDs
-  let previewText = t('noMessagesYet')
-  if (conv.lastMessage?.content) {
-    previewText = humanizeSystemMessage(conv.lastMessage.content, t, { short: true })
-  }
+  // Humanize last-message preview — never render raw system codes, IDs or the
+  // text of a recalled message.
+  const resolveName = useNameResolver(conv.id)
+  const previewText =
+    humanizeLastMessage(conv.lastMessage, t, { resolveName, currentUserId }) ?? t('noMessagesYet')
 
   const invalidateConversations = () => {
     queryClient.invalidateQueries({ queryKey: ['conversations'] })

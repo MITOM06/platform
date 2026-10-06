@@ -5,12 +5,34 @@ export interface BotSessionSummary {
   botUserId: string
   createdAt: string
   lastUsedAt: string | null
+  /** ISO — after this the token stops working and must be re-issued. */
+  expiresAt?: string | null
 }
 
 /** One-time issued integration token + its MCP URL. Never persist client-side. */
 export interface IssuedToken {
   token: string
   mcpUrl: string
+  /** ISO expiry of the issued token (`BOT_SESSION_TTL_DAYS`, 90 by default). */
+  expiresAt?: string | null
+}
+
+/** Bot bridge error codes → `botAdmin.*` keys (HANDOFF §5.4). */
+const BOT_ERROR_KEYS: Record<string, string> = {
+  BOT_BRIDGE_DISABLED: 'errBridgeDisabled',
+  USER_NOT_FOUND: 'errOwnerNotFound',
+  BOT_NOT_FOUND: 'errBotNotFound',
+  MEMBER_INACTIVE: 'errOwnerInactive',
+  BOT_OWNER_MISMATCH: 'errBotOwnerMismatch',
+  INSUFFICIENT_PERMISSION: 'errInsufficientPermission',
+}
+
+/** Localized key for a failed issue / revoke; generic when the code is unknown. */
+export function botAdminErrorKey(err: unknown): string {
+  const response = (err as { response?: { data?: { code?: unknown } } } | null)?.response
+  if (!response) return 'errNetwork'
+  const code = response.data?.code
+  return (typeof code === 'string' && BOT_ERROR_KEYS[code]) || 'errGeneric'
 }
 
 /** A registered Bot Factory bot, as returned by chat-service admin list. */

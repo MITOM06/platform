@@ -4,11 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/app_error.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../../chat/data/chat_repository.dart';
+import '../../chat/utils/chat_error.dart';
 import '../../home/domain/home_providers.dart';
+import '../data/assistant_error.dart';
 import '../data/assistant_repository.dart';
 import '../state/assistant_provider.dart';
 import 'widgets/assistant_setup_steps.dart';
@@ -42,6 +43,27 @@ class _AssistantSetupScreenState extends ConsumerState<AssistantSetupScreen> {
     super.initState();
     // Rebuild the bottom bar (enable/disable Next) as the name changes.
     _nameCtrl.addListener(_onChanged);
+    _prefill();
+  }
+
+  /// Re-running the wizard over an existing assistant starts from its stored
+  /// name, persona and model (`GET /api/assistant/me`) — never blank, which
+  /// used to overwrite the persona.
+  Future<void> _prefill() async {
+    AssistantInfo? existing;
+    try {
+      existing = await ref.read(assistantProvider.future);
+    } catch (_) {
+      return; // first setup or unreachable — the empty wizard is correct
+    }
+    if (!mounted || existing == null) return;
+    setState(() {
+      if (_nameCtrl.text.trim().isEmpty) _nameCtrl.text = existing!.name;
+      if (_personaCtrl.text.trim().isEmpty) {
+        _personaCtrl.text = existing!.systemPrompt ?? '';
+      }
+      _providerId ??= existing!.providerId;
+    });
   }
 
   void _onChanged() => setState(() {});
@@ -110,16 +132,18 @@ class _AssistantSetupScreenState extends ConsumerState<AssistantSetupScreen> {
     try {
       final info = await repo.setup(
         name: _nameCtrl.text.trim(),
-        systemPrompt: _personaCtrl.text.trim(),
-        providerId: _providerId!,
+        systemPrompt: _personaCtrl.text,
+        providerId: _providerId,
       );
       ref.invalidate(assistantProvider);
       if (!mounted) return;
       showInfoSnackBar(context.l10n.assistantSetupSuccess);
       await _openChat(info.botUserId);
     } catch (e) {
-      showErrorSnackBar(friendlyError(e));
-      if (mounted) setState(() => _submitting = false);
+      if (mounted) {
+        showErrorSnackBar(assistantErrorMessage(context.l10n, e));
+        setState(() => _submitting = false);
+      }
     }
   }
 
@@ -137,8 +161,10 @@ class _AssistantSetupScreenState extends ConsumerState<AssistantSetupScreen> {
         context.go('/chat/${conv.id}');
       }
     } catch (e) {
-      showErrorSnackBar(friendlyError(e));
-      if (mounted) setState(() => _submitting = false);
+      if (mounted) {
+        showErrorSnackBar(chatErrorMessage(context.l10n, e));
+        setState(() => _submitting = false);
+      }
     }
   }
 

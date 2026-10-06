@@ -1,6 +1,7 @@
 package com.platform.chatservice.config;
 
 import com.platform.chatservice.security.AuthChannelInterceptor;
+import com.platform.chatservice.security.ConversationTopicOutboundInterceptor;
 import com.platform.chatservice.security.WsSessionRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +26,7 @@ import org.springframework.web.socket.handler.WebSocketHandlerDecorator;
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   private final AuthChannelInterceptor authChannelInterceptor;
+  private final ConversationTopicOutboundInterceptor conversationTopicOutboundInterceptor;
   private final WsSessionRegistry wsSessionRegistry;
 
   @Value("${app.cors.allowed-origins:*}")
@@ -57,6 +59,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         .setHeartbeatValue(new long[] {10_000, 10_000})
         .setTaskScheduler(heartbeatScheduler());
     registry.setUserDestinationPrefix("/user");
+    // The clientOutboundChannel is a thread pool: without this, two frames published back-to-back
+    // to the same session (e.g. a persisted AI message and the AI_STREAM_DONE that follows it) can
+    // be written in either order.
+    registry.setPreservePublishOrder(true);
   }
 
   /** Dedicated scheduler driving STOMP broker heartbeats (see configureMessageBroker). */
@@ -72,6 +78,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
   @Override
   public void configureClientInboundChannel(ChannelRegistration registration) {
     registration.interceptors(authChannelInterceptor);
+  }
+
+  /** Re-checks conversation membership on every outbound conversation-topic frame. */
+  @Override
+  public void configureClientOutboundChannel(ChannelRegistration registration) {
+    registration.interceptors(conversationTopicOutboundInterceptor);
   }
 
   /**

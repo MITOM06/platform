@@ -2,8 +2,11 @@ package com.platform.chatservice.service;
 
 import com.platform.chatservice.dto.ConversationResponse;
 import com.platform.chatservice.model.Conversation;
+import com.platform.chatservice.model.Message;
 import com.platform.chatservice.repository.MessageRepository;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -22,11 +25,15 @@ public class ConversationMapper {
   public ConversationResponse toResponse(Conversation c, String userId, long unreadCount) {
     ConversationResponse.LastMessageDto lastMsg = null;
     if (c.getLastMessage() != null) {
+      Conversation.LastMessage last = c.getLastMessage();
       lastMsg =
           new ConversationResponse.LastMessageDto(
-              c.getLastMessage().getContent(),
-              c.getLastMessage().getSenderId(),
-              c.getLastMessage().getCreatedAt());
+              last.isRecalled() ? "" : last.getContent(),
+              last.getSenderId(),
+              last.getCreatedAt(),
+              last.getMessageId(),
+              last.getType(),
+              last.isRecalled());
     }
     List<ConversationResponse.PinnedMessageDto> pinned = resolvePinnedMessages(c);
     Long muteUntil =
@@ -58,20 +65,28 @@ public class ConversationMapper {
         c.getWallpaper(),
         isBlocked,
         muteExpiresAt,
-        c.getPendingMembers() != null ? c.getPendingMembers() : List.of());
+        c.getPendingMembers() != null ? c.getPendingMembers() : List.of(),
+        c.getAutoDeleteSeconds() != null ? c.getAutoDeleteEnabledAt() : null,
+        c.getDepartmentId());
   }
 
   private List<ConversationResponse.PinnedMessageDto> resolvePinnedMessages(Conversation c) {
     if (c.getPinnedMessages() == null || c.getPinnedMessages().isEmpty()) {
       return List.of();
     }
-    // Clamp to the same max as the pin write-path (MessageService.MAX_PINNED_MESSAGES).
+    // Clamp to the same max as the pin write-path (MessageInteractionService.MAX_PINNED_MESSAGES).
     List<String> ids = c.getPinnedMessages();
-    if (ids.size() > MessageService.MAX_PINNED_MESSAGES) {
-      ids = ids.subList(0, MessageService.MAX_PINNED_MESSAGES);
+    if (ids.size() > MessageInteractionService.MAX_PINNED_MESSAGES) {
+      ids = ids.subList(0, MessageInteractionService.MAX_PINNED_MESSAGES);
+    }
+    // One $in query for all pins (this runs for every conversation of a list page), then back into
+    // pin order — newest pin first.
+    Map<String, Message> byId = new HashMap<>();
+    for (Message m : messageRepository.findAllById(ids)) {
+      byId.put(m.getId(), m);
     }
     return ids.stream()
-        .map(messageId -> messageRepository.findById(messageId).orElse(null))
+        .map(byId::get)
         .filter(m -> m != null && !m.isRecalled() && !"system".equals(m.getType()))
         .map(
             m ->

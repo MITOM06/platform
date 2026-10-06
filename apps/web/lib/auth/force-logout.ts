@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { clearQueryCache } from '@/lib/query-client'
 
 /**
  * Reasons the login screen can explain after a forced logout. Only codes in
@@ -33,6 +34,21 @@ export const LOGIN_NOTICES = [
   'SOCIAL_EMAIL_UNAVAILABLE',
   'SSO_DISABLED',
   'SSO_DOMAIN_NOT_ALLOWED',
+  // Google / OIDC sign-in matched an account but the IdP did not verify the
+  // email, or the account is linked to another identity of that provider.
+  'SSO_EMAIL_UNVERIFIED',
+  'OIDC_EMAIL_UNVERIFIED',
+  'SOCIAL_ACCOUNT_CONFLICT',
+  'SOCIAL_PROVIDER_UNSUPPORTED',
+  'OIDC_NO_STATE',
+  'OIDC_BAD_STATE',
+  'OIDC_EXCHANGE_FAILED',
+  // The 2FA step (`/mfa`) became unusable — expired/used token, too many wrong
+  // codes, wrong step — and the user must sign in again (see lib/auth/mfa.ts).
+  'MFA_TOKEN_INVALID',
+  'MFA_TOO_MANY_ATTEMPTS',
+  'MFA_NOT_ENROLLED',
+  'MFA_ALREADY_ENROLLED',
   'GENERIC_ERROR',
 ] as const
 export type LoginNotice = (typeof LOGIN_NOTICES)[number]
@@ -60,6 +76,8 @@ export function loginPath(reason?: LoginNotice): string {
  */
 export async function forceLogout(err?: unknown): Promise<void> {
   useAuthStore.getState().clearAuth()
+  // Same hygiene as a normal logout: nothing of this user stays cached.
+  clearQueryCache()
   if (typeof window === 'undefined') return
   await axios.post('/api/auth/clear-cookie').catch(() => {})
   window.location.href = loginPath(logoutReasonFromError(err))

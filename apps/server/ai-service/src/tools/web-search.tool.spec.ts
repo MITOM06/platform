@@ -47,9 +47,32 @@ describe('WebSearchTool', () => {
     // One source per result, with synthetic web:N ids, title as fileName,
     // url present, type 'web'.
     expect(ctx.sourceSink).toEqual([
-      { documentId: 'web:0', fileName: 'Result One', score: 1, url: 'https://a.example/1', type: 'web' },
-      { documentId: 'web:1', fileName: 'Result Two', score: 1, url: 'https://b.example/2', type: 'web' },
+      { documentId: 'web:1', fileName: 'Result One', score: 1, url: 'https://a.example/1', type: 'web' },
+      { documentId: 'web:2', fileName: 'Result Two', score: 1, url: 'https://b.example/2', type: 'web' },
     ]);
+  });
+
+  it('numbers web results AFTER the KB sources already cited, so [Source N] = sources[N-1]', async () => {
+    const results: WebSearchResult[] = [
+      { title: 'Web A', url: 'https://a.example', snippet: 'a' },
+      { title: 'Web B', url: 'https://b.example', snippet: 'b' },
+    ];
+    const tool = new WebSearchTool(makeService({ search: jest.fn().mockResolvedValue(results) }));
+    const ctx = makeCtx();
+    ctx.sourceSink.push(
+      { documentId: 'doc-1', fileName: 'spec.pdf', score: 0.9 },
+      { documentId: 'doc-2', fileName: 'plan.pdf', score: 0.8 },
+    );
+
+    const out = await tool.execute({ query: 'q' }, ctx);
+
+    expect(out).toContain('[Source 3] Web A — https://a.example');
+    expect(out).toContain('[Source 4] Web B — https://b.example');
+    expect(ctx.sourceSink[2]).toMatchObject({ documentId: 'web:3', url: 'https://a.example' });
+    // A second search returning the same URL reuses its number (no duplicate chip).
+    const again = await tool.execute({ query: 'q2' }, ctx);
+    expect(again).toContain('[Source 3] Web A');
+    expect(ctx.sourceSink).toHaveLength(4);
   });
 
   it('returns a clear "no results" string and an empty sink when the provider returns []', async () => {

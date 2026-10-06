@@ -1,10 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../chat/data/chat_repository.dart';
+import '../../../../core/utils/global_messenger.dart';
+import '../../../auth/utils/auth_error.dart';
+import '../../../chat/ui/open_direct_chat.dart';
 import '../../../friends/data/friends_repository.dart';
 import '../../../friends/domain/friends_provider.dart';
 
@@ -39,12 +42,12 @@ class OtherUserActions extends ConsumerWidget {
         ProfileActionChip(
           icon: Icons.message_rounded,
           label: context.l10n.actionMessage,
-          onTap: () async {
+          onTap: () {
+            // Start the open (it captures router + providers synchronously),
+            // then close the dialog.
+            final opening = openDirectChat(context, ref, userId);
             Navigator.of(context).pop();
-            final conv = await ref
-                .read(chatRepositoryProvider)
-                .getOrCreateConversation(userId);
-            if (context.mounted) context.go('/chat/${conv.id}');
+            unawaited(opening);
           },
         ),
         if (!isFriend && !pending)
@@ -52,7 +55,15 @@ class OtherUserActions extends ConsumerWidget {
             icon: Icons.person_add_rounded,
             label: context.l10n.actionAddFriend,
             onTap: () async {
-              await ref.read(friendsRepositoryProvider).sendRequest(userId);
+              try {
+                await ref.read(friendsRepositoryProvider).sendRequest(userId);
+              } catch (e) {
+                // e.g. USER_BLOCKED → specific localized text, never raw.
+                if (context.mounted) {
+                  showErrorSnackBar(authErrorMessage(context, e));
+                }
+                return;
+              }
               ref.invalidate(relationshipProvider(userId));
               // Keep the Friends screen's requests/friends lists in sync.
               ref.invalidate(friendRequestsProvider);
@@ -64,14 +75,21 @@ class OtherUserActions extends ConsumerWidget {
           color: Theme.of(context).colorScheme.error,
           onTap: () async {
             final repo = ref.read(friendsRepositoryProvider);
-            if (iBlocked) {
-              // Unblocking is non-destructive — no confirmation needed.
-              await repo.unblockUser(userId);
-            } else {
-              // Blocking is destructive — confirm first.
-              final ok = await _confirmBlock(context);
-              if (ok != true) return;
-              await repo.blockUser(userId);
+            try {
+              if (iBlocked) {
+                // Unblocking is non-destructive — no confirmation needed.
+                await repo.unblockUser(userId);
+              } else {
+                // Blocking is destructive — confirm first.
+                final ok = await _confirmBlock(context);
+                if (ok != true) return;
+                await repo.blockUser(userId);
+              }
+            } catch (e) {
+              if (context.mounted) {
+                showErrorSnackBar(authErrorMessage(context, e));
+              }
+              return;
             }
             ref.invalidate(relationshipProvider(userId));
           },

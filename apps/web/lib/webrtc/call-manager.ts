@@ -1,234 +1,102 @@
 import { stompService } from '@/lib/stomp/client'
 import { useCallStore } from '@/lib/store/call.store'
-import { chatService } from '@/lib/api/chat'
+import type { CallEvent } from '@/lib/api/types'
+import type { CallEndReason } from './call-end-notice'
+import type { WebRTCSignal } from './call-config'
+import type { CallHooks } from './call-hooks'
+import { getCallTransport } from './call-transport'
+import { MeshCallManager } from './mesh-call-manager'
+import { SfuDirectCall } from './sfu-call'
+
+export type { CallEndReason } from './call-end-notice'
+export {
+  DISCONNECT_GRACE_MS,
+  INCOMING_RING_TIMEOUT_MS,
+  RING_TIMEOUT_MS,
+  type WebRTCSignal,
+} from './call-config'
 
 /**
- * Web counterpart of the Flutter `WebRTCService`. Owns a single
- * `RTCPeerConnection` and drives the call lifecycle over the chat-service STOMP
- * signaling channel (`/app/call.*` → `/user/queue/webrtc`).
- *
- * Uses Unified Plan (`addTrack` / `ontrack`) — matches the mobile peer so SDP
- * negotiation is symmetric.
+ * The one entry point for 1-on-1 calls. Components set the UI callbacks here
+ * and call the methods below; each call is run by the engine matching the
+ * media path the server chose for it (spec 2026-10-05 calls-and-meetings).
  */
-export interface WebRTCSignal {
-  senderId?: string
-  targetId?: string
-  conversationId?: string
-  type: 'offer' | 'answer' | 'ice' | 'end' | 'call-ring' | 'call-blocked'
-  sdp?: string
-  candidate?: RTCIceCandidateInit
-  // ── Group-call fields (Track A §3). Absent on legacy 1-on-1 signals. ───────
-  /** Present on every mesh signal; routes the signal into the group manager. */
-  callId?: string
-  /** Mesh peer id the signal was relayed from (server-filled). */
-  fromId?: string
-  /** Ring metadata (`type:'call-ring'`). */
-  startedByName?: string
-  media?: 'audio' | 'video'
-  aiNotetaker?: boolean
-}
-
-const ICE_SERVERS: RTCConfiguration = {
-  iceServers: [
-    { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
-  ],
-}
-
-class CallManager {
-  private pc: RTCPeerConnection | null = null
-  private localStream: MediaStream | null = null
-  private remoteStream: MediaStream | null = null
-  private targetId: string | null = null
-  private conversationId: string | null = null
-  private remoteDescriptionSet = false
-  private pendingCandidates: RTCIceCandidateInit[] = []
-
+class CallManager implements CallHooks {
   onLocalStream: ((s: MediaStream) => void) | null = null
   onRemoteStream: ((s: MediaStream) => void) | null = null
   onEnded: (() => void) | null = null
+  onEndNotice: ((reason: CallEndReason, byPeer: boolean, peerName: string) => void) | null = null
+
+  private readonly mesh = new MeshCallManager(this)
+  private readonly sfu = new SfuDirectCall(this)
+
+  /** The engine running the current call (idle → mesh, which is a no-op then). */
+  private get active(): MeshCallManager | SfuDirectCall {
+    return useCallStore.getState().transport === 'sfu' ? this.sfu : this.mesh
+  }
 
   getLocalStream(): MediaStream | null {
-    return this.localStream
+    return this.active.getLocalStream()
   }
+
   getRemoteStream(): MediaStream | null {
-    return this.remoteStream
+    return this.active.getRemoteStream()
   }
 
-  /** Start an outgoing call to `targetId`. `video=false` → audio-only voice call. */
-  async startCall(
-    targetId: string,
-    targetName: string,
-    conversationId: string,
-    video = true,
-  ): Promise<void> {
-    useCallStore.getState().setOutgoing({ peerId: targetId, peerName: targetName, conversationId, video })
-    await this.setup(targetId, conversationId, video)
-    const offer = await this.pc!.createOffer()
-    await this.pc!.setLocalDescription(offer)
-    stompService.publish('/app/call.offer', {
-      targetId,
-      conversationId,
-      type: 'offer',
-      sdp: offer.sdp,
-    })
+  startCall(targetId: string, targetName: string, conversationId: string, video = true): Promise<void> {
+    const engine = getCallTransport() === 'sfu' ? this.sfu : this.mesh
+    return engine.startCall(targetId, targetName, conversationId, video)
   }
 
-  /** Accept the incoming offer currently held in the store. */
-  async acceptIncoming(): Promise<void> {
-    const { peerId, conversationId, pendingOfferSdp } = useCallStore.getState()
-    if (!peerId || !conversationId || !pendingOfferSdp) return
-    // Match the caller's media: only enable local video if the offer has a video m-line.
-    const video = pendingOfferSdp.includes('m=video')
-    await this.setup(peerId, conversationId, video)
-    await this.pc!.setRemoteDescription({ type: 'offer', sdp: pendingOfferSdp })
-    await this.flushPending()
-    const answer = await this.pc!.createAnswer()
-    await this.pc!.setLocalDescription(answer)
-    stompService.publish('/app/call.answer', {
-      targetId: peerId,
-      conversationId,
-      type: 'answer',
-      sdp: answer.sdp,
-    })
+  acceptIncoming(): Promise<void> {
+    return this.active.acceptIncoming()
   }
 
-  /** Route an inbound signal (from `/user/queue/webrtc`). */
+  /** Inbound `/user/queue/webrtc` signal for a 1-on-1 call. */
   handleSignal(signal: WebRTCSignal): void {
-    switch (signal.type) {
-      case 'answer':
-        void this.handleAnswer(signal.sdp ?? '')
-        break
-      case 'ice':
-        if (signal.candidate) void this.addCandidate(signal.candidate)
-        break
-      case 'end':
-        this.teardown(true)
-        break
+    const sfu =
+      signal.transport === 'sfu' || signal.type === 'call-ring-cancel' || signal.type === 'call-declined'
+    if (sfu) {
+      this.sfu.handleSignal(signal)
+      return
     }
+    const st = useCallStore.getState()
+    if (st.transport === 'sfu' && st.status !== 'idle') {
+      // A peer-to-peer call while we are on LiveKit (e.g. a mesh-only app): we
+      // are busy. Its other signals must never reach — and reset — our call.
+      if (signal.type === 'offer' && signal.senderId && signal.conversationId) {
+        stompService.publish('/app/call.end', {
+          targetId: signal.senderId,
+          conversationId: signal.conversationId,
+          type: 'end',
+          reason: 'busy',
+          duration: 0,
+        })
+      }
+      return
+    }
+    this.mesh.handleSignal(signal)
   }
 
-  /** Hang up an active/ringing call and notify the peer. */
-  endCall(): void {
-    const store = useCallStore.getState()
-    // Fall back to the store when rejecting an incoming call that was never
-    // set up (peer connection not created yet) — the caller must still be told.
-    const targetId = this.targetId ?? store.peerId
-    const conversationId = this.conversationId ?? store.conversationId
-    if (targetId && conversationId) {
-      stompService.publish('/app/call.end', {
-        targetId,
-        conversationId,
-        type: 'end',
-        duration: store.durationSeconds,
-      })
-    }
-    // Emit a system message so both sides see the call log in the chat history.
-    // Only the hang-up initiator sends this (the peer's teardown via 'end'
-    // signal does not call endCall, preventing duplicate messages).
-    if (conversationId) {
-      const kind = store.video ? 'video' : 'voice'
-      const wasConnected = store.status === 'connected'
-      const content = wasConnected
-        ? `system.call.ended:${kind}:${store.durationSeconds}`
-        : `system.call.missed:${kind}`
-      chatService.sendMessage(conversationId, content, 'system').catch(() => {
-        // best-effort — a failed system message must not block hangup
-      })
-    }
-    this.teardown(true)
+  /** `call.started` / `call.ended` of a direct sfu call, from the conversation topic. */
+  handleCallEvent(event: CallEvent): void {
+    this.sfu.handleCallEvent(event)
+  }
+
+  endCall(reason: CallEndReason = 'hangup'): void {
+    this.active.endCall(reason)
+  }
+
+  dismissIncoming(): void {
+    this.active.dismissIncoming()
   }
 
   toggleMic(on: boolean): void {
-    this.localStream?.getAudioTracks().forEach((t) => (t.enabled = on))
-    useCallStore.getState().setMic(on)
+    this.active.toggleMic(on)
   }
 
   toggleCamera(on: boolean): void {
-    this.localStream?.getVideoTracks().forEach((t) => (t.enabled = on))
-    useCallStore.getState().setCamera(on)
-  }
-
-  private async setup(targetId: string, conversationId: string, video: boolean): Promise<void> {
-    this.targetId = targetId
-    this.conversationId = conversationId
-    this.remoteDescriptionSet = false
-    this.pendingCandidates = []
-
-    const pc = new RTCPeerConnection(ICE_SERVERS)
-    this.pc = pc
-
-    pc.onicecandidate = (e) => {
-      if (e.candidate) {
-        stompService.publish('/app/call.ice', {
-          targetId,
-          conversationId,
-          type: 'ice',
-          candidate: e.candidate.toJSON(),
-        })
-      }
-    }
-    pc.ontrack = (e) => {
-      if (e.streams[0]) {
-        this.remoteStream = e.streams[0]
-        this.onRemoteStream?.(e.streams[0])
-        useCallStore.getState().setConnected()
-      }
-    }
-    pc.onconnectionstatechange = () => {
-      if (['failed', 'closed', 'disconnected'].includes(pc.connectionState)) {
-        this.teardown(true)
-      }
-    }
-
-    this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video })
-    this.onLocalStream?.(this.localStream)
-    for (const track of this.localStream.getTracks()) {
-      pc.addTrack(track, this.localStream)
-    }
-  }
-
-  private async handleAnswer(sdp: string): Promise<void> {
-    if (!this.pc) return
-    await this.pc.setRemoteDescription({ type: 'answer', sdp })
-    await this.flushPending()
-  }
-
-  private async addCandidate(candidate: RTCIceCandidateInit): Promise<void> {
-    if (!this.pc) return
-    if (!this.remoteDescriptionSet) {
-      this.pendingCandidates.push(candidate)
-      return
-    }
-    await this.pc.addIceCandidate(candidate)
-  }
-
-  private async flushPending(): Promise<void> {
-    this.remoteDescriptionSet = true
-    for (const c of this.pendingCandidates) {
-      try {
-        await this.pc?.addIceCandidate(c)
-      } catch {
-        // ignore malformed late candidates
-      }
-    }
-    this.pendingCandidates = []
-  }
-
-  /** Tear down media + connection. `notifyUi` resets the store/overlay. */
-  private teardown(notifyUi: boolean): void {
-    this.localStream?.getTracks().forEach((t) => t.stop())
-    this.localStream = null
-    this.remoteStream = null
-    this.pc?.close()
-    this.pc = null
-    this.targetId = null
-    this.conversationId = null
-    this.remoteDescriptionSet = false
-    this.pendingCandidates = []
-    if (notifyUi) {
-      this.onEnded?.()
-      useCallStore.getState().reset()
-    }
+    this.active.toggleCamera(on)
   }
 }
 

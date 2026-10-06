@@ -6,6 +6,7 @@ import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/domain/auth_state.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
+import 'system_message_text.dart';
 
 class SystemMessage extends ConsumerWidget {
   final MessageModel message;
@@ -13,76 +14,36 @@ class SystemMessage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (message.content.startsWith('system.call.')) {
+      return _CallSystemMessage(content: message.content);
+    }
     final authState = ref.watch(authNotifierProvider).valueOrNull;
     final currentUserId = authState is AuthAuthenticated ? authState.user.id : '';
     final nicknames = ref.watch(nicknamesProvider(message.conversationId));
+    final l10n = context.l10n;
 
-    final actorId = message.senderId;
-    final actorProfile = ref.watch(userProfileProvider(actorId)).valueOrNull;
-    final actorNickname = nicknames[actorId];
-    final actorName = actorId == currentUserId
-        ? context.l10n.you
-        : ((actorNickname != null && actorNickname.isNotEmpty)
-            ? actorNickname
-            : (actorProfile?.displayName ?? '...'));
-
-    String text = message.content;
-
-    if (message.content.startsWith('system.nickname.changed:')) {
-      final parts = message.content.split(':');
-      if (parts.length >= 2) {
-        final targetId = parts[1];
-        final nickname = parts.length > 2 ? parts.sublist(2).join(':') : '';
-        final targetProfile = ref.watch(userProfileProvider(targetId)).valueOrNull;
-        final targetNickname = nicknames[targetId];
-        final targetName = targetId == currentUserId
-            ? context.l10n.you
-            : ((targetNickname != null && targetNickname.isNotEmpty)
-                ? targetNickname
-                : (targetProfile?.displayName ?? '...'));
-
-        if (nickname.isEmpty) {
-          text = targetId == actorId
-              ? context.l10n.sysNicknameClearedSelf(actorName)
-              : context.l10n.sysNicknameClearedOther(actorName, targetName);
-        } else {
-          text = targetId == actorId
-              ? context.l10n.sysNicknameSetSelf(actorName, nickname)
-              : context.l10n
-                  .sysNicknameSetOther(actorName, targetName, nickname);
-        }
+    // "You" / nickname / display name — never the raw id. Ids that are not
+    // users (the "system" sender, assistants) are never looked up.
+    String resolveName(String userId) {
+      if (userId.isEmpty || isSystemSender(userId)) return l10n.someone;
+      if (userId == currentUserId) return l10n.you;
+      if (userId == kAiBotUserId || userId.startsWith('extbot:')) {
+        return l10n.aiAssistant;
       }
-    } else if (message.content.startsWith('system.theme.changed:')) {
-      text = context.l10n.sysThemeChanged(actorName);
-    } else if (message.content.startsWith('system.quick_reaction.changed:')) {
-      final parts = message.content.split(':');
-      final emoji = parts.length > 1 ? parts[1] : '👍';
-      text = context.l10n.sysQuickReactionChanged(actorName, emoji);
-    } else if (message.content.startsWith('system.message.pinned:') ||
-        message.content.startsWith('system.message.unpinned:')) {
-      // Format: `system.message.(un)pinned:<actorUserId>`. The actor id is
-      // carried in the content (senderId is the generic "system" sender).
-      final isUnpinned = message.content.startsWith('system.message.unpinned:');
-      final parts = message.content.split(':');
-      final pinActorId = parts.length > 1 ? parts[1] : '';
-      final pinActorProfile =
-          ref.watch(userProfileProvider(pinActorId)).valueOrNull;
-      final pinActorNickname = nicknames[pinActorId];
-      final pinActorName = pinActorId.isEmpty
-          ? context.l10n.someone
-          : (pinActorId == currentUserId
-              ? context.l10n.you
-              : ((pinActorNickname != null && pinActorNickname.isNotEmpty)
-                  ? pinActorNickname
-                  : (pinActorProfile?.displayName ?? context.l10n.someone)));
-      text = isUnpinned
-          ? context.l10n.sysUnpinnedMessage(pinActorName)
-          : context.l10n.sysPinnedMessage(pinActorName);
-    } else if (message.content.startsWith('system.call.')) {
-      return _CallSystemMessage(content: message.content);
-    } else {
-      text = _systemText(context, message.content, actorName);
+      final nickname = nicknames[userId];
+      if (nickname != null && nickname.isNotEmpty) return nickname;
+      final profile = ref.watch(userProfileProvider(userId)).valueOrNull;
+      return profile?.displayName ?? l10n.someone;
     }
+
+    // Unknown system code → render nothing rather than a raw key string.
+    final text = systemMessageText(
+      l10n,
+      message.content,
+      senderId: message.senderId,
+      resolveName: resolveName,
+    );
+    if (text == null || text.isEmpty) return const SizedBox.shrink();
 
     return Center(
       child: Container(
@@ -103,24 +64,6 @@ class SystemMessage extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  String _systemText(BuildContext context, String key, String actorName) {
-    switch (key) {
-      case 'system.group.created':
-        return context.l10n.sysGroupCreated(actorName);
-      case 'system.members.added':
-        return context.l10n.sysMembersAdded(actorName);
-      case 'system.member.left':
-        return context.l10n.sysMemberLeft(actorName);
-      case 'system.member.removed':
-        return context.l10n.sysMemberRemoved(actorName);
-      case 'system.member.joined':
-        return context.l10n.sysMemberJoined(actorName);
-      default:
-        // Unknown system code — render nothing rather than a raw key string.
-        return '';
-    }
   }
 }
 

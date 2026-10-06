@@ -87,7 +87,7 @@ describe('ClaimsService', () => {
     });
   });
 
-  it('uses the Member preset for a dangling roleId and caches the lookup', async () => {
+  it('uses the Member preset for a dangling roleId', async () => {
     userModel.findById.mockReturnValue(
       lean({ _id: 'u1', roleId: 'deleted-role', departmentIds: [] }),
     );
@@ -96,11 +96,26 @@ describe('ClaimsService', () => {
       lean({ name: 'Member', permissions: { [Capability.USE_PERSONAL_ASSISTANT]: true } }),
     );
 
-    await service.resolve('u1');
     const claims = await service.resolve('u1');
 
     expect(claims.perms).toEqual([Capability.USE_PERSONAL_ASSISTANT]);
-    expect(roleModel.findOne).toHaveBeenCalledTimes(1);
+  });
+
+  it('a Member-role edit reaches the very next resolve (no stale cache after markClaimsStale)', async () => {
+    userModel.findById.mockReturnValue(
+      lean({ _id: 'u1', roleId: undefined, departmentIds: [] }),
+    );
+    roleModel.findOne.mockReturnValue(
+      lean({ name: 'Member', permissions: { [Capability.USE_PERSONAL_ASSISTANT]: true } }),
+    );
+    expect((await service.resolve('u1')).perms).toEqual([
+      Capability.USE_PERSONAL_ASSISTANT,
+    ]);
+
+    roleModel.findOne.mockReturnValue(
+      lean({ name: 'Member', permissions: { [Capability.USE_GROUP_BOT]: true } }),
+    );
+    expect((await service.resolve('u1')).perms).toEqual([Capability.USE_GROUP_BOT]);
   });
 
   it('falls back when the user does not exist', async () => {

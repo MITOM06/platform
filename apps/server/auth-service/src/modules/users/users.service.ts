@@ -5,49 +5,97 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, isValidObjectId } from 'mongoose';
 import {
+  Role,
+  RoleDocument,
   User,
   UserDocument,
   UserBlock,
   UserBlockDocument,
 } from '@platform/database';
-import * as bcrypt from 'bcrypt';
 import { FirebaseAdminService } from '../firebase/firebase-admin.service';
+import { FriendsService } from '../friends/friends.service';
+import { AuthCode } from '../../common/auth-code.enum';
+import { escapeRegex, normalizeEmail } from '../../common/email';
+import { isObjectIdString } from '../../common/ids';
+
+/** select:false secrets the login / OTP flows (and only they) need. */
+const AUTH_SECRET_FIELDS = '+password +otpCode +otpExpires';
+
+/** Role + department membership as plain ids (no populate). */
+export interface UserMembership {
+  roleId: string | null;
+  departmentIds: string[];
+}
 
 @Injectable()
 export class UsersService {
-  // ❌ Xóa: session: any;  — không cần nữa
-
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(UserBlock.name)
     private userBlockModel: Model<UserBlockDocument>,
     private readonly firebaseAdmin: FirebaseAdminService,
-    // ❌ Xóa: SessionService — UsersService không cần biết về session
+    // Blocking someone also ends the friendship (both directions, pending too).
+    private readonly friendsService: FriendsService,
+    @InjectModel(Role.name) private roleModel?: Model<RoleDocument>,
   ) {}
 
+  /**
+   * The effective role name for a user's `roleId`: the Role's name, or
+   * 'Member' when no role is assigned or it was deleted — the same fallback
+   * ClaimsService puts in the JWT, so /me and the token never disagree.
+   * Looked up by id because `User.roleId` has no Mongoose `ref` (adding one
+   * would turn `roleId` in every user payload into an object).
+   */
+  async getRoleName(roleId: unknown): Promise<string> {
+    const id = roleId?.toString();
+    if (!id || !isValidObjectId(id) || !this.roleModel) return 'Member';
+    const role = await this.roleModel.findById(id).select('name').lean().exec();
+    return role?.name ?? 'Member';
+  }
+
+  /** Every role's name by id, for batch profile lookups (a deployment has a handful of roles). */
+  async getRoleNameMap(): Promise<Map<string, string>> {
+    if (!this.roleModel) return new Map();
+    const roles = await this.roleModel.find().select('name').lean().exec();
+    return new Map(roles.map((r) => [String(r._id), r.name]));
+  }
+
+  /**
+   * Login / OTP lookup. The typed address is normalized (trim + lower-case)
+   * and matched exactly — invitations store emails that way — then falls back
+   * to a case-insensitive match for legacy mixed-case rows, so `Bob@acme.com`
+   * finds bob's account instead of failing (and counting toward lockout).
+   * otpCode/otpExpires are select:false (never leak via /me or /search); the
+   * OTP + login flows read them through this internal lookup only.
+   */
   async findByEmail(email: string): Promise<UserDocument | null> {
-    // otpCode/otpExpires are select:false (never leak via /me or /search); the
-    // OTP + login flows read them through this internal lookup only.
-    return this.userModel
-      .findOne({ email })
-      .select('+password +otpCode +otpExpires')
+    const normalized = normalizeEmail(email);
+    if (!normalized) return null;
+    const exact = await this.userModel
+      .findOne({ email: normalized })
+      .select(AUTH_SECRET_FIELDS)
       .exec();
+    return exact ?? this.findByEmailInsensitive(normalized, AUTH_SECRET_FIELDS);
   }
 
   /**
    * Case-insensitive exact email lookup (invite-only onboarding: invitations
    * store emails lowercase, legacy user rows may be mixed-case). Regex is
    * anchored + escaped so it is an exact match, never a partial one.
+   * `select` adds select:false fields (the login flow needs the password hash).
    */
-  async findByEmailInsensitive(email: string): Promise<UserDocument | null> {
+  async findByEmailInsensitive(
+    email: string,
+    select?: string,
+  ): Promise<UserDocument | null> {
     const trimmed = (email ?? '').trim();
     if (!trimmed) return null;
-    const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return this.userModel
-      .findOne({ email: { $regex: `^${escaped}$`, $options: 'i' } })
-      .exec();
+    const query = this.userModel.findOne({
+      email: { $regex: `^${escapeRegex(trimmed)}$`, $options: 'i' },
+    });
+    return (select ? query.select(select) : query).exec();
   }
 
   async findByPhone(phoneNumber: string): Promise<UserDocument | null> {
@@ -109,6 +157,28 @@ export class UsersService {
     }
   }
 
+  /** Current role/department ids of a user (null for an unknown / malformed id). */
+  async getMembership(userId: string): Promise<UserMembership | null> {
+    if (!isObjectIdString(userId)) return null;
+    const doc = await this.userModel
+      .findById(userId)
+      .select('roleId departmentIds')
+      .lean()
+      .exec();
+    if (!doc) return null;
+    return {
+      roleId: doc.roleId ? String(doc.roleId) : null,
+      departmentIds: (doc.departmentIds ?? []).map(String),
+    };
+  }
+
+  /** Active users holding `roleId`, excluding `excludeUserId` (last-Owner guards). */
+  countActiveWithRole(roleId: string, excludeUserId: string): Promise<number> {
+    return this.userModel
+      .countDocuments({ _id: { $ne: excludeUserId }, roleId, status: 'active' })
+      .exec();
+  }
+
   async setRoleAndDepartments(
     userId: string,
     roleId: string | null,
@@ -122,9 +192,14 @@ export class UsersService {
       .exec();
   }
 
+  /**
+   * Single write path for a new password (change / first set / reset). Setting
+   * any password also completes the Google-invite onboarding step, so the
+   * `mustSetPassword` flag is cleared here.
+   */
   async updatePassword(userId: string, passwordHash: string): Promise<void> {
     await this.userModel.findByIdAndUpdate(userId, {
-      $set: { password: passwordHash },
+      $set: { password: passwordHash, mustSetPassword: false },
       $unset: { otpCode: '', otpExpires: '' },
     });
   }
@@ -138,10 +213,14 @@ export class UsersService {
     });
   }
 
+  /**
+   * Mark the email verified WITHOUT consuming the OTP: the mobile forgot-password
+   * flow verifies first and then resets with the same code. The code is consumed
+   * by a successful reset (updatePassword) or simply expires (5 min).
+   */
   async setVerified(userId: string): Promise<void> {
     await this.userModel.findByIdAndUpdate(userId, {
       $set: { isVerified: true },
-      $unset: { otpCode: '', otpExpires: '' },
     });
   }
 
@@ -321,59 +400,54 @@ export class UsersService {
     return user;
   }
 
-  async changePassword(
-    userId: string,
-    currentPassword?: string,
-    newPassword?: string,
-  ): Promise<{ success: boolean }> {
-    if (!newPassword || newPassword.length < 6) {
-      throw new ConflictException('New password must be at least 6 characters');
-    }
-
-    const user = await this.userModel
-      .findById(userId)
-      .select('+password')
-      .exec();
-    if (!user) {
-      throw new ConflictException('User not found');
-    }
-
-    if (user.password) {
-      if (!currentPassword) {
-        throw new ConflictException('Current password is required');
-      }
-      const isMatch = await bcrypt.compare(currentPassword, user.password);
-      if (!isMatch) {
-        throw new ConflictException('Incorrect current password');
-      }
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(newPassword, salt);
-    await this.updatePassword(userId, hash);
-    return { success: true };
-  }
-
+  /**
+   * Register an FCM token for `userId`. A device token belongs to ONE account
+   * at a time: it is pulled from every other user first, otherwise a phone that
+   * switched accounts keeps receiving the previous user's lock-screen pushes.
+   */
   async addDeviceToken(userId: string, token: string): Promise<void> {
-    if (!token) return;
+    if (typeof token !== 'string' || !token.trim()) return;
+    await this.userModel
+      .updateMany(
+        { _id: { $ne: userId }, fcmTokens: token },
+        { $pull: { fcmTokens: token } },
+      )
+      .exec();
     await this.userModel.findByIdAndUpdate(userId, {
       $addToSet: { fcmTokens: token },
     });
   }
 
-  /** Record that `userId` blocks `targetId` (idempotent). */
+  /** Unregister an FCM token from the caller (logout). Idempotent. */
+  async removeDeviceToken(userId: string, token: string): Promise<void> {
+    await this.userModel
+      .updateOne({ _id: userId }, { $pull: { fcmTokens: token } })
+      .exec();
+  }
+
+  /**
+   * Record that `userId` blocks `targetId` (idempotent) and end any friendship
+   * or pending request between them, in both directions.
+   */
   async blockUser(
     userId: string,
     targetId: string,
   ): Promise<{ success: true }> {
     if (userId === targetId) {
-      throw new ConflictException('You cannot block yourself');
+      // Legacy `message` kept for clients that still match on it.
+      throw new ConflictException({
+        statusCode: 409,
+        error: 'Conflict',
+        code: AuthCode.CANNOT_BLOCK_SELF,
+        message: 'You cannot block yourself',
+      });
     }
     await this.userBlockModel.updateOne(
       { blockerId: userId, blockedId: targetId },
       { $setOnInsert: { blockerId: userId, blockedId: targetId } },
       { upsert: true },
     );
+    await this.friendsService.removeFriend(userId, targetId);
     return { success: true };
   }
 

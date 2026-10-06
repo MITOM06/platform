@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import Redis from 'ioredis';
 import { RedisModule } from '../redis/redis.module';
+import { UsageModule } from '../usage/usage.module';
 import { CallSession, CallSessionSchema } from './call-session.schema';
 import { User, UserSchema } from './user.schema';
 import { CallSummaryService } from './call-summary.service';
@@ -17,7 +18,8 @@ const callSessionFeature = MongooseModule.forFeature([
 const callRedisLogger = new Logger('CallRedisSubscriber');
 
 @Module({
-  imports: [callSessionFeature, RedisModule],
+  // UsageModule: CallSummaryService records the summary model call.
+  imports: [callSessionFeature, RedisModule, UsageModule],
   providers: [
     {
       // Own connection — a subscriber-mode client cannot run other commands,

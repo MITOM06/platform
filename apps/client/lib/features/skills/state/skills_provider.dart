@@ -18,7 +18,8 @@ class SkillsNotifier extends AsyncNotifier<Map<String, bool>> {
 
   Future<Map<String, bool>> _load() async {
     final repo = ref.read(connectorRepositoryProvider);
-    _requireUserId(ref); // fail fast if unauthenticated; identity comes from JWT
+    _requireUserId(
+        ref); // fail fast if unauthenticated; identity comes from JWT
     final skills = await repo.getSkills();
     return {for (final s in skills) s.skillId: s.enabled};
   }
@@ -48,7 +49,6 @@ class SkillsNotifier extends AsyncNotifier<Map<String, bool>> {
   }
 }
 
-final skillsProvider =
-    AsyncNotifierProvider<SkillsNotifier, Map<String, bool>>(
+final skillsProvider = AsyncNotifierProvider<SkillsNotifier, Map<String, bool>>(
   SkillsNotifier.new,
 );

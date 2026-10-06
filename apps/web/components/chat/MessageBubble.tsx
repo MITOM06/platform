@@ -10,13 +10,13 @@ import { GroupReadDetailsModal } from './GroupReadDetailsModal'
 import { ReactionsDetailModal } from './ReactionsDetailModal'
 import { MessageFeedback } from './MessageFeedback'
 import { MessageSources } from './MessageSources'
+import { AiActionCard } from './AiActionCard'
 import { ExternalBotBubble } from './ExternalBotBubble'
 import { MessageBubbleBody } from './MessageBubbleBody'
 import { MessageReplyQuote } from './MessageReplyQuote'
 import { SystemMessageBubble } from './SystemMessageBubble'
 import { formatTime, ReactionBadge, BARE_TYPES, isEmojiOnly } from './message-bubble-helpers'
-import { useNickname, getNickname } from '@/lib/nicknames'
-import { useQueryClient } from '@tanstack/react-query'
+import { isHumanUserId, useNameResolver, useSenderDisplayName } from '@/lib/hooks/use-display-names'
 import { type Message, isExternalBot } from '@/lib/api/types'
 
 interface Props {
@@ -28,6 +28,8 @@ interface Props {
   isPinned?: boolean
   pinnedCount?: number
   isGroup?: boolean
+  /** Group chats: label the bubble with the sender's name (first of a run). */
+  showSenderName?: boolean
   onEdit?: (message: Message) => void
   onForward?: (message: Message) => void
   onReply?: (message: Message) => void
@@ -51,6 +53,7 @@ const MessageBubbleInner = function MessageBubble({
   isPinned = false,
   pinnedCount = 0,
   isGroup = false,
+  showSenderName = false,
   onEdit,
   onForward,
   onReply,
@@ -65,10 +68,13 @@ const MessageBubbleInner = function MessageBubble({
 }: Props) {
   const t = useTranslations('chat')
   const locale = useLocale()
-  const queryClient = useQueryClient()
-  // Resolve nicknames for sender + reply-preview sender (W-15.4 parity).
-  const senderNickname = useNickname(conversationId ?? '', message.senderId)
-  const senderDisplay = senderNickname || message.senderName || ''
+  // Group bubbles: chat-service sends no sender name, so resolve it (nickname →
+  // profile → localized "Member"); DMs and own messages carry no label.
+  const senderDisplay = useSenderDisplayName(
+    message.senderId,
+    conversationId,
+    showSenderName && !isOwn && message.type !== 'system',
+  )
   const [hovered, setHovered] = useState(false)
   const [longPressActive, setLongPressActive] = useState(false)
   const [profileUserId, setProfileUserId] = useState<string | null>(null)
@@ -106,13 +112,7 @@ const MessageBubbleInner = function MessageBubble({
   // Resolve an actor's display name for system codes that carry an actor id
   // (e.g. `system.message.pinned:<actorId>`) and for humanizing system reply
   // quotes. Order: current user → "You", conversation nickname, cached profile.
-  const resolveName = (actorId: string): string | undefined => {
-    if (actorId === currentUserId) return t('you')
-    const nick = conversationId ? getNickname(conversationId, actorId) : undefined
-    if (nick) return nick
-    const cached = queryClient.getQueryData<{ displayName?: string }>(['user', actorId])
-    return cached?.displayName
-  }
+  const resolveName = useNameResolver(conversationId)
 
   // Multi-select: the whole row toggles selection — overlay a checkbox and
   // neutralize inner controls so any tap selects instead of firing actions.
@@ -152,7 +152,14 @@ const MessageBubbleInner = function MessageBubble({
   }
 
   if (message.type === 'system') {
-    return wrapSelectable(<SystemMessageBubble content={message.content} resolveName={resolveName} />)
+    return wrapSelectable(
+      <SystemMessageBubble
+        content={message.content}
+        senderId={message.senderId}
+        currentUserId={currentUserId}
+        resolveName={resolveName}
+      />,
+    )
   }
 
   // Personal assistant bot (Bot Factory) — distinct identity via ExternalBotBubble.
@@ -188,7 +195,7 @@ const MessageBubbleInner = function MessageBubble({
   )
 
   const openProfile = () => {
-    if (!isOwn && message.senderId) setProfileUserId(message.senderId)
+    if (!isOwn && isHumanUserId(message.senderId)) setProfileUserId(message.senderId)
   }
 
   const senderLabel = !isOwn && senderDisplay && (
@@ -286,6 +293,14 @@ const MessageBubbleInner = function MessageBubble({
             {showFeedback && message.sources && message.sources.length > 0 && (
               <MessageSources sources={message.sources} conversationId={conversationId} />
             )}
+            {message.type === 'ai' &&
+              message.pendingActions?.map((action) => (
+                <AiActionCard
+                  key={action.id}
+                  action={action}
+                  conversationId={conversationId ?? message.conversationId}
+                />
+              ))}
           </div>
         )}
 
@@ -355,6 +370,9 @@ export const MessageBubble = memo(
     prev.message.reactions === next.message.reactions &&
     prev.message.readBy === next.message.readBy &&
     prev.message.sources === next.message.sources &&
+    prev.message.pendingActions === next.message.pendingActions &&
+    prev.message.replyPreview === next.message.replyPreview &&
+    prev.showSenderName === next.showSenderName &&
     prev.isPinned === next.isPinned &&
     prev.pinnedCount === next.pinnedCount &&
     prev.isOwn === next.isOwn &&

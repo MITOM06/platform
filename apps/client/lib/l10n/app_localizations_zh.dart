@@ -855,6 +855,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get callMediaError => '无法访问摄像头/麦克风（需要 HTTPS 或 localhost）';
 
   @override
+  String get callNoAnswer => '无人接听';
+
+  @override
   String get callUnknownCaller => '某人';
 
   @override
@@ -1094,7 +1097,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinnedMessagesTitle => '置顶消息';
 
   @override
-  String get pinLimitReached => '最多只能置顶 2 条消息';
+  String get pinLimitReached => '最多只能置顶 5 条消息';
 
   @override
   String get cannotPinCall => '通话无法置顶';
@@ -3450,4 +3453,852 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminLoadFailed => '无法加载此部分，请重试。';
+
+  @override
+  String callDeclined(String name) {
+    return '$name 拒绝了通话';
+  }
+
+  @override
+  String callBusy(String name) {
+    return '$name 正在通话中';
+  }
+
+  @override
+  String callPeerMediaError(String name) {
+    return '$name 无法开启麦克风或摄像头';
+  }
+
+  @override
+  String get callEnded => '通话已结束';
+
+  @override
+  String get callConnectionLost => '连接中断，通话已结束';
+
+  @override
+  String get callSpeaker => '扬声器';
+
+  @override
+  String get callSwitchCamera => '切换摄像头';
+
+  @override
+  String get callHangUp => '挂断';
+
+  @override
+  String get callReconnecting => '正在重新连接…';
+
+  @override
+  String get callPoorConnection => '网络连接不佳';
+
+  @override
+  String get aiContextLearnedFactsLoadError => '无法加载助手已了解的信息。';
+
+  @override
+  String get errTooManyRequests => '请求过于频繁，请稍后再试。';
+
+  @override
+  String get removedFromConversation => '你已不再是此会话的成员';
+
+  @override
+  String get errGroupAdminRequired => '只有群管理员可以执行此操作';
+
+  @override
+  String get errChatUserBlocked => '你无法给此人发消息';
+
+  @override
+  String get errReplyTargetInvalid => '你回复的消息已不可用';
+
+  @override
+  String get errMessageTypeNotAllowed => '此处无法发送此类消息';
+
+  @override
+  String get errInvalidUrl => '无法预览此链接';
+
+  @override
+  String get errNotAGroup => '此功能仅适用于群聊';
+
+  @override
+  String get errNotAMember => '此人已不在群组中';
+
+  @override
+  String get errLastAdminCannotBeRemoved => '群组至少需要一名管理员';
+
+  @override
+  String get errPublicDepartmentChannel => '部门群组不能设为公开频道';
+
+  @override
+  String get publicChannelToggle => '公开频道';
+
+  @override
+  String get publicChannelHint => '工作区中的任何人都可以在“探索”中找到并加入';
+
+  @override
+  String get groupMakeAdmin => '设为管理员';
+
+  @override
+  String get groupRemoveAdmin => '取消管理员';
+
+  @override
+  String get aiErrEmptyResponse => '助手没有给出回答，请重试。';
+
+  @override
+  String get sysGroupCreatedNoActor => '群组已创建';
+
+  @override
+  String get sysMembersAddedNoActor => '已添加新成员';
+
+  @override
+  String get sysMemberLeftNoActor => '一名成员退出了群组';
+
+  @override
+  String get sysMemberRemovedNoActor => '一名成员被移出群组';
+
+  @override
+  String get sysMemberJoinedNoActor => '一名新成员加入了';
+
+  @override
+  String get sysAutoDeleteOff => '已关闭阅后即焚消息';
+
+  @override
+  String sysAutoDeleteOn(String duration) {
+    return '阅后即焚消息已设置为 $duration';
+  }
+
+  @override
+  String sysAutoDeleteOffBy(String actorName) {
+    return '$actorName 关闭了阅后即焚消息';
+  }
+
+  @override
+  String sysAutoDeleteOnBy(String actorName, String duration) {
+    return '$actorName 将阅后即焚消息设置为 $duration';
+  }
+
+  @override
+  String sysAdminPromoted(String targetName) {
+    return '$targetName 现在是管理员';
+  }
+
+  @override
+  String sysAdminDemoted(String targetName) {
+    return '$targetName 不再是管理员';
+  }
+
+  @override
+  String sysAdminPromotedBy(String actorName, String targetName) {
+    return '$actorName 将 $targetName 设为管理员';
+  }
+
+  @override
+  String sysAdminDemotedBy(String actorName, String targetName) {
+    return '$actorName 取消了 $targetName 的管理员身份';
+  }
+
+  @override
+  String durationSeconds(int count) {
+    return '$count 秒';
+  }
+
+  @override
+  String durationMinutes(int count) {
+    return '$count 分钟';
+  }
+
+  @override
+  String durationHours(int count) {
+    return '$count 小时';
+  }
+
+  @override
+  String durationDays(int count) {
+    return '$count 天';
+  }
+
+  @override
+  String durationShortMinutes(int count) {
+    return '$count分钟';
+  }
+
+  @override
+  String durationShortHours(int count) {
+    return '$count小时';
+  }
+
+  @override
+  String durationShortDays(int count) {
+    return '$count天';
+  }
+
+  @override
+  String get authErrUserBlocked => '无法操作——你们其中一方已屏蔽对方';
+
+  @override
+  String get authErrCurrentPasswordRequired => '请输入当前密码';
+
+  @override
+  String get authErrSsoEmailUnverified => '你的登录提供方尚未验证此邮箱地址';
+
+  @override
+  String get authErrSocialAccountConflict => '此邮箱已关联到其他登录账号';
+
+  @override
+  String get aiActionConfirm => '确认';
+
+  @override
+  String get aiActionCancel => '取消';
+
+  @override
+  String get aiActionSendEmail => '发送邮件';
+
+  @override
+  String get aiActionDraftEmail => '草拟邮件';
+
+  @override
+  String get aiActionCreateEvent => '创建日历事件';
+
+  @override
+  String get aiActionUpdateEvent => '更新日历事件';
+
+  @override
+  String get aiActionCreatePage => '创建页面';
+
+  @override
+  String get aiActionUpdatePage => '更新页面';
+
+  @override
+  String get aiActionGeneric => '执行操作';
+
+  @override
+  String aiActionGenericNamed(String tool) {
+    return '执行“$tool”';
+  }
+
+  @override
+  String aiActionVia(String connector) {
+    return '通过 $connector';
+  }
+
+  @override
+  String aiActionWaitingFor(String name) {
+    return '等待 $name 确认';
+  }
+
+  @override
+  String get aiActionFieldTo => '收件人';
+
+  @override
+  String get aiActionFieldSubject => '主题';
+
+  @override
+  String get aiActionFieldTitle => '标题';
+
+  @override
+  String get aiActionFieldWhen => '时间';
+
+  @override
+  String get aiActionStatusConfirmed => '已完成';
+
+  @override
+  String get aiActionStatusCancelled => '已取消';
+
+  @override
+  String get aiActionStatusFailed => '失败';
+
+  @override
+  String get aiActionStatusExpired => '已过期';
+
+  @override
+  String get aiActionStatusHandled => '已处理';
+
+  @override
+  String get aiActionErrNotFound => '此操作已不存在';
+
+  @override
+  String get aiActionErrNotOwner => '只有发起请求的人才能确认';
+
+  @override
+  String get aiActionErrAlreadyResolved => '此操作已被处理';
+
+  @override
+  String get aiActionErrExpired => '此请求已过期';
+
+  @override
+  String get aiActionErrGeneric => '无法完成此操作';
+
+  @override
+  String get aiToolWebSearch => '正在搜索网络';
+
+  @override
+  String get aiToolRememberFact => '正在保存到记忆';
+
+  @override
+  String get aiToolCreateReminder => '正在创建提醒';
+
+  @override
+  String get aiToolGetUserInfo => '正在查找同事';
+
+  @override
+  String get aiToolSearchKnowledgeBase => '正在搜索知识库';
+
+  @override
+  String get aiToolSearchMessages => '正在搜索消息';
+
+  @override
+  String get aiToolSummarizeConversation => '正在总结对话';
+
+  @override
+  String aiToolOnConnector(String tool, String connector) {
+    return '在 $connector 上 $tool';
+  }
+
+  @override
+  String get aiTraceToolAwaiting => '等待确认';
+
+  @override
+  String get aiTraceToolDone => '完成';
+
+  @override
+  String get aiTraceToolNotRun => '未执行';
+
+  @override
+  String aiTraceTokens(String input, String output) {
+    return '输入 $input · 输出 $output';
+  }
+
+  @override
+  String aiTraceCacheTokens(String read, String written) {
+    return '缓存 读 $read · 写 $written';
+  }
+
+  @override
+  String aiTraceThinkingTokens(String count) {
+    return '思考 $count';
+  }
+
+  @override
+  String aiTraceDuration(String seconds) {
+    return '$seconds 秒';
+  }
+
+  @override
+  String aiTraceSteps(int count) {
+    return '$count 步';
+  }
+
+  @override
+  String get connectorGenericName => '连接器';
+
+  @override
+  String get connectorCustomName => '自定义 MCP 服务器';
+
+  @override
+  String get connectorReconnect => '重新连接';
+
+  @override
+  String get connectorStatusReconnect => '需要重新连接';
+
+  @override
+  String get connectorStatusUnavailable => '不可用';
+
+  @override
+  String get connectorDisconnectWorkspaceConfirm =>
+      '断开这个工作区连接器？工作区内所有人都将无法使用它的工具。';
+
+  @override
+  String connectorDisconnected(String name) {
+    return '已断开 $name';
+  }
+
+  @override
+  String get customMcpListTitle => '你的 MCP 服务器';
+
+  @override
+  String get customMcpDelete => '移除';
+
+  @override
+  String get customMcpDeleteConfirm => '移除此 MCP 服务器？AI 将不再使用它的工具。';
+
+  @override
+  String customMcpDeleted(String name) {
+    return '已移除 $name';
+  }
+
+  @override
+  String get directoryDeleteConfirm => '删除此目录条目？';
+
+  @override
+  String get directoryAuthOauth => 'OAuth 登录';
+
+  @override
+  String get directoryAuthMcpOauth => 'OAuth（MCP 服务器）';
+
+  @override
+  String get directoryAuthEnvOauth => 'OAuth（工作区应用）';
+
+  @override
+  String get directoryAuthApiKey => 'API 密钥';
+
+  @override
+  String get directoryAuthNone => '无需登录';
+
+  @override
+  String get scopeEmailSend => '发送邮件';
+
+  @override
+  String get scopeEmailDraft => '创建草稿';
+
+  @override
+  String get scopeEmailRead => '读取邮件';
+
+  @override
+  String get scopeEmailManage => '管理邮件';
+
+  @override
+  String get scopeCalendarRead => '查看日历';
+
+  @override
+  String get scopeCalendarEvents => '管理日程';
+
+  @override
+  String get scopeCalendarManage => '管理日历';
+
+  @override
+  String get scopeFilesRead => '读取文件';
+
+  @override
+  String get scopeFilesManage => '管理文件';
+
+  @override
+  String get scopeReadContent => '读取内容';
+
+  @override
+  String get scopeInsertContent => '添加内容';
+
+  @override
+  String get scopeUpdateContent => '编辑内容';
+
+  @override
+  String get scopeOther => '其他权限';
+
+  @override
+  String get connErrUnsafeUrl => '不允许使用该地址。请使用公开的 https 网址。';
+
+  @override
+  String get connErrDiscoveryFailed => '无法连接该 MCP 服务器';
+
+  @override
+  String get connErrInsufficientPermission => '你没有执行此操作的权限';
+
+  @override
+  String get connErrNotAllowed => '你的工作区不允许使用此连接器';
+
+  @override
+  String get connErrUnavailable => '此连接器目前不可用';
+
+  @override
+  String get connErrOauthSetup => '此连接器尚未配置登录';
+
+  @override
+  String get connErrBotBridgeDisabled => '个人助理服务尚未配置';
+
+  @override
+  String get connErrBotNotFound => '找不到助理';
+
+  @override
+  String get connErrBotOwnerMismatch => '此助理属于其他成员';
+
+  @override
+  String get connErrMemberInactive => '该成员的账号未激活';
+
+  @override
+  String oauthConnected(String name) {
+    return '已连接 $name';
+  }
+
+  @override
+  String oauthErrAccessDenied(String name) {
+    return '你拒绝了 $name 的访问';
+  }
+
+  @override
+  String oauthErrFailed(String name) {
+    return '无法连接 $name';
+  }
+
+  @override
+  String oauthNotCompleted(String name) {
+    return '$name 的连接未完成';
+  }
+
+  @override
+  String get oauthErrExpired => '登录超时，请重试。';
+
+  @override
+  String get tokenUsageDailyChartTitle => '每日用量';
+
+  @override
+  String get tokenUsageTotalInRange => '所选时间段合计';
+
+  @override
+  String get tokenUsageQuotaBlocked => '此工作区已关闭 AI';
+
+  @override
+  String get tokenUsageQuotaExceeded => '已达到本月 AI 上限';
+
+  @override
+  String tokenUsageQuotaResets(String date) {
+    return '$date 重置';
+  }
+
+  @override
+  String authErrRoleGrantExceedsOwnPermissions(String capabilities) {
+    return '你不能授予自己没有的权限：$capabilities。';
+  }
+
+  @override
+  String get authErrRoleGrantExceedsOwnPermissionsGeneric => '你不能授予自己没有的权限。';
+
+  @override
+  String get authErrCannotEditOwnRole => '你不能编辑自己的角色。';
+
+  @override
+  String get authErrPresetRoleRenameForbidden => '内置角色无法重命名。';
+
+  @override
+  String get authErrRoleNameTaken => '已存在同名角色。';
+
+  @override
+  String get authErrOwnerRoleImmutable => 'Owner 角色无法修改或删除。';
+
+  @override
+  String get authErrOwnerSsoMappingForbidden =>
+      '只有 Owner 才能将 SSO 组映射到 Owner 角色。';
+
+  @override
+  String get authErrInsufficientPermission => '你没有执行此操作的权限。';
+
+  @override
+  String get authErrAiContextEntryNotFound => '此上下文条目已不存在。';
+
+  @override
+  String get authErrAiConnectorsNotInAllowList => '所选的 AI 连接器必须在工作区允许的连接器列表中。';
+
+  @override
+  String authErrPasswordTooShortMin(int min) {
+    return '密码至少需要 $min 个字符。';
+  }
+
+  @override
+  String get adminCapManageAiContext => '管理 AI 上下文';
+
+  @override
+  String get adminCapViewInternalContext => '查看内部上下文';
+
+  @override
+  String get adminCapViewConfidentialContext => '查看机密上下文';
+
+  @override
+  String get adminCapUnknown => '其他权限';
+
+  @override
+  String get adminAuditSystem => '系统';
+
+  @override
+  String get adminAuditFormerMember => '前成员';
+
+  @override
+  String get adminAuditActionOther => '其他操作';
+
+  @override
+  String get adminAuditActionWorkspaceUpdate => '更新了工作区';
+
+  @override
+  String get adminAuditActionDepartmentCreate => '创建了部门';
+
+  @override
+  String get adminAuditActionDepartmentUpdate => '更新了部门';
+
+  @override
+  String get adminAuditActionDepartmentDelete => '删除了部门';
+
+  @override
+  String get adminAuditActionMemberUpdate => '更新了成员';
+
+  @override
+  String get adminAuditActionMemberSsoUpdate => '通过 SSO 更新了成员';
+
+  @override
+  String get adminAuditActionMemberBlock => '封禁了成员';
+
+  @override
+  String get adminAuditActionMemberUnblock => '解封了成员';
+
+  @override
+  String get adminAuditActionRoleCreate => '创建了角色';
+
+  @override
+  String get adminAuditActionRoleUpdate => '更新了角色';
+
+  @override
+  String get adminAuditActionInvitationCreate => '发送了邀请';
+
+  @override
+  String get adminAuditActionInvitationResend => '重新发送了邀请';
+
+  @override
+  String get adminAuditActionInvitationRevoke => '撤销了邀请';
+
+  @override
+  String get adminAuditActionInvitationAccept => '接受了邀请';
+
+  @override
+  String get adminAuditActionConnectorConnect => '连接了连接器';
+
+  @override
+  String get adminAuditActionConnectorDisconnect => '断开了连接器';
+
+  @override
+  String get adminAuditActionConnectorReplace => '重新连接了连接器';
+
+  @override
+  String get adminAuditActionConnectionPermissionsUpdate => '更新了连接器权限';
+
+  @override
+  String get adminAuditActionCustomMcpAdd => '添加了自定义 MCP';
+
+  @override
+  String get adminAuditActionCustomMcpDelete => '删除了自定义 MCP';
+
+  @override
+  String get adminAuditActionDirectoryCreate => '添加了目录条目';
+
+  @override
+  String get adminAuditActionDirectoryUpdate => '更新了目录条目';
+
+  @override
+  String get adminAuditActionDirectoryDelete => '删除了目录条目';
+
+  @override
+  String get adminAuditActionSensitiveSkillRun => '运行了敏感技能';
+
+  @override
+  String get adminAuditTargetWorkspace => '工作区';
+
+  @override
+  String get adminAuditTargetMember => '一名成员';
+
+  @override
+  String get adminAuditTargetRole => '一个角色';
+
+  @override
+  String get adminAuditTargetDepartment => '一个部门';
+
+  @override
+  String get adminAuditTargetInvitation => '一个邀请';
+
+  @override
+  String get adminAuditTargetConnector => '一个连接器';
+
+  @override
+  String get adminAuditTargetDirectoryEntry => '一个目录条目';
+
+  @override
+  String get adminAuditTargetTool => '一个工具';
+
+  @override
+  String get adminAuditTargetOther => '其他对象';
+
+  @override
+  String get adminAiConnectorsAllAllowed =>
+      '工作区允许列表为空，因此所有连接器均被允许。请选择 AI 可以使用的连接器。';
+
+  @override
+  String get errAssistantSetupIncomplete => '请填写人设并选择模型，以完成助手设置。';
+
+  @override
+  String get errAssistantNotConfigured => '此工作区尚未启用个人助手，请联系管理员。';
+
+  @override
+  String get errAssistantUpstreamFailed => '助手服务未响应，请稍后重试。';
+
+  @override
+  String adminBotOwnedBy(String name) {
+    return '所有者：$name';
+  }
+
+  @override
+  String adminRoleCloneDefaultName(String name) {
+    return '$name 副本';
+  }
+
+  @override
+  String get setPasswordTitle => '创建您的 PON 密码';
+
+  @override
+  String get setPasswordSubtitle => '您是通过 Google 加入的。请创建密码，以便也能使用邮箱登录。';
+
+  @override
+  String get setPasswordSubmit => '创建密码';
+
+  @override
+  String get setPasswordSuccess => '密码已创建。现在您也可以使用邮箱登录了。';
+
+  @override
+  String get mfaVerifyTitle => '双重验证';
+
+  @override
+  String get mfaVerifySubtitle => '请输入身份验证器应用中的 6 位验证码以完成登录。';
+
+  @override
+  String get mfaBackupSubtitle => '请输入一个备用码（XXXXX-XXXXX）。每个备用码只能使用一次。';
+
+  @override
+  String get mfaCodeLabel => '6 位验证码';
+
+  @override
+  String get mfaBackupCodeLabel => '备用码';
+
+  @override
+  String get mfaVerifyButton => '验证';
+
+  @override
+  String get mfaUseBackupCode => '使用备用码';
+
+  @override
+  String get mfaUseAuthenticatorCode => '改用身份验证器应用';
+
+  @override
+  String get mfaBackToSignIn => '返回登录';
+
+  @override
+  String mfaBackupCodeUsed(int remaining) {
+    return '已使用备用码，剩余 $remaining 个。';
+  }
+
+  @override
+  String get valMfaCodeInvalid => '请输入 6 位验证码。';
+
+  @override
+  String get valMfaBackupCodeInvalid => '请输入格式如 ABCDE-FGHIJ 的备用码。';
+
+  @override
+  String get mfaEnrollTitle => '设置双重验证';
+
+  @override
+  String get mfaEnrollSubtitle => '你的角色要求每次登录时输入身份验证器应用中的验证码。';
+
+  @override
+  String get mfaEnrollStepInstall => '1. 安装 Google Authenticator（或其他身份验证器应用）。';
+
+  @override
+  String get mfaEnrollStepScan => '2. 扫描此二维码、在应用中打开，或输入设置密钥。';
+
+  @override
+  String get mfaEnrollStepCode => '3. 输入应用中显示的 6 位验证码。';
+
+  @override
+  String get mfaEnrollOpenApp => '在身份验证器应用中打开';
+
+  @override
+  String get mfaEnrollNoApp => '未找到身份验证器应用。请安装 Google Authenticator 或手动输入设置密钥。';
+
+  @override
+  String get mfaEnrollManualKey => '设置密钥';
+
+  @override
+  String get mfaCopyKey => '复制密钥';
+
+  @override
+  String get mfaKeyCopied => '已复制设置密钥';
+
+  @override
+  String get mfaQrSemantic => '身份验证器应用的二维码';
+
+  @override
+  String get mfaEnrollConfirm => '确认';
+
+  @override
+  String get mfaBackupCodesTitle => '保存你的备用码';
+
+  @override
+  String get mfaBackupCodesSubtitle => '如果丢失手机，每个备用码可用于登录一次。备用码不会再次显示，请妥善保存。';
+
+  @override
+  String get mfaCopyCodes => '复制备用码';
+
+  @override
+  String get mfaCodesCopied => '已复制备用码';
+
+  @override
+  String get mfaSavedCheckbox => '我已保存备用码';
+
+  @override
+  String get mfaContinue => '继续';
+
+  @override
+  String get securityMfaOn => '每次登录都需要输入身份验证器应用中的验证码。';
+
+  @override
+  String get securityMfaPending => '你的角色必须启用。下次登录时将进行设置。';
+
+  @override
+  String get securityMfaStatusOn => '已开启';
+
+  @override
+  String get securityMfaStatusOff => '未设置';
+
+  @override
+  String get securityMfaRegenerate => '重新生成备用码';
+
+  @override
+  String get securityMfaRegenerateHint => '请输入身份验证器应用中的当前验证码。旧的备用码将失效。';
+
+  @override
+  String get securityMfaRegenerateSubmit => '生成';
+
+  @override
+  String get securityMfaDone => '完成';
+
+  @override
+  String get adminMfaBadge => '已开启双重验证';
+
+  @override
+  String get adminMfaReset => '重置双重验证';
+
+  @override
+  String adminMfaResetConfirm(String name) {
+    return '要重置 $name 的双重验证吗？对方将在所有设备上被登出，并需在下次登录时重新设置。';
+  }
+
+  @override
+  String get adminMfaResetDone => '已重置双重验证。对方将在下次登录时重新设置。';
+
+  @override
+  String get authMsgMfaRequired => '请输入身份验证器应用中的验证码以完成登录。';
+
+  @override
+  String get authErrMfaTokenInvalid => '登录已过期，请重新登录。';
+
+  @override
+  String get authErrMfaCodeInvalid => '验证码不正确，请重试。';
+
+  @override
+  String authErrMfaCodeInvalidRemaining(int remaining) {
+    return '验证码不正确，剩余 $remaining 次尝试。';
+  }
+
+  @override
+  String get authErrMfaTooManyAttempts => '验证码错误次数过多，请重新登录。';
+
+  @override
+  String get authErrMfaNotEnrolled => '此账号尚未设置双重验证。';
+
+  @override
+  String get authErrMfaAlreadyEnrolled => '此账号已设置双重验证。';
+
+  @override
+  String get authErrMfaResetForbidden => '只有所有者才能重置双重验证。';
+
+  @override
+  String get authErrMfaResetSelfForbidden => '你不能重置自己的双重验证。';
 }

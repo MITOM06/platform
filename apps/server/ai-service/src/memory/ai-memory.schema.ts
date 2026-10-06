@@ -25,4 +25,6 @@ export class AiMemory {
 }
 
 export const AiMemorySchema = SchemaFactory.createForClass(AiMemory);
+// One doc per (conversation, user): `keyFacts` is that user's PRIVATE fact list,
+// so every read and upsert filters on both fields (a group has one doc per member).
 AiMemorySchema.index({ conversationId: 1, userId: 1 }, { unique: true });

@@ -2,24 +2,33 @@
 
 import { useState } from 'react'
 import { ClipboardList, ChevronLeft, ChevronRight } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuditLog } from '@/lib/hooks/use-admin'
+import { useProviderNameSources } from '@/lib/hooks/use-connectors'
+import { auditActionKey, auditActorLabel, auditTargetLabel } from '@/lib/admin/audit-labels'
 
 const LIMIT = 20
 
 /**
  * Audit log view — paginated trail of privileged actions (GET /admin/audit).
- * Backed by P0 Part 5. Gated by VIEW_AUDIT_LOG in the shell nav + page wrapper.
+ * Gated by VIEW_AUDIT_LOG in the shell nav + page wrapper. Every cell is
+ * humanized: localized action labels, "System" for automated actions, target
+ * names instead of ids (.claude/rules/no-raw-system-data-in-ui.md).
  */
 export function AuditLogPanel() {
   const t = useTranslations('admin')
+  const locale = useLocale()
   const [page, setPage] = useState(0)
-  const { data, isLoading, isPlaceholderData } = useAuditLog(page, LIMIT)
+  const { data, isLoading, isError, isPlaceholderData } = useAuditLog(page, LIMIT)
+  const providerSources = useProviderNameSources()
 
   if (isLoading) return <Skeleton className="h-80 rounded-xl" />
+  if (isError) {
+    return <p className="py-8 text-center text-sm text-destructive">{t('loadError')}</p>
+  }
 
   const items = data?.items ?? []
   const total = data?.total ?? 0
@@ -39,20 +48,20 @@ export function AuditLogPanel() {
     <div className="space-y-3">
       <div className="space-y-2">
         {items.map((e) => (
-          <div key={e.id} className="rounded-lg border px-4 py-3">
+          <div key={e.id} className="rounded-lg border px-4 py-3" data-testid="audit-row">
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="outline" className="font-mono text-xs">
-                {e.action}
+              <Badge variant="outline" className="text-xs">
+                {t(auditActionKey(e.action))}
               </Badge>
-              <span className="text-sm font-medium">
-                {e.actorName ?? e.actorId}
-              </span>
+              <span className="text-sm font-medium">{auditActorLabel(e, t)}</span>
               <span className="text-sm text-muted-foreground">
-                · {e.targetType}
-                {e.targetId ? ` (${e.targetId})` : ''}
+                · {auditTargetLabel(e, t, providerSources)}
               </span>
               <span className="ml-auto text-xs text-muted-foreground">
-                {new Date(e.createdAt).toLocaleString()}
+                {new Date(e.createdAt).toLocaleString(locale, {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
               </span>
             </div>
           </div>
@@ -61,7 +70,11 @@ export function AuditLogPanel() {
 
       <div className="flex items-center justify-between pt-2">
         <span className="text-sm text-muted-foreground">
-          {page * LIMIT + 1}–{page * LIMIT + items.length} / {total}
+          {t('auditRange', {
+            from: page * LIMIT + 1,
+            to: page * LIMIT + items.length,
+            total,
+          })}
         </span>
         <div className="flex gap-2">
           <Button

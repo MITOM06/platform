@@ -3,16 +3,25 @@ import { ResolvedAiSettings } from '../settings/resolved-ai-settings';
 
 /**
  * One conversation-history entry in the `ai.requests` payload (TASK-10 contract).
- * Text turns carry only `role` + `content` (byte-identical to before). An image
- * turn additionally sets `type: 'image'` + `imageUrls` (relative `/api/uploads/{id}`
- * paths, JSON-array decoded by chat-service); ai-service resolves those to image
- * content blocks. Backward compatible: absent `type`/`imageUrls` ⇒ plain text.
+ * Text turns carry `role` + `content`. An image turn additionally sets
+ * `type: 'image'` + `imageUrls` (relative `/api/uploads/{id}` paths, JSON-array
+ * decoded by chat-service); ai-service resolves those to image content blocks.
+ * Backward compatible: absent `type`/`imageUrls` ⇒ plain text.
+ *
+ * Sender attribution (optional, additive): `senderId` + `senderName` let the AI
+ * see who said what when it is @mentioned in a shared chat. `senderDisplayName`
+ * and `displayName` are accepted as aliases of `senderName`. Names are display
+ * text only — ids are never shown to the model.
  */
 export interface AiHistoryEntry {
   role: 'user' | 'assistant';
   content: string;
   type?: string;
   imageUrls?: string[];
+  senderId?: string;
+  senderName?: string;
+  senderDisplayName?: string;
+  displayName?: string;
 }
 
 export interface AiRequestPayload {
@@ -40,10 +49,13 @@ export interface ToolTraceEntry {
 export interface AiTrace {
   thinkingBlocks: string[];
   toolCalls: ToolTraceEntry[];
+  /** TOTAL prompt tokens across the reply's model calls (cache writes + reads included). */
   inputTokens: number;
   outputTokens: number;
-  /** Input tokens served from the Anthropic prompt cache (savings indicator). */
+  /** Prompt-cache reads — subset of `inputTokens` (savings indicator). */
   cachedInputTokens: number;
+  /** Prompt-cache writes — subset of `inputTokens`. */
+  cacheCreationInputTokens: number;
   thinkingTokens: number;
   processingMs: number;
   model: string;
@@ -66,9 +78,15 @@ export interface RequestContext {
   baseSystem: string;
   /** Volatile per-request grounding block (RAG + memory). Placed AFTER cache. */
   volatileSystem: string;
+  /** KB sources injected into the system prompt, numbered [Source 1..n] in order. */
   ragSources: RagSource[];
   /** Embedded user query — used to populate the semantic response cache. */
   queryVector?: number[] | null;
+  /**
+   * Whether the answer may be stored in the semantic response cache. False when
+   * it depends on more than the question (e.g. the recent group conversation).
+   */
+  responseCacheable?: boolean;
   /** Resolved workspace AI settings (TASK-12) threaded into the loop. */
   settings: ResolvedAiSettings;
   /** Skill ids enabled for this user; gates action-skill MCP tools in the registry. */

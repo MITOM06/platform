@@ -297,6 +297,41 @@ describe('axios 401-refresh interceptor', () => {
     expect(callCount).toBe(0)
   })
 
+  it('does NOT refresh on a typed 2FA verdict (wrong code while signed in)', async () => {
+    let callCount = 0
+    const adapter: SimpleAdapter = () => {
+      callCount++
+      return Promise.reject(new Error('unexpected call'))
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    axios.defaults.adapter = adapter as any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    chatApi.defaults.adapter = adapter as any
+
+    const err = make401('/api/users/me/mfa/backup-codes')
+    err.response!.data = { code: 'MFA_CODE_INVALID', params: { remaining: 3 } }
+    const handler = getInterceptorHandler()
+    await expect(handler(err)).rejects.toBe(err)
+    expect(callCount).toBe(0)
+    expect(getStoreState().clearAuth).not.toHaveBeenCalled()
+  })
+
+  it('does NOT attempt a refresh for 401 on the public 2FA endpoints', async () => {
+    let callCount = 0
+    const adapter: SimpleAdapter = () => {
+      callCount++
+      return Promise.reject(new Error('unexpected call'))
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    axios.defaults.adapter = adapter as any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    chatApi.defaults.adapter = adapter as any
+
+    const handler = getInterceptorHandler()
+    await expect(handler(make401('/auth/mfa/verify'))).rejects.toThrow()
+    expect(callCount).toBe(0)
+  })
+
   it('does NOT attempt a refresh when there is no access token', async () => {
     setToken(null)
 
@@ -488,6 +523,32 @@ describe('axios 401-refresh interceptor', () => {
       const handler = getInterceptorHandler()
       await expect(handler(httpError(503, { code: 'SESSION_CHECK_UNAVAILABLE' }))).rejects.toThrow()
       expect(calls).toBe(0)
+      expect(getStoreState().clearAuth).not.toHaveBeenCalled()
+      expect(nav.href).toBe('')
+    })
+
+    it('treats 401 TOKEN_CLAIMS_STALE like an expired token: silent refresh + retry, never logout', async () => {
+      // F1: an admin changed my role. The old token is rejected with
+      // TOKEN_CLAIMS_STALE; the refresh mints one with the fresh claims.
+      const urls: string[] = []
+      const adapter: SimpleAdapter = (config) => {
+        urls.push(config.url ?? '')
+        if (config.url?.includes('/api/auth/refresh')) {
+          return Promise.resolve({ data: { accessToken: 'fresh-claims' }, status: 200, statusText: 'OK', headers: {}, config } as AxiosResponse)
+        }
+        return Promise.resolve({ data: { ok: true }, status: 200, statusText: 'OK', headers: {}, config } as AxiosResponse)
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      axios.defaults.adapter = adapter as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      chatApi.defaults.adapter = adapter as any
+
+      const handler = getInterceptorHandler()
+      const res = (await handler(httpError(401, { code: 'TOKEN_CLAIMS_STALE' }))) as AxiosResponse
+
+      expect(res.data).toEqual({ ok: true })
+      expect(urls).toEqual(['/api/auth/refresh', '/api/conversations'])
+      expect(getStoreState().setAuth).toHaveBeenCalledWith(expect.objectContaining({ id: 'u1' }), 'fresh-claims')
       expect(getStoreState().clearAuth).not.toHaveBeenCalled()
       expect(nav.href).toBe('')
     })

@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -8,28 +9,14 @@ import { stompService } from '@/lib/stomp/client'
 import { useStompConnected } from '@/lib/stomp/use-stomp-connected'
 import { chatService } from '@/lib/api/chat'
 import { useMessageCache } from '@/lib/hooks/use-message-cache'
+import { useAiStreams } from '@/lib/hooks/use-ai-streams'
+import { aiStreamErrorKey, type AiStreamEntry } from '@/lib/ai/stream-routing'
 import { useCallStore } from '@/lib/store/call.store'
 import { applyNicknameSystemMessage } from '@/lib/nicknames'
 import { applyQuickReactionSystemMessage } from '@/lib/quick-reaction'
-import type {
-  AiSource,
-  AiStreamState,
-  CallEvent,
-  CallMedia,
-  Message,
-  StompEvent,
-} from '@/lib/api/types'
-
-// STOMP events use UPPER_CASE types; regular messages use lowercase types
-const STOMP_EVENT_TYPES = new Set([
-  'MESSAGE_UPDATED', 'MESSAGE_RECALLED', 'MESSAGE_READ', 'REACTION_UPDATED',
-  'PINNED_MESSAGE', 'CONVERSATION_UPDATED',
-  'AI_STREAM_CHUNK', 'AI_STREAM_DONE', 'AI_STREAM_ERROR', 'AI_TOOL_CALL',
-])
-
-function isStompEvent(parsed: Record<string, unknown>): parsed is StompEvent {
-  return typeof parsed.type === 'string' && STOMP_EVENT_TYPES.has(parsed.type)
-}
+import { isMessageFrame, isStompEvent } from '@/lib/realtime/message-frames'
+import { applySharedConversationUpdate } from '@/lib/realtime/conversation-cache'
+import type { AiSource, CallEvent, CallMedia, CallTransport, Message } from '@/lib/api/types'
 
 // Group-call lifecycle events (Track A §3) are keyed by `event`, not `type`.
 const CALL_EVENT_TYPES = new Set(['call.started', 'call.roster', 'call.ended'])
@@ -42,6 +29,8 @@ export interface ActiveCall {
   media: CallMedia
   aiNotetaker: boolean
   joinedCount: number
+  /** Media path of the call (absent = mesh). */
+  transport?: CallTransport
 }
 
 interface UseConversationStompArgs {
@@ -52,11 +41,13 @@ interface UseConversationStompArgs {
 
 interface UseConversationStompResult {
   typingUserIds: string[]
-  aiStream: AiStreamState | null
-  setAiStream: React.Dispatch<React.SetStateAction<AiStreamState | null>>
+  /** Live AI reply bubbles, one per reply (routed by `replyId`). */
+  aiStreams: AiStreamEntry[]
   activeCall: ActiveCall | null
-  armAiWatchdog: () => void
-  clearAiStream: () => void
+  /** Show the "thinking" bubble for a message I just sent that triggers the AI. */
+  startLocalAiStream: () => void
+  /** The send failed — drop that bubble. */
+  dropLocalAiStream: () => void
 }
 
 /**
@@ -71,17 +62,20 @@ export function useConversationStomp({
   currentUserId,
 }: UseConversationStompArgs): UseConversationStompResult {
   const t = useTranslations('chat')
+  const router = useRouter()
   const queryClient = useQueryClient()
   // Re-run the STOMP subscribe effect on every (re)connect so a dropped socket
   // is re-subscribed instead of leaving a subscription bound to a dead socket.
   const stompConnected = useStompConnected()
 
   const [typingUserIds, setTypingUserIds] = useState<string[]>([])
-  const [aiStream, setAiStream] = useState<AiStreamState | null>(null)
   const [activeCall, setActiveCall] = useState<ActiveCall | null>(null)
-  // Watchdog so a "thinking" bubble never sticks forever if the AI never
-  // responds (parity with Flutter's 30s watchdog). Re-armed on every AI event.
-  const aiWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // One bubble per AI reply, each with its own 30s watchdog (parity with Flutter).
+  const ai = useAiStreams(id, currentUserId)
+  const aiRef = useRef(ai)
+  useEffect(() => {
+    aiRef.current = ai
+  })
 
   // Mirror of `messages` for stale-closure-free reads inside the STOMP effect
   // (which only depends on [id, stompConnected]). Used by the reconnect catch-up.
@@ -90,37 +84,28 @@ export function useConversationStomp({
     messagesRef.current = messages
   })
 
-  const { patchMessage, markMessageRead, appendMessage, attachAiSources } = useMessageCache(id)
+  const cache = useMessageCache(id)
 
   // Store message-cache callbacks in a ref so the STOMP subscription effect
   // only needs [id, stompConnected] in its dep array. The ref always holds the
   // latest version of each callback so stale-closure bugs are impossible.
-  const msgCallbacksRef = useRef({ patchMessage, markMessageRead, appendMessage, attachAiSources })
+  const msgCallbacksRef = useRef(cache)
   useEffect(() => {
-    msgCallbacksRef.current = { patchMessage, markMessageRead, appendMessage, attachAiSources }
+    msgCallbacksRef.current = cache
   })
+
+  // Removed from this conversation (kicked / left on another device): the chat is
+  // already dropped from the caches — leave the screen instead of a dead thread.
+  const leaveConversation = useCallback(() => {
+    // Same toast id as the user-queue path, so both channels show one toast.
+    toast.info(t('removedFromConversation'), { id: `removed-${id}` })
+    router.replace('/conversations')
+  }, [id, router, t])
 
   // RAG sources from an AI_STREAM_DONE that arrived before the persisted AI
   // message was in the cache — applied to that message on append (rare race).
-  const pendingAiSourcesRef = useRef<AiSource[] | null>(null)
-
-  const armAiWatchdog = useCallback(() => {
-    if (aiWatchdogRef.current) clearTimeout(aiWatchdogRef.current)
-    aiWatchdogRef.current = setTimeout(() => setAiStream(null), 30000)
-  }, [])
-
-  const clearAiStream = useCallback(() => {
-    if (aiWatchdogRef.current) {
-      clearTimeout(aiWatchdogRef.current)
-      aiWatchdogRef.current = null
-    }
-    setAiStream(null)
-  }, [])
-
-  // Clear the watchdog timer on unmount.
-  useEffect(() => () => {
-    if (aiWatchdogRef.current) clearTimeout(aiWatchdogRef.current)
-  }, [])
+  // Keyed by replyId ('' for servers that send none).
+  const pendingAiSourcesRef = useRef(new Map<string, AiSource[]>())
 
   // Subscribe to STOMP for real-time messages + events + typing
   useEffect(() => {
@@ -138,14 +123,18 @@ export function useConversationStomp({
 
           if (isStompEvent(parsed)) {
             switch (parsed.type) {
-              case 'MESSAGE_UPDATED':
-                msgCallbacksRef.current.patchMessage(parsed.messageId, {
-                  content: parsed.content,
-                  editedAt: parsed.editedAt,
-                })
+              case 'MESSAGE_UPDATED': {
+                // Patch only what the event carries: a pending-action status
+                // update has no `editedAt` (and must not mark the message edited).
+                const patch: Partial<Message> = {}
+                if (typeof parsed.content === 'string') patch.content = parsed.content
+                if (typeof parsed.editedAt === 'string') patch.editedAt = parsed.editedAt
+                if (Array.isArray(parsed.pendingActions)) patch.pendingActions = parsed.pendingActions
+                msgCallbacksRef.current.patchMessage(parsed.messageId, patch)
                 break
+              }
               case 'MESSAGE_RECALLED':
-                msgCallbacksRef.current.patchMessage(parsed.messageId, { recalled: true })
+                msgCallbacksRef.current.recallMessage(parsed.messageId)
                 break
               case 'MESSAGE_READ':
                 msgCallbacksRef.current.markMessageRead(parsed.messageId, parsed.readerId)
@@ -157,70 +146,47 @@ export function useConversationStomp({
                 queryClient.invalidateQueries({ queryKey: ['conversation', id] })
                 break
               case 'CONVERSATION_UPDATED':
-                queryClient.setQueryData(['conversation', id], parsed.conversation)
-                queryClient.invalidateQueries({ queryKey: ['conversations'] })
-                // A participant may have changed their avatar/displayName — refresh
-                // their cached profile so peers see the new avatar (issue 1). The
-                // refetched URL is unique-per-upload so it dodges the HTTP cache.
-                parsed.conversation.participants.forEach((uid) =>
-                  queryClient.invalidateQueries({ queryKey: ['user', uid] }),
-                )
+                // Shared fields only (never my unread / mute / archive state):
+                // MERGE into the cached copies instead of replacing them.
+                if (
+                  applySharedConversationUpdate(queryClient, parsed.conversation, currentUserId) ===
+                  'removed'
+                ) {
+                  leaveConversation()
+                }
                 break
+              case 'KB_STATUS_UPDATE':
+                queryClient.invalidateQueries({ queryKey: ['kb-documents', id] })
+                break
+              case 'AI_ACTION_PENDING':
               case 'AI_STREAM_CHUNK':
-                setAiStream((prev) => ({
-                  content: (prev?.content ?? '') + String(parsed.chunk ?? ''),
-                  thinking: false,
-                  activeTools: prev?.activeTools ?? [],
-                  sensitiveTools: prev?.sensitiveTools ?? [],
-                }))
-                armAiWatchdog()
+              case 'AI_TOOL_CALL':
+                // Routed to the bubble of that reply (replyId), never a shared one.
+                aiRef.current.handleEvent(parsed)
                 break
-              case 'AI_TOOL_CALL': {
-                const toolName = String(parsed.toolName ?? '')
-                const isSensitive = parsed.sensitive === true
-                setAiStream((prev) => {
-                  const base = prev ?? { content: '', thinking: true, activeTools: [], sensitiveTools: [] }
-                  return {
-                    ...base,
-                    activeTools: base.activeTools.includes(toolName)
-                      ? base.activeTools
-                      : [...base.activeTools, toolName],
-                    sensitiveTools:
-                      isSensitive && !base.sensitiveTools.includes(toolName)
-                        ? [...base.sensitiveTools, toolName]
-                        : base.sensitiveTools,
-                  }
-                })
-                armAiWatchdog()
-                break
-              }
               case 'AI_STREAM_DONE': {
-                clearAiStream()
+                aiRef.current.handleEvent(parsed)
                 // Attach RAG citation sources to the persisted AI message so the
                 // bubble can render clickable chips. The saved message frame is
                 // sent before this DONE frame (same topic, FIFO), so it is
                 // normally already in the cache; if not (rare reorder), stash the
                 // sources for the next AI message append.
                 const doneSources = parsed.sources ?? []
-                if (doneSources.length > 0 && !msgCallbacksRef.current.attachAiSources(doneSources)) {
-                  pendingAiSourcesRef.current = doneSources
+                if (
+                  doneSources.length > 0 &&
+                  !msgCallbacksRef.current.attachAiSources(doneSources, parsed.replyId)
+                ) {
+                  pendingAiSourcesRef.current.set(parsed.replyId ?? '', doneSources)
                 }
                 break
               }
               case 'AI_STREAM_ERROR': {
-                clearAiStream()
-                const aiErrCodeMap: Record<string, string> = {
-                  AI_QUOTA_EXCEEDED: t('aiQuotaExceeded'),
-                  AI_RATE_LIMITED: t('aiRateLimited'),
-                  AI_STREAM_INTERRUPTED: t('aiStreamInterrupted'),
-                  AI_UNAVAILABLE: t('aiUnavailable'),
+                // Only the member who asked gets the toast; everyone else just
+                // sees that reply's bubble end. Mapped, localized text only —
+                // never the raw backend error string.
+                if (aiRef.current.handleEvent(parsed)) {
+                  toast.error(t(aiStreamErrorKey(parsed.code)))
                 }
-                // Only show a mapped, localized message — never the raw backend
-                // error string, which is internal/system text.
-                const aiErrMsg = parsed.code && aiErrCodeMap[parsed.code]
-                  ? aiErrCodeMap[parsed.code]
-                  : t('aiError')
-                toast.error(aiErrMsg)
                 break
               }
             }
@@ -229,11 +195,17 @@ export function useConversationStomp({
             // if this client is in the call, feed the roster into the mesh manager.
             switch (parsed.event) {
               case 'call.started': {
+                // A 1-on-1 on LiveKit is driven by the call manager, not the group banner.
+                if (parsed.transport === 'sfu' && parsed.kind === 'direct') {
+                  void import('@/lib/webrtc/call-manager').then((m) => m.callManager.handleCallEvent(parsed))
+                  break
+                }
                 setActiveCall({
                   callId: parsed.callId,
                   media: parsed.media,
                   aiNotetaker: parsed.aiNotetaker,
                   joinedCount: parsed.participants.length,
+                  transport: parsed.transport,
                 })
                 // If WE started it, the server already added us as a participant —
                 // activate our group-call state without re-joining.
@@ -245,6 +217,7 @@ export function useConversationStomp({
                       currentUserId!,
                       parsed.media,
                       parsed.aiNotetaker,
+                      parsed.transport,
                     ),
                   )
                 }
@@ -264,25 +237,35 @@ export function useConversationStomp({
               }
               case 'call.ended':
                 setActiveCall((prev) => (prev?.callId === parsed.callId ? null : prev))
+                void import('@/lib/webrtc/call-manager').then((m) => m.callManager.handleCallEvent(parsed))
                 void import('@/lib/webrtc/group-call-manager').then((m) =>
                   m.groupCallManager.handleEnded(parsed.callId),
                 )
                 break
             }
-          } else {
-            // Regular message (includes AI final message after AI_STREAM_DONE)
-            const msg = parsed as unknown as Message
-            if (msg.type === 'system' && typeof msg.content === 'string') {
+          } else if (isMessageFrame(parsed, id)) {
+            // Regular message (includes AI final message after AI_STREAM_DONE).
+            // Anything else (an unknown event type, a malformed frame) is ignored —
+            // rendering it as a bubble used to crash the whole chat screen.
+            const msg: Message = parsed
+            if (msg.type === 'system') {
               applyNicknameSystemMessage(id, msg.content)
               applyQuickReactionSystemMessage(id, msg.content)
             }
-            // If a DONE frame delivered sources before this AI message arrived
-            // (rare reorder), graft them on so the chips render.
-            if (msg.type === 'ai' && pendingAiSourcesRef.current) {
-              msg.sources = pendingAiSourcesRef.current
-              pendingAiSourcesRef.current = null
+            if (msg.type === 'ai') {
+              // If a DONE frame delivered sources before this AI message arrived
+              // (rare reorder), graft them on so the chips render.
+              const stashKey = msg.aiReplyId && pendingAiSourcesRef.current.has(msg.aiReplyId)
+                ? msg.aiReplyId
+                : pendingAiSourcesRef.current.has('') ? '' : undefined
+              if (stashKey !== undefined) {
+                msg.sources = pendingAiSourcesRef.current.get(stashKey)
+                pendingAiSourcesRef.current.delete(stashKey)
+              }
             }
             msgCallbacksRef.current.appendMessage(msg)
+            // The saved reply replaces exactly its own streaming bubble.
+            if (msg.type === 'ai' && msg.aiReplyId) aiRef.current.finishReply(msg.aiReplyId)
           }
         } catch {
           // ignore malformed frames
@@ -304,18 +287,22 @@ export function useConversationStomp({
         },
       )
 
-      // Catch-up: pull in messages that arrived while the socket was down (parity
-      // with Flutter chat_provider._catchupMessages, Task 55). We subscribe first
-      // (above) so no live message is missed, then backfill the gap from the
-      // newest message we already hold. `messages` are chronological (oldest →
-      // newest), so the last entry is the freshest. appendMessage de-dupes by id.
+      // Catch-up (parity with Flutter chat_provider._catchupMessages, Task 55).
+      // We subscribe first (above) so no live message is missed, then:
+      //  1. backfill EVERY message newer than the newest one we hold — the
+      //     catch-up endpoint pages 50 at a time, so loop on hasNext + afterId;
+      //  2. re-fetch the latest page so edits / recalls / reactions made while
+      //     the socket was down replace the stale cached copies.
+      // `messages` are chronological (oldest → newest): the last is the freshest.
       const newest = messagesRef.current[messagesRef.current.length - 1]
       if (newest?.createdAt) {
-        chatService
-          .getMessagesSince(id, newest.createdAt)
-          .then((missed) => {
+        Promise.all([
+          chatService.getAllMessagesSince(id, newest.createdAt, newest.id),
+          chatService.getMessages(id).then((page) => page.content),
+        ])
+          .then(([missed, latest]) => {
             if (!active) return
-            for (const m of missed) msgCallbacksRef.current.appendMessage(m)
+            msgCallbacksRef.current.reconcileMessages([...latest, ...missed])
           })
           .catch(() => {
             // Best-effort: a failed catch-up is non-fatal; scrolling/refetch recovers.
@@ -330,7 +317,7 @@ export function useConversationStomp({
       messageSub?.unsubscribe()
       typingSub?.unsubscribe()
     }
-  }, [id, stompConnected, queryClient, currentUserId, t, armAiWatchdog, clearAiStream])
+  }, [id, stompConnected, queryClient, currentUserId, t, leaveConversation])
 
   // Mark conversation as read on open
   useEffect(() => {
@@ -368,5 +355,11 @@ export function useConversationStomp({
     })
   }, [id, messages, currentUserId])
 
-  return { typingUserIds, aiStream, setAiStream, activeCall, armAiWatchdog, clearAiStream }
+  return {
+    typingUserIds,
+    aiStreams: ai.streams,
+    activeCall,
+    startLocalAiStream: ai.startLocal,
+    dropLocalAiStream: ai.dropLocal,
+  }
 }
