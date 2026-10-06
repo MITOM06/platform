@@ -17,7 +17,8 @@
 
 - User registration with email OTP verification
 - Login with JWT access token + refresh token rotation
-- OAuth 2.0 social login (Google, X (formerly Twitter))
+- OAuth 2.0 social login — Google only (X/Twitter and Facebook are not supported; the
+  routes answer an error by design, see `docs/decisions.md`)
 - OIDC / enterprise SSO (`/auth/oidc/login`, `/auth/sso/info`)
 - User profile management (`/api/users`)
 - Enterprise ownership: workspace / RBAC (`admin`), friends, notifications,
@@ -46,11 +47,6 @@
 |--------|------|-------------|
 | `GET` | `/auth/google` | Redirect to Google OAuth |
 | `GET` | `/auth/google/callback` | Google OAuth callback |
-| `GET` | `/auth/twitter` | Redirect to X (formerly Twitter) OAuth |
-| `GET` | `/auth/twitter/callback` | X (formerly Twitter) OAuth callback |
-
-> The X strategy lives in `strategies/x.strategy.ts` (rebranded from Twitter); the
-> controller routes are still mounted at `/auth/twitter`.
 
 ### User endpoints
 
