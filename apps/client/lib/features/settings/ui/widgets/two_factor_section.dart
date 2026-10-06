@@ -77,15 +77,15 @@ class _TwoFactorSectionState extends ConsumerState<TwoFactorSection> {
                           l10n.securityTwoFaTitle,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onSurface,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           enabled ? l10n.securityMfaOn : l10n.securityMfaPending,
                           key: const ValueKey('security-mfa-status'),
-                          style: TextStyle(color: muted, fontSize: 12.5),
+                          style: TextStyle(color: muted, fontSize: 12),
                         ),
                       ],
                     ),

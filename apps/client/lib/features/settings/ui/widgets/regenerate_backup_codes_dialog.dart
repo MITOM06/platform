@@ -74,7 +74,7 @@ class _RegenerateBackupCodesDialogState
     final codes = _codes;
     final onSurface = Theme.of(context).colorScheme.onSurface;
     final hintStyle =
-        TextStyle(color: AppTheme.mutedText(context), fontSize: 13, height: 1.4);
+        TextStyle(color: AppTheme.mutedText(context), fontSize: 14, height: 1.4);
 
     return AlertDialog(
       scrollable: true,
@@ -104,7 +104,7 @@ class _RegenerateBackupCodesDialogState
                       key: const ValueKey('regen-error'),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
-                        fontSize: 13,
+                        fontSize: 14,
                       ),
                     ),
                   ],

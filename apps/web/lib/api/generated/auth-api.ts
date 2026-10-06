@@ -46,7 +46,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Change the password, or set the first one (also clears mustSetPassword) */
+        /** Change (or set a first) password — also clears mustSetPassword; signs out every OTHER session */
         post: operations["UsersController_changePassword"];
         delete?: never;
         options?: never;
@@ -80,8 +80,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Register an FCM token (moved off any other account using it) */
         post: operations["UsersController_addDeviceToken"];
-        delete?: never;
+        /** Unregister an FCM token from the caller's account */
+        delete: operations["UsersController_removeDeviceToken"];
         options?: never;
         head?: never;
         patch?: never;
@@ -919,7 +921,7 @@ export interface paths {
         };
         get: operations["AdminController_listRoles"];
         put?: never;
-        /** Create / clone a role */
+        /** Create / clone a role (non-Owners: only capabilities they hold) */
         post: operations["AdminController_createRole"];
         delete?: never;
         options?: never;
@@ -940,7 +942,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Edit a role (Owner is immutable) */
+        /** Edit a role (Owner immutable; presets keep their name; non-Owners: not their own role, only capabilities they hold) */
         patch: operations["AdminController_updateRole"];
         trace?: never;
     };
@@ -1605,6 +1607,26 @@ export interface operations {
         requestBody?: never;
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UsersController_removeDeviceToken: {
+        parameters: {
+            query?: {
+                /** @description FCM token (alternative to the JSON body { token }) */
+                token?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

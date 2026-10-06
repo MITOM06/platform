@@ -21,8 +21,9 @@ public class ApiException extends RuntimeException {
    */
   private final Map<String, Object> params;
 
+  /** Code-only failure: the body carries no {@code message} — clients localize the code. */
   public ApiException(HttpStatus status, String code) {
-    this(status, code, code);
+    this(status, code, (String) null);
   }
 
   public ApiException(HttpStatus status, String code, String message) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../utils/mfa_code.dart';
+import '../../../../core/theme/app_theme.dart';
 
 /// 6-digit authenticator-code input: digits only, one-time-code autofill, and
 /// [onCompleted] fires as soon as the 6th digit is typed (auto-submit, like
@@ -71,7 +72,7 @@ class MfaBackupCodeField extends StatelessWidget {
       style: TextStyle(
         color: Theme.of(context).colorScheme.onSurface,
         letterSpacing: 2,
-        fontFamily: 'monospace',
+        fontFamily: AppTheme.fontMono,
       ),
       validator: (v) => backupCodeError(l10n, v),
       onFieldSubmitted: (_) => onSubmitted(),

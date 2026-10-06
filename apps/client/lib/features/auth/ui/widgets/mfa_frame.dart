@@ -42,7 +42,7 @@ class MfaFrame extends StatelessWidget {
                     title,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: Theme.of(context).colorScheme.onSurface,
                         ),
                   ),
@@ -112,7 +112,7 @@ class MfaErrorText extends StatelessWidget {
         key: const ValueKey('mfa-error'),
         style: TextStyle(
           color: Theme.of(context).colorScheme.error,
-          fontSize: 13,
+          fontSize: 14,
         ),
       ),
     );

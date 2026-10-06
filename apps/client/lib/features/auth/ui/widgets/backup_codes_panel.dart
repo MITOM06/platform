@@ -140,8 +140,8 @@ class _Code extends StatelessWidget {
       textAlign: TextAlign.center,
       style: TextStyle(
         color: color,
-        fontFamily: 'monospace',
-        fontSize: 15,
+        fontFamily: AppTheme.fontMono,
+        fontSize: 16,
         letterSpacing: 1,
         fontWeight: FontWeight.w600,
       ),
