@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 
 class LiveKitWebhookVerifierTest {
 
-  private static final String SECRET = "0123456789abcdef0123456789abcdef";
+  private static final String SECRET = "0123456789abcdef0123456789abcdef"; // gitleaks:allow
   private static final String BODY =
       "{\"event\":\"participant_joined\",\"room\":{\"name\":\"call_abc\"},"
           + "\"participant\":{\"identity\":\"user-1\"}}";

@@ -99,7 +99,7 @@ class LiveKitPropertiesTest {
     LiveKitProperties p = new LiveKitProperties();
     p.setUrl("wss://rtc.example.com");
     p.setApiKey("APIkey1");
-    p.setApiSecret("0123456789abcdef0123456789abcdef");
+    p.setApiSecret("0123456789abcdef0123456789abcdef"); // gitleaks:allow
     return p;
   }
 
@@ -421,7 +421,7 @@ class LiveKitTokenServiceTest {
     props = new LiveKitProperties();
     props.setUrl("wss://rtc.example.com");
     props.setApiKey("APIkey1");
-    props.setApiSecret("0123456789abcdef0123456789abcdef");
+    props.setApiSecret("0123456789abcdef0123456789abcdef"); // gitleaks:allow
     service = new LiveKitTokenService(props);
   }
 
@@ -649,7 +649,7 @@ import org.junit.jupiter.api.Test;
 
 class LiveKitWebhookVerifierTest {
 
-  private static final String SECRET = "0123456789abcdef0123456789abcdef";
+  private static final String SECRET = "0123456789abcdef0123456789abcdef"; // gitleaks:allow
   private static final String BODY =
       "{\"event\":\"participant_joined\",\"room\":{\"name\":\"call_abc\"},"
           + "\"participant\":{\"identity\":\"user-1\"}}";
@@ -1297,7 +1297,7 @@ class LiveKitRoomClientTest {
     props = new LiveKitProperties();
     props.setUrl("wss://rtc.example.com");
     props.setApiKey("APIkey1");
-    props.setApiSecret("0123456789abcdef0123456789abcdef");
+    props.setApiSecret("0123456789abcdef0123456789abcdef"); // gitleaks:allow
     http = mock(HttpClient.class);
     response = mock(HttpResponse.class);
     when(response.statusCode()).thenReturn(200);
@@ -1676,7 +1676,7 @@ git commit -m "feat(chat): LiveKit room API client for host controls"
             "app.livekit.call-transport", "sfu",
             "app.livekit.url", "wss://rtc.example.com",
             "app.livekit.api-key", "APIabc",
-            "app.livekit.api-secret", "0123456789abcdef0123456789abcdef");
+            "app.livekit.api-secret", "0123456789abcdef0123456789abcdef"); // gitleaks:allow
     assertThat(liveKit(env)).isEmpty();
   }
 ```
@@ -2112,7 +2112,7 @@ Chỉ làm được nếu mạng nhà **không** bị CGNAT: IP WAN trên trang 
 
 ```bash
 cd infra/livekit && cp .env.livekit.example /tmp/lk.env && \
-  sed -i '' 's|^LIVEKIT_DOMAIN=.*|LIVEKIT_DOMAIN=rtc.example.com|; s|^ACME_EMAIL=.*|ACME_EMAIL=a@example.com|; s|^LIVEKIT_API_KEY=.*|LIVEKIT_API_KEY=APIabc|; s|^LIVEKIT_API_SECRET=.*|LIVEKIT_API_SECRET=0123456789abcdef0123456789abcdef|; s|^LIVEKIT_WEBHOOK_URL=.*|LIVEKIT_WEBHOOK_URL=https://api.example.com/api/chat/api/rtc/livekit/webhook|' /tmp/lk.env && \
+  sed -i '' 's|^LIVEKIT_DOMAIN=.*|LIVEKIT_DOMAIN=rtc.example.com|; s|^ACME_EMAIL=.*|ACME_EMAIL=a@example.com|; s|^LIVEKIT_API_KEY=.*|LIVEKIT_API_KEY=APIabc|; s|^LIVEKIT_API_SECRET=.*|LIVEKIT_API_SECRET=0123456789abcdef0123456789abcdef|; s|^LIVEKIT_WEBHOOK_URL=.*|LIVEKIT_WEBHOOK_URL=https://api.example.com/api/chat/api/rtc/livekit/webhook|' /tmp/lk.env && \ // gitleaks:allow
   docker compose -f compose.livekit.yml --env-file /tmp/lk.env config --quiet && echo LIVEKIT_COMPOSE_OK; rm -f /tmp/lk.env
 cd ../docker-compose && docker compose -f compose.mini.yml --env-file .env.mini.example config --quiet 2>&1 | head -3
 cd ../.. && bash scripts/ci/check-env-parity.sh && bash scripts/ci/check-env-leaks.sh && bash scripts/ci/check-dev-only.sh
