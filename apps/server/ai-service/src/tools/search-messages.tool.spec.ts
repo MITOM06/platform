@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { SearchMessagesTool } from './search-messages.tool';
 import { ToolContext } from './tool.interface';
 
@@ -7,18 +8,26 @@ const ctx: ToolContext = {
   displayName: 'Alice',
 };
 
+/** Type-strict like Mongo: an ObjectId _id never equals its hex string. */
+const idEquals = (a: unknown, b: unknown) =>
+  a instanceof Types.ObjectId ? b instanceof Types.ObjectId && a.equals(b) : a === b;
+
 function makeConnection(messages: object[], users: object[]) {
-  const makeCol = (docs: object[]) => ({
-    find: jest.fn().mockReturnValue({
+  const makeCol = (docs: object[], filterById = false) => ({
+    find: jest.fn().mockImplementation((query: { _id?: { $in: unknown[] } }) => ({
       sort: jest.fn().mockReturnThis(),
       limit: jest.fn().mockReturnThis(),
-      toArray: jest.fn().mockResolvedValue(docs),
-    }),
+      toArray: jest.fn().mockResolvedValue(
+        filterById && query?._id
+          ? docs.filter((d) => query._id!.$in.some((id) => idEquals((d as { _id: unknown })._id, id)))
+          : docs,
+      ),
+    })),
   });
   return {
     collection: jest.fn().mockImplementation((name: string) => {
       if (name === 'messages') return makeCol(messages);
-      if (name === 'users') return makeCol(users);
+      if (name === 'users') return makeCol(users, true);
       return makeCol([]);
     }),
   } as any;
@@ -58,5 +67,36 @@ describe('SearchMessagesTool', () => {
     const tool = new SearchMessagesTool(connection);
     await tool.execute({ query: 'x', limit: 50 }, ctx);
     expect(findMock.limit).toHaveBeenCalledWith(10);
+  });
+
+  it('resolves names for real users whose _id is an ObjectId (sender ids are strings)', async () => {
+    const oid = new Types.ObjectId();
+    const msgs = [{ content: 'PR #212 cần review', senderId: oid.toHexString(), type: 'text', createdAt: new Date() }];
+    const tool = new SearchMessagesTool(makeConnection(msgs, [{ _id: oid, displayName: 'Phạm Đức Anh' }]));
+    const parsed = JSON.parse(await tool.execute({ query: 'PR #212' }, ctx));
+    expect(parsed[0].senderDisplayName).toBe('Phạm Đức Anh');
+  });
+
+  it('resolves the AI bot by its string _id and never leaks a raw id', async () => {
+    const unknown = new Types.ObjectId().toHexString();
+    const msgs = [
+      { content: 'answer', senderId: 'ai-bot-000000000000000000000001', type: 'ai', createdAt: new Date() },
+      { content: 'question', senderId: unknown, type: 'text', createdAt: new Date() },
+      { content: 'bot', senderId: 'extbot:bf-1', type: 'text', createdAt: new Date() },
+    ];
+    const users = [{ _id: 'ai-bot-000000000000000000000001', displayName: 'PON AI' }];
+    const result = await new SearchMessagesTool(makeConnection(msgs, users)).execute({ query: 'a' }, ctx);
+    const names = JSON.parse(result).map((m: { senderDisplayName: string }) => m.senderDisplayName);
+    expect(names).toEqual(['PON AI', 'Unknown user', 'Personal assistant bot']);
+    expect(result).not.toContain(unknown);
+    expect(result).not.toContain('extbot:');
+  });
+
+  it('matches the query literally, not as a regex', async () => {
+    const connection = makeConnection([], []);
+    const tool = new SearchMessagesTool(connection);
+    await expect(tool.execute({ query: 'PR (#212' }, ctx)).resolves.toContain('No messages found');
+    const messagesCol = connection.collection.mock.results[0].value;
+    expect(messagesCol.find.mock.calls[0][0].content.$regex).toBe('PR \\(#212');
   });
 });
