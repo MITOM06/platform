@@ -91,8 +91,14 @@ export default registerAs('config', () => ({
     // Over-fetch this many candidates, then rerank/keep the best `topK`.
     topK: parseInt(process.env.KB_TOP_K ?? '4', 10),
     overFetch: parseInt(process.env.KB_OVERFETCH ?? '8', 10),
-    // Minimum cosine score for a chunk to be considered grounded context.
-    scoreThreshold: parseFloat(process.env.KB_SCORE_THRESHOLD ?? '0.5'),
+    // Recall floor on cosine score before rerank, NOT a precision gate. Measured
+    // with voyage-4-lite on Vietnamese + English docs (2026-10-03): chunks that
+    // actually answer the question scored 0.26–0.64 (9 of 12 below 0.5), while
+    // off-topic queries scored 0.07–0.43 — the ranges overlap, so no single
+    // cosine cut separates them and 0.5 dropped most real answers. Keep the floor
+    // low, let BM25/Cohere pick the top-K, and let the prompt's "say you don't
+    // have that information" rule handle a weak match.
+    scoreThreshold: parseFloat(process.env.KB_SCORE_THRESHOLD ?? '0.2'),
     // voyage-4-lite, not voyage-3.5: the 4-series carries Voyage's 200M free
     // tokens and the older models carry none, so the default decides whether a
     // fresh deployment embeds for free or bills from the first request. Same

@@ -49,7 +49,7 @@ export class ContextBuilderService {
     this.topK = this.configService.get<number>('config.kb.topK') ?? 4;
     this.overFetch = this.configService.get<number>('config.kb.overFetch') ?? 8;
     this.candidatePool = this.configService.get<number>('config.kb.candidatePool') ?? 25;
-    this.scoreThreshold = this.configService.get<number>('config.kb.scoreThreshold') ?? 0.5;
+    this.scoreThreshold = this.configService.get<number>('config.kb.scoreThreshold') ?? 0.2;
     this.orgMaxChars = this.configService.get<number>('config.aiContext.blockMaxChars') ?? 2000;
   }
 

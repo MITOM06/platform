@@ -38,7 +38,7 @@ export class SearchKnowledgeBaseTool {
       this.configService.get<string>('config.kb.qdrantCollection') ?? 'knowledge';
     this.defaultTopK = this.configService.get<number>('config.kb.topK') ?? 4;
     this.overFetch = this.configService.get<number>('config.kb.overFetch') ?? 8;
-    this.scoreThreshold = this.configService.get<number>('config.kb.scoreThreshold') ?? 0.5;
+    this.scoreThreshold = this.configService.get<number>('config.kb.scoreThreshold') ?? 0.2;
   }
 
   async execute(input: Record<string, unknown>, ctx: ToolContext): Promise<string> {
