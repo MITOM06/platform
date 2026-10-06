@@ -44,6 +44,18 @@ public class CallEventDto {
 
   private String startedByName;
 
+  /** call.started: "mesh" | "sfu". */
+  private String transport;
+
+  /** call.started: "direct" | "group". */
+  private String kind;
+
+  /** call.started on sfu: the wss:// URL clients connect to. */
+  private String livekitUrl;
+
+  /** call.ended: why it ended (hangup | declined | busy | no_answer | media_error | failed). */
+  private String reason;
+
   private List<ParticipantDto> participants;
 
   @Data

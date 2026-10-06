@@ -1363,6 +1363,13 @@
   },
   "call": {
     "peerFallback": "User",
+    "mediaError": "Can't access your camera or microphone. Check your browser permissions.",
+    "noAnswer": "No answer",
+    "declined": "{name} declined the call",
+    "busy": "{name} is on another call",
+    "peerMediaError": "{name} couldn't turn on their microphone or camera",
+    "ended": "Call ended",
+    "connectionLost": "Call dropped — connection lost",
     "calling": "Calling…",
     "muteMic": "Mute mic",
     "unmuteMic": "Unmute mic",
@@ -1395,7 +1402,9 @@
     "summaryOverview": "Overview",
     "summaryKeyPoints": "Key points",
     "summaryActionItems": "Action items",
-    "summaryUnavailable": "Summary unavailable"
+    "summaryUnavailable": "Summary unavailable",
+    "reconnecting": "Reconnecting…",
+    "poorConnection": "Poor connection"
   },
   "notFound": {
     "title": "Page not found",

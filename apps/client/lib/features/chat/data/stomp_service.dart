@@ -7,6 +7,7 @@ import '../../../core/api/token_manager.dart';
 import '../../../core/config/app_config.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../domain/chat_state.dart';
+import 'conversation_subscription_counter.dart';
 
 part 'stomp_service.g.dart';
 
@@ -47,6 +48,8 @@ class StompService extends _$StompService {
   final _callEventCtrl = StreamController<Map<String, dynamic>>.broadcast();
   // Emits whenever a STOMP reconnect completes (not on first connect).
   final _reconnectCtrl = StreamController<void>.broadcast();
+  // Emits on EVERY completed connect, first one included.
+  final _connectedCtrl = StreamController<void>.broadcast();
   bool _presenceSubPending = false;
   // Tracks whether we have successfully connected at least once this session.
   bool _everConnected = false;
@@ -77,6 +80,9 @@ class StompService extends _$StompService {
   Stream<Map<String, dynamic>> get callEvents => _callEventCtrl.stream;
   // Fires whenever the STOMP socket reconnects after a prior disconnect.
   Stream<void> get reconnects => _reconnectCtrl.stream;
+
+  /// Every completed connect (first and reconnects).
+  Stream<void> get connections => _connectedCtrl.stream;
 
   bool get isConnected => _client?.connected ?? false;
 
@@ -168,6 +174,7 @@ class StompService extends _$StompService {
       _reconnectCtrl.add(null);
     }
     _everConnected = true;
+    _connectedCtrl.add(null);
 
     // Re-establish all pending subscriptions after connect/reconnect
     if (_notifSubPending) _doSubscribeNotifications();
@@ -198,7 +205,11 @@ class StompService extends _$StompService {
     debugPrint('[STOMP] websocket error: $error');
   }
 
+  /// Who holds each conversation topic (chat screen, an active call).
+  final ConversationSubscriptionCounter _convHolders = ConversationSubscriptionCounter();
+
   void subscribeConversation(String conversationId) {
+    if (!_convHolders.acquire(conversationId)) return; // already subscribed for someone else
     _pendingConvSubs.add(conversationId);
     if (_client?.connected ?? false) {
       _doSubscribeConversation(conversationId);
@@ -301,6 +312,7 @@ class StompService extends _$StompService {
   }
 
   void unsubscribeConversation(String conversationId) {
+    if (!_convHolders.release(conversationId)) return; // another holder still needs it
     _pendingConvSubs.remove(conversationId);
     _subs.remove('msg_$conversationId')?.call();
     _subs.remove('typ_$conversationId')?.call();

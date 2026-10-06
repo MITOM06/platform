@@ -867,6 +867,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không thể truy cập camera/micro (cần HTTPS hoặc localhost)';
 
   @override
+  String get callNoAnswer => 'Không có người trả lời';
+
+  @override
   String get callUnknownCaller => 'Ai đó';
 
   @override
@@ -3565,4 +3568,40 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get adminLoadFailed => 'Không tải được mục này. Vui lòng thử lại.';
+
+  @override
+  String callDeclined(String name) {
+    return '$name đã từ chối cuộc gọi';
+  }
+
+  @override
+  String callBusy(String name) {
+    return '$name đang bận cuộc gọi khác';
+  }
+
+  @override
+  String callPeerMediaError(String name) {
+    return '$name không bật được micro hoặc camera';
+  }
+
+  @override
+  String get callEnded => 'Cuộc gọi đã kết thúc';
+
+  @override
+  String get callConnectionLost => 'Cuộc gọi bị ngắt do mất kết nối';
+
+  @override
+  String get callSpeaker => 'Loa ngoài';
+
+  @override
+  String get callSwitchCamera => 'Đổi camera';
+
+  @override
+  String get callHangUp => 'Kết thúc';
+
+  @override
+  String get callReconnecting => 'Đang kết nối lại…';
+
+  @override
+  String get callPoorConnection => 'Kết nối yếu';
 }

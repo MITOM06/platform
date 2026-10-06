@@ -1363,6 +1363,13 @@
   },
   "call": {
     "peerFallback": "Usuario",
+    "mediaError": "No se puede acceder a la cámara o al micrófono. Revisa los permisos del navegador.",
+    "noAnswer": "Sin respuesta",
+    "declined": "{name} rechazó la llamada",
+    "busy": "{name} está en otra llamada",
+    "peerMediaError": "{name} no pudo activar su micrófono o cámara",
+    "ended": "Llamada finalizada",
+    "connectionLost": "La llamada se cortó por pérdida de conexión",
     "calling": "Llamando…",
     "muteMic": "Silenciar micrófono",
     "unmuteMic": "Activar micrófono",
@@ -1395,7 +1402,9 @@
     "summaryOverview": "Resumen",
     "summaryKeyPoints": "Puntos clave",
     "summaryActionItems": "Tareas",
-    "summaryUnavailable": "Resumen no disponible"
+    "summaryUnavailable": "Resumen no disponible",
+    "reconnecting": "Reconectando…",
+    "poorConnection": "Conexión débil"
   },
   "notFound": {
     "title": "Página no encontrada",

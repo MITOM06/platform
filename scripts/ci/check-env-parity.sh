@@ -41,6 +41,7 @@ check_required_documented() {
 }
 check_required_documented infra/docker-compose/compose.mini.yml infra/docker-compose/.env.mini.example
 check_required_documented infra/docker-compose/compose.prod.yml infra/docker-compose/.env.example
+check_required_documented infra/livekit/compose.livekit.yml infra/livekit/.env.livekit.example
 
 # ── 2. No development fallback in a production deployment ────────────────────
 # A loopback address, or the well-known local broker credentials, reached from a

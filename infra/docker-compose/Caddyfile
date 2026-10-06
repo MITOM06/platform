@@ -39,3 +39,9 @@
 		reverse_proxy web:3000
 	}
 }
+
+# LiveKit signalling (WebSocket) and its server API. Media never passes through
+# here — it goes straight to the host (UDP 50000-60000, TCP 7881, TURN 3478).
+rtc.{$DOMAIN:localhost} {
+	reverse_proxy host.docker.internal:7880
+}

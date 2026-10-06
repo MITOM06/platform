@@ -11,14 +11,7 @@ import { useMessageCache } from '@/lib/hooks/use-message-cache'
 import { useCallStore } from '@/lib/store/call.store'
 import { applyNicknameSystemMessage } from '@/lib/nicknames'
 import { applyQuickReactionSystemMessage } from '@/lib/quick-reaction'
-import type {
-  AiSource,
-  AiStreamState,
-  CallEvent,
-  CallMedia,
-  Message,
-  StompEvent,
-} from '@/lib/api/types'
+import type { AiSource, AiStreamState, CallEvent, CallMedia, Message, StompEvent, CallTransport } from '@/lib/api/types'
 
 // STOMP events use UPPER_CASE types; regular messages use lowercase types
 const STOMP_EVENT_TYPES = new Set([
@@ -42,6 +35,8 @@ export interface ActiveCall {
   media: CallMedia
   aiNotetaker: boolean
   joinedCount: number
+  /** Media path of the call (absent = mesh). */
+  transport?: CallTransport
 }
 
 interface UseConversationStompArgs {
@@ -229,11 +224,17 @@ export function useConversationStomp({
             // if this client is in the call, feed the roster into the mesh manager.
             switch (parsed.event) {
               case 'call.started': {
+                // A 1-on-1 on LiveKit is driven by the call manager, not the group banner.
+                if (parsed.transport === 'sfu' && parsed.kind === 'direct') {
+                  void import('@/lib/webrtc/call-manager').then((m) => m.callManager.handleCallEvent(parsed))
+                  break
+                }
                 setActiveCall({
                   callId: parsed.callId,
                   media: parsed.media,
                   aiNotetaker: parsed.aiNotetaker,
                   joinedCount: parsed.participants.length,
+                  transport: parsed.transport,
                 })
                 // If WE started it, the server already added us as a participant —
                 // activate our group-call state without re-joining.
@@ -245,6 +246,7 @@ export function useConversationStomp({
                       currentUserId!,
                       parsed.media,
                       parsed.aiNotetaker,
+                      parsed.transport,
                     ),
                   )
                 }
@@ -264,6 +266,7 @@ export function useConversationStomp({
               }
               case 'call.ended':
                 setActiveCall((prev) => (prev?.callId === parsed.callId ? null : prev))
+                void import('@/lib/webrtc/call-manager').then((m) => m.callManager.handleCallEvent(parsed))
                 void import('@/lib/webrtc/group-call-manager').then((m) =>
                   m.groupCallManager.handleEnded(parsed.callId),
                 )

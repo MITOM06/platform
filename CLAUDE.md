@@ -11,7 +11,7 @@
 
 > **Direction (2026-06-19):** PON is pivoting from a chat app to a **self-hosted, single-tenant-per-deployment B2B AI-assistant platform** (one deployment = one company; Workspace → Departments → Members → Role). AI is central; users connect third-party tools via **governed MCP connectors** (`connector-service`, :3003) and the assistant acts for them from chat. Full state + roadmap: `docs/superpowers/PON-ENTERPRISE-HANDOFF.md`. Enterprise RBAC lives in auth-service + `packages/database/rbac` + `packages/database/auth`.
 
-> **Current state (2026-09-30):** Bot Factory ↔ PON bridge (server + client UI), AI Context and the Warm Grey & Burgundy UI redesign are all shipped. Production backend runs on a Mac mini behind a Cloudflare Tunnel (`infra/docker-compose/compose.mini.yml`), web on Vercel. The only plan not started is Meeting Room / LiveKit Phase 1. Plan status of record: `docs/superpowers/plans/README.md`. Bot Factory direction: `docs/superpowers/BOTFACTORY-BRIDGE-DIRECTION.md` — ⛔ the `bot-factory` repo is READ-ONLY; all changes are in this repo.
+> **Current state (2026-09-30):** Bot Factory ↔ PON bridge (server + client UI), AI Context and the Warm Grey & Burgundy UI redesign are all shipped. Production backend runs on a Mac mini behind a Cloudflare Tunnel (`infra/docker-compose/compose.mini.yml`), web on Vercel. Next up (2026-10-05): **Cuộc gọi** (Messenger/Zalo-style) and **Phòng họp** (new Meet/Teams-style feature) on LiveKit — spec `docs/superpowers/specs/2026-10-05-calls-and-meetings-design.md`, 4 pending plans. Plan status of record: `docs/superpowers/plans/README.md`. Bot Factory direction: `docs/superpowers/BOTFACTORY-BRIDGE-DIRECTION.md` — ⛔ the `bot-factory` repo is READ-ONLY; all changes are in this repo.
 
 ## AUTONOMOUS MODE — DEFAULT BEHAVIOR
 
@@ -71,6 +71,8 @@ Chỉ dừng và hỏi khi gặp đúng các tình huống dưới đây — kh�
 | Redis | 6379 | Docker |
 | RabbitMQ AMQP | 5672 | Docker |
 | RabbitMQ Management UI | 15672 | Docker (user: platform / platform) |
+| LiveKit (signalling / API) | 7880 (behind Caddy: `rtc.<domain>`) | LiveKit SFU — calls + meetings |
+| LiveKit media | 7881/tcp, 3478/udp (TURN), 50000–60000/udp | LiveKit SFU |
 
 Start infra: `docker compose -f infra/docker-compose/compose.yml up -d`
 

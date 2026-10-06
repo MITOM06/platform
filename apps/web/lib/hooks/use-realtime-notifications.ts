@@ -42,6 +42,13 @@ export function useRealtimeNotifications(): void {
     const token = useAuthStore.getState().accessToken
     if (!token || stompService.isConnected()) return
 
+    // Which media path new calls take (mesh / LiveKit) — re-read on every
+    // (re)connect, so a server switching CALL_TRANSPORT is picked up after its
+    // restart. connect() resolves only once, hence the state listener.
+    const stopTransportWatch = stompService.onStateChange((connected) => {
+      if (connected) void import('@/lib/webrtc/call-transport').then((m) => m.refreshCallTransport())
+    })
+
     stompService.connect(token).then(() => {
       // NOTE: notification-permission prompting was moved to the post-login /
       // post-register success path (see lib/notifications.ts). It must NOT be
@@ -135,6 +142,26 @@ export function useRealtimeNotifications(): void {
             return
           }
 
+          // ── LiveKit (sfu) call control: a 1-on-1 ring, ring cancels, declines ─
+          if (signal.type === 'call-ring' && signal.transport === 'sfu' && signal.kind === 'direct') {
+            void import('@/lib/webrtc/call-manager').then((m) => m.callManager.handleSignal(signal))
+            return
+          }
+          if (signal.type === 'call-ring-cancel') {
+            const st = useCallStore.getState()
+            if (st.incomingGroupCall?.callId === signal.callId) st.setIncomingGroupCall(null)
+            else void import('@/lib/webrtc/call-manager').then((m) => m.callManager.handleSignal(signal))
+            return
+          }
+          if (signal.type === 'call-declined') {
+            void import('@/lib/webrtc/call-manager').then((m) => m.callManager.handleSignal(signal))
+            return
+          }
+
+          // A 1-on-1 only rings through call-ring on sfu; a mesh "direct" ring is a
+          // stray session from a caller with a stale transport (it cancels itself).
+          if (signal.type === 'call-ring' && signal.kind === 'direct') return
+
           // ── Group call ring → open the incoming-group-call prompt ───────────
           if (signal.type === 'call-ring') {
             // Ignore a ring while already in any call.
@@ -147,6 +174,7 @@ export function useRealtimeNotifications(): void {
               startedByName: signal.startedByName ?? '',
               media: signal.media ?? 'video',
               aiNotetaker: signal.aiNotetaker ?? false,
+              transport: signal.transport,
             })
             return
           }
@@ -159,24 +187,14 @@ export function useRealtimeNotifications(): void {
             return
           }
 
-          // ── Legacy 1-on-1 ───────────────────────────────────────────────────
-          if (signal.type === 'offer') {
-            // Ignore a second offer while already in a call.
-            if (useCallStore.getState().status !== 'idle') return
-            useCallStore.getState().setIncoming({
-              peerId: signal.senderId ?? '',
-              peerName: '',
-              conversationId: signal.conversationId ?? '',
-              sdp: signal.sdp ?? '',
-              video: (signal.sdp ?? '').includes('m=video'),
-            })
-          } else {
-            // Lazy-load the WebRTC module only when an active call needs it —
-            // keeps RTCPeerConnection code out of the initial layout bundle.
-            void import('@/lib/webrtc/call-manager').then((m) =>
-              m.callManager.handleSignal(signal),
-            )
-          }
+          // ── Legacy 1-on-1 (offer / answer / ice / end) ──────────────────────
+          // callManager owns ringing, busy replies and the early-ICE buffer.
+          // Lazy-load the WebRTC module only when a call signal arrives — keeps
+          // RTCPeerConnection code out of the initial layout bundle. Successive
+          // signals stay in order: they all chain on the same import() promise.
+          void import('@/lib/webrtc/call-manager').then((m) =>
+            m.callManager.handleSignal(signal),
+          )
         } catch {
           // ignore
         }
@@ -207,6 +225,7 @@ export function useRealtimeNotifications(): void {
     })
 
     return () => {
+      stopTransportWatch()
       stompService.disconnect()
     }
     // `router` from next/navigation is stable; only (dis)connect on the

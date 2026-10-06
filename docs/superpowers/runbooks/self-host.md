@@ -74,3 +74,30 @@ Without `PON_DOMAIN` the app targets the default Cloud Run hosting.
 - Logs: `docker compose -f compose.prod.yml logs -f <service>`.
 - This kit is single-company by design. Multi-company scale-out (Helm, branding,
   feature flags) is deferred — see `docs/superpowers/specs/2026-06-21-p7-self-host-deployment-kit-design.md` §8.
+
+## Cuộc gọi & Phòng họp (LiveKit)
+
+LiveKit chạy cùng stack (`livekit` trong `compose.prod.yml`). Cần thêm:
+
+1. **DNS:** bản ghi A `rtc.<DOMAIN>` trỏ về **cùng IP** với `<DOMAIN>` (nếu dùng Cloudflare
+   thì để *DNS only* — proxy của Cloudflare không chuyển UDP).
+2. **Firewall máy chủ:** mở `443/tcp` (đã có), `7881/tcp`, `3478/udp`, `50000-60000/udp`.
+   **Không** mở `7880` ra ngoài — Caddy đã proxy nó qua `rtc.<DOMAIN>`. Dải relay TURN
+   (`30000-40000/udp`, mặc định của LiveKit) chỉ dùng nội bộ, không cần mở.
+   LiveKit chạy bằng host networking nên Caddy (trong bridge Docker) gọi nó qua cổng `7880`
+   của host — firewall default-deny (ufw / firewalld) sẽ chặn lượt này và `rtc.<DOMAIN>` trả
+   502. Cho phép **riêng** dải bridge Docker, vẫn chặn Internet:
+   ```bash
+   sudo ufw allow from 172.16.0.0/12 to any port 7880 proto tcp
+   # firewalld: sudo firewall-cmd --permanent --zone=trusted --add-source=172.16.0.0/12 && sudo firewall-cmd --reload
+   ```
+3. **Nâng cấp một bản cài có sẵn:** chạy lại `./bootstrap.sh` **trước** `docker compose up` —
+   nó chỉ sinh thêm `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` còn thiếu, không đổi secret cũ.
+   Thiếu bước này thì `docker compose up` dừng với lỗi `LIVEKIT_API_KEY ... run bootstrap.sh`
+   và **cả stack** không khởi động.
+4. **Bật cho cuộc gọi:** `CALL_TRANSPORT=sfu` trong `.env`, rồi
+   `docker compose -f compose.prod.yml up -d chat-service`. Quay lại P2P: đặt `mesh`.
+   Phòng họp luôn dùng LiveKit, không cần cờ.
+5. **Kiểm tra:** `curl -s https://rtc.<DOMAIN>` trả `OK`; log
+   `docker compose -f compose.prod.yml logs livekit` có dòng `starting LiveKit server` và
+   không có lỗi `port`/`TURN`.

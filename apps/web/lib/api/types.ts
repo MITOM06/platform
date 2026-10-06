@@ -248,9 +248,19 @@ export type CallEvent =
       startedBy: string
       startedByName: string
       participants: CallParticipant[]
+      /** Media path of this call (absent from older servers = mesh). */
+      transport?: CallTransport
+      /** 'direct' = 1-on-1 (Messenger-style UI), 'group' otherwise. */
+      kind?: 'direct' | 'group'
+      livekitUrl?: string | null
     }
   | { event: 'call.roster'; callId: string; participants: CallParticipant[] }
-  | { event: 'call.ended'; callId: string }
+  | {
+      event: 'call.ended'
+      callId: string
+      /** hangup | declined | busy | no_answer | media_error | failed (sfu only). */
+      reason?: string
+    }
 
 // Live state of the AI assistant's in-progress reply, shown as a streaming
 // bubble (parity with Flutter StreamingAiBubble): "thinking" dots before the
@@ -352,4 +362,19 @@ export interface DashboardResponse {
   perModelCost: UsagePerModelCost[]
   topUsers: UsageTopUser[]
   feedback: UsageFeedback
+}
+
+// ─── Calls on LiveKit (docs/api-spec.md "Calls on LiveKit") ───────────────────
+
+/** Media path the server picks for a call. */
+export type CallTransport = 'mesh' | 'sfu'
+
+export interface CallConfig {
+  transport: CallTransport
+  livekitUrl?: string | null
+}
+
+export interface CallToken {
+  url: string
+  token: string
 }
