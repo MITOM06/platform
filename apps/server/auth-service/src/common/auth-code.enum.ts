@@ -21,6 +21,10 @@ export enum AuthCode {
   ACCOUNT_UNVERIFIED_OTP_SENT = 'ACCOUNT_UNVERIFIED_OTP_SENT',
   /** 201 body of POST /auth/invitations/:token/accept-password. */
   INVITATION_ACCEPTED = 'INVITATION_ACCEPTED',
+  /** 201 body of POST /auth/login and /auth/exchange for a privileged user: 2FA step needed, no tokens yet. */
+  MFA_REQUIRED = 'MFA_REQUIRED',
+  /** 201 body of POST /auth/mfa/enroll/confirm: enrolled, backup codes issued, no tokens until enroll/complete. */
+  MFA_BACKUP_CODES_ISSUED = 'MFA_BACKUP_CODES_ISSUED',
 
   // ── 400 Bad Request ─────────────────────────────────────────────────────
   OTP_INVALID = 'OTP_INVALID',
@@ -44,6 +48,12 @@ export enum AuthCode {
   PRESET_ROLE_RENAME_FORBIDDEN = 'PRESET_ROLE_RENAME_FORBIDDEN',
   /** DELETE /api/users/device-tokens without a `token` (body or `?token=`). */
   DEVICE_TOKEN_REQUIRED = 'DEVICE_TOKEN_REQUIRED',
+  /** /auth/mfa/verify on an enrollment token, or enroll/confirm before enroll/start. */
+  MFA_NOT_ENROLLED = 'MFA_NOT_ENROLLED',
+  /** /auth/mfa/enroll/* on a token whose user is already enrolled. */
+  MFA_ALREADY_ENROLLED = 'MFA_ALREADY_ENROLLED',
+  /** POST /admin/members/:id/mfa/reset on the caller's own account. */
+  MFA_RESET_SELF_FORBIDDEN = 'MFA_RESET_SELF_FORBIDDEN',
 
   // ── 401 Unauthorized ────────────────────────────────────────────────────
   ACCOUNT_LOCKED = 'ACCOUNT_LOCKED',
@@ -72,6 +82,12 @@ export enum AuthCode {
    * prove ownership of that account (OAuth redirect only).
    */
   SSO_EMAIL_UNVERIFIED = 'SSO_EMAIL_UNVERIFIED',
+  /** mfaToken missing, expired or already used: restart sign-in. */
+  MFA_TOKEN_INVALID = 'MFA_TOKEN_INVALID',
+  /** Wrong TOTP / backup code. params: { remaining: number } attempts left on this token. */
+  MFA_CODE_INVALID = 'MFA_CODE_INVALID',
+  /** Too many wrong codes: the mfaToken is burned, restart sign-in. */
+  MFA_TOO_MANY_ATTEMPTS = 'MFA_TOO_MANY_ATTEMPTS',
 
   // ── 403 Forbidden ───────────────────────────────────────────────────────
   /** Social/SSO sign-in for an email with no account (invite-only). */
@@ -102,6 +118,8 @@ export enum AuthCode {
    * linked to a DIFFERENT identity of the same provider (OAuth redirect only).
    */
   SOCIAL_ACCOUNT_CONFLICT = 'SOCIAL_ACCOUNT_CONFLICT',
+  /** Only an Owner can reset another member's 2FA. */
+  MFA_RESET_FORBIDDEN = 'MFA_RESET_FORBIDDEN',
 
   // ── 404 Not Found ───────────────────────────────────────────────────────
   EMAIL_NOT_FOUND = 'EMAIL_NOT_FOUND',

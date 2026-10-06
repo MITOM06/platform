@@ -71,6 +71,13 @@ class AdminRepository {
     return Member.fromJson(res.data as Map<String, dynamic>);
   }
 
+  /// Owner-only: clears [id]'s 2FA enrollment + backup codes and revokes
+  /// their sessions; they re-enroll at next sign-in (contract 09). Errors:
+  /// `MFA_RESET_FORBIDDEN`, `MFA_RESET_SELF_FORBIDDEN`, `MEMBER_NOT_FOUND`.
+  Future<void> resetMemberMfa(String id) async {
+    await _dio.post('/admin/members/$id/mfa/reset');
+  }
+
   // ── invitations ─────────────────────────────────────────────────────────
   /// No [status] → the actionable ones (pending + expired).
   Future<List<Invitation>> listInvitations({String? status}) async {

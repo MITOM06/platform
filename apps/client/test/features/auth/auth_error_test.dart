@@ -71,6 +71,33 @@ void main() {
     }
   });
 
+  testWidgets('change-password codes map to their own localized messages',
+      (tester) async {
+    final ctx = await _context(tester);
+    final l10n = AppLocalizations.of(ctx);
+    final expected = <String, String>{
+      'CURRENT_PASSWORD_REQUIRED': l10n.authErrCurrentPasswordRequired,
+      'CURRENT_PASSWORD_INCORRECT': l10n.errCurrentPasswordIncorrect,
+      'VAL_PASSWORD_TOO_SHORT': l10n.authErrValPasswordTooShort,
+      'USER_NOT_FOUND': l10n.authErrUserNotFound,
+    };
+    for (final e in expected.entries) {
+      final msg = authErrorMessage(ctx, _dio(400, {'code': e.key}));
+      expect(msg, e.value, reason: e.key);
+      expect(msg, isNot(l10n.errActionFailed), reason: e.key);
+      expect(msg, isNot(contains(e.key)), reason: e.key);
+    }
+    // The validation-array shape maps the same way.
+    expect(
+      authErrorMessage(
+          ctx,
+          _dio(400, {
+            'message': ['VAL_PASSWORD_TOO_SHORT'],
+          })),
+      l10n.authErrValPasswordTooShort,
+    );
+  });
+
   testWidgets('SESSION_CHECK_UNAVAILABLE reads as a transient server error',
       (tester) async {
     final ctx = await _context(tester);
@@ -115,5 +142,43 @@ void main() {
     );
     expect(authErrorMessage(ctx, network), l10n.errNetwork);
     expect(authErrorMessage(ctx, StateError('boom')), l10n.errGeneric);
+  });
+
+  testWidgets('maps every MFA code to its own localized message',
+      (tester) async {
+    final ctx = await _context(tester);
+    final l10n = AppLocalizations.of(ctx);
+    final expected = <String, String>{
+      'MFA_REQUIRED': l10n.authMsgMfaRequired,
+      'MFA_TOKEN_INVALID': l10n.authErrMfaTokenInvalid,
+      'MFA_CODE_INVALID': l10n.authErrMfaCodeInvalid,
+      'MFA_TOO_MANY_ATTEMPTS': l10n.authErrMfaTooManyAttempts,
+      'MFA_NOT_ENROLLED': l10n.authErrMfaNotEnrolled,
+      'MFA_ALREADY_ENROLLED': l10n.authErrMfaAlreadyEnrolled,
+      'MFA_RESET_FORBIDDEN': l10n.authErrMfaResetForbidden,
+      'MFA_RESET_SELF_FORBIDDEN': l10n.authErrMfaResetSelfForbidden,
+    };
+    for (final e in expected.entries) {
+      expect(authErrorToString(ctx, _dio(401, {'code': e.key})), e.value,
+          reason: e.key);
+      expect(e.value, isNot(contains(e.key)));
+      expect(e.value, isNot(l10n.errActionFailed), reason: e.key);
+    }
+  });
+
+  testWidgets('MFA_CODE_INVALID shows the attempts left when sent',
+      (tester) async {
+    final ctx = await _context(tester);
+    final l10n = AppLocalizations.of(ctx);
+    final msg = authErrorMessage(
+      ctx,
+      _dio(401, {
+        'code': 'MFA_CODE_INVALID',
+        'params': {'remaining': 3},
+      }),
+    );
+    expect(msg, l10n.authErrMfaCodeInvalidRemaining(3));
+    expect(msg, contains('3'));
+    expect(msg, isNot(contains('MFA_CODE_INVALID')));
   });
 }

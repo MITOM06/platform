@@ -22,6 +22,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { SocialProvisioningService } from './social-provisioning.service';
 import { OAuthRedirectService } from './oauth-redirect.service';
 import { LoginAttemptsService } from './login-attempts.service';
+import { MfaChallengeService } from '../mfa/mfa-challenge.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 /**
@@ -230,6 +231,10 @@ describe('F1 — claims-stale access tokens', () => {
         { provide: OAuthRedirectService, useValue: oauthRedirect },
         { provide: LoginAttemptsService, useValue: {} },
         { provide: OtpService, useValue: {} },
+        {
+          provide: MfaChallengeService,
+          useValue: { challengeIfRequired: jest.fn().mockResolvedValue(null) },
+        },
       ],
     }).compile();
 
@@ -441,6 +446,8 @@ describe('F1 — claims-stale access tokens', () => {
       'u1',
       {},
       'web',
+      // OIDC sign-in is exempt from PON 2FA (the IdP owns MFA).
+      'oidc',
     );
 
     // Unchanged mapping → nothing marked.

@@ -1446,5 +1446,81 @@
   "errAssistantNotConfigured": "Workspace này chưa bật trợ lý riêng. Hãy liên hệ quản trị viên.",
   "errAssistantUpstreamFailed": "Dịch vụ trợ lý không phản hồi. Vui lòng thử lại sau giây lát.",
   "adminBotOwnedBy": "Thuộc về {name}",
-  "adminRoleCloneDefaultName": "{name} (bản sao)"
+  "adminRoleCloneDefaultName": "{name} (bản sao)",
+  "setPasswordTitle": "Tạo mật khẩu PON của bạn",
+  "setPasswordSubtitle": "Bạn đã tham gia bằng Google. Hãy tạo mật khẩu để có thể đăng nhập bằng email.",
+  "setPasswordSubmit": "Tạo mật khẩu",
+  "setPasswordSuccess": "Đã tạo mật khẩu. Giờ bạn cũng có thể đăng nhập bằng email.",
+  "mfaVerifyTitle": "Xác thực hai yếu tố",
+  "mfaVerifySubtitle": "Nhập mã 6 chữ số trong ứng dụng xác thực để hoàn tất đăng nhập.",
+  "mfaBackupSubtitle": "Nhập một trong các mã dự phòng (XXXXX-XXXXX). Mỗi mã chỉ dùng được một lần.",
+  "mfaCodeLabel": "Mã 6 chữ số",
+  "mfaBackupCodeLabel": "Mã dự phòng",
+  "mfaVerifyButton": "Xác minh",
+  "mfaUseBackupCode": "Dùng mã dự phòng",
+  "mfaUseAuthenticatorCode": "Dùng ứng dụng xác thực",
+  "mfaBackToSignIn": "Quay lại đăng nhập",
+  "mfaBackupCodeUsed": "Đã dùng mã dự phòng. Còn {remaining} mã.",
+  "@mfaBackupCodeUsed": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "valMfaCodeInvalid": "Nhập mã 6 chữ số.",
+  "valMfaBackupCodeInvalid": "Nhập mã dự phòng dạng ABCDE-FGHIJ.",
+  "mfaEnrollTitle": "Thiết lập xác thực hai yếu tố",
+  "mfaEnrollSubtitle": "Vai trò của bạn yêu cầu mã từ ứng dụng xác thực mỗi lần đăng nhập.",
+  "mfaEnrollStepInstall": "1. Cài Google Authenticator (hoặc một ứng dụng xác thực khác).",
+  "mfaEnrollStepScan": "2. Quét mã QR này, mở trong ứng dụng, hoặc nhập khóa thiết lập.",
+  "mfaEnrollStepCode": "3. Nhập mã 6 chữ số mà ứng dụng hiển thị.",
+  "mfaEnrollOpenApp": "Mở trong ứng dụng xác thực",
+  "mfaEnrollNoApp": "Không tìm thấy ứng dụng xác thực. Hãy cài Google Authenticator hoặc nhập khóa thiết lập thủ công.",
+  "mfaEnrollManualKey": "Khóa thiết lập",
+  "mfaCopyKey": "Sao chép khóa",
+  "mfaKeyCopied": "Đã sao chép khóa thiết lập",
+  "mfaQrSemantic": "Mã QR cho ứng dụng xác thực",
+  "mfaEnrollConfirm": "Xác nhận",
+  "mfaBackupCodesTitle": "Lưu mã dự phòng",
+  "mfaBackupCodesSubtitle": "Mỗi mã cho phép đăng nhập một lần nếu bạn mất điện thoại. Các mã sẽ không hiển thị lại, hãy cất giữ ở nơi an toàn.",
+  "mfaCopyCodes": "Sao chép mã",
+  "mfaCodesCopied": "Đã sao chép mã dự phòng",
+  "mfaSavedCheckbox": "Tôi đã lưu mã dự phòng",
+  "mfaContinue": "Tiếp tục",
+  "securityMfaOn": "Mỗi lần đăng nhập đều cần mã từ ứng dụng xác thực.",
+  "securityMfaPending": "Bắt buộc với vai trò của bạn. Bạn sẽ thiết lập ở lần đăng nhập tới.",
+  "securityMfaStatusOn": "Đang bật",
+  "securityMfaStatusOff": "Chưa thiết lập",
+  "securityMfaRegenerate": "Tạo lại mã dự phòng",
+  "securityMfaRegenerateHint": "Nhập mã hiện tại từ ứng dụng xác thực. Các mã dự phòng cũ sẽ không còn dùng được.",
+  "securityMfaRegenerateSubmit": "Tạo mã",
+  "securityMfaDone": "Xong",
+  "adminMfaBadge": "Đã bật 2FA",
+  "adminMfaReset": "Đặt lại 2FA",
+  "adminMfaResetConfirm": "Đặt lại xác thực hai yếu tố cho {name}? Người này sẽ bị đăng xuất khỏi mọi thiết bị và phải thiết lập lại ở lần đăng nhập tới.",
+  "@adminMfaResetConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminMfaResetDone": "Đã đặt lại 2FA. Người này sẽ thiết lập lại ở lần đăng nhập tới.",
+  "authMsgMfaRequired": "Nhập mã từ ứng dụng xác thực để hoàn tất đăng nhập.",
+  "authErrMfaTokenInvalid": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+  "authErrMfaCodeInvalid": "Mã không đúng. Vui lòng thử lại.",
+  "authErrMfaCodeInvalidRemaining": "Mã không đúng. Còn {remaining} lần thử.",
+  "@authErrMfaCodeInvalidRemaining": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "authErrMfaTooManyAttempts": "Nhập sai mã quá nhiều lần. Vui lòng đăng nhập lại.",
+  "authErrMfaNotEnrolled": "Tài khoản này chưa thiết lập xác thực hai yếu tố.",
+  "authErrMfaAlreadyEnrolled": "Tài khoản này đã thiết lập xác thực hai yếu tố.",
+  "authErrMfaResetForbidden": "Chỉ Chủ sở hữu mới có thể đặt lại xác thực hai yếu tố.",
+  "authErrMfaResetSelfForbidden": "Bạn không thể tự đặt lại xác thực hai yếu tố của chính mình."
 }

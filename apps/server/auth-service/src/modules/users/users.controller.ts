@@ -13,13 +13,24 @@ import {
   Post,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { BadRequestException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { PasswordChangeService } from './password-change.service';
 import { FriendsService } from '../friends/friends.service';
 import { AuthCode } from '../../common/auth-code.enum';
 import { toPublicProfile } from './public-profile';
+import {
+  ChangePasswordDto,
+  ChangePasswordResponseDto,
+} from './dto/change-password.dto';
+import { isMfaPrivileged } from '../mfa/mfa-policy';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -41,12 +52,18 @@ export class UsersController {
     ]);
     if (!user) return null;
     // user is a Mongoose Document — spread via toObject() so we can add hasPassword.
-    const doc = user.toObject();
+    // The raw 2FA sub-document never leaves the server; only the two flags do.
+    const { mfa, ...doc } = user.toObject();
     return {
       ...doc,
       hasPassword,
-      // Role is populated on findById; expose the name (null → client shows "Member").
-      roleName: (doc.roleId as any)?.name ?? null,
+      // 2FA: enrolled, and required (Owner / Admin-like role, from the token claims).
+      mfaEnabled: mfa?.enabled === true,
+      mfaRequired: isMfaPrivileged(req.user),
+      // Google-invite onboarding gate (clients force "create your PON password").
+      mustSetPassword: doc.mustSetPassword === true,
+      // Effective role: Owner / Admin / Manager / Member (unassigned → Member).
+      roleName: await this.usersService.getRoleName(doc.roleId),
     };
   }
 
@@ -73,12 +90,11 @@ export class UsersController {
 
   @Post('me/change-password')
   @ApiOperation({
-    summary: 'Change (or set a first) password; signs out every OTHER session',
+    summary:
+      'Change (or set a first) password — also clears mustSetPassword; signs out every OTHER session',
   })
-  changePassword(
-    @Req() req: any,
-    @Body() body: { currentPassword?: string; newPassword?: string },
-  ) {
+  @ApiCreatedResponse({ type: ChangePasswordResponseDto })
+  changePassword(@Req() req: any, @Body() body: ChangePasswordDto) {
     return this.passwordChange.changePassword(
       req.user.sub,
       req.user.sid,
@@ -225,29 +241,35 @@ export class UsersController {
       throw new BadRequestException('Too many ids — max 100 per request');
     }
 
-    const [users, counts] = await Promise.all([
+    const [users, counts, roleNames] = await Promise.all([
       this.usersService.findManyByIds(unique),
       this.friendsService.countAcceptedForMany(unique),
+      this.usersService.getRoleNameMap(),
     ]);
 
-    return users.map((user) =>
-      toPublicProfile(user.toObject(), req.user.sub, {
+    return users.map((user) => {
+      const doc = user.toObject();
+      return toPublicProfile(doc, req.user.sub, {
         friendsCount: counts.get(String(user._id)) ?? 0,
-      }),
-    );
+        roleName: roleNames.get(String(doc.roleId ?? '')) ?? 'Member',
+      });
+    });
   }
 
   @Get(':id')
   async findById(@Req() req: any, @Param('id') id: string) {
     const user = await this.usersService.findById(id);
     if (!user) return user;
-    const [friendsCount, isBlockedByOwner] = await Promise.all([
+    const doc = user.toObject();
+    const [friendsCount, isBlockedByOwner, roleName] = await Promise.all([
       this.friendsService.countAccepted(id),
       this.usersService.isBlockedBy(id, req.user.sub),
+      this.usersService.getRoleName(doc.roleId),
     ]);
-    return toPublicProfile(user.toObject(), req.user.sub, {
+    return toPublicProfile(doc, req.user.sub, {
       friendsCount,
       isBlockedByOwner,
+      roleName,
     });
   }
 }

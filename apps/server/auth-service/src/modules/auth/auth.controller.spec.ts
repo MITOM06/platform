@@ -305,9 +305,10 @@ describe('AuthController — Google callback (invite accept + error redirects)',
       req.user,
     );
     expect(handleSocialLogin).not.toHaveBeenCalled();
+    // Google invite accept → a Google grant, so 2FA applies at exchange.
     expect(redis.set).toHaveBeenCalledWith(
       'login_code:test-id',
-      'new-user-id',
+      JSON.stringify({ userId: 'new-user-id', via: 'google' }),
       'EX',
       300,
     );

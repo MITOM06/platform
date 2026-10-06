@@ -5,8 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, isValidObjectId } from 'mongoose';
 import {
+  Role,
+  RoleDocument,
   User,
   UserDocument,
   UserBlock,
@@ -36,7 +38,29 @@ export class UsersService {
     private readonly firebaseAdmin: FirebaseAdminService,
     // Blocking someone also ends the friendship (both directions, pending too).
     private readonly friendsService: FriendsService,
+    @InjectModel(Role.name) private roleModel?: Model<RoleDocument>,
   ) {}
+
+  /**
+   * The effective role name for a user's `roleId`: the Role's name, or
+   * 'Member' when no role is assigned or it was deleted — the same fallback
+   * ClaimsService puts in the JWT, so /me and the token never disagree.
+   * Looked up by id because `User.roleId` has no Mongoose `ref` (adding one
+   * would turn `roleId` in every user payload into an object).
+   */
+  async getRoleName(roleId: unknown): Promise<string> {
+    const id = roleId?.toString();
+    if (!id || !isValidObjectId(id) || !this.roleModel) return 'Member';
+    const role = await this.roleModel.findById(id).select('name').lean().exec();
+    return role?.name ?? 'Member';
+  }
+
+  /** Every role's name by id, for batch profile lookups (a deployment has a handful of roles). */
+  async getRoleNameMap(): Promise<Map<string, string>> {
+    if (!this.roleModel) return new Map();
+    const roles = await this.roleModel.find().select('name').lean().exec();
+    return new Map(roles.map((r) => [String(r._id), r.name]));
+  }
 
   /**
    * Login / OTP lookup. The typed address is normalized (trim + lower-case)
@@ -168,9 +192,14 @@ export class UsersService {
       .exec();
   }
 
+  /**
+   * Single write path for a new password (change / first set / reset). Setting
+   * any password also completes the Google-invite onboarding step, so the
+   * `mustSetPassword` flag is cleared here.
+   */
   async updatePassword(userId: string, passwordHash: string): Promise<void> {
     await this.userModel.findByIdAndUpdate(userId, {
-      $set: { password: passwordHash },
+      $set: { password: passwordHash, mustSetPassword: false },
       $unset: { otpCode: '', otpExpires: '' },
     });
   }

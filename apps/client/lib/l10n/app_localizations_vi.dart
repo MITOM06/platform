@@ -4276,4 +4276,195 @@ class AppLocalizationsVi extends AppLocalizations {
   String adminRoleCloneDefaultName(String name) {
     return '$name (bản sao)';
   }
+
+  @override
+  String get setPasswordTitle => 'Tạo mật khẩu PON của bạn';
+
+  @override
+  String get setPasswordSubtitle =>
+      'Bạn đã tham gia bằng Google. Hãy tạo mật khẩu để có thể đăng nhập bằng email.';
+
+  @override
+  String get setPasswordSubmit => 'Tạo mật khẩu';
+
+  @override
+  String get setPasswordSuccess =>
+      'Đã tạo mật khẩu. Giờ bạn cũng có thể đăng nhập bằng email.';
+
+  @override
+  String get mfaVerifyTitle => 'Xác thực hai yếu tố';
+
+  @override
+  String get mfaVerifySubtitle =>
+      'Nhập mã 6 chữ số trong ứng dụng xác thực để hoàn tất đăng nhập.';
+
+  @override
+  String get mfaBackupSubtitle =>
+      'Nhập một trong các mã dự phòng (XXXXX-XXXXX). Mỗi mã chỉ dùng được một lần.';
+
+  @override
+  String get mfaCodeLabel => 'Mã 6 chữ số';
+
+  @override
+  String get mfaBackupCodeLabel => 'Mã dự phòng';
+
+  @override
+  String get mfaVerifyButton => 'Xác minh';
+
+  @override
+  String get mfaUseBackupCode => 'Dùng mã dự phòng';
+
+  @override
+  String get mfaUseAuthenticatorCode => 'Dùng ứng dụng xác thực';
+
+  @override
+  String get mfaBackToSignIn => 'Quay lại đăng nhập';
+
+  @override
+  String mfaBackupCodeUsed(int remaining) {
+    return 'Đã dùng mã dự phòng. Còn $remaining mã.';
+  }
+
+  @override
+  String get valMfaCodeInvalid => 'Nhập mã 6 chữ số.';
+
+  @override
+  String get valMfaBackupCodeInvalid => 'Nhập mã dự phòng dạng ABCDE-FGHIJ.';
+
+  @override
+  String get mfaEnrollTitle => 'Thiết lập xác thực hai yếu tố';
+
+  @override
+  String get mfaEnrollSubtitle =>
+      'Vai trò của bạn yêu cầu mã từ ứng dụng xác thực mỗi lần đăng nhập.';
+
+  @override
+  String get mfaEnrollStepInstall =>
+      '1. Cài Google Authenticator (hoặc một ứng dụng xác thực khác).';
+
+  @override
+  String get mfaEnrollStepScan =>
+      '2. Quét mã QR này, mở trong ứng dụng, hoặc nhập khóa thiết lập.';
+
+  @override
+  String get mfaEnrollStepCode => '3. Nhập mã 6 chữ số mà ứng dụng hiển thị.';
+
+  @override
+  String get mfaEnrollOpenApp => 'Mở trong ứng dụng xác thực';
+
+  @override
+  String get mfaEnrollNoApp =>
+      'Không tìm thấy ứng dụng xác thực. Hãy cài Google Authenticator hoặc nhập khóa thiết lập thủ công.';
+
+  @override
+  String get mfaEnrollManualKey => 'Khóa thiết lập';
+
+  @override
+  String get mfaCopyKey => 'Sao chép khóa';
+
+  @override
+  String get mfaKeyCopied => 'Đã sao chép khóa thiết lập';
+
+  @override
+  String get mfaQrSemantic => 'Mã QR cho ứng dụng xác thực';
+
+  @override
+  String get mfaEnrollConfirm => 'Xác nhận';
+
+  @override
+  String get mfaBackupCodesTitle => 'Lưu mã dự phòng';
+
+  @override
+  String get mfaBackupCodesSubtitle =>
+      'Mỗi mã cho phép đăng nhập một lần nếu bạn mất điện thoại. Các mã sẽ không hiển thị lại, hãy cất giữ ở nơi an toàn.';
+
+  @override
+  String get mfaCopyCodes => 'Sao chép mã';
+
+  @override
+  String get mfaCodesCopied => 'Đã sao chép mã dự phòng';
+
+  @override
+  String get mfaSavedCheckbox => 'Tôi đã lưu mã dự phòng';
+
+  @override
+  String get mfaContinue => 'Tiếp tục';
+
+  @override
+  String get securityMfaOn =>
+      'Mỗi lần đăng nhập đều cần mã từ ứng dụng xác thực.';
+
+  @override
+  String get securityMfaPending =>
+      'Bắt buộc với vai trò của bạn. Bạn sẽ thiết lập ở lần đăng nhập tới.';
+
+  @override
+  String get securityMfaStatusOn => 'Đang bật';
+
+  @override
+  String get securityMfaStatusOff => 'Chưa thiết lập';
+
+  @override
+  String get securityMfaRegenerate => 'Tạo lại mã dự phòng';
+
+  @override
+  String get securityMfaRegenerateHint =>
+      'Nhập mã hiện tại từ ứng dụng xác thực. Các mã dự phòng cũ sẽ không còn dùng được.';
+
+  @override
+  String get securityMfaRegenerateSubmit => 'Tạo mã';
+
+  @override
+  String get securityMfaDone => 'Xong';
+
+  @override
+  String get adminMfaBadge => 'Đã bật 2FA';
+
+  @override
+  String get adminMfaReset => 'Đặt lại 2FA';
+
+  @override
+  String adminMfaResetConfirm(String name) {
+    return 'Đặt lại xác thực hai yếu tố cho $name? Người này sẽ bị đăng xuất khỏi mọi thiết bị và phải thiết lập lại ở lần đăng nhập tới.';
+  }
+
+  @override
+  String get adminMfaResetDone =>
+      'Đã đặt lại 2FA. Người này sẽ thiết lập lại ở lần đăng nhập tới.';
+
+  @override
+  String get authMsgMfaRequired =>
+      'Nhập mã từ ứng dụng xác thực để hoàn tất đăng nhập.';
+
+  @override
+  String get authErrMfaTokenInvalid =>
+      'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+
+  @override
+  String get authErrMfaCodeInvalid => 'Mã không đúng. Vui lòng thử lại.';
+
+  @override
+  String authErrMfaCodeInvalidRemaining(int remaining) {
+    return 'Mã không đúng. Còn $remaining lần thử.';
+  }
+
+  @override
+  String get authErrMfaTooManyAttempts =>
+      'Nhập sai mã quá nhiều lần. Vui lòng đăng nhập lại.';
+
+  @override
+  String get authErrMfaNotEnrolled =>
+      'Tài khoản này chưa thiết lập xác thực hai yếu tố.';
+
+  @override
+  String get authErrMfaAlreadyEnrolled =>
+      'Tài khoản này đã thiết lập xác thực hai yếu tố.';
+
+  @override
+  String get authErrMfaResetForbidden =>
+      'Chỉ Chủ sở hữu mới có thể đặt lại xác thực hai yếu tố.';
+
+  @override
+  String get authErrMfaResetSelfForbidden =>
+      'Bạn không thể tự đặt lại xác thực hai yếu tố của chính mình.';
 }

@@ -1446,5 +1446,81 @@
   "errAssistantNotConfigured": "이 워크스페이스에서는 아직 개인 어시스턴트를 사용할 수 없습니다. 관리자에게 문의하세요.",
   "errAssistantUpstreamFailed": "어시스턴트 서비스가 응답하지 않았습니다. 잠시 후 다시 시도하세요.",
   "adminBotOwnedBy": "소유자: {name}",
-  "adminRoleCloneDefaultName": "{name} 사본"
+  "adminRoleCloneDefaultName": "{name} 사본",
+  "setPasswordTitle": "PON 비밀번호 만들기",
+  "setPasswordSubtitle": "Google로 가입하셨습니다. 이메일로도 로그인할 수 있도록 비밀번호를 만드세요.",
+  "setPasswordSubmit": "비밀번호 만들기",
+  "setPasswordSuccess": "비밀번호가 만들어졌습니다. 이제 이메일로도 로그인할 수 있습니다.",
+  "mfaVerifyTitle": "2단계 인증",
+  "mfaVerifySubtitle": "로그인을 완료하려면 인증 앱에 표시된 6자리 코드를 입력하세요.",
+  "mfaBackupSubtitle": "백업 코드(XXXXX-XXXXX) 중 하나를 입력하세요. 각 코드는 한 번만 사용할 수 있습니다.",
+  "mfaCodeLabel": "6자리 코드",
+  "mfaBackupCodeLabel": "백업 코드",
+  "mfaVerifyButton": "확인",
+  "mfaUseBackupCode": "백업 코드 사용",
+  "mfaUseAuthenticatorCode": "인증 앱 사용",
+  "mfaBackToSignIn": "로그인으로 돌아가기",
+  "mfaBackupCodeUsed": "백업 코드를 사용했습니다. 남은 백업 코드: {remaining}개.",
+  "@mfaBackupCodeUsed": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "valMfaCodeInvalid": "6자리 코드를 입력하세요.",
+  "valMfaBackupCodeInvalid": "ABCDE-FGHIJ 형식의 백업 코드를 입력하세요.",
+  "mfaEnrollTitle": "2단계 인증 설정",
+  "mfaEnrollSubtitle": "회원님의 역할은 로그인할 때마다 인증 앱의 코드가 필요합니다.",
+  "mfaEnrollStepInstall": "1. Google Authenticator(또는 다른 인증 앱)를 설치하세요.",
+  "mfaEnrollStepScan": "2. 이 QR 코드를 스캔하거나, 앱에서 열거나, 설정 키를 입력하세요.",
+  "mfaEnrollStepCode": "3. 앱에 표시된 6자리 코드를 입력하세요.",
+  "mfaEnrollOpenApp": "인증 앱에서 열기",
+  "mfaEnrollNoApp": "인증 앱을 찾을 수 없습니다. Google Authenticator를 설치하거나 설정 키를 직접 입력하세요.",
+  "mfaEnrollManualKey": "설정 키",
+  "mfaCopyKey": "키 복사",
+  "mfaKeyCopied": "설정 키를 복사했습니다",
+  "mfaQrSemantic": "인증 앱용 QR 코드",
+  "mfaEnrollConfirm": "확인",
+  "mfaBackupCodesTitle": "백업 코드 저장",
+  "mfaBackupCodesSubtitle": "휴대폰을 잃어버린 경우 각 코드로 한 번 로그인할 수 있습니다. 다시 표시되지 않으니 안전한 곳에 보관하세요.",
+  "mfaCopyCodes": "코드 복사",
+  "mfaCodesCopied": "백업 코드를 복사했습니다",
+  "mfaSavedCheckbox": "백업 코드를 저장했습니다",
+  "mfaContinue": "계속",
+  "securityMfaOn": "로그인할 때마다 인증 앱의 코드가 필요합니다.",
+  "securityMfaPending": "회원님의 역할에 필수입니다. 다음 로그인 시 설정합니다.",
+  "securityMfaStatusOn": "켜짐",
+  "securityMfaStatusOff": "설정 안 됨",
+  "securityMfaRegenerate": "백업 코드 재생성",
+  "securityMfaRegenerateHint": "인증 앱의 현재 코드를 입력하세요. 기존 백업 코드는 더 이상 사용할 수 없습니다.",
+  "securityMfaRegenerateSubmit": "생성",
+  "securityMfaDone": "완료",
+  "adminMfaBadge": "2FA 켜짐",
+  "adminMfaReset": "2FA 재설정",
+  "adminMfaResetConfirm": "{name}님의 2단계 인증을 재설정할까요? 모든 기기에서 로그아웃되며 다음 로그인 시 다시 설정해야 합니다.",
+  "@adminMfaResetConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminMfaResetDone": "2FA를 재설정했습니다. 다음 로그인 시 다시 설정하게 됩니다.",
+  "authMsgMfaRequired": "로그인을 완료하려면 인증 앱의 코드를 입력하세요.",
+  "authErrMfaTokenInvalid": "로그인 시간이 만료되었습니다. 다시 로그인하세요.",
+  "authErrMfaCodeInvalid": "코드가 틀렸습니다. 다시 시도하세요.",
+  "authErrMfaCodeInvalidRemaining": "코드가 틀렸습니다. 남은 시도 횟수: {remaining}회.",
+  "@authErrMfaCodeInvalidRemaining": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "authErrMfaTooManyAttempts": "잘못된 코드를 너무 많이 입력했습니다. 다시 로그인하세요.",
+  "authErrMfaNotEnrolled": "이 계정은 아직 2단계 인증이 설정되지 않았습니다.",
+  "authErrMfaAlreadyEnrolled": "이 계정은 이미 2단계 인증이 설정되어 있습니다.",
+  "authErrMfaResetForbidden": "소유자만 2단계 인증을 재설정할 수 있습니다.",
+  "authErrMfaResetSelfForbidden": "본인의 2단계 인증은 재설정할 수 없습니다."
 }

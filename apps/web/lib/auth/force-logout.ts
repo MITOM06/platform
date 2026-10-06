@@ -43,6 +43,12 @@ export const LOGIN_NOTICES = [
   'OIDC_NO_STATE',
   'OIDC_BAD_STATE',
   'OIDC_EXCHANGE_FAILED',
+  // The 2FA step (`/mfa`) became unusable — expired/used token, too many wrong
+  // codes, wrong step — and the user must sign in again (see lib/auth/mfa.ts).
+  'MFA_TOKEN_INVALID',
+  'MFA_TOO_MANY_ATTEMPTS',
+  'MFA_NOT_ENROLLED',
+  'MFA_ALREADY_ENROLLED',
   'GENERIC_ERROR',
 ] as const
 export type LoginNotice = (typeof LOGIN_NOTICES)[number]

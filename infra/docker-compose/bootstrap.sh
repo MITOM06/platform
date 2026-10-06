@@ -38,6 +38,8 @@ fill_secret() {
 
 fill_secret JWT_ACCESS_SECRET  "openssl rand -hex 32"
 fill_secret JWT_REFRESH_SECRET "openssl rand -hex 32"
+# auth-service session secret; also the root of the 2FA secret-encryption key.
+fill_secret SESSION_SECRET     "openssl rand -hex 32"
 fill_secret CONNECTOR_VAULT_KEY "openssl rand -base64 32"
 fill_secret INTERNAL_API_KEY   "openssl rand -hex 32"
 # LiveKit media server (calls + meetings). The key is a public name, the secret

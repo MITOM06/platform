@@ -2159,5 +2159,81 @@
         "type": "String"
       }
     }
-  }
+  },
+  "setPasswordTitle": "Create your PON password",
+  "setPasswordSubtitle": "You joined with Google. Create a password so you can also sign in with your email.",
+  "setPasswordSubmit": "Create password",
+  "setPasswordSuccess": "Password created. You can now also sign in with your email.",
+  "mfaVerifyTitle": "Two-factor authentication",
+  "mfaVerifySubtitle": "Enter the 6-digit code from your authenticator app to finish signing in.",
+  "mfaBackupSubtitle": "Enter one of your backup codes (XXXXX-XXXXX). Each code works only once.",
+  "mfaCodeLabel": "6-digit code",
+  "mfaBackupCodeLabel": "Backup code",
+  "mfaVerifyButton": "Verify",
+  "mfaUseBackupCode": "Use a backup code",
+  "mfaUseAuthenticatorCode": "Use your authenticator app instead",
+  "mfaBackToSignIn": "Back to sign in",
+  "mfaBackupCodeUsed": "Backup code used. {remaining} backup code(s) left.",
+  "@mfaBackupCodeUsed": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "valMfaCodeInvalid": "Enter the 6-digit code.",
+  "valMfaBackupCodeInvalid": "Enter a backup code like ABCDE-FGHIJ.",
+  "mfaEnrollTitle": "Set up two-factor authentication",
+  "mfaEnrollSubtitle": "Your role requires a code from an authenticator app every time you sign in.",
+  "mfaEnrollStepInstall": "1. Install Google Authenticator (or another authenticator app).",
+  "mfaEnrollStepScan": "2. Scan this QR code, open it in the app, or enter the setup key.",
+  "mfaEnrollStepCode": "3. Enter the 6-digit code the app shows.",
+  "mfaEnrollOpenApp": "Open in authenticator app",
+  "mfaEnrollNoApp": "No authenticator app found. Install Google Authenticator or enter the setup key manually.",
+  "mfaEnrollManualKey": "Setup key",
+  "mfaCopyKey": "Copy key",
+  "mfaKeyCopied": "Setup key copied",
+  "mfaQrSemantic": "QR code for your authenticator app",
+  "mfaEnrollConfirm": "Confirm",
+  "mfaBackupCodesTitle": "Save your backup codes",
+  "mfaBackupCodesSubtitle": "Each code lets you sign in once if you lose your phone. They won't be shown again, so keep them somewhere safe.",
+  "mfaCopyCodes": "Copy codes",
+  "mfaCodesCopied": "Backup codes copied",
+  "mfaSavedCheckbox": "I saved my backup codes",
+  "mfaContinue": "Continue",
+  "securityMfaOn": "A code from your authenticator app is required every time you sign in.",
+  "securityMfaPending": "Required for your role. You'll set it up at your next sign-in.",
+  "securityMfaStatusOn": "On",
+  "securityMfaStatusOff": "Not set up",
+  "securityMfaRegenerate": "Regenerate backup codes",
+  "securityMfaRegenerateHint": "Enter a current code from your authenticator app. Your old backup codes will stop working.",
+  "securityMfaRegenerateSubmit": "Generate",
+  "securityMfaDone": "Done",
+  "adminMfaBadge": "2FA on",
+  "adminMfaReset": "Reset 2FA",
+  "adminMfaResetConfirm": "Reset two-factor authentication for {name}? They will be signed out everywhere and must set it up again at their next sign-in.",
+  "@adminMfaResetConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminMfaResetDone": "2FA reset. They'll set it up again at their next sign-in.",
+  "authMsgMfaRequired": "Enter the code from your authenticator app to finish signing in.",
+  "authErrMfaTokenInvalid": "Your sign-in has expired. Please sign in again.",
+  "authErrMfaCodeInvalid": "Incorrect code. Please try again.",
+  "authErrMfaCodeInvalidRemaining": "Incorrect code. {remaining} attempt(s) remaining.",
+  "@authErrMfaCodeInvalidRemaining": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "authErrMfaTooManyAttempts": "Too many incorrect codes. Please sign in again.",
+  "authErrMfaNotEnrolled": "Two-factor authentication isn't set up for this account yet.",
+  "authErrMfaAlreadyEnrolled": "Two-factor authentication is already set up for this account.",
+  "authErrMfaResetForbidden": "Only an Owner can reset two-factor authentication.",
+  "authErrMfaResetSelfForbidden": "You can't reset your own two-factor authentication."
 }

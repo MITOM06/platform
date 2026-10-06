@@ -7,6 +7,7 @@ import '../../../../core/widgets/pon_widgets.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../utils/change_password_error.dart';
 import '../../../auth/ui/widgets/password_strength_indicator.dart';
+import '../../../auth/utils/password_policy.dart';
 
 void showChangePasswordDialog(BuildContext context, WidgetRef ref) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -53,28 +54,9 @@ class __ChangePasswordDialogContentState
     // one for the first time. The server enforces the current-password check
     // only for accounts that already have a password.
     // Enforce the same strong-password requirements as the invitation accept form.
-    if (newPass.isEmpty) {
-      setState(() => _errorText = context.l10n.valPasswordRequired);
-      return;
-    }
-    if (newPass.length < 8) {
-      setState(() => _errorText = context.l10n.valPasswordMin8);
-      return;
-    }
-    if (!newPass.contains(RegExp(r'[A-Z]'))) {
-      setState(() => _errorText = context.l10n.valPasswordUppercase);
-      return;
-    }
-    if (!newPass.contains(RegExp(r'[a-z]'))) {
-      setState(() => _errorText = context.l10n.valPasswordLowercase);
-      return;
-    }
-    if (!newPass.contains(RegExp(r'[0-9]'))) {
-      setState(() => _errorText = context.l10n.valPasswordDigit);
-      return;
-    }
-    if (!newPass.contains(RegExp(r'[!@#$%^&*]'))) {
-      setState(() => _errorText = context.l10n.valPasswordSpecial);
+    final policyError = newPasswordPolicyError(context.l10n, newPass);
+    if (policyError != null) {
+      setState(() => _errorText = policyError);
       return;
     }
     if (newPass != confirmPass) {

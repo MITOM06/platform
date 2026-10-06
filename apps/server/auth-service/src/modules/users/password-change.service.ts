@@ -4,11 +4,13 @@ import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from '@platform/database';
 import { AuthCode } from '../../common/auth-code.enum';
+import { MIN_PASSWORD_LENGTH } from '../../common/password-policy';
 import { SessionService } from '../auth/session.service';
 import { UsersService } from './users.service';
 
-/** Same floor as invitation accept (AcceptInvitationPasswordDto) and both clients. */
-export const MIN_PASSWORD_LENGTH = 8;
+// Same floor as invitation accept, reset and both clients (re-exported for
+// existing importers).
+export { MIN_PASSWORD_LENGTH };
 
 /**
  * 409 body carrying BOTH the typed code (new clients map it) and the legacy

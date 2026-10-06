@@ -12,6 +12,7 @@ import '../domain/invitation_preview_provider.dart';
 import '../utils/auth_error.dart';
 import 'widgets/accept_invite_password_form.dart';
 import 'widgets/invite_status_view.dart';
+import 'widgets/read_only_email_field.dart';
 import 'widgets/terms_agreement_row.dart';
 
 /// `/invite/:token` — accept an admin invitation either with Google (the
@@ -126,7 +127,7 @@ class _AcceptInviteScreenState extends ConsumerState<AcceptInviteScreen> {
               style: TextStyle(color: AppTheme.mutedText(context)),
             ),
             const SizedBox(height: 20),
-            _ReadOnlyEmail(email: preview.email),
+            ReadOnlyEmailField(email: preview.email),
             const SizedBox(height: 16),
             TermsAgreementRow(
               value: _agreedToTerms,
@@ -170,26 +171,6 @@ class _AcceptInviteScreenState extends ConsumerState<AcceptInviteScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _ReadOnlyEmail extends StatelessWidget {
-  final String email;
-  const _ReadOnlyEmail({required this.email});
-
-  @override
-  Widget build(BuildContext context) {
-    return InputDecorator(
-      decoration: InputDecoration(
-        labelText: context.l10n.fieldEmail,
-        prefixIcon: const Icon(Icons.email_rounded),
-        enabled: false,
-      ),
-      child: Text(
-        email,
-        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
       ),
     );
   }

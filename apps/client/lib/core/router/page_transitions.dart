@@ -3,6 +3,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
 
 import '../theme/motion.dart';
+import 'route_guard.dart';
 
 /// Directional page motion for the whole app.
 ///
@@ -64,6 +65,13 @@ class PageNavDirection {
   }
 
   static bool _isBackward(String from, String to) {
+    // The forced "create your password" gate is a one-way step: arriving
+    // (from login or an invite) and leaving it (home, theme onboarding,
+    // sign-out) always read as moving forward.
+    if (from == kSetPasswordPath || to == kSetPasswordPath) return false;
+    // The 2FA step sits after sign-in: arriving reads as forward, leaving is
+    // forward too (home, set-password, onboarding) — except "Back to sign in".
+    if (from == kMfaPath) return to == '/login';
     final int? fromStep = _stepOf(from);
     final int? toStep = _stepOf(to);
     // Inside the auth flow: compare steps.
