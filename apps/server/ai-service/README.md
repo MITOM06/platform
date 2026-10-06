@@ -16,6 +16,7 @@ REST routes exist for health, usage dashboards and session inspection.
 | `memory` | Long-term facts: extraction every N turns, dedup, half-life decay, stored in Mongo + a Qdrant memory collection |
 | `kb` | Knowledge Base / RAG: parses PDF·DOCX·TXT, chunks, embeds via Voyage AI, upserts to Qdrant, hybrid retrieval with a score threshold |
 | `tools` | Built-in tools (reminders, web search, …) plus the per-user MCP tools fetched from connector-service |
+| `actions` | Sensitive connector writes held for the requester's in-chat confirmation; confirm/cancel API, follow-up reply |
 | `skills` | Reads `user_skills` to decide which capability bundles are on for this member |
 | `persona` | Per-conversation AI persona (name + instructions) |
 | `session` | Assembles the message pairs sent to the Anthropic API |
@@ -30,8 +31,10 @@ REST routes exist for health, usage dashboards and session inspection.
 | Direction | Channel | Payload |
 |---|---|---|
 | **consume** | RabbitMQ queue `ai.requests` (exchange `ai.direct`, key `ai.request`) | `{conversationId, userId, displayName, content, history[]}` |
-| **publish** | Redis `ai:response:{conversationId}` | `{type: AI_STREAM_CHUNK \| AI_STREAM_DONE \| AI_STREAM_ERROR, chunk?, fullContent?}` |
+| **publish** | Redis `ai:response:{conversationId}` | `{type: AI_STREAM_CHUNK \| AI_TOOL_CALL \| AI_ACTION_PENDING \| AI_STREAM_DONE \| AI_STREAM_ERROR, …}` — every event carries `conversationId`, `replyId`, `requesterId` |
+| **publish** | Redis `ai:action:resolved` | `{actionId, conversationId, replyId, status: confirmed \| failed \| cancelled, resultSummary?}` |
 | **subscribe** | Redis `kb:process`, `kb:delete` | KB indexing / deletion jobs |
+| **subscribe** | Redis `ai:memory:delete` | `{conversationId, userId}` (both required) — drop that member's memory vectors |
 
 `ai.requests` is declared durable with a 30 s TTL and dead-letters to `ai.requests.dlq` via
 `ai.dead-letter`. chat-service declares the same topology — **the arguments must match on both sides**,
@@ -43,10 +46,36 @@ after an older build left an arg-less queue behind, delete the queue and let it 
 | Route | Purpose |
 |---|---|
 | `GET /health` | liveness |
-| `GET /usage/...` | token usage + admin quality dashboard |
+| `GET /usage/quota` | the caller's monthly quota `{used, limit, periodStart, periodEnd}` (JWT) |
+| `GET /usage/dashboard` | admin usage & quality dashboard (`MANAGE_WORKSPACE`) |
+| `POST /ai/actions/:id/confirm` | run a pending action once with its stored input → `{status: confirmed \| failed}` (JWT, requester only) |
+| `POST /ai/actions/:id/cancel` | drop a pending action → `{status: cancelled}` (JWT, requester only) |
 | `/api/sessions/...` | session inspection |
 
+Through the mini's Caddy every route is under `/api/ai` (e.g. `/api/ai/ai/actions/:id/confirm`).
 Swagger UI: `http://localhost:3002/docs`.
+
+## Confirming sensitive actions
+
+connector-service lists every non-read-only tool with `sensitive: true` (`GET /internal/tools`). The loop
+never runs such a tool itself — unless its name is in the low-risk allow-list (`create_draft`); built-in
+tools never need confirmation. Instead it:
+
+1. stores `ai:pending-action:{id}` (requester, conversation, reply, tool, **input**, humanized `summary`,
+   `expiresAt` = now + `AI_PENDING_ACTION_TTL_SEC`),
+2. answers the tool call with "waiting for the user's confirmation — not performed",
+3. publishes `AI_ACTION_PENDING {action}` and lists the action in that reply's `AI_STREAM_DONE.pendingActions`.
+
+`action` = `{id, toolName, provider, summary: {kind, …}, status: "pending", expiresAt}`; `summary.kind` is
+`send_email | draft_email` (`to`, `subject`), `create_event | update_event` (`title`, `start`, `end`),
+`create_page | update_page` (`title`) or `generic` (`tool`) — no bodies, ids or links, lengths capped.
+
+Confirm/cancel check ownership first (403 `ACTION_NOT_OWNER`, nothing consumed), then take a single-use
+claim (409 `ACTION_ALREADY_RESOLVED`); unknown → 404 `ACTION_NOT_FOUND`, past `expiresAt` → 410
+`ACTION_EXPIRED`. Confirm runs the **stored** input through the connector client (the body is never read),
+publishes `ai:action:resolved` and posts a short follow-up AI reply (new `replyId`, persona, usage
+recorded). A connector tool the model asks for that was not offered in the request is refused, and a reply
+that ends in an error drops its pending actions.
 
 ## Configuration
 
@@ -64,7 +93,20 @@ QDRANT_URL=http://localhost:6333
 VOYAGE_API_KEY=...                                # unset ⇒ embeddings off ⇒ RAG + memory degrade
 CONNECTOR_INTERNAL_URL=http://localhost:3003      # per-user MCP tools
 INTERNAL_API_KEY=...                              # must match connector-service
+CHAT_INTERNAL_URL=http://localhost:8080           # Docker: http://chat-service:8080
 ```
+
+Tuning added with the 2026-10 QC sweep (defaults shown):
+
+| Var | Default | Effect |
+|---|---|---|
+| `AI_HISTORY_WINDOW` | `20` | latest AI-session turns sent verbatim (older ones only via the compacted summary; `0` = no cap) |
+| `AI_GROUP_CONTEXT_MESSAGES` | `20` | latest group/DM messages shown to the AI as attributed context when @mentioned |
+| `CHAT_VISION_FETCH_TIMEOUT_MS` | `10000` | per-image fetch budget for chat vision |
+| `CONNECTOR_READ_TIMEOUT_MS` | `5000` | connector tool listing + read-only calls |
+| `CONNECTOR_WRITE_TIMEOUT_MS` | `30000` | connector writes; a timed-out write is reported as "may have happened", never retried |
+| `AI_PENDING_ACTION_TTL_SEC` | `600` | how long a sensitive action waits for confirmation (the Redis key lives 5 min longer for the 410) |
+| `AI_TIMEZONE` | `Asia/Ho_Chi_Minh` | clock, reminder times without offset, daily-digest day window |
 
 Feature groups, all env-driven: `ANTHROPIC_ROUTER_*` (route simple/mid/complex prompts to different
 models), `AI_PROMPT_CACHE_*` / `AI_RESPONSE_CACHE_*`, `AI_RATE_*` (per-user rate limit),

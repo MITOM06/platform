@@ -1,21 +1,30 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
-import {
-  IsNotEmpty,
-  IsObject,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsNotEmpty, IsObject, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { InternalKeyGuard } from './internal-key.guard';
 import { InternalService } from './internal.service';
 
-class CallToolDto {
+/**
+ * Member ids are plain strings (Mongo ObjectIds in practice). Validating the
+ * shape keeps a query like `?userId[$ne]=x` (or a JSON object in the body)
+ * from ever reaching a Mongo filter as an operator, should the internal key leak.
+ */
+export const USER_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
+
+export class ToolsQueryDto {
   @IsString()
-  @IsNotEmpty()
+  @Matches(USER_ID_PATTERN, { message: 'userId must be a plain id' })
+  userId: string;
+}
+
+export class CallToolDto {
+  @IsString()
+  @Matches(USER_ID_PATTERN, { message: 'userId must be a plain id' })
   userId: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(256)
   name: string;
 
   @IsOptional()
@@ -32,13 +41,14 @@ export class InternalController {
   @Get('tools')
   @ApiOperation({ summary: 'Aggregated dynamic tools for a user (ai-service)' })
   @ApiQuery({ name: 'userId', required: true })
-  getTools(@Query('userId') userId: string) {
-    return this.service.getTools(userId);
+  getTools(@Query() query: ToolsQueryDto) {
+    return this.service.getTools(query.userId);
   }
 
   @Post('tools/call')
   @ApiOperation({ summary: 'Execute a dynamic tool by namespaced name' })
-  callTool(@Body() dto: CallToolDto) {
-    return this.service.callTool(dto.userId, dto.name, dto.input ?? {});
+  async callTool(@Body() dto: CallToolDto) {
+    const { result } = await this.service.callTool(dto.userId, dto.name, dto.input ?? {});
+    return { result };
   }
 }

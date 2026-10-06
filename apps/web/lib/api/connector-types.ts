@@ -20,15 +20,22 @@ export interface CatalogEntry {
   description: string
   scopes: string[]
   authType: ConnectorAuthType
-  mcpUrl: string
+  /** Governance tier — decides which capability connecting needs. */
+  tier?: DirectoryTier
   available: boolean
 }
 
-/** `GET /connections?userId=` item — metadata only, never secrets. */
+/** Who a connection belongs to: the caller only, or the whole workspace. */
+export type ConnectionScope = 'personal' | 'workspace'
+
+/** `GET /connections` item — metadata only, never secrets. */
 export interface ConnectionView {
   id: string
   provider: string
+  /** `expired` ⇒ the refresh token died: the member must reconnect. */
   status: ConnectionStatus
+  /** Workspace connections are shared org-wide (disconnect needs CONNECT_WORKSPACE_CONNECTOR). */
+  scope?: ConnectionScope
   scopes: string[]
   accountLabel: string | null
   lastUsedAt: string | null
@@ -70,6 +77,18 @@ export interface CustomMcpInput {
   url: string
   authType: ConnectorAuthType
   credential?: string
+}
+
+/** `GET /custom-mcp` item — the caller's own servers (URL redacted, no credential). */
+export interface CustomMcpServer {
+  id: string
+  name: string
+  /** Redacted by the server; never rendered (internal endpoint). */
+  url?: string
+  authType: ConnectorAuthType
+  hasCredential: boolean
+  toolsPreview: McpToolPreview[]
+  createdAt?: string
 }
 
 /** `GET /skills?userId=` item / `PUT /skills` payload shape. */

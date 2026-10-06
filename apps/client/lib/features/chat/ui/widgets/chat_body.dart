@@ -272,15 +272,22 @@ class _ChatMessageListSection extends ConsumerWidget {
       isLoadingMore: isLoadingMore,
     );
 
+    // Unpinning is admin-only in groups; others just see the bar.
+    final canUnpin = ref.watch(conversationProvider(conversationId)
+            .select((c) => c?.canManage(currentUserId))) ??
+        !isGroup;
+
     return Column(
       children: [
         if (pinnedMessages.isNotEmpty)
           PinnedMessageBar(
             pinned: pinnedMessages.first,
             onTap: () => onJump(pinnedMessages.first.id),
-            onDismiss: () => ref
-                .read(chatNotifierProvider(conversationId).notifier)
-                .unpinMessage(pinnedMessages.first.id),
+            onDismiss: canUnpin
+                ? () => ref
+                    .read(chatNotifierProvider(conversationId).notifier)
+                    .unpinMessage(pinnedMessages.first.id)
+                : null,
           ),
         Expanded(
           child: ChatMessageList(
@@ -322,8 +329,8 @@ class _TypingIndicatorSection extends ConsumerWidget {
       return (msgs == null || msgs.isEmpty) ? null : msgs.first.senderId;
     }));
 
-    final visible = (typingUserIds.isNotEmpty &&
-            !typingUserIds.contains(currentUserId)) ||
+    // Only OTHER people's typing counts — our own echo must never hide it.
+    final visible = typingUserIds.any((id) => id != currentUserId) ||
         ((otherUserId?.startsWith('extbot:') ?? false) &&
             newestSenderId == currentUserId);
 

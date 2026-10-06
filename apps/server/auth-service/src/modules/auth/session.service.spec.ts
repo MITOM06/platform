@@ -100,6 +100,19 @@ describe('SessionService.rotateRefreshToken', () => {
     expect(result.userId).toBe('u1');
     expect(result.newRefreshToken).toMatch(/^v4\./);
     expect(redis.eval).toHaveBeenCalled();
+    expect(result.claimsAt).toBeUndefined();
+  });
+
+  it('a claims-stale session still rotates and reports its claimsAt', async () => {
+    redis.hgetall.mockResolvedValue(sessionData({ claimsAt: '1700000005' }));
+
+    const result = await service.rotateRefreshToken({
+      sid: 's1',
+      refreshToken: CURRENT_TOKEN,
+    });
+
+    expect(result.newRefreshToken).toMatch(/^v4\./);
+    expect(result.claimsAt).toBe(1_700_000_005);
   });
 
   it('treats the previous token WITHIN the grace window as a benign race (no revoke)', async () => {
@@ -136,6 +149,20 @@ describe('SessionService.rotateRefreshToken', () => {
 
     expect(code).toBe(AuthCode.REFRESH_TOKEN_INVALID);
     expect(redis.multi).not.toHaveBeenCalled();
+  });
+
+  it('a forged OLDER-version token (v0.x) is just invalid — it must not revoke the session', async () => {
+    // The v<n> prefix is caller-supplied; anyone who knows a sid could otherwise
+    // log its owner out by sending "v0.anything".
+    redis.hgetall.mockResolvedValue(
+      sessionData({ rotatedAt: (Date.now() - 600_000).toString() }),
+    );
+
+    const code = await rotateExpectingCode('v0.forged-older-version');
+
+    expect(code).toBe(AuthCode.REFRESH_TOKEN_INVALID);
+    expect(redis.multi).not.toHaveBeenCalled();
+    expect(redis.pipeline).not.toHaveBeenCalled();
   });
 
   it('rejects a revoked session', async () => {
@@ -230,6 +257,53 @@ describe('SessionService.revokeAllSessions / refresh-owner helpers', () => {
     expect(redis.hget).toHaveBeenCalledWith('sess:s1', 'userId');
     redis.hget.mockResolvedValue(null);
     await expect(service.peekSessionUserId('gone')).resolves.toBeNull();
+  });
+
+  it('revokeSession only revokes a session the user owns (logout cannot hit others)', async () => {
+    const multi = {
+      hset: jest.fn().mockReturnThis(),
+      srem: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValue([]),
+    };
+    (redis as any).multi = jest.fn().mockReturnValue(multi);
+    (redis as any).srem = jest.fn().mockResolvedValue(1);
+
+    // carol's session presented by eve → refused, nothing written.
+    redis.hget.mockResolvedValue('carol');
+    await expect(service.revokeSession('eve', 's-carol')).resolves.toBe(false);
+    expect((redis as any).multi).not.toHaveBeenCalled();
+
+    // Own session → revoked.
+    redis.hget.mockResolvedValue('eve');
+    await expect(service.revokeSession('eve', 's-eve')).resolves.toBe(true);
+    expect(multi.hset).toHaveBeenCalledWith('sess:s-eve', { revoked: '1' });
+    expect(multi.srem).toHaveBeenCalledWith('user:eve:sessions', 's-eve');
+
+    // Missing sid → no `sess:undefined` written; expired hash → only the own set is cleaned.
+    (redis as any).multi.mockClear();
+    redis.hget.mockClear();
+    await expect(service.revokeSession('eve', undefined as any)).resolves.toBe(false);
+    await expect(service.revokeSession('eve', '')).resolves.toBe(false);
+    expect(redis.hget).not.toHaveBeenCalled();
+    redis.hget.mockResolvedValue(null);
+    await expect(service.revokeSession('eve', 's-gone')).resolves.toBe(false);
+    expect((redis as any).srem).toHaveBeenCalledWith('user:eve:sessions', 's-gone');
+    expect((redis as any).multi).not.toHaveBeenCalled();
+  });
+
+  it('revokeOtherSessions keeps the caller session and does not broadcast a user-wide revoke', async () => {
+    redis.smembers.mockResolvedValue(['keep', 'a', 'b']);
+    await expect(service.revokeOtherSessions('u1', 'keep')).resolves.toBe(2);
+    expect(pipe.hset).toHaveBeenCalledWith('sess:a', { revoked: '1' });
+    expect(pipe.hset).toHaveBeenCalledWith('sess:b', { revoked: '1' });
+    expect(pipe.hset).not.toHaveBeenCalledWith('sess:keep', expect.anything());
+    // auth:sessions-revoked closes EVERY socket of the user (incl. the caller's).
+    expect(redis.publish).not.toHaveBeenCalled();
+
+    redis.smembers.mockResolvedValue(['keep']);
+    pipe.exec.mockClear();
+    await expect(service.revokeOtherSessions('u1', 'keep')).resolves.toBe(0);
+    expect(pipe.exec).not.toHaveBeenCalled();
   });
 
   it('refreshTokenBelongsToSession matches current or previous hash only', async () => {

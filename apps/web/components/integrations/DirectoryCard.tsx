@@ -4,6 +4,9 @@ import { useTranslations } from 'next-intl'
 import { Loader2, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { connectionState } from '@/lib/integrations/gating'
+import { authModeLabelKey } from '@/lib/integrations/labels'
+import { StatusPill } from './ConnectorCard'
 import type { DirectoryEntry, ConnectionView } from '@/lib/api/connector-types'
 
 const DIRECTORY_LOGO_URLS: Record<string, string> = {
@@ -52,10 +55,12 @@ interface DirectoryCardProps {
   entry: DirectoryEntry
   connection?: ConnectionView
   connecting?: boolean
-  disconnecting?: boolean
+  /** The caller holds the capability this entry's tier needs. */
+  canConnect: boolean
   isAdmin?: boolean
   onConnect: (entry: DirectoryEntry) => void
-  onDisconnect: (connection: ConnectionView) => void
+  /** Opens the manage dialog (details + confirm-to-disconnect). */
+  onManage: (connection: ConnectionView) => void
   onEdit?: (entry: DirectoryEntry) => void
   onDelete?: (entry: DirectoryEntry) => void
 }
@@ -64,23 +69,23 @@ export function DirectoryCard({
   entry,
   connection,
   connecting,
-  disconnecting,
+  canConnect,
   isAdmin,
   onConnect,
-  onDisconnect,
+  onManage,
   onEdit,
   onDelete,
 }: DirectoryCardProps) {
   const t = useTranslations('integrations')
-  const isConnected = connection?.status === 'active'
+  const state = connectionState(connection)
+  const isConnected = state === 'connected'
 
   return (
     <div
       className={cn(
-        'relative flex flex-col rounded-xl border p-[18px] overflow-hidden min-h-[170px]',
-        'bg-gradient-to-b from-card to-muted/40',
-        isConnected &&
-          'border-pon-green/40',
+        'relative flex flex-col rounded-xl border bg-card p-[18px] overflow-hidden min-h-[170px]',
+        isConnected && 'border-pon-green/40',
+        state === 'expired' && 'border-destructive/40',
       )}
     >
       <div className="flex items-start gap-3">
@@ -89,13 +94,15 @@ export function DirectoryCard({
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="m-0 text-[15.5px] font-semibold truncate">{entry.name}</h3>
-          <div className="flex items-center gap-1.5 mt-1">
-            <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide">
+          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+            <span className="text-[11px] text-muted-foreground">
               {t(`tier_${entry.tier}` as 'tier_both')}
             </span>
-            <span className="font-mono text-[10px] text-primary/80 uppercase tracking-wide">
-              · {entry.authMode}
+            <span className="text-[11px] text-muted-foreground">
+              · {t(authModeLabelKey(entry.authMode))}
             </span>
+            {isConnected && <StatusPill variant="on" label={t('statusConnected')} />}
+            {state === 'expired' && <StatusPill variant="warn" label={t('statusReconnect')} />}
           </div>
         </div>
         {isAdmin && (
@@ -130,31 +137,40 @@ export function DirectoryCard({
 
       <div className="flex items-center justify-between mt-3.5 gap-2.5">
         <span className="font-mono text-[10.5px] text-muted-foreground/70 tracking-wide truncate">
-          {isConnected && connection?.accountLabel
+          {state !== 'none' && connection?.accountLabel
             ? t('metaAccount', { label: connection.accountLabel })
             : t('metaRemote')}
         </span>
-        {isConnected ? (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-muted-foreground"
-            disabled={disconnecting}
-            onClick={() => connection && onDisconnect(connection)}
-          >
-            {disconnecting ? <Loader2 className="size-4 animate-spin" /> : t('manage')}
-          </Button>
+        {state !== 'none' && connection ? (
+          <div className="flex items-center gap-0.5">
+            {state === 'expired' && canConnect && (
+              <Button size="sm" disabled={connecting} onClick={() => onConnect(entry)}>
+                {connecting ? <Loader2 className="size-4 animate-spin" /> : t('reconnect')}
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-muted-foreground"
+              onClick={() => onManage(connection)}
+            >
+              {t('manage')}
+            </Button>
+          </div>
         ) : (
           <Button
             size="sm"
-            className="bg-primary text-primary-foreground hover:opacity-90"
-            disabled={connecting}
+            disabled={connecting || !canConnect || !entry.available}
+            title={!canConnect ? t('connectNeedsCap') : undefined}
             onClick={() => onConnect(entry)}
           >
             {connecting ? <Loader2 className="size-4 animate-spin" /> : t('connect')}
           </Button>
         )}
       </div>
+      {!canConnect && state === 'none' && (
+        <p className="mt-2 text-xs text-muted-foreground">{t('connectNeedsCap')}</p>
+      )}
     </div>
   )
 }

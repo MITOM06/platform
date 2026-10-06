@@ -7,62 +7,24 @@
 part of 'chat_provider.dart';
 
 mixin _ChatActionsMixin on _$ChatNotifier {
-  /// Provided by ChatNotifier (the class this mixin is applied to). Declared
-  /// here so mixin methods (e.g. [retrySend]) can invoke the optimistic-send
-  /// path without duplicating it.
+  /// Provided by the send mixin (applied to the same ChatNotifier). Declared
+  /// here so actions can use the optimistic-send path.
   Future<void> sendMessage(String content, {String type = 'text'});
+
+  /// Most messages a conversation can pin (chat-service MAX_PINNED_MESSAGES).
+  static const int maxPinnedMessages = 5;
 
   /// Message ids with a reaction request in flight. Guards against rapid
   /// repeated double-taps spamming the server with add/remove churn before the
   /// authoritative REACTION_UPDATED broadcast lands.
   final Set<String> _reactionInFlight = {};
 
-  /// Per-optimistic-message send watchdogs (keyed by the local `pending_…` id).
-  /// A STOMP send has no ack; if no server echo arrives in [_sendTimeout] the
-  /// bubble is marked failed so the user can retry instead of spinning forever.
-  final Map<String, Timer> _sendWatchdogs = {};
-  static const Duration _sendTimeout = Duration(seconds: 15);
+  /// Localized strings without a widget context (resolved via the router).
+  AppLocalizations get _l10n => appL10n();
 
-  /// Arms the send watchdog for the optimistic message [pendingId].
-  void _startSendWatchdog(String pendingId) {
-    _sendWatchdogs[pendingId]?.cancel();
-    _sendWatchdogs[pendingId] = Timer(_sendTimeout, () {
-      _sendWatchdogs.remove(pendingId);
-      final current = state.valueOrNull;
-      if (current == null) return;
-      // If the message is gone (reconciled with the server echo) or already
-      // resolved, this is a no-op — mirrors the AI placeholder watchdog.
-      final idx = current.messages.indexWhere(
-        (m) => m.id == pendingId && m.isPending,
-      );
-      if (idx == -1) return;
-      final updated = List<MessageModel>.from(current.messages);
-      updated[idx] =
-          current.messages[idx].copyWith(isPending: false, sendFailed: true);
-      state = AsyncData(current.copyWith(messages: updated));
-    });
-  }
-
-  void _cancelSendWatchdogs() {
-    for (final t in _sendWatchdogs.values) {
-      t.cancel();
-    }
-    _sendWatchdogs.clear();
-  }
-
-  /// Retry a message whose optimistic send failed: drop the failed placeholder
-  /// and re-send its content (reuses the normal optimistic send path).
-  Future<void> retrySend(String messageId) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    final msg = current.messages.firstWhereOrNull((m) => m.id == messageId);
-    if (msg == null || !msg.sendFailed) return;
-    _sendWatchdogs.remove(messageId)?.cancel();
-    state = AsyncData(current.copyWith(
-      messages: current.messages.where((m) => m.id != messageId).toList(),
-    ));
-    await sendMessage(msg.content, type: msg.type);
-  }
+  /// Shows [message] (or the generic "action failed") as an error snackbar.
+  void _showError(String? message) =>
+      showErrorSnackBar(message ?? _l10n.errActionFailed);
 
   String? get _currentUserId {
     final auth = ref.read(authNotifierProvider).valueOrNull;
@@ -153,10 +115,11 @@ mixin _ChatActionsMixin on _$ChatNotifier {
       } else {
         await repo.addReaction(messageId, emoji);
       }
-    } catch (_) {
+    } catch (e) {
       // The REACTION_UPDATED broadcast keeps state authoritative, but surface
-      // the failure so the user knows the tap didn't take effect.
-      _showActionError();
+      // the failure (incl. the 429 reaction rate limit) so the user knows the
+      // tap didn't take effect.
+      _showActionError(e);
     } finally {
       _reactionInFlight.remove(messageId);
     }
@@ -166,31 +129,17 @@ mixin _ChatActionsMixin on _$ChatNotifier {
     final current = state.valueOrNull;
     try {
       await ref.read(chatRepositoryProvider).recallMessage(messageId);
-    } catch (_) {
+    } catch (e) {
       // Re-assert the pre-recall state (no local change was applied yet, but
       // guard against any in-flight optimistic edit) and tell the user.
       if (current != null && state.hasValue) state = AsyncData(current);
-      _showActionError();
+      _showActionError(e);
     }
   }
 
-  /// Surface a generic "action failed" SnackBar via the app-wide messenger.
-  void _showActionError() {
-    final context =
-        ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
-    if (context == null) return;
-    showErrorSnackBar(context.l10n.errActionFailed);
-  }
-
-  /// Surface the localized rate-limit (429) message. Resolves a context via the
-  /// router to avoid the BuildContext-across-async-gap lint.
-  void _showRateLimitError() {
-    final context =
-        ref.read(appRouterProvider).routerDelegate.navigatorKey.currentContext;
-    showErrorSnackBar(context != null
-        ? context.l10n.rateLimitError
-        : 'Too many messages. Please slow down.');
-  }
+  /// Surface the localized message for a failed chat-service call.
+  void _showActionError([Object? error]) => _showError(
+      error == null ? null : chatErrorMessage(_l10n, error));
 
   /// Edit a sent message. Optimistically updates locally; the server's
   /// MESSAGE_UPDATED broadcast keeps both peers authoritative.
@@ -198,6 +147,15 @@ mixin _ChatActionsMixin on _$ChatNotifier {
     final trimmed = content.trim();
     if (trimmed.isEmpty) return;
     final current = state.valueOrNull;
+    // Only text can be edited (chat-service MessageTypePolicy): editing a
+    // voice/sticker/media message would overwrite its payload with text.
+    final target = current?.messages.firstWhereOrNull((m) => m.id == messageId);
+    if (target == null || target.type != 'text' || target.recalled) {
+      if (current != null) {
+        state = AsyncData(current.copyWith(clearEditingMessage: true));
+      }
+      return;
+    }
     if (current != null) {
       state = AsyncData(current.copyWith(
         messages: current.messages
@@ -210,7 +168,7 @@ mixin _ChatActionsMixin on _$ChatNotifier {
     }
     try {
       await ref.read(chatRepositoryProvider).editMessage(messageId, trimmed);
-    } catch (_) {
+    } catch (e) {
       // Roll back the optimistic edit and tell the user it didn't save.
       if (current != null && state.hasValue) {
         state = AsyncData(state.requireValue.copyWith(
@@ -223,7 +181,7 @@ mixin _ChatActionsMixin on _$ChatNotifier {
               .toList(),
         ));
       }
-      _showActionError();
+      _showActionError(e);
     }
   }
 
@@ -249,11 +207,18 @@ mixin _ChatActionsMixin on _$ChatNotifier {
     state = AsyncData(current.copyWith(clearHighlight: true));
   }
 
-  /// Pin a message in this conversation (Task 53).
-  Future<void> pinMessage(MessageModel message) async {
+  /// Pin a message in this conversation (Task 53). At most
+  /// [maxPinnedMessages] — a full set is refused here and by the server
+  /// (409 `PIN_LIMIT_REACHED`); nothing is ever evicted silently. Returns
+  /// whether the pin was applied.
+  Future<bool> pinMessage(MessageModel message) async {
     final current = state.valueOrNull;
-    if (current == null) return;
-    // Optimistic: prepend to pinned list
+    if (current == null) return false;
+    if (current.pinnedMessages.any((p) => p.id == message.id)) return true;
+    if (current.pinnedMessages.length >= maxPinnedMessages) {
+      _showError(_l10n.pinLimitReached);
+      return false;
+    }
     final pinned = [
       PinnedMessageModel(
         id: message.id,
@@ -263,18 +228,22 @@ mixin _ChatActionsMixin on _$ChatNotifier {
         type: message.type,
         createdAt: message.createdAt,
       ),
-      ...current.pinnedMessages.where((p) => p.id != message.id),
+      ...current.pinnedMessages,
     ];
     state = AsyncData(current.copyWith(pinnedMessages: pinned));
     try {
       await ref.read(chatRepositoryProvider).pinMessage(message.id);
-    } catch (_) {
-      // Revert on failure
+      return true;
+    } catch (e) {
       final c = state.valueOrNull;
       if (c != null) {
-        state = AsyncData(
-            c.copyWith(pinnedMessages: current.pinnedMessages));
+        state = AsyncData(c.copyWith(
+            pinnedMessages:
+                c.pinnedMessages.where((p) => p.id != message.id).toList()));
       }
+      // 409 PIN_LIMIT_REACHED / 403 GROUP_ADMIN_REQUIRED → specific text.
+      _showActionError(e);
+      return false;
     }
   }
 
@@ -289,22 +258,25 @@ mixin _ChatActionsMixin on _$ChatNotifier {
             .toList()));
     try {
       await ref.read(chatRepositoryProvider).unpinMessage(messageId);
-    } catch (_) {
+    } catch (e) {
       final c = state.valueOrNull;
       if (c != null) state = AsyncData(c.copyWith(pinnedMessages: reverted));
+      _showActionError(e);
     }
   }
 
-  /// Forward a message to another conversation (Task 53).
-  Future<bool> forwardMessage(
+  /// Forward a message to another conversation (Task 53). Returns null on
+  /// success, else the localized reason (blocked, type not forwardable,
+  /// rate limit, …).
+  Future<String?> forwardMessage(
       String messageId, String targetConversationId) async {
     try {
       await ref
           .read(chatRepositoryProvider)
           .forwardMessage(messageId, targetConversationId);
-      return true;
-    } catch (_) {
-      return false;
+      return null;
+    } catch (e) {
+      return chatErrorMessage(_l10n, e);
     }
   }
 
@@ -317,10 +289,10 @@ mixin _ChatActionsMixin on _$ChatNotifier {
     ));
     try {
       await ref.read(chatRepositoryProvider).deleteMessageForMe(messageId);
-    } catch (_) {
+    } catch (e) {
       // Restore the message we optimistically removed and tell the user.
       if (state.hasValue) state = AsyncData(current);
-      _showActionError();
+      _showActionError(e);
     }
   }
 }

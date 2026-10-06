@@ -3,16 +3,22 @@ import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../data/models/connector_models.dart';
+import '../../utils/connector_labels.dart';
 
-/// Neon gallery card for a single connector — mirrors the web `ConnectorCard`
-/// and the mockup: icon, name + status pill, description, scope chips, and a
-/// Connect / Manage action.
+/// Gallery card for a single connector — mirrors the web `ConnectorCard`:
+/// icon, name + status pill, description, localized scope chips, and a
+/// Connect / Reconnect / Manage action.
 class ConnectorCard extends StatelessWidget {
   final ConnectorItem item;
   final bool busy;
   final VoidCallback onConnect;
-  final VoidCallback onManage;
-  final VoidCallback onPermissions;
+
+  /// Null when the caller may not disconnect this connection (a workspace
+  /// connection without CONNECT_WORKSPACE_CONNECTOR).
+  final VoidCallback? onManage;
+
+  /// Null when the caller may not change this connection's AI permissions.
+  final VoidCallback? onPermissions;
 
   const ConnectorCard({
     super.key,
@@ -28,6 +34,7 @@ class ConnectorCard extends StatelessWidget {
     final entry = item.entry;
     final connected = item.isConnected;
     final available = entry.available;
+    final scopes = scopeLabels(context.l10n, entry.scopes);
 
     return PonCard(
       borderRadius: 16,
@@ -52,7 +59,11 @@ class ConnectorCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                _StatusPill(connected: connected, available: available),
+                _StatusPill(
+                  connected: connected,
+                  needsReconnect: item.needsReconnect,
+                  available: available,
+                ),
               ],
             ),
             const SizedBox(height: 6),
@@ -64,13 +75,12 @@ class ConnectorCard extends StatelessWidget {
                 height: 1.3,
               ),
             ),
-            if (entry.scopes.isNotEmpty) ...[
+            if (scopes.isNotEmpty) ...[
               const SizedBox(height: 12),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
-                children:
-                    entry.scopes.map((s) => _ScopeChip(label: s)).toList(),
+                children: scopes.map((s) => _ScopeChip(label: s)).toList(),
               ),
             ],
             const SizedBox(height: 14),
@@ -153,8 +163,13 @@ class _ConnectorLogo extends StatelessWidget {
 
 class _StatusPill extends StatelessWidget {
   final bool connected;
+  final bool needsReconnect;
   final bool available;
-  const _StatusPill({required this.connected, required this.available});
+  const _StatusPill({
+    required this.connected,
+    required this.needsReconnect,
+    required this.available,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -163,6 +178,9 @@ class _StatusPill extends StatelessWidget {
     if (connected) {
       color = AppTheme.onlineGreen;
       label = context.l10n.connectorStatusConnected;
+    } else if (needsReconnect) {
+      color = AppTheme.warning;
+      label = context.l10n.connectorStatusReconnect;
     } else if (available) {
       color = AppTheme.accent(context);
       label = context.l10n.connectorStatusAvailable;
@@ -178,12 +196,11 @@ class _StatusPill extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Text(
-        label.toUpperCase(),
+        label,
         style: TextStyle(
           color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.6,
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -206,9 +223,8 @@ class _ScopeChip extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          color: AppTheme.accent(context),
-          fontSize: 10.5,
-          fontFamily: AppTheme.fontMono,
+          color: AppTheme.accentTintFg(context),
+          fontSize: 11,
         ),
       ),
     );
@@ -221,8 +237,8 @@ class _ActionRow extends StatelessWidget {
   final bool connected;
   final bool available;
   final VoidCallback onConnect;
-  final VoidCallback onManage;
-  final VoidCallback onPermissions;
+  final VoidCallback? onManage;
+  final VoidCallback? onPermissions;
 
   const _ActionRow({
     required this.item,
@@ -236,7 +252,8 @@ class _ActionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final meta = _metaLabel(context);
+    final meta = connectionMetaLabel(context.l10n, item.connection) ?? '';
+    final reconnect = item.needsReconnect;
     return Row(
       children: [
         Expanded(
@@ -244,8 +261,7 @@ class _ActionRow extends StatelessWidget {
             meta,
             style: TextStyle(
               color: AppTheme.mutedText(context),
-              fontSize: 11,
-              fontFamily: AppTheme.fontMono,
+              fontSize: 12,
             ),
             overflow: TextOverflow.ellipsis,
           ),
@@ -258,25 +274,31 @@ class _ActionRow extends StatelessWidget {
             child: CircularProgressIndicator(strokeWidth: 2),
           )
         else if (connected) ...[
-          IconButton(
-            onPressed: onPermissions,
-            visualDensity: VisualDensity.compact,
-            tooltip: context.l10n.permManage,
-            icon: Icon(Icons.tune_rounded, color: AppTheme.accent(context), size: 20),
-          ),
-          TextButton(
-            onPressed: onManage,
-            child: Text(context.l10n.connectorManage,
-                style: TextStyle(color: AppTheme.accent(context))),
-          ),
+          if (onPermissions != null)
+            IconButton(
+              onPressed: onPermissions,
+              visualDensity: VisualDensity.compact,
+              tooltip: context.l10n.permManage,
+              icon: Icon(Icons.tune_rounded,
+                  color: AppTheme.mutedText(context), size: 20),
+            ),
+          if (onManage != null)
+            TextButton(
+              onPressed: onManage,
+              child: Text(context.l10n.connectorManage,
+                  style: TextStyle(color: AppTheme.accent(context))),
+            ),
         ]
-        else if (available)
+        else if (available || reconnect)
           Flexible(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 120),
+              constraints: const BoxConstraints(maxWidth: 140),
               child: PonButton(
                 onPressed: onConnect,
-                child: Text(context.l10n.connectorConnect,
+                child: Text(
+                    reconnect
+                        ? context.l10n.connectorReconnect
+                        : context.l10n.connectorConnect,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 14)),
@@ -293,14 +315,5 @@ class _ActionRow extends StatelessWidget {
           ),
       ],
     );
-  }
-
-  String _metaLabel(BuildContext context) {
-    final conn = item.connection;
-    if (conn != null && conn.accountLabel != null &&
-        conn.accountLabel!.isNotEmpty) {
-      return 'remote-mcp · ${conn.accountLabel}';
-    }
-    return 'remote-mcp';
   }
 }

@@ -39,7 +39,7 @@ describe('McpServerController', () => {
     const req = { body: { method: 'tools/list', params: {} }, botSession: { userId: 'u1' } } as any;
     const res = { json: jest.fn(), status: jest.fn().mockReturnThis() } as any;
     await controller.handle(req, res);
-    expect(mockInternalService.getTools).toHaveBeenCalledWith('u1');
+    expect(mockInternalService.getTools).toHaveBeenCalledWith('u1', 'bot');
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ result: expect.objectContaining({ tools: expect.any(Array) }) }),
     );
@@ -58,5 +58,36 @@ describe('McpServerController', () => {
         result: expect.objectContaining({ content: expect.any(Array) }),
       }),
     );
+  });
+
+  it('refuses a write with a JSON-RPC error carrying SENSITIVE_ACTION_REQUIRES_CONFIRMATION', async () => {
+    mockInternalService.callTool.mockResolvedValue({
+      result: 'Tool error: [NOT_PERMITTED] needs confirmation',
+      refusal: 'SENSITIVE_ACTION_REQUIRES_CONFIRMATION',
+    });
+    const req = {
+      body: { jsonrpc: '2.0', id: 7, method: 'tools/call', params: { name: 'mcp__gmail__send_email', arguments: {} } },
+      botSession: { userId: 'u1' },
+    } as any;
+    const res = { json: jest.fn(), status: jest.fn().mockReturnThis() } as any;
+    await controller.handle(req, res);
+    expect(mockInternalService.callTool).toHaveBeenCalledWith('u1', 'mcp__gmail__send_email', {}, 'bot');
+    const body = res.json.mock.calls[0][0];
+    expect(body.error).toEqual({
+      code: -32010,
+      message: 'SENSITIVE_ACTION_REQUIRES_CONFIRMATION',
+      data: expect.objectContaining({ code: 'SENSITIVE_ACTION_REQUIRES_CONFIRMATION', tool: 'mcp__gmail__send_email' }),
+    });
+  });
+
+  it('acknowledges notifications with 202 and hides internal error text', async () => {
+    const res = { json: jest.fn(), status: jest.fn().mockReturnThis(), end: jest.fn() } as any;
+    await controller.handle({ body: { method: 'notifications/initialized' }, botSession: { userId: 'u1' } } as any, res);
+    expect(res.status).toHaveBeenCalledWith(202);
+
+    mockInternalService.getTools.mockRejectedValue(new Error('mongo at 10.0.0.3 refused'));
+    const res2 = { json: jest.fn(), status: jest.fn().mockReturnThis() } as any;
+    await controller.handle({ body: { id: 1, method: 'tools/list' }, botSession: { userId: 'u1' } } as any, res2);
+    expect(res2.json.mock.calls[0][0].error).toEqual({ code: -32603, message: 'Internal error' });
   });
 });

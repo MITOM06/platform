@@ -28,7 +28,7 @@ const NO_LEAD = '__none__'
 
 export function DepartmentsPanel() {
   const t = useTranslations('admin')
-  const { data: departments = [], isLoading } = useDepartments()
+  const { data: departments = [], isLoading, isError } = useDepartments()
   const { create, update, remove } = useDepartmentActions()
   const canMembers = useHasCapability('MANAGE_MEMBERS')
   const { data: members = [] } = useMembers(canMembers)
@@ -56,16 +56,30 @@ export function DepartmentsPanel() {
   }
 
   const onSubmit = () => {
-    const input = {
-      name: name.trim(),
-      description: description.trim() || undefined,
-      leadUserId: leadUserId === NO_LEAD ? undefined : leadUserId,
-    }
     const done = () => setOpen(false)
     if (editing) {
-      update.mutate({ id: editing._id, input }, { onSuccess: done })
+      // An edit can CLEAR the description ('') and the lead (null) — omitting
+      // them used to keep the old values forever.
+      update.mutate(
+        {
+          id: editing._id,
+          input: {
+            name: name.trim(),
+            description: description.trim(),
+            leadUserId: leadUserId === NO_LEAD ? null : leadUserId,
+          },
+        },
+        { onSuccess: done },
+      )
     } else {
-      create.mutate(input, { onSuccess: done })
+      create.mutate(
+        {
+          name: name.trim(),
+          description: description.trim() || undefined,
+          leadUserId: leadUserId === NO_LEAD ? undefined : leadUserId,
+        },
+        { onSuccess: done },
+      )
     }
   }
 
@@ -73,6 +87,9 @@ export function DepartmentsPanel() {
     members.find((m) => m._id === id)?.displayName
 
   if (isLoading) return <Skeleton className="h-64 rounded-xl" />
+  if (isError) {
+    return <p className="py-8 text-center text-sm text-destructive">{t('loadError')}</p>
+  }
 
   return (
     <div className="space-y-4">

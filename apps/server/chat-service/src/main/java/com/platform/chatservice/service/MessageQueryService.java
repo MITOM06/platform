@@ -14,12 +14,12 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -41,6 +41,7 @@ public class MessageQueryService {
   private final MongoTemplate mongoTemplate;
   private final MessageServiceHelper helper;
   private final MessageMapper messageMapper;
+  private final SenderNameResolver senderNameResolver;
 
   /**
    * Cursor-based pagination (newest first). When {@code beforeId} is null/blank the most recent
@@ -125,37 +126,65 @@ public class MessageQueryService {
     return mongoTemplate.find(query, Message.class);
   }
 
+  /** Max rows of one catch-up page ({@code after=} query). */
+  static final int CATCH_UP_PAGE_SIZE = 50;
+
   /**
-   * Catch-up fetch for Task 55 — returns messages with createdAt > afterTimestamp, oldest first,
-   * capped at 50. Called on STOMP reconnect so the client can sync any messages that arrived while
-   * it was offline.
+   * Catch-up fetch for Task 55 — messages newer than {@code (afterTimestamp, afterId)}, oldest
+   * first, at most {@link #CATCH_UP_PAGE_SIZE} per page. Called on STOMP reconnect so the client
+   * can sync any messages that arrived while it was offline.
+   *
+   * <p>The page used to be capped at 50 with no way to tell that more existed, so a client that was
+   * offline for a busy hour silently lost everything past the 50th message. {@code hasNext} is now
+   * exact (one row is over-fetched) and visibility filters run in the query, so a client loops with
+   * the last row's {@code createdAt} + {@code id} until {@code hasNext} is false. Without {@code
+   * afterId} the cursor is strictly {@code createdAt > after} (the original behaviour).
    */
-  public List<MessageResponse> getMessagesSince(
-      String userId, String conversationId, Instant afterTimestamp) {
+  public PageResponse<MessageResponse> getMessagesSince(
+      String userId, String conversationId, Instant afterTimestamp, String afterId) {
     Conversation conversation =
         conversationRepository
             .findById(conversationId)
             .orElseThrow(() -> new ConversationNotFoundException(conversationId));
-    if (!conversation.getParticipants().contains(userId)) {
+    if (conversation.getParticipants() == null
+        || !conversation.getParticipants().contains(userId)) {
       throw new ConversationNotFoundException(conversationId);
     }
     Instant clearedAt =
         conversation.getClearedAt() == null ? null : conversation.getClearedAt().get(userId);
 
-    Pageable pageable = PageRequest.of(0, 50, Sort.by(Sort.Direction.ASC, "createdAt"));
-    List<Message> rows =
-        messageRepository.findByConversationIdAndCreatedAtGreaterThanOrderByCreatedAtAsc(
-            conversationId, afterTimestamp, pageable);
+    List<Criteria> ands = new ArrayList<>();
+    ands.add(Criteria.where("conversationId").is(conversationId));
+    ands.add(Criteria.where("deletedFor").ne(userId));
+    if (clearedAt != null) {
+      ands.add(Criteria.where("createdAt").gt(clearedAt));
+    }
+    if (afterId != null && !afterId.isBlank()) {
+      Object cursorId = ObjectId.isValid(afterId) ? new ObjectId(afterId) : afterId;
+      ands.add(
+          new Criteria()
+              .orOperator(
+                  Criteria.where("createdAt").gt(afterTimestamp),
+                  new Criteria()
+                      .andOperator(
+                          Criteria.where("createdAt").is(afterTimestamp),
+                          Criteria.where("_id").gt(cursorId))));
+    } else {
+      ands.add(Criteria.where("createdAt").gt(afterTimestamp));
+    }
+    Query query =
+        new Query(new Criteria().andOperator(ands.toArray(new Criteria[0])))
+            .with(Sort.by(Sort.Direction.ASC, "createdAt").and(Sort.by(Sort.Direction.ASC, "_id")))
+            .limit(CATCH_UP_PAGE_SIZE + 1);
+    List<Message> rows = mongoTemplate.find(query, Message.class);
 
-    return rows.stream()
-        .filter(m -> m.getDeletedFor() == null || !m.getDeletedFor().contains(userId))
-        .filter(
-            m ->
-                clearedAt == null
-                    || m.getCreatedAt() == null
-                    || m.getCreatedAt().isAfter(clearedAt))
-        .map(this::toResponse)
-        .toList();
+    boolean hasMore = rows.size() > CATCH_UP_PAGE_SIZE;
+    List<MessageResponse> content =
+        (hasMore ? rows.subList(0, CATCH_UP_PAGE_SIZE) : rows)
+            .stream().map(this::toResponse).toList();
+    // page=0 always; totalElements is synthetic so hasNext() reflects `hasMore`.
+    long total = hasMore ? (long) CATCH_UP_PAGE_SIZE + 1 : content.size();
+    return new PageResponse<>(content, 0, CATCH_UP_PAGE_SIZE, total);
   }
 
   private static final Set<String> AI_HISTORY_SKIP_TYPES =
@@ -181,6 +210,10 @@ public class MessageQueryService {
    * anymore — they carry {@code type="image"} + {@code imageUrls} (parsed from the message content,
    * which is a single URL or a JSON array, mirroring web's {@code parseImageUrls}) so ai-service
    * can render them as image content blocks. Caption is the (usually empty) text.
+   *
+   * <p>Every entry carries its {@code senderId} and, when it resolves, {@code senderName} (one
+   * batched lookup for all senders, see {@link SenderNameResolver}) — without them ai-service's
+   * group context attributed every line to "A member".
    */
   public List<AiHistoryEntry> getAiHistory(String userId, String conversationId) {
     try {
@@ -196,19 +229,39 @@ public class MessageQueryService {
           List<String> imageUrls = parseImageUrls(msg.content());
           if (imageUrls.isEmpty()) continue;
           // No caption field on image messages today — caption stays empty.
-          history.add(AiHistoryEntry.image(role, "", imageUrls));
+          history.add(AiHistoryEntry.image(role, "", imageUrls).withSender(msg.senderId(), null));
           continue;
         }
 
         String content = AI_MENTION_STRIP.matcher(msg.content()).replaceAll("").trim();
         if (content.isBlank()) continue;
-        history.add(AiHistoryEntry.text(role, content));
+        history.add(AiHistoryEntry.text(role, content).withSender(msg.senderId(), null));
       }
       Collections.reverse(history); // newest-first → chronological
-      return history;
+      return withSenderNames(conversationId, history);
     } catch (Exception e) {
       return List.of();
     }
+  }
+
+  /** Fill {@code senderName} for every entry whose sender resolves; a lookup failure keeps none. */
+  private List<AiHistoryEntry> withSenderNames(
+      String conversationId, List<AiHistoryEntry> history) {
+    if (history.isEmpty()) {
+      return history;
+    }
+    Map<String, String> names;
+    try {
+      names =
+          senderNameResolver.displayNames(
+              conversationId,
+              history.stream().map(AiHistoryEntry::senderId).filter(Objects::nonNull).toList());
+    } catch (Exception e) {
+      return history;
+    }
+    return history.stream()
+        .map(h -> h.senderId() == null ? h : h.withSender(h.senderId(), names.get(h.senderId())))
+        .toList();
   }
 
   /**

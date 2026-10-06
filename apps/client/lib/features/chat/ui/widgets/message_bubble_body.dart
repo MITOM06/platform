@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../domain/chat_state.dart';
+import 'ai_action_card.dart';
 import 'ai_message_parts.dart';
 import 'file_content.dart';
 import 'image_content.dart';
@@ -70,11 +71,19 @@ class MessageBubbleBody extends StatelessWidget {
             isSentByMe: isSentByMe,
           )
         else if (message.isAiMessage && message.isStreaming)
-          StreamingAiBubble(
-            content: message.content,
-            isThinking: message.isThinking,
-            activeTools: message.activeTools,
-            sensitiveTools: message.sensitiveTools,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              StreamingAiBubble(
+                content: message.content,
+                isThinking: message.isThinking,
+                activeTools: message.activeTools,
+                sensitiveTools: message.sensitiveTools,
+              ),
+              if (message.pendingActions?.isNotEmpty ?? false)
+                AiActionCards(actions: message.pendingActions!),
+            ],
           )
         else if (message.isAiQuotaExceeded)
           const QuotaExceededBubble()
@@ -126,6 +135,22 @@ class MessageBubbleBody extends StatelessWidget {
               ),
             ],
           )
+        else if (message.isAiEmptyResponse)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.info_outline_rounded,
+                  color: AppTheme.mutedText(context), size: 16),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  context.l10n.aiErrEmptyResponse,
+                  style: TextStyle(
+                      color: AppTheme.mutedText(context), fontSize: 14),
+                ),
+              ),
+            ],
+          )
         else if (message.isAiError)
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -152,6 +177,8 @@ class MessageBubbleBody extends StatelessWidget {
                 sources: message.sources,
                 conversationId: message.conversationId,
               ),
+              if (message.pendingActions?.isNotEmpty ?? false)
+                AiActionCards(actions: message.pendingActions!),
               if (message.trace != null)
                 TracePanel(trace: message.trace!),
             ],

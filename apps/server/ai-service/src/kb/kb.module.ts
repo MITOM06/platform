@@ -9,13 +9,15 @@ import { VectorStoreService } from './vector-store.service';
 import { KbProcessorService } from './kb-processor.service';
 import { RerankerService } from './reranker.service';
 import { RedisModule } from '../redis/redis.module';
+import { UsageModule } from '../usage/usage.module';
 
 const kbFeature = MongooseModule.forFeature([
   { name: KbDocument.name, schema: KbDocumentSchema },
 ]) as unknown as DynamicModule;
 
 @Module({
-  imports: [kbFeature, RedisModule],
+  // UsageModule: VisionDescribeService records its model calls (KB vision).
+  imports: [kbFeature, RedisModule, UsageModule],
   providers: [
     DocumentExtractorService,
     VisionDescribeService,

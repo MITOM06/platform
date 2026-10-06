@@ -42,17 +42,43 @@ function makeCron(opts: {
   const generate = opts.generateImpl ?? jest.fn().mockResolvedValue(true);
   const generator = { generateAndDeliver: generate } as any;
 
-  const cron = new DailyDigestCron(connection, digestLogModel, settingsService, generator);
+  const config = {
+    get: (k: string) =>
+      ({ 'config.ai.timeZone': 'Asia/Ho_Chi_Minh', 'config.bot.userId': 'ai-bot-1' })[k],
+  } as any;
+  const cron = new DailyDigestCron(connection, digestLogModel, settingsService, generator, config);
   return { cron, create, deleteOne, distinct, generate };
 }
 
-const AT_8 = new Date(2026, 5, 23, 8, 0, 0); // hour 8 local
+// 08:00 in the workspace zone (Asia/Ho_Chi_Minh, +07:00) — 01:00 UTC. Absolute
+// instants keep the test independent of the machine's own time zone.
+const AT_8 = new Date('2026-06-23T01:00:00Z');
 
 describe('DailyDigestCron (TASK-11)', () => {
   it('does nothing when the digest is disabled', async () => {
     const { cron, distinct } = makeCron({ resolved: settings({ dailyDigestEnabled: false }) });
     await cron.run(AT_8);
     expect(distinct).not.toHaveBeenCalled();
+  });
+
+  it('fires on the workspace-zone hour, not the container (UTC) hour', async () => {
+    const { cron, distinct } = makeCron({ resolved: settings({ dailyDigestHour: 1 }) });
+    await cron.run(AT_8); // 01:00 UTC but 08:00 local → configured hour 1 must NOT fire
+    expect(distinct).not.toHaveBeenCalled();
+  });
+
+  it('counts only HUMAN text as activity over the local yesterday (never its own digests)', async () => {
+    const { cron, distinct } = makeCron({ resolved: settings() });
+    await cron.run(AT_8);
+    expect(distinct).toHaveBeenCalledWith('conversationId', {
+      createdAt: {
+        $gte: new Date('2026-06-21T17:00:00.000Z'),
+        $lt: new Date('2026-06-22T17:00:00.000Z'),
+      },
+      type: 'text',
+      senderId: { $ne: 'ai-bot-1' },
+      recalled: { $ne: true },
+    });
   });
 
   it('does nothing when the current hour != dailyDigestHour', async () => {

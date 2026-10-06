@@ -1,6 +1,11 @@
 jest.mock('nanoid', () => ({ nanoid: () => 'test-id' }));
-jest.mock('bcrypt', () => ({ compare: jest.fn() }));
+jest.mock('bcrypt', () => ({
+  compare: jest.fn(),
+  genSalt: jest.fn(),
+  hash: jest.fn(),
+}));
 
+import { createHash } from 'node:crypto';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -262,6 +267,192 @@ describe('AuthService — account status enforcement (invite-only)', () => {
         response: { code: 'ACCOUNT_BLOCKED' },
       });
       expect(users.updateOtp).not.toHaveBeenCalled();
+    });
+  });
+});
+
+/**
+ * Stateful fakes for the OTP flows: `users` mirrors the real UsersService
+ * semantics (setVerified marks verified WITHOUT consuming the code; a successful
+ * updatePassword consumes it), `redis` is an in-memory key/value + counter store.
+ */
+describe('AuthService — OTP / email-normalization flows', () => {
+  let service: AuthService;
+  let store: Map<string, string>;
+  let user: any;
+  let users: Record<string, jest.Mock>;
+  let session: Record<string, jest.Mock>;
+  let attempts: Record<string, jest.Mock>;
+  let mail: { sendOtpEmail: jest.Mock };
+  const sha = (v: string) => createHash('sha256').update(v).digest('hex');
+
+  beforeEach(async () => {
+    store = new Map();
+    user = {
+      _id: { toString: () => 'u1' },
+      email: 'bob@qc.test',
+      displayName: 'Bob',
+      password: 'old-hash',
+      isVerified: true,
+      status: 'active',
+      otpCode: undefined,
+      otpExpires: undefined,
+    };
+    users = {
+      findByEmail: jest.fn(async () => user),
+      updateOtp: jest.fn(async (_id: unknown, hash: string, expires: Date) => {
+        user.otpCode = hash;
+        user.otpExpires = expires;
+      }),
+      setVerified: jest.fn(async () => {
+        user.isVerified = true; // the code is NOT consumed
+      }),
+      updatePassword: jest.fn(async (_id: string, hash: string) => {
+        user.password = hash;
+        user.otpCode = undefined;
+        user.otpExpires = undefined;
+      }),
+      getHasPassword: jest.fn().mockResolvedValue(true),
+    };
+    session = {
+      revokeAllSessions: jest.fn().mockResolvedValue(undefined),
+      createSession: jest.fn().mockResolvedValue({ sid: 's1', refreshToken: 'r1' }),
+    };
+    attempts = {
+      checkBruteForce: jest.fn().mockResolvedValue(undefined),
+      handleFailedLogin: jest
+        .fn()
+        .mockRejectedValue(new UnauthorizedException({ code: 'LOGIN_FAILED_WITH_REMAINING' })),
+      reset: jest.fn().mockResolvedValue(undefined),
+    };
+    mail = { sendOtpEmail: jest.fn().mockResolvedValue(undefined) };
+    const redis = {
+      incr: jest.fn(async (k: string) => {
+        const n = Number(store.get(k) ?? 0) + 1;
+        store.set(k, String(n));
+        return n;
+      }),
+      expire: jest.fn(async () => 1),
+      del: jest.fn(async (k: string) => (store.delete(k) ? 1 : 0)),
+      get: jest.fn(async (k: string) => store.get(k) ?? null),
+      set: jest.fn(async (k: string, v: string) => {
+        store.set(k, v);
+        return 'OK';
+      }),
+      ttl: jest.fn(async () => 42),
+    };
+    (bcrypt.compare as jest.Mock).mockReset().mockResolvedValue(true);
+    (bcrypt.genSalt as jest.Mock).mockResolvedValue('salt');
+    (bcrypt.hash as jest.Mock).mockResolvedValue('new-hash');
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        { provide: JwtService, useValue: { sign: jest.fn().mockReturnValue('jwt') } },
+        { provide: SessionService, useValue: session },
+        {
+          provide: ClaimsService,
+          useValue: { resolve: jest.fn().mockResolvedValue({ role: 'Member', perms: [], depts: [] }) },
+        },
+        { provide: UsersService, useValue: users },
+        { provide: MailService, useValue: mail },
+        OtpService,
+        { provide: SsoMappingService, useValue: {} },
+        {
+          provide: NotificationsService,
+          useValue: { createSetupNotificationsIfNeeded: jest.fn().mockResolvedValue(undefined) },
+        },
+        { provide: SocialProvisioningService, useValue: {} },
+        { provide: OAuthRedirectService, useValue: {} },
+        { provide: LoginAttemptsService, useValue: attempts },
+        { provide: ConfigService, useValue: { get: (_k: string, d?: unknown) => d } },
+        { provide: REDIS_CLIENT, useValue: redis },
+      ],
+    }).compile();
+    service = moduleRef.get(AuthService);
+  });
+
+  function emailedOtp(): string {
+    const calls = mail.sendOtpEmail.mock.calls;
+    return calls[calls.length - 1][1];
+  }
+
+  it('mobile forgot-password: verify-otp THEN reset-password with the same code succeeds (E2E)', async () => {
+    await service.forgotPassword('bob@qc.test');
+    const otp = emailedOtp();
+    expect(user.otpCode).toBe(sha(otp));
+
+    await expect(service.verifyOtp('bob@qc.test', otp)).resolves.toMatchObject({
+      code: 'OTP_VALID',
+    });
+    // verify-otp must not consume the code…
+    expect(user.otpCode).toBe(sha(otp));
+
+    await expect(service.resetPassword('bob@qc.test', otp, 'new-password')).resolves.toMatchObject(
+      { code: 'PASSWORD_UPDATED' },
+    );
+    expect(users.updatePassword).toHaveBeenCalledWith('u1', 'new-hash');
+    expect(session.revokeAllSessions).toHaveBeenCalledWith('u1', 'password_reset');
+  });
+
+  it('a replayed reset after a successful reset still fails (the reset consumed the code)', async () => {
+    await service.forgotPassword('bob@qc.test');
+    const otp = emailedOtp();
+    await service.resetPassword('bob@qc.test', otp, 'new-password');
+
+    await expect(service.resetPassword('bob@qc.test', otp, 'evil-password')).rejects.toMatchObject(
+      { status: 400, response: { code: 'OTP_INVALID' } },
+    );
+    expect(users.updatePassword).toHaveBeenCalledTimes(1);
+  });
+
+  it('normalizes the email (trim + lower-case) for the lookup and every Redis key', async () => {
+    await service.forgotPassword('  Bob@QC.test ');
+    expect(users.findByEmail).toHaveBeenLastCalledWith('bob@qc.test');
+    expect(store.get('forgot_otp_rate:bob@qc.test')).toBe('1');
+    // The code is mailed to the address on file, not the typed variant.
+    expect(mail.sendOtpEmail.mock.calls[0][0]).toBe('bob@qc.test');
+
+    const otp = emailedOtp();
+    await service.verifyOtp('BOB@qc.TEST', '000000' === otp ? '111111' : '000000').catch(() => {});
+    expect(store.get('otp_attempts:bob@qc.test')).toBe('1');
+    await service.verifyOtp('Bob@Qc.Test', otp);
+
+    await service.resendOtp('BOB@QC.TEST').catch(() => {});
+    expect(store.has('otp_resend_cooldown:bob@qc.test')).toBe(true);
+  });
+
+  it('login: case variants hit the same account and the same brute-force counters', async () => {
+    const res = await service.login({ email: ' Bob@QC.test', password: 'pw' } as any);
+    expect(res).toMatchObject({ code: 'LOGIN_SUCCESS' });
+    expect(attempts.checkBruteForce).toHaveBeenCalledWith('bob@qc.test');
+    expect(users.findByEmail).toHaveBeenCalledWith('bob@qc.test');
+    expect(attempts.reset).toHaveBeenCalledWith('bob@qc.test');
+
+    (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+    await expect(
+      service.login({ email: 'BOB@qc.test', password: 'bad' } as any),
+    ).rejects.toMatchObject({ response: { code: 'LOGIN_FAILED_WITH_REMAINING' } });
+    expect(attempts.handleFailedLogin).toHaveBeenCalledWith('bob@qc.test');
+  });
+
+  it('resend-otp keeps the wrong-guess counter (no fresh batch of guesses per resend)', async () => {
+    await service.forgotPassword('bob@qc.test');
+    const otp = emailedOtp();
+    const wrong = otp === '123456' ? '654321' : '123456';
+    for (let i = 0; i < 3; i++) {
+      await service.verifyOtp('bob@qc.test', wrong).catch(() => {});
+    }
+    expect(store.get('otp_attempts:bob@qc.test')).toBe('3');
+
+    await service.resendOtp('bob@qc.test');
+    expect(store.get('otp_attempts:bob@qc.test')).toBe('3');
+
+    await service.verifyOtp('bob@qc.test', wrong).catch(() => {});
+    await service.verifyOtp('bob@qc.test', wrong).catch(() => {});
+    // 6th guess overall → exceeded even though a new code was sent.
+    await expect(service.verifyOtp('bob@qc.test', emailedOtp())).rejects.toMatchObject({
+      response: { code: 'OTP_ATTEMPTS_EXCEEDED' },
     });
   });
 });

@@ -122,6 +122,12 @@ class MessageBubble extends ConsumerWidget {
     );
   }
 
+  bool get _isLocalOnly =>
+      message.isPending ||
+      message.sendFailed ||
+      message.id.startsWith('pending_') ||
+      message.id.startsWith('ai-');
+
   void _toggleSelect(BuildContext context, WidgetRef ref) {
     final rejected = ref
         .read(messageSelectionProvider(message.conversationId).notifier)
@@ -180,7 +186,9 @@ class MessageBubble extends ConsumerWidget {
                   ),
                 ),
               GestureDetector(
-                onLongPress: selectMode
+                // No actions on local-only bubbles (optimistic / failed sends,
+                // AI placeholders): the server knows no such message id.
+                onLongPress: (selectMode || _isLocalOnly)
                     ? null
                     : (message.recalled || message.isAiMessage)
                         ? (message.isAiMessage && !message.isStreaming
@@ -189,7 +197,7 @@ class MessageBubble extends ConsumerWidget {
                             : null)
                         : () => FloatingReactionSheet.show(
                             context, ref, message, isSentByMe),
-                onDoubleTap: (selectMode || message.recalled)
+                onDoubleTap: (selectMode || message.recalled || _isLocalOnly)
                     ? null
                     : () {
                         ref
@@ -282,11 +290,9 @@ class MessageBubble extends ConsumerWidget {
               if (message.isAiMessage &&
                   !message.isStreaming &&
                   !message.recalled &&
-                  !message.isAiError &&
-                  !message.isAiQuotaExceeded &&
-                  !message.isAiRateLimited &&
-                  !message.isAiStreamInterrupted &&
-                  !message.isAiUnavailable)
+                  !message.isAiFailure &&
+                  // Local placeholders have no server id to rate.
+                  !message.id.startsWith('ai-'))
                 Padding(
                   padding: const EdgeInsets.only(left: 16, right: 40),
                   child: MessageFeedback(messageId: message.id),

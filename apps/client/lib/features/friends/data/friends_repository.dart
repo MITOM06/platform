@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/api/dio_client.dart';
+import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 
 /// A pending incoming friend request: the [requester] plus the friendship id.
@@ -102,5 +103,11 @@ class FriendsRepository {
 
 final friendsRepositoryProvider = Provider<FriendsRepository>((ref) {
   const storage = FlutterSecureStorage();
-  return FriendsRepository(DioClient.createAuthDio(storage));
+  return FriendsRepository(DioClient.createAuthDio(
+    storage,
+    // A dead session (refresh rejected / account blocked) must sign out here
+    // too, exactly like the chat and auth repositories.
+    onForceLogout: () =>
+        ref.read(authNotifierProvider.notifier).forceLogout(),
+  ));
 });

@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { chatService } from '@/lib/api/chat'
+import { chatErrorMessage } from '@/lib/api/chat-errors'
 import { useConversations } from '@/lib/hooks/use-conversations'
 import { useUser } from '@/lib/hooks/use-user'
 import { useNickname } from '@/lib/nicknames'
@@ -97,8 +98,9 @@ export function ForwardMessageModal({ message, onClose }: Props) {
       toast.success(t('forwardSuccess'))
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
       onClose()
-    } catch {
-      toast.error(t('forwardError'))
+    } catch (err) {
+      // Blocked DM, admin-only group, rate limit… — never the raw server text.
+      toast.error(chatErrorMessage(err, t, 'forwardError'))
     } finally {
       setForwardingTo(null)
     }

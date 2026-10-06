@@ -5,8 +5,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { authService } from '@/lib/api/auth'
 import { useAuthStore } from '@/lib/store/auth.store'
 import type { Conversation } from '@/lib/api/types'
-
-const AI_BOT_ID = 'ai-bot-000000000000000000000001'
+import { isHumanUserId } from '@/lib/hooks/use-display-names'
+import { safeDisplayName } from '@/lib/chat/names'
 
 /**
  * Resolves group participant userIds → display names for @mentions. Mirrors
@@ -22,10 +22,10 @@ export function useMentionParticipants(
   const currentUserId = useAuthStore((s) => s.user?.id)
   const queryClient = useQueryClient()
 
+  // Humans only: the AI bot and Bot Factory assistants (`extbot:*`) have no
+  // auth-service profile — sending their ids broke the whole batch lookup.
   const mentionableIds = (conversation?.type === 'group'
-    ? conversation.participants.filter(
-        (p) => p !== currentUserId && p !== AI_BOT_ID,
-      )
+    ? conversation.participants.filter((p) => p !== currentUserId && isHumanUserId(p))
     : []
   )
   // Resolve all mentionable participants in ONE batched request (was an N+1
@@ -42,8 +42,11 @@ export function useMentionParticipants(
     batchedUsers?.forEach((u) => queryClient.setQueryData(['user', u.id], u))
   }, [batchedUsers, queryClient])
 
-  return mentionableIds.map((uid) => {
+  // Only members whose name is known: inserting `@<userId>` leaked the raw id
+  // into the message. Unresolved members appear once their profile loads.
+  return mentionableIds.flatMap((uid) => {
     const cached = queryClient.getQueryData<{ displayName?: string }>(['user', uid])
-    return { id: uid, name: cached?.displayName ?? uid }
+    const name = safeDisplayName(cached?.displayName, uid)
+    return name ? [{ id: uid, name }] : []
   })
 }

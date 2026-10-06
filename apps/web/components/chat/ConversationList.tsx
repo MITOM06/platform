@@ -19,6 +19,7 @@ import { useAuthStore } from '@/lib/store/auth.store'
 import { getNickname } from '@/lib/nicknames'
 import { authService } from '@/lib/api/auth'
 import { AI_BOT_ID } from '@/lib/constants'
+import { isHumanUserId } from '@/lib/hooks/use-display-names'
 import type { Conversation } from '@/lib/api/types'
 
 function ConversationSkeleton() {
@@ -109,7 +110,8 @@ export function ConversationList() {
       ...new Set(
         conversations
           .flatMap((c) => c.participants)
-          .filter((id) => id !== currentUserId && id !== AI_BOT_ID),
+          // Humans only — an `extbot:*` id made the whole batch request fail.
+          .filter((id) => id !== currentUserId && isHumanUserId(id)),
       ),
     ]
     const missing = ids.filter((id) => !queryClient.getQueryData(['user', id]))

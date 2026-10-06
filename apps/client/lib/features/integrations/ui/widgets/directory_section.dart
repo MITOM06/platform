@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/l10n/l10n_ext.dart';
@@ -10,14 +9,18 @@ import '../../../admin/data/models/admin_models.dart';
 import '../../../admin/state/capabilities_provider.dart';
 import '../../data/models/connector_models.dart';
 import '../../state/integrations_provider.dart';
+import '../../state/oauth_flow_provider.dart';
+import '../../utils/connector_error.dart';
 import 'directory_admin_sheet.dart';
 import 'directory_card.dart';
+import 'disconnect_dialog.dart';
 
 /// The dynamic MCP directory section on the integrations screen: a searchable
 /// 1-click connect grid backed by the DB-driven directory. OAuth entries open
-/// the system browser; apikey entries prompt for a key; "none" entries connect
-/// instantly. Admins (MANAGE_WORKSPACE) can add/edit/delete entries. Mirrors the
-/// web `DirectorySection`.
+/// the system browser (the result is reported when the app resumes — see
+/// [OAuthFlowNotifier]); apikey entries prompt for a key; "none" entries
+/// connect instantly. Admins (MANAGE_WORKSPACE) can add/edit/delete entries.
+/// Mirrors the web `DirectorySection`.
 class DirectorySection extends ConsumerStatefulWidget {
   const DirectorySection({super.key});
 
@@ -25,62 +28,45 @@ class DirectorySection extends ConsumerStatefulWidget {
   ConsumerState<DirectorySection> createState() => _DirectorySectionState();
 }
 
-class _DirectorySectionState extends ConsumerState<DirectorySection>
-    with WidgetsBindingObserver {
+class _DirectorySectionState extends ConsumerState<DirectorySection> {
+  /// Slug whose connect request is in flight (before the browser opens).
   String? _busySlug;
   String _query = '';
   final _searchCtrl = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _searchCtrl.dispose();
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // After the OAuth browser redirect the user returns to the app; refresh so
-    // a freshly-completed connection appears.
-    if (state == AppLifecycleState.resumed && _busySlug != null) {
-      _busySlug = null;
-      ref.read(directoryProvider.notifier).refresh();
-    }
-  }
-
   Future<void> _connect(DirectoryEntry entry) async {
     setState(() => _busySlug = entry.slug);
+    final l10n = context.l10n;
     try {
       final result =
           await ref.read(directoryProvider.notifier).startOAuth(entry.slug);
       if (!mounted) return;
+      setState(() => _busySlug = null);
       if (result.mode == 'oauth' && result.authorizeUrl != null) {
+        ref.read(oauthFlowProvider.notifier).begin(entry.slug, entry.name);
         final ok = await launchUrl(
           Uri.parse(result.authorizeUrl!),
           mode: LaunchMode.externalApplication,
         );
-        if (!ok && mounted) {
-          showErrorSnackBar(context.l10n.connectorOpenFailed);
-          setState(() => _busySlug = null);
+        if (!ok) {
+          ref.read(oauthFlowProvider.notifier).clear();
+          showErrorSnackBar(l10n.connectorOpenFailed);
         }
       } else if (result.mode == 'apikey') {
-        setState(() => _busySlug = null);
         await _promptKey(entry);
       } else {
-        setState(() => _busySlug = null);
-        showInfoSnackBar(context.l10n.directoryConnected(entry.name));
+        await ref.read(connectionsProvider.notifier).refresh();
+        showInfoSnackBar(l10n.directoryConnected(entry.name));
       }
     } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(friendlyError(e));
-        setState(() => _busySlug = null);
-      }
+      showErrorSnackBar(connectorErrorMessage(l10n, e));
+      if (mounted) setState(() => _busySlug = null);
     }
   }
 
@@ -117,9 +103,9 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
     if (credential == null || credential.isEmpty) return;
     try {
       await ref.read(directoryProvider.notifier).connectKey(entry.slug, credential);
-      if (mounted) showInfoSnackBar(context.l10n.directoryConnected(entry.name));
+      showInfoSnackBar(l10n.directoryConnected(entry.name));
     } catch (e) {
-      if (mounted) showErrorSnackBar(friendlyError(e));
+      showErrorSnackBar(connectorErrorMessage(l10n, e));
     }
   }
 
@@ -127,40 +113,31 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
     final conn = item.connection;
     if (conn == null) return;
     final l10n = context.l10n;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: Text(item.entry.name, style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-        content: Text(l10n.connectorDisconnectConfirm,
-            style: TextStyle(color: AppTheme.mutedText(context))),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.actionCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.connectorDisconnect,
-                style: TextStyle(color: Theme.of(context).colorScheme.error)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
+    final confirmed = await confirmDisconnect(context, item.entry.name,
+        workspace: conn.isWorkspace);
+    if (!confirmed) return;
     try {
       await ref.read(directoryProvider.notifier).disconnect(conn.id);
+      showInfoSnackBar(l10n.connectorDisconnected(item.entry.name));
     } catch (e) {
-      if (mounted) showErrorSnackBar(friendlyError(e));
+      showErrorSnackBar(connectorErrorMessage(l10n, e));
     }
   }
 
   Future<void> _delete(DirectoryEntry entry) async {
+    final l10n = context.l10n;
+    final confirmed = await confirmDisconnect(
+      context,
+      entry.name,
+      message: l10n.directoryDeleteConfirm,
+      actionLabel: l10n.directoryDelete,
+    );
+    if (!confirmed) return;
     try {
       await ref.read(directoryProvider.notifier).deleteEntry(entry.id);
-      if (mounted) showInfoSnackBar(context.l10n.directoryDeleteSuccess);
+      showInfoSnackBar(l10n.directoryDeleteSuccess);
     } catch (e) {
-      if (mounted) showErrorSnackBar(friendlyError(e));
+      showErrorSnackBar(connectorErrorMessage(l10n, e));
     }
   }
 
@@ -179,6 +156,9 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isAdmin = ref.watch(hasCapabilityProvider(Cap.manageWorkspace));
+    final canWorkspace =
+        ref.watch(hasCapabilityProvider(Cap.connectWorkspaceConnector));
+    final flow = ref.watch(oauthFlowProvider);
     final itemsAsync = ref.watch(directoryProvider);
 
     return Column(
@@ -222,13 +202,14 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
         ),
         const SizedBox(height: 14),
         itemsAsync.when(
+          skipLoadingOnReload: true,
           loading: () => const Padding(
             padding: EdgeInsets.symmetric(vertical: 24),
             child: Center(child: CircularProgressIndicator()),
           ),
           error: (e, _) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Text(friendlyError(e),
+            child: Text(connectorErrorMessage(l10n, e),
                 style: TextStyle(color: AppTheme.mutedText(context))),
           ),
           data: (items) {
@@ -249,10 +230,14 @@ class _DirectorySectionState extends ConsumerState<DirectorySection>
                     padding: const EdgeInsets.only(bottom: 14),
                     child: DirectoryCard(
                       item: item,
-                      busy: _busySlug == item.entry.slug,
+                      busy: _busySlug == item.entry.slug ||
+                          flow?.slug == item.entry.slug,
                       isAdmin: isAdmin,
                       onConnect: () => _connect(item.entry),
-                      onManage: () => _manage(item),
+                      onManage: (item.connection != null &&
+                              (!item.connection!.isWorkspace || canWorkspace))
+                          ? () => _manage(item)
+                          : null,
                       onEdit: () =>
                           DirectoryAdminSheet.show(context, entry: item.entry),
                       onDelete: () => _delete(item.entry),

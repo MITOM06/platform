@@ -14,9 +14,8 @@ describe('ConnectionsController (JWT-derived identity)', () => {
       listConnections: jest.fn().mockResolvedValue([]),
       listSkills: jest.fn().mockResolvedValue([]),
       setSkill: jest.fn().mockResolvedValue({ skillId: 's1', enabled: true }),
-      saveCustom: jest.fn().mockResolvedValue({ _id: 'm1' }),
     };
-    controller = new ConnectionsController(service);
+    controller = new ConnectionsController(service, {} as any);
   });
 
   const user = (sub: string) => ({ sub, sid: 'sess', perms: [] }) as any;

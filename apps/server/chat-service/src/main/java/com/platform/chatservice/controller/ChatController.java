@@ -4,18 +4,24 @@ import com.platform.chatservice.dto.AiHistoryEntry;
 import com.platform.chatservice.dto.ChatMessageDto;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
+import com.platform.chatservice.exception.BadRequestException;
+import com.platform.chatservice.exception.ConversationNotFoundException;
+import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.exception.RateLimitExceededException;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.CallService;
 import com.platform.chatservice.service.ClusterMessageBroker;
+import com.platform.chatservice.service.ConversationMembershipCache;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.ExternalBotService;
 import com.platform.chatservice.service.MessageNotificationService;
 import com.platform.chatservice.service.MessageQueryService;
 import com.platform.chatservice.service.MessageService;
+import com.platform.chatservice.service.MessageTypePolicy;
 import com.platform.chatservice.service.RateLimiterService;
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -41,6 +47,7 @@ public class ChatController {
   private final CallService callService;
   private final ExternalBotService externalBotService;
   private final ConversationService conversationService;
+  private final ConversationMembershipCache membershipCache;
 
   @MessageMapping("/chat.send")
   public void send(@Payload ChatMessageDto dto, Principal principal) {
@@ -58,17 +65,28 @@ public class ChatController {
     SendMessageRequest request =
         new SendMessageRequest(
             dto.getConversationId(), dto.getContent(), dto.getType(), dto.getReplyToId());
-    MessageResponse response = messageService.sendMessage(principal.getName(), request);
+    MessageResponse response;
+    try {
+      response = messageService.sendMessage(principal.getName(), request);
+    } catch (BadRequestException
+        | ForbiddenException
+        | ConversationNotFoundException
+        | IllegalArgumentException e) {
+      // STOMP has no HTTP status: tell the sender (only) why the frame was refused.
+      rejectSend(principal.getName(), dto.getConversationId(), e);
+      return;
+    }
     clusterBroker.convertAndSend("/topic/conversation/" + dto.getConversationId(), response);
 
     // Async AI trigger — must not block the STOMP response.
     // Trigger when the message mentions @AI, OR when this is a 1-1 conversation with the native AI
-    // bot (every message there is implicitly addressed to the AI, so no mention is required).
-    boolean hasMention =
-        dto.getContent() != null && AI_MENTION_PATTERN.matcher(dto.getContent()).find();
+    // bot (every message there is implicitly addressed to the AI, so no mention is required). Only
+    // TEXT does: stickers, voice notes, file JSON and system codes are not prompts.
+    boolean isText =
+        dto.getContent() != null && MessageTypePolicy.triggersAssistant(response.type());
+    boolean hasMention = isText && AI_MENTION_PATTERN.matcher(dto.getContent()).find();
     boolean isDirectAi =
-        dto.getContent() != null
-            && conversationService.isDirectAiConversation(dto.getConversationId());
+        isText && conversationService.isDirectAiConversation(dto.getConversationId());
     if (hasMention || isDirectAi) {
       final String uid = principal.getName();
       final String convId = dto.getConversationId();
@@ -92,7 +110,7 @@ public class ChatController {
     }
 
     // Async personal-assistant (Bot Factory) trigger — 1-1 conversation with the member's bot.
-    if (dto.getContent() != null) {
+    if (isText) {
       final String botUid = principal.getName();
       final String botConvId = dto.getConversationId();
       final String botRaw = dto.getContent();
@@ -112,8 +130,38 @@ public class ChatController {
     messageNotificationService.notifyNewMessage(principal.getName(), response);
   }
 
+  /**
+   * {@code {type:"MESSAGE_REJECTED", conversationId, code}} on the sender's notification queue —
+   * the STOMP counterpart of the REST 400/403/404 (code: see {@code ErrorCodes}; {@code NOT_FOUND}
+   * for an unknown / non-member conversation).
+   */
+  private void rejectSend(String userId, String conversationId, RuntimeException e) {
+    String code;
+    if (e instanceof BadRequestException bad) {
+      code = bad.getCode();
+    } else if (e instanceof ForbiddenException forbidden) {
+      code = forbidden.getCode() != null ? forbidden.getCode() : "FORBIDDEN";
+    } else if (e instanceof ConversationNotFoundException) {
+      code = "NOT_FOUND";
+    } else {
+      code = null;
+    }
+    Map<String, Object> event = new HashMap<>();
+    event.put("type", "MESSAGE_REJECTED");
+    event.put("code", code != null ? code : "BAD_REQUEST");
+    if (conversationId != null) {
+      event.put("conversationId", conversationId);
+    }
+    clusterBroker.convertAndSendToUser(userId, "/queue/notifications", event);
+  }
+
+  /** Relay a typing indicator — only from a current participant of the conversation. */
   @MessageMapping("/chat.typing")
   public void typing(@Payload ChatMessageDto dto, Principal principal) {
+    if (dto.getConversationId() == null
+        || !membershipCache.isMember(dto.getConversationId(), principal.getName())) {
+      return;
+    }
     Map<String, Object> payload =
         Map.of(
             "conversationId", dto.getConversationId(),

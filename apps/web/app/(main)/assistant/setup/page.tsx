@@ -15,6 +15,7 @@ import {
 } from '@/components/chat/assistant/AssistantPreviewAvatar'
 import { AssistantModelSelect } from '@/components/chat/assistant/AssistantModelSelect'
 import { useAssistantProviders, useSetupAssistant } from '@/lib/hooks/use-assistant'
+import { assistantErrorKey } from '@/lib/api/assistant'
 import { useOpenAssistantChat } from '@/lib/hooks/use-open-assistant-chat'
 
 type Step = 0 | 1 | 2 | 3
@@ -37,7 +38,8 @@ export default function AssistantSetupPage() {
 
   const canAdvance =
     (step === 0 && name.trim().length > 0) ||
-    (step === 1 && true) ||
+    // The persona is required on the first setup (400 ASSISTANT_SETUP_INCOMPLETE).
+    (step === 1 && systemPrompt.trim().length > 0) ||
     (step === 2 && providerId.length > 0) ||
     step === 3
 
@@ -49,7 +51,7 @@ export default function AssistantSetupPage() {
   }
 
   async function handleCreate() {
-    if (!name.trim() || !providerId) return
+    if (!name.trim() || !systemPrompt.trim() || !providerId) return
     try {
       const res = await setup.mutateAsync({
         name: name.trim(),
@@ -58,8 +60,8 @@ export default function AssistantSetupPage() {
       })
       toast.success(t('success'))
       await openChat(res.botUserId)
-    } catch {
-      toast.error(tc('somethingWrong'))
+    } catch (err) {
+      toast.error(t(assistantErrorKey(err)))
     }
   }
 
@@ -182,7 +184,7 @@ export default function AssistantSetupPage() {
             ) : (
               <Button
                 onClick={handleCreate}
-                disabled={setup.isPending || !name.trim() || !providerId}
+                disabled={setup.isPending || !name.trim() || !systemPrompt.trim() || !providerId}
                 className="flex-1"
               >
                 {setup.isPending ? (

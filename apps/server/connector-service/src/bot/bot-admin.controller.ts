@@ -1,15 +1,5 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ConfigService } from '@nestjs/config';
 import {
   Capability,
   JwtAuthGuard,
@@ -17,11 +7,8 @@ import {
   RequirePermissionGuard,
 } from '@platform/database';
 import { BotSessionService } from './bot-session.service';
-
-class BotSessionDto {
-  userId: string;
-  botUserId: string;
-}
+import { BotBridgeService } from './bot-bridge.service';
+import { BotSessionDto, BotSessionListQueryDto } from './bot.dto';
 
 /**
  * Admin-only API to issue/revoke bot session tokens. The `@RequirePermission`
@@ -35,20 +22,22 @@ class BotSessionDto {
 export class BotAdminController {
   constructor(
     private readonly sessions: BotSessionService,
-    private readonly config: ConfigService,
+    private readonly bridge: BotBridgeService,
   ) {}
 
   /**
-   * Issue a bot session token. Returns the plaintext token once — admin must
-   * copy it immediately and configure it in Bot Factory as the MCP Bearer token.
+   * Issue a bot session token for a member's own bot. Returns the plaintext
+   * token once (with its expiry) — the admin configures it in Bot Factory as
+   * the MCP Bearer token.
    */
   @Post('sessions')
   @ApiOperation({ summary: 'Issue a bot session token (returned once)' })
   @RequirePermission(Capability.MANAGE_WORKSPACE)
   async issue(@Body() dto: BotSessionDto) {
-    const token = await this.sessions.issue(dto.userId, dto.botUserId);
-    const mcpUrl = this.config.get<string>('mcpServerUrl');
-    return { token, mcpUrl };
+    const mcpUrl = this.bridge.requireMcpServerUrl();
+    await this.bridge.assertIssuable(dto.userId, dto.botUserId);
+    const { token, expiresAt } = await this.sessions.issue(dto.userId, dto.botUserId);
+    return { token, mcpUrl, expiresAt };
   }
 
   /** Revoke a bot session — the Bot Factory bot loses tool access immediately. */
@@ -64,13 +53,14 @@ export class BotAdminController {
   @Get('sessions')
   @ApiOperation({ summary: 'List active bot sessions for a user' })
   @RequirePermission(Capability.MANAGE_WORKSPACE)
-  async list(@Query('userId') userId: string) {
-    const sessions = await this.sessions.findForUser(userId);
+  async list(@Query() query: BotSessionListQueryDto) {
+    const sessions = await this.sessions.findForUser(query.userId);
     return {
       sessions: sessions.map((s) => ({
         botUserId: s.botUserId,
         createdAt: s.createdAt,
         lastUsedAt: s.lastUsedAt ?? null,
+        expiresAt: new Date(this.sessions.expiryOf(s)),
       })),
     };
   }

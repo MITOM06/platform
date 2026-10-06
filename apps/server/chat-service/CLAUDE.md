@@ -47,7 +47,8 @@
 - deletedFor: List<String> (userIds who hid this message)
 - editedAt: Instant
 - mentions: List<String> (userIds)
-- trace: AiTraceData { thinkingBlocks, toolCalls, inputTokens, outputTokens... }
+- trace: AiTraceData { thinkingBlocks, toolCalls, inputTokens, outputTokens, cachedInputTokens, cacheCreationInputTokens... }
+- pendingActions: List<PendingAction> (AI replies only) [ { id, toolName, provider, summary, status: pending|confirmed|failed|cancelled, expiresAt, requesterId } ]
 - createdAt: Instant
 ```
 
@@ -105,7 +106,15 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 ### Server-to-Client Broker
 - `/topic/conversation/{conversationId}` — Receive messages, reactions, edits, recalls, and AI streaming.
 - `/topic/conversation/{conversationId}/typing` — Receive typing status: `{ userId, typing: boolean }`
-- `/user/queue/notifications` — Receive unread notifications: `{ type: "NEW_MESSAGE", conversationId, senderName }`
+- `/user/queue/notifications` — Receive unread notifications: `{ type: "NEW_MESSAGE", conversationId, senderName }`;
+  also `{ type: "CLAIMS_CHANGED" }` (role/department/permissions changed → refresh token, refetch capabilities, reconnect)
+
+### Session checks
+- REST + STOMP CONNECT: `SessionValidator.validateToken` — `sess:{sid}` exists, not revoked, owner = `sub`, and
+  `iat >= claimsAt` when auth-service stamped `claimsAt` (else 401 / STOMP ERROR `TOKEN_CLAIMS_STALE`, a refresh signal)
+- SEND / SUBSCRIBE on an open socket + the 30 s socket sweep: `SessionValidator.validate` (revocation only)
+- Redis in: `auth:sessions-revoked` (close sockets), `auth:claims-changed` (evict cache + push CLAIMS_CHANGED locally),
+  `ai:action:resolved` (flip `pendingActions[].status` → `MESSAGE_UPDATED` with `pendingActions`)
 
 ---
 
@@ -114,9 +123,11 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 ### `/api/conversations`
 - `GET /` — List user's conversations (paginated, unreadCount included)
 - `POST /` — Create/get 1-on-1 direct chat
-- `POST /group` — Create group chat
+- `POST /group` — Create group chat (`publicChannel: true` → public channel; not allowed with `departmentId`)
 - `GET /{id}` — Get single conversation details
-- `PUT /{id}` — Update group name / avatarUrl (admins only)
+- `PUT /{id}` — Update group name / avatarUrl / `publicChannel` (admins only)
+- `POST /{id}/admins/{userId}` / `DELETE /{id}/admins/{userId}` — Promote / demote a group admin (admins only;
+  `NOT_A_GROUP` 400, `GROUP_ADMIN_REQUIRED` 403, `NOT_A_MEMBER` 404, `LAST_ADMIN_CANNOT_BE_REMOVED` 409)
 - `DELETE /{id}` — Delete/leave conversation
 - `POST /{id}/members` — Add members to group
 - `DELETE /{id}/members/{userId}` — Kick member from group
@@ -138,7 +149,7 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 - `POST /{id}/delete-for-me` — Delete message for self only
 - `POST /{id}/reactions` / `DELETE /{id}/reactions` — Toggle emoji reaction
 - `GET /{id}/trace` — Retrieve AI reasoning trace logs
-- `POST /{id}/pin` / `DELETE /{id}/pin` — Pin/unpin message
+- `POST /{id}/pin` / `DELETE /{id}/pin` — Pin/unpin message (max 5; 409 `PIN_LIMIT_REACHED` `params.max`)
 - `/search?q={query}&conversationId={id}` — Text search messages in conversation
 
 ### Other Services

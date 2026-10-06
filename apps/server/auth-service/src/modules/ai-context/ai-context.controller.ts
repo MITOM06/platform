@@ -56,9 +56,13 @@ export class AiContextController {
     return this.service.updateSoftContext(user.sub, dto);
   }
 
+  /** Self, MANAGE_MEMBERS, or the member's department lead — else 403. */
   @Get('users/:userId')
-  getUser(@Param('userId') userId: string) {
-    return this.service.getUserContext(userId);
+  getUser(@CurrentUser() user: JwtUser, @Param('userId') userId: string) {
+    return this.service.getUserContextFor(
+      { sub: user.sub, perms: user.perms ?? [] },
+      userId,
+    );
   }
 
   @Patch('users/:userId/hard')

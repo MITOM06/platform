@@ -18,9 +18,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * SessionValidator}); otherwise the request is rejected right here with {@code 401 {"code":
  * "SESSION_REVOKED" | "SESSION_NOT_FOUND" | "TOKEN_SESSION_MISMATCH" | "TOKEN_INVALID"}} (or {@code
  * 503 {"code":"SESSION_CHECK_UNAVAILABLE"}} if the session store is down), so a blocked /
- * logged-out user is cut off immediately instead of at token expiry. Requests without a token, or
- * with a token whose signature fails, continue unauthenticated exactly as before (public routes
- * still work; protected ones get the entry-point 401).
+ * logged-out user is cut off immediately instead of at token expiry. A token issued before the
+ * user's role / departments / permissions changed answers {@code 401 {"code":"TOKEN_CLAIMS_STALE"}}
+ * — clients refresh (like an expired token) and retry; it is never a logout. Requests without a
+ * token, or with a token whose signature fails, continue unauthenticated exactly as before (public
+ * routes still work; protected ones get the entry-point 401).
  */
 @Component
 @RequiredArgsConstructor
@@ -37,7 +39,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     if (StringUtils.hasText(token) && jwtUtil.isValid(token)) {
       String userId = jwtUtil.extractUserId(token);
-      SessionStatus status = sessionValidator.validate(jwtUtil.extractSid(token), userId);
+      SessionStatus status =
+          sessionValidator.validateToken(
+              jwtUtil.extractSid(token), userId, jwtUtil.extractIssuedAtSeconds(token));
       if (!status.isValid()) {
         reject(response, status);
         return;

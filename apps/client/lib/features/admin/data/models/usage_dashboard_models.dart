@@ -106,11 +106,14 @@ class TopUser {
         estimatedCostUsd: _asDouble(j['estimatedCostUsd']),
       );
 
-  /// Best-effort label: backend resolves displayName, falls back to userId.
-  String get label =>
-      (displayName != null && displayName!.trim().isNotEmpty)
-          ? displayName!
-          : userId;
+  /// The backend-resolved display name, or null when it is missing or is
+  /// itself an id — the UI then shows a generic label, never the userId.
+  String? get safeName {
+    final name = displayName?.trim();
+    if (name == null || name.isEmpty || name == userId) return null;
+    if (RegExp(r'^[0-9a-fA-F]{24}$').hasMatch(name)) return null;
+    return name;
+  }
 }
 
 class WorstAnswer {

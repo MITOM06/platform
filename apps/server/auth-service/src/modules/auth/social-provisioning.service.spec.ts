@@ -18,7 +18,12 @@ describe('SocialProvisioningService (invite-only rules D7/D8)', () => {
   let config: Record<string, string>;
   let roleModel: { findOne: jest.Mock };
 
-  const profile = { id: 'g-1', email: 'Jane@Acme.com', displayName: 'Jane' };
+  const profile = {
+    id: 'g-1',
+    email: 'Jane@Acme.com',
+    displayName: 'Jane',
+    emailVerified: true,
+  };
 
   beforeEach(async () => {
     users = {
@@ -62,6 +67,64 @@ describe('SocialProvisioningService (invite-only rules D7/D8)', () => {
     expect(users.findByEmailInsensitive).toHaveBeenCalledWith('jane@acme.com');
     expect(users.updateSocialId).toHaveBeenCalledWith('u1', 'google', 'g-1');
     expect(users.create).not.toHaveBeenCalled();
+  });
+
+  it('existing account by email but the IdP did not verify the email → 401 SSO_EMAIL_UNVERIFIED, nothing linked', async () => {
+    users.findByEmailInsensitive.mockResolvedValue({
+      _id: oid('u1'),
+      status: 'active',
+      socialLinks: {},
+    });
+    for (const emailVerified of [false, undefined]) {
+      await expect(
+        service.resolveUserId({ ...profile, emailVerified }, 'oidc'),
+      ).rejects.toMatchObject({
+        status: 401,
+        response: { code: 'SSO_EMAIL_UNVERIFIED' },
+      });
+    }
+    expect(users.updateSocialId).not.toHaveBeenCalled();
+  });
+
+  it('existing account already linked to a DIFFERENT provider id → 403 SOCIAL_ACCOUNT_CONFLICT', async () => {
+    users.findByEmailInsensitive.mockResolvedValue({
+      _id: oid('u1'),
+      status: 'active',
+      socialLinks: { google: 'g-original' },
+    });
+    await expect(service.resolveUserId(profile, 'google')).rejects.toMatchObject({
+      status: 403,
+      response: { code: 'SOCIAL_ACCOUNT_CONFLICT' },
+    });
+    expect(users.updateSocialId).not.toHaveBeenCalled();
+  });
+
+  it('a user already linked by provider id signs in regardless of the email claim', async () => {
+    users.findBySocialId.mockResolvedValue({
+      _id: oid('u1'),
+      status: 'active',
+      socialLinks: { google: 'g-1' },
+    });
+    await expect(
+      service.resolveUserId({ ...profile, emailVerified: undefined }, 'google'),
+    ).resolves.toBe('u1');
+    expect(users.findByEmailInsensitive).not.toHaveBeenCalled();
+  });
+
+  it('bootstrap owner creation requires a verified email (it grants Owner)', async () => {
+    config.BOOTSTRAP_OWNER_EMAIL = 'jane@acme.com';
+    await expect(
+      service.resolveUserId({ ...profile, emailVerified: false }, 'oidc', { allowJit: true }),
+    ).rejects.toMatchObject({ response: { code: 'SSO_EMAIL_UNVERIFIED' } });
+    expect(users.create).not.toHaveBeenCalled();
+  });
+
+  it('JIT creation on an allowed domain keeps working without a verified-email claim', async () => {
+    await expect(
+      service.resolveUserId({ ...profile, emailVerified: undefined }, 'oidc', {
+        allowJit: true,
+      }),
+    ).resolves.toBe('created');
   });
 
   it('blocked user → 403 ACCOUNT_BLOCKED', async () => {

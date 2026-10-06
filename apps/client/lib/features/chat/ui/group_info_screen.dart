@@ -1,26 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
-import '../../../core/utils/app_error.dart';
-import '../../../core/utils/global_messenger.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
-import '../data/chat_repository.dart';
 import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
+import '../utils/chat_error.dart';
+import 'group_info_actions.dart';
 import 'widgets/conversation_avatar.dart';
 import 'widgets/member_tile.dart';
 import 'widgets/pinned_messages_section.dart';
-
-/// Loads a single conversation (used for group info, refreshed on demand).
-final groupConversationProvider =
-    FutureProvider.autoDispose.family<ConversationModel, String>((ref, id) {
-  return ref.read(chatRepositoryProvider).getConversation(id);
-});
 
 class GroupInfoScreen extends ConsumerWidget {
   final String conversationId;
@@ -29,31 +20,40 @@ class GroupInfoScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final convAsync = ref.watch(groupConversationProvider(conversationId));
+    // Prefer the live copy (kept fresh by CONVERSATION_UPDATED — admins,
+    // members, name change in realtime); fall back to a one-off fetch.
+    final live = ref.watch(conversationProvider(conversationId));
+    final convAsync = live != null
+        ? AsyncData<ConversationModel>(live)
+        : ref.watch(groupConversationProvider(conversationId));
     final auth = ref.watch(authNotifierProvider).valueOrNull;
     final currentUserId = auth is AuthAuthenticated ? auth.user.id : '';
+    final actions = GroupInfoActions(context, ref, conversationId);
 
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.groupInfo)),
       body: convAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
-          child: Text(friendlyError(e),
+          child: Text(chatErrorMessage(context.l10n, e),
               style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant)),
         ),
         data: (conv) {
           final colorScheme = Theme.of(context).colorScheme;
-          final dividerColor =
-              AppTheme.hairline(context);
+          final dividerColor = AppTheme.hairline(context);
           final isAdmin = conv.admins.contains(currentUserId);
+          // Admins first, then everyone else (stable within each group).
+          final members = [
+            ...conv.participants.where(conv.admins.contains),
+            ...conv.participants.where((p) => !conv.admins.contains(p)),
+          ];
           return ListView(
             children: [
               const SizedBox(height: 16),
               Center(
                 child: GestureDetector(
-                  onTap:
-                      isAdmin ? () => _uploadGroupAvatar(context, ref) : null,
+                  onTap: isAdmin ? actions.uploadAvatar : null,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
@@ -107,7 +107,7 @@ class GroupInfoScreen extends ConsumerWidget {
                       Icon(Icons.edit_rounded, color: AppTheme.accent(context)),
                   title: Text(context.l10n.renameGroup,
                       style: TextStyle(color: colorScheme.onSurface)),
-                  onTap: () => _renameGroup(context, ref, conv),
+                  onTap: () => actions.rename(conv),
                 ),
               if (isAdmin)
                 ListTile(
@@ -115,7 +115,26 @@ class GroupInfoScreen extends ConsumerWidget {
                       color: AppTheme.accent(context)),
                   title: Text(context.l10n.addMembers,
                       style: TextStyle(color: colorScheme.onSurface)),
-                  onTap: () => _addMember(context, ref),
+                  onTap: actions.addMember,
+                ),
+              if (isAdmin)
+                SwitchListTile(
+                  secondary: Icon(Icons.public_rounded,
+                      color: AppTheme.accent(context)),
+                  title: Text(context.l10n.publicChannelToggle,
+                      style: TextStyle(color: colorScheme.onSurface)),
+                  subtitle: Text(
+                    conv.departmentId == null
+                        ? context.l10n.publicChannelHint
+                        : context.l10n.errPublicDepartmentChannel,
+                    style: TextStyle(
+                        fontSize: 12, color: AppTheme.mutedText(context)),
+                  ),
+                  value: conv.isPublic,
+                  // A department group can never be public.
+                  onChanged: conv.departmentId == null
+                      ? actions.setPublicChannel
+                      : null,
                 ),
               Divider(color: dividerColor),
               Padding(
@@ -130,13 +149,21 @@ class GroupInfoScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              for (final memberId in conv.participants)
+              for (final memberId in members)
                 MemberTile(
                   userId: memberId,
                   isMemberAdmin: conv.admins.contains(memberId),
-                  canRemove: isAdmin && memberId != currentUserId,
                   isSelf: memberId == currentUserId,
-                  onRemove: () => _removeMember(context, ref, memberId),
+                  // Admin-only management. Self-demote is offered only when
+                  // another admin remains (the server refuses the last one).
+                  canManage: isAdmin &&
+                      (memberId != currentUserId || conv.admins.length > 1),
+                  canRemove: isAdmin && memberId != currentUserId,
+                  onRemove: () => actions.removeMember(memberId),
+                  onPromote: () =>
+                      actions.setAdmin(memberId, makeAdmin: true),
+                  onDemote: () =>
+                      actions.setAdmin(memberId, makeAdmin: false),
                 ),
               // Pinned messages (Task 53). Prefer the live chat-state list so
               // unpins reflect immediately; fall back to the loaded snapshot.
@@ -182,11 +209,12 @@ class GroupInfoScreen extends ConsumerWidget {
               ],
               Divider(color: dividerColor),
               ListTile(
-                leading:
-                    Icon(Icons.logout_rounded, color: Theme.of(context).colorScheme.error),
+                leading: Icon(Icons.logout_rounded,
+                    color: Theme.of(context).colorScheme.error),
                 title: Text(context.l10n.leaveGroup,
-                    style: TextStyle(color: Theme.of(context).colorScheme.error)),
-                onTap: () => _leaveGroup(context, ref, currentUserId),
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.error)),
+                onTap: () => actions.leave(currentUserId),
               ),
             ],
           );
@@ -194,171 +222,4 @@ class GroupInfoScreen extends ConsumerWidget {
       ),
     );
   }
-
-  Future<void> _renameGroup(
-      BuildContext context, WidgetRef ref, ConversationModel conv) async {
-    final controller = TextEditingController(text: conv.name ?? '');
-    final String? newName;
-    try {
-      newName = await showDialog<String>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(ctx.l10n.renameGroup),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            decoration: InputDecoration(hintText: ctx.l10n.groupName),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(ctx.l10n.actionCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-              child: Text(ctx.l10n.actionSave),
-            ),
-          ],
-        ),
-      );
-    } finally {
-      controller.dispose();
-    }
-    if (newName == null || newName.isEmpty) return;
-    try {
-      await ref
-          .read(chatRepositoryProvider)
-          .updateConversation(conversationId, name: newName);
-      ref.invalidate(groupConversationProvider(conversationId));
-      // Also refresh the conversation list + app-bar so the new name shows there.
-      ref.invalidate(conversationsNotifierProvider);
-    } catch (e) {
-      if (context.mounted) {
-        showErrorSnackBar(context.l10n.listGenericError);
-      }
-    }
-  }
-
-  Future<void> _uploadGroupAvatar(BuildContext context, WidgetRef ref) async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile == null) return;
-
-    try {
-      final url = await ref.read(chatRepositoryProvider).uploadFile(pickedFile);
-      await ref
-          .read(chatRepositoryProvider)
-          .updateConversation(conversationId, avatarUrl: url);
-      ref.invalidate(groupConversationProvider(conversationId));
-      ref.invalidate(conversationsNotifierProvider);
-    } catch (e) {
-      if (context.mounted) {
-        showErrorSnackBar(context.l10n.uploadFailed);
-      }
-    }
-  }
-
-  Future<void> _addMember(BuildContext context, WidgetRef ref) async {
-    final controller = TextEditingController();
-    final String? email;
-    try {
-      email = await showDialog<String>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(ctx.l10n.addMembers),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            decoration: InputDecoration(hintText: ctx.l10n.searchUsers),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(ctx.l10n.actionCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-              child: Text(ctx.l10n.actionConfirm),
-            ),
-          ],
-        ),
-      );
-    } finally {
-      controller.dispose();
-    }
-    if (email == null || email.isEmpty) return;
-    final query = email;
-    try {
-      final users = await ref.read(authRepositoryProvider).searchUsers(query);
-      final matches =
-          users.where((u) => u.email.toLowerCase() == query.toLowerCase());
-      final user = matches.isNotEmpty
-          ? matches.first
-          : (users.isNotEmpty ? users.first : null);
-      if (user == null) {
-        if (context.mounted) {
-          showErrorSnackBar(context.l10n.errUserNotFoundEmail);
-        }
-        return;
-      }
-      await ref
-          .read(chatRepositoryProvider)
-          .addMembers(conversationId, [user.id]);
-      ref.invalidate(groupConversationProvider(conversationId));
-      ref.invalidate(conversationsNotifierProvider);
-    } catch (e) {
-      if (context.mounted) {
-        showErrorSnackBar(context.l10n.listGenericError);
-      }
-    }
-  }
-
-  Future<void> _removeMember(
-      BuildContext context, WidgetRef ref, String userId) async {
-    try {
-      await ref
-          .read(chatRepositoryProvider)
-          .removeMember(conversationId, userId);
-      ref.invalidate(groupConversationProvider(conversationId));
-    } catch (e) {
-      if (context.mounted) {
-        showErrorSnackBar(context.l10n.listGenericError);
-      }
-    }
-  }
-
-  Future<void> _leaveGroup(
-      BuildContext context, WidgetRef ref, String currentUserId) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(ctx.l10n.leaveGroup),
-        content: Text(ctx.l10n.leaveGroupConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(ctx.l10n.actionCancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(ctx.l10n.actionLeave),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true) return;
-    try {
-      await ref
-          .read(chatRepositoryProvider)
-          .removeMember(conversationId, currentUserId);
-      ref.read(conversationsNotifierProvider.notifier).refresh();
-      if (context.mounted) context.go('/');
-    } catch (e) {
-      if (context.mounted) {
-        showErrorSnackBar(context.l10n.listGenericError);
-      }
-    }
-  }
 }
-

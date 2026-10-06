@@ -5,6 +5,7 @@ import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/admin_models.dart';
 import '../../state/admin_providers.dart';
+import '../../utils/audit_labels.dart';
 
 const _limit = 20;
 
@@ -90,6 +91,7 @@ class _AuditTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final when = entry.createdAt;
     return Container(
       padding: const EdgeInsets.all(12),
@@ -110,28 +112,25 @@ class _AuditTile extends StatelessWidget {
                   color: AppTheme.accent(context).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text(entry.action,
+                child: Text(auditActionLabel(l10n, entry.action),
                     style: TextStyle(
-                        color: AppTheme.accent(context),
-                        fontSize: 11,
-                        fontFamily: AppTheme.fontMono)),
+                        color: AppTheme.accent(context), fontSize: 11)),
               ),
               const Spacer(),
               if (when != null)
                 Text(
-                  '${when.toLocal()}'.split('.').first,
+                  auditTimeLabel(l10n, when),
                   style: TextStyle(color: AppTheme.mutedText(context), fontSize: 11),
                 ),
             ],
           ),
           const SizedBox(height: 6),
           Text(
-            entry.actorName ?? entry.actorId,
+            auditActorLabel(l10n, entry),
             style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
           ),
           Text(
-            '${entry.targetType}'
-            '${entry.targetId != null ? ' (${entry.targetId})' : ''}',
+            auditTargetLabel(l10n, entry),
             style: TextStyle(color: AppTheme.mutedText(context), fontSize: 12),
           ),
         ],

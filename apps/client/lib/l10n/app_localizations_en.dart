@@ -1112,7 +1112,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinnedMessagesTitle => 'Pinned Messages';
 
   @override
-  String get pinLimitReached => 'You can pin up to 2 messages';
+  String get pinLimitReached => 'You can pin up to 5 messages';
 
   @override
   String get cannotPinCall => 'Calls can\'t be pinned';
@@ -3602,4 +3602,703 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get callPoorConnection => 'Poor connection';
+
+  @override
+  String get aiContextLearnedFactsLoadError =>
+      'Couldn\'t load what the assistant has learned.';
+
+  @override
+  String get errTooManyRequests =>
+      'Too many requests. Please wait a moment and try again.';
+
+  @override
+  String get removedFromConversation =>
+      'You are no longer a member of this conversation';
+
+  @override
+  String get errGroupAdminRequired => 'Only group admins can do this';
+
+  @override
+  String get errChatUserBlocked => 'You can\'t message this person';
+
+  @override
+  String get errReplyTargetInvalid =>
+      'The message you replied to is no longer available';
+
+  @override
+  String get errMessageTypeNotAllowed =>
+      'This kind of message can\'t be sent here';
+
+  @override
+  String get errInvalidUrl => 'This link can\'t be previewed';
+
+  @override
+  String get errNotAGroup => 'This only works in group chats';
+
+  @override
+  String get errNotAMember => 'This person is no longer in the group';
+
+  @override
+  String get errLastAdminCannotBeRemoved => 'A group needs at least one admin';
+
+  @override
+  String get errPublicDepartmentChannel =>
+      'A department group can\'t be a public channel';
+
+  @override
+  String get publicChannelToggle => 'Public channel';
+
+  @override
+  String get publicChannelHint =>
+      'Anyone in the workspace can find it in Explore and join';
+
+  @override
+  String get groupMakeAdmin => 'Make admin';
+
+  @override
+  String get groupRemoveAdmin => 'Remove as admin';
+
+  @override
+  String get aiErrEmptyResponse =>
+      'The assistant didn\'t produce an answer. Please try again.';
+
+  @override
+  String get sysGroupCreatedNoActor => 'Group created';
+
+  @override
+  String get sysMembersAddedNoActor => 'New members were added';
+
+  @override
+  String get sysMemberLeftNoActor => 'A member left the group';
+
+  @override
+  String get sysMemberRemovedNoActor => 'A member was removed';
+
+  @override
+  String get sysMemberJoinedNoActor => 'A new member joined';
+
+  @override
+  String get sysAutoDeleteOff => 'Disappearing messages turned off';
+
+  @override
+  String sysAutoDeleteOn(String duration) {
+    return 'Disappearing messages set to $duration';
+  }
+
+  @override
+  String sysAutoDeleteOffBy(String actorName) {
+    return '$actorName turned off disappearing messages';
+  }
+
+  @override
+  String sysAutoDeleteOnBy(String actorName, String duration) {
+    return '$actorName set disappearing messages to $duration';
+  }
+
+  @override
+  String sysAdminPromoted(String targetName) {
+    return '$targetName is now an admin';
+  }
+
+  @override
+  String sysAdminDemoted(String targetName) {
+    return '$targetName is no longer an admin';
+  }
+
+  @override
+  String sysAdminPromotedBy(String actorName, String targetName) {
+    return '$actorName made $targetName an admin';
+  }
+
+  @override
+  String sysAdminDemotedBy(String actorName, String targetName) {
+    return '$actorName removed $targetName as admin';
+  }
+
+  @override
+  String durationSeconds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count seconds',
+      one: '1 second',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes',
+      one: '1 minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours',
+      one: '1 hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationShortMinutes(int count) {
+    return '${count}m';
+  }
+
+  @override
+  String durationShortHours(int count) {
+    return '${count}h';
+  }
+
+  @override
+  String durationShortDays(int count) {
+    return '${count}d';
+  }
+
+  @override
+  String get authErrUserBlocked =>
+      'Not available — one of you has blocked the other';
+
+  @override
+  String get authErrCurrentPasswordRequired => 'Enter your current password';
+
+  @override
+  String get authErrSsoEmailUnverified =>
+      'Your sign-in provider hasn\'t verified this email address';
+
+  @override
+  String get authErrSocialAccountConflict =>
+      'This email is already linked to a different sign-in account';
+
+  @override
+  String get aiActionConfirm => 'Confirm';
+
+  @override
+  String get aiActionCancel => 'Cancel';
+
+  @override
+  String get aiActionSendEmail => 'Send email';
+
+  @override
+  String get aiActionDraftEmail => 'Draft email';
+
+  @override
+  String get aiActionCreateEvent => 'Create calendar event';
+
+  @override
+  String get aiActionUpdateEvent => 'Update calendar event';
+
+  @override
+  String get aiActionCreatePage => 'Create page';
+
+  @override
+  String get aiActionUpdatePage => 'Update page';
+
+  @override
+  String get aiActionGeneric => 'Run an action';
+
+  @override
+  String aiActionGenericNamed(String tool) {
+    return 'Run “$tool”';
+  }
+
+  @override
+  String aiActionVia(String connector) {
+    return 'via $connector';
+  }
+
+  @override
+  String aiActionWaitingFor(String name) {
+    return 'Waiting for $name to confirm';
+  }
+
+  @override
+  String get aiActionFieldTo => 'To';
+
+  @override
+  String get aiActionFieldSubject => 'Subject';
+
+  @override
+  String get aiActionFieldTitle => 'Title';
+
+  @override
+  String get aiActionFieldWhen => 'When';
+
+  @override
+  String get aiActionStatusConfirmed => 'Done';
+
+  @override
+  String get aiActionStatusCancelled => 'Cancelled';
+
+  @override
+  String get aiActionStatusFailed => 'Failed';
+
+  @override
+  String get aiActionStatusExpired => 'Expired';
+
+  @override
+  String get aiActionStatusHandled => 'Already handled';
+
+  @override
+  String get aiActionErrNotFound => 'This action no longer exists';
+
+  @override
+  String get aiActionErrNotOwner =>
+      'Only the person who asked can confirm this';
+
+  @override
+  String get aiActionErrAlreadyResolved => 'This action was already handled';
+
+  @override
+  String get aiActionErrExpired => 'This request expired';
+
+  @override
+  String get aiActionErrGeneric => 'Couldn’t complete this action';
+
+  @override
+  String get aiToolWebSearch => 'Searching the web';
+
+  @override
+  String get aiToolRememberFact => 'Saving to memory';
+
+  @override
+  String get aiToolCreateReminder => 'Creating a reminder';
+
+  @override
+  String get aiToolGetUserInfo => 'Looking up a colleague';
+
+  @override
+  String get aiToolSearchKnowledgeBase => 'Searching the knowledge base';
+
+  @override
+  String get aiToolSearchMessages => 'Searching messages';
+
+  @override
+  String get aiToolSummarizeConversation => 'Summarizing the conversation';
+
+  @override
+  String aiToolOnConnector(String tool, String connector) {
+    return '$tool on $connector';
+  }
+
+  @override
+  String get aiTraceToolAwaiting => 'Awaiting confirmation';
+
+  @override
+  String get aiTraceToolDone => 'Done';
+
+  @override
+  String get aiTraceToolNotRun => 'Not run';
+
+  @override
+  String aiTraceTokens(String input, String output) {
+    return '$input in · $output out';
+  }
+
+  @override
+  String aiTraceCacheTokens(String read, String written) {
+    return 'cache $read read · $written written';
+  }
+
+  @override
+  String aiTraceThinkingTokens(String count) {
+    return '$count thinking';
+  }
+
+  @override
+  String aiTraceDuration(String seconds) {
+    return '${seconds}s';
+  }
+
+  @override
+  String aiTraceSteps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count steps',
+      one: '1 step',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get connectorGenericName => 'Connector';
+
+  @override
+  String get connectorCustomName => 'Custom MCP server';
+
+  @override
+  String get connectorReconnect => 'Reconnect';
+
+  @override
+  String get connectorStatusReconnect => 'Reconnect needed';
+
+  @override
+  String get connectorStatusUnavailable => 'Unavailable';
+
+  @override
+  String get connectorDisconnectWorkspaceConfirm =>
+      'Disconnect this workspace connector? Everyone in the workspace loses access to its tools.';
+
+  @override
+  String connectorDisconnected(String name) {
+    return '$name disconnected';
+  }
+
+  @override
+  String get customMcpListTitle => 'Your MCP servers';
+
+  @override
+  String get customMcpDelete => 'Remove';
+
+  @override
+  String get customMcpDeleteConfirm =>
+      'Remove this MCP server? The AI will no longer use its tools.';
+
+  @override
+  String customMcpDeleted(String name) {
+    return '$name removed';
+  }
+
+  @override
+  String get directoryDeleteConfirm => 'Delete this directory entry?';
+
+  @override
+  String get directoryAuthOauth => 'OAuth sign-in';
+
+  @override
+  String get directoryAuthMcpOauth => 'OAuth (MCP server)';
+
+  @override
+  String get directoryAuthEnvOauth => 'OAuth (workspace app)';
+
+  @override
+  String get directoryAuthApiKey => 'API key';
+
+  @override
+  String get directoryAuthNone => 'No sign-in needed';
+
+  @override
+  String get scopeEmailSend => 'Send email';
+
+  @override
+  String get scopeEmailDraft => 'Create drafts';
+
+  @override
+  String get scopeEmailRead => 'Read email';
+
+  @override
+  String get scopeEmailManage => 'Manage email';
+
+  @override
+  String get scopeCalendarRead => 'Read calendar';
+
+  @override
+  String get scopeCalendarEvents => 'Manage events';
+
+  @override
+  String get scopeCalendarManage => 'Manage calendars';
+
+  @override
+  String get scopeFilesRead => 'Read files';
+
+  @override
+  String get scopeFilesManage => 'Manage files';
+
+  @override
+  String get scopeReadContent => 'Read content';
+
+  @override
+  String get scopeInsertContent => 'Add content';
+
+  @override
+  String get scopeUpdateContent => 'Edit content';
+
+  @override
+  String get scopeOther => 'Other access';
+
+  @override
+  String get connErrUnsafeUrl =>
+      'That address isn’t allowed. Use a public https URL.';
+
+  @override
+  String get connErrDiscoveryFailed => 'Couldn’t reach that MCP server';
+
+  @override
+  String get connErrInsufficientPermission =>
+      'You don’t have permission to do this';
+
+  @override
+  String get connErrNotAllowed =>
+      'This connector isn’t allowed in your workspace';
+
+  @override
+  String get connErrUnavailable => 'This connector is unavailable right now';
+
+  @override
+  String get connErrOauthSetup => 'This connector isn’t set up for sign-in yet';
+
+  @override
+  String get connErrBotBridgeDisabled =>
+      'The personal assistant service isn’t configured';
+
+  @override
+  String get connErrBotNotFound => 'Assistant not found';
+
+  @override
+  String get connErrBotOwnerMismatch =>
+      'This assistant belongs to another member';
+
+  @override
+  String get connErrMemberInactive => 'This member’s account is inactive';
+
+  @override
+  String oauthConnected(String name) {
+    return '$name connected';
+  }
+
+  @override
+  String oauthErrAccessDenied(String name) {
+    return 'You declined access to $name';
+  }
+
+  @override
+  String oauthErrFailed(String name) {
+    return 'Couldn’t connect $name';
+  }
+
+  @override
+  String oauthNotCompleted(String name) {
+    return 'Connecting $name wasn’t completed';
+  }
+
+  @override
+  String get oauthErrExpired => 'The sign-in took too long. Please try again.';
+
+  @override
+  String get tokenUsageDailyChartTitle => 'Daily usage';
+
+  @override
+  String get tokenUsageTotalInRange => 'Total in the selected range';
+
+  @override
+  String get tokenUsageQuotaBlocked => 'AI is turned off for this workspace';
+
+  @override
+  String get tokenUsageQuotaExceeded => 'Monthly AI limit reached';
+
+  @override
+  String tokenUsageQuotaResets(String date) {
+    return 'Resets on $date';
+  }
+
+  @override
+  String authErrRoleGrantExceedsOwnPermissions(String capabilities) {
+    return 'You can\'t grant permissions you don\'t have yourself: $capabilities.';
+  }
+
+  @override
+  String get authErrRoleGrantExceedsOwnPermissionsGeneric =>
+      'You can\'t grant permissions you don\'t have yourself.';
+
+  @override
+  String get authErrCannotEditOwnRole => 'You can\'t edit your own role.';
+
+  @override
+  String get authErrPresetRoleRenameForbidden =>
+      'Built-in roles can\'t be renamed.';
+
+  @override
+  String get authErrRoleNameTaken => 'A role with this name already exists.';
+
+  @override
+  String get authErrOwnerRoleImmutable =>
+      'The Owner role can\'t be modified or deleted.';
+
+  @override
+  String get authErrOwnerSsoMappingForbidden =>
+      'Only an Owner can map SSO groups to the Owner role.';
+
+  @override
+  String get authErrInsufficientPermission =>
+      'You don\'t have permission to do this.';
+
+  @override
+  String get authErrAiContextEntryNotFound =>
+      'This context entry no longer exists.';
+
+  @override
+  String get authErrAiConnectorsNotInAllowList =>
+      'The selected AI connectors must also be allowed in the workspace connector list.';
+
+  @override
+  String authErrPasswordTooShortMin(int min) {
+    return 'Password must be at least $min characters.';
+  }
+
+  @override
+  String get adminCapManageAiContext => 'Manage AI context';
+
+  @override
+  String get adminCapViewInternalContext => 'View internal context';
+
+  @override
+  String get adminCapViewConfidentialContext => 'View confidential context';
+
+  @override
+  String get adminCapUnknown => 'Other permission';
+
+  @override
+  String get adminAuditSystem => 'System';
+
+  @override
+  String get adminAuditFormerMember => 'A former member';
+
+  @override
+  String get adminAuditActionOther => 'Other action';
+
+  @override
+  String get adminAuditActionWorkspaceUpdate => 'Workspace updated';
+
+  @override
+  String get adminAuditActionDepartmentCreate => 'Department created';
+
+  @override
+  String get adminAuditActionDepartmentUpdate => 'Department updated';
+
+  @override
+  String get adminAuditActionDepartmentDelete => 'Department deleted';
+
+  @override
+  String get adminAuditActionMemberUpdate => 'Member updated';
+
+  @override
+  String get adminAuditActionMemberSsoUpdate => 'Member updated by SSO';
+
+  @override
+  String get adminAuditActionMemberBlock => 'Member blocked';
+
+  @override
+  String get adminAuditActionMemberUnblock => 'Member unblocked';
+
+  @override
+  String get adminAuditActionRoleCreate => 'Role created';
+
+  @override
+  String get adminAuditActionRoleUpdate => 'Role updated';
+
+  @override
+  String get adminAuditActionInvitationCreate => 'Invitation sent';
+
+  @override
+  String get adminAuditActionInvitationResend => 'Invitation resent';
+
+  @override
+  String get adminAuditActionInvitationRevoke => 'Invitation revoked';
+
+  @override
+  String get adminAuditActionInvitationAccept => 'Invitation accepted';
+
+  @override
+  String get adminAuditActionConnectorConnect => 'Connector connected';
+
+  @override
+  String get adminAuditActionConnectorDisconnect => 'Connector disconnected';
+
+  @override
+  String get adminAuditActionConnectorReplace => 'Connector reconnected';
+
+  @override
+  String get adminAuditActionConnectionPermissionsUpdate =>
+      'Connector permissions updated';
+
+  @override
+  String get adminAuditActionCustomMcpAdd => 'Custom MCP added';
+
+  @override
+  String get adminAuditActionCustomMcpDelete => 'Custom MCP removed';
+
+  @override
+  String get adminAuditActionDirectoryCreate => 'Directory entry added';
+
+  @override
+  String get adminAuditActionDirectoryUpdate => 'Directory entry updated';
+
+  @override
+  String get adminAuditActionDirectoryDelete => 'Directory entry removed';
+
+  @override
+  String get adminAuditActionSensitiveSkillRun => 'Sensitive skill run';
+
+  @override
+  String get adminAuditTargetWorkspace => 'Workspace';
+
+  @override
+  String get adminAuditTargetMember => 'A member';
+
+  @override
+  String get adminAuditTargetRole => 'A role';
+
+  @override
+  String get adminAuditTargetDepartment => 'A department';
+
+  @override
+  String get adminAuditTargetInvitation => 'An invitation';
+
+  @override
+  String get adminAuditTargetConnector => 'A connector';
+
+  @override
+  String get adminAuditTargetDirectoryEntry => 'A directory entry';
+
+  @override
+  String get adminAuditTargetTool => 'A tool';
+
+  @override
+  String get adminAuditTargetOther => 'Something else';
+
+  @override
+  String get adminAiConnectorsAllAllowed =>
+      'The workspace allow-list is empty, so every connector is allowed. Pick the ones the AI may use.';
+
+  @override
+  String get errAssistantSetupIncomplete =>
+      'Add a persona and pick a model to finish setting up your assistant.';
+
+  @override
+  String get errAssistantNotConfigured =>
+      'Personal assistants aren\'t available on this workspace yet. Ask your administrator.';
+
+  @override
+  String get errAssistantUpstreamFailed =>
+      'The assistant service didn\'t respond. Please try again in a moment.';
+
+  @override
+  String adminBotOwnedBy(String name) {
+    return 'Owned by $name';
+  }
+
+  @override
+  String adminRoleCloneDefaultName(String name) {
+    return '$name copy';
+  }
 }

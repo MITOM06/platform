@@ -2,11 +2,13 @@ import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { REDIS_CLIENT, Redis } from '@platform/database';
 import { AuthCode } from '../../common/auth-code.enum';
+import { normalizeEmail } from '../../common/email';
 
 /**
  * Per-email password brute-force protection: counts failed attempts in Redis
  * and locks the email out for LOCKOUT_DURATION after MAX_FAILED_ATTEMPTS.
- * (Extracted verbatim from AuthService to keep it under the 500-line limit.)
+ * Keys use the normalized email, so case variants share one counter/lockout.
+ * (Extracted from AuthService to keep it under the 500-line limit.)
  */
 @Injectable()
 export class LoginAttemptsService {
@@ -15,7 +17,8 @@ export class LoginAttemptsService {
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
-  async checkBruteForce(email: string) {
+  async checkBruteForce(rawEmail: string) {
+    const email = normalizeEmail(rawEmail);
     const lockoutKey = `lockout:${email}`;
     const isLocked = await this.redis.get(lockoutKey);
 
@@ -29,7 +32,8 @@ export class LoginAttemptsService {
     }
   }
 
-  async handleFailedLogin(email: string): Promise<never> {
+  async handleFailedLogin(rawEmail: string): Promise<never> {
+    const email = normalizeEmail(rawEmail);
     const maxAttempts = Number(
       this.configService.get('MAX_FAILED_ATTEMPTS', 5),
     );
@@ -64,7 +68,7 @@ export class LoginAttemptsService {
   }
 
   /** Clear the failed-attempt counter (successful or non-guess sign-in). */
-  async reset(email: string): Promise<void> {
-    await this.redis.del(`failed_attempts:${email}`);
+  async reset(rawEmail: string): Promise<void> {
+    await this.redis.del(`failed_attempts:${normalizeEmail(rawEmail)}`);
   }
 }

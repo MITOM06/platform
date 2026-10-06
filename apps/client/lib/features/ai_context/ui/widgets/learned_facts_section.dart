@@ -24,7 +24,7 @@ class LearnedFactsSection extends ConsumerWidget {
               padding: EdgeInsets.all(8),
               child: Center(child: CircularProgressIndicator()),
             ),
-            error: (_, __) => Text(l.aiContextSaveError),
+            error: (_, __) => Text(l.aiContextLearnedFactsLoadError),
             data: (memory) {
               final hasContent = memory != null &&
                   (memory.summary.isNotEmpty || memory.keyFacts.isNotEmpty);
@@ -36,7 +36,8 @@ class LearnedFactsSection extends ConsumerWidget {
                         style: TextStyle(color: AppTheme.mutedText(context))),
                     const SizedBox(height: 4),
                     Text(l.aiContextMemoryEmptyHint,
-                        style: TextStyle(fontSize: 12, color: AppTheme.mutedText(context))),
+                        style: TextStyle(
+                            fontSize: 12, color: AppTheme.mutedText(context))),
                   ],
                 );
               }
@@ -53,8 +54,8 @@ class LearnedFactsSection extends ConsumerWidget {
                     ...memory.keyFacts.map(
                       (f) => Padding(
                         padding: const EdgeInsets.symmetric(vertical: 1),
-                        child: Text('• $f',
-                            style: const TextStyle(fontSize: 12)),
+                        child:
+                            Text('• $f', style: const TextStyle(fontSize: 12)),
                       ),
                     ),
                   ],

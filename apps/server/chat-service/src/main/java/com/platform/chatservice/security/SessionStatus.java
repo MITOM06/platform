@@ -15,6 +15,13 @@ public enum SessionStatus {
   SESSION_REVOKED,
   /** {@code sess:{sid}.userId} differs from the token's {@code sub}. */
   TOKEN_SESSION_MISMATCH,
+  /**
+   * The token was issued before the user's role / departments / permissions last changed ({@code
+   * iat < sess:{sid}.claimsAt}). Not a logout: clients refresh (same as an expired access token)
+   * and retry with a token carrying the fresh claims. Only returned for NEW authentications (REST
+   * requests, STOMP CONNECT) — see {@link SessionValidator#validateToken}.
+   */
+  TOKEN_CLAIMS_STALE,
   /** The session store could not be reached; not the client's fault, so never a 401. */
   UNAVAILABLE;
 

@@ -7,6 +7,7 @@ import com.platform.chatservice.service.FileValidationService;
 import com.platform.chatservice.service.RateLimiterService;
 import com.platform.chatservice.service.VirusScanService;
 import java.io.IOException;
+import java.io.PushbackInputStream;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,9 @@ public class UploadController {
   private final RateLimiterService rateLimiterService;
   private final FileValidationService fileValidationService;
   private final VirusScanService virusScanService;
+
+  /** Leading bytes read to confirm a stored type before serving a file inline. */
+  private static final int SNIFF_BYTES = 16;
 
   @PostMapping
   public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file)
@@ -111,43 +115,31 @@ public class UploadController {
         || lower.startsWith("application/");
   }
 
+  /**
+   * Serve an upload. Public (no auth) so {@code <img src>} works — which is exactly why the
+   * response must be inert on the API origin: it is {@code inline} only for raster images, audio,
+   * video and PDF whose stored type is confirmed by the file's own magic bytes (never by the type
+   * the client declared at upload); everything else is an {@code attachment}, active types
+   * (HTML/XML/SVG/JS) are relabelled {@code application/octet-stream}, and every response carries
+   * {@code X-Content-Type-Options: nosniff} plus {@code Content-Security-Policy: sandbox} (except
+   * an inline PDF, where a sandboxed document would stop the browser's PDF viewer from loading).
+   */
   @GetMapping("/{id}")
   public ResponseEntity<Resource> getFile(
       @PathVariable String id,
       @RequestParam(name = "download", required = false) boolean download) {
-    // New files use a random UUID key; legacy files still resolve by ObjectId.
-    boolean isUuid = id.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
-    boolean isObjectId = id.matches("[0-9a-f]{24}");
-    if (!isUuid && !isObjectId) {
-      return ResponseEntity.notFound().build();
-    }
-
-    com.mongodb.client.gridfs.model.GridFSFile gridFSFile;
-    if (isUuid) {
-      gridFSFile = gridFsTemplate.findOne(Query.query(Criteria.where("metadata.fileId").is(id)));
-    } else {
-      try {
-        ObjectId objectId = new ObjectId(id);
-        gridFSFile = gridFsTemplate.findOne(Query.query(Criteria.where("_id").is(objectId)));
-      } catch (IllegalArgumentException e) {
-        return ResponseEntity.notFound().build();
-      }
-    }
-
+    com.mongodb.client.gridfs.model.GridFSFile gridFSFile = findFile(id);
     if (gridFSFile == null) {
       return ResponseEntity.notFound().build();
     }
 
     GridFsResource resource = gridFsOperations.getResource(gridFSFile);
 
-    MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+    String storedType = "";
     try {
-      String storedType = resource.getContentType();
-      if (storedType != null && !storedType.isBlank()) {
-        mediaType = MediaType.parseMediaType(storedType);
-      }
+      storedType = DownloadHeaders.baseType(resource.getContentType());
     } catch (Exception ignored) {
-      // contentType không hợp lệ → giữ octet-stream
+      // contentType missing/invalid → treated as opaque binary below
     }
 
     // Prefer the original filename (stored in metadata for UUID-keyed files) so a
@@ -158,26 +150,74 @@ public class UploadController {
       displayName = meta.getString("originalFilename");
     }
 
-    // download=true → buộc trình duyệt/thiết bị tải file về (attachment);
-    // mặc định inline để hiển thị ngay trong app.
-    String disposition =
-        (download ? "attachment" : "inline") + "; filename=\"" + displayName + "\"";
-
-    // Defense-in-depth: never let SVG/XML render inline — force download so any
-    // embedded <script> can't execute. Covers files stored before SVG was blocked.
-    String storedTypeLower = mediaType.toString().toLowerCase();
-    if (storedTypeLower.contains("svg") || storedTypeLower.contains("xml")) {
-      mediaType = MediaType.APPLICATION_OCTET_STREAM;
-      disposition = "attachment; filename=\"" + displayName + "\"";
-    }
-
     try {
-      return ResponseEntity.ok()
-          .contentType(mediaType)
-          .header(HttpHeaders.CONTENT_DISPOSITION, disposition)
-          .body(new InputStreamResource(resource.getInputStream()));
+      PushbackInputStream body = new PushbackInputStream(resource.getInputStream(), SNIFF_BYTES);
+      byte[] header = body.readNBytes(SNIFF_BYTES);
+      body.unread(header);
+
+      // "verified": an inline-capable type whose bytes really are of that type.
+      boolean verified =
+          DownloadHeaders.isInlineType(storedType)
+              && fileValidationService.matchesInlineSignature(storedType, header);
+      boolean inline = !download && verified;
+      MediaType mediaType = responseType(storedType, verified);
+
+      ResponseEntity.BodyBuilder response =
+          ResponseEntity.ok()
+              .contentType(mediaType)
+              .header(
+                  HttpHeaders.CONTENT_DISPOSITION,
+                  DownloadHeaders.contentDisposition(inline ? "inline" : "attachment", displayName))
+              .header("X-Content-Type-Options", "nosniff");
+      if (!(inline && "application/pdf".equals(storedType))) {
+        response.header("Content-Security-Policy", "sandbox");
+      }
+      if (gridFSFile.getLength() >= 0) {
+        response.contentLength(gridFSFile.getLength());
+      }
+      return response.body(new InputStreamResource(body));
     } catch (IOException e) {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+  }
+
+  /**
+   * New files are keyed by a random UUID ({@code metadata.fileId}). The 24-hex path exists only for
+   * LEGACY files stored before that scheme — it must not resolve a new file by its GridFS {@code
+   * _id} (an ObjectId is guessable: timestamp + counter), so it only matches files without a {@code
+   * metadata.fileId}.
+   */
+  private com.mongodb.client.gridfs.model.GridFSFile findFile(String id) {
+    if (id.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
+      return gridFsTemplate.findOne(Query.query(Criteria.where("metadata.fileId").is(id)));
+    }
+    if (id.matches("[0-9a-f]{24}")) {
+      try {
+        return gridFsTemplate.findOne(
+            Query.query(
+                Criteria.where("_id").is(new ObjectId(id)).and("metadata.fileId").exists(false)));
+      } catch (IllegalArgumentException e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * A verified media type keeps its type; active content, and an image/audio/video/PDF claim the
+   * bytes do not back up, become {@code application/octet-stream}; other documents keep theirs.
+   */
+  private static MediaType responseType(String storedType, boolean verified) {
+    if (!verified
+        && (storedType.isEmpty()
+            || DownloadHeaders.isActiveType(storedType)
+            || DownloadHeaders.isInlineType(storedType))) {
+      return MediaType.APPLICATION_OCTET_STREAM;
+    }
+    try {
+      return MediaType.parseMediaType(storedType);
+    } catch (Exception e) {
+      return MediaType.APPLICATION_OCTET_STREAM;
     }
   }
 

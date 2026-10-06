@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,8 +7,11 @@ import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/app_error.dart';
+import '../../../core/utils/media_url.dart';
 import '../data/chat_repository.dart';
+import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
+import '../utils/chat_error.dart';
 
 // ---------------------------------------------------------------------------
 // Provider
@@ -114,13 +119,22 @@ class _ChannelTileState extends ConsumerState<_ChannelTile> {
       final conv = await ref
           .read(chatRepositoryProvider)
           .joinChannel(widget.channel.id);
+      // Pull the joined channel into the list so its chat header, composer
+      // and realtime updates work right away.
+      unawaited(
+          ref.read(conversationsNotifierProvider.notifier).ensureLoaded(conv.id));
       if (mounted) {
         context.push('/chat/${conv.id}');
       }
     } catch (e) {
       if (mounted) {
+        final code = chatErrorCode(e);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.exploreJoinFailed)),
+          SnackBar(
+            content: Text(code != null
+                ? chatErrorMessage(context.l10n, e)
+                : context.l10n.exploreJoinFailed),
+          ),
         );
       }
     } finally {
@@ -132,21 +146,24 @@ class _ChannelTileState extends ConsumerState<_ChannelTile> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final ch = widget.channel;
+    final avatar = ch.avatarUrl ?? '';
+    final hasAvatar = avatar.isNotEmpty;
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: AppTheme.accent(context).withValues(alpha: 0.2),
         // Cache + downscale the small (40px) avatar so the list scrolls
         // without re-decoding full-resolution images each frame.
-        backgroundImage: ch.avatarUrl != null
+        // Upload paths are relative — resolve against the chat host.
+        backgroundImage: hasAvatar
             ? CachedNetworkImageProvider(
-                ch.avatarUrl!,
+                absoluteMediaUrl(avatar),
                 maxWidth: 96,
                 maxHeight: 96,
               )
             : null,
-        child: ch.avatarUrl == null
-            ? Icon(Icons.tag_rounded, color: AppTheme.accent(context))
-            : null,
+        child: hasAvatar
+            ? null
+            : Icon(Icons.tag_rounded, color: AppTheme.accent(context)),
       ),
       title: Text(ch.name ?? l10n.unnamedChannel),
       subtitle: Text(

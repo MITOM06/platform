@@ -1,26 +1,15 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Sparkles, User, BellOff, Bell, Search } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { absoluteMediaUrl } from '@/lib/media'
+import { MUTE_FOREVER_MS, formatMuteExpiry } from '../conversation-item-helpers'
 
 const ACTION_CLS = 'flex flex-col items-center gap-1.5 w-16'
 const ICON_WRAP = 'size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center'
 const LABEL_CLS = 'text-[11px] text-muted-foreground truncate w-full text-center'
 
-/** epoch ms value chat-service uses for "muted forever" */
-const MUTE_FOREVER_MS = 9_200_000_000_000_000
-
-function formatMuteExpiry(expiresAt: number): string {
-  const remaining = expiresAt - Date.now()
-  if (remaining <= 0) return ''
-  const mins = Math.ceil(remaining / 60_000)
-  if (mins < 60) return `${mins}m`
-  const hrs = Math.floor(remaining / 3_600_000)
-  if (hrs < 24) return `${hrs}h`
-  return `${Math.floor(hrs / 24)}d`
-}
 
 interface Props {
   displayName: string
@@ -51,13 +40,14 @@ export function SettingsHeader({
   onSearch,
 }: Props) {
   const t = useTranslations('chat')
+  const locale = useLocale()
 
   const showMuteExpiry =
     isMuted &&
     typeof muteExpiresAt === 'number' &&
     muteExpiresAt < MUTE_FOREVER_MS
 
-  const muteExpiryLabel = showMuteExpiry ? ` (${formatMuteExpiry(muteExpiresAt!)})` : ''
+  const muteExpiryLabel = showMuteExpiry ? ` (${formatMuteExpiry(muteExpiresAt!, locale)})` : ''
 
   return (
     <>

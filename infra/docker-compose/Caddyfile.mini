@@ -24,6 +24,11 @@
 		}
 	}
 	handle_path /api/connector/* {
+		# /internal/* is for ai-service and chat-service over the Docker network
+		# (INTERNAL_API_KEY). Never expose it publicly: a leaked key would then be
+		# usable from the internet. handle_path already stripped /api/connector.
+		@internal path /internal /internal/*
+		respond @internal 404
 		reverse_proxy connector-service:3003
 	}
 	handle_path /api/chat/* {

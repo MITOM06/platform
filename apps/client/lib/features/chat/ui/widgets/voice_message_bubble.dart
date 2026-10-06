@@ -1,6 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/media_url.dart';
 
 class VoiceMessageBubble extends StatefulWidget {
   final String audioUrl;
@@ -53,8 +54,12 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
   Future<void> _togglePlay() async {
     if (_state == PlayerState.playing) {
       await _player.pause();
+    } else if (_state == PlayerState.paused) {
+      await _player.resume();
     } else {
-      await _player.play(UrlSource(widget.audioUrl));
+      // Voice notes are stored as a relative `/api/uploads/…` path — the
+      // player needs the absolute URL (same resolver as images/web).
+      await _player.play(UrlSource(absoluteMediaUrl(widget.audioUrl)));
     }
   }
 

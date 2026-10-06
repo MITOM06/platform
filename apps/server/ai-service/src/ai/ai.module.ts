@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AiController } from './ai.controller';
 import { AiService } from './ai.service';
 import { AgenticLoopService } from './agentic-loop.service';
+import { ToolRoundRunner } from './tool-round.runner';
 import { FactExtractorService } from './fact-extractor.service';
 import { ContextBuilderService } from './context-builder.service';
 import { ResponseCacheService } from './response-cache.service';
@@ -17,6 +18,7 @@ import { SkillsModule } from '../skills/skills.module';
 import { ConversationModule } from '../conversation/conversation.module';
 import { SettingsModule } from '../settings/settings.module';
 import { AiContextModule } from '../ai-context/ai-context.module';
+import { ActionsModule } from '../actions/actions.module';
 
 @Module({
   imports: [
@@ -35,11 +37,15 @@ import { AiContextModule } from '../ai-context/ai-context.module';
     SettingsModule,
     // Role-aware org context reader (P2a) — ContextBuilderService injects it.
     AiContextModule,
+    // PendingActionStore — ToolRoundRunner holds sensitive connector writes for
+    // the user's in-chat confirmation instead of executing them (§F2).
+    ActionsModule,
   ],
   controllers: [AiController],
   providers: [
     AiService,
     AgenticLoopService,
+    ToolRoundRunner,
     FactExtractorService,
     ContextBuilderService,
     ResponseCacheService,

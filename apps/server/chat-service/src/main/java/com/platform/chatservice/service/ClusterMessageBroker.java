@@ -1,7 +1,9 @@
 package com.platform.chatservice.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -56,6 +58,39 @@ public class ClusterMessageBroker {
    */
   public void convertAndSendToUser(String user, String destination, Object payload) {
     publish(destination, user, payload);
+  }
+
+  /**
+   * Broadcast several payloads to one destination so every client receives them IN THIS ORDER.
+   * Separate {@link #convertAndSend} calls are separate Redis messages, and the Redis listener
+   * container dispatches each message on its own thread — so two back-to-back broadcasts (e.g. a
+   * persisted AI message and the {@code AI_STREAM_DONE} that follows it) could overtake each other.
+   * Here they travel in ONE envelope ({@code payloads} array) and {@link ClusterBroadcastListener}
+   * delivers them sequentially on a single thread; the broker's preserve-publish-order setting
+   * keeps that order per session.
+   */
+  public void convertAndSendAll(String destination, List<?> payloads) {
+    if (payloads == null || payloads.isEmpty()) {
+      return;
+    }
+    try {
+      ObjectNode envelope = objectMapper.createObjectNode();
+      envelope.put("destination", destination);
+      ArrayNode array = envelope.putArray("payloads");
+      for (Object payload : payloads) {
+        array.add(objectMapper.valueToTree(payload));
+      }
+      redisTemplate.convertAndSend(CHANNEL, objectMapper.writeValueAsString(envelope));
+    } catch (Exception e) {
+      log.error("Cluster broadcast to {} failed; falling back to local delivery", destination, e);
+      try {
+        for (Object payload : payloads) {
+          messagingTemplate.convertAndSend(destination, payload);
+        }
+      } catch (Exception fallback) {
+        log.error("Local fallback delivery to {} also failed", destination, fallback);
+      }
+    }
   }
 
   private void publish(String destination, String user, Object payload) {

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { passwordChangeErrorKey } from '@/lib/auth/password-change-error'
 import { useTranslations } from 'next-intl'
 import { Loader2, Lock, LockOpen, KeyRound, Eye, EyeOff } from 'lucide-react'
 import { authService } from '@/lib/api/auth'
@@ -74,25 +75,10 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
       toast.success(t('success'))
       handleClose(false)
     } catch (e: unknown) {
-      // Map the backend's English error text to a localized string. An unrecognised message must
-      // fall back to the generic localized copy — never `serverMsg` itself: that renders raw
-      // backend text in the user's UI, in English regardless of locale
-      // (.claude/rules/no-raw-system-data-in-ui.md). Mirrors the mobile dialog's `_mapError`,
-      // which already ends at `friendlyError(e)`.
-      let message = t('genericError')
-      if (e && typeof e === 'object' && 'response' in e) {
-        const resp = (e as { response?: { data?: { message?: string } } }).response
-        const serverMsg = resp?.data?.message
-        if (serverMsg) {
-          if (serverMsg.includes('Incorrect current password')) {
-            message = t('incorrectCurrent')
-          } else if (serverMsg.includes('Current password is required')) {
-            message = t('currentRequired')
-          } else if (serverMsg.includes('at least 6')) {
-            message = t('atLeast6')
-          }
-        }
-      }
+      // Mapped by error `code`, never the raw server text (mirrors the
+      // mobile dialog, which ends at `friendlyError(e)`).
+      const { key, values } = passwordChangeErrorKey(e)
+      const message = t(key, values)
       setError(message)
     } finally {
       setSaving(false)

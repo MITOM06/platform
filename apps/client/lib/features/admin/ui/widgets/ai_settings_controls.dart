@@ -30,12 +30,18 @@ class AiConnectorChecklist extends StatelessWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, __) => AiMutedText(emptyLabel),
       data: (catalog) {
-        // Outer boundary: only catalog connectors present in connectorAllowList.
-        final entries =
-            catalog.where((e) => allowList.contains(e.id as String)).toList();
+        // Outer boundary: only catalog connectors present in connectorAllowList;
+        // an EMPTY allow-list means every connector is allowed.
+        final entries = allowList.isEmpty
+            ? catalog
+            : catalog.where((e) => allowList.contains(e.id as String)).toList();
         if (entries.isEmpty) return AiMutedText(emptyLabel);
         return Column(
-          children: entries
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (allowList.isEmpty)
+              AiMutedText(context.l10n.adminAiConnectorsAllAllowed),
+            ...entries
               .map(
                 (entry) => CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
@@ -46,8 +52,8 @@ class AiConnectorChecklist extends StatelessWidget {
                   value: selected.contains(entry.id as String),
                   onChanged: (_) => onToggle(entry.id as String),
                 ),
-              )
-              .toList(),
+              ),
+          ],
         );
       },
     );

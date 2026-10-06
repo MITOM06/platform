@@ -108,6 +108,14 @@ services:
       # Everything is served from the single Caddy domain. main.ts refuses to
       # boot in production without this (no fallback to localhost origins).
       CORS_ORIGINS: ${CORS_ORIGINS:-https://${DOMAIN}}
+      # Client IP for rate limiting. Caddy is the public edge here and rewrites
+      # X-Forwarded-For with the real peer, so trusting exactly one hop makes
+      # req.ip the client instead of Caddy (otherwise every user shares one
+      # throttle bucket). Raise it only when another proxy sits in front of Caddy;
+      # set CLIENT_IP_HEADER only when that proxy guarantees the header (e.g.
+      # Cloudflare's cf-connecting-ip). See docs/environments.md.
+      TRUST_PROXY: ${TRUST_PROXY:-1}
+      CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-}
       OIDC_ENABLED: ${OIDC_ENABLED:-}
       OIDC_ISSUER: ${OIDC_ISSUER:-}
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
@@ -137,6 +145,9 @@ services:
       # to open CORS. Everything is served from the single Caddy domain, so that
       # origin is the whole allow-list; override only for extra front-ends.
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://${DOMAIN}}
+      # Personal-assistant setup issues the bot's MCP token through connector-service.
+      CONNECTOR_SERVICE_BASE_URL: http://connector-service:3003
+      CONNECTOR_INTERNAL_KEY: ${INTERNAL_API_KEY}
       # See ProdEnvironmentGuard — the addresses below are container names, so the
       # guard passes; point one of them back at localhost and it refuses to boot.
       SPRING_PROFILES_ACTIVE: prod
@@ -236,6 +247,8 @@ services:
       CONNECTOR_VAULT_KEY: ${CONNECTOR_VAULT_KEY}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       OAUTH_REDIRECT_BASE: https://${DOMAIN}/api/connector
+      # Public MCP endpoint handed to Bot Factory assistants (never localhost).
+      MCP_SERVER_URL: https://${DOMAIN}/api/connector/mcp
       CLIENT_REDIRECT_URL: https://${DOMAIN}/integrations
       # main.ts refuses to boot in production without an allow-list; it no longer
       # falls back to reflecting whatever origin asks.

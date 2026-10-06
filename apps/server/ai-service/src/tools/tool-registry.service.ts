@@ -12,6 +12,33 @@ import { ToolContext, ToolDefinition } from './tool.interface';
 import { ToolResultCacheService } from './tool-result-cache.service';
 import { isSensitiveTool } from '../ai/injection-guard';
 import { SKILL_TOOL_REQUIREMENTS } from '../skills/skill-catalog';
+import { MCP_PREFIX, providerOf, toolOf } from './tool-names';
+
+// Re-exported: these used to live here and are imported from this module.
+export { providerOf, toolOf } from './tool-names';
+
+/** Anthropic's tool-name rule. One violating name 400s the whole request. */
+const TOOL_NAME_RE = /^[a-zA-Z0-9_-]{1,64}$/;
+
+/**
+ * Read-only tools that must NOT go through the text result cache anyway:
+ *  - `web_search` / `search_knowledge_base` register citable sources and print
+ *    reply-relative `[Source N]` numbers — a cached text would replay stale
+ *    numbering and lose the citation chips;
+ *  - `summarize_conversation` reads memory that `remember_fact` may have just
+ *    changed in the same reply (and is a single indexed read).
+ * Sensitive (state-changing) tools are never cached either — see `isCacheableTool`.
+ */
+const NEVER_CACHED_TOOLS: ReadonlySet<string> = new Set([
+  'web_search',
+  'search_knowledge_base',
+  'summarize_conversation',
+]);
+
+/** Whether a tool's result may be served from the short-TTL result cache. */
+export function isCacheableTool(toolName: string): boolean {
+  return !isSensitiveTool(toolName) && !NEVER_CACHED_TOOLS.has(toolName);
+}
 
 /**
  * Filter dynamic MCP tools by the workspace AI connector allow-list (TASK-12).
@@ -20,13 +47,8 @@ import { SKILL_TOOL_REQUIREMENTS } from '../skills/skill-catalog';
  * `/internal/tools` response carries NO separate catalog/connector-id field, so
  * the only mapping signal is the `<provider>` segment. For built-in connectors
  * the provider IS the catalog id (e.g. `gmail`, `notion`) — exact, safe match.
- *
- * Known limitation (documented, not guessed): custom MCP servers are namespaced
- * `custom:<id>` (NOT a catalog id), so they can never appear in `allowedConnectors`
- * (which holds catalog ids) and are therefore dropped whenever a non-null AI
- * allow-list is set. This is the safe/conservative behavior (deny-by-default for
- * the AI list) and is called out in the report for a follow-up if custom-MCP
- * allow-listing is required.
+ * Custom MCP servers are not catalog ids, so they never pass a non-null AI
+ * allow-list (conservative: deny by default for the AI list).
  *
  * Semantics: `allowedConnectors == null`/undefined ⇒ no filtering (inherit the
  * workspace-wide list, already enforced upstream by connector-service). `[]` ⇒
@@ -45,44 +67,75 @@ export function filterByAllowedConnectors(
 }
 
 /**
- * Gate action-skill MCP tools by enabled skills (Approach A). An MCP tool whose
- * provider is in `SKILL_TOOL_REQUIREMENTS` (calendar/gmail/notion) is kept ONLY
- * when its required skill is enabled; a provider NOT in the map passes through
- * unchanged. Non-MCP tools (`providerOf` → null) always pass. Applied AFTER the
- * RBAC allow-list filter so RBAC stays the highest-priority gate.
+ * Gate action-skill MCP tools by enabled skills (Approach A), PER TOOL. A tool
+ * of a provider that appears in `SKILL_TOOL_REQUIREMENTS` is kept only when an
+ * enabled skill maps that provider AND (lists no tools, or lists this tool).
+ * Providers no skill maps pass through; non-MCP tools always pass. Applied AFTER
+ * the RBAC allow-list filter so RBAC stays the highest-priority gate.
  */
 export function filterBySkillGate(
   tools: ToolDefinition[],
   enabledSkillIds: readonly string[],
 ): ToolDefinition[] {
   const enabled = new Set(enabledSkillIds);
-  // Every provider subject to skill gating (may be mapped by >1 skill, e.g.
-  // gmail ← mailWriter + inboxTriage).
-  const gatedProviders = new Set(
-    Object.values(SKILL_TOOL_REQUIREMENTS).map((req) => req.provider),
-  );
-  // A provider is UNLOCKED if AT LEAST ONE of its mapping skills is enabled.
-  const unlockedProviders = new Set(
-    Object.entries(SKILL_TOOL_REQUIREMENTS)
-      .filter(([skillId]) => enabled.has(skillId))
-      .map(([, req]) => req.provider),
-  );
+  const requirements = Object.entries(SKILL_TOOL_REQUIREMENTS);
+  const gatedProviders = new Set(requirements.map(([, req]) => req.provider));
+  const unlocked = requirements.filter(([skillId]) => enabled.has(skillId)).map(([, req]) => req);
   return tools.filter((t) => {
     const provider = providerOf(t.name);
     if (provider === null) return true; // non-MCP tool — never gated
     if (!gatedProviders.has(provider)) return true; // provider not gated by any skill
-    return unlockedProviders.has(provider); // gated → keep only if unlocked
+    const bare = toolOf(t.name)?.toLowerCase() ?? '';
+    return unlocked.some(
+      (req) =>
+        req.provider === provider &&
+        (!req.tools || req.tools.some((name) => name.toLowerCase() === bare)),
+    );
   });
 }
 
-/** Extract the `<provider>` segment from `mcp__<provider>__<tool>`; else null. */
-export function providerOf(name: string): string | null {
-  const PREFIX = 'mcp__';
-  const SEP = '__';
-  if (!name.startsWith(PREFIX)) return null;
-  const rest = name.slice(PREFIX.length);
-  const idx = rest.indexOf(SEP);
-  return idx > 0 ? rest.slice(0, idx) : null;
+/**
+ * Defence in depth against connector bugs: Anthropic rejects the WHOLE request
+ * (400 → "AI temporarily unavailable" on every message) when any tool name breaks
+ * `^[a-zA-Z0-9_-]{1,64}$` (e.g. `mcp__custom:<id>__x`), two tools share a name, or
+ * a schema is not an object schema. Offenders are dropped (logged) — first
+ * definition of a duplicated name wins, so built-ins beat connector tools.
+ */
+export function sanitizeToolDefinitions(
+  defs: ToolDefinition[],
+  warn: (message: string) => void = () => undefined,
+): ToolDefinition[] {
+  const seen = new Set<string>();
+  const out: ToolDefinition[] = [];
+  for (const def of defs) {
+    const name = typeof def?.name === 'string' ? def.name : '';
+    if (!TOOL_NAME_RE.test(name)) {
+      warn(`Dropping tool with an invalid name "${name.slice(0, 80)}"`);
+      continue;
+    }
+    if (seen.has(name)) {
+      warn(`Dropping duplicate tool "${name}"`);
+      continue;
+    }
+    const schema = def.input_schema as unknown;
+    if (
+      !schema ||
+      typeof schema !== 'object' ||
+      Array.isArray(schema) ||
+      (schema as { type?: unknown }).type !== 'object'
+    ) {
+      warn(`Dropping tool "${name}": input_schema is not an object schema`);
+      continue;
+    }
+    seen.add(name);
+    out.push(def);
+  }
+  return out;
+}
+
+export interface ExecuteOptions {
+  /** The offered definition is flagged sensitive by connector-service. */
+  sensitive?: boolean;
 }
 
 @Injectable()
@@ -122,30 +175,46 @@ export class ToolRegistryService {
     // RBAC allow-list first (highest priority), then the skill consent gate.
     const rbacFiltered = filterByAllowedConnectors(dynamicDefs, ctx.allowedConnectors);
     const skillFiltered = filterBySkillGate(rbacFiltered, ctx.enabledSkillIds ?? []);
-    return [...staticDefs, ...skillFiltered];
+    return sanitizeToolDefinitions([...staticDefs, ...skillFiltered], (m) =>
+      this.logger.warn(`${m} (user ${ctx.userId})`),
+    );
   }
 
+  /**
+   * Run one tool. `opts.sensitive` is the offered definition's connector flag:
+   * a flagged tool is never cached and gets the connector write timeout even
+   * when its name carries no write marker. (Tools that need a user
+   * confirmation never reach this method — the loop stages them instead.)
+   */
   async execute(
     toolName: string,
     input: Record<string, unknown>,
     ctx: ToolContext,
+    opts: ExecuteOptions = {},
   ): Promise<string> {
-    // Cache only read-only (non-sensitive) tools — never cache a send/create/
-    // delete result. Short TTL; per-user so results are never shared across users.
-    const cacheable = this.resultCache.isEnabled && !isSensitiveTool(toolName);
+    // Cache only read-only tools whose output is plain text (see isCacheableTool),
+    // keyed by user + conversation + department scope so a result never leaks
+    // into another conversation. Never a send/create/delete result.
+    const cacheable =
+      this.resultCache.isEnabled && opts.sensitive !== true && isCacheableTool(toolName);
+    const scope = {
+      userId: ctx.userId,
+      conversationId: ctx.conversationId,
+      departmentId: ctx.departmentId,
+    };
     if (cacheable) {
-      const hit = await this.resultCache.get(ctx.userId, toolName, input);
+      const hit = await this.resultCache.get(scope, toolName, input);
       if (hit !== null) {
         this.logger.debug(`Tool cache hit [${toolName}]`);
         return hit;
       }
     }
 
-    const result = await this.dispatch(toolName, input, ctx);
+    const result = await this.dispatch(toolName, input, ctx, opts.sensitive === true);
 
     // Don't cache failures (let the next call retry).
     if (cacheable && !result.startsWith('Tool error') && !result.startsWith('Tool not found')) {
-      await this.resultCache.set(ctx.userId, toolName, input, result);
+      await this.resultCache.set(scope, toolName, input, result);
     }
     return result;
   }
@@ -154,10 +223,13 @@ export class ToolRegistryService {
     toolName: string,
     input: Record<string, unknown>,
     ctx: ToolContext,
+    write: boolean,
   ): Promise<string> {
     try {
-      if (toolName.startsWith('mcp__')) {
-        return await this.mcpConnector.callTool(ctx.userId, toolName, input);
+      if (toolName.startsWith(MCP_PREFIX)) {
+        return write
+          ? await this.mcpConnector.callTool(ctx.userId, toolName, input, { write: true })
+          : await this.mcpConnector.callTool(ctx.userId, toolName, input);
       }
       switch (toolName) {
         case 'search_messages':

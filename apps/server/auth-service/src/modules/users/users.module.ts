@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
+import { PasswordChangeService } from './password-change.service';
+import { SessionService } from '../auth/session.service';
 import { FriendsModule } from '../friends/friends.module';
 import { FirebaseAdminModule } from '../firebase/firebase.module';
 import { User, UserSchema, UserBlock, UserBlockSchema } from '@platform/database';
@@ -19,7 +21,9 @@ import { User, UserSchema, UserBlock, UserBlockSchema } from '@platform/database
     FirebaseAdminModule,
   ],
   controllers: [UsersController],
-  providers: [UsersService],
+  // SessionService is stateless over the global REDIS_CLIENT (AdminModule does
+  // the same); change-password signs the user's other sessions out.
+  providers: [UsersService, PasswordChangeService, SessionService],
   exports: [UsersService], // Xuất ra để AuthModule có thể sử dụng
 })
 export class UsersModule {}

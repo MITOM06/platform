@@ -11,11 +11,6 @@ interface Props {
   conversationId?: string
 }
 
-/** Short, human-friendly fallback when a source has no fileName (e.g. older
- * payloads carrying only a documentId). Shows the first 6 chars of the id. */
-function fallbackLabel(documentId: string): string {
-  return `#${documentId.slice(0, 6)}`
-}
 
 /**
  * Compact "Sources" row rendered under a finalized AI answer. One clickable chip
@@ -39,8 +34,10 @@ export function MessageSources({ sources, conversationId }: Props) {
         <BookOpen className="size-3" />
         {t('sourcesLabel')}
       </span>
-      {unique.map((s) => {
-        const label = s.fileName?.trim() || fallbackLabel(s.documentId)
+      {unique.map((s, i) => {
+        // No file name (older payloads carry only a documentId): a numbered,
+        // localized "Source N" — never a fragment of the id.
+        const label = s.fileName?.trim() || t('sourceFallback', { index: i + 1 })
         // A web-search source carries an external URL (and/or type:'web'). Its
         // chip opens that URL in a new tab; KB sources keep navigating to /kb.
         const isWeb = (s.type === 'web' || !!s.url) && !!s.url?.trim()

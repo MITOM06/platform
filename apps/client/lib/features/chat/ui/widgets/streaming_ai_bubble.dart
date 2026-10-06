@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/l10n/l10n_ext.dart';
+import '../../../integrations/state/integrations_provider.dart';
+import '../../utils/ai_tool_names.dart';
 
 // Re-exported so existing importers of `streaming_ai_bubble.dart` keep getting
 // [FinalizedAiBubble] without changing their imports (e.g. message_bubble.dart).
@@ -137,7 +140,7 @@ class _CursorBlink extends Animation<double>
   double get value => _parent.value < 0.5 ? 1.0 : 0.0;
 }
 
-class _ToolIndicatorRow extends StatelessWidget {
+class _ToolIndicatorRow extends ConsumerWidget {
   final List<String> activeTools;
   final List<String> sensitiveTools;
 
@@ -146,7 +149,9 @@ class _ToolIndicatorRow extends StatelessWidget {
     this.sensitiveTools = const [],
   });
 
-  String _toolLabel(BuildContext context, String toolName) {
+  /// Progress wording for the tool in use — never its raw `mcp__…` name.
+  String _toolLabel(
+      BuildContext context, String toolName, Map<String, String> names) {
     switch (toolName) {
       case 'search_messages':
         return context.l10n.toolSearchMessages;
@@ -159,20 +164,24 @@ class _ToolIndicatorRow extends StatelessWidget {
       case 'create_reminder':
         return context.l10n.toolCreateReminder;
       default:
-        return context.l10n.aiToolCalling(toolName);
+        return context.l10n.aiToolCalling(
+            aiToolDisplayName(context.l10n, toolName, connectorNames: names));
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final toolName = activeTools.last;
+    final names = parseConnectorToolName(toolName) != null
+        ? ref.watch(connectorNamesProvider)
+        : const <String, String>{};
     final isSensitive = sensitiveTools.contains(toolName);
     // Sensitive (state-changing / outbound) tools get a shield icon + red tint
     // so the user notices the assistant is about to act on their behalf.
     final color = isSensitive ? Theme.of(context).colorScheme.error : AppTheme.warning;
     final label = isSensitive
-        ? '${_toolLabel(context, toolName)} · ${context.l10n.aiSensitiveAction}'
-        : _toolLabel(context, toolName);
+        ? '${_toolLabel(context, toolName, names)} · ${context.l10n.aiSensitiveAction}'
+        : _toolLabel(context, toolName, names);
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(

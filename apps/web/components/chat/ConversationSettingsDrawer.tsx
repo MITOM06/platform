@@ -136,6 +136,7 @@ export function ConversationSettingsDrawer({
                   isArchived={s.isArchived}
                   autoDeleteOptions={s.autoDeleteOptions}
                   sliderValue={s.sliderValue}
+                  canChangeAutoDelete={s.canChangeAutoDelete}
                   onMarkRead={s.handleMarkRead}
                   onMarkUnread={s.handleMarkUnread}
                   onArchiveToggle={s.handleArchiveToggle}

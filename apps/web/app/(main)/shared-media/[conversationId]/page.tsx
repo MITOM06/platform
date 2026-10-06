@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { ArrowLeft, Loader2, Image as ImageIcon, FileText, Link as LinkIcon, Download } from 'lucide-react'
 import { chatService } from '@/lib/api/chat'
-import { absoluteMediaUrl, downloadMediaUrl, parseImageUrls, parseFileMeta, formatBytes } from '@/lib/media'
+import { absoluteMediaUrl, downloadMediaUrl, parseImageUrls, parseFileMeta, formatBytes, firstUrl } from '@/lib/media'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export default function SharedMediaPage() {
@@ -129,24 +129,28 @@ export default function SharedMediaPage() {
               </TabsContent>
 
               <TabsContent value="link" className="mt-0 outline-none space-y-2">
-                {messages.map((msg) => (
-                  <a
-                    key={msg.id}
-                    href={msg.content}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-start gap-3 p-3 rounded-xl border hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <LinkIcon className="size-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0 pt-0.5">
-                      <p className="text-sm text-foreground break-all line-clamp-2">
-                        {msg.content}
-                      </p>
-                    </div>
-                  </a>
-                ))}
+                {messages.map((msg) => {
+                  // The message text may wrap the link in other words — link to
+                  // the URL itself, not to the whole sentence.
+                  const url = firstUrl(msg.content)
+                  if (!url) return null
+                  return (
+                    <a
+                      key={msg.id}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-start gap-3 p-3 rounded-xl border hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                        <LinkIcon className="size-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0 pt-0.5">
+                        <p className="text-sm text-foreground break-all line-clamp-2">{url}</p>
+                      </div>
+                    </a>
+                  )
+                })}
               </TabsContent>
             </>
           )}

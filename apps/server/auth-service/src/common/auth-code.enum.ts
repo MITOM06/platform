@@ -40,6 +40,10 @@ export enum AuthCode {
   CANNOT_CHANGE_OWN_ROLE = 'CANNOT_CHANGE_OWN_ROLE',
   /** PATCH /admin/members/:id — would leave no active Owner. */
   LAST_OWNER_CANNOT_BE_DEMOTED = 'LAST_OWNER_CANNOT_BE_DEMOTED',
+  /** PATCH /admin/roles/:id — preset roles (Owner/Admin/Manager/Member) keep their name. */
+  PRESET_ROLE_RENAME_FORBIDDEN = 'PRESET_ROLE_RENAME_FORBIDDEN',
+  /** DELETE /api/users/device-tokens without a `token` (body or `?token=`). */
+  DEVICE_TOKEN_REQUIRED = 'DEVICE_TOKEN_REQUIRED',
 
   // ── 401 Unauthorized ────────────────────────────────────────────────────
   ACCOUNT_LOCKED = 'ACCOUNT_LOCKED',
@@ -50,6 +54,11 @@ export enum AuthCode {
   SESSION_INVALID = 'SESSION_INVALID',
   SESSION_REVOKED = 'SESSION_REVOKED',
   TOKEN_SESSION_MISMATCH = 'TOKEN_SESSION_MISMATCH',
+  /**
+   * The access token was minted before the user's role / departments / permissions changed
+   * (`iat < sess:{sid}.claimsAt`). The session is still valid: refresh and retry — never a logout.
+   */
+  TOKEN_CLAIMS_STALE = 'TOKEN_CLAIMS_STALE',
   SOCIAL_EMAIL_UNAVAILABLE = 'SOCIAL_EMAIL_UNAVAILABLE',
   LOGIN_CODE_INVALID = 'LOGIN_CODE_INVALID',
   REFRESH_TOKEN_REUSE = 'REFRESH_TOKEN_REUSE',
@@ -57,6 +66,12 @@ export enum AuthCode {
   REFRESH_TOKEN_ROTATED = 'REFRESH_TOKEN_ROTATED',
   SSO_DISABLED = 'SSO_DISABLED',
   SSO_DOMAIN_NOT_ALLOWED = 'SSO_DOMAIN_NOT_ALLOWED',
+  /**
+   * Google / OIDC sign-in matched an EXISTING account (or the bootstrap Owner) by email, but the
+   * identity provider did not assert `email_verified: true` — the address is not trusted to
+   * prove ownership of that account (OAuth redirect only).
+   */
+  SSO_EMAIL_UNVERIFIED = 'SSO_EMAIL_UNVERIFIED',
 
   // ── 403 Forbidden ───────────────────────────────────────────────────────
   /** Social/SSO sign-in for an email with no account (invite-only). */
@@ -68,6 +83,25 @@ export enum AuthCode {
   INVITATION_EMAIL_MISMATCH = 'INVITATION_EMAIL_MISMATCH',
   OWNER_ROLE_ASSIGN_FORBIDDEN = 'OWNER_ROLE_ASSIGN_FORBIDDEN',
   OWNER_BLOCK_FORBIDDEN = 'OWNER_BLOCK_FORBIDDEN',
+  /** Capability-gated route (RequirePermissionGuard) or an object-level check failed. */
+  INSUFFICIENT_PERMISSION = 'INSUFFICIENT_PERMISSION',
+  /**
+   * A non-Owner tried to create/edit a role, assign a role (member update, invitation, SSO
+   * mapping) that grants capabilities the actor does not hold.
+   * params: { capabilities: string[] } — the capability keys the actor is missing.
+   */
+  ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS = 'ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS',
+  /** PATCH /admin/roles/:id — a non-Owner cannot edit the role they currently hold. */
+  CANNOT_EDIT_OWN_ROLE = 'CANNOT_EDIT_OWN_ROLE',
+  /** PATCH /admin/workspace — only an Owner may map SSO groups / defaultRole to the Owner role. */
+  OWNER_SSO_MAPPING_FORBIDDEN = 'OWNER_SSO_MAPPING_FORBIDDEN',
+  /** Friend request / accept while either user has blocked the other. */
+  USER_BLOCKED = 'USER_BLOCKED',
+  /**
+   * Google / OIDC sign-in matched an existing account by email, but that account is already
+   * linked to a DIFFERENT identity of the same provider (OAuth redirect only).
+   */
+  SOCIAL_ACCOUNT_CONFLICT = 'SOCIAL_ACCOUNT_CONFLICT',
 
   // ── 404 Not Found ───────────────────────────────────────────────────────
   EMAIL_NOT_FOUND = 'EMAIL_NOT_FOUND',
@@ -77,6 +111,10 @@ export enum AuthCode {
   INVITATION_INVALID = 'INVITATION_INVALID',
   /** Unknown invitation id (admin endpoints). */
   INVITATION_NOT_FOUND = 'INVITATION_NOT_FOUND',
+  /** Unknown / malformed AI-context entry id (PATCH/DELETE /ai-context/entries/:id). */
+  AI_CONTEXT_ENTRY_NOT_FOUND = 'AI_CONTEXT_ENTRY_NOT_FOUND',
+  /** Malformed notification id (POST /api/notifications/:id/read). */
+  NOTIFICATION_NOT_FOUND = 'NOTIFICATION_NOT_FOUND',
 
   // ── 409 Conflict ────────────────────────────────────────────────────────
   /** @deprecated Only emitted by the removed POST /auth/register. */
@@ -86,6 +124,18 @@ export enum AuthCode {
   INVITATION_NOT_PENDING = 'INVITATION_NOT_PENDING',
   MEMBER_ALREADY_EXISTS = 'MEMBER_ALREADY_EXISTS',
   LAST_OWNER_CANNOT_BE_BLOCKED = 'LAST_OWNER_CANNOT_BE_BLOCKED',
+  /** Role names are unique; preset names (Owner/Admin/Manager/Member) are reserved. */
+  ROLE_NAME_TAKEN = 'ROLE_NAME_TAKEN',
+  /**
+   * POST /api/users/me/change-password — the account has a password and none was sent.
+   * Body keeps the legacy `message: 'Current password is required'` alongside the code.
+   */
+  CURRENT_PASSWORD_REQUIRED = 'CURRENT_PASSWORD_REQUIRED',
+  /**
+   * POST /api/users/me/change-password — wrong current password.
+   * Body keeps the legacy `message: 'Incorrect current password'` alongside the code.
+   */
+  CURRENT_PASSWORD_INCORRECT = 'CURRENT_PASSWORD_INCORRECT',
 
   // ── 410 Gone ────────────────────────────────────────────────────────────
   INVITATION_EXPIRED = 'INVITATION_EXPIRED',

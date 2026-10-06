@@ -21,9 +21,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
       def = "{'conversationId': 1, 'type': 1, 'createdAt': -1}"),
   // Sender-scoped lookups: edit/recall own messages
   @CompoundIndex(name = "conv_sender", def = "{'conversationId': 1, 'senderId': 1}"),
+  // ai:action:resolved → the AI message holding that pending action (only AI replies have one).
+  @CompoundIndex(name = "pending_action_id", def = "{'pendingActions.id': 1}", sparse = true),
 })
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class Message {
@@ -70,6 +72,18 @@ public class Message {
   @org.springframework.data.mongodb.core.mapping.Field("trace")
   private AiTraceData trace;
 
+  /**
+   * Sensitive AI actions this reply is waiting for the requester to confirm (F2) — null on every
+   * other message, so the field is only stored where it means something.
+   */
+  private List<PendingAction> pendingActions;
+
+  /**
+   * The ai-service stream id ({@code replyId}) this AI message was produced by — lets clients swap
+   * their streaming placeholder for the persisted message exactly. Null on every other message.
+   */
+  private String aiReplyId;
+
   @CreatedDate private Instant createdAt;
 
   @Data
@@ -89,5 +103,8 @@ public class Message {
     private String messageId;
     private String senderId;
     private String content;
+
+    /** True once the quoted message was recalled — {@code content} is then blank. */
+    private boolean recalled;
   }
 }

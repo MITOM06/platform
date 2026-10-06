@@ -7,6 +7,8 @@ import 'package:super_clipboard/super_clipboard.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/media_url.dart';
+import '../../../auth/domain/auth_provider.dart';
+import '../../../auth/domain/auth_state.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 import '../../domain/message_selection_provider.dart';
@@ -23,10 +25,19 @@ class FloatingReactionSheet extends ConsumerWidget {
   final MessageModel message;
   final bool isSentByMe;
 
+  /// Context + ref of the bubble that opened the sheet. Actions that continue
+  /// AFTER the sheet is popped (forward picker, read details) must use these —
+  /// the sheet's own context/ref are disposed by then, which made "Forward"
+  /// silently do nothing.
+  final BuildContext hostContext;
+  final WidgetRef hostRef;
+
   const FloatingReactionSheet({
     super.key,
     required this.message,
     required this.isSentByMe,
+    required this.hostContext,
+    required this.hostRef,
   });
 
   /// Downloads the image bytes from [content] and writes them to the OS
@@ -54,6 +65,11 @@ class FloatingReactionSheet extends ConsumerWidget {
     await clipboard.write([item]);
   }
 
+  /// chat-service refuses to forward system, call-log and meeting-summary
+  /// messages (400 MESSAGE_TYPE_NOT_ALLOWED) — don't offer it.
+  static bool _canForward(MessageModel m) =>
+      !m.recalled && !m.isSystem && !m.isCallLog && !m.isMeetingSummary;
+
   static void show(BuildContext context, WidgetRef ref, MessageModel message,
       bool isSentByMe) {
     showModalBottomSheet(
@@ -64,6 +80,8 @@ class FloatingReactionSheet extends ConsumerWidget {
       builder: (ctx) => FloatingReactionSheet(
         message: message,
         isSentByMe: isSentByMe,
+        hostContext: context,
+        hostRef: ref,
       ),
     );
   }
@@ -73,9 +91,23 @@ class FloatingReactionSheet extends ConsumerWidget {
     final l10n = context.l10n;
     final notifier =
         ref.read(chatNotifierProvider(message.conversationId).notifier);
-    final convs = ref.watch(conversationsNotifierProvider).valueOrNull;
-    final isGroupChat =
-        convs?.any((c) => c.id == message.conversationId && c.isGroup) ?? false;
+    final conv = ref.watch(conversationProvider(message.conversationId));
+    final isGroupChat = conv?.isGroup ?? false;
+    final me = ref.watch(authNotifierProvider.select((s) {
+      final v = s.valueOrNull;
+      return v is AuthAuthenticated ? v.user.id : '';
+    }));
+    // Pins are admin-only in groups (server: 403 GROUP_ADMIN_REQUIRED); both
+    // people may pin in a direct chat. System / call messages are never pinned.
+    final canPin = (conv?.canManage(me) ?? !isGroupChat) &&
+        !message.isCallLog &&
+        !message.isSystem;
+    // Copy only what reads as text (or a single image). Voice, files, stickers
+    // and collages store upload URLs / JSON that must never reach the
+    // clipboard as raw text.
+    final canCopy = message.type == 'text' ||
+        message.isAiMessage ||
+        (message.isImage && !message.isMultiImage);
     // Read the *current* pinned set so the Pin/Unpin label stays in sync
     // after a STOMP update (spec: unpin toggle freshness).
     final chatState =
@@ -165,29 +197,28 @@ class FloatingReactionSheet extends ConsumerWidget {
                         context.pop();
                       },
                     ),
-                    ListTile(
-                      leading:
-                          Icon(Icons.copy_rounded, color: AppTheme.mutedText(context)),
-                      title: Text(l10n.actionCopy),
-                      onTap: () async {
-                        final messenger = ScaffoldMessenger.of(context);
-                        final copiedMsg = context.l10n.copiedToClipboard;
-                        context.pop();
-                        // Single image → copy the actual image bytes into the
-                        // OS clipboard; everything else keeps copy-as-text.
-                        if (message.isImage && !message.isMultiImage) {
-                          await _copyImageToClipboard(message.content);
-                        } else {
-                          final text = message.isFile
-                              ? message.fileUrl
-                              : message.content;
-                          await Clipboard.setData(ClipboardData(text: text));
-                        }
-                        messenger.showSnackBar(
-                          SnackBar(content: Text(copiedMsg)),
-                        );
-                      },
-                    ),
+                    if (canCopy)
+                      ListTile(
+                        leading: Icon(Icons.copy_rounded,
+                            color: AppTheme.mutedText(context)),
+                        title: Text(l10n.actionCopy),
+                        onTap: () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          final copiedMsg = context.l10n.copiedToClipboard;
+                          context.pop();
+                          // Single image → copy the actual image bytes into
+                          // the OS clipboard; text keeps copy-as-text.
+                          if (message.isImage) {
+                            await _copyImageToClipboard(message.content);
+                          } else {
+                            await Clipboard.setData(
+                                ClipboardData(text: message.content));
+                          }
+                          messenger.showSnackBar(
+                            SnackBar(content: Text(copiedMsg)),
+                          );
+                        },
+                      ),
                     if (message.isImage || message.isVideo)
                       ListTile(
                         leading: Icon(Icons.download_rounded,
@@ -235,11 +266,12 @@ class FloatingReactionSheet extends ConsumerWidget {
                             style: TextStyle(color: AppTheme.accent(context))),
                         onTap: () {
                           context.pop();
-                          showGroupReadDetailsModal(context, message);
+                          if (hostContext.mounted) {
+                            showGroupReadDetailsModal(hostContext, message);
+                          }
                         },
                       ),
-                    // Calls can't be pinned — hide the action entirely.
-                    if (!message.isCallLog)
+                    if (canPin || isPinned)
                       ListTile(
                         leading: Icon(
                           // No rounded outline pin exists, so the unpinned state
@@ -275,14 +307,17 @@ class FloatingReactionSheet extends ConsumerWidget {
                         notifier.toggle(message.id, message.type);
                       },
                     ),
+                    if (_canForward(message))
                     ListTile(
                       leading: Icon(Icons.forward_to_inbox_rounded,
                           color: AppTheme.mutedText(context)),
                       title: Text(l10n.forwardMessage),
                       onTap: () {
                         context.pop();
-                        showForwardDialog(
-                            context, ref, message, message.conversationId);
+                        if (hostContext.mounted) {
+                          showForwardDialog(hostContext, hostRef, message,
+                              message.conversationId);
+                        }
                       },
                     ),
                     ListTile(

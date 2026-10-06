@@ -132,7 +132,11 @@ String _codeToString(
     case 'VAL_DISPLAYNAME_TOO_SHORT':
       return l10n.authErrValDisplaynameTooShort;
     case 'VAL_PASSWORD_TOO_SHORT':
-      return l10n.authErrValPasswordTooShort;
+      // change-password sends `params.min`; the validation-array form has none.
+      final min = _intParam(params, 'min');
+      return min > 0
+          ? l10n.authErrPasswordTooShortMin(min)
+          : l10n.authErrValPasswordTooShort;
 
     // ── Account / login errors ───────────────────────────────────────────────
     case 'ACCOUNT_LOCKED':
@@ -193,6 +197,26 @@ String _codeToString(
       return l10n.authErrOwnerBlockForbidden;
     case 'LAST_OWNER_CANNOT_BE_BLOCKED':
       return l10n.authErrLastOwnerCannotBeBlocked;
+    // Role / permission governance — `adminErrorMessage` names the missing
+    // capabilities of ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS; this is the fallback.
+    case 'ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS':
+      return l10n.authErrRoleGrantExceedsOwnPermissionsGeneric;
+    case 'CANNOT_EDIT_OWN_ROLE':
+      return l10n.authErrCannotEditOwnRole;
+    case 'PRESET_ROLE_RENAME_FORBIDDEN':
+      return l10n.authErrPresetRoleRenameForbidden;
+    case 'ROLE_NAME_TAKEN':
+      return l10n.authErrRoleNameTaken;
+    case 'OWNER_ROLE_IMMUTABLE':
+      return l10n.authErrOwnerRoleImmutable;
+    case 'OWNER_SSO_MAPPING_FORBIDDEN':
+      return l10n.authErrOwnerSsoMappingForbidden;
+    case 'INSUFFICIENT_PERMISSION':
+      return l10n.authErrInsufficientPermission;
+    case 'AI_CONTEXT_ENTRY_NOT_FOUND':
+      return l10n.authErrAiContextEntryNotFound;
+    case 'AI_CONNECTORS_NOT_IN_ALLOW_LIST':
+      return l10n.authErrAiConnectorsNotInAllowList;
 
     // ── Token / session errors ───────────────────────────────────────────────
     case 'TOKEN_INVALID':
@@ -226,6 +250,20 @@ String _codeToString(
       return l10n.authErrSsoDisabled;
     case 'SSO_DOMAIN_NOT_ALLOWED':
       return l10n.authErrSsoDomainNotAllowed;
+    case 'SSO_EMAIL_UNVERIFIED':
+      return l10n.authErrSsoEmailUnverified;
+    case 'SOCIAL_ACCOUNT_CONFLICT':
+      return l10n.authErrSocialAccountConflict;
+
+    // ── Friends / blocking ───────────────────────────────────────────────────
+    case 'USER_BLOCKED':
+      return l10n.authErrUserBlocked;
+
+    // ── Change password ──────────────────────────────────────────────────────
+    case 'CURRENT_PASSWORD_REQUIRED':
+      return l10n.authErrCurrentPasswordRequired;
+    case 'CURRENT_PASSWORD_INCORRECT':
+      return l10n.errCurrentPasswordIncorrect;
 
     default:
       return l10n.errActionFailed;

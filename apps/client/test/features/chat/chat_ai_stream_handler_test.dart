@@ -114,8 +114,9 @@ void main() {
       expect(msg.sources?.map((s) => s.documentId).toList(), ['doc-1', 'doc-2']);
       expect(msg.trace, isNotNull);
       expect(msg.trace!.model, 'claude');
-      // DONE remembers the finalized placeholder id for later swap.
-      expect(h.finalizedAiPlaceholderId, 'ai-pending-1');
+      // DONE-before-persist: the reply stays tracked until its persisted
+      // message swaps in.
+      expect(h.slots.single.done, isTrue);
       h.dispose();
     });
   });

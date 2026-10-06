@@ -2,6 +2,8 @@
 export interface InvitationActor {
   sub: string;
   role?: string;
+  /** Capability keys of the actor (JWT `perms`) — bounds which roles they may invite with. */
+  perms?: string[];
 }
 
 /** `invitedBy` value of the boot-time Owner invitation. */
@@ -9,9 +11,8 @@ export const SYSTEM_INVITER = 'system';
 export const OWNER_ROLE = 'Owner';
 export const MEMBER_ROLE = 'Member';
 
-export function normalizeEmail(email: string): string {
-  return (email ?? '').trim().toLowerCase();
-}
+// Moved to common/email so the auth flows share one definition; re-exported for existing imports.
+export { normalizeEmail } from '../../common/email';
 
 /** Mongo E11000 (unique index violation). */
 export function isDuplicateKey(e: unknown): boolean {

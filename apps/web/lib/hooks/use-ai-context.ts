@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { aiContextService, type UpsertEntryInput } from '@/lib/api/ai-context'
 import { aiService } from '@/lib/api/ai'
+import { useAdminErrorToast } from '@/lib/hooks/use-admin'
 
 // ── Self (current user) ──────────────────────────────────────────────────────
 
@@ -56,6 +57,8 @@ export function useMemberAiContext(userId: string, enabled: boolean) {
 export function useUpdateMemberHard() {
   const qc = useQueryClient()
   const t = useTranslations('admin')
+  // AI_CONTEXT_ENTRY_NOT_FOUND / INSUFFICIENT_PERMISSION → their own message.
+  const onError = useAdminErrorToast()
   return useMutation({
     mutationFn: ({ userId, body }: { userId: string; body: { jobTitle?: string; projects?: string[] } }) =>
       aiContextService.updateUserHard(userId, body),
@@ -63,7 +66,7 @@ export function useUpdateMemberHard() {
       qc.invalidateQueries({ queryKey: ['ai-context', 'user', v.userId] })
       toast.success(t('toastSaved'))
     },
-    onError: () => toast.error(t('toastError')),
+    onError,
   })
 }
 
@@ -79,19 +82,23 @@ export function useContextEntries(scope: 'company' | 'department', scopeId?: str
 export function useCreateEntry() {
   const qc = useQueryClient()
   const t = useTranslations('admin')
+  // AI_CONTEXT_ENTRY_NOT_FOUND / INSUFFICIENT_PERMISSION → their own message.
+  const onError = useAdminErrorToast()
   return useMutation({
     mutationFn: (dto: UpsertEntryInput) => aiContextService.createEntry(dto),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['ai-context', 'entries'] })
       toast.success(t('toastSaved'))
     },
-    onError: () => toast.error(t('toastError')),
+    onError,
   })
 }
 
 export function useUpdateEntry() {
   const qc = useQueryClient()
   const t = useTranslations('admin')
+  // AI_CONTEXT_ENTRY_NOT_FOUND / INSUFFICIENT_PERMISSION → their own message.
+  const onError = useAdminErrorToast()
   return useMutation({
     mutationFn: ({ id, dto }: { id: string; dto: UpsertEntryInput }) =>
       aiContextService.updateEntry(id, dto),
@@ -99,19 +106,21 @@ export function useUpdateEntry() {
       qc.invalidateQueries({ queryKey: ['ai-context', 'entries'] })
       toast.success(t('toastSaved'))
     },
-    onError: () => toast.error(t('toastError')),
+    onError,
   })
 }
 
 export function useDeleteEntry() {
   const qc = useQueryClient()
   const t = useTranslations('admin')
+  // AI_CONTEXT_ENTRY_NOT_FOUND / INSUFFICIENT_PERMISSION → their own message.
+  const onError = useAdminErrorToast()
   return useMutation({
     mutationFn: (id: string) => aiContextService.deleteEntry(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['ai-context', 'entries'] })
-      toast.success(t('toastSaved'))
+      toast.success(t('toastDeleted'))
     },
-    onError: () => toast.error(t('toastError')),
+    onError,
   })
 }

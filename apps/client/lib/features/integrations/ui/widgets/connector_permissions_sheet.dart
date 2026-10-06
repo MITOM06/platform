@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/utils/app_error.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -7,6 +6,7 @@ import '../../../../core/utils/global_messenger.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../data/models/connector_models.dart';
 import '../../state/integrations_provider.dart';
+import '../../utils/connector_error.dart';
 
 /// Bottom sheet that governs which AI actions a connected connector may perform:
 /// View (read-only), Create, Edit, Delete (write). Mirrors the web permissions
@@ -74,7 +74,7 @@ class _ConnectorPermissionsSheetState
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = friendlyError(e);
+        _error = connectorErrorMessage(context.l10n, e);
       });
     }
   }

@@ -17,14 +17,11 @@ import {
 import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { authService } from '@/lib/api/auth'
+import { passwordChangeErrorKey } from '@/lib/auth/password-change-error'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter'
-
-interface ServerError {
-  response?: { data?: { message?: string } }
-}
 
 export default function SecurityPage() {
   const t = useTranslations('settings.security')
@@ -86,17 +83,10 @@ export default function SecurityPage() {
       setNewPw('')
       setConfirmPw('')
     } catch (e: unknown) {
-      // An unrecognised server message falls back to the generic localized copy. Assigning
-      // `serverMsg` here would print raw English backend text into the UI regardless of locale
+      // Mapped by error `code`, never the raw English server text
       // (.claude/rules/no-raw-system-data-in-ui.md).
-      let msg = t('genericError')
-      const serverMsg = (e as ServerError)?.response?.data?.message
-      if (serverMsg?.includes('Incorrect current password')) {
-        msg = t('incorrectCurrent')
-      } else if (serverMsg?.includes('Current password is required')) {
-        msg = t('currentRequired')
-      }
-      setError(msg)
+      const { key, values } = passwordChangeErrorKey(e)
+      setError(t(key, values))
     } finally {
       setSaving(false)
     }
@@ -265,7 +255,10 @@ export default function SecurityPage() {
               </div>
 
               <div className="flex items-center justify-between pt-1">
-                <p className="text-xs text-muted-foreground">{t('staySignedIn')}</p>
+                {/* Changing the password signs every OTHER device out (server-side). */}
+                <p className="text-xs text-muted-foreground">
+                  {hasPassword ? t('otherDevicesSignedOut') : t('staySignedIn')}
+                </p>
                 <div className="flex gap-2">
                   <Button variant="ghost" onClick={reset} disabled={saving}>
                     {tCommon('cancel')}

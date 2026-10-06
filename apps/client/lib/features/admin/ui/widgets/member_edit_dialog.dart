@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -10,6 +11,20 @@ class MemberEditResult {
   final String? roleId;
   final List<String> departmentIds;
   const MemberEditResult({required this.roleId, required this.departmentIds});
+}
+
+/// The PATCH body for a member edit — only the fields that actually changed
+/// (an untouched dialog yields `{}`). A `null` role is never sent.
+Map<String, dynamic> memberEditPatch(Member member, MemberEditResult result) {
+  final roleChanged = result.roleId != null && result.roleId != member.roleId;
+  final deptsChanged = !const SetEquality<String>().equals(
+    result.departmentIds.toSet(),
+    member.departmentIds.toSet(),
+  );
+  return {
+    if (roleChanged) 'roleId': result.roleId,
+    if (deptsChanged) 'departmentIds': result.departmentIds,
+  };
 }
 
 /// Edit a member's role + departments. Mirrors the web `MembersPanel` edit

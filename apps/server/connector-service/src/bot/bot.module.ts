@@ -1,20 +1,27 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { BotSession, BotSessionSchema } from './bot-session.schema';
+import { ExternalBotRef, ExternalBotRefSchema } from './external-bot-ref.schema';
 import { BotSessionService } from './bot-session.service';
+import { BotBridgeService } from './bot-bridge.service';
 import { BotSessionGuard } from './bot-session.guard';
 import { McpServerController } from './mcp-server.controller';
 import { BotAdminController } from './bot-admin.controller';
 import { InternalBotController } from './internal-bot.controller';
 import { InternalModule } from '../internal/internal.module';
+import { GovernanceModule } from '../governance/governance.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: BotSession.name, schema: BotSessionSchema }]),
+    MongooseModule.forFeature([
+      { name: BotSession.name, schema: BotSessionSchema },
+      { name: ExternalBotRef.name, schema: ExternalBotRefSchema },
+    ]),
     InternalModule,
+    GovernanceModule,
   ],
   controllers: [McpServerController, BotAdminController, InternalBotController],
-  providers: [BotSessionService, BotSessionGuard],
+  providers: [BotSessionService, BotBridgeService, BotSessionGuard],
   exports: [BotSessionService],
 })
 export class BotModule {}

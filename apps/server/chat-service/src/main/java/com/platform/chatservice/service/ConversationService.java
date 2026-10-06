@@ -2,41 +2,34 @@ package com.platform.chatservice.service;
 
 import com.platform.chatservice.dto.ConversationResponse;
 import com.platform.chatservice.dto.CreateGroupRequest;
+import com.platform.chatservice.exception.BadRequestException;
 import com.platform.chatservice.exception.ConversationNotFoundException;
 import com.platform.chatservice.exception.DuplicateConversationException;
+import com.platform.chatservice.exception.ErrorCodes;
 import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.ExternalBot;
-import com.platform.chatservice.model.Message;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.ExternalBotRepository;
 import com.platform.chatservice.repository.FriendshipRepository;
-import com.platform.chatservice.repository.MessageRepository;
 import com.platform.chatservice.security.UserPrincipal;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 /**
- * Write-side of the conversation domain: creation, group management, membership, per-user state
- * (mute/archive/block/read), wallpaper, auto-delete and stranger-request acceptance. Read/list
- * concerns live in {@link ConversationQueryService}; response mapping lives in {@link
- * ConversationMapper}.
+ * Write-side of the conversation domain for SHARED state: creation, group management, membership,
+ * wallpaper, auto-delete and stranger-request acceptance. Per-user state (mute/archive/block/read/
+ * clear/hide) lives in {@link ConversationUserStateService}; read/list concerns in {@link
+ * ConversationQueryService}; response mapping in {@link ConversationMapper}.
  */
 @Service
 @RequiredArgsConstructor
@@ -44,11 +37,13 @@ public class ConversationService {
 
   private final ConversationRepository conversationRepository;
   private final ConversationCacheService conversationCacheService;
-  private final MessageRepository messageRepository;
   private final FriendshipRepository friendshipRepository;
-  private final MongoTemplate mongoTemplate;
   private final ExternalBotRepository externalBotRepository;
-  private final ConversationMapper conversationMapper;
+  private final ConversationWriteSupport support;
+  private final ConversationMembershipCache membershipCache;
+
+  /** Result of {@link #setAutoDelete}: {@code changed} is false for a no-op (same setting). */
+  public record AutoDeleteChange(ConversationResponse conversation, boolean changed, int seconds) {}
 
   public ConversationResponse createConversation(String currentUserId, String participantId) {
     List<String> participants = List.of(currentUserId, participantId);
@@ -74,7 +69,7 @@ public class ConversationService {
                 .createdBy(currentUserId)
                 .status(friends ? Conversation.STATUS_ACCEPTED : Conversation.STATUS_PENDING)
                 .build());
-    return toResponse(saved, currentUserId, 0L);
+    return support.view(saved, currentUserId, 0L);
   }
 
   public ConversationResponse createGroup(UserPrincipal creator, CreateGroupRequest request) {
@@ -82,12 +77,16 @@ public class ConversationService {
       throw new IllegalArgumentException("Group name cannot be empty");
     }
     requireDepartmentAccess(creator, request.departmentId());
+    boolean publicChannel = Boolean.TRUE.equals(request.publicChannel());
+    if (publicChannel) {
+      requireNotDepartmentGroup(request.departmentId());
+    }
     final String creatorId = creator.getUserId();
     // Creator is always a participant + admin; dedupe ids preserving order.
     LinkedHashSet<String> members = new LinkedHashSet<>();
     members.add(creatorId);
     if (request.participantIds() != null) {
-      members.addAll(request.participantIds());
+      request.participantIds().stream().filter(Objects::nonNull).forEach(members::add);
     }
     if (members.size() < 2) {
       throw new IllegalArgumentException("A group needs at least 2 members");
@@ -104,10 +103,11 @@ public class ConversationService {
                 .admins(new ArrayList<>(List.of(creatorId)))
                 .createdBy(creatorId)
                 .departmentId(request.departmentId())
+                .publicChannel(publicChannel)
                 .lastMessageAt(Instant.now())
                 .pendingMembers(pendingMembers)
                 .build());
-    return toResponse(saved, creatorId, 0L);
+    return support.view(saved, creatorId, 0L);
   }
 
   /**
@@ -123,17 +123,51 @@ public class ConversationService {
     throw new ForbiddenException("Not a member of this department");
   }
 
+  /**
+   * A department group scopes its assistant to that department's knowledge base; making it public
+   * would let anyone join and read that knowledge base through the assistant — the exact leak
+   * {@link #requireDepartmentAccess} closes at creation.
+   */
+  private static void requireNotDepartmentGroup(String departmentId) {
+    if (departmentId != null && !departmentId.isBlank()) {
+      throw new BadRequestException(
+          ErrorCodes.PUBLIC_DEPARTMENT_CHANNEL_NOT_ALLOWED,
+          "A department group cannot be a public channel");
+    }
+  }
+
   public ConversationResponse updateGroup(
       String userId, String conversationId, String name, String avatarUrl) {
-    Conversation conversation = requireGroupAdmin(userId, conversationId);
+    return updateGroup(userId, conversationId, name, avatarUrl, null);
+  }
+
+  /** Same, optionally switching the group between public channel and private ({@code null}). */
+  public ConversationResponse updateGroup(
+      String userId, String conversationId, String name, String avatarUrl, Boolean publicChannel) {
+    Conversation conversation = support.requireGroupAdmin(userId, conversationId);
+    Update update = new Update();
+    boolean touched = false;
+    if (publicChannel != null && publicChannel != conversation.isPublicChannel()) {
+      if (publicChannel) {
+        requireNotDepartmentGroup(conversation.getDepartmentId());
+      }
+      update.set("publicChannel", publicChannel);
+      touched = true;
+    }
     if (name != null && !name.trim().isEmpty()) {
-      conversation.setName(name.trim());
+      update.set("name", name.trim());
+      touched = true;
     }
     if (avatarUrl != null) {
-      conversation.setAvatarUrl(avatarUrl.isBlank() ? null : avatarUrl);
+      if (avatarUrl.isBlank()) {
+        update.unset("avatarUrl");
+      } else {
+        update.set("avatarUrl", avatarUrl);
+      }
+      touched = true;
     }
-    Conversation saved = conversationCacheService.save(conversation);
-    return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
+    Conversation result = touched ? support.update(conversationId, null, update) : conversation;
+    return support.view(result != null ? result : conversation, userId);
   }
 
   /**
@@ -141,212 +175,146 @@ public class ConversationService {
    * shared cosmetic, not an admin-gated setting. Blank/null resets to the default for everyone.
    */
   public ConversationResponse setWallpaper(String userId, String conversationId, String wallpaper) {
-    Conversation conversation = getRawConversation(userId, conversationId);
-    conversation.setWallpaper(wallpaper == null || wallpaper.isBlank() ? null : wallpaper);
-    Conversation saved = conversationCacheService.save(conversation);
-    return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
+    Update update =
+        wallpaper == null || wallpaper.isBlank()
+            ? new Update().unset("wallpaper")
+            : new Update().set("wallpaper", wallpaper);
+    return support.view(support.updateAsParticipant(userId, conversationId, update), userId);
   }
 
   public ConversationResponse addMembers(
       String userId, String conversationId, List<String> userIds) {
-    Conversation conversation = requireGroupAdmin(userId, conversationId);
+    Conversation conversation = support.requireGroupAdmin(userId, conversationId);
     // Snapshot existing participants BEFORE mutating, so an already-accepted member
     // re-passed in userIds is not wrongly demoted back to pending.
     Set<String> alreadyIn = new HashSet<>(conversation.getParticipants());
-    List<String> participants = new ArrayList<>(conversation.getParticipants());
-    for (String id : userIds) {
-      if (id != null && !participants.contains(id)) {
-        participants.add(id);
-      }
+    List<String> newMembers =
+        (userIds == null ? List.<String>of() : userIds)
+            .stream()
+                .filter(id -> id != null && !id.isBlank() && !alreadyIn.contains(id))
+                .distinct()
+                .toList();
+    if (newMembers.isEmpty()) {
+      return support.view(conversation, userId);
     }
-    conversation.setParticipants(participants);
-    if (conversation.getPendingMembers() == null) conversation.setPendingMembers(new ArrayList<>());
-    for (String id : userIds) {
-      if (id != null
-          && !alreadyIn.contains(id)
-          && !conversation.getPendingMembers().contains(id)
-          && !id.equals(conversation.getCreatedBy())) {
-        conversation.getPendingMembers().add(id);
-      }
+    List<String> newPending =
+        newMembers.stream().filter(id -> !id.equals(conversation.getCreatedBy())).toList();
+    Update update = new Update();
+    update.addToSet("participants").each(newMembers.toArray());
+    if (!newPending.isEmpty()) {
+      update.addToSet("pendingMembers").each(newPending.toArray());
     }
-    Conversation saved = conversationCacheService.save(conversation);
-    return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
+    Conversation updated = support.update(conversationId, null, update);
+    membershipCache.invalidate(conversationId);
+    return support.view(updated != null ? updated : conversation, userId);
   }
 
   /**
    * Remove a member. Self-removal (leave) is allowed for any participant; removing others requires
-   * admin.
+   * admin. If the group is left without an admin, the first remaining human member is promoted.
    */
   public ConversationResponse removeMember(
       String userId, String conversationId, String targetUserId) {
-    Conversation conversation = getRawConversation(userId, conversationId);
+    Conversation conversation = support.requireParticipant(userId, conversationId);
     if (!conversation.isGroup()) {
-      throw new IllegalArgumentException("Not a group conversation");
+      throw ConversationWriteSupport.notAGroup();
     }
     boolean isSelf = userId.equals(targetUserId);
-    if (!isSelf && !isAdmin(conversation, userId)) {
-      throw new ForbiddenException("Only admins can remove members");
+    if (!isSelf && !ConversationWriteSupport.isAdmin(conversation, userId)) {
+      throw ConversationWriteSupport.adminRequired("Only admins can remove members");
     }
-    List<String> participants = new ArrayList<>(conversation.getParticipants());
-    participants.remove(targetUserId);
-    conversation.setParticipants(participants);
-    if (conversation.getAdmins() != null) {
-      List<String> admins = new ArrayList<>(conversation.getAdmins());
-      admins.remove(targetUserId);
-      // Promote someone if the group lost all admins but still has members.
-      if (admins.isEmpty() && !participants.isEmpty()) {
-        admins.add(participants.get(0));
-      }
-      conversation.setAdmins(admins);
+    Conversation updated =
+        support.update(
+            conversationId,
+            null,
+            new Update()
+                .pull("participants", targetUserId)
+                .pull("admins", targetUserId)
+                .pull("pendingMembers", targetUserId));
+    membershipCache.invalidate(conversationId);
+    if (updated == null) {
+      throw new ConversationNotFoundException(conversationId);
     }
-    if (conversation.getPendingMembers() != null) {
-      conversation.getPendingMembers().remove(targetUserId);
-    }
-    Conversation saved = conversationCacheService.save(conversation);
-    return toResponse(saved, userId, 0L);
+    updated = promoteHeirIfNoAdmin(conversationId, updated);
+    return support.view(updated, userId, 0L);
   }
 
-  /** Hide the conversation from the user's list and clear their history cutoff. */
-  public void deleteConversation(String userId, String conversationId) {
-    Conversation conversation = getRawConversation(userId, conversationId);
-    List<String> hidden =
-        conversation.getHiddenFor() == null
-            ? new ArrayList<>()
-            : new ArrayList<>(conversation.getHiddenFor());
-    if (!hidden.contains(userId)) {
-      hidden.add(userId);
+  /** Promote the first remaining human member — only if the group STILL has no admin (atomic). */
+  private Conversation promoteHeirIfNoAdmin(String conversationId, Conversation conversation) {
+    boolean noAdmin = conversation.getAdmins() == null || conversation.getAdmins().isEmpty();
+    if (!noAdmin || conversation.getParticipants() == null) {
+      return conversation;
     }
-    conversation.setHiddenFor(hidden);
-    setClearedAt(conversation, userId, Instant.now());
-    conversationCacheService.save(conversation);
+    String heir =
+        conversation.getParticipants().stream()
+            .filter(p -> !AiConstants.AI_BOT_USER_ID.equals(p) && !p.startsWith("extbot:"))
+            .findFirst()
+            .orElse(null);
+    if (heir == null) {
+      return conversation;
+    }
+    Conversation promoted =
+        support.update(
+            conversationId,
+            new Criteria()
+                .orOperator(
+                    Criteria.where("admins").size(0), Criteria.where("admins").exists(false)),
+            new Update().push("admins", heir));
+    return promoted != null ? promoted : conversation;
   }
-
-  /** "Start over": hide all messages up to now for this user only. */
-  public void clearHistory(String userId, String conversationId) {
-    Conversation conversation = getRawConversation(userId, conversationId);
-    setClearedAt(conversation, userId, Instant.now());
-    conversationCacheService.save(conversation);
-  }
-
-  /** Sentinel value meaning "muted until the user manually unmutes". */
-  private static final long MUTE_FOREVER_MS = 9_200_000_000_000_000L;
 
   /**
-   * Mute conversation for userId with a time-based duration.
-   *
-   * @param durationSeconds 900=15min, 1800=30min, 3600=1h, 86400=24h, -1=forever
+   * Disappearing messages. In a group only admins may change it (any participant of a direct chat).
+   * Enabling stamps {@code autoDeleteEnabledAt}; the sweep only ever deletes messages created
+   * at/after that instant, so switching it on can no longer wipe the existing history. Changing the
+   * window while enabled keeps the original instant; disabling clears both fields.
    */
-  public ConversationResponse muteConversation(
-      String userId, String conversationId, long durationSeconds) {
-    Conversation conversation = getRawConversation(userId, conversationId);
-    if (conversation.getMutedUntil() == null) {
-      conversation.setMutedUntil(new HashMap<>());
+  public AutoDeleteChange setAutoDelete(String userId, String conversationId, Integer seconds) {
+    Conversation conversation = support.requireParticipant(userId, conversationId);
+    if (conversation.isGroup() && !ConversationWriteSupport.isAdmin(conversation, userId)) {
+      throw ConversationWriteSupport.adminRequired(
+          "Only admins can change disappearing messages in a group");
     }
-    long expiryMs =
-        (durationSeconds <= 0)
-            ? MUTE_FOREVER_MS
-            : System.currentTimeMillis() + durationSeconds * 1000L;
-    conversation.getMutedUntil().put(userId, expiryMs);
-    conversationCacheService.save(conversation);
-    return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
-  }
-
-  public ConversationResponse unmuteConversation(String userId, String conversationId) {
-    Conversation conversation = getRawConversation(userId, conversationId);
-    if (conversation.getMutedUntil() != null) {
-      conversation.getMutedUntil().remove(userId);
-      conversationCacheService.save(conversation);
+    Integer target = seconds != null && seconds > 0 ? seconds : null;
+    boolean enabled = conversation.getAutoDeleteSeconds() != null;
+    if (Objects.equals(target, conversation.getAutoDeleteSeconds())
+        && (target == null || conversation.getAutoDeleteEnabledAt() != null)) {
+      return new AutoDeleteChange(
+          support.view(conversation, userId), false, target == null ? 0 : target);
     }
-    return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
-  }
-
-  public ConversationResponse archiveConversation(String userId, String conversationId) {
-    Conversation conversation = getRawConversation(userId, conversationId);
-    List<String> archived =
-        conversation.getArchivedBy() == null
-            ? new ArrayList<>()
-            : new ArrayList<>(conversation.getArchivedBy());
-    if (!archived.contains(userId)) {
-      archived.add(userId);
-      conversation.setArchivedBy(archived);
-      conversationCacheService.save(conversation);
+    Update update;
+    if (target == null) {
+      update = new Update().unset("autoDeleteSeconds").unset("autoDeleteEnabledAt");
+    } else {
+      update = new Update().set("autoDeleteSeconds", target);
+      if (!enabled || conversation.getAutoDeleteEnabledAt() == null) {
+        update.set("autoDeleteEnabledAt", Instant.now());
+      }
     }
-    return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
-  }
-
-  public ConversationResponse unarchiveConversation(String userId, String conversationId) {
-    Conversation conversation = getRawConversation(userId, conversationId);
-    List<String> archived =
-        conversation.getArchivedBy() == null
-            ? new ArrayList<>()
-            : new ArrayList<>(conversation.getArchivedBy());
-    if (archived.remove(userId)) {
-      conversation.setArchivedBy(archived);
-      conversationCacheService.save(conversation);
-    }
-    return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
-  }
-
-  public ConversationResponse markConversationUnread(String userId, String conversationId) {
-    Conversation conversation = getRawConversation(userId, conversationId);
-    Pageable pageable = PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "createdAt"));
-    Page<Message> page =
-        messageRepository.findByConversationIdOrderByCreatedAtDesc(conversationId, pageable);
-    if (!page.isEmpty()) {
-      Message lastMessage = page.getContent().get(0);
-      // Atomic $pull mirrors markConversationRead's $addToSet: avoids the read-modify-write race
-      // where a concurrent read could silently re-add the user to readBy.
-      mongoTemplate.updateFirst(
-          new Query(Criteria.where("_id").is(lastMessage.getId())),
-          new Update().pull("readBy", userId),
-          Message.class);
-    }
-    return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
-  }
-
-  public ConversationResponse markConversationRead(String userId, String conversationId) {
-    Conversation conversation = getRawConversation(userId, conversationId);
-    // Atomic per-document $addToSet avoids the read-modify-write race where a
-    // message arriving mid-operation could be silently re-marked unread, and
-    // avoids loading the whole unread set into memory.
-    mongoTemplate.updateMulti(
-        new Query(Criteria.where("conversationId").is(conversationId).and("readBy").nin(userId)),
-        new Update().addToSet("readBy", userId),
-        Message.class);
-    return toResponse(conversation, userId, 0L);
-  }
-
-  public ConversationResponse setAutoDelete(String userId, String conversationId, Integer seconds) {
-    Conversation conversation = getRawConversation(userId, conversationId);
-    conversation.setAutoDeleteSeconds(seconds != null && seconds > 0 ? seconds : null);
-    Conversation saved = conversationCacheService.save(conversation);
-    return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
+    Conversation updated = support.updateAsParticipant(userId, conversationId, update);
+    return new AutoDeleteChange(support.view(updated, userId), true, target == null ? 0 : target);
   }
 
   public ConversationResponse getConversation(String userId, String conversationId) {
-    Conversation conversation = getRawConversation(userId, conversationId);
-    long unreadCount = messageRepository.countUnread(conversationId, userId);
-    return toResponse(conversation, userId, unreadCount);
+    return support.view(support.requireParticipant(userId, conversationId), userId);
   }
 
   /**
    * Accept a pending stranger request. Only a participant who did NOT initiate the conversation may
-   * accept it.
+   * accept it. For a group, accepting an invite removes the caller from {@code pendingMembers}.
    */
   public ConversationResponse acceptConversation(String userId, String conversationId) {
-    Conversation conversation = getRawConversation(userId, conversationId);
+    Conversation conversation = support.requireParticipant(userId, conversationId);
+    Update update;
     if (Conversation.TYPE_DIRECT.equals(conversation.resolvedType())) {
       if (userId.equals(conversation.getCreatedBy())) {
         throw new ForbiddenException("The initiator cannot accept their own request");
       }
-      conversation.setStatus(Conversation.STATUS_ACCEPTED);
+      update = new Update().set("status", Conversation.STATUS_ACCEPTED);
     } else {
-      if (conversation.getPendingMembers() != null) {
-        conversation.getPendingMembers().remove(userId);
-      }
+      update = new Update().pull("pendingMembers", userId);
     }
-    Conversation saved = conversationCacheService.save(conversation);
-    return toResponse(saved, userId, messageRepository.countUnread(conversationId, userId));
+    return support.view(support.updateAsParticipant(userId, conversationId, update), userId);
   }
 
   /** Join a public channel. Idempotent — no-op if the user is already a member. */
@@ -359,63 +327,16 @@ public class ConversationService {
         || !Conversation.TYPE_GROUP.equals(conversation.getType())) {
       throw new ForbiddenException("This channel is not publicly joinable");
     }
-    if (!conversation.getParticipants().contains(userId)) {
-      List<String> participants = new ArrayList<>(conversation.getParticipants());
-      participants.add(userId);
-      conversation.setParticipants(participants);
-      conversationCacheService.save(conversation);
+    Conversation updated =
+        support.update(
+            conversationId,
+            Criteria.where("publicChannel").is(true).and("type").is(Conversation.TYPE_GROUP),
+            new Update().addToSet("participants", userId));
+    if (updated == null) {
+      throw new ForbiddenException("This channel is not publicly joinable");
     }
-    return toResponse(conversation, userId, messageRepository.countUnread(conversationId, userId));
-  }
-
-  /** Move conversation to the Blocked section for userId (called after blockUser). */
-  public ConversationResponse blockArchiveConversation(String userId, String conversationId) {
-    Conversation conv = getRawConversation(userId, conversationId);
-    if (conv.getBlockedBy() == null) {
-      conv.setBlockedBy(new ArrayList<>());
-    }
-    if (!conv.getBlockedBy().contains(userId)) {
-      conv.getBlockedBy().add(userId);
-      conversationCacheService.save(conv);
-    }
-    return toResponse(conv, userId, messageRepository.countUnread(conversationId, userId));
-  }
-
-  /** Restore conversation from Blocked section (called after unblockUser). */
-  public ConversationResponse blockRestoreConversation(String userId, String conversationId) {
-    Conversation conv = getRawConversation(userId, conversationId);
-    if (conv.getBlockedBy() != null && conv.getBlockedBy().remove(userId)) {
-      conversationCacheService.save(conv);
-    }
-    return toResponse(conv, userId, messageRepository.countUnread(conversationId, userId));
-  }
-
-  /** Fetch a conversation, enforcing the caller is a participant. */
-  private Conversation getRawConversation(String userId, String conversationId) {
-    Conversation conversation =
-        conversationCacheService
-            .findByIdOptional(conversationId)
-            .orElseThrow(() -> new ConversationNotFoundException(conversationId));
-    if (conversation.getParticipants() == null
-        || !conversation.getParticipants().contains(userId)) {
-      throw new ConversationNotFoundException(conversationId);
-    }
-    return conversation;
-  }
-
-  private Conversation requireGroupAdmin(String userId, String conversationId) {
-    Conversation conversation = getRawConversation(userId, conversationId);
-    if (!conversation.isGroup()) {
-      throw new IllegalArgumentException("Not a group conversation");
-    }
-    if (!isAdmin(conversation, userId)) {
-      throw new ForbiddenException("Only admins can perform this action");
-    }
-    return conversation;
-  }
-
-  private boolean isAdmin(Conversation conversation, String userId) {
-    return conversation.getAdmins() != null && conversation.getAdmins().contains(userId);
+    membershipCache.invalidate(conversationId);
+    return support.view(updated, userId);
   }
 
   /**
@@ -441,18 +362,5 @@ public class ConversationService {
         .findByBotUserId(participantId)
         .map(ExternalBot::isEnabled)
         .orElse(false);
-  }
-
-  private void setClearedAt(Conversation conversation, String userId, Instant when) {
-    Map<String, Instant> cleared =
-        conversation.getClearedAt() == null
-            ? new java.util.HashMap<>()
-            : new java.util.HashMap<>(conversation.getClearedAt());
-    cleared.put(userId, when);
-    conversation.setClearedAt(cleared);
-  }
-
-  private ConversationResponse toResponse(Conversation c, String userId, long unreadCount) {
-    return conversationMapper.toResponse(c, userId, unreadCount);
   }
 }

@@ -1100,7 +1100,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get pinnedMessagesTitle => '고정된 메시지';
 
   @override
-  String get pinLimitReached => '메시지는 최대 2개까지 고정할 수 있습니다';
+  String get pinLimitReached => '메시지는 최대 5개까지 고정할 수 있습니다';
 
   @override
   String get cannotPinCall => '통화는 고정할 수 없습니다';
@@ -3525,4 +3525,651 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get callPoorConnection => '연결 상태가 좋지 않음';
+
+  @override
+  String get aiContextLearnedFactsLoadError => '어시스턴트가 기억한 내용을 불러오지 못했습니다.';
+
+  @override
+  String get errTooManyRequests => '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String get removedFromConversation => '더 이상 이 대화의 멤버가 아닙니다';
+
+  @override
+  String get errGroupAdminRequired => '그룹 관리자만 할 수 있습니다';
+
+  @override
+  String get errChatUserBlocked => '이 사용자에게 메시지를 보낼 수 없습니다';
+
+  @override
+  String get errReplyTargetInvalid => '답장하려는 메시지를 더 이상 사용할 수 없습니다';
+
+  @override
+  String get errMessageTypeNotAllowed => '이 유형의 메시지는 여기에서 보낼 수 없습니다';
+
+  @override
+  String get errInvalidUrl => '이 링크는 미리 볼 수 없습니다';
+
+  @override
+  String get errNotAGroup => '그룹 채팅에서만 사용할 수 있습니다';
+
+  @override
+  String get errNotAMember => '이 사용자는 더 이상 그룹에 없습니다';
+
+  @override
+  String get errLastAdminCannotBeRemoved => '그룹에는 최소 한 명의 관리자가 있어야 합니다';
+
+  @override
+  String get errPublicDepartmentChannel => '부서 그룹은 공개 채널로 만들 수 없습니다';
+
+  @override
+  String get publicChannelToggle => '공개 채널';
+
+  @override
+  String get publicChannelHint => '워크스페이스의 누구나 탐색에서 찾아 참여할 수 있습니다';
+
+  @override
+  String get groupMakeAdmin => '관리자로 지정';
+
+  @override
+  String get groupRemoveAdmin => '관리자 해제';
+
+  @override
+  String get aiErrEmptyResponse => '어시스턴트가 답변을 생성하지 못했습니다. 다시 시도해 주세요.';
+
+  @override
+  String get sysGroupCreatedNoActor => '그룹이 생성되었습니다';
+
+  @override
+  String get sysMembersAddedNoActor => '새 멤버가 추가되었습니다';
+
+  @override
+  String get sysMemberLeftNoActor => '멤버가 그룹을 나갔습니다';
+
+  @override
+  String get sysMemberRemovedNoActor => '멤버가 내보내졌습니다';
+
+  @override
+  String get sysMemberJoinedNoActor => '새 멤버가 참여했습니다';
+
+  @override
+  String get sysAutoDeleteOff => '사라지는 메시지가 꺼졌습니다';
+
+  @override
+  String sysAutoDeleteOn(String duration) {
+    return '사라지는 메시지가 $duration(으)로 설정되었습니다';
+  }
+
+  @override
+  String sysAutoDeleteOffBy(String actorName) {
+    return '$actorName님이 사라지는 메시지를 껐습니다';
+  }
+
+  @override
+  String sysAutoDeleteOnBy(String actorName, String duration) {
+    return '$actorName님이 사라지는 메시지를 $duration(으)로 설정했습니다';
+  }
+
+  @override
+  String sysAdminPromoted(String targetName) {
+    return '$targetName님이 이제 관리자입니다';
+  }
+
+  @override
+  String sysAdminDemoted(String targetName) {
+    return '$targetName님은 더 이상 관리자가 아닙니다';
+  }
+
+  @override
+  String sysAdminPromotedBy(String actorName, String targetName) {
+    return '$actorName님이 $targetName님을 관리자로 지정했습니다';
+  }
+
+  @override
+  String sysAdminDemotedBy(String actorName, String targetName) {
+    return '$actorName님이 $targetName님의 관리자 권한을 해제했습니다';
+  }
+
+  @override
+  String durationSeconds(int count) {
+    return '$count초';
+  }
+
+  @override
+  String durationMinutes(int count) {
+    return '$count분';
+  }
+
+  @override
+  String durationHours(int count) {
+    return '$count시간';
+  }
+
+  @override
+  String durationDays(int count) {
+    return '$count일';
+  }
+
+  @override
+  String durationShortMinutes(int count) {
+    return '$count분';
+  }
+
+  @override
+  String durationShortHours(int count) {
+    return '$count시간';
+  }
+
+  @override
+  String durationShortDays(int count) {
+    return '$count일';
+  }
+
+  @override
+  String get authErrUserBlocked => '사용할 수 없습니다 — 둘 중 한 명이 상대를 차단했습니다';
+
+  @override
+  String get authErrCurrentPasswordRequired => '현재 비밀번호를 입력하세요';
+
+  @override
+  String get authErrSsoEmailUnverified => '로그인 제공업체에서 이 이메일 주소를 인증하지 않았습니다';
+
+  @override
+  String get authErrSocialAccountConflict => '이 이메일은 이미 다른 로그인 계정에 연결되어 있습니다';
+
+  @override
+  String get aiActionConfirm => '확인';
+
+  @override
+  String get aiActionCancel => '취소';
+
+  @override
+  String get aiActionSendEmail => '이메일 보내기';
+
+  @override
+  String get aiActionDraftEmail => '이메일 초안 작성';
+
+  @override
+  String get aiActionCreateEvent => '캘린더 일정 만들기';
+
+  @override
+  String get aiActionUpdateEvent => '캘린더 일정 수정';
+
+  @override
+  String get aiActionCreatePage => '페이지 만들기';
+
+  @override
+  String get aiActionUpdatePage => '페이지 수정';
+
+  @override
+  String get aiActionGeneric => '작업 실행';
+
+  @override
+  String aiActionGenericNamed(String tool) {
+    return '“$tool” 실행';
+  }
+
+  @override
+  String aiActionVia(String connector) {
+    return '$connector 사용';
+  }
+
+  @override
+  String aiActionWaitingFor(String name) {
+    return '$name님의 확인을 기다리는 중';
+  }
+
+  @override
+  String get aiActionFieldTo => '받는 사람';
+
+  @override
+  String get aiActionFieldSubject => '제목';
+
+  @override
+  String get aiActionFieldTitle => '제목';
+
+  @override
+  String get aiActionFieldWhen => '일시';
+
+  @override
+  String get aiActionStatusConfirmed => '완료됨';
+
+  @override
+  String get aiActionStatusCancelled => '취소됨';
+
+  @override
+  String get aiActionStatusFailed => '실패';
+
+  @override
+  String get aiActionStatusExpired => '만료됨';
+
+  @override
+  String get aiActionStatusHandled => '이미 처리됨';
+
+  @override
+  String get aiActionErrNotFound => '이 작업은 더 이상 존재하지 않습니다';
+
+  @override
+  String get aiActionErrNotOwner => '요청한 사람만 확인할 수 있습니다';
+
+  @override
+  String get aiActionErrAlreadyResolved => '이 작업은 이미 처리되었습니다';
+
+  @override
+  String get aiActionErrExpired => '이 요청은 만료되었습니다';
+
+  @override
+  String get aiActionErrGeneric => '이 작업을 완료할 수 없습니다';
+
+  @override
+  String get aiToolWebSearch => '웹 검색 중';
+
+  @override
+  String get aiToolRememberFact => '기억에 저장 중';
+
+  @override
+  String get aiToolCreateReminder => '리마인더 만드는 중';
+
+  @override
+  String get aiToolGetUserInfo => '동료 정보 조회 중';
+
+  @override
+  String get aiToolSearchKnowledgeBase => '지식 베이스 검색 중';
+
+  @override
+  String get aiToolSearchMessages => '메시지 검색 중';
+
+  @override
+  String get aiToolSummarizeConversation => '대화 요약 중';
+
+  @override
+  String aiToolOnConnector(String tool, String connector) {
+    return '$connector에서 $tool';
+  }
+
+  @override
+  String get aiTraceToolAwaiting => '확인 대기 중';
+
+  @override
+  String get aiTraceToolDone => '완료';
+
+  @override
+  String get aiTraceToolNotRun => '실행 안 됨';
+
+  @override
+  String aiTraceTokens(String input, String output) {
+    return '입력 $input · 출력 $output';
+  }
+
+  @override
+  String aiTraceCacheTokens(String read, String written) {
+    return '캐시 읽기 $read · 쓰기 $written';
+  }
+
+  @override
+  String aiTraceThinkingTokens(String count) {
+    return '사고 $count';
+  }
+
+  @override
+  String aiTraceDuration(String seconds) {
+    return '$seconds초';
+  }
+
+  @override
+  String aiTraceSteps(int count) {
+    return '$count단계';
+  }
+
+  @override
+  String get connectorGenericName => '커넥터';
+
+  @override
+  String get connectorCustomName => '사용자 지정 MCP 서버';
+
+  @override
+  String get connectorReconnect => '다시 연결';
+
+  @override
+  String get connectorStatusReconnect => '다시 연결해야 합니다';
+
+  @override
+  String get connectorStatusUnavailable => '사용할 수 없음';
+
+  @override
+  String get connectorDisconnectWorkspaceConfirm =>
+      '이 워크스페이스 커넥터의 연결을 끊을까요? 워크스페이스의 모든 사람이 해당 도구를 사용할 수 없게 됩니다.';
+
+  @override
+  String connectorDisconnected(String name) {
+    return '$name 연결을 끊었습니다';
+  }
+
+  @override
+  String get customMcpListTitle => '내 MCP 서버';
+
+  @override
+  String get customMcpDelete => '삭제';
+
+  @override
+  String get customMcpDeleteConfirm =>
+      '이 MCP 서버를 삭제할까요? AI가 더 이상 해당 도구를 사용하지 않습니다.';
+
+  @override
+  String customMcpDeleted(String name) {
+    return '$name을(를) 삭제했습니다';
+  }
+
+  @override
+  String get directoryDeleteConfirm => '이 디렉터리 항목을 삭제할까요?';
+
+  @override
+  String get directoryAuthOauth => 'OAuth 로그인';
+
+  @override
+  String get directoryAuthMcpOauth => 'OAuth (MCP 서버)';
+
+  @override
+  String get directoryAuthEnvOauth => 'OAuth (워크스페이스 앱)';
+
+  @override
+  String get directoryAuthApiKey => 'API 키';
+
+  @override
+  String get directoryAuthNone => '로그인 필요 없음';
+
+  @override
+  String get scopeEmailSend => '이메일 보내기';
+
+  @override
+  String get scopeEmailDraft => '초안 만들기';
+
+  @override
+  String get scopeEmailRead => '이메일 읽기';
+
+  @override
+  String get scopeEmailManage => '이메일 관리';
+
+  @override
+  String get scopeCalendarRead => '캘린더 보기';
+
+  @override
+  String get scopeCalendarEvents => '일정 관리';
+
+  @override
+  String get scopeCalendarManage => '캘린더 관리';
+
+  @override
+  String get scopeFilesRead => '파일 읽기';
+
+  @override
+  String get scopeFilesManage => '파일 관리';
+
+  @override
+  String get scopeReadContent => '콘텐츠 읽기';
+
+  @override
+  String get scopeInsertContent => '콘텐츠 추가';
+
+  @override
+  String get scopeUpdateContent => '콘텐츠 수정';
+
+  @override
+  String get scopeOther => '기타 권한';
+
+  @override
+  String get connErrUnsafeUrl => '허용되지 않는 주소입니다. 공개 https URL을 사용하세요.';
+
+  @override
+  String get connErrDiscoveryFailed => '해당 MCP 서버에 연결할 수 없습니다';
+
+  @override
+  String get connErrInsufficientPermission => '이 작업을 할 권한이 없습니다';
+
+  @override
+  String get connErrNotAllowed => '이 커넥터는 워크스페이스에서 허용되지 않습니다';
+
+  @override
+  String get connErrUnavailable => '이 커넥터는 지금 사용할 수 없습니다';
+
+  @override
+  String get connErrOauthSetup => '이 커넥터는 아직 로그인이 설정되지 않았습니다';
+
+  @override
+  String get connErrBotBridgeDisabled => '개인 비서 서비스가 설정되지 않았습니다';
+
+  @override
+  String get connErrBotNotFound => '비서를 찾을 수 없습니다';
+
+  @override
+  String get connErrBotOwnerMismatch => '이 비서는 다른 멤버의 것입니다';
+
+  @override
+  String get connErrMemberInactive => '이 멤버의 계정은 비활성 상태입니다';
+
+  @override
+  String oauthConnected(String name) {
+    return '$name에 연결되었습니다';
+  }
+
+  @override
+  String oauthErrAccessDenied(String name) {
+    return '$name 접근을 거부했습니다';
+  }
+
+  @override
+  String oauthErrFailed(String name) {
+    return '$name에 연결할 수 없습니다';
+  }
+
+  @override
+  String oauthNotCompleted(String name) {
+    return '$name 연결이 완료되지 않았습니다';
+  }
+
+  @override
+  String get oauthErrExpired => '로그인 시간이 너무 오래 걸렸습니다. 다시 시도하세요.';
+
+  @override
+  String get tokenUsageDailyChartTitle => '일별 사용량';
+
+  @override
+  String get tokenUsageTotalInRange => '선택한 기간의 합계';
+
+  @override
+  String get tokenUsageQuotaBlocked => '이 워크스페이스에서는 AI가 꺼져 있습니다';
+
+  @override
+  String get tokenUsageQuotaExceeded => '이번 달 AI 한도에 도달했습니다';
+
+  @override
+  String tokenUsageQuotaResets(String date) {
+    return '$date에 초기화';
+  }
+
+  @override
+  String authErrRoleGrantExceedsOwnPermissions(String capabilities) {
+    return '본인에게 없는 권한은 부여할 수 없습니다: $capabilities.';
+  }
+
+  @override
+  String get authErrRoleGrantExceedsOwnPermissionsGeneric =>
+      '본인에게 없는 권한은 부여할 수 없습니다.';
+
+  @override
+  String get authErrCannotEditOwnRole => '자신의 역할은 편집할 수 없습니다.';
+
+  @override
+  String get authErrPresetRoleRenameForbidden => '기본 제공 역할은 이름을 바꿀 수 없습니다.';
+
+  @override
+  String get authErrRoleNameTaken => '같은 이름의 역할이 이미 있습니다.';
+
+  @override
+  String get authErrOwnerRoleImmutable => 'Owner 역할은 수정하거나 삭제할 수 없습니다.';
+
+  @override
+  String get authErrOwnerSsoMappingForbidden =>
+      'SSO 그룹을 Owner 역할에 매핑할 수 있는 사람은 Owner뿐입니다.';
+
+  @override
+  String get authErrInsufficientPermission => '이 작업을 수행할 권한이 없습니다.';
+
+  @override
+  String get authErrAiContextEntryNotFound => '이 컨텍스트 항목은 더 이상 존재하지 않습니다.';
+
+  @override
+  String get authErrAiConnectorsNotInAllowList =>
+      '선택한 AI 커넥터는 워크스페이스 허용 커넥터 목록에 있어야 합니다.';
+
+  @override
+  String authErrPasswordTooShortMin(int min) {
+    return '비밀번호는 $min자 이상이어야 합니다.';
+  }
+
+  @override
+  String get adminCapManageAiContext => 'AI 컨텍스트 관리';
+
+  @override
+  String get adminCapViewInternalContext => '내부 컨텍스트 보기';
+
+  @override
+  String get adminCapViewConfidentialContext => '기밀 컨텍스트 보기';
+
+  @override
+  String get adminCapUnknown => '기타 권한';
+
+  @override
+  String get adminAuditSystem => '시스템';
+
+  @override
+  String get adminAuditFormerMember => '이전 멤버';
+
+  @override
+  String get adminAuditActionOther => '기타 작업';
+
+  @override
+  String get adminAuditActionWorkspaceUpdate => '워크스페이스 업데이트';
+
+  @override
+  String get adminAuditActionDepartmentCreate => '부서 생성';
+
+  @override
+  String get adminAuditActionDepartmentUpdate => '부서 업데이트';
+
+  @override
+  String get adminAuditActionDepartmentDelete => '부서 삭제';
+
+  @override
+  String get adminAuditActionMemberUpdate => '멤버 업데이트';
+
+  @override
+  String get adminAuditActionMemberSsoUpdate => 'SSO로 멤버 업데이트';
+
+  @override
+  String get adminAuditActionMemberBlock => '멤버 차단';
+
+  @override
+  String get adminAuditActionMemberUnblock => '멤버 차단 해제';
+
+  @override
+  String get adminAuditActionRoleCreate => '역할 생성';
+
+  @override
+  String get adminAuditActionRoleUpdate => '역할 업데이트';
+
+  @override
+  String get adminAuditActionInvitationCreate => '초대 보냄';
+
+  @override
+  String get adminAuditActionInvitationResend => '초대 다시 보냄';
+
+  @override
+  String get adminAuditActionInvitationRevoke => '초대 취소';
+
+  @override
+  String get adminAuditActionInvitationAccept => '초대 수락';
+
+  @override
+  String get adminAuditActionConnectorConnect => '커넥터 연결';
+
+  @override
+  String get adminAuditActionConnectorDisconnect => '커넥터 연결 해제';
+
+  @override
+  String get adminAuditActionConnectorReplace => '커넥터 다시 연결';
+
+  @override
+  String get adminAuditActionConnectionPermissionsUpdate => '커넥터 권한 업데이트';
+
+  @override
+  String get adminAuditActionCustomMcpAdd => '사용자 지정 MCP 추가';
+
+  @override
+  String get adminAuditActionCustomMcpDelete => '사용자 지정 MCP 삭제';
+
+  @override
+  String get adminAuditActionDirectoryCreate => '디렉터리 항목 추가';
+
+  @override
+  String get adminAuditActionDirectoryUpdate => '디렉터리 항목 업데이트';
+
+  @override
+  String get adminAuditActionDirectoryDelete => '디렉터리 항목 삭제';
+
+  @override
+  String get adminAuditActionSensitiveSkillRun => '민감한 스킬 실행';
+
+  @override
+  String get adminAuditTargetWorkspace => '워크스페이스';
+
+  @override
+  String get adminAuditTargetMember => '멤버';
+
+  @override
+  String get adminAuditTargetRole => '역할';
+
+  @override
+  String get adminAuditTargetDepartment => '부서';
+
+  @override
+  String get adminAuditTargetInvitation => '초대';
+
+  @override
+  String get adminAuditTargetConnector => '커넥터';
+
+  @override
+  String get adminAuditTargetDirectoryEntry => '디렉터리 항목';
+
+  @override
+  String get adminAuditTargetTool => '도구';
+
+  @override
+  String get adminAuditTargetOther => '기타 대상';
+
+  @override
+  String get adminAiConnectorsAllAllowed =>
+      '워크스페이스 허용 목록이 비어 있어 모든 커넥터가 허용됩니다. AI가 사용할 커넥터를 선택하세요.';
+
+  @override
+  String get errAssistantSetupIncomplete =>
+      '어시스턴트 설정을 마치려면 페르소나를 입력하고 모델을 선택하세요.';
+
+  @override
+  String get errAssistantNotConfigured =>
+      '이 워크스페이스에서는 아직 개인 어시스턴트를 사용할 수 없습니다. 관리자에게 문의하세요.';
+
+  @override
+  String get errAssistantUpstreamFailed =>
+      '어시스턴트 서비스가 응답하지 않았습니다. 잠시 후 다시 시도하세요.';
+
+  @override
+  String adminBotOwnedBy(String name) {
+    return '소유자: $name';
+  }
+
+  @override
+  String adminRoleCloneDefaultName(String name) {
+    return '$name 사본';
+  }
 }

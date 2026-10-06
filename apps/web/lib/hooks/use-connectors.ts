@@ -1,8 +1,11 @@
+import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { connectorService } from '@/lib/api/connector'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { connectorErrorKey } from '@/lib/integrations/connector-errors'
+import type { ProviderNameSources } from '@/lib/ai/connector-names'
 import type {
   ActionGroup,
   CreateDirectoryEntryInput,
@@ -10,12 +13,16 @@ import type {
   UpdateDirectoryEntryInput,
 } from '@/lib/api/connector-types'
 
+/** My custom MCP servers live under the connections root (invalidated with it). */
+const CUSTOM_MCP_KEY = (userId: string | undefined) => ['connections', userId, 'custom-mcp'] as const
+
 /** The connector catalog is global (not per-user), so it can be cached longer. */
-export function useCatalog() {
+export function useCatalog(enabled = true) {
   return useQuery({
     queryKey: ['connector-catalog'],
     queryFn: () => connectorService.getCatalog(),
     staleTime: 10 * 60 * 1000,
+    enabled,
   })
 }
 
@@ -48,7 +55,11 @@ export function useConnectorActions() {
       toast.success(t('disconnectSuccess'))
       invalidateConnections()
     },
-    onError: () => toast.error(t('disconnectError')),
+    // 403 INSUFFICIENT_PERMISSION on a workspace connection, 404 when it is gone.
+    onError: (err) => {
+      toast.error(t(connectorErrorKey(err, 'disconnectError')))
+      invalidateConnections()
+    },
   })
 
   const saveCustomMcp = useMutation({
@@ -56,8 +67,18 @@ export function useConnectorActions() {
     onSuccess: () => {
       toast.success(t('customSaveSuccess'))
       invalidateConnections()
+      queryClient.invalidateQueries({ queryKey: CUSTOM_MCP_KEY(userId) })
     },
-    onError: () => toast.error(t('customSaveError')),
+    onError: (err) => toast.error(t(connectorErrorKey(err, 'customSaveError'))),
+  })
+
+  const deleteCustomMcp = useMutation({
+    mutationFn: (id: string) => connectorService.deleteCustomMcp(id),
+    onSuccess: () => {
+      toast.success(t('customDeleteSuccess'))
+      queryClient.invalidateQueries({ queryKey: CUSTOM_MCP_KEY(userId) })
+    },
+    onError: (err) => toast.error(t(connectorErrorKey(err, 'customDeleteError'))),
   })
 
   const updatePermissions = useMutation({
@@ -72,18 +93,46 @@ export function useConnectorActions() {
       toast.success(t('permSaved'))
       invalidateConnections()
     },
-    onError: () => toast.error(t('disconnectError')),
+    onError: (err) => toast.error(t(connectorErrorKey(err, 'permSaveError'))),
   })
 
-  return { disconnect, saveCustomMcp, updatePermissions, invalidateConnections }
+  return {
+    disconnect,
+    saveCustomMcp,
+    deleteCustomMcp,
+    updatePermissions,
+    invalidateConnections,
+  }
+}
+
+/** The caller's own custom MCP servers (`GET /custom-mcp`). */
+export function useCustomMcpServers(enabled = true) {
+  const userId = useAuthStore((s) => s.user?.id)
+  return useQuery({
+    queryKey: CUSTOM_MCP_KEY(userId),
+    queryFn: () => connectorService.listCustomMcp(),
+    enabled: !!userId && enabled,
+  })
+}
+
+/**
+ * Everything that can name a connector provider (catalog, directory, my custom
+ * servers) — used to show `mcp__<provider>__…` tools by their display name.
+ */
+export function useProviderNameSources(enabled = true): ProviderNameSources {
+  const { data: catalog } = useCatalog(enabled)
+  const { data: directory } = useDirectory(enabled)
+  const { data: customMcp } = useCustomMcpServers(enabled)
+  return useMemo(() => ({ catalog, directory, customMcp }), [catalog, directory, customMcp])
 }
 
 /** The dynamic MCP directory (global, DB-driven). Cached like the catalog. */
-export function useDirectory() {
+export function useDirectory(enabled = true) {
   return useQuery({
     queryKey: ['connector-directory'],
     queryFn: () => connectorService.getDirectory(),
     staleTime: 10 * 60 * 1000,
+    enabled,
   })
 }
 

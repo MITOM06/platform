@@ -34,6 +34,7 @@ import '../../features/admin/ui/admin_screen.dart';
 import '../../features/settings/ui/token_usage_screen.dart';
 import '../../features/settings/ui/legal_screen.dart';
 import '../../features/help/ui/help_screen.dart';
+import '../l10n/l10n_ext.dart';
 import '../utils/global_messenger.dart';
 import 'page_transitions.dart';
 
@@ -295,7 +296,8 @@ List<RouteBase> buildAppRoutes() {
           state,
           CallScreen(
             targetId: extra['targetId'] as String? ?? '',
-            targetName: extra['targetName'] as String? ?? 'User',
+            targetName:
+                extra['targetName'] as String? ?? context.l10n.someone,
             conversationId: extra['conversationId'] as String? ?? '',
             isCaller: extra['isCaller'] as bool? ?? false,
             isVideo: extra['isVideo'] as bool? ?? true,

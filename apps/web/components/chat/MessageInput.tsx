@@ -9,9 +9,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { useQuickReaction } from '@/lib/quick-reaction'
 import { useVoiceRecorder } from '@/lib/hooks/use-voice-recorder'
 import { useStagedAttachments } from '@/lib/hooks/use-staged-attachments'
-import { useMentionParticipants } from '@/lib/hooks/use-mention-participants'
+import { useMentionAutocomplete } from '@/lib/hooks/use-mention-autocomplete'
 import { AI_BOT_ID } from '@/lib/constants'
 import { FILE_TOO_LARGE } from '@/lib/api/chat'
+import { isReportedSendError } from '@/lib/chat/send-error'
+import { useAuthStore } from '@/lib/store/auth.store'
+import { useSenderDisplayName } from '@/lib/hooks/use-display-names'
 import { EmojiStickerPicker } from '@/components/chat/EmojiStickerPicker'
 import { MediaPreviewStrip } from '@/components/chat/MediaPreviewStrip'
 import {
@@ -20,7 +23,10 @@ import {
 import type { Message, MessageType, Conversation } from '@/lib/api/types'
 
 interface Props {
+  /** Send a NEW message. Rejects (after its own toast) when the send failed. */
   onSend: (content: string, type?: MessageType) => Promise<void>
+  /** Submit the edit of `editingMessage` (text only). Rejects on failure. */
+  onEditSubmit?: (content: string) => Promise<void>
   onTypingChange?: (isTyping: boolean) => void
   disabled?: boolean
   editingMessage?: Message | null
@@ -32,6 +38,7 @@ interface Props {
 
 export function MessageInput({
   onSend,
+  onEditSubmit,
   onTypingChange,
   disabled,
   editingMessage,
@@ -43,7 +50,13 @@ export function MessageInput({
   const t = useTranslations('chat')
   const quickReaction = useQuickReaction(conversation?.id ?? '')
 
-  const participants = useMentionParticipants(conversation)
+  const currentUserId = useAuthStore((s) => s.user?.id)
+  const replyIsOwn = !!replyingTo && replyingTo.senderId === currentUserId
+  const replySenderName = useSenderDisplayName(
+    replyingTo?.senderId,
+    conversation?.id,
+    !!replyingTo && !replyIsOwn,
+  )
   const [value, setValue] = useState('')
   const [sending, setSending] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -73,10 +86,7 @@ export function MessageInput({
     flushAttachments,
   } = useStagedAttachments()
 
-  // Mentions state
-  const [mentionCandidates, setMentionCandidates] = useState<{ id: string; name: string }[]>([])
-  const [mentionIndex, setMentionIndex] = useState(0)
-  const [mentionQuery, setMentionQuery] = useState<{ start: number, end: number, text: string } | null>(null)
+  const mention = useMentionAutocomplete({ conversation, value, setValue, textareaRef })
 
   // Grow the textarea to fit content, capped at max-h-32 (128px). Driven by JS
   // (not `field-sizing-content`) so the empty box doesn't grow to the placeholder.
@@ -111,24 +121,7 @@ export function MessageInput({
     setValue(val)
     resizeTextarea()
 
-    // Check for mention
-    const cursor = e.target.selectionStart
-    const textBeforeCursor = val.slice(0, cursor)
-    const match = textBeforeCursor.match(/@([a-zA-Z0-9_]*)$/)
-
-    if (match && conversation && conversation.type === 'group') {
-      const q = match[1].toLowerCase()
-      const candidates = participants.filter((p) => p.name.toLowerCase().includes(q))
-      if (candidates.length > 0) {
-        setMentionCandidates(candidates)
-        setMentionQuery({ start: match.index!, end: cursor, text: q })
-        setMentionIndex(0)
-      } else {
-        setMentionQuery(null)
-      }
-    } else {
-      setMentionQuery(null)
-    }
+    mention.updateFromInput(val, e.target.selectionStart)
 
     if (onTypingChange && !editingMessage) {
       onTypingChange(true)
@@ -137,20 +130,32 @@ export function MessageInput({
     }
   }
 
-  // Send a text message, then clear and refocus the box.
+  // Send (or submit the edit of) a text message. The box is cleared ONLY on
+  // success — a failed send keeps the draft so nothing the user typed is lost.
   const sendText = async (content: string) => {
     if (sending) return
     setSending(true)
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
     onTypingChange?.(false)
     try {
-      await onSend(content, 'text')
+      if (editingMessage && onEditSubmit) await onEditSubmit(content)
+      else await onSend(content, 'text')
       setValue('')
       if (textareaRef.current) textareaRef.current.style.height = 'auto'
-      textareaRef.current?.focus()
+    } catch (err) {
+      if (!isReportedSendError(err)) toast.error(t('sendMessageError'))
     } finally {
       setSending(false)
+      textareaRef.current?.focus()
     }
+  }
+
+  // Stickers / quick reaction: the page already toasts a failure; just don't
+  // leave an unhandled rejection behind.
+  const sendQuick = (content: string, type: MessageType) => {
+    onSend(content, type).catch((err) => {
+      if (!isReportedSendError(err)) toast.error(t('sendMessageError'))
+    })
   }
 
   const handleSend = async () => {
@@ -162,10 +167,13 @@ export function MessageInput({
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
       onTypingChange?.(false)
       try {
+        // Sent items leave the strip one by one; whatever failed stays staged.
         await flushAttachments(onSend)
       } catch (err) {
-        const tooLarge = err instanceof Error && err.message === FILE_TOO_LARGE
-        toast.error(tooLarge ? t('uploadTooLarge') : t('uploadError'))
+        if (!isReportedSendError(err)) {
+          const tooLarge = err instanceof Error && err.message === FILE_TOO_LARGE
+          toast.error(tooLarge ? t('uploadTooLarge') : t('uploadError'))
+        }
       } finally {
         setSending(false)
       }
@@ -189,31 +197,10 @@ export function MessageInput({
     conversation?.type !== 'group' &&
     (conversation?.participants?.includes(AI_BOT_ID) ?? false)
   const showSlashSuggestion =
-    isDirectAiConversation && value === '/' && !editingMessage && !mentionQuery
+    isDirectAiConversation && value === '/' && !editingMessage && !mention.hasQuery
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (mentionQuery) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        setMentionIndex((i) => (i + 1) % mentionCandidates.length)
-        return
-      }
-      if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        setMentionIndex((i) => (i - 1 + mentionCandidates.length) % mentionCandidates.length)
-        return
-      }
-      if (e.key === 'Enter' || e.key === 'Tab') {
-        e.preventDefault()
-        insertMention(mentionCandidates[mentionIndex])
-        return
-      }
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        setMentionQuery(null)
-        return
-      }
-    }
+    if (mention.handleKey(e)) return
 
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -241,30 +228,17 @@ export function MessageInput({
     })
   }
 
-  const insertMention = (candidate: { id: string; name: string }) => {
-    if (!mentionQuery) return
-    const el = textareaRef.current
-    const before = value.slice(0, mentionQuery.start)
-    const after = value.slice(mentionQuery.end)
-    const inserted = `@${candidate.name} `
-    setValue(before + inserted + after)
-    setMentionQuery(null)
-
-    if (el) {
-      requestAnimationFrame(() => {
-        el.focus()
-        el.selectionStart = el.selectionEnd = before.length + inserted.length
-      })
-    }
-  }
-
   const busy = disabled || sending || uploading
 
   return (
     <div className="flex flex-col border-t bg-background pb-safe">
       {/* Reply banner */}
       {replyingTo && !editingMessage && (
-        <ReplyBanner replyingTo={replyingTo} onCancelReply={onCancelReply} />
+        <ReplyBanner
+          replyingTo={replyingTo}
+          senderName={replyIsOwn ? t('you') : replySenderName}
+          onCancelReply={onCancelReply}
+        />
       )}
 
       {/* Edit mode banner */}
@@ -338,12 +312,12 @@ export function MessageInput({
             )}
 
             {/* Mention Popover */}
-            {mentionQuery && mentionCandidates.length > 0 && (
+            {mention.isOpen && (
               <MentionPopover
-                candidates={mentionCandidates}
-                activeIndex={mentionIndex}
-                onSelect={insertMention}
-                onHover={setMentionIndex}
+                candidates={mention.candidates}
+                activeIndex={mention.activeIndex}
+                onSelect={mention.insert}
+                onHover={mention.setActiveIndex}
               />
             )}
           </div>
@@ -352,7 +326,7 @@ export function MessageInput({
           <EmojiStickerPicker
             disabled={busy}
             onInsertEmoji={insertEmoji}
-            onSendSticker={(sticker) => onSend(sticker, 'sticker')}
+            onSendSticker={(sticker) => sendQuick(sticker, 'sticker')}
           />
 
           {/* Send (when text OR staged attachments present) OR Mic+👍 (when empty) */}
@@ -379,7 +353,7 @@ export function MessageInput({
                 <Mic className="size-5 text-primary" />
               </Button>
               <button
-                onClick={() => onSend(quickReaction, 'text')}
+                onClick={() => sendQuick(quickReaction, 'text')}
                 disabled={busy}
                 className="size-9 shrink-0 flex items-center justify-center text-xl transition-transform hover:scale-110 active:scale-95 tap"
                 title={t('quickSend')}

@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import 'ai_models.dart';
+import 'ai_pending_action.dart';
+
+export 'ai_pending_action.dart';
 
 @immutable
 class ReactionModel {
@@ -21,17 +24,22 @@ class ReplyPreview {
   final String? messageId;
   final String senderId;
   final String content;
+  // The quoted message was recalled — [content] is blank; render the
+  // localized "message recalled" label instead.
+  final bool recalled;
 
   const ReplyPreview({
     this.messageId,
     required this.senderId,
     required this.content,
+    this.recalled = false,
   });
 
   factory ReplyPreview.fromJson(Map<String, dynamic> json) => ReplyPreview(
         messageId: json['messageId'] as String?,
         senderId: json['senderId'] as String? ?? '',
         content: json['content'] as String? ?? '',
+        recalled: json['recalled'] as bool? ?? false,
       );
 }
 
@@ -68,6 +76,12 @@ class MessageModel {
   final List<String> activeTools;
   // Subset of activeTools flagged sensitive (state-changing / outbound) by ai-service
   final List<String> sensitiveTools;
+  // Sensitive AI actions held for in-chat confirmation (CONTRACTS-ROUND2 §F2):
+  // one confirmation card each. Null when the reply has none.
+  final List<AiPendingAction>? pendingActions;
+  // ai-service `replyId` of the stream a persisted AI message came from —
+  // lets the client swap exactly that streaming bubble (absent on others).
+  final String? aiReplyId;
 
   const MessageModel({
     required this.id,
@@ -91,6 +105,8 @@ class MessageModel {
     this.trace,
     this.activeTools = const [],
     this.sensitiveTools = const [],
+    this.pendingActions,
+    this.aiReplyId,
   });
 
   bool get isEdited => editedAt != null;
@@ -108,6 +124,18 @@ class MessageModel {
       isAiMessage && content == kAiStreamInterruptedSentinel;
   bool get isAiUnavailable => isAiMessage && content == kAiUnavailableSentinel;
   bool get isAiRateLimited => isAiMessage && content == kAiRateLimitedSentinel;
+  bool get isAiEmptyResponse =>
+      isAiMessage && content == kAiEmptyResponseSentinel;
+
+  /// Any AI failure state (rendered as a localized notice, never the
+  /// sentinel itself).
+  bool get isAiFailure =>
+      isAiError ||
+      isAiQuotaExceeded ||
+      isAiRateLimited ||
+      isAiStreamInterrupted ||
+      isAiUnavailable ||
+      isAiEmptyResponse;
   bool get isImage => type == 'image';
   bool get isVideo => type == 'video';
   bool get isMedia => isImage || isVideo;
@@ -186,10 +214,16 @@ class MessageModel {
           .map((e) => ReactionModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       recalled: json['recalled'] as bool? ?? false,
-      editedAt: json['editedAt'] != null
-          ? DateTime.parse(json['editedAt'] as String)
+      // Absent on most messages; never let a malformed value throw.
+      editedAt: json['editedAt'] is String
+          ? DateTime.tryParse(json['editedAt'] as String)
           : null,
       mentions: List<String>.from(json['mentions'] as List? ?? []),
+      pendingActions: parsePendingActions(json['pendingActions']),
+      aiReplyId: json['aiReplyId'] is String &&
+              (json['aiReplyId'] as String).isNotEmpty
+          ? json['aiReplyId'] as String
+          : null,
     );
   }
 
@@ -215,6 +249,8 @@ class MessageModel {
     AiTrace? trace,
     List<String>? activeTools,
     List<String>? sensitiveTools,
+    List<AiPendingAction>? pendingActions,
+    String? aiReplyId,
   }) {
     return MessageModel(
       id: id ?? this.id,
@@ -238,6 +274,8 @@ class MessageModel {
       trace: trace ?? this.trace,
       activeTools: activeTools ?? this.activeTools,
       sensitiveTools: sensitiveTools ?? this.sensitiveTools,
+      pendingActions: pendingActions ?? this.pendingActions,
+      aiReplyId: aiReplyId ?? this.aiReplyId,
     );
   }
 }

@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   Inject,
@@ -17,9 +18,14 @@ import {
   Redis,
 } from '@platform/database';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AuthCode } from '../../common/auth-code.enum';
+import { toPublicProfile } from '../users/public-profile';
 
 // Redis key written by chat-service PresenceEventListener (value "online", 5-min TTL).
 const STATUS_KEY_PREFIX = 'user:status:';
+
+/** A friend as returned to clients: the shared public profile (+ email). */
+export type FriendProfile = Record<string, unknown> & { _id: unknown };
 
 @Injectable()
 export class FriendsService {
@@ -92,18 +98,21 @@ export class FriendsService {
     );
   }
 
-  /** Accepted friends resolved to public user profiles (password excluded). */
-  async listFriends(userId: string): Promise<UserDocument[]> {
-    const ids = await this.listAcceptedFriendIds(userId);
-    if (ids.length === 0) return [];
-    return this.userModel
-      .find({ _id: { $in: ids } })
-      .select('-password')
-      .exec();
+  /**
+   * Accepted friends as public profiles (same privacy rules as
+   * GET /api/users/:id: show* toggles honoured, no tokens/devices/links),
+   * excluding anyone in a block relationship with `userId` (legacy rows —
+   * blocking now deletes the friendship).
+   */
+  async listFriends(userId: string): Promise<FriendProfile[]> {
+    const docs = await this.excludeBlocked(userId, await this.friendDocs(userId));
+    return docs.map((d) => this.toFriend(d, userId));
   }
 
   /** Pending friend requests addressed TO `userId` (incoming), with requester profile. */
-  async listIncomingRequests(userId: string): Promise<any[]> {
+  async listIncomingRequests(
+    userId: string,
+  ): Promise<Array<{ friendshipId: string; requester: FriendProfile }>> {
     const docs = await this.friendshipModel
       .find({
         recipientId: userId,
@@ -112,47 +121,87 @@ export class FriendsService {
       .exec();
     const requesterIds = docs.map((d) => d.requesterId);
     if (requesterIds.length === 0) return [];
-    const users = await this.userModel
-      .find({ _id: { $in: requesterIds } })
-      .select('-password')
-      .exec();
+    const users = await this.excludeBlocked(
+      userId,
+      await this.userModel
+        .find({ _id: { $in: requesterIds } })
+        .select('-password')
+        .lean()
+        .exec(),
+    );
     const byId = new Map(users.map((u) => [String(u._id), u]));
     return docs
       .map((d) => {
         const requester = byId.get(d.requesterId);
         if (!requester) return null;
-        return { friendshipId: String(d._id), requester };
+        return {
+          friendshipId: String(d._id),
+          requester: this.toFriend(requester, userId),
+        };
       })
-      .filter((x) => x !== null);
+      .filter((x): x is { friendshipId: string; requester: FriendProfile } => x !== null);
   }
 
   /** Accepted friends that are currently online (Redis presence).
    *  Excludes anyone who has a block relationship with `userId` in either
    *  direction — neither party should see the other as online.
    */
-  async listOnlineFriends(userId: string): Promise<UserDocument[]> {
-    const friends = await this.listFriends(userId);
+  async listOnlineFriends(userId: string): Promise<FriendProfile[]> {
+    const friends = await this.friendDocs(userId);
     if (friends.length === 0) return [];
     const statuses = await Promise.all(
       friends.map((f) => this.redis.get(STATUS_KEY_PREFIX + String(f._id))),
     );
     const onlineFriends = friends.filter((_, i) => statuses[i] === 'online');
-
-    // Exclude anyone who has blocked userId OR been blocked by userId.
     if (onlineFriends.length === 0) return [];
-    const friendIds = onlineFriends.map((f) => String(f._id));
+    const visible = await this.excludeBlocked(userId, onlineFriends);
+    return visible.map((d) => this.toFriend(d, userId));
+  }
+
+  private async friendDocs(userId: string): Promise<any[]> {
+    const ids = await this.listAcceptedFriendIds(userId);
+    if (ids.length === 0) return [];
+    return this.userModel
+      .find({ _id: { $in: ids } })
+      .select('-password')
+      .lean()
+      .exec();
+  }
+
+  private toFriend(doc: any, callerId: string): FriendProfile {
+    return toPublicProfile(doc, callerId, { includeEmail: true }) as FriendProfile;
+  }
+
+  /** Drop users that blocked `userId` or were blocked by `userId`. */
+  private async excludeBlocked<T extends { _id: unknown }>(
+    userId: string,
+    users: T[],
+  ): Promise<T[]> {
+    if (users.length === 0) return users;
+    const ids = users.map((u) => String(u._id));
     const blocks = await this.userBlockModel.find({
       $or: [
-        { blockerId: userId, blockedId: { $in: friendIds } },
-        { blockerId: { $in: friendIds }, blockedId: userId },
+        { blockerId: userId, blockedId: { $in: ids } },
+        { blockerId: { $in: ids }, blockedId: userId },
       ],
     });
-    const blockedSet = new Set<string>();
+    if (!blocks || blocks.length === 0) return users;
+    const blocked = new Set<string>();
     for (const b of blocks) {
-      blockedSet.add(b.blockerId === userId ? b.blockedId : b.blockerId);
+      blocked.add(b.blockerId === userId ? b.blockedId : b.blockerId);
     }
+    return users.filter((u) => !blocked.has(String(u._id)));
+  }
 
-    return onlineFriends.filter((f) => !blockedSet.has(String(f._id)));
+  /** Whether either user has blocked the other. */
+  async isBlockedEitherWay(a: string, b: string): Promise<boolean> {
+    const hit = await this.userBlockModel.exists({
+      $or: [
+        { blockerId: a, blockedId: b },
+        { blockerId: b, blockedId: a },
+      ],
+    });
+    return !!hit;
   }
 
   /** Returns the friendship doc between two users (either direction), if any. */
@@ -174,6 +223,9 @@ export class FriendsService {
   ): Promise<FriendshipDocument> {
     if (requesterId === recipientId) {
       throw new ConflictException('Cannot send a friend request to yourself');
+    }
+    if (await this.isBlockedEitherWay(requesterId, recipientId)) {
+      throw new ForbiddenException({ code: AuthCode.USER_BLOCKED });
     }
     const existing = await this.findBetween(requesterId, recipientId);
     if (existing) {
@@ -226,6 +278,9 @@ export class FriendsService {
       .exec();
     if (!doc) {
       throw new NotFoundException('No pending friend request from this user');
+    }
+    if (await this.isBlockedEitherWay(currentUserId, requesterId)) {
+      throw new ForbiddenException({ code: AuthCode.USER_BLOCKED });
     }
     doc.status = 'accepted';
     const saved = await doc.save();

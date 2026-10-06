@@ -87,6 +87,7 @@ describe('OidcService', () => {
       displayName: 'Alice',
       id: 'sub-123',
       groups: ['pon-admins'],
+      emailVerified: true,
       platform: 'web',
     });
     expect(store['oidc:flow:state-abc']).toBeUndefined(); // one-time
@@ -96,6 +97,17 @@ describe('OidcService', () => {
     await expect(
       makeService({}).handleCallback({ code: 'c', state: 'nope' }),
     ).rejects.toThrow();
+  });
+
+  it('handleCallback reports a MISSING email_verified claim as unverified (not as verified)', async () => {
+    mockClient.callback.mockResolvedValueOnce({
+      claims: () => ({ email: 'carol@acme.com', sub: 's2', groups: [] }),
+    } as any);
+    const store: Record<string, string> = {
+      'oidc:flow:state-abc': JSON.stringify({ codeVerifier: 'v', nonce: 'n', platform: 'web' }),
+    };
+    const profile = await makeService(store).handleCallback({ code: 'c', state: 'state-abc' });
+    expect(profile.emailVerified).toBe(false);
   });
 
   it('handleCallback rejects an unverified email', async () => {

@@ -7,6 +7,9 @@ import { humanizeSystemMessage } from '@/lib/system-messages'
 
 interface Props {
   content: string
+  /** `system` for server-written events; the acting user for actor-carrying codes. */
+  senderId?: string
+  currentUserId?: string
   resolveName: (actorId: string) => string | undefined
 }
 
@@ -14,9 +17,9 @@ interface Props {
  * Centered pill for a structured system event (member joined, message pinned, call ended…).
  * The raw `system.*` code is always humanised — parity with Flutter `system_message.dart`.
  */
-export function SystemMessageBubble({ content, resolveName }: Props) {
+export function SystemMessageBubble({ content, senderId, currentUserId, resolveName }: Props) {
   const t = useTranslations('chat')
-  const systemText = humanizeSystemMessage(content, t, { resolveName })
+  const systemText = humanizeSystemMessage(content, t, { resolveName, senderId, currentUserId })
   const isCallMsg = content.startsWith('system.call.')
   const isVideoCall = isCallMsg && content.includes(':video')
   const isMissedCall = isCallMsg && content.startsWith('system.call.missed:')

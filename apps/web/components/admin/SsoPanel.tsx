@@ -14,6 +14,9 @@ import {
   useRoles,
   useDepartments,
 } from '@/lib/hooks/use-admin'
+import { useCapabilities } from '@/lib/hooks/use-capabilities'
+import { OWNER_ROLE_NAME } from '@/lib/admin/role-guard'
+import type { Role } from '@/lib/api/admin-types'
 
 type Row = { group: string; value: string }
 
@@ -40,6 +43,12 @@ export function SsoPanel() {
   const { data: roles = [] } = useRoles()
   const { data: departments = [] } = useDepartments()
   const save = useUpdateWorkspace()
+  const callerIsOwner = useCapabilities().data?.role === OWNER_ROLE_NAME
+  // Only an Owner may map SSO groups (or the default) to the Owner role
+  // (OWNER_SSO_MAPPING_FORBIDDEN) — a non-Owner still sees an existing Owner
+  // mapping so the row renders, but can't pick it.
+  const roleOptions = (current: string): Role[] =>
+    callerIsOwner ? roles : roles.filter((r) => r.name !== OWNER_ROLE_NAME || r.name === current)
 
   const [prevWs, setPrevWs] = useState(ws)
   const [enabled, setEnabled] = useState(ws?.sso?.enabled ?? false)
@@ -118,7 +127,7 @@ export function SsoPanel() {
             onChange={(e) => setDefaultRole(e.target.value)}
           >
             <option value="">{t('ssoNone')}</option>
-            {roles.map((r) => (
+            {roleOptions(defaultRole).map((r) => (
               <option key={r._id} value={r.name}>
                 {r.name}
               </option>
@@ -145,7 +154,7 @@ export function SsoPanel() {
                 onChange={(e) => setRow(roleRows, setRoleRows, i, { value: e.target.value })}
               >
                 <option value="">{t('ssoNone')}</option>
-                {roles.map((r) => (
+                {roleOptions(row.value).map((r) => (
                   <option key={r._id} value={r.name}>
                     {r.name}
                   </option>

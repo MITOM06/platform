@@ -5,6 +5,7 @@ import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/utils/app_error.dart';
 import '../../../core/theme/app_theme.dart';
 import '../domain/token_usage_provider.dart';
+import 'widgets/ai_quota_card.dart';
 import 'widgets/token_usage_chart.dart';
 import 'widgets/token_usage_range_selector.dart';
 
@@ -133,10 +134,6 @@ class _Body extends StatelessWidget {
     final estimatedCost =
         totalInput * kInputTokenPrice + totalOutput * kOutputTokenPrice;
 
-    const monthlyQuotaLimit = kMonthlyTokenQuota;
-    final totalUsed = totalInput + totalOutput;
-    final quotaFraction = (totalUsed / monthlyQuotaLimit).clamp(0.0, 1.0);
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -150,15 +147,11 @@ class _Body extends StatelessWidget {
             isDark: isDark,
           ),
           const SizedBox(height: 16),
-          _QuotaProgressCard(
-            used: totalUsed,
-            limit: monthlyQuotaLimit,
-            fraction: quotaFraction,
-            isDark: isDark,
-          ),
-          const SizedBox(height: 8),
+          // The real monthly allowance — independent of the range above.
+          const AiQuotaCard(),
+          const SizedBox(height: 16),
           Text(
-            context.l10n.tokenUsageDailyChart,
+            context.l10n.tokenUsageDailyChartTitle,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -167,95 +160,6 @@ class _Body extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           TokenUsageBarChart(days: days),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuotaProgressCard extends StatelessWidget {
-  final int used;
-  final int limit;
-  final double fraction;
-  final bool isDark;
-
-  const _QuotaProgressCard({
-    required this.used,
-    required this.limit,
-    required this.fraction,
-    required this.isDark,
-  });
-
-  String _fmt(int n) {
-    if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
-    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}K';
-    return n.toString();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final barColor = fraction >= 0.9
-        ? Theme.of(context).colorScheme.error
-        : fraction >= 0.7
-            ? AppTheme.warning
-            : AppTheme.accent(context);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: barColor.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.data_usage_rounded, size: 16, color: barColor),
-              const SizedBox(width: 6),
-              Text(
-                context.l10n.tokenUsageQuota,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.mutedText(context),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '${_fmt(used)} / ${_fmt(limit)}',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: barColor,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: fraction,
-              minHeight: 8,
-              backgroundColor:
-                  AppTheme.hairline(context),
-              valueColor: AlwaysStoppedAnimation<Color>(barColor),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            context.l10n
-                .tokenUsagePercentUsed((fraction * 100).toStringAsFixed(1)),
-            style: TextStyle(
-              fontSize: 11,
-              color: AppTheme.mutedText(context),
-            ),
-          ),
         ],
       ),
     );
@@ -285,7 +189,7 @@ class _SummaryCards extends StatelessWidget {
           children: [
             Expanded(
               child: _StatCard(
-                label: context.l10n.tokenUsageThisMonth,
+                label: context.l10n.tokenUsageTotalInRange,
                 value: _fmt(totalInput + totalOutput),
                 icon: Icons.toll_rounded,
                 color: AppTheme.accent(context),
