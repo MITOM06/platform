@@ -3,6 +3,26 @@
 All notable changes to PON. One version per promotion to `main`; web, mobile and the
 NestJS services share the product version (`apps/client/pubspec.yaml`, `apps/*/package.json`).
 
+## 1.2.0 — 2026-10-07
+
+### AI cost
+
+- **Light tier through OpenRouter.** With `OPENROUTER_API_KEY` set, short text-only chat turns
+  (the router's fast tier) and small background calls — conversation titles, history compaction,
+  memory facts, daily digests — run on `OPENROUTER_MODEL` (default `google/gemini-2.5-flash-lite`,
+  about 10x cheaper than Claude Haiku). Longer or harder turns, answers grounded in the knowledge
+  base, images, KB vision and call summaries stay on Claude. Any OpenRouter failure falls back to
+  Claude automatically. Without the key nothing changes.
+
+### Operations
+
+- The Cloud Run deploy workflow runs only when started by hand (production is on the Mac mini).
+
+### Deploy notes
+
+- Optional: add `OPENROUTER_API_KEY` (and `OPENROUTER_MODEL` to pick another model) to the mini
+  `.env.mini`, then `./scripts/mini/up.sh --no-pull`.
+
 ## 1.1.0 — 2026-10-06
 
 First versioned release. Batches four feature branches that were tested together on `dev`:
@@ -73,9 +93,8 @@ First versioned release. Batches four feature branches that were tested together
 
 ### Deploy notes
 
-- **Mac mini (`compose.mini.yml`) needs `PON_API_BASE`** (public API origin, used for
-  `MCP_SERVER_URL`) — the stack refuses to start without it. `SESSION_SECRET` and
-  `INTERNAL_API_KEY` must be set (already required).
+- Mac mini (`compose.mini.yml`): `SESSION_SECRET`, `INTERNAL_API_KEY` and `PON_API_BASE` must be
+  set (all three were already required before 1.1.0).
 - `SESSION_SECRET` now also encrypts 2FA secrets: **rotating it invalidates every 2FA enrollment**
   (an Owner must reset the affected members).
 - Existing privileged users are asked to enroll in 2FA at their next sign-in; existing sessions stay

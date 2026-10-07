@@ -1,13 +1,15 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
 import { UsageService } from '../usage/usage.service';
+import { LlmClientsService } from '../llm/llm-clients.service';
 
 /**
  * Thin wrapper around the Anthropic SDK for cheap, non-streaming utility calls
  * that are ancillary to the main agentic loop: session auto-naming and context
- * compaction. Uses the Haiku model (cheapest / fastest) for both. Their tokens
- * are recorded against the user they serve (they used to be invisible to quota).
+ * compaction. Both run on the light model — OpenRouter when configured, else
+ * Haiku (see LlmClientsService). Their tokens are recorded against the user
+ * they serve (they used to be invisible to quota).
  */
 @Injectable()
 export class ClaudeClientService {
@@ -18,6 +20,7 @@ export class ClaudeClientService {
   constructor(
     private readonly configService: ConfigService,
     private readonly usageService?: UsageService,
+    @Optional() private readonly llm?: LlmClientsService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -33,8 +36,7 @@ export class ClaudeClientService {
   async generateTitle(firstMessage: string, userId?: string): Promise<string> {
     const trimmed = firstMessage.trim().slice(0, 2000);
     if (!trimmed) return 'New conversation';
-    const response = await this.anthropic.messages.create({
-      model: this.haikuModel,
+    const response = await this.light({
       max_tokens: 32,
       messages: [
         {
@@ -55,8 +57,7 @@ export class ClaudeClientService {
 
   /** Summarize older conversation turns, preserving facts/decisions/context. */
   async summarize(conversationText: string, userId?: string): Promise<string> {
-    const response = await this.anthropic.messages.create({
-      model: this.haikuModel,
+    const response = await this.light({
       max_tokens: 1024,
       messages: [
         {
@@ -71,5 +72,13 @@ export class ClaudeClientService {
     });
     this.usageService?.recordModelCall(userId, response.usage, 'compaction');
     return response.content[0]?.type === 'text' ? response.content[0].text : '';
+  }
+
+  /** Light-model call: OpenRouter (falling back to Haiku) when wired, else Haiku. */
+  private async light(
+    params: Omit<Anthropic.MessageCreateParamsNonStreaming, 'model'>,
+  ): Promise<Anthropic.Message> {
+    if (this.llm) return (await this.llm.createLight(params)).message;
+    return this.anthropic.messages.create({ ...params, model: this.haikuModel });
   }
 }
