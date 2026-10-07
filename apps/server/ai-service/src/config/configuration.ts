@@ -39,6 +39,7 @@ function buildPriceMap(): Record<string, ModelPrice> {
     'claude-fable-5-1': { inputPerMTok: 10, outputPerMTok: 50 },
     // OpenRouter light tier default (OPENROUTER_MODEL); other ids use AI_PRICE_* or the default.
     'google/gemini-2.5-flash-lite': { inputPerMTok: 0.1, outputPerMTok: 0.4 },
+    'google/gemini-2.5-flash': { inputPerMTok: 0.3, outputPerMTok: 2.5 },
   };
   const map: Record<string, ModelPrice> = {};
   for (const [model, seed] of Object.entries(seeds)) {

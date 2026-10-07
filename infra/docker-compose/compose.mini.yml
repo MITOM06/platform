@@ -144,6 +144,11 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?required}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-5}
       ANTHROPIC_FALLBACK_MODEL: ${ANTHROPIC_FALLBACK_MODEL:-claude-haiku-4-5-20251001}
+      # Demo cost profile (the mini is the demo deployment): mid tier on Gemini Flash via
+      # OpenRouter, complex tier on Sonnet instead of Opus. Without OPENROUTER_API_KEY an
+      # OpenRouter tier falls back to ANTHROPIC_MODEL. Override per tier in .env.mini.
+      ANTHROPIC_MID_MODEL: ${ANTHROPIC_MID_MODEL:-google/gemini-2.5-flash}
+      ANTHROPIC_COMPLEX_MODEL: ${ANTHROPIC_COMPLEX_MODEL:-claude-sonnet-4-5}
       # Light tier (fast-tier chat + small utility calls) via OpenRouter; blank = all Claude.
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OPENROUTER_MODEL: ${OPENROUTER_MODEL:-google/gemini-2.5-flash-lite}

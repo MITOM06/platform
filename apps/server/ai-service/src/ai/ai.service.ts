@@ -403,6 +403,11 @@ export class AiService {
     if (selectedModel === this.routerConfig.simpleModel && this.llm?.openRouterEnabled && !hasImageTurn) {
       selectedModel = this.llm.lightModel;
     }
+    // A tier mapped to an OpenRouter model (e.g. ANTHROPIC_MID_MODEL=google/…) needs the
+    // OpenRouter key; without it the Anthropic API would reject the id — use Claude instead.
+    if (LlmClientsService.isOpenRouterModel(selectedModel) && !this.llm?.openRouterEnabled) {
+      selectedModel = this.primaryModel;
+    }
     // TASK-10: the router's haiku/sonnet tiers must not receive image blocks
     // (vision support unconfirmed → would 400). Gated by chat vision.
     if (hasImageTurn && selectedModel !== this.primaryModel) {
