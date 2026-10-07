@@ -108,4 +108,15 @@ class StompDestinationPolicyTest {
   void allowList_coversEveryClientDestination() {
     assertThat(StompDestinationPolicy.SUBSCRIBE_ALLOW_LIST).hasSize(7);
   }
+
+  @Test
+  void meetingIdOfTopic_onlyForTheExactMeetingTopic() {
+    assertThat(StompDestinationPolicy.meetingIdOfTopic("/topic/meeting/670f1c2ab9e4d21f0c3a9e11"))
+        .isEqualTo("670f1c2ab9e4d21f0c3a9e11");
+    assertThat(StompDestinationPolicy.meetingIdOfTopic("/topic/meeting/m1/typing")).isNull();
+    assertThat(StompDestinationPolicy.meetingIdOfTopic("/topic/meeting/")).isNull();
+    assertThat(StompDestinationPolicy.meetingIdOfTopic("/topic/conversation/m1")).isNull();
+    assertThat(StompDestinationPolicy.meetingIdOfTopic("/user/queue/meeting")).isNull();
+    assertThat(StompDestinationPolicy.meetingIdOfTopic(null)).isNull();
+  }
 }

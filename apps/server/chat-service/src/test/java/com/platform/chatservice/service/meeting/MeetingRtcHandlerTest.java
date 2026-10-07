@@ -37,6 +37,8 @@ class MeetingRtcHandlerTest {
   @Mock private CallBusyRegistry busy;
   @Mock private MeetingCloser closer;
   @Mock private MeetingPeople people;
+  @Mock private MeetingRoomPolicy policy;
+  @Mock private MeetingHandService hands;
   @InjectMocks private MeetingRtcHandler handler;
   private Meeting m;
   private final Instant at = Instant.parse("2026-10-08T02:00:05Z");
@@ -48,6 +50,7 @@ class MeetingRtcHandlerTest {
     when(people.profiles(anyCollection()))
         .thenReturn(Map.of("host", new PersonDto("host", "Lan", null)));
     when(store.recordJoin(anyString(), any())).thenReturn(true);
+    when(policy.admitOnJoin(any(), anyString())).thenReturn(true);
   }
 
   private static RtcParticipantEvent ev(String identity, String sid, Instant createdAt) {
@@ -101,6 +104,7 @@ class MeetingRtcHandlerTest {
     verify(store, never()).recordJoin(anyString(), any());
     verify(store, never()).recordLeave(anyString(), anyString(), any(), any());
     verifyNoInteractions(busy, events);
+    verifyNoInteractions(policy, hands);
   }
 
   @Test
@@ -144,5 +148,36 @@ class MeetingRtcHandlerTest {
 
     verify(closer).close("m1");
     verify(closer, never()).close("");
+  }
+
+  @Test
+  void aRemovedPersonRejoiningWithAnOldTokenIsTurnedAwayAndLeavesNoTrace() {
+    when(policy.admitOnJoin(m, "kicked")).thenReturn(false);
+
+    handler.onParticipantJoined(ev("kicked", "PA_9", at));
+
+    verify(store, never()).markLive(anyString(), any()); // m is SCHEDULED: it must stay so
+    verify(store, never()).recordJoin(anyString(), any());
+    verifyNoInteractions(busy, events);
+  }
+
+  @Test
+  void leavingTheRoomLowersTheirHand() {
+    m.setStatus(MeetingStatus.LIVE);
+    when(store.recordLeave(eq("m1"), eq("inv"), eq("PA_1"), any())).thenReturn(true);
+
+    handler.onParticipantLeft(ev("inv", "PA_1", at));
+
+    verify(hands).lower("m1", "inv");
+  }
+
+  @Test
+  void aStaleLeaveLeavesTheHandUp() {
+    m.setStatus(MeetingStatus.LIVE);
+    when(store.recordLeave(eq("m1"), eq("inv"), eq("PA_OLD"), any())).thenReturn(false);
+
+    handler.onParticipantLeft(ev("inv", "PA_OLD", at));
+
+    verify(hands, never()).lower(anyString(), anyString());
   }
 }

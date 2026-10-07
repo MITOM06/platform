@@ -159,7 +159,7 @@ class MeetingJoinServiceTest {
   }
 
   @Test
-  void theHostGetsAnAdminTokenForTheMeetingRoomAndSeesWhoIsWaiting() {
+  void theHostGetsATokenForTheMeetingRoomAndSeesWhoIsWaiting() {
     List<LobbyEntryDto> waiting = List.of(new LobbyEntryDto("stranger", "Sam"));
     when(lobby.waiting("m1")).thenReturn(waiting);
 
@@ -171,9 +171,29 @@ class MeetingJoinServiceTest {
     assertThat(claims(r).getSubject()).isEqualTo("host");
     assertThat(claims(r).get("name")).isEqualTo("Lan");
     assertThat(claims(r).get("metadata")).isEqualTo("{\"avatarUrl\":\"/a.png\"}");
-    assertThat(video(r)).containsEntry("room", "meet_m1").containsEntry("roomAdmin", true);
+    assertThat(video(r)).containsEntry("room", "meet_m1");
     verify(rooms).createRoom("meet_m1", 300, 300, 25);
     verify(events).lobbyTo("host", "m1", waiting);
+  }
+
+  @Test
+  void hostAndCoHostTokensNeverCarryRoomAdminButKeepEveryMediaGrant() {
+    // Moderation goes through /app/meet.host only: a roomAdmin participant token would let a
+    // (co-)host — even one removed or revoked since — use LiveKit's RoomService directly.
+    m.getSettings().setAllowAttendeeScreenShare(false);
+
+    for (UserPrincipal manager : List.of(host, new UserPrincipal("co"))) {
+      Map<String, Object> video = video(service.join(manager, "m1"));
+
+      assertThat(video).doesNotContainKey("roomAdmin");
+      assertThat(video)
+          .containsEntry("room", "meet_m1")
+          .containsEntry("roomJoin", true)
+          .containsEntry("canPublish", true)
+          .containsEntry("canSubscribe", true)
+          .containsEntry("canPublishData", true)
+          .doesNotContainKey("canPublishSources"); // screen share stays allowed for managers
+    }
   }
 
   @Test
@@ -266,5 +286,22 @@ class MeetingJoinServiceTest {
     service.end("host", "m1");
     verify(closer, never()).close(anyString());
     verify(rooms, never()).deleteRoom(anyString());
+  }
+
+  @Test
+  void someoneWhoWalkedInIsRememberedSoLockingLaterDoesNotLockThemOut() {
+    m.getSettings().setWaitingRoom(false);
+
+    assertThat(service.join(stranger, "m1").status()).isEqualTo("joined");
+
+    verify(lobby).admit("m1", "stranger");
+  }
+
+  @Test
+  void inviteesAndManagersNeedNoAdmission() {
+    service.join(invitee, "m1");
+    service.join(host, "m1");
+
+    verify(lobby, never()).admit(anyString(), anyString());
   }
 }

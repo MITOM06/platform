@@ -8,6 +8,7 @@ import com.platform.chatservice.security.UserPrincipal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -115,6 +116,42 @@ final class MeetingRequests {
       out.setLocked(patch.locked());
     }
     return out;
+  }
+
+  /**
+   * The {@code $set} entries that turn {@code base} into {@code merged}: one {@code
+   * settings.<field>} per changed switch, so a concurrent single-field host command (LOCK, waiting
+   * room, screen share) on another switch is never reverted by a stale read. A meeting stored
+   * without a settings sub-document gets the whole object (a dotted path would leave the other
+   * switches unset).
+   */
+  static Map<String, Object> changedSettings(Meeting.Settings base, Meeting.Settings merged) {
+    Map<String, Object> out = new LinkedHashMap<>();
+    if (base == null) {
+      out.put("settings", merged);
+      return out;
+    }
+    putIfChanged(out, "waitingRoom", base.isWaitingRoom(), merged.isWaitingRoom());
+    putIfChanged(out, "muteOnEntry", base.isMuteOnEntry(), merged.isMuteOnEntry());
+    putIfChanged(
+        out,
+        "allowAttendeeScreenShare",
+        base.isAllowAttendeeScreenShare(),
+        merged.isAllowAttendeeScreenShare());
+    putIfChanged(
+        out,
+        "attendeesCanEditNotes",
+        base.isAttendeesCanEditNotes(),
+        merged.isAttendeesCanEditNotes());
+    putIfChanged(out, "locked", base.isLocked(), merged.isLocked());
+    return out;
+  }
+
+  private static void putIfChanged(
+      Map<String, Object> out, String field, boolean before, boolean after) {
+    if (before != after) {
+      out.put("settings." + field, after);
+    }
   }
 
   /**

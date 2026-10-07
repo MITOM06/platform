@@ -100,6 +100,58 @@ public final class MeetingAccess {
     return "guest";
   }
 
+  /** Currently in the room: has an attendance row that is still open ({@code leftAt == null}). */
+  public static boolean isInside(Meeting m, String userId) {
+    List<Meeting.Attendance> rows = m.getAttendance();
+    return userId != null
+        && rows != null
+        && rows.stream()
+            .anyMatch(a -> a != null && a.getLeftAt() == null && userId.equals(a.getUserId()));
+  }
+
+  /**
+   * May read the meeting's records (chat history, shared note, own private note) — also after it
+   * ended: anyone who belonged to it (host, co-host, invited / department, attended, admitted)
+   * unless they were removed.
+   */
+  public static boolean canReadRecords(
+      Meeting m, String userId, Collection<String> departmentIds, boolean admitted) {
+    if (userId == null || contains(m.getRemovedIds(), userId)) {
+      return false;
+    }
+    return canManage(m, userId)
+        || isInvited(m, userId, departmentIds)
+        || attended(m, userId)
+        || admitted;
+  }
+
+  /**
+   * May edit the shared note: host / co-host always, everyone else who can read the records only
+   * while {@code settings.attendeesCanEditNotes} is on.
+   */
+  public static boolean canEditSharedNote(
+      Meeting m, String userId, Collection<String> departmentIds, boolean admitted) {
+    if (!canReadRecords(m, userId, departmentIds, admitted)) {
+      return false;
+    }
+    Meeting.Settings settings = m.getSettings();
+    return canManage(m, userId) || (settings != null && settings.isAttendeesCanEditNotes());
+  }
+
+  /**
+   * Whether {@code actorId} may act on {@code targetId} (remove them): the host outranks everyone
+   * else, a co-host only attendees; nobody outranks themselves.
+   */
+  public static boolean outranks(Meeting m, String actorId, String targetId) {
+    if (actorId == null || Objects.equals(actorId, targetId)) {
+      return false;
+    }
+    if (isHost(m, actorId)) {
+      return true;
+    }
+    return isCoHost(m, actorId) && !canManage(m, targetId);
+  }
+
   private static boolean isHost(Meeting m, String userId) {
     return userId != null && Objects.equals(m.getHostId(), userId);
   }

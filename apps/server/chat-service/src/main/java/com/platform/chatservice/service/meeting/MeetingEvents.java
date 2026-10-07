@@ -1,9 +1,12 @@
 package com.platform.chatservice.service.meeting;
 
 import com.platform.chatservice.dto.meeting.AttendanceDto;
+import com.platform.chatservice.dto.meeting.HandDto;
 import com.platform.chatservice.dto.meeting.LobbyEntryDto;
 import com.platform.chatservice.dto.meeting.MeetingEventDto;
+import com.platform.chatservice.dto.meeting.MeetingMessageDto;
 import com.platform.chatservice.dto.meeting.MeetingSettingsDto;
+import com.platform.chatservice.dto.meeting.PersonDto;
 import com.platform.chatservice.model.Meeting;
 import com.platform.chatservice.service.ClusterMessageBroker;
 import com.platform.chatservice.service.FcmService;
@@ -39,7 +42,11 @@ public class MeetingEvents {
   private final ClusterMessageBroker broker;
   private final FcmService fcm;
 
-  /** {@code meet.roster}: everyone still in the room, one row per person (latest open session). */
+  /**
+   * {@code meet.roster}: everyone still in the room, one row per person (latest open session).
+   * {@code role} is the person's <em>current</em> role (co-hosts can be made / revoked
+   * mid-meeting), not the role recorded on the attendance row at join time.
+   */
   public void roster(Meeting m) {
     Map<String, AttendanceDto> open = new LinkedHashMap<>();
     if (m.getAttendance() != null) {
@@ -49,7 +56,11 @@ public class MeetingEvents {
         }
         AttendanceDto row =
             new AttendanceDto(
-                a.getUserId(), a.getDisplayName(), a.getRole(), a.getJoinedAt(), null);
+                a.getUserId(),
+                a.getDisplayName(),
+                MeetingAccess.roleOf(m, a.getUserId()),
+                a.getJoinedAt(),
+                null);
         open.merge(a.getUserId(), row, MeetingEvents::later);
       }
     }
@@ -134,6 +145,55 @@ public class MeetingEvents {
               .build());
       push(userId, PUSH_STARTING, m, false);
     }
+  }
+
+  /** {@code meet.hands} to the room — always carries the list, {@code []} when nobody is up. */
+  public void hands(String meetingId, List<HandDto> hands) {
+    toTopic(
+        meetingId, base("meet.hands", meetingId).hands(hands == null ? List.of() : hands).build());
+  }
+
+  /** {@code meet.chat} to the room, echoing the sender's {@code clientId} (may be null). */
+  public void chat(String meetingId, MeetingMessageDto message, String clientId) {
+    toTopic(meetingId, base("meet.chat", meetingId).message(message).clientId(clientId).build());
+  }
+
+  /** {@code meet.notes.updated} to the room: the new version and who saved — never the text. */
+  public void notesUpdated(String meetingId, long version, PersonDto updatedBy) {
+    toTopic(
+        meetingId,
+        base("meet.notes.updated", meetingId).version(version).updatedBy(updatedBy).build());
+  }
+
+  /** {@code meet.removed} to the person the host / co-host removed. */
+  public void removed(String meetingId, String userId) {
+    toUser(userId, base("meet.removed", meetingId).build());
+  }
+
+  /** {@code meet.muted} to the person whose microphone {@code actor} muted. */
+  public void muted(String meetingId, String userId, PersonDto actor) {
+    toUser(userId, base("meet.muted", meetingId).actor(actor).build());
+  }
+
+  /**
+   * {@code meet.error} to the sender of a refused {@code /app/meet.*} command. {@code errorCode} is
+   * an {@code ErrorCodes} value; {@code params} only interpolation values — never exception text.
+   */
+  public void error(
+      String userId,
+      String meetingId,
+      String action,
+      String clientId,
+      String errorCode,
+      Map<String, Object> params) {
+    toUser(
+        userId,
+        base("meet.error", meetingId)
+            .action(action)
+            .clientId(clientId)
+            .errorCode(errorCode)
+            .params(params == null || params.isEmpty() ? null : params)
+            .build());
   }
 
   private void push(String userId, String type, Meeting m, boolean onlyWhenOffline) {

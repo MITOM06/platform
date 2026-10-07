@@ -8,6 +8,7 @@ import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.BadRequestException;
 import com.platform.chatservice.exception.ErrorCodes;
+import com.platform.chatservice.exception.RateLimitExceededException;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.ClusterMessageBroker;
 import com.platform.chatservice.service.ConversationMembershipCache;
@@ -78,6 +79,18 @@ class ChatControllerTest {
     verify(clusterBroker, times(1))
         .convertAndSend(eq("/topic/conversation/conv-456"), eq(response));
     verify(messageNotificationService, times(1)).notifyNewMessage(eq(SENDER_ID), eq(response));
+  }
+
+  @Test
+  void send_WhenRateLimited_ShouldSendOnlyTheStableCodeAndNeverExceptionText() {
+    doThrow(new RateLimitExceededException()).when(rateLimiterService).checkMessageRate(SENDER_ID);
+
+    chatController.send(chatDto, principal);
+
+    verify(clusterBroker)
+        .convertAndSendToUser(
+            SENDER_ID, "/queue/notifications", Map.of("type", ErrorCodes.RATE_LIMITED));
+    verifyNoInteractions(messageService);
   }
 
   @Test

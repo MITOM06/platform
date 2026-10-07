@@ -99,5 +99,23 @@ public final class ErrorCodes {
   /** 503 — LiveKit is not configured on this deployment, or did not answer. */
   public static final String MEETINGS_UNAVAILABLE = "MEETINGS_UNAVAILABLE";
 
+  /**
+   * 409 — {@code PUT /api/meetings/{id}/notes/*} on a stale {@code version}; the body carries the
+   * current note as {@code latest}.
+   */
+  public static final String MEETING_NOTE_CONFLICT = "MEETING_NOTE_CONFLICT";
+
+  /** 403 — an attendee edits the shared note while {@code attendeesCanEditNotes} is off. */
+  public static final String MEETING_NOTES_READ_ONLY = "MEETING_NOTES_READ_ONLY";
+
+  // ── Rate limiting ─────────────────────────────────────────────────────────
+
+  /**
+   * Too many messages (10 per 5 s per person, chat and meeting chat together). Sent over STOMP
+   * only: {@code {type: RATE_LIMITED}} on {@code /user/queue/notifications} for chat, {@code
+   * meet.error} for meeting chat. The REST send returns HTTP 429.
+   */
+  public static final String RATE_LIMITED = "RATE_LIMITED";
+
   private ErrorCodes() {}
 }

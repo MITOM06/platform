@@ -16,6 +16,9 @@ import org.springframework.stereotype.Service;
  * LiveKit webhooks for meeting rooms ({@code meet_{id}}) — the source of truth for attendance and
  * room state. Picked up by {@code RtcWebhookDispatcher} like the calls handler.
  *
+ * <p>Joining also re-applies {@link MeetingRoomPolicy} (a removed person is kicked again, an
+ * attendee is restricted while screen share is off); leaving lowers the person's hand.
+ *
  * <p>A host leaving never ends the meeting: LiveKit closes the room after its departure timeout
  * (set when the room is created) and {@code room_finished} ends it then.
  */
@@ -28,6 +31,8 @@ public class MeetingRtcHandler implements RtcRoomEventHandler {
   private final CallBusyRegistry busy;
   private final MeetingCloser closer;
   private final MeetingPeople people;
+  private final MeetingRoomPolicy policy;
+  private final MeetingHandService hands;
 
   @Override
   public boolean supports(String room) {
@@ -42,6 +47,11 @@ public class MeetingRtcHandler implements RtcRoomEventHandler {
       return;
     }
     Meeting m = open.get();
+    if (!policy.admitOnJoin(m, userId)) {
+      // A removed person back with a token issued before the removal: kicked again, and they
+      // leave no trace — no LIVE flip, no attendance row, not marked busy.
+      return;
+    }
     Instant at = e.createdAt() != null ? e.createdAt() : Instant.now();
     if (m.getStatus() == MeetingStatus.SCHEDULED) {
       store.markLive(m.getId(), at);
@@ -78,6 +88,7 @@ public class MeetingRtcHandler implements RtcRoomEventHandler {
       return;
     }
     busy.clear(userId, e.room());
+    hands.lower(meetingId, userId);
     store.findById(meetingId).ifPresent(events::roster);
   }
 

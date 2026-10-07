@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,7 @@ public class MeetingService {
   private final MeetingEvents events;
   private final MeetingMapper mapper;
   private final MeetingLobby lobby;
+  private final MeetingRoomPolicy policy;
 
   /** {@code req} may be null: no body = an instant meeting with every default ("họp ngay"). */
   public MeetingResponse create(UserPrincipal caller, CreateMeetingRequest req) {
@@ -174,10 +176,12 @@ public class MeetingService {
     changed |= reschedule(m, req, update);
     boolean settingsChanged = false;
     if (req.settings() != null) {
+      // Field by field: a whole-object write from this read would revert a concurrent host command.
       Meeting.Settings merged = MeetingRequests.settings(req.settings(), m.getSettings());
-      update.set("settings", merged);
-      settingsChanged = !Objects.equals(merged, m.getSettings());
-      changed = true;
+      Map<String, Object> fields = MeetingRequests.changedSettings(m.getSettings(), merged);
+      fields.forEach(update::set);
+      settingsChanged = !fields.isEmpty();
+      changed |= settingsChanged;
     }
     if (!changed) {
       // An empty update document would make findAndModify replace the whole meeting.
@@ -187,6 +191,7 @@ public class MeetingService {
     Meeting updated = store.update(id, update).orElseThrow(MeetingService::ended);
     if (settingsChanged) {
       events.settings(updated);
+      policy.afterSettingsChange(m, updated);
     }
     if (!newcomers.isEmpty()) {
       events.invited(updated, hostName(updated), newcomers);

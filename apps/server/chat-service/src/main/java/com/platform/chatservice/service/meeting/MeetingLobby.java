@@ -17,7 +17,10 @@ import org.springframework.stereotype.Component;
  * <ul>
  *   <li>{@code meet:lobby:{id}} — hash userId → displayName ({@code ""} when unknown)
  *   <li>{@code meet:admitted:{id}} — set of people the host let in (they skip the lobby next time)
- *   <li>{@code meet:hands:{id}} — raised hands (MT3); dropped together with the rest
+ *   <li>{@code meet:hands:{id}} — zset userId → raise time (epoch ms), see {@code
+ *       MeetingHandService}
+ *   <li>{@code meet:removed:{id}} — set of people the host removed, read per frame by the topic
+ *       outbound filter (no Mongo read)
  * </ul>
  *
  * Every key expires {@link #TTL} after its last write so an abandoned meeting cleans itself up.
@@ -77,9 +80,26 @@ public class MeetingLobby {
     return Boolean.TRUE.equals(redis.opsForSet().isMember(admittedKey(meetingId), userId));
   }
 
+  /** Remembers a removed person and drops their admission (they must never skip the lobby). */
+  public void markRemoved(String meetingId, String userId) {
+    String key = removedKey(meetingId);
+    redis.opsForSet().add(key, userId);
+    redis.expire(key, TTL);
+    redis.opsForSet().remove(admittedKey(meetingId), userId);
+  }
+
+  public boolean isRemoved(String meetingId, String userId) {
+    return Boolean.TRUE.equals(redis.opsForSet().isMember(removedKey(meetingId), userId));
+  }
+
   /** Drops everything this meeting kept in Redis (on end / cancel). */
   public void clear(String meetingId) {
-    redis.delete(List.of(lobbyKey(meetingId), admittedKey(meetingId), handsKey(meetingId)));
+    redis.delete(
+        List.of(
+            lobbyKey(meetingId),
+            admittedKey(meetingId),
+            handsKey(meetingId),
+            removedKey(meetingId)));
   }
 
   static String lobbyKey(String meetingId) {
@@ -92,5 +112,9 @@ public class MeetingLobby {
 
   static String handsKey(String meetingId) {
     return "meet:hands:" + meetingId;
+  }
+
+  static String removedKey(String meetingId) {
+    return "meet:removed:" + meetingId;
   }
 }

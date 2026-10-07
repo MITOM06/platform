@@ -80,11 +80,31 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(ex.getStatus()).body(body);
   }
 
+  /**
+   * 409 {@code MEETING_NOTE_CONFLICT}: the {@link #handleApi} body plus {@code latest} (the current
+   * note). Spring picks the closest handler in the exception hierarchy, so {@code handleApi} never
+   * sees this one.
+   */
+  @ExceptionHandler(MeetingNoteConflictException.class)
+  public ResponseEntity<Map<String, Object>> handleNoteConflict(MeetingNoteConflictException ex) {
+    Map<String, Object> body = new LinkedHashMap<>();
+    Map<String, Object> base = handleApi(ex).getBody();
+    if (base != null) {
+      body.putAll(base);
+    }
+    body.put("latest", ex.getLatest());
+    return ResponseEntity.status(ex.getStatus()).body(body);
+  }
+
+  /**
+   * 429 with the stable {@code RATE_LIMITED} code (clients localize by code / status) and a {@code
+   * Retry-After} hint — never the exception's English text.
+   */
   @ExceptionHandler(RateLimitExceededException.class)
   public ResponseEntity<Map<String, Object>> handleRateLimit(RateLimitExceededException ex) {
     return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
         .header("Retry-After", "5")
-        .body(Map.of("error", "Too Many Requests", "message", ex.getMessage(), "statusCode", 429));
+        .body(body("Too Many Requests", null, ErrorCodes.RATE_LIMITED, 429));
   }
 
   /**
