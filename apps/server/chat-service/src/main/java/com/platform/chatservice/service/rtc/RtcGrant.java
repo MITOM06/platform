@@ -4,13 +4,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** What a LiveKit access token lets its holder do in one room. */
+/**
+ * What a LiveKit access token lets its holder do in one room. A participant token never carries
+ * {@code roomAdmin}: LiveKit would accept it as a RoomService credential (kick, mute, change
+ * permissions), so room administration stays with the server ({@code
+ * LiveKitTokenService#serverToken}).
+ */
 public record RtcGrant(
     String room,
     boolean canPublish,
     boolean canSubscribe,
     boolean canPublishData,
-    boolean roomAdmin,
     List<String> canPublishSources) {
 
   public static final String CAMERA = "camera";
@@ -20,16 +24,11 @@ public record RtcGrant(
 
   /** Publish, subscribe and send data in {@code room}; every source allowed. */
   public static RtcGrant participant(String room) {
-    return new RtcGrant(room, true, true, true, false, null);
+    return new RtcGrant(room, true, true, true, null);
   }
 
   public RtcGrant withSources(List<String> sources) {
-    return new RtcGrant(
-        room, canPublish, canSubscribe, canPublishData, roomAdmin, List.copyOf(sources));
-  }
-
-  public RtcGrant asRoomAdmin() {
-    return new RtcGrant(room, canPublish, canSubscribe, canPublishData, true, canPublishSources);
+    return new RtcGrant(room, canPublish, canSubscribe, canPublishData, List.copyOf(sources));
   }
 
   /** The {@code video} claim LiveKit reads. Optional grants are omitted rather than false. */
@@ -40,9 +39,6 @@ public record RtcGrant(
     video.put("canPublish", canPublish);
     video.put("canSubscribe", canSubscribe);
     video.put("canPublishData", canPublishData);
-    if (roomAdmin) {
-      video.put("roomAdmin", true);
-    }
     if (canPublishSources != null) {
       video.put("canPublishSources", canPublishSources);
     }

@@ -392,8 +392,9 @@ class MeetingServiceTest {
             new MeetingSettingsDto(null, null, null, null, true)));
 
     Document set = (Document) update.getValue().getUpdateObject().get("$set");
-    assertThat(set).containsKeys("inviteeIds", "scheduledStart", "sortAt", "reminded", "settings");
-    assertThat(set).doesNotContainKeys("title", "description", "attendance", "status");
+    assertThat(set)
+        .containsKeys("inviteeIds", "scheduledStart", "sortAt", "reminded", "settings.locked");
+    assertThat(set).doesNotContainKeys("title", "description", "attendance", "status", "settings");
     assertThat(set.get("reminded")).isEqualTo(false);
     verify(events).invited(after, "Lan", List.of(U2)); // only the newcomer
     verify(events).settings(after);

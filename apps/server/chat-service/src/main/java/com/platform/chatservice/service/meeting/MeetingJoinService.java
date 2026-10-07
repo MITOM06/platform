@@ -151,10 +151,12 @@ public class MeetingJoinService {
 
     String role = MeetingAccess.roleOf(m, uid);
     boolean manager = !"attendee".equals(role);
+    // Never roomAdmin, not even for the host: LiveKit accepts such a participant token as a
+    // RoomService credential, so a co-host (or one removed / revoked since) could kick, mute or
+    // re-permission people directly and bypass the host-control rules. Moderation goes through
+    // /app/meet.host only.
     RtcGrant grant = RtcGrant.participant(room);
-    if (manager) {
-      grant = grant.asRoomAdmin();
-    } else if (m.getSettings() != null && !m.getSettings().isAllowAttendeeScreenShare()) {
+    if (!manager && m.getSettings() != null && !m.getSettings().isAllowAttendeeScreenShare()) {
       grant = grant.withSources(List.of(RtcGrant.CAMERA, RtcGrant.MICROPHONE));
     }
     PersonDto me = profile(uid);

@@ -244,6 +244,19 @@ class MeetingNotesServiceTest {
   void theNotesOfAnEndedMeetingStayEditable() {
     m.setStatus(MeetingStatus.ENDED);
     assertThat(notes.put(host, "m1", Scope.SHARED, req("minutes", 0L)).version()).isEqualTo(1);
+    assertThat(notes.put(host, "m1", Scope.SHARED, req("minutes v2", 1L)).version()).isEqualTo(2);
+  }
+
+  @Test
+  void savingTheSharedNoteAfterTheMeetingEndedTellsNobody() {
+    // Nobody is in the room any more, and an old subscription of a removed person may still be
+    // open (the removed set is cleared when the meeting ends).
+    m.setStatus(MeetingStatus.ENDED);
+
+    notes.put(host, "m1", Scope.SHARED, req("minutes", 0L));
+    notes.put(host, "m1", Scope.SHARED, req("minutes v2", 1L));
+
+    verify(events, never()).notesUpdated(anyString(), anyLong(), any());
   }
 
   @Test

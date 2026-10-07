@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -107,8 +109,24 @@ class MeetingHostServiceTest {
   @SuppressWarnings("unchecked")
   private Predicate<String> mutePredicate() {
     ArgumentCaptor<Predicate<String>> captor = ArgumentCaptor.forClass(Predicate.class);
-    verify(policy).muteMicrophones(eq("m1"), captor.capture());
+    verify(policy).muteMicrophones(eq("m1"), captor.capture(), any());
     return captor.getValue();
+  }
+
+  /** The policy reports {@code muted} one by one, then optionally fails. */
+  @SuppressWarnings("unchecked")
+  private void policyMutes(List<String> muted, RuntimeException thenFails) {
+    doAnswer(
+            inv -> {
+              Consumer<String> onMuted = inv.getArgument(2, Consumer.class);
+              muted.forEach(onMuted);
+              if (thenFails != null) {
+                throw thenFails;
+              }
+              return null;
+            })
+        .when(policy)
+        .muteMicrophones(eq("m1"), any(), any());
   }
 
   @Test
@@ -139,7 +157,7 @@ class MeetingHostServiceTest {
 
   @Test
   void muteMicTargetsOnePersonAndTellsThemWhoDidIt() {
-    when(policy.muteMicrophones(eq("m1"), any())).thenReturn(List.of("inv"));
+    policyMutes(List.of("inv"), null);
 
     host.execute(minh, cmd("MUTE_MIC", "inv"));
 
@@ -151,7 +169,7 @@ class MeetingHostServiceTest {
 
   @Test
   void muteAllSparesTheCallerAndANoOpMuteSaysNothing() {
-    when(policy.muteMicrophones(eq("m1"), any())).thenReturn(List.of());
+    policyMutes(List.of(), null);
 
     host.execute(lan, cmd("MUTE_ALL", null));
 
@@ -160,6 +178,42 @@ class MeetingHostServiceTest {
     assertThat(who.test("co")).isTrue();
     assertThat(who.test("inv")).isTrue();
     verify(events, never()).muted(anyString(), anyString(), any());
+  }
+
+  @Test
+  void aMuteAllThatFailsHalfwayStillTellsThoseAlreadyMuted() {
+    policyMutes(
+        List.of("inv", "walkin"),
+        new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "MEETINGS_UNAVAILABLE"));
+
+    assertThat(apiError(() -> host.execute(lan, cmd("MUTE_ALL", null))).code())
+        .isEqualTo("MEETINGS_UNAVAILABLE");
+
+    PersonDto actor = new PersonDto("host", "Lan", null);
+    verify(events).muted("m1", "inv", actor);
+    verify(events).muted("m1", "walkin", actor);
+    verify(people, times(1)).profiles(anyCollection()); // the actor is looked up once
+  }
+
+  @Test
+  void aRemovedPersonCannotBeMadeCoHost() {
+    // The kick failed (or participant_left is in flight): the attendance row is still open.
+    m.getRemovedIds().add("inv");
+
+    assertThat(apiError(() -> host.execute(lan, cmd("MAKE_COHOST", "inv"))).getParams())
+        .isEqualTo(Map.of("field", "targetId"));
+    verify(store, never()).update(anyString(), any());
+    verifyNoInteractions(events, policy);
+  }
+
+  @Test
+  void aRemovedCallersCommandsAreIgnoredEvenIfTheyStillLookLikeACoHost() {
+    m.getRemovedIds().add("co"); // e.g. made co-host again by a stale command before the fix
+
+    for (MeetingHostAction a : MeetingHostAction.values()) {
+      host.execute(minh, cmd(a.name(), "walkin"));
+    }
+    verifyNoInteractions(store, lobby, hands, policy, events);
   }
 
   @Test

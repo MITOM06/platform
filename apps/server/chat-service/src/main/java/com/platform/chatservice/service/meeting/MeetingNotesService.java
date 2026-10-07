@@ -8,6 +8,7 @@ import com.platform.chatservice.exception.ErrorCodes;
 import com.platform.chatservice.exception.MeetingNoteConflictException;
 import com.platform.chatservice.model.Meeting;
 import com.platform.chatservice.model.MeetingNote;
+import com.platform.chatservice.model.MeetingStatus;
 import com.platform.chatservice.security.UserPrincipal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -68,8 +69,8 @@ public class MeetingNotesService {
 
   /**
    * Saves the note on top of {@code req.version()} and returns it with the bumped version. The
-   * shared note announces {@code meet.notes.updated} (version + who, never the text); a private
-   * note announces nothing.
+   * shared note announces {@code meet.notes.updated} (version + who, never the text) until the
+   * meeting ended; a private note announces nothing.
    */
   public MeetingNoteDto put(
       UserPrincipal caller, String meetingId, Scope scope, MeetingNoteRequest req) {
@@ -129,7 +130,9 @@ public class MeetingNotesService {
     }
 
     MeetingNoteDto dto = toDto(scope, saved);
-    if (scope == Scope.SHARED) {
+    // Once ENDED nobody is in the room, and a removed person's old subscription may still be open
+    // (the removed set is cleared at the end): announce nothing.
+    if (scope == Scope.SHARED && m.getStatus() != MeetingStatus.ENDED) {
       events.notesUpdated(meetingId, dto.version(), dto.updatedBy());
     }
     return dto;

@@ -10,6 +10,7 @@ import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.meeting.MeetingChatService;
 import com.platform.chatservice.service.meeting.MeetingEvents;
 import com.platform.chatservice.service.meeting.MeetingHandService;
+import com.platform.chatservice.service.meeting.MeetingHostAction;
 import com.platform.chatservice.service.meeting.MeetingHostService;
 import java.security.Principal;
 import lombok.RequiredArgsConstructor;
@@ -52,10 +53,11 @@ public class MeetingWsController {
         () -> chat.send(caller(principal), cmd.meetingId(), cmd.content(), cmd.clientId()));
   }
 
+  /** {@code meet.error.action} is the parsed action, or null — never the client's raw string. */
   @MessageMapping("/meet.host")
   public void host(@Payload MeetingHostCommand cmd, Principal principal) {
-    reply(
-        principal, cmd.meetingId(), cmd.action(), null, () -> host.execute(caller(principal), cmd));
+    String action = MeetingHostAction.parse(cmd.action()).map(Enum::name).orElse(null);
+    reply(principal, cmd.meetingId(), action, null, () -> host.execute(caller(principal), cmd));
   }
 
   private void reply(

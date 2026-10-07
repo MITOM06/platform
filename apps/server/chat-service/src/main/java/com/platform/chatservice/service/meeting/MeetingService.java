@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -175,10 +176,12 @@ public class MeetingService {
     changed |= reschedule(m, req, update);
     boolean settingsChanged = false;
     if (req.settings() != null) {
+      // Field by field: a whole-object write from this read would revert a concurrent host command.
       Meeting.Settings merged = MeetingRequests.settings(req.settings(), m.getSettings());
-      update.set("settings", merged);
-      settingsChanged = !Objects.equals(merged, m.getSettings());
-      changed = true;
+      Map<String, Object> fields = MeetingRequests.changedSettings(m.getSettings(), merged);
+      fields.forEach(update::set);
+      settingsChanged = !fields.isEmpty();
+      changed |= settingsChanged;
     }
     if (!changed) {
       // An empty update document would make findAndModify replace the whole meeting.

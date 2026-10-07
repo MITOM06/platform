@@ -115,7 +115,7 @@ class MeetingRoomPolicyTest {
     assertThat(e.code()).isEqualTo("MEETINGS_UNAVAILABLE");
 
     doThrow(new LiveKitApiException("List", 500, null)).when(rooms).listParticipants(ROOM);
-    assertThat(apiError(() -> policy.muteMicrophones("m1", id -> true)).code())
+    assertThat(apiError(() -> policy.muteMicrophones("m1", id -> true, id -> {})).code())
         .isEqualTo("MEETINGS_UNAVAILABLE");
   }
 
@@ -202,11 +202,32 @@ class MeetingRoomPolicyTest {
 
   @Test
   void muteMicrophonesMutesOnlyLiveMicsOfTheChosenPeople() {
-    List<String> muted = policy.muteMicrophones("m1", id -> !id.equals("host"));
+    List<String> muted = new ArrayList<>();
+    policy.muteMicrophones("m1", id -> !id.equals("host"), muted::add);
 
     assertThat(muted).containsExactly("inv"); // walkin's mic was already muted
     verify(rooms).mutePublishedTrack(ROOM, "inv", "TR_im", true);
     verify(rooms, never()).mutePublishedTrack(ROOM, "walkin", "TR_wm", true);
     verify(rooms, never()).mutePublishedTrack(ROOM, "inv", "TR_is", true); // not a microphone
+  }
+
+  @Test
+  void muteAllReportsEachPersonAsTheyAreMutedSoAPartialFailureStillTellsThem() {
+    when(rooms.listParticipants(ROOM))
+        .thenReturn(
+            List.of(
+                new RoomParticipant(
+                    "inv", "Hoa", List.of(new RoomTrack("TR_im", "MICROPHONE", false))),
+                new RoomParticipant(
+                    "walkin", null, List.of(new RoomTrack("TR_wm", "MICROPHONE", false)))));
+    doThrow(new LiveKitApiException("MutePublishedTrack", 500, null))
+        .when(rooms)
+        .mutePublishedTrack(ROOM, "walkin", "TR_wm", true);
+    List<String> muted = new ArrayList<>();
+
+    ApiException e = apiError(() -> policy.muteMicrophones("m1", id -> true, muted::add));
+
+    assertThat(e.code()).isEqualTo("MEETINGS_UNAVAILABLE");
+    assertThat(muted).containsExactly("inv"); // already muted before walkin's failure
   }
 }

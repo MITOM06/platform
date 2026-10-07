@@ -571,7 +571,7 @@ Someone who once entered the room is remembered as admitted, so turning the wait
 locking the room later never shuts them out (`LOCK` only stops newcomers).
 
 `MEETING_INVALID` carries `params.field` ∈ `title | description | inviteeIds | departmentId |
-scheduledStart | scheduledEnd | settings | scope | size` and `params.max` when a limit applies, e.g.
+scheduledStart | scheduledEnd | settings | scope | size | content | version` and `params.max` when a limit applies, e.g.
 `{"error":"Bad Request","code":"MEETING_INVALID","statusCode":400,"params":{"field":"title","max":120}}`.
 A body or query value that cannot be parsed is also 400 `MEETING_INVALID` (never 500), with
 `params.field` when the field is known — notably a datetime **without an offset**
@@ -615,8 +615,9 @@ meeting 48h past its start (or creation) is retired to ENDED by the sweep.
 ```
 
 - `role` ∈ `host | cohost | attendee`; token TTL `app.livekit.token-ttl-seconds` (600 s),
-  identity = userId, name = display name, metadata `{"avatarUrl"}`. Host/co-host get
-  `roomAdmin`; attendees get `canPublishSources=["camera","microphone"]` when
+  identity = userId, name = display name, metadata `{"avatarUrl"}`. Every token (host and
+  co-host included) is publish + subscribe + data and **never** `roomAdmin` — all moderation goes
+  through `/app/meet.host`; attendees get `canPublishSources=["camera","microphone"]` when
   `allowAttendeeScreenShare=false`. Max 25 people in the room.
 - `waiting`: subscribe `/user/queue/meeting`, wait for `meet.admitted` then call `join` again, or
   `meet.denied` / `meet.ended`. Calling `join` again while waiting stays `waiting` (no duplicate);
@@ -674,18 +675,20 @@ Host `action`s:
 | `action` | Who | Effect | Events |
 |---|---|---|---|
 | `MUTE_MIC` | host, co-host | mutes the target's live microphone tracks (cannot unmute anyone) | `meet.muted` to the target (when a track was muted) |
-| `MUTE_ALL` | host, co-host | same for everyone in the room except the caller | `meet.muted` to each person muted |
+| `MUTE_ALL` | host, co-host | same for everyone in the room except the caller | `meet.muted` to each person as soon as they are muted (a LiveKit failure halfway still told the ones before it) |
 | `REMOVE` | host; co-host only on attendees; nobody removes the host or themselves | `removedIds` + loses co-host → Redis removed set (loses admission) → hand lowered → kicked from LiveKit | `meet.removed` to the target; `meet.hands` if their hand was up; `meet.roster` via the webhook |
 | `LOWER_HAND` / `LOWER_ALL_HANDS` | host, co-host | lowers one / every hand | `meet.hands` (when it changed) |
 | `LOCK` / `UNLOCK` | host, co-host | `settings.locked` | `meet.settings` (when it changed) |
 | `WAITING_ROOM_ON` / `WAITING_ROOM_OFF` | host, co-host | `settings.waitingRoom` | `meet.settings` (when it changed) |
 | `ATTENDEE_SCREEN_SHARE_ON` / `_OFF` | host, co-host | `settings.allowAttendeeScreenShare`; every attendee in the room is updated in LiveKit (OFF: camera + microphone only, a live share is stopped; ON: every source) | `meet.settings` (when it changed) |
-| `MAKE_COHOST` | **host** | target must be in the room | `meet.roster`; `meet.lobby` to the new co-host |
+| `MAKE_COHOST` | **host** | target must be in the room and not removed (else `MEETING_INVALID {field:"targetId"}`) | `meet.roster`; `meet.lobby` to the new co-host |
 | `REVOKE_COHOST` | **host** | target stays admitted | `meet.roster` |
 
 A LiveKit failure ⇒ `meet.error MEETINGS_UNAVAILABLE` to the caller; whatever was already saved
 stays (re-sending the command is idempotent). A `PATCH` that flips `allowAttendeeScreenShare` in a
-LIVE meeting is applied to the room too (best effort). Someone removed who reconnects to LiveKit with
+LIVE meeting is applied to the room too (best effort). A `PATCH` writes only the settings switches
+it actually changes (one `settings.<field>` each), so it never reverts a concurrent `LOCK` /
+`WAITING_ROOM_*` / `ATTENDEE_SCREEN_SHARE_*` on another switch. Someone removed who reconnects to LiveKit with
 a still-valid token is kicked again on arrival and gets no attendance row.
 
 ### STOMP — server events
@@ -698,7 +701,7 @@ Every payload is `MeetingEventDto` `{event, meetingId, …}`; absent fields are 
 | `/topic/meeting/{id}` | `meet.settings` | `{settings:{…5 fields…}}` | `PATCH` or a host command changed settings |
 | `/topic/meeting/{id}` | `meet.hands` | `{hands:[Hand…]}` in raise order (`[]` = none) | raise / lower / lower all / leaving the room / removed |
 | `/topic/meeting/{id}` | `meet.chat` | `{clientId?, message: MeetingMessage}` | `/app/meet.chat` succeeded |
-| `/topic/meeting/{id}` | `meet.notes.updated` | `{version, updatedBy:{userId, displayName?}}` — never the text (GET it when not editing) | `PUT /notes/shared` succeeded (private notes announce nothing) |
+| `/topic/meeting/{id}` | `meet.notes.updated` | `{version, updatedBy:{userId, displayName?}}` — never the text (GET it when not editing) | `PUT /notes/shared` succeeded while the meeting is not ENDED (private notes and edits after the end announce nothing) |
 | `/topic/meeting/{id}` | `meet.ended` | — | `POST /end`, LiveKit `room_finished`, `DELETE` (cancel) |
 | `/user/queue/meeting` | `meet.lobby` | `{waiting:[{userId, displayName}]}` (by name; nameless last) | to host + co-hosts when the lobby changes, to a host/co-host on `join` (empty list ⇒ clear the badge), and to a newly appointed co-host |
 | `/user/queue/meeting` | `meet.removed` | — | you were removed: leave LiveKit, go to the meeting info page; `join` ⇒ 403 `MEETING_REMOVED` |
@@ -718,7 +721,8 @@ removal (outbound filter) — the subscription stays open but silent.
 
 `meet.error.errorCode` ∈ `MEETING_NOT_FOUND | MEETING_FORBIDDEN | MEETING_REMOVED | MEETING_ENDED |
 MEETING_INVALID | MEETINGS_UNAVAILABLE | RATE_LIMITED`; `params` as in REST (`{field, max?}`, `field`
-∈ `content | action | targetId`); `action` = the refused host action; `clientId` = the refused chat
+∈ `content | action | targetId`); `action` = the refused host action, or absent when it was not a
+known action (the client's string is never echoed); `clientId` = the refused chat
 line's. (The field is `errorCode` because `code` is the meeting code.) Example:
 `{"event":"meet.error","meetingId":"m1","clientId":"c-7f3a","errorCode":"MEETING_INVALID","params":{"field":"content","max":2000}}`.
 

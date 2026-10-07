@@ -11,9 +11,9 @@ import com.platform.chatservice.service.rtc.LiveKitRoomClient.RoomTrack;
 import com.platform.chatservice.service.rtc.LiveKitUnavailableException;
 import com.platform.chatservice.service.rtc.RtcGrant;
 import com.platform.chatservice.service.rtc.RtcRooms;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -151,24 +151,23 @@ public class MeetingRoomPolicy {
   }
 
   /**
-   * Mutes every live microphone track of the people in the room matching {@code who}. Returns who
-   * had at least one track muted, in LiveKit's order (nobody can be unmuted remotely).
+   * Mutes every live microphone track of the people in the room matching {@code who}, in LiveKit's
+   * order (nobody can be unmuted remotely). {@code onMuted} is told each person as soon as at least
+   * one of their tracks is muted, so a failure on a later person still reports the earlier ones.
    */
-  public List<String> muteMicrophones(String meetingId, Predicate<String> who) {
+  public void muteMicrophones(String meetingId, Predicate<String> who, Consumer<String> onMuted) {
     String room = RtcRooms.forMeeting(meetingId);
-    List<String> muted = new ArrayList<>();
     try {
       for (RoomParticipant p : rooms.listParticipants(room)) {
         if (p.identity() != null
             && who.test(p.identity())
             && muteTracks(room, p, Set.of(MICROPHONE))) {
-          muted.add(p.identity());
+          onMuted.accept(p.identity());
         }
       }
     } catch (LiveKitApiException | LiveKitUnavailableException e) {
       throw unavailable(meetingId, e);
     }
-    return muted;
   }
 
   /** Sets what {@code identity} may publish; false when they are not in the room (404). */

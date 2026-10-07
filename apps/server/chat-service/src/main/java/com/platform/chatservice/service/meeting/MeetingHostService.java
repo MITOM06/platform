@@ -47,7 +47,8 @@ public class MeetingHostService {
       throw MeetingService.ended();
     }
     String uid = caller.getUserId();
-    if (!MeetingAccess.canManage(m, uid)) {
+    if (!MeetingAccess.canManage(m, uid) || isRemoved(m, uid)) {
+      // A removed person keeps nothing, even if their id still sits in coHostIds.
       log.warn("Ignored meeting host command {} from a non-manager", action);
       return;
     }
@@ -73,16 +74,22 @@ public class MeetingHostService {
     }
   }
 
-  /** Mutes live microphones; each person actually muted learns who did it. */
+  /**
+   * Mutes live microphones; each person actually muted learns who did it as soon as it happened, so
+   * a LiveKit failure halfway still tells the ones already muted. The actor is looked up once, and
+   * only when someone was muted.
+   */
   private void mute(String meetingId, String uid, Predicate<String> who) {
-    List<String> muted = policy.muteMicrophones(meetingId, who);
-    if (muted.isEmpty()) {
-      return;
-    }
-    PersonDto actor = MeetingMapper.person(uid, people.profiles(List.of(uid)));
-    for (String identity : muted) {
-      events.muted(meetingId, identity, actor);
-    }
+    PersonDto[] actor = new PersonDto[1];
+    policy.muteMicrophones(
+        meetingId,
+        who,
+        identity -> {
+          if (actor[0] == null) {
+            actor[0] = MeetingMapper.person(uid, people.profiles(List.of(uid)));
+          }
+          events.muted(meetingId, identity, actor[0]);
+        });
   }
 
   /**
@@ -124,9 +131,16 @@ public class MeetingHostService {
     }
   }
 
-  /** Host only; the target must be in the room. Already a co-host ⇒ nothing to do. */
+  /**
+   * Host only; the target must be in the room and not removed (their attendance row may still be
+   * open while the kick failed or {@code participant_left} is in flight). Already a co-host ⇒
+   * nothing to do.
+   */
   private void makeCoHost(Meeting m, String uid, String target) {
     requireHost(m, uid);
+    if (isRemoved(m, target)) {
+      throw MeetingRequests.invalid("targetId");
+    }
     if (m.getCoHostIds() != null && m.getCoHostIds().contains(target)) {
       return;
     }
@@ -162,6 +176,10 @@ public class MeetingHostService {
       case "settings.waitingRoom" -> settings.isWaitingRoom();
       default -> settings.isAllowAttendeeScreenShare();
     };
+  }
+
+  private static boolean isRemoved(Meeting m, String userId) {
+    return m.getRemovedIds() != null && m.getRemovedIds().contains(userId);
   }
 
   private static void requireHost(Meeting m, String uid) {

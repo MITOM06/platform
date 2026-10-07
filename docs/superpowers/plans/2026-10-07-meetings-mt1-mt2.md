@@ -178,7 +178,7 @@ Quy tắc (vi phạm ⇒ 400 `MEETING_INVALID` với `params.field`):
 { "status": "waiting" }
 ```
 
-- `role` ∈ `host | cohost | attendee`. Token sống `app.livekit.token-ttl-seconds` (600s), room `meet_{id}`, identity = userId. Host/co-host: grant thêm `roomAdmin`. Attendee khi `allowAttendeeScreenShare=false`: `canPublishSources=["camera","microphone"]`.
+- `role` ∈ `host | cohost | attendee`. Token sống `app.livekit.token-ttl-seconds` (600s), room `meet_{id}`, identity = userId. ~~Host/co-host: grant thêm `roomAdmin`.~~ **roomAdmin dropped 2026-10-07 — co-hosts could bypass host-only rules via LiveKit's room API**; mọi token (cả host/co-host) chỉ publish + subscribe + data, điều khiển phòng chỉ qua `/app/meet.host`. Attendee khi `allowAttendeeScreenShare=false`: `canPublishSources=["camera","microphone"]`.
 - `waiting`: client subscribe `/user/queue/meeting`, chờ `meet.admitted` rồi gọi lại `join` (lần này trả `joined`), hoặc `meet.denied` / `meet.ended`.
 - Gọi lại `join` khi đang chờ ⇒ vẫn `waiting` (không nhân đôi trong phòng chờ). Người trong phòng chờ rời trang ⇒ client gọi `DELETE /lobby`.
 

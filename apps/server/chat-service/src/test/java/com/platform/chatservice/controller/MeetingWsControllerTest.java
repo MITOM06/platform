@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -105,6 +106,27 @@ class MeetingWsControllerTest {
     controller.host(new MeetingHostCommand("m1", "MUTE_ALL", null), an);
 
     verify(events).error("a", "m1", "MUTE_ALL", null, "MEETINGS_UNAVAILABLE", null);
+  }
+
+  @Test
+  void anUnknownHostActionIsNeverEchoedBack() {
+    doThrow(
+            new ApiException(
+                HttpStatus.BAD_REQUEST, "MEETING_INVALID", null, Map.of("field", "action")))
+        .when(host)
+        .execute(any(), any());
+
+    controller.host(new MeetingHostCommand("m1", "<img src=x>".repeat(100), null), an);
+    controller.host(new MeetingHostCommand("m1", "mute_all", null), an); // exact names only
+
+    verify(events, times(2))
+        .error(
+            eq("a"),
+            eq("m1"),
+            isNull(),
+            isNull(),
+            eq("MEETING_INVALID"),
+            eq(Map.of("field", "action")));
   }
 
   @Test
