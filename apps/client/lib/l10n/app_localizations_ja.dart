@@ -4349,4 +4349,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get authErrMfaResetSelfForbidden => '自分の二要素認証はリセットできません。';
+
+  @override
+  String get adminCapHostMeeting => '会議を主催';
 }

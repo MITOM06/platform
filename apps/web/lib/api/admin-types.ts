@@ -19,6 +19,7 @@ export const CAPABILITIES = [
   'MANAGE_AI_CONTEXT',
   'VIEW_INTERNAL_CONTEXT',
   'VIEW_CONFIDENTIAL_CONTEXT',
+  'HOST_MEETING',
 ] as const
 
 export type Capability = (typeof CAPABILITIES)[number]

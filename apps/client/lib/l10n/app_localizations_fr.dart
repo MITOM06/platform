@@ -4561,4 +4561,7 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get authErrMfaResetSelfForbidden =>
       'Vous ne pouvez pas réinitialiser votre propre authentification à deux facteurs.';
+
+  @override
+  String get adminCapHostMeeting => 'Organiser des réunions';
 }

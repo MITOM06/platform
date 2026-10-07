@@ -2,6 +2,7 @@ package com.platform.chatservice.security;
 
 import com.platform.chatservice.service.ConversationQueryService;
 import com.platform.chatservice.service.PresenceService;
+import com.platform.chatservice.service.meeting.MeetingTopicAuthorizer;
 import java.security.Principal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +20,8 @@ import org.springframework.stereotype.Component;
 /**
  * Inbound STOMP gatekeeper (clientInboundChannel): authenticates CONNECT, re-validates the auth
  * session on SEND/SUBSCRIBE, enforces {@link StompDestinationPolicy} (SUBSCRIBE allow-list +
- * conversation membership, SEND only to {@code /app/**}) and refreshes presence on every inbound
- * frame — heartbeats included.
+ * conversation membership + meeting room access, SEND only to {@code /app/**}) and refreshes
+ * presence on every inbound frame — heartbeats included.
  *
  * <p>A refused frame throws {@link MessageDeliveryException}: Spring answers with a STOMP ERROR
  * frame whose {@code message} header is the reason code ({@link #FORBIDDEN_DESTINATION} / {@link
@@ -34,7 +35,10 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
   /** ERROR reason: destination not on the allow-list (or SEND outside {@code /app/**}). */
   public static final String FORBIDDEN_DESTINATION = "FORBIDDEN_DESTINATION";
 
-  /** ERROR reason: conversation topic of a conversation the user is not a participant of. */
+  /**
+   * ERROR reason: conversation topic of a conversation the user is not a participant of, or a
+   * meeting topic of a room the user may not enter (waiting, removed, locked out, ended).
+   */
   public static final String UNAUTHORIZED_SUBSCRIPTION = "Unauthorized subscription";
 
   private final JwtUtil jwtUtil;
@@ -42,6 +46,7 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
   private final SessionValidator sessionValidator;
   private final WsSessionRegistry wsSessionRegistry;
   private final PresenceService presenceService;
+  private final MeetingTopicAuthorizer meetingTopics;
 
   @Override
   public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
@@ -122,7 +127,8 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
   /**
    * SUBSCRIBE is allow-listed ({@link StompDestinationPolicy#SUBSCRIBE_ALLOW_LIST}); wildcard /
    * template / traversal syntax is refused outright and conversation topics require membership
-   * (read straight from Mongo so a just-added member can subscribe immediately).
+   * (read straight from Mongo so a just-added member can subscribe immediately). Meeting topics
+   * require being allowed into the room ({@link MeetingTopicAuthorizer}).
    */
   private void authorizeSubscription(StompHeaderAccessor accessor) {
     Principal user = accessor.getUser();
@@ -140,6 +146,13 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
       List<String> participants =
           conversationQueryService.getParticipants(decision.conversationId());
       if (participants == null || !participants.contains(user.getName())) {
+        throw new MessageDeliveryException(UNAUTHORIZED_SUBSCRIPTION);
+      }
+    }
+    if (decision.meetingId() != null) {
+      UserPrincipal principal =
+          user instanceof UserPrincipal u ? u : new UserPrincipal(user.getName());
+      if (!meetingTopics.canSubscribe(decision.meetingId(), principal)) {
         throw new MessageDeliveryException(UNAUTHORIZED_SUBSCRIPTION);
       }
     }

@@ -4492,4 +4492,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authErrMfaResetSelfForbidden =>
       'You can\'t reset your own two-factor authentication.';
+
+  @override
+  String get adminCapHostMeeting => 'Host meetings';
 }

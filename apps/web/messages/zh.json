@@ -1497,7 +1497,8 @@
       "VIEW_AUDIT_LOG": "查看审计日志",
       "MANAGE_AI_CONTEXT": "管理 AI 上下文",
       "VIEW_INTERNAL_CONTEXT": "查看内部上下文",
-      "VIEW_CONFIDENTIAL_CONTEXT": "查看机密上下文"
+      "VIEW_CONFIDENTIAL_CONTEXT": "查看机密上下文",
+      "HOST_MEETING": "主持会议"
     },
     "auditEmpty": "暂无审计记录。",
     "auditPrev": "上一页",

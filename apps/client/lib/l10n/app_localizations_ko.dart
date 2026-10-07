@@ -4349,4 +4349,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get authErrMfaResetSelfForbidden => '본인의 2단계 인증은 재설정할 수 없습니다.';
+
+  @override
+  String get adminCapHostMeeting => '회의 주최';
 }

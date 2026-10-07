@@ -1522,5 +1522,6 @@
   "authErrMfaNotEnrolled": "Tài khoản này chưa thiết lập xác thực hai yếu tố.",
   "authErrMfaAlreadyEnrolled": "Tài khoản này đã thiết lập xác thực hai yếu tố.",
   "authErrMfaResetForbidden": "Chỉ Chủ sở hữu mới có thể đặt lại xác thực hai yếu tố.",
-  "authErrMfaResetSelfForbidden": "Bạn không thể tự đặt lại xác thực hai yếu tố của chính mình."
+  "authErrMfaResetSelfForbidden": "Bạn không thể tự đặt lại xác thực hai yếu tố của chính mình.",
+  "adminCapHostMeeting": "Tổ chức cuộc họp"
 }

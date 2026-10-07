@@ -122,6 +122,21 @@ class LiveKitRoomClientTest {
   }
 
   @Test
+  void createRoomSetsTheTimeoutsAndTheParticipantCap() throws Exception {
+    client.createRoom("meet_1", 300, 300, 25);
+
+    HttpRequest request = sentRequest();
+    assertThat(request.uri().getPath()).isEqualTo("/twirp/livekit.RoomService/CreateRoom");
+    assertThat(new ObjectMapper().readValue(bodyOf(request), Map.class))
+        .isEqualTo(
+            Map.of(
+                "name", "meet_1",
+                "empty_timeout", 300,
+                "departure_timeout", 300,
+                "max_participants", 25));
+  }
+
+  @Test
   void deleteRoomTargetsTheRoom() throws Exception {
     client.deleteRoom("call_c1");
 

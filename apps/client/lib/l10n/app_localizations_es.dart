@@ -4532,4 +4532,7 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get authErrMfaResetSelfForbidden =>
       'No puedes restablecer tu propia autenticación de dos factores.';
+
+  @override
+  String get adminCapHostMeeting => 'Organizar reuniones';
 }

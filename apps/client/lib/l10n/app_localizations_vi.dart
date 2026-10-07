@@ -4467,4 +4467,7 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get authErrMfaResetSelfForbidden =>
       'Bạn không thể tự đặt lại xác thực hai yếu tố của chính mình.';
+
+  @override
+  String get adminCapHostMeeting => 'Tổ chức cuộc họp';
 }

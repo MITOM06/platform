@@ -1497,7 +1497,8 @@
       "VIEW_AUDIT_LOG": "Xem nhật ký kiểm toán",
       "MANAGE_AI_CONTEXT": "Quản lý ngữ cảnh AI",
       "VIEW_INTERNAL_CONTEXT": "Xem ngữ cảnh nội bộ",
-      "VIEW_CONFIDENTIAL_CONTEXT": "Xem ngữ cảnh mật"
+      "VIEW_CONFIDENTIAL_CONTEXT": "Xem ngữ cảnh mật",
+      "HOST_MEETING": "Tổ chức cuộc họp"
     },
     "auditEmpty": "Chưa có bản ghi kiểm toán nào.",
     "auditPrev": "Trước",

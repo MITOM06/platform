@@ -4301,4 +4301,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get authErrMfaResetSelfForbidden => '你不能重置自己的双重验证。';
+
+  @override
+  String get adminCapHostMeeting => '主持会议';
 }

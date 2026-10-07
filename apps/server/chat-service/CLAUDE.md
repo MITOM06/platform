@@ -52,6 +52,26 @@
 - createdAt: Instant
 ```
 
+### Meeting (`meetings`)
+```
+- id: String (ObjectId)
+- code: String (unique, "abc-defg-hjk" — MeetingCodeGenerator)
+- title / description: String (user text; null = client shows its localized default)
+- hostId: String; coHostIds / inviteeIds / removedIds: List<String> (userIds)
+- departmentId: String (every member of the department is invited)
+- scheduledStart / scheduledEnd: Instant (null start = instant meeting)
+- sortAt: Instant (scheduledStart ?? createdAt — list ordering only, never returned)
+- status: "SCHEDULED" | "LIVE" | "ENDED" (cancelled = ENDED + cancelledAt)
+- settings: { waitingRoom, muteOnEntry, allowAttendeeScreenShare, attendeesCanEditNotes, locked }
+- attendance: List<{ userId, displayName, role, sid, joinedAt, leftAt }> (one row per session)
+- reminded: boolean (10-minute reminder claimed)
+- createdAt / startedAt / endedAt / cancelledAt: Instant
+```
+After the first insert a meeting is **only** changed through atomic updates in `MeetingStore`
+(concurrent LiveKit webhooks) — never `meetingRepository.save(meeting)`. Lobby / admitted set
+live in Redis (`meet:lobby:{id}`, `meet:admitted:{id}`, `MeetingLobby`). Code:
+`service/meeting/`, REST `MeetingController`, contract in `docs/api-spec.md` § Meetings.
+
 ---
 
 ## Configuration (`application.yml`)
@@ -77,6 +97,9 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 - `MessageSweepService` — deletes disappearing-messages past each conversation's window
 - `ReminderSweepService` — every `app.reminder.sweep-interval-ms` (60 s default), pushes due
   reminders via FCM and flags them `notified` so each fires exactly once (see ADR-011)
+- `MeetingReminderSweep` — every `app.meeting.sweep-interval-ms` (60 s default, annotation only):
+  claims each meeting starting within 10 min (`reminded` false → true, once cluster-wide) and
+  sends `meet.starting` + FCM `MEETING_STARTING`; retires SCHEDULED meetings 48h past their start
 
 **Cross-service collections read by chat-service** (owned by NestJS services):
 - `user_blocks` — block relationships (replaces former `users.blockedUsers[]`); read via the
@@ -106,6 +129,10 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 ### Server-to-Client Broker
 - `/topic/conversation/{conversationId}` — Receive messages, reactions, edits, recalls, and AI streaming.
 - `/topic/conversation/{conversationId}/typing` — Receive typing status: `{ userId, typing: boolean }`
+- `/topic/meeting/{meetingId}` — `meet.roster | meet.settings | meet.ended`; SUBSCRIBE only when
+  `MeetingAccess.decide` lets the user straight into the room (`MeetingTopicAuthorizer`)
+- `/user/queue/meeting` — `meet.lobby | meet.admitted | meet.denied | meet.ended | meet.invited |
+  meet.starting | meet.cancelled`
 - `/user/queue/notifications` — Receive unread notifications: `{ type: "NEW_MESSAGE", conversationId, senderName }`;
   also `{ type: "CLAIMS_CHANGED" }` (role/department/permissions changed → refresh token, refetch capabilities, reconnect)
 
@@ -151,6 +178,13 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 - `GET /{id}/trace` — Retrieve AI reasoning trace logs
 - `POST /{id}/pin` / `DELETE /{id}/pin` — Pin/unpin message (max 5; 409 `PIN_LIMIT_REACHED` `params.max`)
 - `/search?q={query}&conversationId={id}` — Text search messages in conversation
+
+### `/api/meetings` (see `docs/api-spec.md` § Meetings)
+- `POST /` (needs `HOST_MEETING`, 201) · `GET /?scope=upcoming|past&cursor=&size=` · `GET /{id}` ·
+  `GET /by-code/{code}` · `PATCH /{id}` (host/co-host) · `DELETE /{id}` (cancel, host)
+- `POST /{id}/join` → `{status:"joined", url, token, role}` | `{status:"waiting"}` ·
+  `DELETE /{id}/lobby` · `POST /{id}/lobby/{userId}/admit|deny` · `POST /{id}/end`
+- Errors `MEETING_*` / `MEETINGS_UNAVAILABLE` (`ErrorCodes`), checked in the services (no `@PreAuthorize`)
 
 ### Other Services
 - `GET /api/users/{userId}/status` — Fetch online status & lastSeen timestamp

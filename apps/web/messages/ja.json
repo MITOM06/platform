@@ -1497,7 +1497,8 @@
       "VIEW_AUDIT_LOG": "監査ログを表示",
       "MANAGE_AI_CONTEXT": "AI コンテキストの管理",
       "VIEW_INTERNAL_CONTEXT": "社内コンテキストの閲覧",
-      "VIEW_CONFIDENTIAL_CONTEXT": "機密コンテキストの閲覧"
+      "VIEW_CONFIDENTIAL_CONTEXT": "機密コンテキストの閲覧",
+      "HOST_MEETING": "会議を主催"
     },
     "auditEmpty": "監査記録はまだありません。",
     "auditPrev": "前へ",

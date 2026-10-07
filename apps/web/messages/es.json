@@ -1497,7 +1497,8 @@
       "VIEW_AUDIT_LOG": "Ver registro de auditoría",
       "MANAGE_AI_CONTEXT": "Gestionar el contexto de IA",
       "VIEW_INTERNAL_CONTEXT": "Ver contexto interno",
-      "VIEW_CONFIDENTIAL_CONTEXT": "Ver contexto confidencial"
+      "VIEW_CONFIDENTIAL_CONTEXT": "Ver contexto confidencial",
+      "HOST_MEETING": "Organizar reuniones"
     },
     "auditEmpty": "Aún no hay registros de auditoría.",
     "auditPrev": "Anterior",

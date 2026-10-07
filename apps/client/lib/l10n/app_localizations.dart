@@ -8184,6 +8184,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can\'t reset your own two-factor authentication.'**
   String get authErrMfaResetSelfForbidden;
+
+  /// No description provided for @adminCapHostMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Host meetings'**
+  String get adminCapHostMeeting;
 }
 
 class _AppLocalizationsDelegate

@@ -1522,5 +1522,6 @@
   "authErrMfaNotEnrolled": "此账号尚未设置双重验证。",
   "authErrMfaAlreadyEnrolled": "此账号已设置双重验证。",
   "authErrMfaResetForbidden": "只有所有者才能重置双重验证。",
-  "authErrMfaResetSelfForbidden": "你不能重置自己的双重验证。"
+  "authErrMfaResetSelfForbidden": "你不能重置自己的双重验证。",
+  "adminCapHostMeeting": "主持会议"
 }

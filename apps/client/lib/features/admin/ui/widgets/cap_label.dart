@@ -40,6 +40,8 @@ String capabilityLabelOf(AppLocalizations l, String cap) {
       return l.adminCapViewInternalContext;
     case Cap.viewConfidentialContext:
       return l.adminCapViewConfidentialContext;
+    case Cap.hostMeeting:
+      return l.adminCapHostMeeting;
     default:
       return l.adminCapUnknown;
   }

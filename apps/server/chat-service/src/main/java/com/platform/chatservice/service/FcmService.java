@@ -7,6 +7,9 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.AndroidConfig;
 import com.google.firebase.messaging.AndroidNotification;
+import com.google.firebase.messaging.ApnsConfig;
+import com.google.firebase.messaging.Aps;
+import com.google.firebase.messaging.ApsAlert;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
@@ -33,6 +36,9 @@ public class FcmService {
   private final StringRedisTemplate redisTemplate;
 
   private static final String STATUS_KEY_PREFIX = "user:status:";
+
+  /** FCM {@code type} of a meeting invitation push; anything else is a "starting soon" push. */
+  public static final String MEETING_INVITED = "MEETING_INVITED";
 
   /**
    * Push a new-message notification to {@code targetUserId}'s devices when they are offline. {@code
@@ -170,6 +176,80 @@ public class FcmService {
     } catch (Exception e) {
       log.error("Reminder push skipped due to error", e);
       return false;
+    }
+  }
+
+  /**
+   * Push a meeting invitation ({@code MEETING_INVITED}) or "starting soon" reminder ({@code
+   * MEETING_STARTING}) to all of {@code userId}'s devices. The only text sent is the user-entered
+   * meeting {@code title}; the body is a localization key ({@code meeting_push_invited} / {@code
+   * meeting_push_starting}) the app resolves in the device's language. {@code onlyWhenOffline}
+   * skips users currently online (they get the STOMP event instead). Never throws.
+   */
+  public void sendMeetingPush(
+      String userId,
+      String type,
+      String meetingId,
+      String code,
+      String title,
+      boolean onlyWhenOffline) {
+    if (FirebaseApp.getApps().isEmpty()) {
+      return;
+    }
+    if (userId == null || !ObjectId.isValid(userId)) {
+      log.warn("Skipping meeting push: invalid userId '{}'", userId);
+      return;
+    }
+    try {
+      if (onlyWhenOffline
+          && "online".equals(redisTemplate.opsForValue().get(STATUS_KEY_PREFIX + userId))) {
+        return;
+      }
+      Query query = new Query(Criteria.where("_id").is(new ObjectId(userId)));
+      query.fields().include("fcmTokens");
+      Document userDoc = mongoTemplate.findOne(query, Document.class, "users");
+      if (userDoc == null) return;
+      List<String> tokens = userDoc.getList("fcmTokens", String.class);
+      if (tokens == null || tokens.isEmpty()) return;
+
+      String bodyKey =
+          MEETING_INVITED.equals(type) ? "meeting_push_invited" : "meeting_push_starting";
+      boolean hasTitle = title != null && !title.isBlank();
+      for (String token : tokens) {
+        try {
+          ApsAlert.Builder alert = ApsAlert.builder().setLocalizationKey(bodyKey);
+          if (hasTitle) {
+            alert.setTitle(title);
+          }
+          Message.Builder message =
+              Message.builder()
+                  .setToken(token)
+                  .setAndroidConfig(
+                      AndroidConfig.builder()
+                          .setPriority(AndroidConfig.Priority.HIGH)
+                          .setNotification(
+                              AndroidNotification.builder()
+                                  .setChannelId("pon_meetings")
+                                  .setBodyLocalizationKey(bodyKey)
+                                  .build())
+                          .build())
+                  .setApnsConfig(
+                      ApnsConfig.builder()
+                          .setAps(Aps.builder().setAlert(alert.build()).build())
+                          .build())
+                  .putData("type", type == null ? "" : type)
+                  .putData("meetingId", meetingId == null ? "" : meetingId)
+                  .putData("code", code == null ? "" : code);
+          if (hasTitle) {
+            message.setNotification(Notification.builder().setTitle(title).build());
+          }
+          dispatch(message.build(), token);
+        } catch (Exception e) {
+          log.warn("Failed to send meeting push to token (skipping): {}", e.getMessage());
+        }
+      }
+    } catch (Exception e) {
+      log.error("Meeting push skipped due to error", e);
     }
   }
 

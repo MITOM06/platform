@@ -22,8 +22,23 @@ class StompDestinationPolicyTest {
     assertThat(typing.conversationId()).isEqualTo(CONV);
   }
 
+  @Test
+  void meetingTopics_areAllowed_andCaptureTheMeetingId() {
+    StompDestinationPolicy.SubscribeDecision d =
+        StompDestinationPolicy.evaluateSubscribe("/topic/meeting/670f1c2ab9e4d21f0c3a9e11");
+    assertThat(d.allowed()).isTrue();
+    assertThat(d.meetingId()).isEqualTo("670f1c2ab9e4d21f0c3a9e11");
+    assertThat(d.conversationId()).isNull();
+  }
+
   @ParameterizedTest
-  @ValueSource(strings = {"/user/queue/notifications", "/user/queue/webrtc", "/topic/presence"})
+  @ValueSource(
+      strings = {
+        "/user/queue/notifications",
+        "/user/queue/webrtc",
+        "/topic/presence",
+        "/user/queue/meeting"
+      })
   void fixedDestinations_areAllowed_withoutMembership(String destination) {
     var decision = StompDestinationPolicy.evaluateSubscribe(destination);
 
@@ -46,6 +61,12 @@ class StompDestinationPolicyTest {
         "/topic/conversation/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         "/topic/conversation/a.b",
         "/queue/notifications",
+        "/topic/meeting/*",
+        "/topic/meeting/**",
+        "/topic/meeting/",
+        "/topic/meeting/m1/typing",
+        "/topic/meeting/{id}",
+        "/topic/meetings/m1",
         ""
       })
   void everythingElse_isDenied(String destination) {
@@ -85,6 +106,6 @@ class StompDestinationPolicyTest {
   /** Every destination used by web + Flutter must stay subscribable (contract guard). */
   @Test
   void allowList_coversEveryClientDestination() {
-    assertThat(StompDestinationPolicy.SUBSCRIBE_ALLOW_LIST).hasSize(5);
+    assertThat(StompDestinationPolicy.SUBSCRIBE_ALLOW_LIST).hasSize(7);
   }
 }
