@@ -738,6 +738,35 @@ New error codes: `MEETING_NOTE_CONFLICT` (409, with `latest`), `MEETING_NOTES_RE
 an attendee editing the shared note while `attendeesCanEditNotes=false`), `RATE_LIMITED` (in
 `meet.error`; also the `code` of every chat-service REST 429, which carries `Retry-After`).
 
+### Web client (MT4–MT5) — how `apps/web` uses this contract
+
+No contract change; notes for the other clients (Flutter MT6–MT7 should match):
+
+- **Times** go up as `Date.prototype.toISOString()` (UTC with `Z`); the form edits date / start /
+  duration in the browser's time zone.
+- **`clientId`** of `/app/meet.chat` = `c-` + 12 random base62 characters (`[A-Za-z0-9]`).
+- **Subscribe first, then read.** The room page subscribes `/topic/meeting/{id}` only while
+  connecting / in the room (never while `waiting`), then seeds the roster from
+  `GET /api/meetings/{id}` (open `attendance` rows + current `host` / `coHosts`) and hands from
+  `GET /hands`. Every re-subscribe after a STOMP reconnect re-reads roster, hands, the meeting,
+  chat and the shared note.
+- **STOMP reconnect:** a host / co-host in the room calls `GET /api/meetings/{id}/lobby` to catch
+  up on a missed `meet.lobby`; only a guest still **waiting** re-POSTs `/join` (still `waiting`, or
+  `joined` if they were admitted while offline — a lost `meet.admitted` is never fatal).
+- `/user/queue/meeting` is one durable subscription per session (next to
+  `/user/queue/notifications`); room events in it are routed to the open room by `meetingId`.
+- **Reactions** never touch the server: LiveKit data channel, topic `reaction`, payload exactly
+  `{"e":"<emoji>"}` with one of `👍 ❤️ 😂 😮 👏 🎉` (anything else is dropped), lossy, at most
+  one per second per sender.
+- **Host controls** are `/app/meet.host` only (tokens never carry `roomAdmin`). The six switch
+  actions show as pending until `meet.settings` arrives (8 s at most); "participants can edit
+  shared notes" has no STOMP action and uses `PATCH /api/meetings/{id}` `{settings:{attendeesCanEditNotes}}`.
+- **Notes** autosave 2 s after the last keystroke; a 409 keeps the typed text and offers keep mine /
+  use newer / save merged against `latest`; leaving or ending the meeting flushes unsaved text
+  (best effort, never delays leaving).
+- Every `errorCode` / REST `code` maps to a localized `meeting.err*` string; ids, `removedIds`,
+  room names, tokens and raw error text are never shown.
+
 ### FCM (data)
 
 - `MEETING_INVITED` — to named invitees **when offline**. `MEETING_STARTING` — to everyone who

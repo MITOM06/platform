@@ -18,7 +18,7 @@ import { meetingErrorKey, meetingEventErrorKey, parseMeetingError } from './meet
 import { MeetingRoomChat } from './meeting-room-chat'
 import { canShareScreen, isManager } from './permissions'
 import { applyMeetingEnded } from './room-events'
-import { SWITCH_ACTIONS, hostCommandBody, initialRoomRole, mutedNotice } from './room-host'
+import { SWITCH_ACTIONS, answerLobby, flushNotes, hostCommandBody, initialRoomRole, mutedNotice } from './room-host'
 import { wireRoomSession, type JoinMedia, type MeetingRoomDeps, type RoomSession } from './room-session'
 import { phaseAfterJoinError, phaseAfterPersonalEvent, phaseAfterRoomClosed } from './room-phase'
 
@@ -42,6 +42,7 @@ export class MeetingRoomController implements ActiveMeetingRoom {
   /** Bumped by every join / leave / dispose: answers of an older run are dropped. */
   private epoch = 0
   private readonly chat: MeetingRoomChat
+  private notesFlush: (() => Promise<void>) | null = null
 
   constructor(
     private readonly meeting: Meeting,
@@ -185,13 +186,20 @@ export class MeetingRoomController implements ActiveMeetingRoom {
     set({ phase: 'prejoin' })
   }
 
+  /** NotesPanel hands over its save-now (null on unmount); leaving / ending calls it. */
+  registerNotesFlush(flush: (() => Promise<void>) | null): void {
+    this.notesFlush = flush
+  }
+
   leave(): void {
+    flushNotes(this.notesFlush)
     this.epoch++
     this.closeSession()
     set({ phase: 'left', pendingChat: [], screen: false, reconnecting: false })
   }
 
   async endForAll(): Promise<void> {
+    flushNotes(this.notesFlush)
     try {
       await this.deps.api.end(this.meetingId)
     } catch (err) {
@@ -298,23 +306,12 @@ export class MeetingRoomController implements ActiveMeetingRoom {
     if (SWITCH_ACTIONS.has(action)) set({ pendingHost: { ...store().pendingHost, [action]: this.deps.now() } })
   }
 
-  private async lobbyCall(call: () => Promise<void>, userId: string): Promise<void> {
-    try {
-      await call()
-      this.deps.queryClient.setQueryData<LobbyEntry[]>(meetingKeys.lobby(this.meetingId), (list) =>
-        list?.filter((e) => e.userId !== userId),
-      )
-    } catch (err) {
-      this.deps.notify('error', meetingErrorKey(parseMeetingError(err)))
-    }
-  }
-
   admit(userId: string): Promise<void> {
-    return this.lobbyCall(() => this.deps.api.admit(this.meetingId, userId), userId)
+    return answerLobby(this.deps, this.meetingId, userId, () => this.deps.api.admit(this.meetingId, userId))
   }
 
   deny(userId: string): Promise<void> {
-    return this.lobbyCall(() => this.deps.api.deny(this.meetingId, userId), userId)
+    return answerLobby(this.deps, this.meetingId, userId, () => this.deps.api.deny(this.meetingId, userId))
   }
 
   // ── Events ───────────────────────────────────────────────────────────────

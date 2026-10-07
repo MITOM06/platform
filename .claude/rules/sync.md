@@ -22,6 +22,11 @@ Examples:
    - `apps/web/components/chat/ConversationHeader.tsx` ↔ `apps/client/lib/features/chat/ui/widgets/chat_app_bar.dart`
    - `apps/web/app/(main)/friends/page.tsx` ↔ `apps/client/lib/features/friends/ui/friends_screen.dart`
    - `apps/web/app/(main)/settings/page.tsx` ↔ `apps/client/lib/features/settings/ui/settings_screen.dart`
+   - Meetings (web done in MT4–MT5; the Flutter side is created in MT6–MT7):
+     - `apps/web/app/(main)/meetings/page.tsx` ↔ `apps/client/lib/features/meetings/ui/meetings_screen.dart`
+     - `apps/web/app/(main)/meetings/[id]/page.tsx` ↔ `apps/client/lib/features/meetings/ui/meeting_detail_screen.dart`
+     - `apps/web/app/(main)/meet/[code]/page.tsx` ↔ `apps/client/lib/features/meetings/ui/room/meeting_room_screen.dart`
+     - `apps/web/lib/meetings/meeting-room-controller.ts` ↔ `apps/client/lib/features/meetings/state/meeting_room_controller.dart`
 
 2. **Read the mirror file** before implementing. Match the logic, not just the UI.
 

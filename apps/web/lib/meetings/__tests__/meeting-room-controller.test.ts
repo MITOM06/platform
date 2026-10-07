@@ -413,9 +413,24 @@ describe('lifecycle', () => {
     expect(deps.notify).not.toHaveBeenCalled()
   })
 
-  it('remembers the latest shared-note signal', async () => {
+  it('flushes unsaved notes before leaving and remembers the latest shared-note signal', async () => {
     await inRoom()
+    const flush = vi.fn(async () => undefined)
+    c.registerNotesFlush(flush)
     c.onSharedNoteUpdated(5, { userId: 'u2', displayName: 'Minh' })
     expect(store().sharedNoteRemote).toEqual({ version: 5, updatedBy: { userId: 'u2', displayName: 'Minh' } })
+    c.leave()
+    expect(flush).toHaveBeenCalled()
+    expect(store().phase).toBe('left')
+  })
+
+  it('ending for everyone flushes notes too, and a failing flush never blocks it', async () => {
+    await inRoom('host')
+    const flush = vi.fn(async () => Promise.reject(new Error('offline')))
+    c.registerNotesFlush(flush)
+    await c.endForAll()
+    expect(flush).toHaveBeenCalled()
+    expect(deps.api.end).toHaveBeenCalledWith('m1')
+    expect(store().phase).toBe('ended')
   })
 })

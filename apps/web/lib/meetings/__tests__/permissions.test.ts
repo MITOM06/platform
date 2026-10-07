@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { Meeting, MeetingSettings } from '@/lib/api/meeting-types'
-import { DEFAULT_MEETING_SETTINGS } from '@/lib/api/meeting-types'
+import { DEFAULT_MEETING_SETTINGS, HOST_ACTIONS } from '@/lib/api/meeting-types'
 import {
   canEditSharedNote, canSeeRecords, canShareScreen, detailActions, isManager, myRoomRole,
   personActions, prejoinIntent, roomControls,
@@ -105,5 +105,23 @@ describe('room roles and host menus', () => {
     expect(canShareScreen('attendee', S)).toBe(true)
     expect(canShareScreen('attendee', { ...S, allowAttendeeScreenShare: false })).toBe(false)
     expect(canShareScreen('cohost', { ...S, allowAttendeeScreenShare: false })).toBe(true)
+  })
+
+  it('every host action is reachable from some menu state', () => {
+    const reachable = new Set<string>()
+    const targets = [
+      { userId: 't', role: 'attendee' as const, handRaised: true, micOn: true },
+      { userId: 't', role: 'cohost' as const, handRaised: false, micOn: true },
+    ]
+    for (const tg of targets) personActions('host', 'me', tg).forEach((a) => reachable.add(a))
+    for (const s of [S, { ...S, locked: true, waitingRoom: false, allowAttendeeScreenShare: false }]) {
+      const rc = roomControls('host', s, true)!
+      reachable.add('MUTE_ALL')
+      if (rc.lowerAllHands) reachable.add('LOWER_ALL_HANDS')
+      reachable.add(rc.lock)
+      reachable.add(rc.waitingRoom)
+      reachable.add(rc.screenShare)
+    }
+    expect([...reachable].sort()).toEqual([...HOST_ACTIONS].sort())
   })
 })

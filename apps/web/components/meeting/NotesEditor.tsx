@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { MarkdownContent } from '@/components/chat/MarkdownContent'
 import { Button } from '@/components/ui/button'
@@ -18,15 +18,28 @@ interface Props {
   canEditShared: boolean
   /** `meet.notes.updated` while in the room; the detail page passes nothing. */
   sharedRemote?: RemoteNewer | null
+  /** In the room: receives "save both tabs now" (used when leaving / ending the meeting). */
+  onFlushReady?(flush: () => Promise<void>): void
   className?: string
 }
 
+type Flush = () => Promise<void>
+
 /** Shared + private meeting notes: Markdown, autosave 2s, conflicts never lose text. */
-export function NotesEditor({ meetingId, canEditShared, sharedRemote, className }: Props) {
+export function NotesEditor({ meetingId, canEditShared, sharedRemote, onFlushReady, className }: Props) {
   const t = useTranslations('meeting')
   const [tab, setTab] = useState<NoteScope>('shared')
   // Only fetch a tab once it has been opened.
   const [opened, setOpened] = useState<ReadonlySet<NoteScope>>(() => new Set(['shared']))
+  const flushes = useRef(new Map<NoteScope, Flush>())
+  const registerFlush = useCallback((scope: NoteScope, flush: Flush) => {
+    flushes.current.set(scope, flush)
+  }, [])
+  useEffect(() => {
+    onFlushReady?.(async () => {
+      await Promise.all([...flushes.current.values()].map((f) => f()))
+    })
+  }, [onFlushReady])
 
   return (
     <Tabs
@@ -43,24 +56,27 @@ export function NotesEditor({ meetingId, canEditShared, sharedRemote, className 
         <TabsTrigger value="private">{t('notesPrivate')}</TabsTrigger>
       </TabsList>
       <TabsContent value="shared" forceMount hidden={tab !== 'shared'} className="mt-3">
-        <NoteTab meetingId={meetingId} scope="shared" enabled={opened.has('shared')} canEdit={canEditShared} remote={sharedRemote} />
+        <NoteTab meetingId={meetingId} scope="shared" enabled={opened.has('shared')} canEdit={canEditShared} remote={sharedRemote} registerFlush={registerFlush} />
       </TabsContent>
       <TabsContent value="private" forceMount hidden={tab !== 'private'} className="mt-3">
-        <NoteTab meetingId={meetingId} scope="private" enabled={opened.has('private')} canEdit />
+        <NoteTab meetingId={meetingId} scope="private" enabled={opened.has('private')} canEdit registerFlush={registerFlush} />
       </TabsContent>
     </Tabs>
   )
 }
 
-function NoteTab({ meetingId, scope, enabled, canEdit, remote }: {
+function NoteTab({ meetingId, scope, enabled, canEdit, remote, registerFlush }: {
   meetingId: string
   scope: NoteScope
   enabled: boolean
   canEdit: boolean
   remote?: RemoteNewer | null
+  registerFlush(scope: NoteScope, flush: Flush): void
 }) {
   const t = useTranslations('meeting')
   const editor = useNoteEditor(meetingId, scope, { enabled, canEdit, remote })
+  const { flush } = editor
+  useEffect(() => registerFlush(scope, flush), [registerFlush, scope, flush])
   const [preview, setPreview] = useState(false)
   const [reviewing, setReviewing] = useState(false)
   const { state } = editor

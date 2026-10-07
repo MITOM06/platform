@@ -135,6 +135,24 @@ NEXT_PUBLIC_CHAT_URL=https://chat-service-942942821810.asia-southeast1.run.app
 NEXT_PUBLIC_WS_URL=wss://chat-service-942942821810.asia-southeast1.run.app/ws
 ```
 
+## Meetings (Phòng họp — MT4–MT5)
+
+| Where | What |
+|-------|------|
+| `app/(main)/meetings/page.tsx` | List (Upcoming / Past), Start now, Schedule, join by code |
+| `app/(main)/meetings/[id]/page.tsx` | Details: actions by `viewerRole`, attendance, notes, chat history |
+| `app/(main)/meet/[code]/page.tsx` | Full-screen room: pre-join → waiting room → room, or a status screen |
+| `lib/meetings/` | Pure logic with vitest (events, errors → i18n keys, cache patches, schedule/UTC, permissions, note sync, room phase, stage layout, reactions, shortcuts, devices) + `meeting-room-controller.ts` (non-React room driver: REST join/lobby/end, `/app/meet.*`, LiveKit) |
+| `lib/store/meeting.store.ts` | Zustand UI state of the open room only (phase, panel, layout, pin, media, pending chat, reactions) — server data stays in TanStack Query (`lib/hooks/use-meetings.ts`) |
+| `components/meeting/` | List / form / detail / notes; `room/` = the in-room UI (`MeetingSession` → `MeetingRoom`: stage, tiles, control bar, People / Chat / Notes panels) |
+
+- `lib/rtc/livekit-session.ts` and `components/call/VideoTile.tsx` are **shared with Calls**
+  (Module B): any change must keep call behaviour identical and the `livekit-session` / `sfu-*`
+  / call tests green.
+- Meeting tokens never carry `roomAdmin`: every host action is a `/app/meet.host` STOMP command.
+- Room video elements are always muted; voices play through `RemoteAudio` (one `<audio>` per
+  person), so people without a tile are still heard.
+
 ## Rules
 
 - `NEXT_PUBLIC_*` only for non-secret config. No secrets in client bundle.

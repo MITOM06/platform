@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Loader2, PhoneOff } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import type { Meeting } from '@/lib/api/meeting-types'
 import { meetingsApi } from '@/lib/api/meetings'
 import { safeDisplayName } from '@/lib/chat/names'
@@ -16,6 +14,7 @@ import { LiveKitSession } from '@/lib/rtc/livekit-session'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useMeetingRoomStore } from '@/lib/store/meeting.store'
 import { stompService } from '@/lib/stomp/client'
+import { MeetingRoom } from './MeetingRoom'
 import { PreJoinLobby } from './PreJoinLobby'
 import { RoomStatusScreen } from './RoomStatusScreen'
 import { WaitingScreen } from './WaitingScreen'
@@ -104,26 +103,16 @@ export function MeetingSession({ meeting }: { meeting: Meeting }) {
         />
       )
     case 'inRoom':
-      return <InterimRoom title={meeting.title?.trim() || t('untitled')} onLeave={() => controller.leave()} />
+      return (
+        <MeetingRoom
+          meeting={meeting}
+          controller={controller}
+          myId={user?.id ?? ''}
+          myName={myName}
+          myAvatarUrl={user?.avatarUrl}
+        />
+      )
     default:
       return <RoomStatusScreen kind={phase} meetingId={meeting.id} onRetry={() => void controller.rejoin()} />
   }
-}
-
-/**
- * Placeholder for the in-room UI until Task 18 (MeetingRoom: stage, controls, panels)
- * replaces it — keeps the connected state usable (leave) in the meantime.
- */
-function InterimRoom({ title, onLeave }: { title: string; onLeave: () => void }) {
-  const t = useTranslations('meeting')
-  return (
-    <div className="flex h-dvh w-full flex-col items-center justify-center gap-4 bg-neutral-950 px-4 text-white">
-      <Loader2 className="size-6 animate-spin text-white/70 motion-reduce:animate-none" aria-hidden />
-      <h1 className="max-w-full truncate text-lg font-semibold">{title}</h1>
-      <Button variant="destructive" onClick={onLeave}>
-        <PhoneOff className="size-4" aria-hidden />
-        {t('leaveMeeting')}
-      </Button>
-    </div>
-  )
 }

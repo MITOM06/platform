@@ -21,11 +21,11 @@ function conflict(latest: unknown): AxiosError {
   return new AxiosError('conflict', 'ERR', undefined, undefined, response as AxiosResponse)
 }
 
-function renderEditor() {
+function renderEditor(onFlushReady?: (flush: () => Promise<void>) => void) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={qc}>
-      <NotesEditor meetingId="m1" canEditShared />
+      <NotesEditor meetingId="m1" canEditShared onFlushReady={onFlushReady} />
     </QueryClientProvider>,
   )
 }
@@ -85,5 +85,17 @@ describe('NotesEditor', () => {
     const box = await screen.findByRole('textbox', { name: 'notesShared' })
     expect(box).toHaveAttribute('readonly')
     expect(screen.getByText('notesReadOnly')).toBeInTheDocument()
+  })
+
+  it('hands the room a flush that saves unsaved text right away (leaving the meeting)', async () => {
+    api.putNote.mockResolvedValue({ scope: 'shared', content: 'base?', version: 2 })
+    let flush: (() => Promise<void>) | undefined
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    renderEditor((f) => { flush = f })
+    const box = await screen.findByRole('textbox', { name: 'notesShared' })
+    await user.type(box, '?')
+    expect(flush).toBeDefined()
+    await act(async () => { await flush?.() })
+    expect(api.putNote).toHaveBeenCalledWith('m1', 'shared', { content: 'base?', version: 1 })
   })
 })

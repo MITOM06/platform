@@ -1,12 +1,15 @@
+import type { QueryClient } from '@tanstack/react-query'
 import {
   TARGETED_HOST_ACTIONS,
   type HostAction,
+  type LobbyEntry,
   type Meeting,
   type MeetingPerson,
   type MeetingRoomRole,
 } from '@/lib/api/meeting-types'
 import { safeDisplayName } from '@/lib/chat/names'
-import type { MessageKey } from './meeting-errors'
+import { meetingKeys } from './cache-updates'
+import { meetingErrorKey, parseMeetingError, type MessageKey } from './meeting-errors'
 
 /** Small pure helpers of MeetingRoomController (host commands, notices, roles). */
 
@@ -35,4 +38,26 @@ export function mutedNotice(actor: MeetingPerson | undefined): MessageKey {
 /** Room role before the join answer / first roster: host/co-host from the meeting, else attendee. */
 export function initialRoomRole(m: Pick<Meeting, 'viewerRole'>): MeetingRoomRole {
   return m.viewerRole === 'host' || m.viewerRole === 'cohost' ? m.viewerRole : 'attendee'
+}
+
+/** Admit / deny one waiting person: drop them from the cached lobby, or say why it failed. */
+export async function answerLobby(
+  deps: { queryClient: QueryClient; notify(level: 'info' | 'error', msg: MessageKey): void },
+  meetingId: string,
+  userId: string,
+  call: () => Promise<void>,
+): Promise<void> {
+  try {
+    await call()
+    deps.queryClient.setQueryData<LobbyEntry[]>(meetingKeys.lobby(meetingId), (list) =>
+      list?.filter((e) => e.userId !== userId),
+    )
+  } catch (err) {
+    deps.notify('error', meetingErrorKey(parseMeetingError(err)))
+  }
+}
+
+/** Best-effort save of unsaved notes; never throws, never waits. */
+export function flushNotes(flush: (() => Promise<void>) | null): void {
+  void flush?.().catch(() => undefined)
 }
