@@ -123,4 +123,66 @@ class MeetingAccessTest {
                 .build());
     assertThat(MeetingAccess.viewerRole(m, "x", List.of())).isEqualTo("invited");
   }
+
+  @Test
+  void insideMeansAnOpenAttendanceRow() {
+    Instant t = Instant.now();
+    m.getAttendance().add(Meeting.Attendance.builder().userId("a").joinedAt(t).build());
+    m.getAttendance().add(Meeting.Attendance.builder().userId("b").joinedAt(t).leftAt(t).build());
+
+    assertThat(MeetingAccess.isInside(m, "a")).isTrue();
+    assertThat(MeetingAccess.isInside(m, "b")).isFalse();
+    assertThat(MeetingAccess.isInside(m, "nobody")).isFalse();
+    assertThat(MeetingAccess.isInside(m, null)).isFalse();
+  }
+
+  @Test
+  void recordsStayReadableForEveryoneWhoBelongedEvenAfterTheEnd() {
+    m.setStatus(MeetingStatus.ENDED);
+    m.getAttendance()
+        .add(Meeting.Attendance.builder().userId("walkin").joinedAt(Instant.now()).build());
+
+    assertThat(MeetingAccess.canReadRecords(m, "host", List.of(), false)).isTrue();
+    assertThat(MeetingAccess.canReadRecords(m, "co", List.of(), false)).isTrue();
+    assertThat(MeetingAccess.canReadRecords(m, "inv", List.of(), false)).isTrue();
+    assertThat(MeetingAccess.canReadRecords(m, "x", List.of("dept-a"), false)).isTrue();
+    assertThat(MeetingAccess.canReadRecords(m, "walkin", List.of(), false)).isTrue();
+    assertThat(MeetingAccess.canReadRecords(m, "let-in", List.of(), true)).isTrue();
+    assertThat(MeetingAccess.canReadRecords(m, "stranger", List.of(), false)).isFalse();
+    assertThat(MeetingAccess.canReadRecords(m, "stranger", null, false)).isFalse();
+  }
+
+  @Test
+  void removedPeopleLoseTheRecordsToo() {
+    m.getRemovedIds().add("inv");
+    assertThat(MeetingAccess.canReadRecords(m, "inv", List.of("dept-a"), true)).isFalse();
+    assertThat(MeetingAccess.canEditSharedNote(m, "inv", List.of("dept-a"), true)).isFalse();
+  }
+
+  @Test
+  void sharedNotesAreEditableByManagersAlwaysAndByOthersOnlyWhenAllowed() {
+    assertThat(MeetingAccess.canEditSharedNote(m, "inv", List.of(), false)).isTrue();
+
+    m.getSettings().setAttendeesCanEditNotes(false);
+    assertThat(MeetingAccess.canEditSharedNote(m, "inv", List.of(), false)).isFalse();
+    assertThat(MeetingAccess.canEditSharedNote(m, "host", List.of(), false)).isTrue();
+    assertThat(MeetingAccess.canEditSharedNote(m, "co", List.of(), false)).isTrue();
+
+    m.getSettings().setAttendeesCanEditNotes(true);
+    assertThat(MeetingAccess.canEditSharedNote(m, "stranger", List.of(), false)).isFalse();
+  }
+
+  @Test
+  void theHostOutranksEveryoneElseAndCoHostsOnlyAttendees() {
+    m.getCoHostIds().add("co2");
+
+    assertThat(MeetingAccess.outranks(m, "host", "co")).isTrue();
+    assertThat(MeetingAccess.outranks(m, "host", "inv")).isTrue();
+    assertThat(MeetingAccess.outranks(m, "co", "inv")).isTrue();
+    assertThat(MeetingAccess.outranks(m, "co", "stranger")).isTrue();
+    assertThat(MeetingAccess.outranks(m, "co", "co2")).isFalse();
+    assertThat(MeetingAccess.outranks(m, "co", "host")).isFalse();
+    assertThat(MeetingAccess.outranks(m, "inv", "stranger")).isFalse();
+    assertThat(MeetingAccess.outranks(m, "host", "host")).isFalse();
+  }
 }

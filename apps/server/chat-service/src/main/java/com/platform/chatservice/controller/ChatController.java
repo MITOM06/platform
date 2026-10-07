@@ -6,6 +6,7 @@ import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.BadRequestException;
 import com.platform.chatservice.exception.ConversationNotFoundException;
+import com.platform.chatservice.exception.ErrorCodes;
 import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.exception.RateLimitExceededException;
 import com.platform.chatservice.security.UserPrincipal;
@@ -54,11 +55,10 @@ public class ChatController {
     try {
       rateLimiterService.checkMessageRate(principal.getName());
     } catch (RateLimitExceededException e) {
-      // STOMP has no HTTP status — send an error event to the user's private queue.
+      // STOMP has no HTTP status — send the stable code (never exception text) to the user's
+      // private queue; clients map it to a localized message.
       clusterBroker.convertAndSendToUser(
-          principal.getName(),
-          "/queue/notifications",
-          Map.of("type", "RATE_LIMITED", "message", e.getMessage()));
+          principal.getName(), "/queue/notifications", Map.of("type", ErrorCodes.RATE_LIMITED));
       return;
     }
 

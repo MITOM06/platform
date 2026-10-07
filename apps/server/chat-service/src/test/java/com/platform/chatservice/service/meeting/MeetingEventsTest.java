@@ -1,6 +1,7 @@
 package com.platform.chatservice.service.meeting;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -8,14 +9,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.platform.chatservice.dto.meeting.HandDto;
 import com.platform.chatservice.dto.meeting.LobbyEntryDto;
 import com.platform.chatservice.dto.meeting.MeetingEventDto;
+import com.platform.chatservice.dto.meeting.MeetingMessageDto;
+import com.platform.chatservice.dto.meeting.PersonDto;
 import com.platform.chatservice.model.Meeting;
 import com.platform.chatservice.service.ClusterMessageBroker;
 import com.platform.chatservice.service.FcmService;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -145,5 +150,75 @@ class MeetingEventsTest {
     assertThat(toTopic().toString()).doesNotContain("meet_m1");
     verify(fcm, never())
         .sendMeetingPush(anyString(), anyString(), anyString(), anyString(), anyString(), eq(true));
+  }
+
+  @Test
+  void rosterReportsEachPersonsCurrentRoleNotTheRoleTheyJoinedWith() {
+    Instant t = Instant.parse("2026-10-08T02:00:00Z");
+    m.getAttendance().add(row("co", "Co", t, null)); // row() records role "attendee"
+
+    events.roster(m);
+
+    assertThat(toTopic().getParticipants())
+        .singleElement()
+        .satisfies(p -> assertThat(p.role()).isEqualTo("cohost"));
+  }
+
+  @Test
+  void handsGoToTheRoomInOrderAndAnEmptyListIsStillSent() {
+    Instant t = Instant.parse("2026-10-08T02:06:00Z");
+    events.hands("m1", List.of(new HandDto("a", "An", t), new HandDto("b", null, t)));
+
+    MeetingEventDto e = toTopic();
+    assertThat(e.getEvent()).isEqualTo("meet.hands");
+    assertThat(e.getHands()).extracting(HandDto::userId).containsExactly("a", "b");
+  }
+
+  @Test
+  void noHandsIsAnEmptyListNotAMissingField() {
+    events.hands("m1", List.of());
+    assertThat(toTopic().getHands()).isNotNull().isEmpty();
+  }
+
+  @Test
+  void chatCarriesTheMessageAndEchoesTheClientId() {
+    MeetingMessageDto msg =
+        new MeetingMessageDto("x1", new PersonDto("a", "An", null), "hi", Instant.EPOCH);
+
+    events.chat("m1", msg, "c-1");
+
+    MeetingEventDto e = toTopic();
+    assertThat(e.getEvent()).isEqualTo("meet.chat");
+    assertThat(e.getMessage()).isEqualTo(msg);
+    assertThat(e.getClientId()).isEqualTo("c-1");
+  }
+
+  @Test
+  void noteUpdatesCarryTheVersionAndWhoButNeverTheText() {
+    events.notesUpdated("m1", 8, new PersonDto("a", "An", null));
+
+    MeetingEventDto e = toTopic();
+    assertThat(e.getEvent()).isEqualTo("meet.notes.updated");
+    assertThat(e.getVersion()).isEqualTo(8L);
+    assertThat(e.getUpdatedBy()).isEqualTo(new PersonDto("a", "An", null));
+    assertThat(e.getMessage()).isNull();
+  }
+
+  @Test
+  void removedMutedAndErrorsArePersonalNeverBroadcast() {
+    events.removed("m1", "u1");
+    events.muted("m1", "u1", new PersonDto("host", "Lan", null));
+    events.error("u1", "m1", "REMOVE", null, "MEETING_INVALID", Map.of("field", "targetId"));
+
+    List<MeetingEventDto> got = toUser("u1");
+    assertThat(got)
+        .extracting(MeetingEventDto::getEvent)
+        .containsExactly("meet.removed", "meet.muted", "meet.error");
+    assertThat(got.get(1).getActor().displayName()).isEqualTo("Lan");
+    assertThat(got.get(2).getErrorCode()).isEqualTo("MEETING_INVALID");
+    assertThat(got.get(2).getAction()).isEqualTo("REMOVE");
+    assertThat(got.get(2).getParams()).containsEntry("field", "targetId");
+    assertThat(got.get(2).getCode()).isNull(); // `code` is the meeting code, never an error
+    verify(broker, never()).convertAndSend(anyString(), any(Object.class));
   }
 }

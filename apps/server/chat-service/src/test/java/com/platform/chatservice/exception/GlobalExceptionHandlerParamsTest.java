@@ -2,6 +2,9 @@ package com.platform.chatservice.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.platform.chatservice.dto.meeting.MeetingNoteDto;
+import com.platform.chatservice.dto.meeting.PersonDto;
+import java.time.Instant;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -86,5 +89,26 @@ class GlobalExceptionHandlerParamsTest {
     assertThat(response.getBody())
         .containsEntry("code", "MEETING_INVALID")
         .doesNotContainKeys("message", "params");
+  }
+
+  @Test
+  void aNoteConflictCarriesTheLatestNoteNextToTheCode() {
+    MeetingNoteDto latest =
+        new MeetingNoteDto(
+            "shared",
+            "B",
+            2,
+            new PersonDto("u2", "Hoa", null),
+            Instant.parse("2026-10-08T02:31:02Z"));
+
+    ResponseEntity<Map<String, Object>> r =
+        new GlobalExceptionHandler().handleNoteConflict(new MeetingNoteConflictException(latest));
+
+    assertThat(r.getStatusCode().value()).isEqualTo(409);
+    assertThat(r.getBody())
+        .containsEntry("code", "MEETING_NOTE_CONFLICT")
+        .containsEntry("statusCode", 409)
+        .containsEntry("latest", latest)
+        .doesNotContainKey("message");
   }
 }

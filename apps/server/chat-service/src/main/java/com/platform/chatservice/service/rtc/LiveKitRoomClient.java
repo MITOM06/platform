@@ -13,6 +13,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -81,6 +82,28 @@ public class LiveKitRoomClient {
     body.put("track_sid", trackSid);
     body.put("muted", muted);
     call("MutePublishedTrack", room, body);
+  }
+
+  /**
+   * Replaces what {@code identity} may publish in {@code room}. LiveKit swaps the whole permission
+   * object (no merge), so the three grants every meeting token carries are re-sent with it. {@code
+   * publishSources} uses the {@link RtcGrant} constants; {@code null} or empty allows every source.
+   */
+  public void updateParticipant(String room, String identity, List<String> publishSources) {
+    List<String> sources =
+        publishSources == null
+            ? List.of()
+            : publishSources.stream().map(s -> s.toUpperCase(Locale.ROOT)).toList();
+    Map<String, Object> permission = new LinkedHashMap<>();
+    permission.put("can_publish", true);
+    permission.put("can_subscribe", true);
+    permission.put("can_publish_data", true);
+    permission.put("can_publish_sources", sources);
+    Map<String, Object> body = new LinkedHashMap<>();
+    body.put("room", room);
+    body.put("identity", identity);
+    body.put("permission", permission);
+    call("UpdateParticipant", room, body);
   }
 
   public void removeParticipant(String room, String identity) {

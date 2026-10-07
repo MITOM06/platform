@@ -82,6 +82,20 @@ class MeetingLobbyTest {
   @Test
   void clearDropsEverythingTheMeetingKeptInRedis() {
     lobby.clear("m1");
-    verify(redis).delete(List.of("meet:lobby:m1", "meet:admitted:m1", "meet:hands:m1"));
+    verify(redis)
+        .delete(List.of("meet:lobby:m1", "meet:admitted:m1", "meet:hands:m1", "meet:removed:m1"));
+  }
+
+  @Test
+  void removedPeopleAreRememberedAndLoseTheirAdmission() {
+    lobby.markRemoved("m1", "u1");
+
+    verify(sets).add("meet:removed:m1", "u1");
+    verify(sets).remove("meet:admitted:m1", "u1");
+    verify(redis).expire("meet:removed:m1", Duration.ofHours(24));
+
+    when(sets.isMember("meet:removed:m1", "u1")).thenReturn(true);
+    assertThat(lobby.isRemoved("m1", "u1")).isTrue();
+    assertThat(lobby.isRemoved("m1", "u2")).isFalse();
   }
 }
