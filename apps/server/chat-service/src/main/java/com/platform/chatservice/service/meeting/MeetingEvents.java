@@ -168,6 +168,15 @@ public class MeetingEvents {
     toTopic(meetingId, base("meet.chat", meetingId).message(message).clientId(clientId).build());
   }
 
+  /**
+   * {@code meet.chat} to the sender only ({@code /user/queue/meeting}): the stored line of a
+   * re-sent {@code clientId}, so the sender's retry settles while the room never sees it twice.
+   */
+  public void chatToSender(
+      String userId, String meetingId, MeetingMessageDto message, String clientId) {
+    toUser(userId, base("meet.chat", meetingId).message(message).clientId(clientId).build());
+  }
+
   /** {@code meet.notes.updated} to the room: the new version and who saved — never the text. */
   public void notesUpdated(String meetingId, long version, PersonDto updatedBy) {
     toTopic(

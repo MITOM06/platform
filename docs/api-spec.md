@@ -675,8 +675,17 @@ host/co-host whose STOMP reconnected calls `GET /lobby` to catch up on a missed 
 | Destination | Payload | Notes |
 |---|---|---|
 | `/app/meet.hand` | `{ "meetingId": "m1", "raised": true }` | Your own hand only. Raising again keeps your place (no event); lowering when not raised is a no-op. Room access ² |
-| `/app/meet.chat` | `{ "meetingId": "m1", "content": "…", "clientId": "c-7f3a" }` | `content` trimmed, 1..2000. Rate limit shared with normal chat (10 lines / 5 s). `clientId` optional, `[A-Za-z0-9_-]{1,64}` (otherwise dropped), echoed in `meet.chat` / `meet.error`, never stored |
+| `/app/meet.chat` | `{ "meetingId": "m1", "content": "…", "clientId": "c-7f3a" }` | `content` trimmed, 1..2000. Rate limit shared with normal chat (10 lines / 5 s). `clientId` optional, `[A-Za-z0-9_-]{1,64}` (otherwise dropped), echoed in `meet.chat` / `meet.error`. A valid `clientId` is stored with the line and makes the send **idempotent** per (meeting, sender, `clientId`) — see below |
 | `/app/meet.host` | `{ "meetingId": "m1", "action": "MUTE_MIC", "targetId": "64b0…03" }` | Host / co-host. An attendee's command is **ignored** (logged, no event, no error). `targetId` required for `MUTE_MIC`, `REMOVE`, `LOWER_HAND`, `MAKE_COHOST`, `REVOKE_COHOST` |
+
+**Idempotent chat sends.** Re-sending `/app/meet.chat` with a `clientId` you already used in that
+meeting (a retry after a slow echo) stores nothing, is not counted against the rate limit, and
+re-sends the **stored** line (its `id`, `content` and `createdAt`, not the retry's) as `meet.chat`
+`{clientId, message}` to **you only** on `/user/queue/meeting` — the room never sees the line twice.
+Concurrent duplicates are settled by a unique partial index on `meeting_messages`
+`(meetingId, senderId, clientId)` (`meeting_sender_client`); the losers get the same personal
+re-echo. Settle a pending line on a `meet.chat` from either destination, matched by `clientId`, and
+dedupe the message list by `message.id`. Sends without a (valid) `clientId` are never deduplicated.
 
 Host `action`s:
 
@@ -715,6 +724,7 @@ Every payload is `MeetingEventDto` `{event, meetingId, …}`; absent fields are 
 | `/user/queue/meeting` | `meet.removed` | — | you were removed: leave LiveKit, go to the meeting info page; `join` ⇒ 403 `MEETING_REMOVED` |
 | `/user/queue/meeting` | `meet.muted` | `{actor:{userId, displayName?}}` | a host / co-host muted your microphone |
 | `/user/queue/meeting` | `meet.error` | `{meetingId?, action?, clientId?, errorCode, params?}` | one of **your** `/app/meet.*` commands was refused |
+| `/user/queue/meeting` | `meet.chat` | `{clientId, message: MeetingMessage}` — the stored line | you re-sent a `/app/meet.chat` `clientId` that was already stored (idempotent retry; nothing new stored, the room gets nothing) |
 | `/user/queue/meeting` | `meet.admitted` / `meet.denied` | — | host admitted / denied you |
 | `/user/queue/meeting` | `meet.ended` | — | to people still in the lobby when the meeting ends or is cancelled (the lobby is cleared) |
 | `/user/queue/meeting` | `meet.invited` | `{code, title, hostId, hostName, scheduledStart}` | create / `PATCH` added you (named invitees only) |

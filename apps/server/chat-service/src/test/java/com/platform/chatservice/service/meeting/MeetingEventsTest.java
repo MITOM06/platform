@@ -214,6 +214,21 @@ class MeetingEventsTest {
   }
 
   @Test
+  void aReplayedChatLineGoesToTheSenderOnly() {
+    MeetingMessageDto msg =
+        new MeetingMessageDto("x1", new PersonDto("a", "An", null), "hi", Instant.EPOCH);
+
+    events.chatToSender("a", "m1", msg, "c-1");
+
+    verify(broker, never()).convertAndSend(anyString(), any(Object.class));
+    MeetingEventDto e = toUser("a").get(0);
+    assertThat(e.getEvent()).isEqualTo("meet.chat");
+    assertThat(e.getMeetingId()).isEqualTo("m1");
+    assertThat(e.getMessage()).isEqualTo(msg);
+    assertThat(e.getClientId()).isEqualTo("c-1");
+  }
+
+  @Test
   void noteUpdatesCarryTheVersionAndWhoButNeverTheText() {
     events.notesUpdated("m1", 8, new PersonDto("a", "An", null));
 

@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -44,9 +45,16 @@ public class MeetingChatService {
   private final RateLimiterService rateLimiter;
 
   /**
-   * Stores one chat line and tells the room. Order: room access → content (trimmed, 1..2000) → rate
-   * limit (shared with normal chat; checked after validation so a refused line costs nothing) →
-   * insert → {@code meet.chat}. A malformed {@code clientId} is dropped, never refused.
+   * Stores one chat line and tells the room. Order: room access → content (trimmed, 1..2000) →
+   * {@code clientId} replay check → rate limit (shared with normal chat; checked after validation
+   * so a refused line costs nothing) → insert → {@code meet.chat}. A malformed {@code clientId} is
+   * dropped, never refused.
+   *
+   * <p>Idempotent per {@code (meetingId, sender, clientId)}: a re-send of a stored {@code clientId}
+   * (a client retry after a slow echo) stores nothing, is not rate limited, and re-sends the stored
+   * line's {@code meet.chat} to the sender only — the room never sees it twice. Two concurrent
+   * sends with the same {@code clientId} are settled by the unique index ({@code
+   * meeting_sender_client}): the loser takes the replay path.
    */
   public MeetingMessageDto send(
       UserPrincipal caller, String meetingId, String content, String clientId) {
@@ -59,18 +67,54 @@ public class MeetingChatService {
       throw MeetingRequests.invalid("content", CONTENT_MAX);
     }
     String uid = caller.getUserId();
+    String cid = clientIdOrNull(clientId);
+    if (cid != null) {
+      MeetingMessage earlier = findByClientId(meetingId, uid, cid);
+      if (earlier != null) {
+        return replay(uid, meetingId, earlier, cid);
+      }
+    }
     rateLimiter.checkMessageRate(uid);
 
-    MeetingMessage saved =
-        mongo.insert(
-            MeetingMessage.builder()
-                .meetingId(meetingId)
-                .senderId(uid)
-                .content(text)
-                .createdAt(Instant.now().truncatedTo(ChronoUnit.MILLIS))
-                .build());
+    MeetingMessage saved;
+    try {
+      saved =
+          mongo.insert(
+              MeetingMessage.builder()
+                  .meetingId(meetingId)
+                  .senderId(uid)
+                  .content(text)
+                  .clientId(cid)
+                  .createdAt(Instant.now().truncatedTo(ChronoUnit.MILLIS))
+                  .build());
+    } catch (DuplicateKeyException e) {
+      MeetingMessage winner = cid == null ? null : findByClientId(meetingId, uid, cid);
+      if (winner == null) {
+        throw e;
+      }
+      return replay(uid, meetingId, winner, cid);
+    }
     MeetingMessageDto dto = toDto(saved, people.profiles(List.of(uid)));
-    events.chat(meetingId, dto, clientIdOrNull(clientId));
+    events.chat(meetingId, dto, cid);
+    return dto;
+  }
+
+  private MeetingMessage findByClientId(String meetingId, String senderId, String clientId) {
+    return mongo.findOne(
+        Query.query(
+            Criteria.where("meetingId")
+                .is(meetingId)
+                .and("senderId")
+                .is(senderId)
+                .and("clientId")
+                .is(clientId)),
+        MeetingMessage.class);
+  }
+
+  private MeetingMessageDto replay(
+      String uid, String meetingId, MeetingMessage stored, String clientId) {
+    MeetingMessageDto dto = toDto(stored, people.profiles(List.of(uid)));
+    events.chatToSender(uid, meetingId, dto, clientId);
     return dto;
   }
 
