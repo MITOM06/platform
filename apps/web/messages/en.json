@@ -1497,7 +1497,8 @@
       "VIEW_AUDIT_LOG": "View audit log",
       "MANAGE_AI_CONTEXT": "Manage AI context",
       "VIEW_INTERNAL_CONTEXT": "View internal context",
-      "VIEW_CONFIDENTIAL_CONTEXT": "View confidential context"
+      "VIEW_CONFIDENTIAL_CONTEXT": "View confidential context",
+      "HOST_MEETING": "Host meetings"
     },
     "auditEmpty": "No audit entries yet.",
     "auditPrev": "Previous",

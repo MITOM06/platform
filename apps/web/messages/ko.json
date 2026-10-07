@@ -1497,7 +1497,8 @@
       "VIEW_AUDIT_LOG": "감사 로그 보기",
       "MANAGE_AI_CONTEXT": "AI 컨텍스트 관리",
       "VIEW_INTERNAL_CONTEXT": "내부 컨텍스트 보기",
-      "VIEW_CONFIDENTIAL_CONTEXT": "기밀 컨텍스트 보기"
+      "VIEW_CONFIDENTIAL_CONTEXT": "기밀 컨텍스트 보기",
+      "HOST_MEETING": "회의 주최"
     },
     "auditEmpty": "감사 기록이 아직 없습니다.",
     "auditPrev": "이전",

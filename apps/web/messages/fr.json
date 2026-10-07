@@ -1497,7 +1497,8 @@
       "VIEW_AUDIT_LOG": "Voir le journal d'audit",
       "MANAGE_AI_CONTEXT": "Gérer le contexte IA",
       "VIEW_INTERNAL_CONTEXT": "Voir le contexte interne",
-      "VIEW_CONFIDENTIAL_CONTEXT": "Voir le contexte confidentiel"
+      "VIEW_CONFIDENTIAL_CONTEXT": "Voir le contexte confidentiel",
+      "HOST_MEETING": "Organiser des réunions"
     },
     "auditEmpty": "Aucune entrée d'audit pour le moment.",
     "auditPrev": "Précédent",
