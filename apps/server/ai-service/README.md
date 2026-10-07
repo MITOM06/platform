@@ -89,6 +89,8 @@ REDIS_HOST=localhost
 RABBITMQ_URL=amqp://platform:platform@localhost:5672
 JWT_ACCESS_SECRET=...                             # identical across every service
 ANTHROPIC_API_KEY=sk-ant-...
+OPENROUTER_API_KEY=...                            # optional light tier; unset ⇒ everything on Claude
+OPENROUTER_MODEL=google/gemini-2.5-flash-lite      # any OpenRouter `vendor/model` id with tool calling
 QDRANT_URL=http://localhost:6333
 VOYAGE_API_KEY=...                                # unset ⇒ embeddings off ⇒ RAG + memory degrade
 CONNECTOR_INTERNAL_URL=http://localhost:3003      # per-user MCP tools
@@ -113,6 +115,13 @@ models), `AI_PROMPT_CACHE_*` / `AI_RESPONSE_CACHE_*`, `AI_RATE_*` (per-user rate
 `CHAT_VISION_*` / `KB_VISION_*` (image + scanned-PDF understanding), `WEB_SEARCH_*`,
 `MEMORY_*` (extraction cadence, dedup threshold, half-life), `KB_*` (top-k, score threshold, hybrid),
 `AI_DIGEST_*`, `AI_RETENTION_*`, `AI_MONTHLY_TOKEN_LIMIT`.
+
+**Cost split (OpenRouter light tier).** With `OPENROUTER_API_KEY` set, the router's fast tier
+(short text-only turns without KB grounding) and the small utility calls — session titles,
+compaction, memory fact extraction, daily digests — run on `OPENROUTER_MODEL` through
+`src/llm/` (Anthropic ⇄ OpenAI translation, so tool calls and the confirmation-card hold work
+unchanged). Mid / complex chat, KB-grounded answers, images, KB vision and call summaries stay on
+Claude. Any OpenRouter failure falls back to `ANTHROPIC_FALLBACK_MODEL` (Haiku).
 
 > **Careful with `ANTHROPIC_EFFORT`**: not every model accepts an effort/output-config parameter —
 > sending it to one that doesn't returns 400 and the user just sees "AI is temporarily unavailable".

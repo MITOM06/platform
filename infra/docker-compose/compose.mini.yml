@@ -144,6 +144,9 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?required}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-5}
       ANTHROPIC_FALLBACK_MODEL: ${ANTHROPIC_FALLBACK_MODEL:-claude-haiku-4-5-20251001}
+      # Light tier (fast-tier chat + small utility calls) via OpenRouter; blank = all Claude.
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-google/gemini-2.5-flash-lite}
       VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
       QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
       # Managed Qdrant refuses unauthenticated requests. Empty for a local
