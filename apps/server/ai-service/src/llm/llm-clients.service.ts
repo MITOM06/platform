@@ -24,11 +24,15 @@ export class LlmClientsService {
   private readonly openRouter: OpenRouterClient | null;
   private readonly openRouterModel: string | null;
   private readonly claudeLightModel: string;
+  /** While set, OpenRouter is skipped (it just answered 429 / 402 / 404). */
+  private cooldownUntil = 0;
+  private readonly cooldownMs: number;
 
   constructor(configService: ConfigService) {
     this.anthropic = new Anthropic({
       apiKey: configService.get<string>('config.anthropic.apiKey'),
     }) as unknown as LlmClient;
+    this.cooldownMs = configService.get<number>('config.openRouter.cooldownMs') ?? 10 * 60_000;
     this.claudeLightModel =
       configService.get<string>('config.anthropic.fallbackModel') ?? 'claude-haiku-4-5';
 
@@ -41,6 +45,7 @@ export class LlmClientsService {
           configService.get<string>('config.openRouter.baseUrl') ?? 'https://openrouter.ai/api/v1',
         appUrl: configService.get<string>('config.openRouter.appUrl'),
         appTitle: 'PON',
+        onUnavailable: () => this.startCooldown(),
       });
       this.openRouterModel = model;
       this.logger.log(`OpenRouter light tier on: ${model}`);
@@ -50,13 +55,27 @@ export class LlmClientsService {
     }
   }
 
+  /** OpenRouter configured and not cooling down after a 429. */
   get openRouterEnabled(): boolean {
-    return this.openRouter !== null;
+    return this.openRouter !== null && Date.now() >= this.cooldownUntil;
+  }
+
+  private startCooldown(): void {
+    const first = Date.now() >= this.cooldownUntil;
+    this.cooldownUntil = Date.now() + this.cooldownMs;
+    if (first) {
+      this.logger.warn(
+        `OpenRouter unavailable (429/402/404) — light tier on ${this.claudeLightModel} for ` +
+          `${Math.round(this.cooldownMs / 60_000)} min`,
+      );
+    }
   }
 
   /** Model for light chat turns and utility calls. */
   get lightModel(): string {
-    return this.openRouterModel ?? this.claudeLightModel;
+    return this.openRouterEnabled && this.openRouterModel
+      ? this.openRouterModel
+      : this.claudeLightModel;
   }
 
   /** The Claude model a failed light call falls back to. */

@@ -239,7 +239,10 @@ describe('OpenRouterClient.create', () => {
     });
     expect(message.content).toEqual([{ type: 'text', text: 'Tiêu đề ngắn', citations: null }]);
     expect(message.usage.input_tokens).toBe(10);
-    expect(JSON.parse(fetchImpl.mock.calls[0][1].body).stream).toBe(false);
+    const sent = JSON.parse(fetchImpl.mock.calls[0][1].body);
+    expect(sent.stream).toBe(false);
+    // Reasoning models spend output on thinking: tiny budgets are raised.
+    expect(sent.max_tokens).toBe(1024);
   });
 });
 
@@ -293,5 +296,52 @@ describe('LlmClientsService', () => {
     expect(claudeCreate).toHaveBeenCalledWith(
       expect.objectContaining({ model: 'claude-haiku-4-5' }),
     );
+  });
+
+  it('cools down after a 429 so the next turns go straight to Claude', async () => {
+    jest.useFakeTimers({ now: new Date('2026-10-07T00:00:00Z') });
+    try {
+      const fetchImpl = jest
+        .fn()
+        .mockResolvedValue(new Response('free-models-per-day', { status: 429 }));
+      const svc = new LlmClientsService(
+        config({
+          'config.openRouter.apiKey': 'k',
+          'config.openRouter.model': 'google/gemma-4-31b-it:free',
+          'config.openRouter.cooldownMs': 600_000,
+          'config.anthropic.fallbackModel': 'claude-haiku-4-5',
+        }),
+      );
+      // Swap in a client that uses the fake fetch, keeping the service's 429 hook.
+      const hook = (svc as any).openRouter.opts.onUnavailable;
+      (svc as any).openRouter = new OpenRouterClient({
+        apiKey: 'k',
+        baseUrl: 'https://or.test/api/v1',
+        fetchImpl,
+        onUnavailable: hook,
+      });
+      jest
+        .spyOn(svc.claude.messages, 'create')
+        .mockResolvedValue({ content: [] } as unknown as Anthropic.Message);
+
+      expect(svc.lightModel).toBe('google/gemma-4-31b-it:free');
+      const first = await svc.createLight({
+        max_tokens: 5,
+        messages: [{ role: 'user', content: 'x' }],
+      });
+      expect(first.model).toBe('claude-haiku-4-5');
+
+      // Cooling down: OpenRouter is skipped entirely.
+      expect(svc.openRouterEnabled).toBe(false);
+      expect(svc.lightModel).toBe('claude-haiku-4-5');
+      await svc.createLight({ max_tokens: 5, messages: [{ role: 'user', content: 'y' }] });
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+
+      jest.advanceTimersByTime(600_001);
+      expect(svc.openRouterEnabled).toBe(true);
+      expect(svc.lightModel).toBe('google/gemma-4-31b-it:free');
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

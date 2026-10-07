@@ -3,9 +3,24 @@ import { randomUUID } from 'crypto';
 import {
   AnthropicRequest,
   buildMessage,
+  OpenAiChatRequest,
   OpenAiUsage,
   toOpenAiRequest,
 } from './openrouter-translate';
+
+/** Statuses that mean "skip OpenRouter for a while", not "retry the next turn". */
+const UNAVAILABLE_STATUSES = new Set([402, 404, 429]);
+
+/**
+ * Light-tier models may reason before answering and count those tokens as output,
+ * so a tiny budget (session titles ask for 32) can end with no text at all. The
+ * light tier is cheap or free, so every call gets at least this much room.
+ */
+const MIN_OUTPUT_TOKENS = 1024;
+
+function withOutputFloor(request: OpenAiChatRequest): OpenAiChatRequest {
+  return { ...request, max_tokens: Math.max(request.max_tokens ?? 0, MIN_OUTPUT_TOKENS) };
+}
 
 /** What ai-service needs from a model client — the Anthropic SDK shape it already uses. */
 export interface LlmMessageStream extends AsyncIterable<Anthropic.RawMessageStreamEvent> {
@@ -27,6 +42,11 @@ export interface OpenRouterOptions {
   appTitle?: string;
   timeoutMs?: number;
   fetchImpl?: typeof fetch;
+  /**
+   * Called when OpenRouter cannot serve the light tier for a while: 429 (free-model
+   * daily/minute limits, upstream congestion), 402 (no credits), 404 (model removed).
+   */
+  onUnavailable?: () => void;
 }
 
 /** HTTP failure from OpenRouter. The body excerpt never contains the API key. */
@@ -72,7 +92,8 @@ interface OpenAiChunk {
 export class OpenRouterClient implements LlmClient {
   readonly messages: LlmClient['messages'] = {
     create: (params) => this.create(params),
-    stream: (params) => new OpenRouterStream((body) => this.post(body), params),
+    stream: (params) =>
+      new OpenRouterStream((body) => this.post(body), params, this.opts.onUnavailable),
   };
 
   constructor(private readonly opts: OpenRouterOptions) {}
@@ -81,7 +102,7 @@ export class OpenRouterClient implements LlmClient {
     params: Anthropic.MessageCreateParamsNonStreaming,
   ): Promise<Anthropic.Message> {
     const res = await this.post({
-      ...toOpenAiRequest(params as AnthropicRequest),
+      ...withOutputFloor(toOpenAiRequest(params as AnthropicRequest)),
       stream: false,
     });
     const json = (await res.json()) as OpenAiChunk;
@@ -116,6 +137,7 @@ export class OpenRouterClient implements LlmClient {
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(this.opts.timeoutMs ?? 120_000),
     });
+    if (UNAVAILABLE_STATUSES.has(res.status)) this.opts.onUnavailable?.();
     if (!res.ok) throw new OpenRouterError(res.status, await res.text().catch(() => ''));
     return res;
   }
@@ -139,6 +161,7 @@ export class OpenRouterStream implements LlmMessageStream {
   constructor(
     private readonly post: (body: Record<string, unknown>) => Promise<Response>,
     private readonly params: Anthropic.MessageStreamParams,
+    private readonly onUnavailable?: () => void,
   ) {}
 
   async *[Symbol.asyncIterator](): AsyncIterator<Anthropic.RawMessageStreamEvent> {
@@ -152,7 +175,7 @@ export class OpenRouterStream implements LlmMessageStream {
     this.consumed.catch(() => undefined);
     try {
       const res = await this.post({
-        ...toOpenAiRequest(this.params as AnthropicRequest),
+        ...withOutputFloor(toOpenAiRequest(this.params as AnthropicRequest)),
         stream: true,
         stream_options: { include_usage: true },
       });
@@ -181,8 +204,10 @@ export class OpenRouterStream implements LlmMessageStream {
   }
 
   private apply(chunk: OpenAiChunk): Anthropic.RawMessageStreamEvent[] {
-    if (chunk.error)
+    if (chunk.error) {
+      if (UNAVAILABLE_STATUSES.has(chunk.error.code ?? 0)) this.onUnavailable?.();
       throw new OpenRouterError(chunk.error.code ?? 502, chunk.error.message ?? 'error');
+    }
     if (chunk.id) this.id = chunk.id;
     if (chunk.usage) this.usage = chunk.usage;
     const events: Anthropic.RawMessageStreamEvent[] = [];
