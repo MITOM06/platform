@@ -53,6 +53,22 @@ function Clock({ code }: { code: string }) {
   )
 }
 
+/** Opens the reaction picker above the bar. */
+function ReactionButton({ label }: { label: string }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <RoundButton label={label}>
+          <SmilePlus className="size-5" aria-hidden />
+        </RoundButton>
+      </PopoverTrigger>
+      <PopoverContent side="top" className="w-auto p-1">
+        <ReactionPicker />
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 /** Bottom bar of the meeting room. Phones keep mic, camera, hand, reaction, more, leave. */
 export function ControlBar() {
   const t = useTranslations('meeting')
@@ -102,16 +118,7 @@ export function ControlBar() {
         <RoundButton label={t('raiseHand')} tooltip={tip(raised ? t('lowerHand') : t('raiseHand'), 'toggleHand')} aria-pressed={raised} disabled={!realtimeConnected} variant={raised ? 'default' : 'secondary'} onClick={() => controller.setHand(!raised)}>
           <Hand className="size-5" aria-hidden />
         </RoundButton>
-        <Popover>
-          <PopoverTrigger asChild>
-            <RoundButton label={t('reactions')}>
-              <SmilePlus className="size-5" aria-hidden />
-            </RoundButton>
-          </PopoverTrigger>
-          <PopoverContent side="top" className="w-auto p-1">
-            <ReactionPicker />
-          </PopoverContent>
-        </Popover>
+        <ReactionButton label={t('reactions')} />
         <ControlBarMore
           compact={isMobile}
           share={canShare ? { allowed: shareAllowed, on: screen, toggle: toggleShare } : undefined}

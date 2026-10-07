@@ -51,6 +51,16 @@ export const meetingsApi = {
   leaveLobby: (id: string): Promise<void> =>
     chatApi.delete(`${base(id)}/lobby`).then(() => undefined),
 
+  /**
+   * Same DELETE from a `pagehide` handler: the fetch adapter with `keepalive` lets the
+   * request outlive the page. Fire-and-forget, never throws.
+   */
+  leaveLobbyOnExit: (id: string): void => {
+    void chatApi
+      .delete(`${base(id)}/lobby`, { adapter: 'fetch', fetchOptions: { keepalive: true } })
+      .catch(() => undefined)
+  },
+
   admit: (id: string, userId: string): Promise<void> =>
     chatApi.post(`${base(id)}/lobby/${enc(userId)}/admit`).then(() => undefined),
 

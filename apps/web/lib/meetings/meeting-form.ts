@@ -100,7 +100,10 @@ export function validateMeetingForm(
   return errors
 }
 
-/** Create (no original) or PATCH body (only what the contract needs; '' clears). */
+/**
+ * Create (no original) or PATCH body (only what the contract needs; '' clears).
+ * `original` must be the meeting as the dialog opened it (its initial values).
+ */
 export function toMeetingInput(v: MeetingFormValues, original?: Meeting): MeetingInput {
   const title = v.title.trim()
   const description = v.description.trim() ? v.description : ''
@@ -124,6 +127,25 @@ export function toMeetingInput(v: MeetingFormValues, original?: Meeting): Meetin
     input.scheduledStart = schedule.scheduledStart
     input.scheduledEnd = schedule.scheduledEnd
   }
-  input.settings = { ...v.settings }
+  if (!original) {
+    input.settings = { ...v.settings }
+  } else {
+    const changed = changedSettings(formFromMeeting(original, 'edit', new Date()).settings, v.settings)
+    if (changed) input.settings = changed
+  }
   return input
+}
+
+/**
+ * Edit: only the switches the user flipped in this dialog. `initial` is what the dialog
+ * opened with — the others may have been changed in the room meanwhile, and re-sending a
+ * stale copy would undo that.
+ */
+function changedSettings(
+  initial: MeetingSettings,
+  next: MeetingSettings,
+): Partial<MeetingSettings> | null {
+  const keys = (Object.keys(next) as (keyof MeetingSettings)[]).filter((k) => next[k] !== initial[k])
+  if (!keys.length) return null
+  return Object.fromEntries(keys.map((k) => [k, next[k]])) as Partial<MeetingSettings>
 }

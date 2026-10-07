@@ -83,8 +83,19 @@ describe('toMeetingInput — edit (PATCH)', () => {
     const v = { ...formFromMeeting(m, 'edit', NOW), title: '', description: '', departmentId: '', invitees: [] }
     expect(toMeetingInput(v, m)).toEqual({
       title: '', description: '', departmentId: '', inviteeIds: [],
-      settings: { ...DEFAULT_MEETING_SETTINGS, waitingRoom: false },
     })
+  })
+
+  it('sends only the switches the user changed, never a stale copy of the others', () => {
+    const m = meeting({ status: 'LIVE' })
+    const untouched = formFromMeeting(m, 'edit', NOW)
+    expect(toMeetingInput(untouched, m)).not.toHaveProperty('settings')
+
+    const flipped = { ...untouched, settings: { ...untouched.settings, muteOnEntry: !untouched.settings.muteOnEntry } }
+    expect(toMeetingInput(flipped, m).settings).toEqual({ muteOnEntry: !untouched.settings.muteOnEntry })
+
+    const back = { ...flipped, settings: { ...untouched.settings } }
+    expect(toMeetingInput(back, m)).not.toHaveProperty('settings')
   })
 
   it('sends the schedule only when it changed and the meeting is not LIVE', () => {

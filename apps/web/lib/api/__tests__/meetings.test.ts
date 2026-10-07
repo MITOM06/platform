@@ -34,6 +34,15 @@ describe('meetingsApi', () => {
     expect(http.post).toHaveBeenLastCalledWith('/api/meetings/m%201/lobby/u%2F2/admit')
   })
 
+  it('leaves the lobby from pagehide with a keepalive fetch and never throws', async () => {
+    http.delete.mockRejectedValueOnce(new Error('offline'))
+    expect(meetingsApi.leaveLobbyOnExit('m 1')).toBeUndefined()
+    expect(http.delete).toHaveBeenLastCalledWith('/api/meetings/m%201/lobby', {
+      adapter: 'fetch', fetchOptions: { keepalive: true },
+    })
+    await Promise.resolve()
+  })
+
   it('creates an instant meeting with an empty body', async () => {
     http.post.mockResolvedValue({ data: { id: 'm1' } })
     await expect(meetingsApi.create()).resolves.toEqual({ id: 'm1' })

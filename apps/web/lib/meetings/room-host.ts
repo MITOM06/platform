@@ -6,10 +6,12 @@ import {
   type Meeting,
   type MeetingPerson,
   type MeetingRoomRole,
+  type RosterEntry,
 } from '@/lib/api/meeting-types'
 import { safeDisplayName } from '@/lib/chat/names'
 import { meetingKeys } from './cache-updates'
 import { meetingErrorKey, parseMeetingError, type MessageKey } from './meeting-errors'
+import { isManager } from './permissions'
 
 /** Small pure helpers of MeetingRoomController (host commands, notices, roles). */
 
@@ -60,4 +62,23 @@ export async function answerLobby(
 /** Best-effort save of unsaved notes; never throws, never waits. */
 export function flushNotes(flush: (() => Promise<void>) | null): void {
   void flush?.().catch(() => undefined)
+}
+
+/** My role in a roster vs the one I had: null when absent / unchanged; else what to apply and say. */
+export function roleChange(
+  roster: RosterEntry[],
+  myId: string,
+  was: MeetingRoomRole,
+): { role: MeetingRoomRole; notice: MessageKey | null; lostLobby: boolean } | null {
+  const role = roster.find((r) => r.userId === myId)?.role
+  if (!role || role === was) return null
+  const promoted = !isManager(was) && isManager(role)
+  const demoted = isManager(was) && !isManager(role)
+  const notice: MessageKey | null = promoted ? { key: 'madeCohost' } : demoted ? { key: 'revokedCohost' } : null
+  return { role, notice, lostLobby: demoted }
+}
+
+/** The pending switch commands without one the server refused. */
+export function withoutPending<T extends string>(pending: Partial<Record<T, number>>, action: T): Partial<Record<T, number>> {
+  return Object.fromEntries(Object.entries(pending).filter(([k]) => k !== action)) as Partial<Record<T, number>>
 }

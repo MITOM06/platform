@@ -31,6 +31,34 @@ interface Props {
   attention?: string[]
 }
 
+/** Phone: the panel buttons (and Present) that do not fit in the bar. */
+function CompactPanelItems({ open, share }: { open: (panel: Exclude<RoomPanel, null>) => void; share: Props['share'] }) {
+  const t = useTranslations('meeting')
+  return (
+    <>
+      <DropdownMenuItem onSelect={() => open('people')}>
+        <Users aria-hidden />
+        {t('people')}
+      </DropdownMenuItem>
+      <DropdownMenuItem onSelect={() => open('chat')}>
+        <MessageSquare aria-hidden />
+        {t('chat')}
+      </DropdownMenuItem>
+      <DropdownMenuItem onSelect={() => open('notes')}>
+        <NotebookPen aria-hidden />
+        {t('notes')}
+      </DropdownMenuItem>
+      {share ? (
+        <DropdownMenuItem disabled={!share.allowed && !share.on} onSelect={share.toggle}>
+          <MonitorUp aria-hidden />
+          {share.on ? t('stopPresenting') : share.allowed ? t('shareStart') : t('shareDisabled')}
+        </DropdownMenuItem>
+      ) : null}
+      <DropdownMenuSeparator />
+    </>
+  )
+}
+
 /** "More options": layout, devices, host controls — plus the panels on phones. */
 export function ControlBarMore({ compact, share, attention = [] }: Props) {
   const t = useTranslations('meeting')
@@ -67,29 +95,7 @@ export function ControlBarMore({ compact, share, attention = [] }: Props) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" side="top" className="w-56">
-          {compact ? (
-            <>
-              <DropdownMenuItem onSelect={() => open('people')}>
-                <Users aria-hidden />
-                {t('people')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => open('chat')}>
-                <MessageSquare aria-hidden />
-                {t('chat')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => open('notes')}>
-                <NotebookPen aria-hidden />
-                {t('notes')}
-              </DropdownMenuItem>
-              {share ? (
-                <DropdownMenuItem disabled={!share.allowed && !share.on} onSelect={share.toggle}>
-                  <MonitorUp aria-hidden />
-                  {share.on ? t('stopPresenting') : share.allowed ? t('shareStart') : t('shareDisabled')}
-                </DropdownMenuItem>
-              ) : null}
-              <DropdownMenuSeparator />
-            </>
-          ) : null}
+          {compact ? <CompactPanelItems open={open} share={share} /> : null}
           <DropdownMenuLabel className="text-xs text-muted-foreground">{t('layout')}</DropdownMenuLabel>
           <DropdownMenuRadioGroup
             value={layout}

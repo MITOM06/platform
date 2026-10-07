@@ -16,7 +16,7 @@ import { useStompConnected } from '@/lib/stomp/use-stomp-connected'
  *
  * Subscribe first, read after: on every re-subscribe after the first one (STOMP came
  * back, or a rejoin) the room data is re-read — deliberately, to cover the gap in which
- * events were missed — and the controller re-asks / re-reads the lobby.
+ * events were missed — and the controller re-reads the meeting, roster and lobby.
  */
 export function useMeetingRoomStomp(args: {
   controller: MeetingRoomController
@@ -48,10 +48,10 @@ export function useMeetingRoomStomp(args: {
       if (e) applyRoomEvent(e, deps)
     })
     if (sub && subscribedOnce.current) {
+      // The meeting itself (detail, by-code = this page, roster) is re-read by the controller,
+      // which also applies the settings / my role / the end that it may have missed.
       for (const queryKey of [
-        meetingKeys.roster(meetingId),
         meetingKeys.hands(meetingId),
-        meetingKeys.detail(meetingId),
         meetingKeys.messages(meetingId),
         meetingKeys.note(meetingId, 'shared'),
       ]) {

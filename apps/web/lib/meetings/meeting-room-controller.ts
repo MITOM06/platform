@@ -17,16 +17,17 @@ import { meetingKeys } from './cache-updates'
 import { meetingErrorKey, meetingEventErrorKey, parseMeetingError } from './meeting-errors'
 import { MeetingRoomChat } from './meeting-room-chat'
 import { canShareScreen, isManager } from './permissions'
-import { applyMeetingEnded } from './room-events'
-import { SWITCH_ACTIONS, answerLobby, flushNotes, hostCommandBody, initialRoomRole, mutedNotice } from './room-host'
+import {
+  SWITCH_ACTIONS, answerLobby, flushNotes, hostCommandBody, initialRoomRole, mutedNotice, roleChange, withoutPending,
+} from './room-host'
 import { wireRoomSession, type JoinMedia, type MeetingRoomDeps, type RoomSession } from './room-session'
+import { appendOwnChat, markMeetingEnded, rereadLobby, rereadMeeting } from './room-sync'
 import { phaseAfterJoinError, phaseAfterPersonalEvent, phaseAfterRoomClosed } from './room-phase'
 
 /**
- * Drives one open meeting room (not React, like SfuGroupCall): REST join / lobby /
- * end, `/app/meet.*` commands, the shared LiveKitSession, and personal-queue events.
- * Writes UI state to meeting.store; server data stays in TanStack Query.
- * Meeting tokens never carry roomAdmin — every host action goes through `/app/meet.host`.
+ * Drives one open meeting room (not React, like SfuGroupCall): REST join / lobby / end, `/app/meet.*`
+ * commands, the shared LiveKitSession, and personal-queue events. Writes UI state to meeting.store;
+ * server data stays in TanStack Query. Tokens never carry roomAdmin — host actions go via `/app/meet.host`.
  */
 
 export type { JoinMedia, MeetingRoomDeps, RoomSession }
@@ -37,6 +38,7 @@ const set = (patch: Partial<MeetingRoomData>) => useMeetingRoomStore.setState(pa
 export class MeetingRoomController implements ActiveMeetingRoom {
   readonly meetingId: string
   private session: RoomSession | null = null
+  /** What a (re)join publishes: the pre-join choice, then every in-room toggle / server mute. */
   private media: JoinMedia = { mic: true, camera: true }
   private settings: MeetingSettings
   /** Bumped by every join / leave / dispose: answers of an older run are dropped. */
@@ -76,7 +78,7 @@ export class MeetingRoomController implements ActiveMeetingRoom {
     await this.enter(true)
   }
 
-  /** Same media as the last join, fresh token. */
+  /** My last mic/camera state in the room (not the pre-join choice), fresh token. */
   async rejoin(): Promise<void> {
     await this.enter(store().phase !== 'waiting')
   }
@@ -131,6 +133,7 @@ export class MeetingRoomController implements ActiveMeetingRoom {
       session.disconnect()
       return
     }
+    this.media = { ...this.media, ...media }
     set({
       phase: 'inRoom',
       myRole: res.role,
@@ -165,15 +168,16 @@ export class MeetingRoomController implements ActiveMeetingRoom {
 
   /** The server closed the room: ended for everyone, or just me out (→ left). */
   private async verifyClosed(run: number): Promise<void> {
-    let ended = false
-    try {
-      ended = (await this.deps.api.get(this.meetingId)).status === 'ENDED'
-    } catch {
-      ended = false
-    }
+    const ended = (await rereadMeeting(this.deps, this.meetingId))?.meeting.status === 'ENDED'
     if (run !== this.epoch) return
-    if (ended) applyMeetingEnded(this.deps.queryClient, this.meetingId, new Date(this.deps.now()).toISOString(), false)
+    if (ended) markMeetingEnded(this.deps, this.meetingId)
     set({ phase: ended ? 'ended' : 'left' })
+  }
+
+
+  /** `pagehide` while waiting: the request must outlive the page (keepalive). */
+  leaveLobbyOnExit(): void {
+    if (store().phase === 'waiting') this.deps.api.leaveLobbyOnExit(this.meetingId)
   }
 
   async cancelWaiting(): Promise<void> {
@@ -206,7 +210,7 @@ export class MeetingRoomController implements ActiveMeetingRoom {
       this.deps.notify('error', meetingErrorKey(parseMeetingError(err)))
       return
     }
-    applyMeetingEnded(this.deps.queryClient, this.meetingId, new Date(this.deps.now()).toISOString(), false)
+    markMeetingEnded(this.deps, this.meetingId)
     this.close('ended')
   }
 
@@ -231,6 +235,7 @@ export class MeetingRoomController implements ActiveMeetingRoom {
     set({ [key]: next })
     try {
       await apply(session, next)
+      if (this.session === session) this.media = { ...this.media, [key]: next }
     } catch {
       if (this.session === session) set({ [key]: !next })
       this.deps.notify('error', { key: 'mediaFailed' })
@@ -320,6 +325,10 @@ export class MeetingRoomController implements ActiveMeetingRoom {
   handle(e: MeetingEvent): void {
     if (e.event === 'meet.muted') return this.onMuted(e.actor)
     if (e.event === 'meet.error') return this.onError(e)
+    if (e.event === 'meet.chat') {
+      appendOwnChat(this.deps, e) // my own line re-sent to me alone (an idempotent retry): never unread
+      return this.chat.onEcho(e, false)
+    }
     const next = phaseAfterPersonalEvent(store().phase, e)
     if (next === null) return
     if (next === 'rejoin') void this.rejoin()
@@ -328,33 +337,23 @@ export class MeetingRoomController implements ActiveMeetingRoom {
   }
 
   private onMuted(actor: MeetingPerson | undefined): void {
+    this.media = { ...this.media, mic: false }
     if (store().phase === 'inRoom') set({ mic: false })
     this.deps.notify('info', mutedNotice(actor))
   }
 
   private onError(e: Extract<MeetingEvent, { event: 'meet.error' }>): void {
-    if (e.clientId) {
-      this.chat.fail(e.clientId, meetingEventErrorKey(e.errorCode, e.params, 'chat'))
-      return
-    }
-    if (e.action) {
-      const pending = { ...store().pendingHost }
-      delete pending[e.action]
-      set({ pendingHost: pending })
-    }
+    if (e.clientId) return this.chat.fail(e.clientId, meetingEventErrorKey(e.errorCode, e.params, 'chat'))
+    if (e.action) set({ pendingHost: withoutPending(store().pendingHost, e.action) })
     this.deps.notify('error', meetingEventErrorKey(e.errorCode, e.params))
   }
 
   onRoster(roster: RosterEntry[]): void {
-    const mine = roster.find((r) => r.userId === this.myId)
-    const was = store().myRole
-    if (!mine || mine.role === was) return
-    set({ myRole: mine.role })
-    if (!isManager(was) && isManager(mine.role)) this.deps.notify('info', { key: 'madeCohost' })
-    if (isManager(was) && !isManager(mine.role)) {
-      this.deps.queryClient.setQueryData<LobbyEntry[]>(meetingKeys.lobby(this.meetingId), [])
-      this.deps.notify('info', { key: 'revokedCohost' })
-    }
+    const change = roleChange(roster, this.myId, store().myRole)
+    if (!change) return
+    set({ myRole: change.role })
+    if (change.lostLobby) this.deps.queryClient.setQueryData<LobbyEntry[]>(meetingKeys.lobby(this.meetingId), [])
+    if (change.notice) this.deps.notify('info', change.notice)
   }
 
   onSettings(settings: MeetingSettings): void {
@@ -380,16 +379,22 @@ export class MeetingRoomController implements ActiveMeetingRoom {
     if (store().phase !== 'ended') this.close('ended')
   }
 
-  /** STOMP came back: re-ask while waiting (missed `meet.admitted`), re-read the lobby as a manager. */
+  /** STOMP came back: re-ask while waiting (missed `meet.admitted`); in the room re-read and apply what changed. */
   async onRealtimeReconnected(): Promise<void> {
-    const { phase, myRole } = store()
+    const phase = store().phase
     if (phase === 'waiting') return this.enter(false, true)
-    if (phase !== 'inRoom' || !isManager(myRole)) return
-    try {
-      const entries = await this.deps.api.lobby(this.meetingId)
-      this.deps.queryClient.setQueryData<LobbyEntry[]>(meetingKeys.lobby(this.meetingId), entries)
-    } catch {
-      // the next meet.lobby will bring it
+    if (phase !== 'inRoom' && phase !== 'connecting') return
+    const run = this.epoch
+    const fresh = await rereadMeeting(this.deps, this.meetingId)
+    if (run !== this.epoch) return
+    if (fresh?.meeting.status === 'ENDED') {
+      markMeetingEnded(this.deps, this.meetingId)
+      return this.onEnded()
     }
+    if (fresh) {
+      this.onRoster(fresh.roster)
+      this.onSettings(fresh.meeting.settings)
+    }
+    if (store().phase === 'inRoom' && isManager(store().myRole)) await rereadLobby(this.deps, this.meetingId)
   }
 }

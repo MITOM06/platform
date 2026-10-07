@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import type { Meeting } from '@/lib/api/meeting-types'
 import { meetingsApi } from '@/lib/api/meetings'
 import { safeDisplayName } from '@/lib/chat/names'
+import { useLobbyExit } from '@/lib/hooks/use-lobby-exit'
 import { useMeetingRoomStomp } from '@/lib/hooks/use-meeting-room-stomp'
 import { MeetingRoomController } from '@/lib/meetings/meeting-room-controller'
 import { LiveKitSession } from '@/lib/rtc/livekit-session'
@@ -65,6 +66,8 @@ export function MeetingSession({ meeting }: { meeting: Meeting }) {
     code: meeting.code,
     active: phase === 'connecting' || phase === 'inRoom',
   })
+
+  useLobbyExit(controller, phase === 'waiting')
 
   // The meeting is over: say so once and show its details (attendance, notes).
   const endedHandled = useRef(false)

@@ -11,7 +11,7 @@ import { formatMeetingRange } from '@/lib/meetings/schedule'
 /**
  * `/user/queue/meeting` — the personal meeting queue, subscribed once per session in
  * useRealtimeNotifications. Invitations / reminders / cancellations patch the cache and
- * notify; room events go to the open room page (if it is that meeting).
+ * notify; room events (and my re-sent chat line) go to the open room page (if it is that meeting).
  */
 
 export interface MeetingNotice {
@@ -116,10 +116,12 @@ export function handleMeetingQueueEvent(e: MeetingEvent, ctx: MeetingQueueContex
     case 'meet.removed':
     case 'meet.muted':
     case 'meet.error':
+    // My own line re-sent to me alone: a retry of a clientId the server had already stored.
+    case 'meet.chat':
       forward(e, ctx)
       return
     default:
-      // Topic events (roster/settings/hands/chat/notes) on the wrong channel — ignore.
+      // Topic events (roster/settings/hands/notes) on the wrong channel — ignore.
       return
   }
 }

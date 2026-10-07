@@ -3,36 +3,12 @@ import { QueryClient } from '@tanstack/react-query'
 import { AxiosError, AxiosHeaders, type AxiosResponse } from 'axios'
 import type { Meeting, MeetingSettings } from '@/lib/api/meeting-types'
 import { DEFAULT_MEETING_SETTINGS } from '@/lib/api/meeting-types'
-import type { LocalMediaState, RemotePeer } from '@/lib/rtc/livekit-session'
 import { meetingKeys } from '@/lib/meetings/cache-updates'
 import { getActiveMeetingRoom } from '@/lib/meetings/active-room'
 import { encodeReaction } from '@/lib/meetings/reactions'
-import { MeetingRoomController, type MeetingRoomDeps, type RoomSession } from '@/lib/meetings/meeting-room-controller'
+import { MeetingRoomController, type MeetingRoomDeps } from '@/lib/meetings/meeting-room-controller'
+import { FakeSession } from './fake-room-session'
 import { useMeetingRoomStore } from '@/lib/store/meeting.store'
-
-type Cb<A extends unknown[]> = ((...args: A) => void) | null
-
-class FakeSession implements RoomSession {
-  onLocalStream: Cb<[MediaStream]> = null
-  onPeersChanged: Cb<[RemotePeer[]]> = null
-  onReconnecting: Cb<[boolean]> = null
-  onLocalPoorConnection: Cb<[boolean]> = null
-  onDisconnected: Cb<['failed' | 'ended']> = null
-  onLocalMediaChanged: Cb<[LocalMediaState]> = null
-  onData: Cb<[string, Uint8Array, string | null]> = null
-  connect = vi.fn<(url: string, token: string, opts: unknown) => Promise<void>>(async () => undefined)
-  setMic = vi.fn<(on: boolean) => Promise<void>>(async () => undefined)
-  setCamera = vi.fn<(on: boolean) => Promise<void>>(async () => undefined)
-  setScreenShare = vi.fn<(on: boolean) => Promise<void>>(async () => undefined)
-  switchDevice = vi.fn<(kind: 'audioinput' | 'videoinput', id: string) => Promise<void>>(async () => undefined)
-  publishData = vi.fn<(topic: string, payload: Uint8Array, reliable: boolean) => void>(() => undefined)
-  setPeerVideoEnabled = vi.fn<(id: string, on: boolean) => void>(() => undefined)
-  disconnect = vi.fn(() => undefined)
-  peers = () => [] as RemotePeer[]
-  localStream = () => null
-  localScreenStream = () => null
-  localMedia = () => ({ mic: true, camera: false, screen: false })
-}
 
 function httpError(status: number, code: string): AxiosError {
   const response = { status, data: { code, statusCode: status }, statusText: '', headers: {},
@@ -58,7 +34,7 @@ let c: MeetingRoomController
 beforeEach(() => {
   session = new FakeSession()
   deps = {
-    api: { join: vi.fn(), leaveLobby: vi.fn(async () => undefined), get: vi.fn(), end: vi.fn(async () => undefined),
+    api: { join: vi.fn(), leaveLobby: vi.fn(async () => undefined), leaveLobbyOnExit: vi.fn(), get: vi.fn(), end: vi.fn(async () => undefined),
       admit: vi.fn(async () => undefined), deny: vi.fn(async () => undefined), lobby: vi.fn(async () => []) },
     queryClient: new QueryClient(),
     publish: vi.fn(), isRealtimeConnected: vi.fn(() => true),

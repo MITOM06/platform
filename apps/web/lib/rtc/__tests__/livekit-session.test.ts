@@ -54,6 +54,8 @@ const lk = vi.hoisted(() => {
         ParticipantDisconnected: 'participantDisconnected',
         TrackSubscribed: 'trackSubscribed',
         TrackUnsubscribed: 'trackUnsubscribed',
+        TrackPublished: 'trackPublished',
+        TrackUnpublished: 'trackUnpublished',
         TrackMuted: 'trackMuted',
         TrackUnmuted: 'trackUnmuted',
         LocalTrackPublished: 'localTrackPublished',
@@ -98,9 +100,15 @@ class FakeMediaStream {
   }
 }
 
-const bob = { identity: 'bob', name: 'Bob', isLocal: false }
+interface FakePub { source: string; isMuted: boolean; setEnabled?: (on: boolean) => void }
+/** A remote participant whose publications can change during a test. */
+function participant(identity: string, name: string, pubs: FakePub[] = [], extra: object = {}) {
+  return { identity, name, isLocal: false, ...extra, pubs,
+    getTrackPublication: (s: string) => pubs.find((p) => p.source === s) }
+}
+const bob = participant('bob', 'Bob')
 const track = (kind: string) => ({ kind, mediaStreamTrack: { id: `${kind}-track` } })
-const pub = (source: string) => ({ source })
+const pub = (source: string, isMuted = false): FakePub => ({ source, isMuted })
 
 let session: LiveKitSession
 const room = () => lk.FakeRoom.last!
@@ -274,7 +282,7 @@ describe('meeting extensions', () => {
     await session.connect('wss://rtc', 'tok', { video: false })
     room().emit('participantConnected', { ...bob, metadata: '{"avatarUrl":"/api/uploads/a.png"}' })
     expect(session.peer('bob')!.avatarUrl).toBe('/api/uploads/a.png')
-    room().emit('participantConnected', { identity: 'eve', name: 'Eve', isLocal: false, metadata: 'not json' })
+    room().emit('participantConnected', participant('eve', 'Eve', [], { metadata: 'not json' }))
     expect(session.peer('eve')!.avatarUrl).toBeUndefined()
   })
 
@@ -343,5 +351,87 @@ describe('meeting extensions', () => {
     session.setPeerVideoEnabled('bob', true)
     session.setPeerVideoEnabled('ghost', false)
     expect(camera.setEnabled.mock.calls).toEqual([[false], [true]])
+  })
+})
+
+describe('remote mic / camera state comes from the publications', () => {
+  it('shows a peer who joined with the mic off as muted (no publication, no mute event)', async () => {
+    await session.connect('wss://rtc', 'tok', { video: true })
+    room().emit('participantConnected', participant('ann', 'Ann', [pub('camera')]))
+    expect(session.peer('ann')).toMatchObject({ micMuted: true, camMuted: false })
+  })
+
+  it('keeps a peer muted who muted before I joined, also when their track is subscribed', async () => {
+    const mic = pub('microphone', true)
+    const carol = participant('carol', 'Carol', [mic, pub('camera', true)])
+    const s = new LiveKitSession()
+    const connecting = s.connect('wss://rtc', 'tok', { video: false })
+    room().remoteParticipants.set('carol', carol)
+    await connecting
+    expect(s.peer('carol')).toMatchObject({ micMuted: true, camMuted: true })
+    room().emit('trackSubscribed', track('audio'), mic, carol)
+    expect(s.peer('carol')).toMatchObject({ micMuted: true, camMuted: true })
+  })
+
+  it('follows a peer publishing and unpublishing the mic', async () => {
+    await session.connect('wss://rtc', 'tok', { video: false })
+    const dave = participant('dave', 'Dave')
+    room().emit('participantConnected', dave)
+    expect(session.peer('dave')!.micMuted).toBe(true)
+
+    const onPeersChanged = vi.fn()
+    session.onPeersChanged = onPeersChanged
+    const mic = pub('microphone')
+    dave.pubs.push(mic)
+    room().emit('trackPublished', mic, dave)
+    expect(session.peer('dave')!.micMuted).toBe(false)
+    expect(onPeersChanged).toHaveBeenCalled()
+
+    dave.pubs.splice(0)
+    room().emit('trackUnpublished', mic, dave)
+    expect(session.peer('dave')!.micMuted).toBe(true)
+  })
+})
+
+describe('hidden tiles', () => {
+  it('disables a hidden peer’s camera as soon as it is published or subscribed', async () => {
+    await session.connect('wss://rtc', 'tok', { video: false })
+    const erin = participant('erin', 'Erin')
+    room().remoteParticipants.set('erin', erin)
+    room().emit('participantConnected', erin)
+    session.setPeerVideoEnabled('erin', false)
+
+    const cam: FakePub = { ...pub('camera'), setEnabled: vi.fn() }
+    erin.pubs.push(cam)
+    room().emit('trackPublished', cam, erin)
+    room().emit('trackSubscribed', track('video'), cam, erin)
+    expect(cam.setEnabled).toHaveBeenCalledWith(false)
+    expect(cam.setEnabled).not.toHaveBeenCalledWith(true)
+
+    session.setPeerVideoEnabled('erin', true)
+    const cam2: FakePub = { ...pub('camera'), setEnabled: vi.fn() }
+    room().emit('trackPublished', cam2, erin)
+    expect(cam2.setEnabled).not.toHaveBeenCalled()
+  })
+
+  it('forgets hidden peers on disconnect', async () => {
+    await session.connect('wss://rtc', 'tok', { video: false })
+    session.setPeerVideoEnabled('erin', false)
+    session.disconnect()
+    await session.connect('wss://rtc', 'tok', { video: false })
+    const erin = participant('erin', 'Erin')
+    const cam: FakePub = { ...pub('camera'), setEnabled: vi.fn() }
+    erin.pubs.push(cam)
+    room().emit('trackPublished', cam, erin)
+    expect(cam.setEnabled).not.toHaveBeenCalled()
+  })
+
+  it('never touches the camera of a peer that is not hidden (calls)', async () => {
+    await session.connect('wss://rtc', 'tok', { video: true })
+    const cam: FakePub = { ...pub('camera'), setEnabled: vi.fn() }
+    const frank = participant('frank', 'Frank', [cam])
+    room().emit('trackPublished', cam, frank)
+    room().emit('trackSubscribed', track('video'), cam, frank)
+    expect(cam.setEnabled).not.toHaveBeenCalled()
   })
 })

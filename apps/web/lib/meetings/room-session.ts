@@ -21,7 +21,10 @@ export interface JoinMedia {
 }
 
 export interface MeetingRoomDeps {
-  api: Pick<typeof meetingsApi, 'join' | 'leaveLobby' | 'get' | 'end' | 'admit' | 'deny' | 'lobby'>
+  api: Pick<
+    typeof meetingsApi,
+    'join' | 'leaveLobby' | 'leaveLobbyOnExit' | 'get' | 'end' | 'admit' | 'deny' | 'lobby'
+  >
   queryClient: QueryClient
   publish(destination: string, body: object): void
   isRealtimeConnected(): boolean

@@ -129,6 +129,17 @@ describe('room events', () => {
     expect(room.handle).toHaveBeenLastCalledWith(err)
   })
 
+  it('forwards my own chat line re-sent on the personal queue to that meeting’s room only', () => {
+    room = { meetingId: 'm1', handle: vi.fn<(e: MeetingEvent) => void>() }
+    const line = (meetingId: string): MeetingEvent => ({ event: 'meet.chat', meetingId, clientId: 'c-abc',
+      message: { id: 'x1', sender: { userId: 'me' }, content: 'hi', createdAt: 't' } })
+    handleMeetingQueueEvent(line('m1'), ctx)
+    expect(room.handle).toHaveBeenCalledWith(line('m1'))
+    handleMeetingQueueEvent(line('other'), ctx)
+    expect(room.handle).toHaveBeenCalledTimes(1)
+    expect(ctx.notify).not.toHaveBeenCalled()
+  })
+
   it('ignores room events when no room is open', () => {
     expect(() => handleMeetingQueueEvent({ event: 'meet.admitted', meetingId: 'm1' }, ctx)).not.toThrow()
     expect(ctx.notify).not.toHaveBeenCalled()

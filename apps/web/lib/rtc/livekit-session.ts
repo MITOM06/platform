@@ -7,9 +7,20 @@ import {
   type Participant,
   type RemoteParticipant,
   type RemoteTrack,
+  type RemoteTrackPublication,
   type RoomOptions,
   type TrackPublication,
 } from 'livekit-client'
+import {
+  MEDIA_ERRORS,
+  MediaAccessError,
+  RoomConnectError,
+  SHARE_REFUSED,
+  ScreenShareError,
+  errorName,
+} from './livekit-errors'
+
+export { MediaAccessError, RoomConnectError, ScreenShareError }
 
 /** One other person in the room, as the call UI needs them. */
 export interface RemotePeer {
@@ -42,44 +53,7 @@ export interface LocalMediaState {
   screen: boolean
 }
 
-/** The user cancelled the browser's share picker, or the source is not allowed. */
-export class ScreenShareError extends Error {
-  constructor() {
-    super('screen share refused')
-  }
-}
-
-/** The browser refused (or has no) microphone/camera. Maps to `media_error`. */
-export class MediaAccessError extends Error {
-  constructor() {
-    super('media access refused')
-  }
-}
-
-/** Could not reach or join the room. Maps to `failed`. */
-export class RoomConnectError extends Error {
-  constructor() {
-    super('room connection failed')
-  }
-}
-
-const MEDIA_ERRORS = new Set([
-  'NotAllowedError',
-  'NotFoundError',
-  'NotReadableError',
-  'OverconstrainedError',
-  'SecurityError',
-])
-
-/** Errors from the share picker that mean "the user said no", not "it broke". */
-const SHARE_REFUSED = new Set(['NotAllowedError', 'AbortError', 'SecurityError'])
-
 const SCREEN_SOURCES = new Set<string>([Track.Source.ScreenShare, Track.Source.ScreenShareAudio])
-
-function errorName(err: unknown): string | undefined {
-  const name = (err as { name?: unknown } | null)?.name
-  return typeof name === 'string' ? name : undefined
-}
 
 function avatarFromMetadata(metadata: string | undefined): string | undefined {
   if (!metadata) return undefined
@@ -89,6 +63,15 @@ function avatarFromMetadata(metadata: string | undefined): string | undefined {
     return typeof url === 'string' && url ? url : undefined
   } catch {
     return undefined
+  }
+}
+
+/** Best-effort: stop (or resume) receiving one remote publication. */
+function setPubEnabled(pub: RemoteTrackPublication | undefined, enabled: boolean): void {
+  try {
+    pub?.setEnabled(enabled)
+  } catch {
+    // best-effort
   }
 }
 
@@ -118,6 +101,8 @@ export class LiveKitSession {
   private local: MediaStream | null = null
   private localScreen: MediaStream | null = null
   private remote = new Map<string, RemotePeer>()
+  /** Peers whose camera we do not want (hidden tiles) — re-applied to every new camera publication. */
+  private videoOff = new Set<string>()
 
   async connect(url: string, token: string, opts: ConnectOptions): Promise<void> {
     // No adaptiveStream: it only works with track.attach(), and our call UI
@@ -218,12 +203,10 @@ export class LiveKitSession {
 
   /** Stop (or resume) receiving a peer's camera, e.g. while their tile is hidden. */
   setPeerVideoEnabled(identity: string, enabled: boolean): void {
+    if (enabled) this.videoOff.delete(identity)
+    else this.videoOff.add(identity)
     const pub = this.room?.remoteParticipants.get(identity)?.getTrackPublication(Track.Source.Camera)
-    try {
-      pub?.setEnabled(enabled)
-    } catch {
-      // best-effort
-    }
+    setPubEnabled(pub, enabled)
   }
 
   disconnect(): void {
@@ -231,6 +214,7 @@ export class LiveKitSession {
     this.leaving = true
     this.room = null
     this.remote.clear()
+    this.videoOff.clear()
     this.local = null
     this.localScreen = null
     void room?.disconnect()
@@ -246,15 +230,29 @@ export class LiveKitSession {
         this.remote.delete(p.identity)
         this.emitPeers()
       })
-      .on(RoomEvent.TrackSubscribed, (track: RemoteTrack, pub: TrackPublication, p: Participant) => {
+      .on(RoomEvent.TrackPublished, (pub: RemoteTrackPublication, p: Participant) => {
+        this.ensurePeer(p)
+        this.keepHiddenCameraOff(pub, p)
+        this.emitPeers()
+      })
+      .on(RoomEvent.TrackUnpublished, (pub: TrackPublication, p: Participant) => {
+        const peer = this.remote.get(p.identity)
+        if (!peer) return
+        this.syncMedia(peer, p)
+        this.setMuted(peer, pub, true)
+        this.emitPeers()
+      })
+      .on(RoomEvent.TrackSubscribed, (track: RemoteTrack, pub: RemoteTrackPublication, p: Participant) => {
         const peer = this.ensurePeer(p)
         if (SCREEN_SOURCES.has(pub.source)) {
           peer.screen ??= new MediaStream()
           peer.screen.addTrack(track.mediaStreamTrack)
         } else {
           peer.stream.addTrack(track.mediaStreamTrack)
-          this.setMuted(peer, pub, false)
+          // A muted publication is subscribed silently (no TrackMuted): read its state.
+          this.setMuted(peer, pub, pub.isMuted)
         }
+        this.keepHiddenCameraOff(pub, p)
         this.emitPeers()
       })
       .on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack, pub: TrackPublication, p: Participant) => {
@@ -330,6 +328,18 @@ export class LiveKitSession {
     if (pub.source === Track.Source.Camera) peer.camMuted = muted
   }
 
+  /** Mic / camera "off" = not published at all (joined with it off) or published muted. */
+  private syncMedia(peer: RemotePeer, p: Participant): void {
+    const mic = p.getTrackPublication(Track.Source.Microphone)
+    const cam = p.getTrackPublication(Track.Source.Camera)
+    peer.micMuted = !mic || mic.isMuted
+    peer.camMuted = !cam || cam.isMuted
+  }
+
+  private keepHiddenCameraOff(pub: RemoteTrackPublication, p: Participant): void {
+    if (pub.source === Track.Source.Camera && this.videoOff.has(p.identity)) setPubEnabled(pub, false)
+  }
+
   private ensurePeer(p: Participant): RemotePeer {
     let peer = this.remote.get(p.identity)
     if (!peer) {
@@ -338,14 +348,15 @@ export class LiveKitSession {
         name: p.name ?? '',
         stream: new MediaStream(),
         speaking: false,
-        micMuted: false,
-        camMuted: false,
+        micMuted: true,
+        camMuted: true,
         poorConnection: false,
         avatarUrl: avatarFromMetadata(p.metadata),
         screen: null,
       }
       this.remote.set(p.identity, peer)
     }
+    this.syncMedia(peer, p)
     return peer
   }
 

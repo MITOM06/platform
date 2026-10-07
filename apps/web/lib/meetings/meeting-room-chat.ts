@@ -75,10 +75,13 @@ export class MeetingRoomChat {
     setPending((list) => list.map((p) => (p.clientId === clientId ? { ...p, error } : p)))
   }
 
-  /** `meet.chat` echo: settles my pending line; counts others' lines while the panel is closed. */
-  onEcho(e: Extract<MeetingEvent, { event: 'meet.chat' }>): void {
+  /**
+   * `meet.chat` echo: settles my pending (or failed) line by `clientId` — a retry reuses it, and
+   * the server stores a clientId once. Counts others' lines while the panel is closed.
+   */
+  onEcho(e: Extract<MeetingEvent, { event: 'meet.chat' }>, countUnread = true): void {
     if (e.clientId) this.discard(e.clientId)
-    if (e.message.sender.userId !== this.myId && store().panel !== 'chat') {
+    if (countUnread && e.message.sender.userId !== this.myId && store().panel !== 'chat') {
       useMeetingRoomStore.setState((s) => ({ unreadChat: s.unreadChat + 1 }))
     }
   }
