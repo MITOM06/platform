@@ -247,4 +247,51 @@ class MeetingStoreTest {
         .extracting(Meeting::getId)
         .containsExactly(a.getId(), c.getId()); // no department ⇒ b is not mine
   }
+
+  @Test
+  void pastAlsoListsEndedMeetingsIAttendedOnceEachWithAStableCursor() {
+    Instant at = now.minusSeconds(3600);
+    Meeting invited = meeting("ttt-tttt-ttt", at.plusSeconds(30), "me");
+    Meeting walkedIn = meeting("uuu-uuuu-uuu", at.plusSeconds(20));
+    // Two sessions (left and came back) — still one list entry.
+    store.recordJoin(walkedIn.getId(), row("me", "PA_1"));
+    store.recordLeave(walkedIn.getId(), "me", "PA_1", at.plusSeconds(25));
+    store.recordJoin(walkedIn.getId(), row("me", "PA_2"));
+    // Same sortAt as walkedIn: the (sortAt, _id) tie-break must page through both.
+    Meeting attendedAndInvited = meeting("vvv-vvvv-vvv", at.plusSeconds(20), "me");
+    store.recordJoin(attendedAndInvited.getId(), row("me", "PA_3"));
+    Meeting removed = meeting("www-wwww-www", at.plusSeconds(10));
+    store.recordJoin(removed.getId(), row("me", "PA_4"));
+    store.update(removed.getId(), new Update().set("removedIds", List.of("me")));
+    Meeting someoneElses = meeting("xxx-xxxx-xxx", at.plusSeconds(5));
+    store.recordJoin(someoneElses.getId(), row("other", "PA_5"));
+    Meeting liveWalkIn = meeting("yyy-yyyy-yyy", at.plusSeconds(40));
+    store.markLive(liveWalkIn.getId(), now);
+    store.recordJoin(liveWalkIn.getId(), row("me", "PA_6"));
+    for (Meeting m : List.of(invited, walkedIn, attendedAndInvited, removed, someoneElses)) {
+      store.markEnded(m.getId(), now);
+    }
+
+    List<Meeting> all = store.page("me", List.of(), false, null, 10);
+    assertThat(all).extracting(Meeting::getId).doesNotHaveDuplicates();
+    assertThat(all)
+        .extracting(Meeting::getId)
+        .containsExactlyInAnyOrder(invited.getId(), walkedIn.getId(), attendedAndInvited.getId());
+    assertThat(all.get(0).getId()).isEqualTo(invited.getId()); // newest sortAt first
+
+    List<String> paged = new ArrayList<>();
+    Meeting cursor = null;
+    for (int i = 0; i < 5; i++) {
+      List<Meeting> page = store.page("me", List.of(), false, cursor, 1);
+      if (page.isEmpty()) {
+        break;
+      }
+      paged.add(page.get(0).getId());
+      cursor = page.get(0);
+    }
+    assertThat(paged).containsExactlyElementsOf(all.stream().map(Meeting::getId).toList());
+
+    // Attending only widens the past list: an open walk-in to a LIVE meeting is not "upcoming".
+    assertThat(store.page("me", List.of(), true, null, 10)).isEmpty();
+  }
 }

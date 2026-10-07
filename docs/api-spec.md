@@ -552,6 +552,7 @@ Response 200: { "success": true }
 | `PATCH /api/meetings/{id}` | host, co-host | 200 `Meeting` | 403 `MEETING_FORBIDDEN` · 403 `MEETING_DEPARTMENT_FORBIDDEN` · 404 · 409 `MEETING_ENDED` · 400 `MEETING_INVALID` |
 | `DELETE /api/meetings/{id}` (cancel) | host | 204 | 403 `MEETING_FORBIDDEN` · 404 · 409 `MEETING_NOT_CANCELLABLE` (LIVE/ENDED or someone already entered) |
 | `POST /api/meetings/{id}/join` | anyone in the workspace | 200 `MeetingJoinResponse` | 403 `MEETING_REMOVED` · 403 `MEETING_LOCKED` · 404 · 409 `MEETING_ENDED` · 409 `MEETING_FULL` · 503 `MEETINGS_UNAVAILABLE` |
+| `GET /api/meetings/{id}/lobby` | host, co-host | 200 `{ "entries": [LobbyEntry…] }` — same items and order as `meet.lobby` (`[]` = nobody waiting); a read, notifies nobody | 403 `MEETING_FORBIDDEN` · 404 `MEETING_NOT_FOUND` · 409 `MEETING_ENDED` |
 | `DELETE /api/meetings/{id}/lobby` | the person waiting | 204 (idempotent) | 404 |
 | `POST /api/meetings/{id}/lobby/{userId}/admit` | host, co-host | 204 (idempotent) | 403 `MEETING_FORBIDDEN` · 404 · 409 `MEETING_ENDED` |
 | `POST /api/meetings/{id}/lobby/{userId}/deny` | host, co-host | 204 (idempotent) | 403 · 404 · 409 `MEETING_ENDED` |
@@ -601,8 +602,11 @@ is a no-op, so a co-host outside the department can still edit the rest). Changi
 `scheduledStart` re-arms the 10-minute reminder. An end without a new start is validated against
 the stored start.
 
-**List** — meetings where the caller is host / co-host / invited by name / in `departmentId`.
-`scope=upcoming` (default): SCHEDULED + LIVE ascending by start (instant meetings by creation);
+**List** — meetings where the caller is host / co-host / invited by name / in `departmentId`;
+`scope=past` also lists every meeting the caller **attended** (has an `attendance` row — e.g.
+walked in or was admitted from the lobby without an invitation) unless they were removed from it
+(each meeting once; such a row has `viewerRole:"invited"`, and `GET /{id}` / the records stay
+readable for them). `scope=upcoming` (default): SCHEDULED + LIVE ascending by start (instant meetings by creation);
 `scope=past`: ENDED descending. `cursor` = `id` of the last item of the previous page; `size`
 default 20, max 100. Response `{content, page:0, size, totalElements, hasNext}`. A SCHEDULED
 meeting 48h past its start (or creation) is retired to ENDED by the sweep.
@@ -662,6 +666,10 @@ merge, then PUTs again with `latest.version`.
 **`Hand`** — `{ "userId": "64b0…03", "displayName": "Hoa Le", "raisedAt": "2026-10-08T02:06:00.250Z" }`;
 `hands` is always in raise order (earliest first).
 
+**`LobbyEntry`** — `{ "userId": "64b0…05", "displayName": "Sam Vo" }` (`displayName` absent when
+unknown ⇒ generic label, never the id). Sorted by name (case-insensitive), nameless last. A
+host/co-host whose STOMP reconnected calls `GET /lobby` to catch up on a missed `meet.lobby`.
+
 ### STOMP — client commands (`SEND /app/…`)
 
 | Destination | Payload | Notes |
@@ -711,7 +719,7 @@ Every payload is `MeetingEventDto` `{event, meetingId, …}`; absent fields are 
 | `/user/queue/meeting` | `meet.ended` | — | to people still in the lobby when the meeting ends or is cancelled (the lobby is cleared) |
 | `/user/queue/meeting` | `meet.invited` | `{code, title, hostId, hostName, scheduledStart}` | create / `PATCH` added you (named invitees only) |
 | `/user/queue/meeting` | `meet.starting` | `{code, title, scheduledStart}` | 10 min before `scheduledStart` — host, co-hosts, invitees, department members, minus removed |
-| `/user/queue/meeting` | `meet.cancelled` | — | host cancelled — same recipients as `meet.starting` |
+| `/user/queue/meeting` | `meet.cancelled` | `{code, title, scheduledStart}` (`title` / `scheduledStart` absent when the meeting has none) | host cancelled — same recipients as `meet.starting` |
 
 Subscribing to `/topic/meeting/{id}` requires being allowed straight into the room (host, co-host,
 invited / department member / admitted); waiting, removed, locked-out people and ENDED meetings get

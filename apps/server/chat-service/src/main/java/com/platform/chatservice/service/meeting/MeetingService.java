@@ -219,7 +219,7 @@ public class MeetingService {
                     ? List.of()
                     : people.departmentMembers(m.getDepartmentId())));
     recipients.remove(caller.getUserId());
-    events.cancelled(id, recipients);
+    events.cancelled(m, recipients);
   }
 
   /** Applies a schedule change; a LIVE meeting keeps its schedule. True when something changed. */

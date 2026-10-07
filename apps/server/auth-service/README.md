@@ -53,6 +53,7 @@
 | Method | Path | Description | Auth required |
 |--------|------|-------------|:---:|
 | `GET` | `/api/users/me` | Current user profile | Bearer |
+| `GET` | `/api/users/me/departments` | Caller's own departments `[{ "id", "name" }]` (from `departmentIds`; deleted ones skipped; sorted by name; no capability needed) | Bearer |
 | `PATCH` | `/api/users/me` | Update display name / avatar | Bearer |
 | `GET` | `/api/users/search?q=` | Search users by name/email | Bearer |
 

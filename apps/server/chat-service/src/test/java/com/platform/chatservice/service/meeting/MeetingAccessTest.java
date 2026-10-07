@@ -125,6 +125,19 @@ class MeetingAccessTest {
   }
 
   @Test
+  void someoneWhoOnlyAttendedStillSeesTheEndedMeetingAsInvited() {
+    m.setStatus(MeetingStatus.ENDED);
+    Instant t = Instant.now();
+    m.getAttendance()
+        .add(Meeting.Attendance.builder().userId("walkin").joinedAt(t).leftAt(t).build());
+
+    // GET /api/meetings/{id} (and the past list) maps the meeting with this role.
+    assertThat(MeetingAccess.viewerRole(m, "walkin", List.of())).isEqualTo("invited");
+    assertThat(MeetingAccess.canReadRecords(m, "walkin", List.of(), false)).isTrue();
+    assertThat(MeetingAccess.viewerRole(m, "stranger", List.of())).isEqualTo("guest");
+  }
+
+  @Test
   void insideMeansAnOpenAttendanceRow() {
     Instant t = Instant.now();
     m.getAttendance().add(Meeting.Attendance.builder().userId("a").joinedAt(t).build());

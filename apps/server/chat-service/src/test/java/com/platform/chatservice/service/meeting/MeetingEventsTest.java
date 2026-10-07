@@ -119,6 +119,26 @@ class MeetingEventsTest {
   }
 
   @Test
+  void cancelledTellsEachRecipientOnceWhichMeetingWithItsTitleCodeAndStart() {
+    events.cancelled(m, List.of("u1", "u1", "u2"));
+
+    assertThat(toUser("u1"))
+        .singleElement()
+        .satisfies(
+            e -> {
+              assertThat(e.getEvent()).isEqualTo("meet.cancelled");
+              assertThat(e.getMeetingId()).isEqualTo("m1");
+              assertThat(e.getTitle()).isEqualTo("Sync");
+              assertThat(e.getCode()).isEqualTo("abc-defg-hjk");
+              assertThat(e.getScheduledStart()).isEqualTo(Instant.parse("2026-10-08T02:00:00Z"));
+              assertThat(e.getHostId()).isNull();
+            });
+    assertThat(toUser("u2")).hasSize(1);
+    verify(fcm, never())
+        .sendMeetingPush(anyString(), anyString(), anyString(), anyString(), anyString(), eq(true));
+  }
+
+  @Test
   void invitesArePushedOnlyToOfflineDevicesAndRemindersAlways() {
     events.invited(m, "Lan", List.of("u1"));
     events.starting(m, List.of("u1"));

@@ -423,7 +423,7 @@ class MeetingServiceTest {
 
     when(store.markCancelled(eq("m1"), any())).thenReturn(true);
     service.cancel(host, "m1");
-    verify(events).cancelled("m1", List.of("co", U1)); // removed U2 and the host left out
+    verify(events).cancelled(m, List.of("co", U1)); // removed U2 and the host left out
   }
 
   @Test

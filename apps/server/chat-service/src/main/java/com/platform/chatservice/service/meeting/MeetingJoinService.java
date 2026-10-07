@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.platform.chatservice.config.LiveKitProperties;
 import com.platform.chatservice.dto.meeting.MeetingJoinResponse;
+import com.platform.chatservice.dto.meeting.MeetingLobbyResponse;
 import com.platform.chatservice.dto.meeting.PersonDto;
 import com.platform.chatservice.exception.ApiException;
 import com.platform.chatservice.exception.ErrorCodes;
@@ -105,6 +106,15 @@ public class MeetingJoinService {
     }
     events.denied(meetingId, userId);
     events.lobby(m, lobby.waiting(meetingId));
+  }
+
+  /**
+   * Who is waiting right now (host / co-host) — for a client that reconnects and may have missed a
+   * {@code meet.lobby}. A read: never changes the lobby nor notifies anyone.
+   */
+  public MeetingLobbyResponse lobbySnapshot(String callerId, String meetingId) {
+    managed(callerId, meetingId);
+    return new MeetingLobbyResponse(lobby.waiting(meetingId));
   }
 
   /** Ends the meeting for everyone (host / co-host). Ending an ended meeting is a no-op. */
