@@ -71,27 +71,35 @@ public class MeetingStore {
    * Records a {@code participant_joined}. If the person already has an open row (a second device /
    * a reconnect, or the same webhook delivered twice) only its sid is replaced; otherwise a new row
    * is appended — conditionally, so two racing deliveries for the same person cannot open two rows.
+   *
+   * <p>Never writes to an ENDED meeting: a join webhook racing {@code end} would otherwise leave an
+   * open row nobody ever closes. True when the row was recorded (appended or its sid replaced).
    */
-  public void recordJoin(String id, Meeting.Attendance row) {
+  public boolean recordJoin(String id, Meeting.Attendance row) {
     for (int attempt = 0; attempt < 2; attempt++) {
-      Query open = new Query(byId(id).and("attendance").elemMatch(openRowOf(row.getUserId())));
+      Query open = new Query(notEnded(id).and("attendance").elemMatch(openRowOf(row.getUserId())));
       if (mongo
               .updateFirst(open, new Update().set("attendance.$.sid", row.getSid()), Meeting.class)
               .getMatchedCount()
           > 0) {
-        return;
+        return true;
       }
       Query noOpenRow =
-          new Query(byId(id).and("attendance").not().elemMatch(openRowOf(row.getUserId())));
+          new Query(notEnded(id).and("attendance").not().elemMatch(openRowOf(row.getUserId())));
       if (mongo
               .updateFirst(noOpenRow, new Update().push("attendance", row), Meeting.class)
               .getMatchedCount()
           > 0) {
-        return;
+        return true;
       }
-      // Either the meeting is gone or another delivery opened the row in between — retry the
+      // The meeting is gone or ENDED, or another delivery opened the row in between — retry the
       // sid replacement once.
     }
+    return false;
+  }
+
+  private static Criteria notEnded(String id) {
+    return byId(id).and("status").ne(MeetingStatus.ENDED);
   }
 
   /**

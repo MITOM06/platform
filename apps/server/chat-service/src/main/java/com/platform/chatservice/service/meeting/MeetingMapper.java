@@ -11,6 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -27,18 +28,45 @@ public class MeetingMapper {
   private final MeetingPeople people;
 
   public MeetingResponse toResponse(Meeting m, String viewerRole) {
-    boolean guest = "guest".equals(viewerRole);
-    boolean manager = "host".equals(viewerRole) || "cohost".equals(viewerRole);
+    return toResponse(m, viewerRole, people.profiles(peopleShownTo(m, viewerRole)));
+  }
 
+  /**
+   * A page of meetings with the names of everyone on it resolved in ONE lookup (not one per
+   * meeting). {@code viewerRole} gives the caller's role in each meeting.
+   */
+  public List<MeetingResponse> toResponses(
+      List<Meeting> meetings, Function<Meeting, String> viewerRole) {
+    List<String> roles = meetings.stream().map(viewerRole).toList();
+    Set<String> ids = new LinkedHashSet<>();
+    for (int i = 0; i < meetings.size(); i++) {
+      ids.addAll(peopleShownTo(meetings.get(i), roles.get(i)));
+    }
+    Map<String, PersonDto> profiles = ids.isEmpty() ? Map.of() : people.profiles(ids);
+    List<MeetingResponse> out = new ArrayList<>(meetings.size());
+    for (int i = 0; i < meetings.size(); i++) {
+      out.add(toResponse(meetings.get(i), roles.get(i), profiles));
+    }
+    return out;
+  }
+
+  /** The people whose names a viewer in {@code viewerRole} sees: the host, plus all for members. */
+  private static Set<String> peopleShownTo(Meeting m, String viewerRole) {
     Set<String> ids = new LinkedHashSet<>();
     if (m.getHostId() != null) {
       ids.add(m.getHostId());
     }
-    if (!guest) {
+    if (!"guest".equals(viewerRole)) {
       addAll(ids, m.getCoHostIds());
       addAll(ids, m.getInviteeIds());
     }
-    Map<String, PersonDto> profiles = people.profiles(ids);
+    return ids;
+  }
+
+  private MeetingResponse toResponse(
+      Meeting m, String viewerRole, Map<String, PersonDto> profiles) {
+    boolean guest = "guest".equals(viewerRole);
+    boolean manager = "host".equals(viewerRole) || "cohost".equals(viewerRole);
 
     return new MeetingResponse(
         m.getId(),

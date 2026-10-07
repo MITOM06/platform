@@ -46,16 +46,21 @@ public class MeetingRtcHandler implements RtcRoomEventHandler {
     if (m.getStatus() == MeetingStatus.SCHEDULED) {
       store.markLive(m.getId(), at);
     }
-    store.recordJoin(
-        m.getId(),
-        Meeting.Attendance.builder()
-            .userId(userId)
-            .displayName(
-                MeetingMapper.person(userId, people.profiles(List.of(userId))).displayName())
-            .role(MeetingAccess.roleOf(m, userId))
-            .sid(e.participantSid())
-            .joinedAt(at)
-            .build());
+    boolean recorded =
+        store.recordJoin(
+            m.getId(),
+            Meeting.Attendance.builder()
+                .userId(userId)
+                .displayName(
+                    MeetingMapper.person(userId, people.profiles(List.of(userId))).displayName())
+                .role(MeetingAccess.roleOf(m, userId))
+                .sid(e.participantSid())
+                .joinedAt(at)
+                .build());
+    if (!recorded) {
+      // The meeting ended between the read above and the write: nothing to mark or announce.
+      return;
+    }
     busy.markBusy(userId, e.room());
     store.findById(m.getId()).ifPresent(events::roster);
   }

@@ -545,7 +545,7 @@ Response 200: { "success": true }
 | Method · Path | Who | 2xx | Errors (`code`) |
 |---|---|---|---|
 | `POST /api/meetings` | has `HOST_MEETING` | **201** `Meeting` (`viewerRole:"host"`) | 403 `MEETING_CREATE_FORBIDDEN` · 403 `MEETING_DEPARTMENT_FORBIDDEN` · 400 `MEETING_INVALID` |
-| `GET /api/meetings?scope=upcoming\|past&cursor=&size=` | anyone | 200 `PageResponse<Meeting>` | 400 `MEETING_INVALID {field:"scope"}` |
+| `GET /api/meetings?scope=upcoming\|past&cursor=&size=` | anyone | 200 `PageResponse<Meeting>` | 400 `MEETING_INVALID {field:"scope"}` · 400 `MEETING_INVALID {field:"size"}` (not a number) |
 | `GET /api/meetings/{id}` | anyone in the workspace | 200 `Meeting` | 404 `MEETING_NOT_FOUND` |
 | `GET /api/meetings/by-code/{code}` | anyone in the workspace (code case-/dash-insensitive) | 200 `Meeting` (also for ENDED) | 404 `MEETING_NOT_FOUND` |
 | `PATCH /api/meetings/{id}` | host, co-host | 200 `Meeting` | 403 `MEETING_FORBIDDEN` · 403 `MEETING_DEPARTMENT_FORBIDDEN` · 404 · 409 `MEETING_ENDED` · 400 `MEETING_INVALID` |
@@ -557,10 +557,16 @@ Response 200: { "success": true }
 | `POST /api/meetings/{id}/end` | host, co-host | 204 (already ENDED ⇒ 204) | 403 `MEETING_FORBIDDEN` · 404 |
 
 `MEETING_INVALID` carries `params.field` ∈ `title | description | inviteeIds | departmentId |
-scheduledStart | scheduledEnd | settings | scope` and `params.max` when a limit applies, e.g.
+scheduledStart | scheduledEnd | settings | scope | size` and `params.max` when a limit applies, e.g.
 `{"error":"Bad Request","code":"MEETING_INVALID","statusCode":400,"params":{"field":"title","max":120}}`.
+A body or query value that cannot be parsed is also 400 `MEETING_INVALID` (never 500), with
+`params.field` when the field is known — notably a datetime **without an offset**
+(`"2026-10-08T09:00:00.000"`): send UTC (`…Z`) or an explicit offset (`+07:00`). Malformed JSON
+gives `MEETING_INVALID` without `params`. (Outside `/api/meetings` the same failures answer 400
+`INVALID_PARAMETER`, with `params.field` when known.)
 
 **`CreateMeetingRequest`** — `{ title?, description?, inviteeIds?, departmentId?, scheduledStart?, scheduledEnd?, settings? }`
+— the body itself is optional: no body (or `{}`) creates an instant meeting with every default.
 
 - `title` trimmed, ≤ 120, blank ⇒ none. `description` ≤ 2000, blank ⇒ none.
 - `inviteeIds` deduped, host dropped; malformed id ⇒ 400; > 100 ⇒ 400 `max:100`; unknown users
@@ -574,7 +580,9 @@ scheduledStart | scheduledEnd | settings | scope` and `params.max` when a limit 
 
 **`UpdateMeetingRequest`** — same fields, all optional; absent = unchanged; `inviteeIds` replaces
 the list (newcomers get `meet.invited`); `settings` merges field by field (a change emits
-`meet.settings`); `description: ""` / `title: ""` / `departmentId: ""` clear the field. Changing
+`meet.settings`); `description: ""` / `title: ""` / `departmentId: ""` clear the field.
+`departmentId` is permission-checked only when it actually changes (sending the stored value back
+is a no-op, so a co-host outside the department can still edit the rest). Changing
 `scheduledStart`/`scheduledEnd` of a LIVE meeting ⇒ 400 `{field:"scheduledStart"}`; a new
 `scheduledStart` re-arms the 10-minute reminder. An end without a new start is validated against
 the stored start.
@@ -608,10 +616,10 @@ Every payload is `MeetingEventDto` `{event, meetingId, …}`; absent fields are 
 |---|---|---|---|
 | `/topic/meeting/{id}` | `meet.roster` | `{participants:[{userId, displayName, role, joinedAt}]}` — one row per person inside | LiveKit `participant_joined` / `participant_left` |
 | `/topic/meeting/{id}` | `meet.settings` | `{settings:{…5 fields…}}` | `PATCH` changed settings |
-| `/topic/meeting/{id}` | `meet.ended` | — | `POST /end`, LiveKit `room_finished` |
+| `/topic/meeting/{id}` | `meet.ended` | — | `POST /end`, LiveKit `room_finished`, `DELETE` (cancel) |
 | `/user/queue/meeting` | `meet.lobby` | `{waiting:[{userId, displayName}]}` (by name; nameless last) | to host + co-hosts when the lobby changes, and to a host/co-host on `join` (empty list ⇒ clear the badge) |
 | `/user/queue/meeting` | `meet.admitted` / `meet.denied` | — | host admitted / denied you |
-| `/user/queue/meeting` | `meet.ended` | — | to people still in the lobby when the meeting ends |
+| `/user/queue/meeting` | `meet.ended` | — | to people still in the lobby when the meeting ends or is cancelled (the lobby is cleared) |
 | `/user/queue/meeting` | `meet.invited` | `{code, title, hostId, hostName, scheduledStart}` | create / `PATCH` added you (named invitees only) |
 | `/user/queue/meeting` | `meet.starting` | `{code, title, scheduledStart}` | 10 min before `scheduledStart` — host, co-hosts, invitees, department members, minus removed |
 | `/user/queue/meeting` | `meet.cancelled` | — | host cancelled — same recipients as `meet.starting` |

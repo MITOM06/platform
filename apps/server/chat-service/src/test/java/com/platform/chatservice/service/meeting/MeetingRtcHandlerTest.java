@@ -47,6 +47,7 @@ class MeetingRtcHandlerTest {
     when(store.findById("m1")).thenReturn(Optional.of(m));
     when(people.profiles(anyCollection()))
         .thenReturn(Map.of("host", new PersonDto("host", "Lan", null)));
+    when(store.recordJoin(anyString(), any())).thenReturn(true);
   }
 
   private static RtcParticipantEvent ev(String identity, String sid, Instant createdAt) {
@@ -100,6 +101,18 @@ class MeetingRtcHandlerTest {
     verify(store, never()).recordJoin(anyString(), any());
     verify(store, never()).recordLeave(anyString(), anyString(), any(), any());
     verifyNoInteractions(busy, events);
+  }
+
+  @Test
+  void aJoinThatLostTheRaceWithEndMarksNobodyBusy() {
+    m.setStatus(MeetingStatus.LIVE);
+    // `end` landed between the handler's read and its write: the store refuses the row.
+    when(store.recordJoin(anyString(), any())).thenReturn(false);
+
+    handler.onParticipantJoined(ev("host", "PA_1", at));
+
+    verify(busy, never()).markBusy(anyString(), anyString());
+    verify(events, never()).roster(any());
   }
 
   @Test

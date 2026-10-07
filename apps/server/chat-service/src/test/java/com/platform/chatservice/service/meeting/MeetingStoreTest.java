@@ -168,6 +168,25 @@ class MeetingStoreTest {
   }
 
   @Test
+  void aJoinArrivingAfterTheEndIsRefused() {
+    Meeting m = meeting("hhh-hhhh-hhh", now);
+    assertThat(store.recordJoin(m.getId(), row("u1", "PA_1"))).isTrue();
+    assertThat(store.recordJoin(m.getId(), row("u1", "PA_2"))).isTrue(); // sid replaced
+    store.markEnded(m.getId(), now);
+
+    assertThat(store.recordJoin(m.getId(), row("u2", "PA_3"))).isFalse();
+    assertThat(store.recordJoin(m.getId(), row("u1", "PA_4"))).isFalse();
+    assertThat(reload(m).getAttendance())
+        .singleElement()
+        .satisfies(
+            a -> {
+              assertThat(a.getUserId()).isEqualTo("u1");
+              assertThat(a.getSid()).isEqualTo("PA_2");
+              assertThat(a.getLeftAt()).isEqualTo(now);
+            });
+  }
+
+  @Test
   void onlyAMeetingNobodyEverJoinedCanBeCancelled() {
     Meeting quiet = meeting("fff-ffff-fff", now);
     Meeting used = meeting("ggg-gggg-ggg", now);

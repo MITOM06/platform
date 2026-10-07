@@ -4,10 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -182,6 +185,48 @@ class MeetingControllerTest {
         .andExpect(status().isForbidden())
         .andExpect(jsonPath("$.code").value("MEETING_REMOVED"))
         .andExpect(jsonPath("$.statusCode").value(403));
+  }
+
+  @Test
+  void aDateTimeWithoutAnOffsetIsAnInvalidFieldNotAServerError() throws Exception {
+    // What Dart's DateTime.toIso8601String() sends for a local time without .toUtc().
+    mvc.perform(
+            post("/api/meetings")
+                .principal(lan)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"scheduledStart\":\"2026-10-08T09:00:00.000\"}"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("MEETING_INVALID"))
+        .andExpect(jsonPath("$.params.field").value("scheduledStart"))
+        .andExpect(jsonPath("$.message").doesNotExist());
+    mvc.perform(
+            patch("/api/meetings/m1")
+                .principal(lan)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{not json"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("MEETING_INVALID"))
+        .andExpect(jsonPath("$.message").doesNotExist());
+    verifyNoInteractions(meetings);
+  }
+
+  @Test
+  void aNonNumericPageSizeIsAnInvalidField() throws Exception {
+    mvc.perform(get("/api/meetings?size=abc").principal(lan))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("MEETING_INVALID"))
+        .andExpect(jsonPath("$.params.field").value("size"))
+        .andExpect(jsonPath("$.message").doesNotExist());
+  }
+
+  @Test
+  void anInstantMeetingNeedsNoBody() throws Exception {
+    when(meetings.create(any(), any())).thenReturn(response("m1"));
+
+    mvc.perform(post("/api/meetings").principal(lan))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.id").value("m1"));
+    verify(meetings).create(any(), isNull());
   }
 
   @Test

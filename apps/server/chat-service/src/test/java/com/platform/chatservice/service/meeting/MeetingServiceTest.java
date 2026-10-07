@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.dto.meeting.CreateMeetingRequest;
+import com.platform.chatservice.dto.meeting.LobbyEntryDto;
 import com.platform.chatservice.dto.meeting.MeetingResponse;
 import com.platform.chatservice.dto.meeting.MeetingSettingsDto;
 import com.platform.chatservice.dto.meeting.PersonDto;
@@ -54,6 +55,7 @@ class MeetingServiceTest {
   @Mock private MeetingStore store;
   @Mock private MeetingPeople people;
   @Mock private MeetingEvents events;
+  @Mock private MeetingLobby lobby;
   private MeetingService service;
 
   private final UserPrincipal host =
@@ -68,7 +70,8 @@ class MeetingServiceTest {
             new MeetingCodeGenerator(new Random(1)),
             people,
             events,
-            new MeetingMapper(people));
+            new MeetingMapper(people),
+            lobby);
     when(store.insert(any()))
         .thenAnswer(
             inv -> {
@@ -129,6 +132,15 @@ class MeetingServiceTest {
     assertThat(r.viewerRole()).isEqualTo("host");
     assertThat(r.host()).isEqualTo(new PersonDto("host", "Lan", null));
     verify(events, never()).invited(any(), any(), anyCollection());
+  }
+
+  @Test
+  void anInstantMeetingNeedsNoRequestBody() {
+    MeetingResponse r = service.create(host, null);
+
+    assertThat(r.viewerRole()).isEqualTo("host");
+    assertThat(inserted().getScheduledStart()).isNull();
+    assertThat(inserted().getStatus()).isEqualTo(MeetingStatus.SCHEDULED);
   }
 
   @Test
@@ -307,6 +319,33 @@ class MeetingServiceTest {
     assertThat(service.list(me, "past", "gone", 2).content()).isEmpty();
   }
 
+  @Test
+  void aPageResolvesEveryonesNamesWithOneLookup() {
+    Meeting a = Meeting.builder().id("a").hostId("host").inviteeIds(List.of("me", U1)).build();
+    Meeting b = Meeting.builder().id("b").hostId("me").coHostIds(List.of(U2)).build();
+    Meeting c = Meeting.builder().id("c").hostId("host").departmentId("dept-a").build();
+    UserPrincipal me = new UserPrincipal("me", "Member", List.of(), List.of("dept-a"));
+    when(store.page(eq("me"), eq(List.of("dept-a")), eq(true), isNull(), eq(21)))
+        .thenReturn(List.of(a, b, c));
+    when(people.profiles(anyCollection()))
+        .thenReturn(
+            Map.of(
+                "host", new PersonDto("host", "Lan", null), U2, new PersonDto(U2, "Minh", null)));
+
+    PageResponse<MeetingResponse> page = service.list(me, null, null, 20);
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<Collection<String>> ids = ArgumentCaptor.forClass(Collection.class);
+    verify(people, times(1)).profiles(ids.capture());
+    assertThat(ids.getValue()).containsExactlyInAnyOrder("host", "me", U1, U2);
+    assertThat(page.content())
+        .extracting(r -> r.host().displayName())
+        .containsExactly("Lan", null, "Lan");
+    assertThat(page.content().get(1).coHosts()).containsExactly(new PersonDto(U2, "Minh", null));
+    assertThat(page.content().get(0).invitees())
+        .containsExactly(new PersonDto("me", null, null), new PersonDto(U1, null, null));
+  }
+
   // ---- update / cancel
 
   @Test
@@ -382,5 +421,50 @@ class MeetingServiceTest {
     when(store.markCancelled(eq("m1"), any())).thenReturn(true);
     service.cancel(host, "m1");
     verify(events).cancelled("m1", List.of("co", U1)); // removed U2 and the host left out
+  }
+
+  @Test
+  void cancellingTellsThePeopleStillWaitingAndDropsTheLobby() {
+    stored();
+    when(store.markCancelled(eq("m1"), any())).thenReturn(true);
+    when(lobby.waiting("m1"))
+        .thenReturn(List.of(new LobbyEntryDto("g1", "Guest"), new LobbyEntryDto("g2", null)));
+
+    service.cancel(host, "m1");
+
+    verify(lobby).clear("m1");
+    verify(events).ended("m1", List.of("g1", "g2"));
+  }
+
+  @Test
+  void aRefusedCancelLeavesTheLobbyAlone() {
+    stored();
+    when(store.markCancelled(eq("m1"), any())).thenReturn(false);
+
+    apiError(() -> service.cancel(host, "m1"));
+
+    verify(lobby, never()).clear(any());
+    verify(events, never()).ended(any(), any());
+  }
+
+  @Test
+  void anUnchangedDepartmentIsNotRecheckedOnEdit() {
+    Meeting m = stored();
+    m.setDepartmentId("dept-b");
+    m.getCoHostIds().add("co");
+    UserPrincipal co = new UserPrincipal("co", "Member", List.of(), List.of("dept-a"));
+    ArgumentCaptor<Update> update = ArgumentCaptor.forClass(Update.class);
+    when(store.update(eq("m1"), update.capture())).thenReturn(Optional.of(m));
+
+    service.update(
+        co, "m1", new UpdateMeetingRequest("New", null, null, "dept-b", null, null, null));
+
+    Document set = (Document) update.getValue().getUpdateObject().get("$set");
+    assertThat(set).containsKey("title").doesNotContainKey("departmentId");
+
+    UpdateMeetingRequest move =
+        new UpdateMeetingRequest(null, null, null, "dept-c", null, null, null);
+    assertThat(apiError(() -> service.update(co, "m1", move)).code())
+        .isEqualTo("MEETING_DEPARTMENT_FORBIDDEN");
   }
 }

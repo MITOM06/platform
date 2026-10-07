@@ -2,6 +2,7 @@ package com.platform.chatservice.service.meeting;
 
 import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.dto.meeting.CreateMeetingRequest;
+import com.platform.chatservice.dto.meeting.LobbyEntryDto;
 import com.platform.chatservice.dto.meeting.MeetingResponse;
 import com.platform.chatservice.dto.meeting.PersonDto;
 import com.platform.chatservice.dto.meeting.UpdateMeetingRequest;
@@ -42,10 +43,15 @@ public class MeetingService {
   private final MeetingPeople people;
   private final MeetingEvents events;
   private final MeetingMapper mapper;
+  private final MeetingLobby lobby;
 
+  /** {@code req} may be null: no body = an instant meeting with every default ("họp ngay"). */
   public MeetingResponse create(UserPrincipal caller, CreateMeetingRequest req) {
     if (!caller.hasPermission(HOST_MEETING)) {
       throw new ApiException(HttpStatus.FORBIDDEN, ErrorCodes.MEETING_CREATE_FORBIDDEN);
+    }
+    if (req == null) {
+      req = new CreateMeetingRequest(null, null, null, null, null, null, null);
     }
     String hostId = caller.getUserId();
     Instant now = Instant.now();
@@ -124,7 +130,10 @@ public class MeetingService {
     List<Meeting> rows =
         store.page(caller.getUserId(), caller.getDepts(), upcoming, after, limit + 1);
     boolean hasMore = rows.size() > limit;
-    List<MeetingResponse> content = rows.stream().limit(limit).map(m -> view(caller, m)).toList();
+    List<MeetingResponse> content =
+        mapper.toResponses(
+            rows.stream().limit(limit).toList(),
+            m -> MeetingAccess.viewerRole(m, caller.getUserId(), caller.getDepts()));
     return new PageResponse<>(content, 0, limit, hasMore ? limit + 1 : content.size());
   }
 
@@ -155,8 +164,9 @@ public class MeetingService {
       newcomers = invitees.stream().filter(u -> !before.contains(u)).toList();
       changed = true;
     }
-    if (req.departmentId() != null) {
-      String departmentId = blankToNull(req.departmentId());
+    String departmentId = blankToNull(req.departmentId());
+    if (req.departmentId() != null && !Objects.equals(departmentId, m.getDepartmentId())) {
+      // Only a change is checked: a co-host outside the department may still edit the rest.
       MeetingRequests.department(caller, departmentId);
       setOrUnset(update, "departmentId", departmentId);
       changed = true;
@@ -192,6 +202,10 @@ public class MeetingService {
     if (!store.markCancelled(id, Instant.now())) {
       throw new ApiException(HttpStatus.CONFLICT, ErrorCodes.MEETING_NOT_CANCELLABLE);
     }
+    // A cancelled meeting is ENDED: like MeetingCloser, release whoever is still in the lobby.
+    List<String> waiting = lobby.waiting(id).stream().map(LobbyEntryDto::userId).toList();
+    lobby.clear(id);
+    events.ended(id, waiting);
     List<String> recipients =
         new ArrayList<>(
             MeetingMapper.recipients(

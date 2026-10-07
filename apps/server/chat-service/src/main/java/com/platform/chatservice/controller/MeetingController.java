@@ -35,9 +35,10 @@ public class MeetingController {
   private final MeetingService meetings;
   private final MeetingJoinService joins;
 
+  /** No body (or an empty one) creates an instant meeting with every default ("họp ngay"). */
   @PostMapping
   public ResponseEntity<MeetingResponse> create(
-      @RequestBody CreateMeetingRequest body, Principal principal) {
+      @RequestBody(required = false) CreateMeetingRequest body, Principal principal) {
     return ResponseEntity.status(HttpStatus.CREATED).body(meetings.create(caller(principal), body));
   }
 
