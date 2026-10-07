@@ -18,7 +18,13 @@ const lk = vi.hoisted(() => {
       }),
       setCameraEnabled: vi.fn<(on: boolean) => Promise<unknown>>(async () => undefined),
       getTrackPublication: vi.fn<(source: string) => unknown>(() => undefined as unknown),
+      isMicrophoneEnabled: true,
+      isCameraEnabled: false,
+      isScreenShareEnabled: false,
+      setScreenShareEnabled: vi.fn<(on: boolean, opts?: unknown) => Promise<unknown>>(async () => undefined),
+      publishData: vi.fn<(data: Uint8Array, opts: unknown) => Promise<void>>(async () => undefined),
     }
+    switchActiveDevice = vi.fn<(kind: string, id: string) => Promise<boolean>>(async () => true)
     connect = vi.fn<(url: string, token: string) => Promise<unknown>>(async () => {
       const e = FakeRoom.connectError
       FakeRoom.connectError = null
@@ -57,8 +63,16 @@ const lk = vi.hoisted(() => {
         Reconnecting: 'reconnecting',
         Reconnected: 'reconnected',
         Disconnected: 'disconnected',
+        DataReceived: 'dataReceived',
       },
-      Track: { Source: { Camera: 'camera', Microphone: 'microphone' } },
+      Track: {
+        Source: {
+          Camera: 'camera',
+          Microphone: 'microphone',
+          ScreenShare: 'screen_share',
+          ScreenShareAudio: 'screen_share_audio',
+        },
+      },
       ConnectionQuality: { Excellent: 'excellent', Good: 'good', Poor: 'poor', Lost: 'lost' },
       DisconnectReason: { CLIENT_INITIATED: 1, PARTICIPANT_REMOVED: 4, ROOM_DELETED: 5, SIGNAL_CLOSE: 9 },
     },
@@ -66,7 +80,7 @@ const lk = vi.hoisted(() => {
 })
 vi.mock('livekit-client', () => lk.module)
 
-import { LiveKitSession, MediaAccessError, RoomConnectError } from '../livekit-session'
+import { LiveKitSession, MediaAccessError, RoomConnectError, ScreenShareError } from '../livekit-session'
 
 class FakeMediaStream {
   tracks: unknown[]
@@ -223,5 +237,111 @@ describe('final-review fixes', () => {
     other.onDisconnected = onOther
     room().emit('disconnected', 9) // SIGNAL_CLOSE
     expect(onOther).toHaveBeenCalledWith('failed')
+  })
+})
+
+describe('meeting extensions', () => {
+  it('can join with the mic off and preferred devices', async () => {
+    await session.connect('wss://rtc', 'tok', { video: true, audio: false, audioDeviceId: 'mic-2', videoDeviceId: 'cam-3' })
+    expect(room().localParticipant.setMicrophoneEnabled).not.toHaveBeenCalled()
+    expect(room().localParticipant.setCameraEnabled).toHaveBeenCalledWith(true)
+    expect(room().options).toMatchObject({
+      adaptiveStream: false,
+      audioCaptureDefaults: { deviceId: 'mic-2' },
+      videoCaptureDefaults: { deviceId: 'cam-3' },
+    })
+  })
+
+  it('adds no capture defaults when no device is chosen (calls stay as they were)', async () => {
+    await session.connect('wss://rtc', 'tok', { video: true })
+    expect(room().options).toEqual({ adaptiveStream: false, dynacast: true })
+    expect(room().localParticipant.setMicrophoneEnabled).toHaveBeenCalledWith(true)
+  })
+
+  it('keeps a peer’s screen share out of their camera stream', async () => {
+    await session.connect('wss://rtc', 'tok', { video: true })
+    room().emit('participantConnected', bob)
+    room().emit('trackSubscribed', track('video'), pub('camera'), bob)
+    room().emit('trackSubscribed', track('video'), pub('screen_share'), bob)
+    const peer = session.peer('bob')!
+    expect((peer.stream as unknown as FakeMediaStream).getTracks()).toHaveLength(1)
+    expect((peer.screen as unknown as FakeMediaStream).getTracks()).toHaveLength(1)
+    room().emit('trackUnsubscribed', track('video'), pub('screen_share'), bob)
+    expect(session.peer('bob')!.screen).toBeNull()
+  })
+
+  it('reads the avatar from metadata and ignores garbage', async () => {
+    await session.connect('wss://rtc', 'tok', { video: false })
+    room().emit('participantConnected', { ...bob, metadata: '{"avatarUrl":"/api/uploads/a.png"}' })
+    expect(session.peer('bob')!.avatarUrl).toBe('/api/uploads/a.png')
+    room().emit('participantConnected', { identity: 'eve', name: 'Eve', isLocal: false, metadata: 'not json' })
+    expect(session.peer('eve')!.avatarUrl).toBeUndefined()
+  })
+
+  it('reports when the server mutes my mic', async () => {
+    await session.connect('wss://rtc', 'tok', { video: false })
+    const onLocal = vi.fn()
+    session.onLocalMediaChanged = onLocal
+    room().localParticipant.isMicrophoneEnabled = false
+    room().emit('trackMuted', pub('microphone'), { identity: 'me', isLocal: true })
+    expect(onLocal).toHaveBeenLastCalledWith({ mic: false, camera: false, screen: false })
+  })
+
+  it('starts and stops screen sharing and tells the caller', async () => {
+    await session.connect('wss://rtc', 'tok', { video: false })
+    const onLocal = vi.fn()
+    session.onLocalMediaChanged = onLocal
+    room().localParticipant.isScreenShareEnabled = true
+    await session.setScreenShare(true)
+    expect(room().localParticipant.setScreenShareEnabled).toHaveBeenCalledWith(true, { audio: true })
+    expect(onLocal).toHaveBeenLastCalledWith({ mic: true, camera: false, screen: true })
+
+    room().localParticipant.setScreenShareEnabled.mockRejectedValueOnce(
+      Object.assign(new Error('Permission denied'), { name: 'NotAllowedError' }))
+    await expect(session.setScreenShare(true)).rejects.toBeInstanceOf(ScreenShareError)
+  })
+
+  it('reports other screen share failures without leaking the browser error', async () => {
+    await session.connect('wss://rtc', 'tok', { video: false })
+    room().localParticipant.setScreenShareEnabled.mockRejectedValueOnce(
+      Object.assign(new Error('Could not start video source'), { name: 'NotReadableError' }))
+    const err = await session.setScreenShare(true).catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(Error)
+    expect(err).not.toBeInstanceOf(ScreenShareError)
+    expect((err as Error).message).not.toContain('video source')
+  })
+
+  it('sends and receives data on a topic', async () => {
+    await session.connect('wss://rtc', 'tok', { video: false })
+    const onData = vi.fn()
+    session.onData = onData
+    const bytes = new Uint8Array([1, 2])
+    session.publishData('reaction', bytes, false)
+    expect(room().localParticipant.publishData).toHaveBeenCalledWith(bytes, { reliable: false, topic: 'reaction' })
+    room().emit('dataReceived', bytes, bob, 1, 'reaction')
+    expect(onData).toHaveBeenCalledWith('reaction', bytes, 'bob')
+  })
+
+  it('never throws when publishing data fails or before connecting', async () => {
+    expect(() => session.publishData('reaction', new Uint8Array([1]), false)).not.toThrow()
+    await session.connect('wss://rtc', 'tok', { video: false })
+    room().localParticipant.publishData.mockRejectedValueOnce(new Error('closed'))
+    expect(() => session.publishData('reaction', new Uint8Array([1]), false)).not.toThrow()
+  })
+
+  it('switches the active capture device', async () => {
+    await session.connect('wss://rtc', 'tok', { video: true })
+    await session.switchDevice('audioinput', 'mic-9')
+    expect(room().switchActiveDevice).toHaveBeenCalledWith('audioinput', 'mic-9')
+  })
+
+  it('stops receiving a hidden peer’s camera and resumes it', async () => {
+    await session.connect('wss://rtc', 'tok', { video: true })
+    const camera = { setEnabled: vi.fn() }
+    room().remoteParticipants.set('bob', { ...bob, getTrackPublication: (s: string) => (s === 'camera' ? camera : undefined) })
+    session.setPeerVideoEnabled('bob', false)
+    session.setPeerVideoEnabled('bob', true)
+    session.setPeerVideoEnabled('ghost', false)
+    expect(camera.setEnabled.mock.calls).toEqual([[false], [true]])
   })
 })
