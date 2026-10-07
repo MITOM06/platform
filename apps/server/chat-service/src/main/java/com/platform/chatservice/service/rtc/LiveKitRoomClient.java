@@ -87,6 +87,22 @@ public class LiveKitRoomClient {
     call("RemoveParticipant", room, Map.of("room", room, "identity", identity));
   }
 
+  /**
+   * Creates {@code room} with explicit lifetimes before anyone joins. LiveKit returns the existing
+   * room when it already exists, so calling it on every join is harmless. {@code
+   * departureTimeoutSeconds} is how long a room that had people stays open once empty — without it
+   * a host dropping off the network for LiveKit's default ~20 s would end the meeting.
+   */
+  public void createRoom(
+      String room, int emptyTimeoutSeconds, int departureTimeoutSeconds, int maxParticipants) {
+    Map<String, Object> body = new LinkedHashMap<>();
+    body.put("name", room);
+    body.put("empty_timeout", emptyTimeoutSeconds);
+    body.put("departure_timeout", departureTimeoutSeconds);
+    body.put("max_participants", maxParticipants);
+    call("CreateRoom", room, body);
+  }
+
   public void deleteRoom(String room) {
     call("DeleteRoom", room, Map.of("room", room));
   }

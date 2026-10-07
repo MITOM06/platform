@@ -57,5 +57,47 @@ public final class ErrorCodes {
   public static final String PUBLIC_DEPARTMENT_CHANNEL_NOT_ALLOWED =
       "PUBLIC_DEPARTMENT_CHANNEL_NOT_ALLOWED";
 
+  // ── Meetings (/api/meetings) ──────────────────────────────────────────────
+
+  /** 404 — no meeting with this id / code. */
+  public static final String MEETING_NOT_FOUND = "MEETING_NOT_FOUND";
+
+  /** 403 — only the host / a co-host (or, to cancel, only the host) may do this. */
+  public static final String MEETING_FORBIDDEN = "MEETING_FORBIDDEN";
+
+  /** 403 — creating a meeting needs the {@code HOST_MEETING} capability. */
+  public static final String MEETING_CREATE_FORBIDDEN = "MEETING_CREATE_FORBIDDEN";
+
+  /**
+   * 403 — inviting a department requires being a member of it or holding {@code
+   * MANAGE_DEPARTMENTS}.
+   */
+  public static final String MEETING_DEPARTMENT_FORBIDDEN = "MEETING_DEPARTMENT_FORBIDDEN";
+
+  /**
+   * 400 — invalid create/update/list input; {@code params.field} names the field ({@code title |
+   * description | inviteeIds | departmentId | scheduledStart | scheduledEnd | settings | scope}),
+   * {@code params.max} the limit when one applies.
+   */
+  public static final String MEETING_INVALID = "MEETING_INVALID";
+
+  /** 403 — the host removed this person from the meeting; they cannot enter again. */
+  public static final String MEETING_REMOVED = "MEETING_REMOVED";
+
+  /** 403 — the meeting is locked and this person is not invited. */
+  public static final String MEETING_LOCKED = "MEETING_LOCKED";
+
+  /** 409 — the meeting has ended (or was cancelled). */
+  public static final String MEETING_ENDED = "MEETING_ENDED";
+
+  /** 409 — the room already holds the maximum number of participants. */
+  public static final String MEETING_FULL = "MEETING_FULL";
+
+  /** 409 — only a SCHEDULED meeting nobody has entered yet can be cancelled. */
+  public static final String MEETING_NOT_CANCELLABLE = "MEETING_NOT_CANCELLABLE";
+
+  /** 503 — LiveKit is not configured on this deployment, or did not answer. */
+  public static final String MEETINGS_UNAVAILABLE = "MEETINGS_UNAVAILABLE";
+
   private ErrorCodes() {}
 }
