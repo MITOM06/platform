@@ -1485,6 +1485,30 @@ describe('AiService', () => {
       );
     });
 
+    it('runs a tier mapped to an OpenRouter model (mid) on OpenRouter', async () => {
+      (service as any).routerConfig = {
+        ...(service as any).routerConfig,
+        midModel: 'google/gemini-2.5-flash',
+      };
+      await service.handleRequest({ ...basePayload, content: 'x'.repeat(600) });
+
+      expect(orStream).toHaveBeenCalledWith(
+        expect.objectContaining({ model: 'google/gemini-2.5-flash' }),
+      );
+      expect(mockStream).not.toHaveBeenCalled();
+    });
+
+    it('sends an OpenRouter-mapped tier to the Claude primary when no OpenRouter key is set', async () => {
+      (service as any).llm = { openRouterEnabled: false, lightModel: 'claude-haiku-4-5' };
+      (service as any).routerConfig = {
+        ...(service as any).routerConfig,
+        midModel: 'google/gemini-2.5-flash',
+      };
+      await service.handleRequest({ ...basePayload, content: 'x'.repeat(600) });
+
+      expect(mockStream).toHaveBeenCalledWith(expect.objectContaining({ model: 'test-primary' }));
+    });
+
     it('keeps mid / complex turns on Claude', async () => {
       await service.handleRequest({ ...basePayload, content: 'x'.repeat(600) });
 
