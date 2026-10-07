@@ -70,7 +70,7 @@ public class MeetingChatService {
                 .createdAt(Instant.now().truncatedTo(ChronoUnit.MILLIS))
                 .build());
     MeetingMessageDto dto = toDto(saved, people.profiles(List.of(uid)));
-    events.chat(meetingId, dto, validClientId(clientId));
+    events.chat(meetingId, dto, clientIdOrNull(clientId));
     return dto;
   }
 
@@ -134,7 +134,11 @@ public class MeetingChatService {
         row.getCreatedAt());
   }
 
-  private static String validClientId(String clientId) {
+  /**
+   * The client's optimistic-message id when it is well formed ({@code [A-Za-z0-9_-]{1,64}}), else
+   * null — a junk value is dropped, never echoed back.
+   */
+  public static String clientIdOrNull(String clientId) {
     return clientId != null && CLIENT_ID.matcher(clientId).matches() ? clientId : null;
   }
 }

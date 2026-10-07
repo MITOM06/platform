@@ -44,6 +44,7 @@ public class MeetingService {
   private final MeetingEvents events;
   private final MeetingMapper mapper;
   private final MeetingLobby lobby;
+  private final MeetingRoomPolicy policy;
 
   /** {@code req} may be null: no body = an instant meeting with every default ("họp ngay"). */
   public MeetingResponse create(UserPrincipal caller, CreateMeetingRequest req) {
@@ -187,6 +188,7 @@ public class MeetingService {
     Meeting updated = store.update(id, update).orElseThrow(MeetingService::ended);
     if (settingsChanged) {
       events.settings(updated);
+      policy.afterSettingsChange(m, updated);
     }
     if (!newcomers.isEmpty()) {
       events.invited(updated, hostName(updated), newcomers);

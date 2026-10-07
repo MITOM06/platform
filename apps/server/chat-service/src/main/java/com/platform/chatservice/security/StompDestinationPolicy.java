@@ -26,7 +26,7 @@ public final class StompDestinationPolicy {
   /** Conversation topic root shared by the message and typing topics. */
   public static final String CONVERSATION_TOPIC_PREFIX = "/topic/conversation/";
 
-  /** Meeting room topic ({@code meet.roster}, {@code meet.settings}, {@code meet.ended}). */
+  /** Meeting room topic ({@code meet.roster}, {@code meet.settings}, {@code meet.hands}, …). */
   public static final String MEETING_TOPIC_PREFIX = "/topic/meeting/";
 
   private static final String CONVERSATION_ID = "(?<conversationId>[A-Za-z0-9_-]{1,64})";
@@ -71,6 +71,9 @@ public final class StompDestinationPolicy {
           Rule.conversation(Pattern.quote(CONVERSATION_TOPIC_PREFIX) + CONVERSATION_ID + "/typing"),
           Rule.exact("/user/queue/meeting"),
           Rule.meeting(Pattern.quote(MEETING_TOPIC_PREFIX) + MEETING_ID));
+
+  private static final Pattern MEETING_TOPIC =
+      Pattern.compile(Pattern.quote(MEETING_TOPIC_PREFIX) + MEETING_ID);
 
   private static final Pattern CONVERSATION_TOPIC =
       Pattern.compile(Pattern.quote(CONVERSATION_TOPIC_PREFIX) + CONVERSATION_ID + "(?:/typing)?");
@@ -124,6 +127,18 @@ public final class StompDestinationPolicy {
     }
     Matcher m = CONVERSATION_TOPIC.matcher(destination);
     return m.matches() ? m.group("conversationId") : null;
+  }
+
+  /**
+   * The meeting id of exactly {@code /topic/meeting/{id}}, or null for any other destination. Used
+   * by the outbound filter that silences the topic for people removed from the meeting.
+   */
+  public static String meetingIdOfTopic(String destination) {
+    if (destination == null || !destination.startsWith(MEETING_TOPIC_PREFIX)) {
+      return null;
+    }
+    Matcher m = MEETING_TOPIC.matcher(destination);
+    return m.matches() ? m.group("meetingId") : null;
   }
 
   /**

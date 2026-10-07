@@ -56,6 +56,7 @@ class MeetingServiceTest {
   @Mock private MeetingPeople people;
   @Mock private MeetingEvents events;
   @Mock private MeetingLobby lobby;
+  @Mock private MeetingRoomPolicy policy;
   private MeetingService service;
 
   private final UserPrincipal host =
@@ -71,7 +72,8 @@ class MeetingServiceTest {
             people,
             events,
             new MeetingMapper(people),
-            lobby);
+            lobby,
+            policy);
     when(store.insert(any()))
         .thenAnswer(
             inv -> {
@@ -466,5 +468,32 @@ class MeetingServiceTest {
         new UpdateMeetingRequest(null, null, null, "dept-c", null, null, null);
     assertThat(apiError(() -> service.update(co, "m1", move)).code())
         .isEqualTo("MEETING_DEPARTMENT_FORBIDDEN");
+  }
+
+  @Test
+  void aSettingsChangeIsAlsoHandedToTheLiveRoom() {
+    Meeting m = stored();
+    Meeting after =
+        Meeting.builder()
+            .id("m1")
+            .code("abc-defg-hjk")
+            .hostId("host")
+            .settings(Meeting.Settings.builder().allowAttendeeScreenShare(false).build())
+            .build();
+    when(store.update(eq("m1"), any())).thenReturn(Optional.of(after));
+
+    service.update(
+        host,
+        "m1",
+        new UpdateMeetingRequest(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            new MeetingSettingsDto(null, null, false, null, null)));
+
+    verify(policy).afterSettingsChange(m, after);
   }
 }

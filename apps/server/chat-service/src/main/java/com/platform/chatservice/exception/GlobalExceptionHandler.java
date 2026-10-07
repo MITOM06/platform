@@ -96,11 +96,15 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(ex.getStatus()).body(body);
   }
 
+  /**
+   * 429 with the stable {@code RATE_LIMITED} code (clients localize by code / status) and a {@code
+   * Retry-After} hint — never the exception's English text.
+   */
   @ExceptionHandler(RateLimitExceededException.class)
   public ResponseEntity<Map<String, Object>> handleRateLimit(RateLimitExceededException ex) {
     return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
         .header("Retry-After", "5")
-        .body(Map.of("error", "Too Many Requests", "message", ex.getMessage(), "statusCode", 429));
+        .body(body("Too Many Requests", null, ErrorCodes.RATE_LIMITED, 429));
   }
 
   /**

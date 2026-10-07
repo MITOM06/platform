@@ -12,19 +12,31 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.platform.chatservice.config.LiveKitProperties;
 import com.platform.chatservice.dto.meeting.CreateMeetingRequest;
+import com.platform.chatservice.dto.meeting.HandDto;
+import com.platform.chatservice.dto.meeting.MeetingHandsResponse;
 import com.platform.chatservice.dto.meeting.MeetingJoinResponse;
+import com.platform.chatservice.dto.meeting.MeetingNoteDto;
+import com.platform.chatservice.dto.meeting.MeetingNoteRequest;
 import com.platform.chatservice.dto.meeting.MeetingResponse;
+import com.platform.chatservice.dto.meeting.PersonDto;
 import com.platform.chatservice.exception.ApiException;
 import com.platform.chatservice.exception.GlobalExceptionHandler;
+import com.platform.chatservice.exception.MeetingNoteConflictException;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.SfuCallService;
+import com.platform.chatservice.service.meeting.MeetingChatService;
+import com.platform.chatservice.service.meeting.MeetingHandService;
 import com.platform.chatservice.service.meeting.MeetingJoinService;
+import com.platform.chatservice.service.meeting.MeetingNotesService;
+import com.platform.chatservice.service.meeting.MeetingNotesService.Scope;
 import com.platform.chatservice.service.meeting.MeetingService;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +58,9 @@ class MeetingControllerTest {
 
   @Mock private MeetingService meetings;
   @Mock private MeetingJoinService joins;
+  @Mock private MeetingChatService chat;
+  @Mock private MeetingNotesService notes;
+  @Mock private MeetingHandService hands;
   private MockMvc mvc;
   private final UserPrincipal lan =
       new UserPrincipal("lan", "Member", List.of("HOST_MEETING"), List.of("dept-a"));
@@ -53,7 +68,7 @@ class MeetingControllerTest {
   @BeforeEach
   void setUp() {
     mvc =
-        MockMvcBuilders.standaloneSetup(new MeetingController(meetings, joins))
+        MockMvcBuilders.standaloneSetup(new MeetingController(meetings, joins, chat, notes, hands))
             .setControllerAdvice(new GlobalExceptionHandler())
             .build();
   }
@@ -234,11 +249,86 @@ class MeetingControllerTest {
     assertThatCode(
             () ->
                 MockMvcBuilders.standaloneSetup(
-                        new MeetingController(meetings, joins),
+                        new MeetingController(meetings, joins, chat, notes, hands),
                         new CallRestController(
                             org.mockito.Mockito.mock(SfuCallService.class),
                             new LiveKitProperties()))
                     .build())
         .doesNotThrowAnyException();
+  }
+
+  @Test
+  void messagesPassTheCursorAndDefaultToFiftyPerPage() throws Exception {
+    when(chat.history(any(), eq("m1"), eq("x9"), eq(10)))
+        .thenReturn(new com.platform.chatservice.dto.PageResponse<>(List.of(), 0, 10, 0));
+    mvc.perform(get("/api/meetings/m1/messages?before=x9&size=10").principal(lan))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.hasNext").value(false));
+
+    mvc.perform(get("/api/meetings/m1/messages").principal(lan));
+    verify(chat).history(any(), eq("m1"), isNull(), eq(50));
+  }
+
+  @Test
+  void aNonNumericPageSizeIsMeetingInvalidNotA500() throws Exception {
+    mvc.perform(get("/api/meetings/m1/messages?size=abc").principal(lan))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("MEETING_INVALID"))
+        .andExpect(jsonPath("$.params.field").value("size"));
+  }
+
+  @Test
+  void theNoteScopeComesFromThePath() throws Exception {
+    when(notes.get(any(), eq("m1"), eq(Scope.SHARED)))
+        .thenReturn(new MeetingNoteDto("shared", "", 0, null, null));
+    mvc.perform(get("/api/meetings/m1/notes/shared").principal(lan))
+        .andExpect(jsonPath("$.scope").value("shared"))
+        .andExpect(jsonPath("$.version").value(0))
+        .andExpect(jsonPath("$.updatedBy").doesNotExist());
+
+    mvc.perform(
+            put("/api/meetings/m1/notes/private")
+                .principal(lan)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"content\":\"x\",\"version\":3}"))
+        .andExpect(status().isOk());
+    verify(notes).put(any(), eq("m1"), eq(Scope.PRIVATE), eq(new MeetingNoteRequest("x", 3L)));
+  }
+
+  @Test
+  void aNoteConflictAnswers409WithTheLatestNote() throws Exception {
+    MeetingNoteDto latest =
+        new MeetingNoteDto(
+            "shared",
+            "B",
+            8,
+            new PersonDto("u2", "Hoa", null),
+            Instant.parse("2026-10-08T02:31:02Z"));
+    when(notes.put(any(), eq("m1"), eq(Scope.SHARED), any()))
+        .thenThrow(new MeetingNoteConflictException(latest));
+
+    mvc.perform(
+            put("/api/meetings/m1/notes/shared")
+                .principal(lan)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"content\":\"C\",\"version\":7}"))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.code").value("MEETING_NOTE_CONFLICT"))
+        .andExpect(jsonPath("$.statusCode").value(409))
+        .andExpect(jsonPath("$.latest.content").value("B"))
+        .andExpect(jsonPath("$.latest.version").value(8))
+        .andExpect(jsonPath("$.latest.updatedBy.displayName").value("Hoa"))
+        .andExpect(jsonPath("$.message").doesNotExist());
+  }
+
+  @Test
+  void theHandsSnapshotIsServed() throws Exception {
+    when(hands.snapshot(any(), eq("m1")))
+        .thenReturn(
+            new MeetingHandsResponse(
+                List.of(new HandDto("u3", "Hoa", Instant.parse("2026-10-08T02:06:00Z")))));
+    mvc.perform(get("/api/meetings/m1/hands").principal(lan))
+        .andExpect(jsonPath("$.hands[0].userId").value("u3"))
+        .andExpect(jsonPath("$.hands[0].displayName").value("Hoa"));
   }
 }

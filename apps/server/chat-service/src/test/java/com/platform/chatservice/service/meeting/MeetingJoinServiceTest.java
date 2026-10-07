@@ -267,4 +267,21 @@ class MeetingJoinServiceTest {
     verify(closer, never()).close(anyString());
     verify(rooms, never()).deleteRoom(anyString());
   }
+
+  @Test
+  void someoneWhoWalkedInIsRememberedSoLockingLaterDoesNotLockThemOut() {
+    m.getSettings().setWaitingRoom(false);
+
+    assertThat(service.join(stranger, "m1").status()).isEqualTo("joined");
+
+    verify(lobby).admit("m1", "stranger");
+  }
+
+  @Test
+  void inviteesAndManagersNeedNoAdmission() {
+    service.join(invitee, "m1");
+    service.join(host, "m1");
+
+    verify(lobby, never()).admit(anyString(), anyString());
+  }
 }

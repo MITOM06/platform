@@ -111,4 +111,18 @@ class GlobalExceptionHandlerParamsTest {
         .containsEntry("latest", latest)
         .doesNotContainKey("message");
   }
+
+  /** A 429 carries a stable code and the retry hint — never the exception's English text. */
+  @Test
+  void rateLimit_isACodeWithRetryAfterAndNoRawText() {
+    ResponseEntity<Map<String, Object>> response =
+        handler.handleRateLimit(new RateLimitExceededException());
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+    assertThat(response.getHeaders().getFirst("Retry-After")).isEqualTo("5");
+    assertThat(response.getBody())
+        .containsEntry("code", "RATE_LIMITED")
+        .containsEntry("statusCode", 429)
+        .doesNotContainKey("message");
+  }
 }

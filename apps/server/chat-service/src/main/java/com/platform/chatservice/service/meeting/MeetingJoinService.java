@@ -16,6 +16,7 @@ import com.platform.chatservice.service.rtc.LiveKitTokenService;
 import com.platform.chatservice.service.rtc.LiveKitUnavailableException;
 import com.platform.chatservice.service.rtc.RtcGrant;
 import com.platform.chatservice.service.rtc.RtcRooms;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -72,7 +73,7 @@ public class MeetingJoinService {
         return waitInLobby(m, uid);
       }
       default -> {
-        return enter(m, uid);
+        return enter(m, uid, caller.getDepts());
       }
     }
   }
@@ -131,7 +132,7 @@ public class MeetingJoinService {
     return MeetingJoinResponse.waiting();
   }
 
-  private MeetingJoinResponse enter(Meeting m, String uid) {
+  private MeetingJoinResponse enter(Meeting m, String uid, Collection<String> departmentIds) {
     String meetingId = m.getId();
     Set<String> inside = peopleInside(m);
     if (inside.size() >= MAX_PARTICIPANTS && !inside.contains(uid)) {
@@ -160,6 +161,10 @@ public class MeetingJoinService {
     String token = tokens.participantToken(uid, me.displayName(), metadata(me.avatarUrl()), grant);
     if (manager) {
       events.lobbyTo(uid, meetingId, lobby.waiting(meetingId));
+    } else if (!MeetingAccess.isInvited(m, uid, departmentIds)) {
+      // Walked in (waiting room off) or was admitted: remember it, so turning the waiting room on
+      // or locking the room later never shuts out someone who is already inside.
+      lobby.admit(meetingId, uid);
     }
     return MeetingJoinResponse.joined(props.getUrl(), token, role);
   }

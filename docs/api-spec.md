@@ -491,8 +491,9 @@ Response 200: { "success": true }
 ## 📅 Meetings (`/api/meetings`)
 
 > Meet/Teams-style meeting rooms, always on LiveKit (room `meet_{meetingId}`, never sent to
-> clients). Plan: `docs/superpowers/plans/2026-10-07-meetings-mt1-mt2.md` (contract section is
-> binding for web/mobile). Creating a meeting needs the `HOST_MEETING` capability (JWT `perms`);
+> clients). Plans: `docs/superpowers/plans/2026-10-07-meetings-mt1-mt2.md` and
+> `docs/superpowers/plans/2026-10-07-meetings-mt3.md` (in-room: hands, chat, notes, host commands —
+> their contract sections are binding for web/mobile). Creating a meeting needs the `HOST_MEETING` capability (JWT `perms`);
 > joining, co-hosting and admitting do not. Times are ISO-8601 UTC; `null` fields are omitted.
 > Errors are `{ "error", "code", "statusCode", "params"? }` — never an internal message.
 
@@ -555,6 +556,19 @@ Response 200: { "success": true }
 | `POST /api/meetings/{id}/lobby/{userId}/admit` | host, co-host | 204 (idempotent) | 403 `MEETING_FORBIDDEN` · 404 · 409 `MEETING_ENDED` |
 | `POST /api/meetings/{id}/lobby/{userId}/deny` | host, co-host | 204 (idempotent) | 403 · 404 · 409 `MEETING_ENDED` |
 | `POST /api/meetings/{id}/end` | host, co-host | 204 (already ENDED ⇒ 204) | 403 `MEETING_FORBIDDEN` · 404 |
+| `GET /api/meetings/{id}/messages?before=&size=` | records access ¹ | 200 `PageResponse<MeetingMessage>` — **newest first** | 403 `MEETING_FORBIDDEN` · 403 `MEETING_REMOVED` · 404 · 400 `MEETING_INVALID {field:"size"}` |
+| `GET /api/meetings/{id}/notes/shared` | records access ¹ | 200 `MeetingNote` | 403 · 404 |
+| `PUT /api/meetings/{id}/notes/shared` | host/co-host; others with records access while `attendeesCanEditNotes=true` | 200 `MeetingNote` | 403 `MEETING_NOTES_READ_ONLY` · 403 `MEETING_FORBIDDEN` · 403 `MEETING_REMOVED` · 404 · 400 `MEETING_INVALID {field:"content",max:50000}` / `{field:"version"}` · **409 `MEETING_NOTE_CONFLICT` + `latest`** |
+| `GET /api/meetings/{id}/notes/private` | records access ¹ (always the caller's own note) | 200 `MeetingNote` | 403 · 404 |
+| `PUT /api/meetings/{id}/notes/private` | records access ¹ | 200 `MeetingNote` | 403 · 404 · 400 · 409 as above |
+| `GET /api/meetings/{id}/hands` | room access ² | 200 `{ "hands": [Hand…] }` | 403 `MEETING_FORBIDDEN` · 403 `MEETING_REMOVED` · 404 · 409 `MEETING_ENDED` |
+
+¹ **Records access** (also after the meeting ended): host, co-host, invited / department member,
+has an `attendance` row, or admitted — unless removed (403 `MEETING_REMOVED`).
+² **Room access**: exactly the people `join` lets straight in (host, co-host, invited / department
+/ admitted, or anyone while the waiting room is off and the room unlocked); ENDED ⇒ 409.
+Someone who once entered the room is remembered as admitted, so turning the waiting room on or
+locking the room later never shuts them out (`LOCK` only stops newcomers).
 
 `MEETING_INVALID` carries `params.field` ∈ `title | description | inviteeIds | departmentId |
 scheduledStart | scheduledEnd | settings | scope | size` and `params.max` when a limit applies, e.g.
@@ -608,16 +622,88 @@ meeting 48h past its start (or creation) is retired to ENDED by the sweep.
   `meet.denied` / `meet.ended`. Calling `join` again while waiting stays `waiting` (no duplicate);
   leaving the waiting page ⇒ `DELETE /lobby`.
 
-### STOMP
+**`MeetingMessage`** (in-meeting chat — text only, no files, no system lines)
+
+```json
+{ "id": "6710aa01b9e4d21f0c3a9e55",
+  "sender": { "userId": "64b0…03", "displayName": "Hoa Le", "avatarUrl": "/api/uploads/…" },
+  "content": "Slide 3 có số liệu mới", "createdAt": "2026-10-08T02:05:11.120Z" }
+```
+
+History: `before` = `id` of the oldest line the client already has (absent = newest page; unknown /
+other meeting's id ⇒ empty page); `size` default 50, max 100.
+
+**`MeetingNote`**
+
+```json
+{ "scope": "shared", "content": "## Kết luận\n- Chốt ngân sách Q4", "version": 7,
+  "updatedBy": { "userId": "64b0…01", "displayName": "Lan Nguyen" },
+  "updatedAt": "2026-10-08T02:30:00Z" }
+```
+
+- `scope` ∈ `shared | private`. Nobody wrote it yet ⇒ `{"scope":"shared","content":"","version":0}`.
+- `content` is Markdown stored verbatim (not trimmed), ≤ 50 000 chars; `""` is valid.
+
+**`MeetingNoteRequest`** — `{ "content": "…", "version": 7 }`: the version the edit was made on
+(first save = `0`). Matches ⇒ saved, returns `version + 1`. Stale (or two people saving the first
+version at once) ⇒ 409, nothing changes:
+
+```json
+{ "error": "Conflict", "code": "MEETING_NOTE_CONFLICT", "statusCode": 409,
+  "latest": { "scope": "shared", "content": "…the other person's text…", "version": 8,
+              "updatedBy": { "userId": "64b0…02", "displayName": "Minh Tran" },
+              "updatedAt": "2026-10-08T02:31:02Z" } }
+```
+
+The client never overwrites what the user is typing: it shows "a newer version exists", lets them
+merge, then PUTs again with `latest.version`.
+
+**`Hand`** — `{ "userId": "64b0…03", "displayName": "Hoa Le", "raisedAt": "2026-10-08T02:06:00.250Z" }`;
+`hands` is always in raise order (earliest first).
+
+### STOMP — client commands (`SEND /app/…`)
+
+| Destination | Payload | Notes |
+|---|---|---|
+| `/app/meet.hand` | `{ "meetingId": "m1", "raised": true }` | Your own hand only. Raising again keeps your place (no event); lowering when not raised is a no-op. Room access ² |
+| `/app/meet.chat` | `{ "meetingId": "m1", "content": "…", "clientId": "c-7f3a" }` | `content` trimmed, 1..2000. Rate limit shared with normal chat (10 lines / 5 s). `clientId` optional, `[A-Za-z0-9_-]{1,64}` (otherwise dropped), echoed in `meet.chat` / `meet.error`, never stored |
+| `/app/meet.host` | `{ "meetingId": "m1", "action": "MUTE_MIC", "targetId": "64b0…03" }` | Host / co-host. An attendee's command is **ignored** (logged, no event, no error). `targetId` required for `MUTE_MIC`, `REMOVE`, `LOWER_HAND`, `MAKE_COHOST`, `REVOKE_COHOST` |
+
+Host `action`s:
+
+| `action` | Who | Effect | Events |
+|---|---|---|---|
+| `MUTE_MIC` | host, co-host | mutes the target's live microphone tracks (cannot unmute anyone) | `meet.muted` to the target (when a track was muted) |
+| `MUTE_ALL` | host, co-host | same for everyone in the room except the caller | `meet.muted` to each person muted |
+| `REMOVE` | host; co-host only on attendees; nobody removes the host or themselves | `removedIds` + loses co-host → Redis removed set (loses admission) → hand lowered → kicked from LiveKit | `meet.removed` to the target; `meet.hands` if their hand was up; `meet.roster` via the webhook |
+| `LOWER_HAND` / `LOWER_ALL_HANDS` | host, co-host | lowers one / every hand | `meet.hands` (when it changed) |
+| `LOCK` / `UNLOCK` | host, co-host | `settings.locked` | `meet.settings` (when it changed) |
+| `WAITING_ROOM_ON` / `WAITING_ROOM_OFF` | host, co-host | `settings.waitingRoom` | `meet.settings` (when it changed) |
+| `ATTENDEE_SCREEN_SHARE_ON` / `_OFF` | host, co-host | `settings.allowAttendeeScreenShare`; every attendee in the room is updated in LiveKit (OFF: camera + microphone only, a live share is stopped; ON: every source) | `meet.settings` (when it changed) |
+| `MAKE_COHOST` | **host** | target must be in the room | `meet.roster`; `meet.lobby` to the new co-host |
+| `REVOKE_COHOST` | **host** | target stays admitted | `meet.roster` |
+
+A LiveKit failure ⇒ `meet.error MEETINGS_UNAVAILABLE` to the caller; whatever was already saved
+stays (re-sending the command is idempotent). A `PATCH` that flips `allowAttendeeScreenShare` in a
+LIVE meeting is applied to the room too (best effort). Someone removed who reconnects to LiveKit with
+a still-valid token is kicked again on arrival and gets no attendance row.
+
+### STOMP — server events
 
 Every payload is `MeetingEventDto` `{event, meetingId, …}`; absent fields are omitted.
 
 | Destination | `event` | Payload | When |
 |---|---|---|---|
-| `/topic/meeting/{id}` | `meet.roster` | `{participants:[{userId, displayName, role, joinedAt}]}` — one row per person inside | LiveKit `participant_joined` / `participant_left` |
-| `/topic/meeting/{id}` | `meet.settings` | `{settings:{…5 fields…}}` | `PATCH` changed settings |
+| `/topic/meeting/{id}` | `meet.roster` | `{participants:[{userId, displayName, role, joinedAt}]}` — one row per person inside; `role` is the **current** role (`attendance[].role` stays the role at join time) | LiveKit `participant_joined` / `participant_left`, `MAKE_COHOST` / `REVOKE_COHOST` |
+| `/topic/meeting/{id}` | `meet.settings` | `{settings:{…5 fields…}}` | `PATCH` or a host command changed settings |
+| `/topic/meeting/{id}` | `meet.hands` | `{hands:[Hand…]}` in raise order (`[]` = none) | raise / lower / lower all / leaving the room / removed |
+| `/topic/meeting/{id}` | `meet.chat` | `{clientId?, message: MeetingMessage}` | `/app/meet.chat` succeeded |
+| `/topic/meeting/{id}` | `meet.notes.updated` | `{version, updatedBy:{userId, displayName?}}` — never the text (GET it when not editing) | `PUT /notes/shared` succeeded (private notes announce nothing) |
 | `/topic/meeting/{id}` | `meet.ended` | — | `POST /end`, LiveKit `room_finished`, `DELETE` (cancel) |
-| `/user/queue/meeting` | `meet.lobby` | `{waiting:[{userId, displayName}]}` (by name; nameless last) | to host + co-hosts when the lobby changes, and to a host/co-host on `join` (empty list ⇒ clear the badge) |
+| `/user/queue/meeting` | `meet.lobby` | `{waiting:[{userId, displayName}]}` (by name; nameless last) | to host + co-hosts when the lobby changes, to a host/co-host on `join` (empty list ⇒ clear the badge), and to a newly appointed co-host |
+| `/user/queue/meeting` | `meet.removed` | — | you were removed: leave LiveKit, go to the meeting info page; `join` ⇒ 403 `MEETING_REMOVED` |
+| `/user/queue/meeting` | `meet.muted` | `{actor:{userId, displayName?}}` | a host / co-host muted your microphone |
+| `/user/queue/meeting` | `meet.error` | `{meetingId?, action?, clientId?, errorCode, params?}` | one of **your** `/app/meet.*` commands was refused |
 | `/user/queue/meeting` | `meet.admitted` / `meet.denied` | — | host admitted / denied you |
 | `/user/queue/meeting` | `meet.ended` | — | to people still in the lobby when the meeting ends or is cancelled (the lobby is cleared) |
 | `/user/queue/meeting` | `meet.invited` | `{code, title, hostId, hostName, scheduledStart}` | create / `PATCH` added you (named invitees only) |
@@ -626,7 +712,19 @@ Every payload is `MeetingEventDto` `{event, meetingId, …}`; absent fields are 
 
 Subscribing to `/topic/meeting/{id}` requires being allowed straight into the room (host, co-host,
 invited / department member / admitted); waiting, removed, locked-out people and ENDED meetings get
-STOMP ERROR `Unauthorized subscription`.
+STOMP ERROR `Unauthorized subscription`. Frames of `/topic/meeting/{id}` are **not delivered** to a
+session whose user was removed from the meeting, even over a subscription opened before the
+removal (outbound filter) — the subscription stays open but silent.
+
+`meet.error.errorCode` ∈ `MEETING_NOT_FOUND | MEETING_FORBIDDEN | MEETING_REMOVED | MEETING_ENDED |
+MEETING_INVALID | MEETINGS_UNAVAILABLE | RATE_LIMITED`; `params` as in REST (`{field, max?}`, `field`
+∈ `content | action | targetId`); `action` = the refused host action; `clientId` = the refused chat
+line's. (The field is `errorCode` because `code` is the meeting code.) Example:
+`{"event":"meet.error","meetingId":"m1","clientId":"c-7f3a","errorCode":"MEETING_INVALID","params":{"field":"content","max":2000}}`.
+
+New error codes: `MEETING_NOTE_CONFLICT` (409, with `latest`), `MEETING_NOTES_READ_ONLY` (403 —
+an attendee editing the shared note while `attendeesCanEditNotes=false`), `RATE_LIMITED` (in
+`meet.error`; also the `code` of every chat-service REST 429, which carries `Retry-After`).
 
 ### FCM (data)
 
@@ -650,6 +748,8 @@ STOMP ERROR `Unauthorized subscription`.
   Payload: `{ "conversationId": "string", "typing": boolean }`
 - **Read indicator:** `/app/chat.read`  
   Payload: `{ "conversationId": "string", "messageId": "string" }`
+- **Meeting commands:** `/app/meet.hand`, `/app/meet.chat`, `/app/meet.host` — see 📅 Meetings ›
+  STOMP — client commands
 
 ### Client Subscriptions
 - **Conversation Stream:** `/topic/conversation/{conversationId}`  
@@ -659,9 +759,11 @@ STOMP ERROR `Unauthorized subscription`.
 - **User Notifications Queue:** `/user/queue/notifications`  
   Payload: `{ "type": "NEW_MESSAGE", "conversationId": "string", "senderName": "string" }`
 - **Meeting room topic:** `/topic/meeting/{meetingId}` — only for people allowed straight into
-  the room (see 📅 Meetings). Events: `meet.roster`, `meet.settings`, `meet.ended`
+  the room (see 📅 Meetings); silent for people removed from the meeting. Events: `meet.roster`,
+  `meet.settings`, `meet.ended`, `meet.hands`, `meet.chat`, `meet.notes.updated`
 - **Personal meeting queue:** `/user/queue/meeting` — `meet.lobby`, `meet.admitted`,
-  `meet.denied`, `meet.ended` (lobby), `meet.invited`, `meet.starting`, `meet.cancelled`
+  `meet.denied`, `meet.ended` (lobby), `meet.invited`, `meet.starting`, `meet.cancelled`,
+  `meet.removed`, `meet.muted`, `meet.error`
 
 ### Group Calls (WebRTC signaling over STOMP)
 
