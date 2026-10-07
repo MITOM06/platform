@@ -1498,7 +1498,7 @@ describe('AiService', () => {
       expect(mockStream).not.toHaveBeenCalled();
     });
 
-    it('sends an OpenRouter-mapped tier to the Claude primary when no OpenRouter key is set', async () => {
+    it('sends an OpenRouter-mapped tier to the Claude fallback when OpenRouter is off', async () => {
       (service as any).llm = { openRouterEnabled: false, lightModel: 'claude-haiku-4-5' };
       (service as any).routerConfig = {
         ...(service as any).routerConfig,
@@ -1506,7 +1506,7 @@ describe('AiService', () => {
       };
       await service.handleRequest({ ...basePayload, content: 'x'.repeat(600) });
 
-      expect(mockStream).toHaveBeenCalledWith(expect.objectContaining({ model: 'test-primary' }));
+      expect(mockStream).toHaveBeenCalledWith(expect.objectContaining({ model: 'test-fallback' }));
     });
 
     it('keeps mid / complex turns on Claude', async () => {

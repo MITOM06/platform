@@ -13,10 +13,12 @@ NestJS services share the product version (`apps/client/pubspec.yaml`, `apps/*/p
   about 10x cheaper than Claude Haiku). Longer or harder turns, answers grounded in the knowledge
   base, images, KB vision and call summaries stay on Claude. Any OpenRouter failure falls back to
   Claude automatically. Without the key nothing changes.
-- **Demo cost profile on the Mac mini:** the mid tier (ordinary conversations) runs on
-  `google/gemini-2.5-flash` via OpenRouter and the complex tier on Claude Sonnet 4.5 instead of
-  Opus. Override with `ANTHROPIC_MID_MODEL` / `ANTHROPIC_COMPLEX_MODEL` in `.env.mini`. A tier mapped
-  to an OpenRouter model uses the Claude primary model when no OpenRouter key is set.
+- **Demo cost profile on the Mac mini (0 USD light tier):** the fast and mid tiers run on the free
+  `nvidia/nemotron-3-super-120b-a12b:free` (OpenRouter; 50 requests/day until 10 USD of credits were
+  ever bought, then 1000/day) and the complex tier on Claude Sonnet 4.5 instead of Opus. When
+  OpenRouter answers 429 / 402 / 404 the light tier moves to Claude Haiku for 10 minutes
+  (`OPENROUTER_COOLDOWN_MS`). Free models cost 0 on the usage dashboard. Free-model providers may
+  log prompts — demo data only.
 
 ### Operations
 

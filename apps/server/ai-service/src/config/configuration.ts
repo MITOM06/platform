@@ -88,6 +88,8 @@ export default registerAs('config', () => ({
     baseUrl: process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',
     // Shown as the app URL on the OpenRouter dashboard (optional).
     appUrl: process.env.OPENROUTER_APP_URL || undefined,
+    // After a 429 (free-model limits), skip OpenRouter for this long.
+    cooldownMs: parseInt(process.env.OPENROUTER_COOLDOWN_MS ?? '600000', 10),
   },
   bot: {
     userId: process.env.AI_BOT_USER_ID ?? 'ai-bot-000000000000000000000001',

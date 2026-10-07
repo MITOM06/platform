@@ -22,6 +22,8 @@ export function resolvePrice(
   model: string,
   prices: PriceConfig,
 ): { inputPricePerMTok: number; outputPricePerMTok: number } {
+  // OpenRouter free variants (`vendor/model:free`) cost nothing.
+  if (model.endsWith(':free')) return { inputPricePerMTok: 0, outputPricePerMTok: 0 };
   const price = prices.models[model] ?? prices.models[normalizeModelId(model)];
   return {
     inputPricePerMTok: price?.inputPerMTok ?? prices.defaultInputPerMTok,
