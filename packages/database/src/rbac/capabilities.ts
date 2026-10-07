@@ -38,6 +38,8 @@ export enum Capability {
   VIEW_INTERNAL_CONTEXT = 'VIEW_INTERNAL_CONTEXT',
   /** Receive "Confidential"-tier company/department context in the AI prompt. */
   VIEW_CONFIDENTIAL_CONTEXT = 'VIEW_CONFIDENTIAL_CONTEXT',
+  /** Create and schedule meetings (Phòng họp). Joining a meeting needs no capability. */
+  HOST_MEETING = 'HOST_MEETING',
 }
 
 /**

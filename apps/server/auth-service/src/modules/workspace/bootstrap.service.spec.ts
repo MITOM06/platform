@@ -178,6 +178,41 @@ describe('BootstrapService', () => {
     expect(roleModel.docs.filter((r: any) => r.name === 'Admin')).toHaveLength(1);
   });
 
+  it('gives stored preset roles that predate HOST_MEETING the new capability, keeping admin edits', async () => {
+    for (const name of ['Admin', 'Manager', 'Member'] as const) {
+      const preset = PRESET_ROLES.find((r) => r.name === name)!;
+      const stored: Record<string, boolean> = { ...preset.permissions } as any;
+      delete stored[Capability.HOST_MEETING]; // saved by a release before meetings existed
+      stored[Capability.USE_GROUP_BOT] = false; // an admin edit that must survive
+      roleModel.docs.push({ _id: `r-${name}`, name, isPreset: true, permissions: stored });
+    }
+
+    const service = await build();
+    await service.onApplicationBootstrap();
+
+    for (const name of ['Admin', 'Manager', 'Member']) {
+      const role = roleModel.docs.find((r: any) => r.name === name);
+      expect(role.permissions[Capability.HOST_MEETING]).toBe(true);
+      expect(role.permissions[Capability.USE_GROUP_BOT]).toBe(false);
+    }
+  });
+
+  it('does not backfill HOST_MEETING into stored custom roles (admins enable it by hand)', async () => {
+    roleModel.docs.push({
+      _id: 'r-custom',
+      name: 'Contractor',
+      isPreset: false,
+      permissions: { [Capability.USE_PERSONAL_ASSISTANT]: true },
+    });
+
+    const service = await build();
+    await service.onApplicationBootstrap();
+
+    const custom = roleModel.docs.find((r: any) => r.name === 'Contractor');
+    expect(custom.permissions[Capability.HOST_MEETING]).toBeUndefined();
+    expect(custom.permissions).toEqual({ [Capability.USE_PERSONAL_ASSISTANT]: true });
+  });
+
   it('always forces the full matrix onto the Owner role', async () => {
     roleModel.docs.push({
       _id: 'r-owner',
