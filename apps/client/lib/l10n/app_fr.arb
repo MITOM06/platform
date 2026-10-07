@@ -1522,5 +1522,6 @@
   "authErrMfaNotEnrolled": "L'authentification à deux facteurs n'est pas encore configurée pour ce compte.",
   "authErrMfaAlreadyEnrolled": "L'authentification à deux facteurs est déjà configurée pour ce compte.",
   "authErrMfaResetForbidden": "Seul un Propriétaire peut réinitialiser l'authentification à deux facteurs.",
-  "authErrMfaResetSelfForbidden": "Vous ne pouvez pas réinitialiser votre propre authentification à deux facteurs."
+  "authErrMfaResetSelfForbidden": "Vous ne pouvez pas réinitialiser votre propre authentification à deux facteurs.",
+  "adminCapHostMeeting": "Organiser des réunions"
 }

@@ -1522,5 +1522,6 @@
   "authErrMfaNotEnrolled": "このアカウントでは二要素認証がまだ設定されていません。",
   "authErrMfaAlreadyEnrolled": "このアカウントでは二要素認証がすでに設定されています。",
   "authErrMfaResetForbidden": "二要素認証をリセットできるのはオーナーのみです。",
-  "authErrMfaResetSelfForbidden": "自分の二要素認証はリセットできません。"
+  "authErrMfaResetSelfForbidden": "自分の二要素認証はリセットできません。",
+  "adminCapHostMeeting": "会議を主催"
 }

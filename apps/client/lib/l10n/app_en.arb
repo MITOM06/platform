@@ -2235,5 +2235,6 @@
   "authErrMfaNotEnrolled": "Two-factor authentication isn't set up for this account yet.",
   "authErrMfaAlreadyEnrolled": "Two-factor authentication is already set up for this account.",
   "authErrMfaResetForbidden": "Only an Owner can reset two-factor authentication.",
-  "authErrMfaResetSelfForbidden": "You can't reset your own two-factor authentication."
+  "authErrMfaResetSelfForbidden": "You can't reset your own two-factor authentication.",
+  "adminCapHostMeeting": "Host meetings"
 }

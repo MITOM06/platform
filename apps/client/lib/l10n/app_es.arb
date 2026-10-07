@@ -1522,5 +1522,6 @@
   "authErrMfaNotEnrolled": "Esta cuenta aún no tiene configurada la autenticación de dos factores.",
   "authErrMfaAlreadyEnrolled": "Esta cuenta ya tiene configurada la autenticación de dos factores.",
   "authErrMfaResetForbidden": "Solo un Propietario puede restablecer la autenticación de dos factores.",
-  "authErrMfaResetSelfForbidden": "No puedes restablecer tu propia autenticación de dos factores."
+  "authErrMfaResetSelfForbidden": "No puedes restablecer tu propia autenticación de dos factores.",
+  "adminCapHostMeeting": "Organizar reuniones"
 }
