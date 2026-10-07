@@ -3,7 +3,7 @@
 import { type CSSProperties } from 'react'
 import dynamic from 'next/dynamic'
 import { usePathname } from 'next/navigation'
-import { Compass, Contact, Plus, MessageSquarePlus, Users } from 'lucide-react'
+import { Compass, Contact, Plus, MessageSquarePlus, Users, Video } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
@@ -59,9 +59,11 @@ function MainShell({ children }: { children: React.ReactNode }) {
   const isConversationOpen = /^\/conversations\/.+/.test(pathname)
   const isMessagingArea = /^\/conversations(\/|$)/.test(pathname)
   const showSidebar = isMessagingArea
+  // The meeting room (/meet/{code}) is full-screen — no generic mobile nav either.
+  const isMeetingRoom = /^\/meet\//.test(pathname)
   // Hide the generic mobile nav across the whole messaging area — the
   // conversation list owns the screen there and has its own bottom tab bar.
-  const showTabBar = !isMessagingArea
+  const showTabBar = !isMessagingArea && !isMeetingRoom
 
   // ── Resizable sidebar (desktop only) ──────────────────────────────────────
   // Width lives in the UI store (single source of truth shared with the
@@ -154,6 +156,18 @@ function MainShell({ children }: { children: React.ReactNode }) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              title={t('navMeetings')}
+              aria-label={t('navMeetings')}
+              className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
+            >
+              <Link href="/meetings">
+                <Video className="size-4" />
+              </Link>
+            </Button>
             <Button
               variant="ghost"
               size="icon"

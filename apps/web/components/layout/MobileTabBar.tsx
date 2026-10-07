@@ -3,12 +3,13 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { MessageSquare, Users, Compass, Settings } from 'lucide-react'
+import { MessageSquare, Users, Compass, Settings, Video } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const tabs = [
   { key: 'chat', href: '/conversations', icon: MessageSquare, labelKey: 'tabChat' },
   { key: 'friends', href: '/friends', icon: Users, labelKey: 'tabFriends' },
+  { key: 'meetings', href: '/meetings', icon: Video, labelKey: 'tabMeetings' },
   { key: 'explore', href: '/explore', icon: Compass, labelKey: 'navExplore' },
   { key: 'settings', href: '/settings', icon: Settings, labelKey: 'menuSettings' },
 ] as const
@@ -30,6 +31,7 @@ export function MobileTabBar() {
           <Link
             key={key}
             href={href}
+            aria-current={active ? 'page' : undefined}
             className={cn(
               'flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors',
               active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',

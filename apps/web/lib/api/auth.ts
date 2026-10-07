@@ -20,6 +20,7 @@ import type {
   MfaBackupCodesResponse,
   RegenerateBackupCodesRequest,
 } from './types'
+import type { DepartmentOption } from './meeting-types'
 
 /** Profile gender — kept as a loose string union to mirror the auth-service
  *  schema (`gender: string`), with the values the UI selector offers. */
@@ -201,6 +202,23 @@ export const authService = {
 
   getMe: () =>
     authApi.get<UserProfile>('/api/users/me').then((r) => r.data),
+
+  /**
+   * Departments the caller can attach a meeting to — all of them with
+   * MANAGE_DEPARTMENTS, otherwise their own. Malformed rows are dropped.
+   */
+  getMyDepartments: (): Promise<DepartmentOption[]> =>
+    authApi.get<unknown>('/api/users/me/departments').then((r) =>
+      Array.isArray(r.data)
+        ? r.data.filter(
+            (d): d is DepartmentOption =>
+              !!d &&
+              typeof d === 'object' &&
+              typeof (d as DepartmentOption).id === 'string' &&
+              typeof (d as DepartmentOption).name === 'string',
+          )
+        : [],
+    ),
 
   getOnlineFriends: () =>
     authApi.get<UserSearchResult[]>('/api/users/friends/online').then((r) => r.data),

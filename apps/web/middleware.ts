@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { isSafeReturnPath, RETURN_PATH_COOKIE, RETURN_PATH_MAX_AGE } from '@/lib/auth/return-path'
 
 // Auth pages — redirect logged-in users away.
 // /oauth-callback must be reachable without a session: the user lands here from
@@ -19,7 +20,19 @@ export function middleware(request: NextRequest) {
   const hasSession = request.cookies.has('accessToken') || request.cookies.has('refreshToken')
 
   if (isAlwaysPublic) return NextResponse.next()
-  if (!hasSession && !isAuthOnly) return NextResponse.redirect(new URL('/login', request.url))
+  if (!hasSession && !isAuthOnly) {
+    const res = NextResponse.redirect(new URL('/login', request.url))
+    // Remember a meeting link so signing in lands back on it (lib/auth/return-path.ts).
+    if (isSafeReturnPath(pathname)) {
+      res.cookies.set(RETURN_PATH_COOKIE, pathname, {
+        path: '/',
+        maxAge: RETURN_PATH_MAX_AGE,
+        sameSite: 'lax',
+        secure: request.nextUrl.protocol === 'https:',
+      })
+    }
+    return res
+  }
   if (hasSession && isAuthOnly) return NextResponse.redirect(new URL('/', request.url))
   return NextResponse.next()
 }
