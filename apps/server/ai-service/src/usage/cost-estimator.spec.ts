@@ -110,3 +110,15 @@ describe('token counts', () => {
     expect(b.inputTokens + b.outputTokens).toBe(0);
   });
 });
+
+describe('resolvePrice — OpenRouter free models', () => {
+  it('prices a :free model at zero', () => {
+    expect(
+      resolvePrice('google/gemma-4-31b-it:free', {
+        defaultInputPerMTok: 3,
+        defaultOutputPerMTok: 15,
+        models: {},
+      }),
+    ).toEqual({ inputPricePerMTok: 0, outputPricePerMTok: 0 });
+  });
+});

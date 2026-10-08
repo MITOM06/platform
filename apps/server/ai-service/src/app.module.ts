@@ -22,6 +22,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
 import { BotSeedService } from './bot/bot-seed.service';
 import { RedisSubscriberService } from './redis/redis-subscriber.service';
 import { HealthModule } from './health/health.module';
+import { LlmModule } from './llm/llm.module';
 
 const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
   useFactory: (configService: ConfigService) => ({
@@ -45,6 +46,7 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
     // First scheduler in ai-service (TASK-11 daily digest).
     ScheduleModule.forRoot(),
     mongooseModule,
+    LlmModule,
     HealthModule,
     RedisModule,
     SettingsModule,

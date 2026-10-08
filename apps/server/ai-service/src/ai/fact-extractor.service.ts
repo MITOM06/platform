@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
+import { LlmClientsService } from '../llm/llm-clients.service';
 import { MemoryService } from '../memory/memory.service';
 import { UsageService } from '../usage/usage.service';
 import type { AiRequestPayload } from './ai.service';
@@ -39,6 +40,7 @@ export class FactExtractorService {
     private readonly configService: ConfigService,
     private readonly memoryService: MemoryService,
     private readonly usageService?: UsageService,
+    @Optional() private readonly llm?: LlmClientsService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -69,12 +71,11 @@ export class FactExtractorService {
     const messages = toExtractionMessages(history);
     if (messages.length === 0) return;
 
-    const response = await this.anthropic.messages.create({
-      model: this.fallbackModel,
-      max_tokens: 512,
-      system: systemPrompt,
-      messages,
-    });
+    const params = { max_tokens: 512, system: systemPrompt, messages };
+    // Light model (OpenRouter when configured, falling back to Haiku).
+    const response = this.llm
+      ? (await this.llm.createLight(params)).message
+      : await this.anthropic.messages.create({ ...params, model: this.fallbackModel });
     // Background extraction serves this user's memory — count it against them.
     this.usageService?.recordModelCall(userId, response.usage, 'fact-extraction');
 
