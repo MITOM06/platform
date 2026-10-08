@@ -73,6 +73,7 @@ public class CallService {
   private final CallBusyRegistry busyRegistry;
   private final MongoTemplate mongoTemplate;
   private final CallTimers timers;
+  private final DirectCallGlare glare;
 
   // ----------------------------------------------------------------------------------------------
   // call.start
@@ -107,7 +108,12 @@ public class CallService {
     String kind = members.size() == 2 ? "direct" : "group";
     if (sfu && "direct".equals(kind)) {
       String callee = members.stream().filter(m -> !m.equals(userId)).findFirst().orElse(null);
-      if (busyRegistry.busyCallOf(callee) != null) {
+      String calleeCall = busyRegistry.busyCallOf(callee);
+      // Both tapped Call: they are ringing us right now — answer their call instead of "busy".
+      if (calleeCall != null && glare.joinIfTheyAreCalling(userId, calleeCall, conversationId)) {
+        return;
+      }
+      if (calleeCall != null) {
         sendToUser(
             userId,
             WebRTCSignalDto.builder()
@@ -137,12 +143,19 @@ public class CallService {
             .participants(new ArrayList<>(List.of(participant(userId, now))))
             .build();
     callSessionRepository.save(session);
+    boolean sfuDirect = sfu && "direct".equals(kind);
     if (sfu) {
       busyRegistry.markBusy(userId, callId);
+    }
+    if (sfuDirect && !glare.claimOrMerge(userId, session)) {
+      return; // started at the same instant as theirs: joined their call instead
+    }
+    if (sfu) {
       timers.after(RING_REAPER_DELAY, () -> expireUnanswered(callId));
     }
-
-    redisTemplate.opsForValue().set(ACTIVE_KEY_PREFIX + conversationId, callId);
+    if (!sfuDirect) {
+      redisTemplate.opsForValue().set(ACTIVE_KEY_PREFIX + conversationId, callId);
+    }
 
     broadcastStarted(session);
     ringOtherMembers(session);

@@ -72,7 +72,8 @@ class CallServiceSfuTest {
             roomClient,
             busy,
             mongo,
-            timers);
+            timers,
+            new DirectCallGlare(sessions, busy, redis, mongo, broker));
   }
 
   private void conversation(String id, String... members) {
@@ -175,6 +176,140 @@ class CallServiceSfuTest {
     assertThat(sentTo("carol")).hasSize(1); // no busy logic on mesh
     assertThat(broadcast("grp").get(0).getTransport()).isEqualTo("mesh");
     assertThat(broadcast("grp").get(0).getLivekitUrl()).isNull();
+  }
+
+  // ---- Both tapped Call at the same time (glare) ----
+
+  /** {@code caller}'s 1-on-1 in "conv" that has not been answered yet. */
+  private CallSession ringingFrom(String caller, String callId) {
+    CallSession s =
+        CallSession.builder()
+            .callId(callId)
+            .conversationId("conv")
+            .startedBy(caller)
+            .transport("sfu")
+            .kind("direct")
+            .media("video")
+            .participants(
+                new ArrayList<>(
+                    List.of(
+                        CallSession.Participant.builder()
+                            .userId(caller)
+                            .joinedAt(Instant.now())
+                            .build())))
+            .build();
+    when(sessions.findByCallId(callId)).thenReturn(Optional.of(s));
+    when(mongo.findAndReplace(any(org.springframework.data.mongodb.core.query.Query.class), eq(s)))
+        .thenReturn(s);
+    return s;
+  }
+
+  private WebRTCSignalDto mergedSignalTo(String userId) {
+    return sentTo(userId).stream()
+        .filter(d -> "call-merged".equals(d.getType()))
+        .findFirst()
+        .orElseThrow();
+  }
+
+  @Test
+  void callingBackWhileTheyAreCallingYouJoinsTheirCall() {
+    conversation("conv", "alice", "bob");
+    CallSession aliceCall = ringingFrom("alice", "call-a");
+    when(busy.busyCallOf("alice")).thenReturn("call-a");
+
+    service.startCall("bob", "conv", "audio", false);
+
+    verify(sessions, never()).save(any());
+    assertThat(aliceCall.getParticipants())
+        .anySatisfy(
+            p -> {
+              assertThat(p.getUserId()).isEqualTo("bob");
+              assertThat(p.getAcceptedAt()).isNotNull();
+            });
+    verify(busy).markBusy("bob", "call-a");
+    assertThat(sentTo("alice")).isEmpty(); // no "busy", no second ring
+    WebRTCSignalDto merged = mergedSignalTo("bob");
+    assertThat(merged.getCallId()).isEqualTo("call-a");
+    assertThat(merged.getSenderId()).isEqualTo("alice");
+    assertThat(merged.getConversationId()).isEqualTo("conv");
+    assertThat(merged.getMedia()).isEqualTo("video");
+    assertThat(merged.getTransport()).isEqualTo("sfu");
+    assertThat(merged.getKind()).isEqualTo("direct");
+    // Bob's other devices were ringing for Alice's call: they stop.
+    assertThat(sentTo("bob"))
+        .anySatisfy(
+            d -> {
+              assertThat(d.getType()).isEqualTo("call-ring-cancel");
+              assertThat(d.getCallId()).isEqualTo("call-a");
+              assertThat(d.getReason()).isEqualTo("answered_elsewhere");
+            });
+  }
+
+  @Test
+  void aCalleeInACallWithSomeoneElseIsStillBusy() {
+    conversation("conv", "alice", "bob");
+    CallSession elsewhere = ringingFrom("alice", "call-x");
+    elsewhere.setConversationId("conv-with-carol");
+    when(busy.busyCallOf("alice")).thenReturn("call-x");
+
+    service.startCall("bob", "conv", "audio", false);
+
+    verify(sessions, never()).save(any());
+    assertThat(sentTo("bob"))
+        .singleElement()
+        .satisfies(
+            d -> {
+              assertThat(d.getType()).isEqualTo("call-declined");
+              assertThat(d.getReason()).isEqualTo("busy");
+            });
+  }
+
+  @Test
+  void aCallTheyAlreadyAnsweredIsNotJoinedAgain() {
+    conversation("conv", "alice", "bob");
+    CallSession live = ringingFrom("alice", "call-a");
+    live.getParticipants()
+        .add(CallSession.Participant.builder().userId("bob").acceptedAt(Instant.now()).build());
+    when(busy.busyCallOf("alice")).thenReturn("call-a");
+
+    service.startCall("bob", "conv", "audio", false);
+
+    assertThat(sentTo("bob")).extracting(WebRTCSignalDto::getType).containsExactly("call-declined");
+  }
+
+  @Test
+  void simultaneousStartsEndUpAsOneCall() {
+    // Both passed the busy check before either was marked: the conversation claim decides.
+    conversation("conv", "alice", "bob");
+    ringingFrom("alice", "call-a");
+    when(values.setIfAbsent(eq(CallService.ACTIVE_KEY_PREFIX + "conv"), anyString()))
+        .thenReturn(false);
+    when(values.get(CallService.ACTIVE_KEY_PREFIX + "conv")).thenReturn("call-a");
+
+    service.startCall("bob", "conv", "audio", false);
+
+    CallSession bobs = saved();
+    verify(sessions).delete(bobs);
+    verify(busy).clear("bob", bobs.getCallId());
+    verify(busy).markBusy("bob", "call-a");
+    assertThat(mergedSignalTo("bob").getCallId()).isEqualTo("call-a");
+    assertThat(sentTo("alice")).isEmpty();
+    assertThat(broadcast("conv")).isEmpty(); // Bob's own call never surfaced
+    verify(timers, never()).after(any(), any());
+  }
+
+  @Test
+  void aStaleConversationClaimIsTakenOver() {
+    conversation("conv", "alice", "bob");
+    when(values.setIfAbsent(eq(CallService.ACTIVE_KEY_PREFIX + "conv"), anyString()))
+        .thenReturn(false);
+    when(values.get(CallService.ACTIVE_KEY_PREFIX + "conv")).thenReturn("long-gone");
+
+    service.startCall("alice", "conv", "audio", false);
+
+    CallSession s = saved();
+    verify(values).set(CallService.ACTIVE_KEY_PREFIX + "conv", s.getCallId());
+    assertThat(sentTo("bob")).extracting(WebRTCSignalDto::getType).containsExactly("call-ring");
   }
 
   private CallSession activeSfu(String kind, String... participants) {
