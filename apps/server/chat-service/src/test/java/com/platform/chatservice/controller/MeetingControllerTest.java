@@ -19,8 +19,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.platform.chatservice.config.LiveKitProperties;
 import com.platform.chatservice.dto.meeting.CreateMeetingRequest;
 import com.platform.chatservice.dto.meeting.HandDto;
+import com.platform.chatservice.dto.meeting.LobbyEntryDto;
 import com.platform.chatservice.dto.meeting.MeetingHandsResponse;
 import com.platform.chatservice.dto.meeting.MeetingJoinResponse;
+import com.platform.chatservice.dto.meeting.MeetingLobbyResponse;
 import com.platform.chatservice.dto.meeting.MeetingNoteDto;
 import com.platform.chatservice.dto.meeting.MeetingNoteRequest;
 import com.platform.chatservice.dto.meeting.MeetingResponse;
@@ -330,5 +332,29 @@ class MeetingControllerTest {
     mvc.perform(get("/api/meetings/m1/hands").principal(lan))
         .andExpect(jsonPath("$.hands[0].userId").value("u3"))
         .andExpect(jsonPath("$.hands[0].displayName").value("Hoa"));
+  }
+
+  @Test
+  void theLobbySnapshotIsServedToTheCallerAndRefusalsKeepTheirCode() throws Exception {
+    when(joins.lobbySnapshot("lan", "m1"))
+        .thenReturn(
+            new MeetingLobbyResponse(
+                List.of(new LobbyEntryDto("w1", "Wen"), new LobbyEntryDto("w2", null))));
+    mvc.perform(get("/api/meetings/m1/lobby").principal(lan))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.entries[0].userId").value("w1"))
+        .andExpect(jsonPath("$.entries[0].displayName").value("Wen"))
+        .andExpect(jsonPath("$.entries[1].userId").value("w2"))
+        .andExpect(jsonPath("$.entries[1].displayName").doesNotExist());
+
+    when(joins.lobbySnapshot("lan", "m2"))
+        .thenThrow(new ApiException(HttpStatus.FORBIDDEN, "MEETING_FORBIDDEN"));
+    mvc.perform(get("/api/meetings/m2/lobby").principal(lan))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.code").value("MEETING_FORBIDDEN"));
+
+    // Same path, other verb: leaving the lobby still works.
+    mvc.perform(delete("/api/meetings/m1/lobby").principal(lan)).andExpect(status().isNoContent());
+    verify(joins).leaveLobby("lan", "m1");
   }
 }

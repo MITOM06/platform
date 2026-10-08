@@ -111,9 +111,19 @@ public class MeetingEvents {
     toUser(userId, base("meet.denied", meetingId).build());
   }
 
-  public void cancelled(String meetingId, Collection<String> userIds) {
+  /**
+   * {@code meet.cancelled} with the meeting's {@code title}, {@code code} and {@code
+   * scheduledStart}, so the client can name it without a cached copy.
+   */
+  public void cancelled(Meeting m, Collection<String> userIds) {
     for (String userId : distinct(userIds)) {
-      toUser(userId, base("meet.cancelled", meetingId).build());
+      toUser(
+          userId,
+          base("meet.cancelled", m.getId())
+              .code(m.getCode())
+              .title(m.getTitle())
+              .scheduledStart(m.getScheduledStart())
+              .build());
     }
   }
 
@@ -156,6 +166,15 @@ public class MeetingEvents {
   /** {@code meet.chat} to the room, echoing the sender's {@code clientId} (may be null). */
   public void chat(String meetingId, MeetingMessageDto message, String clientId) {
     toTopic(meetingId, base("meet.chat", meetingId).message(message).clientId(clientId).build());
+  }
+
+  /**
+   * {@code meet.chat} to the sender only ({@code /user/queue/meeting}): the stored line of a
+   * re-sent {@code clientId}, so the sender's retry settles while the room never sees it twice.
+   */
+  public void chatToSender(
+      String userId, String meetingId, MeetingMessageDto message, String clientId) {
+    toUser(userId, base("meet.chat", meetingId).message(message).clientId(clientId).build());
   }
 
   /** {@code meet.notes.updated} to the room: the new version and who saved — never the text. */

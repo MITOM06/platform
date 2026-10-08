@@ -264,6 +264,31 @@ class MeetingJoinServiceTest {
   }
 
   @Test
+  void theLobbySnapshotIsForHostsAndCoHostsOnly() {
+    List<LobbyEntryDto> waiting = List.of(new LobbyEntryDto("w1", "Wen"));
+    when(lobby.waiting("m1")).thenReturn(waiting);
+
+    assertThat(service.lobbySnapshot("host", "m1").entries()).isEqualTo(waiting);
+    assertThat(service.lobbySnapshot("co", "m1").entries()).isEqualTo(waiting);
+    assertThat(apiError(() -> service.lobbySnapshot("inv", "m1")).code())
+        .isEqualTo("MEETING_FORBIDDEN");
+    assertThat(apiError(() -> service.lobbySnapshot("stranger", "m1")).code())
+        .isEqualTo("MEETING_FORBIDDEN");
+    assertThat(apiError(() -> service.lobbySnapshot("host", "nope")).code())
+        .isEqualTo("MEETING_NOT_FOUND");
+    // A read never changes the lobby nor pings anyone.
+    verify(lobby, never()).remove(anyString(), anyString());
+    verifyNoInteractions(events);
+  }
+
+  @Test
+  void anEndedMeetingHasNoLobbyToShow() {
+    m.setStatus(MeetingStatus.ENDED);
+    assertThat(apiError(() -> service.lobbySnapshot("host", "m1")).code())
+        .isEqualTo("MEETING_ENDED");
+  }
+
+  @Test
   void leavingTheLobbyUpdatesTheHosts() {
     when(lobby.remove("m1", "stranger")).thenReturn(true);
     service.leaveLobby("stranger", "m1");

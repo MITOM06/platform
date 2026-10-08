@@ -433,3 +433,6 @@ export interface CallToken {
   url: string
   token: string
 }
+
+// Meetings contract types (docs/api-spec.md § Meetings) live in ./meeting-types.ts.
+export * from './meeting-types'

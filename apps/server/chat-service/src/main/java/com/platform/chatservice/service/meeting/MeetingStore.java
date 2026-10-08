@@ -187,8 +187,10 @@ public class MeetingStore {
 
   /**
    * One page of the caller's meetings — host, co-host, invited by name, or in the meeting's
-   * department. Upcoming = SCHEDULED/LIVE ascending by {@code (sortAt, _id)}; past = ENDED
-   * descending. {@code cursor} is the last meeting of the previous page.
+   * department; the past list also has every meeting the caller attended (an attendance row) unless
+   * they were removed from it. Upcoming = SCHEDULED/LIVE ascending by {@code (sortAt, _id)}; past =
+   * ENDED descending. {@code cursor} is the last meeting of the previous page. One {@code $or}
+   * query, so a meeting matching several conditions is still listed once.
    */
   public List<Meeting> page(
       String userId, Collection<String> depts, boolean upcoming, Meeting cursor, int limit) {
@@ -198,6 +200,10 @@ public class MeetingStore {
     mine.add(Criteria.where("inviteeIds").is(userId));
     if (depts != null && !depts.isEmpty()) {
       mine.add(Criteria.where("departmentId").in(depts));
+    }
+    if (!upcoming) {
+      // Walked in / admitted from the lobby without an invitation.
+      mine.add(Criteria.where("attendance.userId").is(userId).and("removedIds").ne(userId));
     }
 
     List<Criteria> ands = new ArrayList<>();

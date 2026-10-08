@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
   @CompoundIndex(name = "cohost_sort", def = "{'coHostIds': 1, 'sortAt': 1}"),
   @CompoundIndex(name = "invitee_sort", def = "{'inviteeIds': 1, 'sortAt': 1}"),
   @CompoundIndex(name = "dept_sort", def = "{'departmentId': 1, 'sortAt': 1}"),
+  @CompoundIndex(name = "attendee_sort", def = "{'attendance.userId': 1, 'sortAt': 1}"),
   @CompoundIndex(name = "status_start", def = "{'status': 1, 'scheduledStart': 1}"),
 })
 @Data

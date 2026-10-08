@@ -1,71 +1,13 @@
 'use client'
 
-import { useEffect, useMemo, useRef } from 'react'
+import { useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useCallStore } from '@/lib/store/call.store'
 import { groupCallManager } from '@/lib/webrtc/group-call-manager'
 import type { CallParticipant } from '@/lib/api/types'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useCallNames } from '@/lib/hooks/use-call-names'
-import { cn } from '@/lib/utils'
-
-function initial(name: string): string {
-  return name?.[0]?.toUpperCase() ?? '?'
-}
-
-/** A single video (or avatar) tile bound to a MediaStream. */
-function VideoTile({
-  stream,
-  name,
-  video,
-  muted,
-  mirror,
-  label,
-  speaking,
-}: {
-  stream: MediaStream | null
-  name: string
-  video: boolean
-  muted: boolean
-  mirror?: boolean
-  label?: string
-  /** Active speaker (LiveKit calls): highlighted with the accent ring. */
-  speaking?: boolean
-}) {
-  const ref = useRef<HTMLVideoElement>(null)
-  useEffect(() => {
-    if (ref.current && ref.current.srcObject !== stream) ref.current.srcObject = stream
-  }, [stream])
-
-  const hasVideoTrack = video && !!stream?.getVideoTracks().some((t) => t.enabled)
-
-  return (
-    <div
-      className={cn(
-        'relative aspect-video w-full overflow-hidden rounded-lg border border-white/10 bg-neutral-900',
-        speaking && 'ring-2 ring-primary',
-      )}
-    >
-      <video
-        ref={ref}
-        autoPlay
-        playsInline
-        muted={muted}
-        className={cn('h-full w-full object-cover', !hasVideoTrack && 'opacity-0', mirror && '-scale-x-100')}
-      />
-      {!hasVideoTrack && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="flex size-16 items-center justify-center rounded-full bg-primary/40 text-2xl font-semibold text-white ring-2 ring-white/10">
-            {initial(name)}
-          </div>
-        </div>
-      )}
-      <span className="absolute bottom-2 left-2 max-w-[80%] truncate rounded-md bg-black/55 px-2 py-0.5 text-xs font-medium text-white">
-        {label ?? name}
-      </span>
-    </div>
-  )
-}
+import { VideoTile } from './VideoTile'
 
 /**
  * Grid of participant tiles for a group call. Renders the local preview plus

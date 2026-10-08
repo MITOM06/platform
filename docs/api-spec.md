@@ -552,6 +552,7 @@ Response 200: { "success": true }
 | `PATCH /api/meetings/{id}` | host, co-host | 200 `Meeting` | 403 `MEETING_FORBIDDEN` · 403 `MEETING_DEPARTMENT_FORBIDDEN` · 404 · 409 `MEETING_ENDED` · 400 `MEETING_INVALID` |
 | `DELETE /api/meetings/{id}` (cancel) | host | 204 | 403 `MEETING_FORBIDDEN` · 404 · 409 `MEETING_NOT_CANCELLABLE` (LIVE/ENDED or someone already entered) |
 | `POST /api/meetings/{id}/join` | anyone in the workspace | 200 `MeetingJoinResponse` | 403 `MEETING_REMOVED` · 403 `MEETING_LOCKED` · 404 · 409 `MEETING_ENDED` · 409 `MEETING_FULL` · 503 `MEETINGS_UNAVAILABLE` |
+| `GET /api/meetings/{id}/lobby` | host, co-host | 200 `{ "entries": [LobbyEntry…] }` — same items and order as `meet.lobby` (`[]` = nobody waiting); a read, notifies nobody | 403 `MEETING_FORBIDDEN` · 404 `MEETING_NOT_FOUND` · 409 `MEETING_ENDED` |
 | `DELETE /api/meetings/{id}/lobby` | the person waiting | 204 (idempotent) | 404 |
 | `POST /api/meetings/{id}/lobby/{userId}/admit` | host, co-host | 204 (idempotent) | 403 `MEETING_FORBIDDEN` · 404 · 409 `MEETING_ENDED` |
 | `POST /api/meetings/{id}/lobby/{userId}/deny` | host, co-host | 204 (idempotent) | 403 · 404 · 409 `MEETING_ENDED` |
@@ -601,8 +602,11 @@ is a no-op, so a co-host outside the department can still edit the rest). Changi
 `scheduledStart` re-arms the 10-minute reminder. An end without a new start is validated against
 the stored start.
 
-**List** — meetings where the caller is host / co-host / invited by name / in `departmentId`.
-`scope=upcoming` (default): SCHEDULED + LIVE ascending by start (instant meetings by creation);
+**List** — meetings where the caller is host / co-host / invited by name / in `departmentId`;
+`scope=past` also lists every meeting the caller **attended** (has an `attendance` row — e.g.
+walked in or was admitted from the lobby without an invitation) unless they were removed from it
+(each meeting once; such a row has `viewerRole:"invited"`, and `GET /{id}` / the records stay
+readable for them). `scope=upcoming` (default): SCHEDULED + LIVE ascending by start (instant meetings by creation);
 `scope=past`: ENDED descending. `cursor` = `id` of the last item of the previous page; `size`
 default 20, max 100. Response `{content, page:0, size, totalElements, hasNext}`. A SCHEDULED
 meeting 48h past its start (or creation) is retired to ENDED by the sweep.
@@ -662,13 +666,26 @@ merge, then PUTs again with `latest.version`.
 **`Hand`** — `{ "userId": "64b0…03", "displayName": "Hoa Le", "raisedAt": "2026-10-08T02:06:00.250Z" }`;
 `hands` is always in raise order (earliest first).
 
+**`LobbyEntry`** — `{ "userId": "64b0…05", "displayName": "Sam Vo" }` (`displayName` absent when
+unknown ⇒ generic label, never the id). Sorted by name (case-insensitive), nameless last. A
+host/co-host whose STOMP reconnected calls `GET /lobby` to catch up on a missed `meet.lobby`.
+
 ### STOMP — client commands (`SEND /app/…`)
 
 | Destination | Payload | Notes |
 |---|---|---|
 | `/app/meet.hand` | `{ "meetingId": "m1", "raised": true }` | Your own hand only. Raising again keeps your place (no event); lowering when not raised is a no-op. Room access ² |
-| `/app/meet.chat` | `{ "meetingId": "m1", "content": "…", "clientId": "c-7f3a" }` | `content` trimmed, 1..2000. Rate limit shared with normal chat (10 lines / 5 s). `clientId` optional, `[A-Za-z0-9_-]{1,64}` (otherwise dropped), echoed in `meet.chat` / `meet.error`, never stored |
+| `/app/meet.chat` | `{ "meetingId": "m1", "content": "…", "clientId": "c-7f3a" }` | `content` trimmed, 1..2000. Rate limit shared with normal chat (10 lines / 5 s). `clientId` optional, `[A-Za-z0-9_-]{1,64}` (otherwise dropped), echoed in `meet.chat` / `meet.error`. A valid `clientId` is stored with the line and makes the send **idempotent** per (meeting, sender, `clientId`) — see below |
 | `/app/meet.host` | `{ "meetingId": "m1", "action": "MUTE_MIC", "targetId": "64b0…03" }` | Host / co-host. An attendee's command is **ignored** (logged, no event, no error). `targetId` required for `MUTE_MIC`, `REMOVE`, `LOWER_HAND`, `MAKE_COHOST`, `REVOKE_COHOST` |
+
+**Idempotent chat sends.** Re-sending `/app/meet.chat` with a `clientId` you already used in that
+meeting (a retry after a slow echo) stores nothing, is not counted against the rate limit, and
+re-sends the **stored** line (its `id`, `content` and `createdAt`, not the retry's) as `meet.chat`
+`{clientId, message}` to **you only** on `/user/queue/meeting` — the room never sees the line twice.
+Concurrent duplicates are settled by a unique partial index on `meeting_messages`
+`(meetingId, senderId, clientId)` (`meeting_sender_client`); the losers get the same personal
+re-echo. Settle a pending line on a `meet.chat` from either destination, matched by `clientId`, and
+dedupe the message list by `message.id`. Sends without a (valid) `clientId` are never deduplicated.
 
 Host `action`s:
 
@@ -707,11 +724,12 @@ Every payload is `MeetingEventDto` `{event, meetingId, …}`; absent fields are 
 | `/user/queue/meeting` | `meet.removed` | — | you were removed: leave LiveKit, go to the meeting info page; `join` ⇒ 403 `MEETING_REMOVED` |
 | `/user/queue/meeting` | `meet.muted` | `{actor:{userId, displayName?}}` | a host / co-host muted your microphone |
 | `/user/queue/meeting` | `meet.error` | `{meetingId?, action?, clientId?, errorCode, params?}` | one of **your** `/app/meet.*` commands was refused |
+| `/user/queue/meeting` | `meet.chat` | `{clientId, message: MeetingMessage}` — the stored line | you re-sent a `/app/meet.chat` `clientId` that was already stored (idempotent retry; nothing new stored, the room gets nothing) |
 | `/user/queue/meeting` | `meet.admitted` / `meet.denied` | — | host admitted / denied you |
 | `/user/queue/meeting` | `meet.ended` | — | to people still in the lobby when the meeting ends or is cancelled (the lobby is cleared) |
 | `/user/queue/meeting` | `meet.invited` | `{code, title, hostId, hostName, scheduledStart}` | create / `PATCH` added you (named invitees only) |
 | `/user/queue/meeting` | `meet.starting` | `{code, title, scheduledStart}` | 10 min before `scheduledStart` — host, co-hosts, invitees, department members, minus removed |
-| `/user/queue/meeting` | `meet.cancelled` | — | host cancelled — same recipients as `meet.starting` |
+| `/user/queue/meeting` | `meet.cancelled` | `{code, title, scheduledStart}` (`title` / `scheduledStart` absent when the meeting has none) | host cancelled — same recipients as `meet.starting` |
 
 Subscribing to `/topic/meeting/{id}` requires being allowed straight into the room (host, co-host,
 invited / department member / admitted); waiting, removed, locked-out people and ENDED meetings get
@@ -729,6 +747,35 @@ line's. (The field is `errorCode` because `code` is the meeting code.) Example:
 New error codes: `MEETING_NOTE_CONFLICT` (409, with `latest`), `MEETING_NOTES_READ_ONLY` (403 —
 an attendee editing the shared note while `attendeesCanEditNotes=false`), `RATE_LIMITED` (in
 `meet.error`; also the `code` of every chat-service REST 429, which carries `Retry-After`).
+
+### Web client (MT4–MT5) — how `apps/web` uses this contract
+
+No contract change; notes for the other clients (Flutter MT6–MT7 should match):
+
+- **Times** go up as `Date.prototype.toISOString()` (UTC with `Z`); the form edits date / start /
+  duration in the browser's time zone.
+- **`clientId`** of `/app/meet.chat` = `c-` + 12 random base62 characters (`[A-Za-z0-9]`).
+- **Subscribe first, then read.** The room page subscribes `/topic/meeting/{id}` only while
+  connecting / in the room (never while `waiting`), then seeds the roster from
+  `GET /api/meetings/{id}` (open `attendance` rows + current `host` / `coHosts`) and hands from
+  `GET /hands`. Every re-subscribe after a STOMP reconnect re-reads roster, hands, the meeting,
+  chat and the shared note.
+- **STOMP reconnect:** a host / co-host in the room calls `GET /api/meetings/{id}/lobby` to catch
+  up on a missed `meet.lobby`; only a guest still **waiting** re-POSTs `/join` (still `waiting`, or
+  `joined` if they were admitted while offline — a lost `meet.admitted` is never fatal).
+- `/user/queue/meeting` is one durable subscription per session (next to
+  `/user/queue/notifications`); room events in it are routed to the open room by `meetingId`.
+- **Reactions** never touch the server: LiveKit data channel, topic `reaction`, payload exactly
+  `{"e":"<emoji>"}` with one of `👍 ❤️ 😂 😮 👏 🎉` (anything else is dropped), lossy, at most
+  one per second per sender.
+- **Host controls** are `/app/meet.host` only (tokens never carry `roomAdmin`). The six switch
+  actions show as pending until `meet.settings` arrives (8 s at most); "participants can edit
+  shared notes" has no STOMP action and uses `PATCH /api/meetings/{id}` `{settings:{attendeesCanEditNotes}}`.
+- **Notes** autosave 2 s after the last keystroke; a 409 keeps the typed text and offers keep mine /
+  use newer / save merged against `latest`; leaving or ending the meeting flushes unsaved text
+  (best effort, never delays leaving).
+- Every `errorCode` / REST `code` maps to a localized `meeting.err*` string; ids, `removedIds`,
+  room names, tokens and raw error text are never shown.
 
 ### FCM (data)
 

@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -23,12 +24,22 @@ import com.platform.chatservice.model.MeetingMessage;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.RateLimiterService;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.IndexOperations;
+import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -55,6 +66,7 @@ class MeetingChatServiceTest {
   private static final String OTHER = "64b000000000000000000009";
 
   @Autowired private MongoTemplate template;
+  @Autowired private MongoMappingContext mappingContext;
   private MeetingGuard guard;
   private MeetingPeople people;
   private MeetingEvents events;
@@ -65,6 +77,11 @@ class MeetingChatServiceTest {
   @BeforeEach
   void setUp() {
     template.dropCollection(MeetingMessage.class);
+    // The indexes MongoIndexInitializer creates from the model's annotations.
+    IndexOperations ops = template.indexOps(MeetingMessage.class);
+    new MongoPersistentEntityIndexResolver(mappingContext)
+        .resolveIndexFor(MeetingMessage.class)
+        .forEach(ops::ensureIndex);
     guard = mock(MeetingGuard.class);
     people = mock(MeetingPeople.class);
     events = mock(MeetingEvents.class);
@@ -111,6 +128,99 @@ class MeetingChatServiceTest {
     verify(guard).inRoom(an, "m1");
     verify(rateLimiter).checkMessageRate("a");
     verify(events).chat("m1", dto, "c-1");
+  }
+
+  @Test
+  void theSameClientIdTwiceStoresOneLineAndReEchoesItToTheSenderOnly() {
+    MeetingMessageDto first = chat.send(an, "m1", "hello", "c-1");
+    MeetingMessageDto again = chat.send(an, "m1", "hello", "c-1");
+
+    assertThat(count()).isEqualTo(1);
+    assertThat(again).isEqualTo(first);
+    assertThat(template.findById(first.id(), MeetingMessage.class).getClientId()).isEqualTo("c-1");
+    verify(events, times(1)).chat("m1", first, "c-1");
+    verify(events).chatToSender("a", "m1", first, "c-1");
+    verify(rateLimiter, times(1)).checkMessageRate("a"); // the replay costs nothing
+  }
+
+  @Test
+  void differentClientIdsSendersOrMeetingsAreDifferentLines() {
+    chat.send(an, "m1", "hello", "c-1");
+    chat.send(an, "m1", "hello", "c-2");
+    chat.send(new UserPrincipal("b"), "m1", "hello", "c-1");
+    chat.send(an, "m2", "hello", "c-1");
+
+    assertThat(count()).isEqualTo(4);
+    verify(events, never()).chatToSender(any(), any(), any(), any());
+  }
+
+  @Test
+  void linesWithoutAClientIdAreNeverDeduplicated() {
+    chat.send(an, "m1", "hello", null);
+    chat.send(an, "m1", "hello", null);
+    chat.send(an, "m1", "hello", "bad id"); // malformed = absent
+
+    assertThat(count()).isEqualTo(3);
+    assertThat(template.findAll(MeetingMessage.class))
+        .allSatisfy(m -> assertThat(m.getClientId()).isNull());
+    verify(events, never()).chatToSender(any(), any(), any(), any());
+  }
+
+  @Test
+  void concurrentSendsWithTheSameClientIdStoreOneLine() throws Exception {
+    int n = 8;
+    ExecutorService pool = Executors.newFixedThreadPool(n);
+    CountDownLatch go = new CountDownLatch(1);
+    try {
+      List<Future<MeetingMessageDto>> sends = new ArrayList<>();
+      for (int i = 0; i < n; i++) {
+        sends.add(
+            pool.submit(
+                () -> {
+                  go.await();
+                  return chat.send(an, "m1", "hello", "c-race");
+                }));
+      }
+      go.countDown();
+      List<String> ids = new ArrayList<>();
+      for (Future<MeetingMessageDto> f : sends) {
+        ids.add(f.get(30, TimeUnit.SECONDS).id());
+      }
+
+      assertThat(count()).isEqualTo(1);
+      assertThat(ids).containsOnly(template.findAll(MeetingMessage.class).get(0).getId());
+      verify(events, times(1)).chat(eq("m1"), any(), eq("c-race"));
+      verify(events, times(n - 1)).chatToSender(eq("a"), eq("m1"), any(), eq("c-race"));
+    } finally {
+      pool.shutdownNow();
+    }
+  }
+
+  @Test
+  void aDuplicateKeyFromARacingSendTakesTheReplayPath() {
+    // The racing send lands between this send's lookup and its insert.
+    doAnswer(
+            inv -> {
+              template.insert(
+                  MeetingMessage.builder()
+                      .id(ID1)
+                      .meetingId("m1")
+                      .senderId("a")
+                      .content("hello")
+                      .clientId("c-late")
+                      .createdAt(Instant.now())
+                      .build());
+              return null;
+            })
+        .when(rateLimiter)
+        .checkMessageRate("a");
+
+    MeetingMessageDto dto = chat.send(an, "m1", "hello", "c-late");
+
+    assertThat(dto.id()).isEqualTo(ID1);
+    assertThat(count()).isEqualTo(1);
+    verify(events, never()).chat(any(), any(), any());
+    verify(events).chatToSender("a", "m1", dto, "c-late");
   }
 
   @Test

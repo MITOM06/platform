@@ -4,6 +4,7 @@ import com.platform.chatservice.dto.PageResponse;
 import com.platform.chatservice.dto.meeting.CreateMeetingRequest;
 import com.platform.chatservice.dto.meeting.MeetingHandsResponse;
 import com.platform.chatservice.dto.meeting.MeetingJoinResponse;
+import com.platform.chatservice.dto.meeting.MeetingLobbyResponse;
 import com.platform.chatservice.dto.meeting.MeetingMessageDto;
 import com.platform.chatservice.dto.meeting.MeetingNoteDto;
 import com.platform.chatservice.dto.meeting.MeetingNoteRequest;
@@ -88,6 +89,12 @@ public class MeetingController {
   @PostMapping("/{id}/join")
   public MeetingJoinResponse join(@PathVariable String id, Principal principal) {
     return joins.join(caller(principal), id);
+  }
+
+  /** Host / co-host: who is waiting now (same items as {@code meet.lobby}). */
+  @GetMapping("/{id}/lobby")
+  public MeetingLobbyResponse lobby(@PathVariable String id, Principal principal) {
+    return joins.lobbySnapshot(principal.getName(), id);
   }
 
   @DeleteMapping("/{id}/lobby")
