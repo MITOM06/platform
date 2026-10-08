@@ -3,10 +3,11 @@ import { useCallStore } from '@/lib/store/call.store'
 import { chatService } from '@/lib/api/chat'
 import type { CallEndReason } from './call-end-notice'
 import { IceQueue } from './ice-queue'
+import { MeshNegotiator } from './mesh-negotiator'
+import { MeshInCall } from './mesh-in-call'
 import type { CallHooks } from './call-hooks'
 import {
   CallCancelledError,
-  DISCONNECT_GRACE_MS,
   ICE_SERVERS,
   REJECTIONS,
   RING_TIMEOUT_MS,
@@ -29,10 +30,29 @@ export class MeshCallManager {
   private targetId: string | null = null
   private conversationId: string | null = null
   private ringTimer: ReturnType<typeof setTimeout> | null = null
-  private disconnectTimer: ReturnType<typeof setTimeout> | null = null
   private readonly ice = new IceQueue()
   /** Caller only: the offer has left. Before that, hanging up signals nothing. */
   private offerSent = false
+  /** We placed this call: only the caller offers (see MeshNegotiator). */
+  private caller = false
+  private readonly negotiator = new MeshNegotiator({
+    pc: () => this.pc,
+    target: () =>
+      this.targetId && this.conversationId ? { peerId: this.targetId, conversationId: this.conversationId } : null,
+    flush: (pc) => this.ice.flush(pc),
+  })
+  private readonly inCall = new MeshInCall(
+    {
+      pc: () => this.pc,
+      localStream: () => this.localStream,
+      isCaller: () => this.caller,
+      target: () =>
+        this.targetId && this.conversationId ? { peerId: this.targetId, conversationId: this.conversationId } : null,
+      onLocalStream: (stream) => this.hooks.onLocalStream?.(stream),
+      endCall: (reason) => this.endCall(reason),
+    },
+    this.negotiator,
+  )
 
   constructor(private readonly hooks: CallHooks) {}
 
@@ -55,6 +75,7 @@ export class MeshCallManager {
     video = true,
   ): Promise<void> {
     useCallStore.getState().setOutgoing({ peerId: targetId, peerName: targetName, conversationId, video })
+    this.caller = true
     try {
       const pc = await this.setup(targetId, conversationId, video)
       const offer = await pc.createOffer()
@@ -89,6 +110,7 @@ export class MeshCallManager {
     if (!peerId || !conversationId || !pendingOfferSdp || this.pc) return
     // Match the caller's media: only enable local video if the offer has a video m-line.
     const video = pendingOfferSdp.includes('m=video')
+    this.caller = false
     let pc: RTCPeerConnection
     try {
       pc = await this.setup(peerId, conversationId, video)
@@ -100,34 +122,8 @@ export class MeshCallManager {
       this.endCall('media_error')
       return
     }
-    await this.answerOffer(pc, peerId, conversationId, pendingOfferSdp)
-  }
-
-  /** Apply `sdp` and send our answer; an unusable offer ends the call instead of hanging. */
-  private async answerOffer(
-    pc: RTCPeerConnection,
-    peerId: string,
-    conversationId: string,
-    sdp: string,
-  ): Promise<void> {
-    try {
-      await pc.setRemoteDescription({ type: 'offer', sdp })
-      await this.ice.flush(pc)
-      this.assertLive(pc)
-      const answer = await pc.createAnswer()
-      this.assertLive(pc)
-      await pc.setLocalDescription(answer)
-      this.assertLive(pc)
-      stompService.publish('/app/call.answer', {
-        targetId: peerId,
-        conversationId,
-        type: 'answer',
-        sdp: answer.sdp,
-      })
-    } catch (err) {
-      if (err instanceof CallCancelledError) return
-      this.endCall('failed')
-    }
+    // An unusable offer ends the call instead of leaving the prompt stuck.
+    if (!(await this.negotiator.answer(pendingOfferSdp)) && this.pc === pc) this.endCall('failed')
   }
 
   /**
@@ -136,9 +132,10 @@ export class MeshCallManager {
    * ignores it) and answers theirs; the other keeps its offer and waits.
    */
   private async answerCrossedCall(from: string, conversationId: string, sdp: string): Promise<void> {
-    const peerName = useCallStore.getState().peerName
+    const { peerName, micEnabled, cameraEnabled } = useCallStore.getState()
     const video = sdp.includes('m=video')
     this.teardown(false)
+    this.caller = false
     this.ice.expect(from) // their candidates follow their offer
     // Keep showing "Calling…" until media flows; the call takes their media.
     useCallStore.getState().setOutgoing({ peerId: from, peerName, conversationId, video })
@@ -152,10 +149,9 @@ export class MeshCallManager {
     }
     this.offerSent = true // the peer knows about this call: hanging up must tell them
     // Fresh tracks start live: keep what the user muted while "Calling…".
-    const { micEnabled, cameraEnabled } = useCallStore.getState()
     if (!micEnabled) this.toggleMic(false)
-    if (!cameraEnabled) this.toggleCamera(false)
-    await this.answerOffer(pc, from, conversationId, sdp)
+    if (video && !cameraEnabled) this.inCall.toggleCamera(false)
+    if (!(await this.negotiator.answer(sdp)) && this.pc === pc) this.endCall('failed')
   }
 
   /** Route an inbound 1-on-1 signal (from `/user/queue/webrtc`). */
@@ -172,6 +168,9 @@ export class MeshCallManager {
         break
       case 'end':
         this.handleRemoteEnd(signal)
+        break
+      case 'state':
+        this.inCall.handleState(signal)
         break
     }
   }
@@ -216,9 +215,9 @@ export class MeshCallManager {
     useCallStore.getState().setMic(on)
   }
 
+  /** Turn our camera on/off — in a voice call this switches it to video (Messenger-style). */
   toggleCamera(on: boolean): void {
-    this.localStream?.getVideoTracks().forEach((t) => (t.enabled = on))
-    useCallStore.getState().setCamera(on)
+    this.inCall.toggleCamera(on)
   }
 
   private handleOffer(signal: WebRTCSignal): void {
@@ -227,6 +226,11 @@ export class MeshCallManager {
     const sdp = signal.sdp
     if (!from || !conversationId || !sdp) return
     const st = useCallStore.getState()
+    if (st.status === 'connected' && st.peerId === from && st.conversationId === conversationId && this.pc) {
+      // The caller renegotiates mid-call: an ICE restart, or a camera turned on.
+      void this.negotiator.answer(sdp)
+      return
+    }
     if (st.status === 'outgoing' && st.peerId === from && st.conversationId === conversationId) {
       // We are calling each other. `targetId` is us, as the caller addressed it.
       const me = signal.targetId
@@ -309,28 +313,26 @@ export class MeshCallManager {
       }
     }
     pc.ontrack = (e) => {
-      if (e.streams[0]) {
-        this.remoteStream = e.streams[0]
-        this.hooks.onRemoteStream?.(e.streams[0])
-        this.clearRingTimer()
-        useCallStore.getState().setConnected()
-      }
+      // A video line added mid-call may come without a stream: join it to theirs.
+      const stream = e.streams[0] ?? this.remoteStream
+      if (!stream) return
+      if (!e.streams[0] && !stream.getTracks().includes(e.track)) stream.addTrack(e.track)
+      this.remoteStream = stream
+      this.hooks.onRemoteStream?.(stream)
+      this.clearRingTimer()
+      useCallStore.getState().setConnected()
     }
     pc.onconnectionstatechange = () => {
       if (this.pc !== pc) return
       switch (pc.connectionState) {
         case 'connected':
-          this.clearDisconnectTimer()
+          this.inCall.connected(pc)
           break
         case 'disconnected':
-          // Often transient (network hand-off): give it a chance to recover.
-          this.disconnectTimer ??= setTimeout(() => {
-            this.disconnectTimer = null
-            if (this.pc === pc) this.endCall('failed')
-          }, DISCONNECT_GRACE_MS)
-          break
         case 'failed':
-          this.endCall('failed')
+          // Mid-call: a minute to recover (network hand-off, a tunnel, lost Wi-Fi).
+          if (useCallStore.getState().status === 'connected') this.inCall.dropped()
+          else if (pc.connectionState === 'failed') this.endCall('failed') // never connected
           break
       }
     }
@@ -350,9 +352,15 @@ export class MeshCallManager {
   }
 
   private async handleAnswer(sdp: string): Promise<void> {
-    if (!this.pc) return
-    await this.pc.setRemoteDescription({ type: 'answer', sdp })
-    await this.ice.flush(this.pc)
+    const pc = this.pc
+    if (!pc || pc.signalingState !== 'have-local-offer') return // late or duplicate
+    try {
+      await pc.setRemoteDescription({ type: 'answer', sdp })
+      await this.ice.flush(pc)
+    } catch {
+      // superseded by a newer offer
+    }
+    this.negotiator.answered()
   }
 
   private clearRingTimer(): void {
@@ -360,15 +368,12 @@ export class MeshCallManager {
     this.ringTimer = null
   }
 
-  private clearDisconnectTimer(): void {
-    if (this.disconnectTimer) clearTimeout(this.disconnectTimer)
-    this.disconnectTimer = null
-  }
-
   /** Tear down media + connection. `notifyUi` resets the store/overlay. */
   private teardown(notifyUi: boolean): void {
     this.clearRingTimer()
-    this.clearDisconnectTimer()
+    this.inCall.reset()
+    this.negotiator.reset()
+    this.caller = false
     this.localStream?.getTracks().forEach((t) => t.stop())
     this.localStream = null
     this.remoteStream = null

@@ -9,6 +9,7 @@ import { callManager, INCOMING_RING_TIMEOUT_MS } from '@/lib/webrtc/call-manager
 import { Button } from '@/components/ui/button'
 import { VoiceCallModal } from './VoiceCallModal'
 import { VideoCallModal } from './VideoCallModal'
+import { showsVideo } from '@/lib/webrtc/call-network'
 import { GroupCallModal } from './GroupCallModal'
 import { IncomingGroupCall } from './IncomingGroupCall'
 
@@ -24,6 +25,8 @@ export function CallOverlay() {
   const status = useCallStore((s) => s.status)
   const peerName = useCallStore((s) => s.peerName)
   const video = useCallStore((s) => s.video)
+  const cameraEnabled = useCallStore((s) => s.cameraEnabled)
+  const peerCamera = useCallStore((s) => s.peerCamera)
   const setDuration = useCallStore((s) => s.setDuration)
   const groupCallId = useCallStore((s) => s.groupCallId)
   const incomingGroupCall = useCallStore((s) => s.incomingGroupCall)
@@ -86,5 +89,6 @@ export function CallOverlay() {
   }
 
   // ── Outgoing / connected ────────────────────────────────────────────────
-  return video ? <VideoCallModal /> : <VoiceCallModal />
+  // Video while either camera is on; back to voice when both are off.
+  return showsVideo(cameraEnabled, peerCamera) ? <VideoCallModal /> : <VoiceCallModal />
 }

@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { PhoneOff, Mic, MicOff, Video, VideoOff } from 'lucide-react'
 import { useCallStore } from '@/lib/store/call.store'
 import { CallConnectionNotice } from './CallConnectionNotice'
+import { CallReconnectOverlay } from './CallReconnectOverlay'
 import { callManager } from '@/lib/webrtc/call-manager'
 import { cn } from '@/lib/utils'
 
@@ -25,6 +26,7 @@ export function VideoCallModal() {
   const duration = useCallStore((s) => s.durationSeconds)
   const micEnabled = useCallStore((s) => s.micEnabled)
   const cameraEnabled = useCallStore((s) => s.cameraEnabled)
+  const peerCamera = useCallStore((s) => s.peerCamera)
 
   const localRef = useRef<HTMLVideoElement>(null)
   const remoteRef = useRef<HTMLVideoElement>(null)
@@ -74,13 +76,26 @@ export function VideoCallModal() {
           </div>
         )}
 
+        {connected && !peerCamera && (
+          // Their camera is off while ours is on: show who we are talking to.
+          <div className="absolute inset-0 flex items-center justify-center bg-neutral-900">
+            <div className="size-24 rounded-full bg-white/10 flex items-center justify-center text-4xl font-semibold text-white">
+              {(peerName || '?')[0]?.toUpperCase()}
+            </div>
+          </div>
+        )}
+        <CallReconnectOverlay />
+
         {/* Local PiP */}
         <video
           ref={localRef}
           autoPlay
           playsInline
           muted
-          className="absolute bottom-28 right-4 h-40 w-28 rounded-xl border border-white/20 object-cover bg-neutral-900 -scale-x-100"
+          className={cn(
+            'absolute bottom-28 right-4 h-40 w-28 rounded-xl border border-white/20 object-cover bg-neutral-900 -scale-x-100',
+            !cameraEnabled && 'hidden',
+          )}
         />
       </div>
 

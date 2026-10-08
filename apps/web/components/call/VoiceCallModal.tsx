@@ -2,9 +2,10 @@
 
 import { useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
-import { PhoneOff, Mic, MicOff } from 'lucide-react'
+import { PhoneOff, Mic, MicOff, Video } from 'lucide-react'
 import { useCallStore } from '@/lib/store/call.store'
 import { CallConnectionNotice } from './CallConnectionNotice'
+import { CallReconnectOverlay } from './CallReconnectOverlay'
 import { callManager } from '@/lib/webrtc/call-manager'
 import { cn } from '@/lib/utils'
 
@@ -44,6 +45,7 @@ export function VoiceCallModal() {
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-between bg-gradient-to-b from-slate-900 via-black to-slate-950 py-16">
       {/* Remote audio sink (no video element in a voice call) */}
       <audio ref={audioRef} autoPlay className="hidden" />
+      <CallReconnectOverlay />
 
       <div className="flex flex-col items-center gap-5 mt-16">
         <div className="size-32 rounded-full bg-primary/40 flex items-center justify-center text-5xl font-semibold text-white ring-4 ring-white/10">
@@ -84,6 +86,17 @@ export function VoiceCallModal() {
         >
           {micEnabled ? <Mic className="size-6" /> : <MicOff className="size-6" />}
         </button>
+        {connected && (
+          // Turn our camera on: the call switches to video (Messenger-style).
+          <button
+            onClick={() => callManager.toggleCamera(true)}
+            className="flex size-14 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
+            title={t('switchToVideo')}
+            aria-label={t('switchToVideo')}
+          >
+            <Video className="size-6" />
+          </button>
+        )}
         <button
           onClick={() => callManager.endCall()}
           className="flex size-16 items-center justify-center rounded-full bg-red-600 text-white hover:bg-red-700"

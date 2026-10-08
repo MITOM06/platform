@@ -17,10 +17,18 @@ export interface WebRTCSignal {
     | 'call-declined'
     /** sfu: we both tapped Call — the server answered their call for us; join it. */
     | 'call-merged'
+    /** 1-on-1 in-call state from the other person (`/app/call.state`). */
+    | 'state'
   sdp?: string
   candidate?: RTCIceCandidateInit
   /** On `end`: why the call ended. Absent from older clients (= 'hangup'). */
   reason?: CallEndReason
+  /** On `state`: the sender's camera is on. */
+  video?: boolean
+  /** On `state`: how well the sender receives us. */
+  quality?: 'good' | 'poor'
+  /** On `state`: the sender asks the caller for a fresh offer (reconnect / video line). */
+  restart?: boolean
   // ── Group-call fields (Track A §3). Absent on legacy 1-on-1 signals. ───────
   /** Present on every mesh signal; routes the signal into the group manager. */
   callId?: string
@@ -46,10 +54,13 @@ export const RING_TIMEOUT_MS = 45_000
 /** Callee-side safety net, slightly longer than the caller's ring. */
 export const INCOMING_RING_TIMEOUT_MS = RING_TIMEOUT_MS + 5_000
 /**
- * How long a `disconnected` connection may try to recover (Wi-Fi ↔ 4G hand-off,
- * short loss) before the call is ended. Mirrors Flutter `disconnectGrace`.
+ * How long a dropped 1-on-1 may try to recover (Wi-Fi ↔ 4G hand-off, a tunnel,
+ * a lost network) before the call is ended; the call screen shows "waiting to
+ * reconnect" meanwhile. Mirrors Flutter `disconnectGrace` and the server.
  */
-export const DISCONNECT_GRACE_MS = 8_000
+export const DISCONNECT_GRACE_MS = 60_000
+/** Same window, by its user-facing name: the "waiting to reconnect" screen. */
+export const RECONNECT_GRACE_MS = DISCONNECT_GRACE_MS
 
 /** The call was ended (hang-up, peer cancel) while setup was still awaiting. */
 export class CallCancelledError extends Error {
