@@ -77,6 +77,30 @@ void main() {
   tearDown(() => c.dispose());
 
   group('joining', () {
+    test('leaving while "ask to join" is in flight drops the late lobby entry (QA P3-1)', () async {
+      final answer = Completer<MeetingJoinResponse>();
+      api.joins.add(answer.future);
+      final joining = c.join(const JoinMedia(mic: true, camera: true));
+      c.dispose();
+      answer.complete(const MeetingWaiting());
+      await joining;
+      await settle();
+      expect(api.leaveLobbyCalls, 1);
+    });
+
+    test('a superseded join never drops its own newer lobby entry', () async {
+      final first = Completer<MeetingJoinResponse>();
+      api.joins.add(first.future);
+      final joining = c.join(const JoinMedia(mic: true, camera: true));
+      api.joins.add(const MeetingWaiting());
+      await c.rejoin();
+      first.complete(const MeetingWaiting());
+      await joining;
+      await settle();
+      expect(api.leaveLobbyCalls, 0);
+      expect(s.phase, RoomPhase.waiting);
+    });
+
     test('goes straight in with the chosen media', () async {
       api.joins.add(joined(MeetingRoomRole.cohost));
       await c.join(const JoinMedia(mic: false, camera: true, frontCamera: false));

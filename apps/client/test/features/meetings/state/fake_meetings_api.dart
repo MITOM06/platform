@@ -25,6 +25,7 @@ class FakeMeetingsApi implements MeetingsApi {
   final gets = <Object>[];
   final lobbies = <List<LobbyEntry>>[];
   List<MeetingHand> handsAnswer = const [];
+  Object? handsError;
   MeetingMessagePage messagesAnswer = const MeetingMessagePage(content: [], hasNext: false);
   int joinCalls = 0, getCalls = 0, lobbyCalls = 0, leaveLobbyCalls = 0, endCalls = 0;
   final admitted = <String>[], denied = <String>[];
@@ -66,7 +67,11 @@ class FakeMeetingsApi implements MeetingsApi {
   Future<void> deny(String id, String userId) async => denied.add(userId);
 
   @override
-  Future<List<MeetingHand>> hands(String id) async => handsAnswer;
+  Future<List<MeetingHand>> hands(String id) async {
+    final e = handsError;
+    if (e != null) throw e;
+    return handsAnswer;
+  }
 
   @override
   Future<MeetingMessagePage> messages(String id, {String? before, int size = 50}) async =>

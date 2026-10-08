@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:platform_client/features/meetings/domain/meeting_events.dart';
 import 'package:platform_client/features/meetings/domain/meeting_models.dart';
 import 'package:platform_client/features/meetings/domain/meeting_room_models.dart';
+import 'package:platform_client/features/meetings/domain/room_phase.dart';
 import 'package:platform_client/features/meetings/ui/room/meeting_chat_sheet.dart';
 
 import 'meeting_test_harness.dart';
@@ -104,5 +105,15 @@ void main() {
   testWidgets('an empty chat says who can see messages', (tester) async {
     await pumpChat(tester);
     expect(find.text(l10nOf(tester).meetingChatEmpty), findsOneWidget);
+  });
+
+  testWidgets('before the first history read it shows a spinner, not "empty"',
+      (tester) async {
+    await pumpRoom(tester,
+        phase: RoomPhase.prejoin,
+        settle: false,
+        child: const Scaffold(body: MeetingChatSheet()));
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text(l10nOf(tester).meetingChatEmpty), findsNothing);
   });
 }

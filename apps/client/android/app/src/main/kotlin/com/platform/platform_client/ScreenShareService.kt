@@ -27,16 +27,30 @@ class ScreenShareService : Service() {
         val title = intent?.getStringExtra(EXTRA_TITLE).orEmpty()
         val body = intent?.getStringExtra(EXTRA_BODY).orEmpty()
         val notification = buildNotification(title, body)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(
-                NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION,
-            )
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(
+                    NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION,
+                )
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+        } catch (e: Exception) {
+            notifyStarted(false)
+            stopSelf()
+            return START_NOT_STICKY
         }
+        // Only now may the capture start (Android 14): answer the Dart call.
+        notifyStarted(true)
         return START_NOT_STICKY
+    }
+
+    private fun notifyStarted(ok: Boolean) {
+        val reply = pendingStart
+        pendingStart = null
+        reply?.invoke(ok)
     }
 
     private fun stopAsForeground() {
@@ -70,6 +84,13 @@ class ScreenShareService : Service() {
     }
 
     companion object {
+        /**
+         * Answers MainActivity's "start" call once the service runs in the
+         * foreground (main thread, single use).
+         */
+        @Volatile
+        var pendingStart: ((Boolean) -> Unit)? = null
+
         const val ACTION_STOP = "com.platform.platform_client.SCREEN_SHARE_STOP"
         const val EXTRA_TITLE = "title"
         const val EXTRA_BODY = "body"

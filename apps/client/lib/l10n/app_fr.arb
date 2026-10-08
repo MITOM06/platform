@@ -1839,10 +1839,6 @@
   "@meetingPresentingName": {
     "placeholders": { "name": { "type": "String" } }
   },
-  "meetingParticipantCount": "{count, plural, one {{count} personne} other {{count} personnes}}",
-  "@meetingParticipantCount": {
-    "placeholders": { "count": { "type": "int" } }
-  },
   "meetingOverflowTiles": "+{count}",
   "@meetingOverflowTiles": {
     "placeholders": { "count": { "type": "int" } }
@@ -1859,7 +1855,6 @@
   },
   "meetingMicMutedLabel": "Micro coupé",
   "meetingHandRaisedLabel": "Main levée",
-  "meetingSpeakingLabel": "En train de parler",
   "meetingPoorConnectionPeer": "Connexion instable",
   "meetingHostBadge": "Organisateur ou co-organisateur",
   "meetingShareStart": "Présenter l'écran",
@@ -1874,7 +1869,6 @@
   "meetingLayout": "Disposition",
   "meetingLayoutGrid": "Mosaïque",
   "meetingLayoutSpotlight": "Intervenant",
-  "meetingDevicesTitle": "Audio et vidéo",
   "meetingLeave": "Quitter",
   "meetingEndForAll": "Mettre fin à la réunion pour tous",
   "meetingReactionAria": "{name} a réagi avec {emoji}",
@@ -1936,6 +1930,5 @@
   "meetingMediaBlocked": "L'accès au micro ou à la caméra est désactivé. Vous pouvez quand même participer et l'activer plus tard dans Réglages.",
   "meetingSwitchCamera": "Changer de caméra",
   "meetingSpeakerOn": "Utiliser le haut-parleur",
-  "meetingSpeakerOff": "Utiliser l'écouteur",
   "meetingLoading": "Chargement de la réunion…"
 }

@@ -5256,16 +5256,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String meetingParticipantCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count người',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String meetingOverflowTiles(int count) {
     return '+$count';
   }
@@ -5296,9 +5286,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get meetingHandRaisedLabel => 'Đang giơ tay';
-
-  @override
-  String get meetingSpeakingLabel => 'Đang nói';
 
   @override
   String get meetingPoorConnectionPeer => 'Mạng không ổn định';
@@ -5342,9 +5329,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get meetingLayoutSpotlight => 'Người nói';
-
-  @override
-  String get meetingDevicesTitle => 'Âm thanh & hình ảnh';
 
   @override
   String get meetingLeave => 'Rời';
@@ -5479,9 +5463,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get meetingSpeakerOn => 'Dùng loa ngoài';
-
-  @override
-  String get meetingSpeakerOff => 'Dùng loa trong';
 
   @override
   String get meetingLoading => 'Đang tải cuộc họp…';

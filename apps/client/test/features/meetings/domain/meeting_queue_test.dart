@@ -57,6 +57,17 @@ void main() {
       hostId: '64b0aaaaaaaaaaaaaaaaaaaa', hostName: 'Lan');
 
   group('invitations and reminders', () {
+    test('no banner for the meeting whose room is already open (QA P2-1)', () {
+      ctx.room = FakeRoom('m2');
+      seedUpcoming(ctx, [meeting('m1')]);
+      handleMeetingQueueEvent(invited, ctx);
+      handleMeetingQueueEvent(const StartingEvent(meetingId: 'm2', code: 'xyz-wxyz-xyz'), ctx);
+      expect(ctx.notices, isEmpty);
+      expect(upcomingIds(ctx), contains('m2')); // the cache is still patched
+      handleMeetingQueueEvent(const StartingEvent(meetingId: 'm9', code: 'abc-defg-hjk'), ctx);
+      expect(ctx.notices.single.route, '/meet/abc-defg-hjk');
+    });
+
     test('adds a placeholder row and notifies with the host name, linking to the room', () {
       seedUpcoming(ctx, [meeting('m1')]);
       handleMeetingQueueEvent(invited, ctx);
@@ -148,6 +159,19 @@ void main() {
     test('ignores room events when no room is open', () {
       expect(() => handleMeetingQueueEvent(const AdmittedEvent(meetingId: 'm1'), ctx), returnsNormally);
       expect(ctx.notices, isEmpty);
+    });
+  });
+
+  group('tapping a banner (QA P2-1)', () {
+    test('does nothing when that room is already on screen', () {
+      expect(bannerTapAction('/meet/abc-defg-hjk', here: '/meet/abc-defg-hjk', roomOpen: true), BannerTap.none);
+      expect(bannerTapAction('/meet/abc-defg-hjk', here: '/meet/ABC-DEFG-HJK', roomOpen: true), BannerTap.none);
+    });
+    test('replaces an open room instead of stacking a second one', () {
+      expect(bannerTapAction('/meet/xyz-wxyz-xyz', here: '/meet/abc-defg-hjk', roomOpen: true), BannerTap.replace);
+    });
+    test('pushes from anywhere else', () {
+      expect(bannerTapAction('/meet/xyz-wxyz-xyz', here: '/chat/c1', roomOpen: false), BannerTap.push);
     });
   });
 }

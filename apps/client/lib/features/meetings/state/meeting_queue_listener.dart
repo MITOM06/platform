@@ -70,7 +70,19 @@ class _AppMeetingQueueContext implements MeetingQueueContext {
     showInAppNotification(
       meetingText(l, n.title),
       meetingText(l, n.body),
-      onTap: () => _ref.read(appRouterProvider).push(n.route),
+      onTap: () {
+        final router = _ref.read(appRouterProvider);
+        final here = router.routerDelegate.currentConfiguration.uri.path;
+        switch (bannerTapAction(n.route,
+            here: here, roomOpen: activeMeetingRoom() != null)) {
+          case BannerTap.none:
+            break;
+          case BannerTap.replace:
+            router.go(n.route);
+          case BannerTap.push:
+            unawaited(router.push(n.route));
+        }
+      },
     );
   }
 

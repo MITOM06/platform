@@ -137,6 +137,7 @@ class MeetingRoomState {
     this.hands = const [],
     this.lobby = const [],
     this.chat = const ChatHistory(),
+    this.chatSeeded = false,
     this.sharedNoteRemote,
     this.sharedNoteResync = 0,
   });
@@ -174,6 +175,10 @@ class MeetingRoomState {
   final List<MeetingHand> hands;
   final List<LobbyEntry> lobby;
   final ChatHistory chat;
+
+  /// The first chat page read has answered (until then: a spinner, not
+  /// "no messages").
+  final bool chatSeeded;
   final RemoteNewer? sharedNoteRemote;
 
   /// Bumped after a reconnect: the shared note re-reads itself when clean.
@@ -209,6 +214,7 @@ class MeetingRoomState {
     List<MeetingHand>? hands,
     List<LobbyEntry>? lobby,
     ChatHistory? chat,
+    bool? chatSeeded,
     Object? sharedNoteRemote = _keep,
     int? sharedNoteResync,
   }) {
@@ -239,6 +245,7 @@ class MeetingRoomState {
       hands: hands ?? this.hands,
       lobby: lobby ?? this.lobby,
       chat: chat ?? this.chat,
+      chatSeeded: chatSeeded ?? this.chatSeeded,
       sharedNoteRemote:
           pick<RemoteNewer?>(sharedNoteRemote, this.sharedNoteRemote),
       sharedNoteResync: sharedNoteResync ?? this.sharedNoteResync,

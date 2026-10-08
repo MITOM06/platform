@@ -15,6 +15,10 @@ ActiveMeetingRoom? activeMeetingRoom() => _active;
 abstract interface class LiveMeetingRoom implements ActiveMeetingRoom {
   /// Connecting to or inside the room.
   bool get isLive;
+
+  /// Leave it (another room is opening in its place — like web unmounting
+  /// the room on navigation).
+  void leave();
 }
 
 /// A meeting is running on this device (connecting / in the room): the app

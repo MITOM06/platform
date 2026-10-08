@@ -1839,10 +1839,6 @@
   "@meetingPresentingName": {
     "placeholders": { "name": { "type": "String" } }
   },
-  "meetingParticipantCount": "{count, plural, other {{count} 人}}",
-  "@meetingParticipantCount": {
-    "placeholders": { "count": { "type": "int" } }
-  },
   "meetingOverflowTiles": "+{count}",
   "@meetingOverflowTiles": {
     "placeholders": { "count": { "type": "int" } }
@@ -1859,7 +1855,6 @@
   },
   "meetingMicMutedLabel": "麦克风已关闭",
   "meetingHandRaisedLabel": "已举手",
-  "meetingSpeakingLabel": "正在发言",
   "meetingPoorConnectionPeer": "网络不稳定",
   "meetingHostBadge": "主持人或联合主持人",
   "meetingShareStart": "共享屏幕",
@@ -1874,7 +1869,6 @@
   "meetingLayout": "布局",
   "meetingLayoutGrid": "网格",
   "meetingLayoutSpotlight": "发言人",
-  "meetingDevicesTitle": "音频和视频",
   "meetingLeave": "离开",
   "meetingEndForAll": "为所有人结束会议",
   "meetingReactionAria": "{name} 发送了 {emoji}",
@@ -1936,6 +1930,5 @@
   "meetingMediaBlocked": "麦克风或摄像头权限已关闭。你仍可加入，稍后可在“设置”中开启。",
   "meetingSwitchCamera": "切换摄像头",
   "meetingSpeakerOn": "使用扬声器",
-  "meetingSpeakerOff": "使用听筒",
   "meetingLoading": "正在加载会议…"
 }

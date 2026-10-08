@@ -78,7 +78,7 @@ class MeetingRoomController extends RoomMedia
   void dispose() {
     if (_disposed) return;
     _disposed = true;
-    if (store.value.phase == RoomPhase.waiting) _leaveLobbyQuietly();
+    if (store.value.phase == RoomPhase.waiting) leaveLobbyQuietly();
     epoch++;
     closeSession();
     _chat.dispose();
@@ -116,7 +116,12 @@ class MeetingRoomController extends RoomMedia
       if (!keep) set((s) => s.copyWith(phase: phase));
       return;
     }
-    if (run != epoch) return;
+    if (run != epoch) {
+      // The screen went away mid-"ask to join": drop the late lobby entry
+      // (never on a superseding join — that one owns the entry now).
+      if (_disposed && res is MeetingWaiting) leaveLobbyQuietly();
+      return;
+    }
     switch (res) {
       case MeetingWaiting():
         set((s) => s.copyWith(phase: RoomPhase.waiting));
@@ -203,26 +208,10 @@ class MeetingRoomController extends RoomMedia
     set((s) => s.copyWith(phase: ended ? RoomPhase.ended : RoomPhase.left));
   }
 
-  /// The app is going away while waiting: drop the lobby entry (best-effort).
-  void leaveLobbyOnExit() {
-    if (store.value.phase == RoomPhase.waiting) _leaveLobbyQuietly();
-  }
-
-  void _leaveLobbyQuietly() =>
-      unawaited(deps.api.leaveLobby(meetingId).catchError((Object _) {}));
-
-  Future<void> cancelWaiting() async {
-    epoch++;
-    try {
-      await deps.api.leaveLobby(meetingId);
-    } catch (_) {
-      // the lobby entry expires on its own
-    }
-    set((s) => s.copyWith(phase: RoomPhase.prejoin));
-  }
-
+  @override
   void leave() {
     flushNotes();
+    if (store.value.phase == RoomPhase.waiting) leaveLobbyQuietly();
     _close(RoomPhase.left);
   }
 
@@ -351,6 +340,12 @@ class MeetingRoomController extends RoomMedia
     if (store.value.phase != RoomPhase.ended) _close(RoomPhase.ended);
   }
 
+  void _closedAway(RoomPhase p) {
+    if (p != RoomPhase.ended) return _close(RoomPhase.removed);
+    markMeetingEnded(deps, _meeting);
+    onEnded();
+  }
+
   /// STOMP came back: re-ask while waiting (a missed `meet.admitted`); in the
   /// room re-read and apply what changed — never join again.
   @override
@@ -370,25 +365,30 @@ class MeetingRoomController extends RoomMedia
   Future<void> _syncRoom(int run) async {
     final gen = ++_syncGen;
     bool current() => run == epoch && gen == _syncGen;
-    final hands = rereadHands(deps, meetingId);
+    final hands = syncRead(() => deps.api.hands(meetingId));
     final chat = rereadChat(deps, meetingId);
-    final fresh = await rereadMeeting(deps, meetingId);
+    final read = await syncMeeting(deps, meetingId);
     if (!current()) return;
-    if (fresh != null) {
+    // Removed / ended while offline: close (+ unsubscribe), no refusal loop.
+    if (read.closed case final p?) return _closedAway(p);
+    if (read.value case final fresh?) {
       _meeting = fresh.meeting;
-      if (fresh.meeting.status == MeetingStatus.ended) {
-        markMeetingEnded(deps, _meeting);
-        return onEnded();
+      if (_meeting.status == MeetingStatus.ended) {
+        return _closedAway(RoomPhase.ended);
       }
       set((s) => s.copyWith(roster: fresh.roster));
       onRoster(fresh.roster, readLobby: false);
-      onSettings(fresh.meeting.settings);
+      onSettings(_meeting.settings);
     }
     final h = await hands;
-    if (current() && h != null) set((s) => s.copyWith(hands: h));
+    if (!current()) return;
+    if (h.closed case final p?) return _closedAway(p);
+    if (h.value case final raised?) set((s) => s.copyWith(hands: raised));
     final page = await chat;
-    if (current() && page != null) {
-      set((s) => s.copyWith(chat: mergeLatestPage(s.chat, page)));
+    if (current()) {
+      set((s) => s.copyWith(
+          chatSeeded: true,
+          chat: page == null ? null : mergeLatestPage(s.chat, page)));
     }
     final s = store.value;
     if (!current() || s.phase != RoomPhase.inRoom || !isManagerRoom(s.myRole)) {

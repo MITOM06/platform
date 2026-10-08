@@ -1839,10 +1839,6 @@
   "@meetingPresentingName": {
     "placeholders": { "name": { "type": "String" } }
   },
-  "meetingParticipantCount": "{count, plural, other {{count} 人}}",
-  "@meetingParticipantCount": {
-    "placeholders": { "count": { "type": "int" } }
-  },
   "meetingOverflowTiles": "+{count}",
   "@meetingOverflowTiles": {
     "placeholders": { "count": { "type": "int" } }
@@ -1859,7 +1855,6 @@
   },
   "meetingMicMutedLabel": "マイクはオフです",
   "meetingHandRaisedLabel": "挙手しています",
-  "meetingSpeakingLabel": "発言中",
   "meetingPoorConnectionPeer": "接続が不安定",
   "meetingHostBadge": "主催者または共同主催者",
   "meetingShareStart": "画面を共有",
@@ -1874,7 +1869,6 @@
   "meetingLayout": "レイアウト",
   "meetingLayoutGrid": "グリッド",
   "meetingLayoutSpotlight": "発言者",
-  "meetingDevicesTitle": "音声と動画",
   "meetingLeave": "退出",
   "meetingEndForAll": "全員の会議を終了",
   "meetingReactionAria": "{name} さんが {emoji} でリアクションしました",
@@ -1936,6 +1930,5 @@
   "meetingMediaBlocked": "マイクまたはカメラへのアクセスがオフです。このまま参加して、後で「設定」からオンにできます。",
   "meetingSwitchCamera": "カメラを切り替え",
   "meetingSpeakerOn": "スピーカーを使用",
-  "meetingSpeakerOff": "受話口を使用",
   "meetingLoading": "会議を読み込み中…"
 }

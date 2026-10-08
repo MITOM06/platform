@@ -81,6 +81,25 @@ mixin RoomCommands on RoomMedia {
     }
   }
 
+  /// The app is going away while waiting: drop the lobby entry (best-effort).
+  void leaveLobbyOnExit() {
+    if (store.value.phase == RoomPhase.waiting) leaveLobbyQuietly();
+  }
+
+  @protected
+  void leaveLobbyQuietly() =>
+      unawaited(deps.api.leaveLobby(meetingId).catchError((Object _) {}));
+
+  Future<void> cancelWaiting() async {
+    epoch++;
+    try {
+      await deps.api.leaveLobby(meetingId);
+    } catch (_) {
+      // the lobby entry expires on its own
+    }
+    set((s) => s.copyWith(phase: RoomPhase.prejoin));
+  }
+
   /// Re-read the lobby (host / co-host in the room); a failed read is quiet.
   void refreshLobby() {
     if (store.value.phase != RoomPhase.inRoom) return;

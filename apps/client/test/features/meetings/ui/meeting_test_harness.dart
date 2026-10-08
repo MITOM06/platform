@@ -24,12 +24,17 @@ Future<void> pumpMeetingWidget(WidgetTester tester, Widget child,
     bool fakeAuth = true,
     bool wrapInScaffold = true,
     bool dark = false,
-    bool settle = true}) async {
+    bool settle = true,
+    Widget Function(String code)? meetRoute}) async {
   final router = GoRouter(routes: [
     GoRoute(
         path: '/',
         builder: (_, __) => wrapInScaffold ? Scaffold(body: child) : child),
-    GoRoute(path: '/meet/:code', builder: (_, s) => Text(s.uri.path)),
+    GoRoute(
+        path: '/meet/:code',
+        builder: (_, s) => meetRoute == null
+            ? Text(s.uri.path)
+            : meetRoute(s.pathParameters['code'] ?? '')),
     GoRoute(path: '/meetings/:id', builder: (_, s) => Text(s.uri.path)),
     GoRoute(path: '/meetings', builder: (_, s) => Text(s.uri.path)),
   ]);

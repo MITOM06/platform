@@ -5113,16 +5113,6 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String meetingParticipantCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count 人',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String meetingOverflowTiles(int count) {
     return '+$count';
   }
@@ -5153,9 +5143,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get meetingHandRaisedLabel => '挙手しています';
-
-  @override
-  String get meetingSpeakingLabel => '発言中';
 
   @override
   String get meetingPoorConnectionPeer => '接続が不安定';
@@ -5198,9 +5185,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get meetingLayoutSpotlight => '発言者';
-
-  @override
-  String get meetingDevicesTitle => '音声と動画';
 
   @override
   String get meetingLeave => '退出';
@@ -5334,9 +5318,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get meetingSpeakerOn => 'スピーカーを使用';
-
-  @override
-  String get meetingSpeakerOff => '受話口を使用';
 
   @override
   String get meetingLoading => '会議を読み込み中…';

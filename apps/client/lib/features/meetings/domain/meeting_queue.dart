@@ -59,6 +59,25 @@ abstract interface class MeetingQueueContext {
   ActiveMeetingRoom? activeRoom();
 }
 
+/// What tapping a meeting banner does.
+enum BannerTap {
+  /// Already there.
+  none,
+
+  /// A room is open: replace it, like web (`router.push` to another
+  /// `/meet/…` unmounts the open room) — never stack a second room.
+  replace,
+  push,
+}
+
+BannerTap bannerTapAction(String route,
+    {required String here, required bool roomOpen}) {
+  if (Uri.decodeComponent(here).toLowerCase() == route.toLowerCase()) {
+    return BannerTap.none;
+  }
+  return roomOpen ? BannerTap.replace : BannerTap.push;
+}
+
 String? _trimmed(String? s) {
   final t = s?.trim();
   return t == null || t.isEmpty ? null : t;
@@ -67,9 +86,14 @@ String? _trimmed(String? s) {
 String _titleOr(MeetingQueueContext ctx, String? title) =>
     _trimmed(title) ?? ctx.label(MeetingText.untitled);
 
+/// No banner about the meeting whose room is already open: tapping it would
+/// open that room a second time.
+bool _roomOpen(MeetingQueueContext ctx, String meetingId) =>
+    ctx.activeRoom()?.meetingId == meetingId;
+
 void _onInvited(InvitedEvent e, MeetingQueueContext ctx) {
   ctx.cache.updateCache((s) => s.addInvited(e, ctx.now()));
-  if (!ctx.notificationsEnabled()) return;
+  if (!ctx.notificationsEnabled() || _roomOpen(ctx, e.meetingId)) return;
   // hostId is identity only — a name that is missing or looks like an id
   // becomes "Someone".
   final name =
@@ -89,7 +113,7 @@ void _onInvited(InvitedEvent e, MeetingQueueContext ctx) {
 }
 
 void _onStarting(StartingEvent e, MeetingQueueContext ctx) {
-  if (!ctx.notificationsEnabled()) return;
+  if (!ctx.notificationsEnabled() || _roomOpen(ctx, e.meetingId)) return;
   final time = ctx.formatTime(e.scheduledStart ?? ctx.now());
   ctx.notify(MeetingQueueNotice(
     title: const MeetingNotice(MeetingText.notifStartingTitle),

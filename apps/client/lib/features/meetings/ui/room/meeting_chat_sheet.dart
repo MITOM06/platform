@@ -88,6 +88,8 @@ class _MeetingChatSheetState extends ConsumerState<MeetingChatSheet> {
     final scope = MeetingRoomScope.of(context);
     final c = scope.controller;
     final chat = ref.watch(meetingRoomStoreProvider.select((s) => s.chat));
+    final seeded =
+        ref.watch(meetingRoomStoreProvider.select((s) => s.chatSeeded));
     final pending =
         ref.watch(meetingRoomStoreProvider.select((s) => s.pendingChat));
     _syncTick(pending.isNotEmpty);
@@ -132,7 +134,13 @@ class _MeetingChatSheetState extends ConsumerState<MeetingChatSheet> {
       child: Column(children: [
         Expanded(
           child: Stack(children: [
-            if (_total == 0)
+            if (_total == 0 && !seeded)
+              Center(
+                child: Semantics(
+                    label: l.meetingChatTitle,
+                    child: const CircularProgressIndicator()),
+              )
+            else if (_total == 0)
               Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),

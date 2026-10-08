@@ -5064,16 +5064,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String meetingParticipantCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count 人',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String meetingOverflowTiles(int count) {
     return '+$count';
   }
@@ -5104,9 +5094,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get meetingHandRaisedLabel => '已举手';
-
-  @override
-  String get meetingSpeakingLabel => '正在发言';
 
   @override
   String get meetingPoorConnectionPeer => '网络不稳定';
@@ -5149,9 +5136,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get meetingLayoutSpotlight => '发言人';
-
-  @override
-  String get meetingDevicesTitle => '音频和视频';
 
   @override
   String get meetingLeave => '离开';
@@ -5284,9 +5268,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get meetingSpeakerOn => '使用扬声器';
-
-  @override
-  String get meetingSpeakerOff => '使用听筒';
 
   @override
   String get meetingLoading => '正在加载会议…';

@@ -5115,16 +5115,6 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String meetingParticipantCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count명',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String meetingOverflowTiles(int count) {
     return '+$count';
   }
@@ -5155,9 +5145,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get meetingHandRaisedLabel => '손을 들었습니다';
-
-  @override
-  String get meetingSpeakingLabel => '말하는 중';
 
   @override
   String get meetingPoorConnectionPeer => '연결 불안정';
@@ -5200,9 +5187,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get meetingLayoutSpotlight => '발언자';
-
-  @override
-  String get meetingDevicesTitle => '오디오 및 비디오';
 
   @override
   String get meetingLeave => '나가기';
@@ -5336,9 +5320,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get meetingSpeakerOn => '스피커 사용';
-
-  @override
-  String get meetingSpeakerOff => '수화부 사용';
 
   @override
   String get meetingLoading => '회의를 불러오는 중…';

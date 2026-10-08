@@ -91,6 +91,28 @@ void main() {
   tearDown(() => c.dispose());
 
   group('P2-2 — resync after a STOMP reconnect', () {
+    test('removed while offline: the re-read 403 closes the room and the topic (QA P3-5)', () async {
+      await inRoom();
+      api.gets.add(httpError(403, 'MEETING_REMOVED'));
+      await c.onRealtimeReconnected();
+      expect(s.phase, RoomPhase.removed);
+      expect(session.disconnects, greaterThan(0));
+    });
+
+    test('ended while offline: a 409 from /hands ends the room (QA P3-5)', () async {
+      await inRoom();
+      api.handsError = httpError(409, 'MEETING_ENDED');
+      await c.onRealtimeReconnected();
+      expect(s.phase, RoomPhase.ended);
+    });
+
+    test('a missing meeting (404) on the re-read ends the room', () async {
+      await inRoom();
+      api.gets.add(httpError(404, 'MEETING_NOT_FOUND'));
+      await c.onRealtimeReconnected();
+      expect(s.phase, RoomPhase.ended);
+    });
+
     test('re-reads the meeting and applies settings and my role changed while offline', () async {
       await inRoom();
       final gets = api.getCalls;

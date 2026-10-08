@@ -1839,10 +1839,6 @@
   "@meetingPresentingName": {
     "placeholders": { "name": { "type": "String" } }
   },
-  "meetingParticipantCount": "{count, plural, other {{count}명}}",
-  "@meetingParticipantCount": {
-    "placeholders": { "count": { "type": "int" } }
-  },
   "meetingOverflowTiles": "+{count}",
   "@meetingOverflowTiles": {
     "placeholders": { "count": { "type": "int" } }
@@ -1859,7 +1855,6 @@
   },
   "meetingMicMutedLabel": "마이크 꺼짐",
   "meetingHandRaisedLabel": "손을 들었습니다",
-  "meetingSpeakingLabel": "말하는 중",
   "meetingPoorConnectionPeer": "연결 불안정",
   "meetingHostBadge": "주최자 또는 공동 주최자",
   "meetingShareStart": "화면 공유",
@@ -1874,7 +1869,6 @@
   "meetingLayout": "레이아웃",
   "meetingLayoutGrid": "그리드",
   "meetingLayoutSpotlight": "발언자",
-  "meetingDevicesTitle": "오디오 및 비디오",
   "meetingLeave": "나가기",
   "meetingEndForAll": "모두에게 회의 종료",
   "meetingReactionAria": "{name}님이 {emoji} 반응을 보냈습니다",
@@ -1936,6 +1930,5 @@
   "meetingMediaBlocked": "마이크 또는 카메라 권한이 꺼져 있습니다. 지금 참여하고 나중에 설정에서 켤 수 있습니다.",
   "meetingSwitchCamera": "카메라 전환",
   "meetingSpeakerOn": "스피커 사용",
-  "meetingSpeakerOff": "수화부 사용",
   "meetingLoading": "회의를 불러오는 중…"
 }

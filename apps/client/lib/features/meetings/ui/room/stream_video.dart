@@ -29,6 +29,10 @@ class _StreamVideoState extends State<StreamVideo> {
   final _renderer = RTCVideoRenderer();
   bool _ready = false;
 
+  /// `initialize()` has answered (or failed). Until then the plugin has no
+  /// texture to free — disposing then would leak it (QA P3-4).
+  bool _initDone = false;
+
   @override
   void initState() {
     super.initState();
@@ -39,9 +43,15 @@ class _StreamVideoState extends State<StreamVideo> {
     try {
       await _renderer.initialize();
     } catch (_) {
+      _initDone = true;
       return; // no video on this device — the tile keeps its avatar look
     }
-    if (!mounted) return;
+    _initDone = true;
+    if (!mounted) {
+      // The tile went away while the texture was being created: free it now.
+      unawaited(_release());
+      return;
+    }
     _renderer.srcObject = widget.stream;
     setState(() => _ready = true);
   }
@@ -56,7 +66,7 @@ class _StreamVideoState extends State<StreamVideo> {
 
   @override
   void dispose() {
-    unawaited(_release());
+    if (_initDone) unawaited(_release()); // else _init frees it on completion
     super.dispose();
   }
 

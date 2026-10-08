@@ -1839,10 +1839,6 @@
   "@meetingPresentingName": {
     "placeholders": { "name": { "type": "String" } }
   },
-  "meetingParticipantCount": "{count, plural, other {{count} người}}",
-  "@meetingParticipantCount": {
-    "placeholders": { "count": { "type": "int" } }
-  },
   "meetingOverflowTiles": "+{count}",
   "@meetingOverflowTiles": {
     "placeholders": { "count": { "type": "int" } }
@@ -1859,7 +1855,6 @@
   },
   "meetingMicMutedLabel": "Micro đang tắt",
   "meetingHandRaisedLabel": "Đang giơ tay",
-  "meetingSpeakingLabel": "Đang nói",
   "meetingPoorConnectionPeer": "Mạng không ổn định",
   "meetingHostBadge": "Người tổ chức hoặc đồng tổ chức",
   "meetingShareStart": "Trình bày màn hình",
@@ -1874,7 +1869,6 @@
   "meetingLayout": "Bố cục",
   "meetingLayoutGrid": "Lưới",
   "meetingLayoutSpotlight": "Người nói",
-  "meetingDevicesTitle": "Âm thanh & hình ảnh",
   "meetingLeave": "Rời",
   "meetingEndForAll": "Kết thúc cho mọi người",
   "meetingReactionAria": "{name} đã thả {emoji}",
@@ -1936,6 +1930,5 @@
   "meetingMediaBlocked": "Quyền micro hoặc camera đang tắt. Bạn vẫn có thể tham gia và bật lại sau trong Cài đặt.",
   "meetingSwitchCamera": "Đổi camera",
   "meetingSpeakerOn": "Dùng loa ngoài",
-  "meetingSpeakerOff": "Dùng loa trong",
   "meetingLoading": "Đang tải cuộc họp…"
 }

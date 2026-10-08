@@ -5372,17 +5372,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String meetingParticipantCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count personnes',
-      one: '$count personne',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String meetingOverflowTiles(int count) {
     return '+$count';
   }
@@ -5414,9 +5403,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get meetingHandRaisedLabel => 'Main levée';
-
-  @override
-  String get meetingSpeakingLabel => 'En train de parler';
 
   @override
   String get meetingPoorConnectionPeer => 'Connexion instable';
@@ -5460,9 +5446,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get meetingLayoutSpotlight => 'Intervenant';
-
-  @override
-  String get meetingDevicesTitle => 'Audio et vidéo';
 
   @override
   String get meetingLeave => 'Quitter';
@@ -5600,9 +5583,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get meetingSpeakerOn => 'Utiliser le haut-parleur';
-
-  @override
-  String get meetingSpeakerOff => 'Utiliser l\'écouteur';
 
   @override
   String get meetingLoading => 'Chargement de la réunion…';

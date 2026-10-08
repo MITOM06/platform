@@ -35,7 +35,12 @@ void _wireRoom(LiveKitSession s, Room room) {
       s._refreshLocal();
       s._emitLocalMedia();
     })
-    ..on<LocalTrackUnpublishedEvent>((_) {
+    ..on<LocalTrackUnpublishedEvent>((e) {
+      // Share stopped from the system UI (track ended → unpublished): stop
+      // the mediaProjection foreground service and its notification too.
+      if (e.publication.source == TrackSource.screenShareVideo) {
+        unawaited(s._capture.end());
+      }
       s._refreshLocal();
       s._emitLocalMedia();
     })

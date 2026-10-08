@@ -134,3 +134,10 @@ final meetingKeepAwakeProvider = Provider<void Function(bool on)>(
       (on ? WakelockPlus.enable() : WakelockPlus.disable())
           .catchError((Object _) {})),
 );
+
+/// The meeting stopped (ended / removed / dropped) while the app is in the
+/// background: STOMP was only kept for the meeting — let it go now so the
+/// server sees this device offline and sends FCM again (main.dart's pause
+/// rule, applied late).
+final meetingBackgroundReleaseProvider = Provider<void Function()>(
+    (ref) => () => ref.read(stompServiceProvider.notifier).disconnect());

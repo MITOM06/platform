@@ -4138,6 +4138,8 @@ void main() {
   24. **STOMP giữ khi ở nền trong lúc họp:** đang họp, đưa app xuống nền ⇒ người khác chat, giơ tay, host tắt mic mình ⇒ mở lại thấy đủ (không cần tải lại), mic đã tắt; **rời họp rồi** đưa app xuống nền ⇒ STOMP ngắt như cũ (server gửi FCM tin nhắn thường bình thường).
   25. **Nhớ thiết bị + loa:** chọn mic/cam/camera sau/loa trong, vào họp, thoát app, mở lại link ⇒ màn chờ nhớ đúng lựa chọn; "Dùng loa ngoài" bật/tắt trong phòng thực sự đổi đường ra (loa ngoài ⇄ loa trong; tai nghe Bluetooth/có dây được hệ thống ưu tiên).
   26. **Sao chép link:** bản build có `PON_WEB_URL` ⇒ chép `https://<web>/meet/{code}`; bản release không có `PON_WEB_URL`/`PON_DOMAIN` ⇒ chép mã, không crash.
+  27. **Trình bày màn hình trên Android 14, máy nhanh:** bấm Trình bày 5 lần liên tiếp (dừng giữa các lần) ⇒ lần nào cũng chia sẻ được, không hiện "Không trình bày được" (app giờ chờ service `mediaProjection` vào foreground rồi mới bật share — QA MT6–MT7 ghi chú); dừng từ chip/thông báo hệ thống ⇒ thông báo "Đang trình bày" biến mất ngay (QA P3-3).
+  28. **Một phòng một lúc:** đang trong phòng A, chạm banner nhắc của chính A ⇒ không mở phòng thứ hai; chạm banner/thông báo của cuộc họp B ⇒ rời A rồi mở màn chờ B (giống web); bị mời ra / mất kết nối khi đang mở Chat/Mọi người/Ghi chú ⇒ sheet tự đóng, thấy màn trạng thái (QA P2-1, P2-2).
 - [ ] Commit `docs: meetings mobile client (MT6–MT7)`
 
 ---

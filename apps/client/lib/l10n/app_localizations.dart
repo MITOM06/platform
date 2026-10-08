@@ -9523,12 +9523,6 @@ abstract class AppLocalizations {
   /// **'{name} is presenting'**
   String meetingPresentingName(String name);
 
-  /// No description provided for @meetingParticipantCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, one {{count} person} other {{count} people}}'**
-  String meetingParticipantCount(int count);
-
   /// No description provided for @meetingOverflowTiles.
   ///
   /// In en, this message translates to:
@@ -9570,12 +9564,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hand raised'**
   String get meetingHandRaisedLabel;
-
-  /// No description provided for @meetingSpeakingLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Speaking'**
-  String get meetingSpeakingLabel;
 
   /// No description provided for @meetingPoorConnectionPeer.
   ///
@@ -9660,12 +9648,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Speaker'**
   String get meetingLayoutSpotlight;
-
-  /// No description provided for @meetingDevicesTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Audio & video'**
-  String get meetingDevicesTitle;
 
   /// No description provided for @meetingLeave.
   ///
@@ -9888,12 +9870,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use speaker'**
   String get meetingSpeakerOn;
-
-  /// No description provided for @meetingSpeakerOff.
-  ///
-  /// In en, this message translates to:
-  /// **'Use earpiece'**
-  String get meetingSpeakerOff;
 
   /// No description provided for @meetingLoading.
   ///
