@@ -59,6 +59,10 @@ dependencies:
   video_player: ^2.9.5
   chewie: ^1.11.0
 
+  # Meetings: keep the screen on while in the room (already resolved via
+  # chewie — declared directly, same version, no new native pod).
+  wakelock_plus: ^1.5.2
+
   # Deep link handling — OAuth callback (platform://auth?code=xxx)
   app_links: ^6.3.0
 

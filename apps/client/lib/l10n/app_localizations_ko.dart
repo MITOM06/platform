@@ -4971,4 +4971,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get meetingLinkCodeCopied => '회의 코드를 복사했습니다';
+
+  @override
+  String get meetingShareNotifTitle => '화면을 공유하는 중';
+
+  @override
+  String get meetingShareNotifBody => '회의의 모든 참가자가 내 화면을 볼 수 있습니다';
 }

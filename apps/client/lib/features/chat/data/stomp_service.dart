@@ -66,6 +66,14 @@ class StompService extends _$StompService {
   Stream<Map<String, dynamic>> get meetingQueue =>
       _streams.meetingQueueCtrl.stream;
 
+  /// `/topic/meeting/{id}` frames of the open meeting room, decoded.
+  Stream<Map<String, dynamic>> get meetingTopic =>
+      _streams.meetingTopicCtrl.stream;
+
+  /// true when a connect completes, false when the socket goes away
+  /// (deduplicated) — the meeting room's "realtime offline" banner.
+  Stream<bool> get connectionChanges => _streams.connectionStateCtrl.stream;
+
   // Fires whenever the STOMP socket reconnects after a prior disconnect.
   Stream<void> get reconnects => _streams.reconnectCtrl.stream;
 
@@ -92,8 +100,8 @@ class StompService extends _$StompService {
       config: StompConfig(
         url: AppConfig.wsUrl,
         onConnect: _onConnect,
-        onDisconnect: (_) => _subs.onSocketLost(),
-        onWebSocketDone: _subs.onSocketLost,
+        onDisconnect: (_) => _onSocketLost(),
+        onWebSocketDone: _onSocketLost,
         onStompError: _onError,
         onWebSocketError: _onWebSocketError,
         beforeConnect: _beforeConnect,
@@ -122,7 +130,20 @@ class StompService extends _$StompService {
   void _teardownClient() {
     _client?.deactivate();
     _client = null;
+    _onSocketLost();
+  }
+
+  void _onSocketLost() {
     _subs.onSocketLost();
+    _announceConnected(false);
+  }
+
+  bool _announced = false;
+
+  void _announceConnected(bool connected) {
+    if (_announced == connected) return;
+    _announced = connected;
+    _streams.connectionStateCtrl.add(connected);
   }
 
   void _setAuthHeader(String token) {
@@ -175,6 +196,7 @@ class StompService extends _$StompService {
           client.subscribe(destination: destination, callback: callback));
     }
     _streams.connectedCtrl.add(null);
+    _announceConnected(true);
     if (isReconnect) _streams.reconnectCtrl.add(null);
   }
 
@@ -269,6 +291,23 @@ class StompService extends _$StompService {
       subscriber: subscriber,
     );
   }
+
+  /// `/topic/meeting/{id}` while the room is connecting / open (never while
+  /// waiting — the server refuses it). Re-subscribed after every reconnect.
+  void subscribeMeetingTopic(String meetingId) {
+    _subs.add(
+      'meet_$meetingId',
+      '/topic/meeting/$meetingId',
+      (frame) {
+        final data = StompStreams.decode(frame.body);
+        if (data != null) _streams.meetingTopicCtrl.add(data);
+      },
+      subscriber: _liveSubscriber,
+    );
+  }
+
+  void unsubscribeMeetingTopic(String meetingId) =>
+      _subs.remove('meet_$meetingId', connected: isConnected);
 
   void subscribePresence() {
     _subs.add(

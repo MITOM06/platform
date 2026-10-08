@@ -4969,4 +4969,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get meetingLinkCodeCopied => '会議コードをコピーしました';
+
+  @override
+  String get meetingShareNotifTitle => '画面を共有しています';
+
+  @override
+  String get meetingShareNotifBody => '会議の参加者全員があなたの画面を見ることができます';
 }

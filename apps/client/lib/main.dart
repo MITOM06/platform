@@ -28,6 +28,7 @@ import 'features/chat/ui/widgets/incoming_group_call_prompt.dart';
 import 'features/chat/ui/widgets/incoming_call_prompt.dart';
 import 'features/integrations/state/oauth_flow_provider.dart';
 import 'features/meetings/domain/meeting_code.dart';
+import 'features/meetings/state/active_room.dart';
 import 'features/notifications/domain/notifications_provider.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
@@ -180,11 +181,13 @@ class _PlatformAppState extends ConsumerState<PlatformApp>
 
   /// Global app lifecycle observer — disconnects STOMP when backgrounded so
   /// Redis drops the online status and FCM push notifications are delivered.
+  /// Not during a meeting: like a call, it keeps running in the background
+  /// (chat, hands, host commands, the end of the meeting).
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final stomp = ref.read(stompServiceProvider.notifier);
     if (state == AppLifecycleState.paused) {
-      stomp.disconnect();
+      if (!meetingInProgress()) stomp.disconnect();
     } else if (state == AppLifecycleState.resumed) {
       _reconnectStomp();
       // Back from a connector's OAuth page in the browser: report the result.

@@ -1779,5 +1779,7 @@
   "@meetingCreatedAt": {
     "placeholders": { "time": { "type": "String" } }
   },
-  "meetingLinkCodeCopied": "已复制会议代码"
+  "meetingLinkCodeCopied": "已复制会议代码",
+  "meetingShareNotifTitle": "正在共享你的屏幕",
+  "meetingShareNotifBody": "会议中的所有人都能看到你的屏幕"
 }

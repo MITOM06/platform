@@ -2492,5 +2492,7 @@
   "@meetingCreatedAt": {
     "placeholders": { "time": { "type": "String" } }
   },
-  "meetingLinkCodeCopied": "Meeting code copied"
+  "meetingLinkCodeCopied": "Meeting code copied",
+  "meetingShareNotifTitle": "Presenting your screen",
+  "meetingShareNotifBody": "Everyone in the meeting can see your screen"
 }

@@ -1779,5 +1779,7 @@
   "@meetingCreatedAt": {
     "placeholders": { "time": { "type": "String" } }
   },
-  "meetingLinkCodeCopied": "Code de la réunion copié"
+  "meetingLinkCodeCopied": "Code de la réunion copié",
+  "meetingShareNotifTitle": "Présentation de votre écran",
+  "meetingShareNotifBody": "Tous les participants à la réunion voient votre écran"
 }

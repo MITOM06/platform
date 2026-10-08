@@ -5137,4 +5137,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meetingLinkCodeCopied => 'Meeting code copied';
+
+  @override
+  String get meetingShareNotifTitle => 'Presenting your screen';
+
+  @override
+  String get meetingShareNotifBody =>
+      'Everyone in the meeting can see your screen';
 }

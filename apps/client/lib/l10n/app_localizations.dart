@@ -9258,6 +9258,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Meeting code copied'**
   String get meetingLinkCodeCopied;
+
+  /// No description provided for @meetingShareNotifTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Presenting your screen'**
+  String get meetingShareNotifTitle;
+
+  /// No description provided for @meetingShareNotifBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone in the meeting can see your screen'**
+  String get meetingShareNotifBody;
 }
 
 class _AppLocalizationsDelegate

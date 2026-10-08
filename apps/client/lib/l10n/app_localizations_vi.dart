@@ -5107,4 +5107,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get meetingLinkCodeCopied => 'Đã sao chép mã cuộc họp';
+
+  @override
+  String get meetingShareNotifTitle => 'Đang trình bày màn hình';
+
+  @override
+  String get meetingShareNotifBody =>
+      'Mọi người trong cuộc họp đang thấy màn hình của bạn';
 }

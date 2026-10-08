@@ -5220,4 +5220,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get meetingLinkCodeCopied => 'Code de la réunion copié';
+
+  @override
+  String get meetingShareNotifTitle => 'Présentation de votre écran';
+
+  @override
+  String get meetingShareNotifBody =>
+      'Tous les participants à la réunion voient votre écran';
 }

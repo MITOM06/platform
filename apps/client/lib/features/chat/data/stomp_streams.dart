@@ -26,6 +26,10 @@ class StompStreams {
   final callEventCtrl = StreamController<Map<String, dynamic>>.broadcast();
   // `/user/queue/meeting` — personal meeting events (meet.invited, meet.lobby…).
   final meetingQueueCtrl = StreamController<Map<String, dynamic>>.broadcast();
+  // `/topic/meeting/{id}` — the open meeting room's topic (meet.roster…).
+  final meetingTopicCtrl = StreamController<Map<String, dynamic>>.broadcast();
+  // true on every completed connect, false when the socket goes away.
+  final connectionStateCtrl = StreamController<bool>.broadcast();
   // Emits whenever a STOMP reconnect completes (not on first connect).
   final reconnectCtrl = StreamController<void>.broadcast();
   // Emits on EVERY completed connect, first one included.

@@ -1779,5 +1779,7 @@
   "@meetingCreatedAt": {
     "placeholders": { "time": { "type": "String" } }
   },
-  "meetingLinkCodeCopied": "会議コードをコピーしました"
+  "meetingLinkCodeCopied": "会議コードをコピーしました",
+  "meetingShareNotifTitle": "画面を共有しています",
+  "meetingShareNotifBody": "会議の参加者全員があなたの画面を見ることができます"
 }

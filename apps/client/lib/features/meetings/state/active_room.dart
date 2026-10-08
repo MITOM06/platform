@@ -10,3 +10,16 @@ ActiveMeetingRoom? _active;
 void setActiveMeetingRoom(ActiveMeetingRoom? room) => _active = room;
 
 ActiveMeetingRoom? activeMeetingRoom() => _active;
+
+/// An open room that can say whether its media is live.
+abstract interface class LiveMeetingRoom implements ActiveMeetingRoom {
+  /// Connecting to or inside the room.
+  bool get isLive;
+}
+
+/// A meeting is running on this device (connecting / in the room): the app
+/// keeps STOMP and the audio going in the background, like a call.
+bool meetingInProgress() {
+  final room = _active;
+  return room is LiveMeetingRoom && room.isLive;
+}

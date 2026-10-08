@@ -4920,4 +4920,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get meetingLinkCodeCopied => '已复制会议代码';
+
+  @override
+  String get meetingShareNotifTitle => '正在共享你的屏幕';
+
+  @override
+  String get meetingShareNotifBody => '会议中的所有人都能看到你的屏幕';
 }
