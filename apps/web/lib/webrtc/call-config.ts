@@ -61,6 +61,20 @@ export const INCOMING_RING_TIMEOUT_MS = RING_TIMEOUT_MS + 5_000
 export const DISCONNECT_GRACE_MS = 60_000
 /** Same window, by its user-facing name: the "waiting to reconnect" screen. */
 export const RECONNECT_GRACE_MS = DISCONNECT_GRACE_MS
+/**
+ * A drop shorter than this is a blip the connection usually rides out by
+ * itself (a Wi-Fi roam, a busy cell): no wait screen, no ICE restart for it.
+ * Mirrors Flutter `ReconnectWatch.blip`.
+ */
+export const RECONNECT_BLIP_MS = 2_500
+/**
+ * A callee that turned its camera on waits this long for the caller's offer
+ * with a video line. An older caller app never sends one: the camera goes back
+ * off and the call says video is not available. Mirrors Flutter `cameraOfferWait`.
+ */
+export const CAMERA_OFFER_WAIT_MS = 5_000
+/** How long the "video is not available" notice stays up. */
+export const VIDEO_UNAVAILABLE_NOTICE_MS = 6_000
 
 /** The call was ended (hang-up, peer cancel) while setup was still awaiting. */
 export class CallCancelledError extends Error {

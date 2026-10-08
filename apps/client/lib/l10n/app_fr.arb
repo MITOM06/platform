@@ -1255,8 +1255,6 @@
   "callSpeaker": "Haut-parleur",
   "callSwitchCamera": "Changer de caméra",
   "callHangUp": "Raccrocher",
-  "callReconnecting": "Reconnexion…",
-  "callPoorConnection": "Connexion faible",
   "aiContextLearnedFactsLoadError": "Impossible de charger ce que l’assistant a appris.",
   "errTooManyRequests": "Trop de requêtes. Patientez un instant puis réessayez.",
   "removedFromConversation": "Vous ne faites plus partie de cette conversation",
@@ -1538,5 +1536,6 @@
   "@callReconnectCountdown": {
     "placeholders": { "seconds": { "type": "int" } }
   },
-  "callSwitchToVideo": "Passer en vidéo"
+  "callSwitchToVideo": "Passer en vidéo",
+  "callVideoUnavailable": "La vidéo n'est pas disponible pour cet appel — l'autre personne doit peut-être mettre à jour l'application"
 }

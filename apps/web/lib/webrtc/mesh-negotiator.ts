@@ -117,6 +117,13 @@ export class MeshNegotiator {
     this.heldCamera = { track, stream }
   }
 
+  /** Callee: stop holding `track` — true when no offer took it yet. */
+  releaseHeldCamera(track: MediaStreamTrack): boolean {
+    if (this.heldCamera?.track !== track) return false
+    this.heldCamera = null
+    return true
+  }
+
   reset(): void {
     this.pending = false
     this.queued = null

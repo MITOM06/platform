@@ -1255,8 +1255,6 @@
   "callSpeaker": "スピーカー",
   "callSwitchCamera": "カメラを切り替え",
   "callHangUp": "通話を終了",
-  "callReconnecting": "再接続中…",
-  "callPoorConnection": "接続が不安定です",
   "aiContextLearnedFactsLoadError": "アシスタントが記憶した内容を読み込めませんでした。",
   "errTooManyRequests": "リクエストが多すぎます。しばらくしてからもう一度お試しください。",
   "removedFromConversation": "この会話のメンバーではなくなりました",
@@ -1538,5 +1536,6 @@
   "@callReconnectCountdown": {
     "placeholders": { "seconds": { "type": "int" } }
   },
-  "callSwitchToVideo": "ビデオ通話に切り替え"
+  "callSwitchToVideo": "ビデオ通話に切り替え",
+  "callVideoUnavailable": "この通話ではビデオを使えません。相手のアプリの更新が必要な可能性があります"
 }

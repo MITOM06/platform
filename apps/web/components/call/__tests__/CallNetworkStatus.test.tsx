@@ -37,6 +37,12 @@ describe('CallConnectionNotice', () => {
     rerender(<CallConnectionNotice />)
     expect(screen.getByRole('status').textContent).toBe('unstableNetwork')
   })
+
+  it('says when our video could not be sent', () => {
+    act(() => useCallStore.getState().setVideoUnavailable(true))
+    render(<CallConnectionNotice />)
+    expect(screen.getByRole('status').textContent).toBe('videoUnavailable')
+  })
 })
 
 describe('CallReconnectOverlay', () => {

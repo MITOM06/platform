@@ -159,6 +159,7 @@ void main() {
       },
       probeMedia: (_) async => probeOk,
       peerGrace: const Duration(milliseconds: 40),
+      reconnectBlip: const Duration(milliseconds: 10),
       pendingStartDeadline: const Duration(milliseconds: 30),
     )
       ..onEndNotice = ((r, byPeer) => notices.add((r, byPeer)))
@@ -383,12 +384,50 @@ void main() {
       expect(notices, [(CallEndReason.failed, false)]);
     });
 
+    Future<void> pastBlip() =>
+        Future<void>.delayed(const Duration(milliseconds: 15));
+
     test('LiveKit reconnecting shows that it is our own connection', () async {
       final s = await connect();
       s.onReconnecting!(true);
+      await pastBlip();
       expect(call.network.reconnectWho, ReconnectWho.self);
       s.onReconnecting!(false);
       expect(call.network.reconnectWho, isNull);
+    });
+
+    test('a LiveKit blip that resumes in time shows no wait', () async {
+      final s = await connect();
+      s.onReconnecting!(true);
+      s.onReconnecting!(false);
+      await pastBlip();
+      expect(call.network.reconnectWho, isNull);
+    });
+
+    test('resumed while they are gone: the wait turns to them', () async {
+      final s = await connect();
+      s.onReconnecting!(true);
+      await pastBlip();
+      s._peers.remove('bob'); // they left while we were away (no event reached us)
+      s.onReconnecting!(false);
+      expect(call.network.reconnectWho, ReconnectWho.peer);
+      s.join('bob');
+      expect(call.network.reconnectWho, isNull);
+    });
+
+    test('the speaker follows the layout: loud for video, earpiece for voice',
+        () async {
+      final s = await connect(); // a voice call: earpiece
+      expect(s.speakerCalls, [false]);
+      s.peerState('bob', video: true); // their camera came on
+      expect(s.speakerCalls.last, isTrue);
+      expect(call.speakerOn, isTrue);
+      s.peerState('bob', camMuted: true); // and off again
+      expect(s.speakerCalls.last, isFalse);
+      await call.setCameraOn(true); // ours
+      expect(s.speakerCalls.last, isTrue);
+      s.peerState('bob', poor: true); // no layout change, no switch
+      expect(s.speakerCalls, [false, true, false, true]);
     });
 
     test("shows the other person's weak network and follows their camera",

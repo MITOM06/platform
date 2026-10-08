@@ -35,6 +35,7 @@ void main() {
   testWidgets('the caller restarts ICE on a beat for a minute, then gives up',
       (tester) async {
     inCall.dropped();
+    await tester.pump(ReconnectWatch.blipDelay);
     expect(network.reconnectWho, ReconnectWho.peer);
     expect(offers, [(true, false)]);
     await tester.pump(const Duration(seconds: 4));
@@ -47,6 +48,7 @@ void main() {
   testWidgets('the callee asks the caller to restart', (tester) async {
     caller = false;
     inCall.dropped();
+    await tester.pump(ReconnectWatch.blipDelay);
     expect(offers, isEmpty);
     expect(states.single, containsPair('restart', true));
     inCall.reset();
@@ -56,8 +58,42 @@ void main() {
       (tester) async {
     offline = true;
     inCall.dropped();
+    await tester.pump(ReconnectWatch.blipDelay);
     expect(network.reconnectWho, ReconnectWho.self);
     inCall.reset();
+  });
+
+  testWidgets('a blip that recovers by itself shows no wait, restarts nothing',
+      (tester) async {
+    inCall.dropped();
+    await tester.pump(const Duration(seconds: 2));
+    inCall.connected(() async => []);
+    await tester.pump(const Duration(seconds: 70));
+    expect(network.reconnectWho, isNull);
+    expect(offers, isEmpty);
+    expect(expired, 0);
+    inCall.reset();
+  });
+
+  testWidgets(
+      'a camera no offer took (an older caller app) is undone, with a notice',
+      (tester) async {
+    var undone = 0;
+    inCall.awaitCameraOffer(() {
+      undone++;
+      return true;
+    });
+    await tester.pump(MeshInCall.cameraOfferWait);
+    expect(undone, 1);
+    expect(network.videoUnavailable, isTrue);
+    await tester.pump(const Duration(seconds: 10));
+    expect(network.videoUnavailable, isFalse);
+  });
+
+  testWidgets('a camera the offer took shows no notice', (tester) async {
+    inCall.awaitCameraOffer(() => false); // no longer held: it was sent
+    await tester.pump(MeshInCall.cameraOfferWait);
+    expect(network.videoUnavailable, isFalse);
   });
 
   testWidgets('a connection back in time stops the wait', (tester) async {
@@ -96,6 +132,7 @@ void main() {
   testWidgets('while we already restart, the callee asking adds no offer',
       (tester) async {
     inCall.dropped();
+    await tester.pump(ReconnectWatch.blipDelay);
     expect(offers, hasLength(1));
     inCall.handleState({'restart': true});
     expect(offers, hasLength(1));

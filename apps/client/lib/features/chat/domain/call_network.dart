@@ -82,6 +82,7 @@ class CallNetworkState extends ChangeNotifier {
   bool _selfPoor = false;
   bool _peerPoor = false;
   bool _peerCamera = false;
+  bool _videoUnavailable = false;
   ReconnectWho? _reconnectWho;
   DateTime? _reconnectDeadline;
 
@@ -90,12 +91,18 @@ class CallNetworkState extends ChangeNotifier {
 
   /// The other person's camera is on.
   bool get peerCamera => _peerCamera;
+
+  /// Our camera could not be sent (the other side's app cannot take video
+  /// mid-call).
+  bool get videoUnavailable => _videoUnavailable;
   ReconnectWho? get reconnectWho => _reconnectWho;
   DateTime? get reconnectDeadline => _reconnectDeadline;
 
   set selfPoor(bool v) => _set(() => _selfPoor = v, _selfPoor != v);
   set peerPoor(bool v) => _set(() => _peerPoor = v, _peerPoor != v);
   set peerCamera(bool v) => _set(() => _peerCamera = v, _peerCamera != v);
+  set videoUnavailable(bool v) =>
+      _set(() => _videoUnavailable = v, _videoUnavailable != v);
 
   void setReconnect(ReconnectWho? who, DateTime? deadline) => _set(() {
         _reconnectWho = who;
@@ -115,6 +122,7 @@ class CallNetworkState extends ChangeNotifier {
         _selfPoor = false;
         _peerPoor = false;
         _peerCamera = peerCamera;
+        _videoUnavailable = false;
         _reconnectWho = null;
         _reconnectDeadline = null;
       }, true);
@@ -131,21 +139,31 @@ class CallNetworkState extends ChangeNotifier {
 /// recovery on a beat, and ends the call when the minute runs out.
 /// Mirrors web `ReconnectWatch`.
 class ReconnectWatch {
-  ReconnectWatch(this._state, {this.grace = reconnectGrace});
+  ReconnectWatch(this._state,
+      {this.grace = reconnectGrace, this.blip = blipDelay});
 
   /// Same window as web `RECONNECT_GRACE_MS` and the server.
   static const reconnectGrace = Duration(seconds: 60);
 
+  /// A drop shorter than this is a blip the connection usually rides out by
+  /// itself (a Wi-Fi roam, a busy cell): no wait screen, no ICE restart for
+  /// it. Same as web `RECONNECT_BLIP_MS`.
+  static const blipDelay = Duration(milliseconds: 2500);
+
   final CallNetworkState _state;
   final Duration grace;
+  final Duration blip;
   Timer? _expiry;
   Timer? _ticker;
+  Timer? _blip;
 
   bool get active => _expiry != null;
 
   /// Open the window (or, while open, update whose connection it waits for).
   void begin(ReconnectWho who, void Function() onExpire,
       {void Function()? tick, Duration every = const Duration(seconds: 4)}) {
+    _blip?.cancel();
+    _blip = null;
     if (_expiry != null) {
       _state.setReconnect(who, _state.reconnectDeadline);
       if (tick != null && _ticker == null) _startTicker(tick, every);
@@ -159,16 +177,49 @@ class ReconnectWatch {
     if (tick != null) _startTicker(tick, every);
   }
 
+  /// Open the window only if the drop outlasts a [blip]: [end] meanwhile —
+  /// the connection came back — and nothing is shown.
+  void beginAfterBlip(ReconnectWho who, void Function() onExpire,
+      {void Function()? tick}) {
+    if (_expiry != null || _blip != null) return;
+    _blip = Timer(blip, () {
+      _blip = null;
+      begin(who, onExpire, tick: tick);
+    });
+  }
+
   void _startTicker(void Function() tick, Duration every) {
     tick();
     _ticker = Timer.periodic(every, (_) => tick());
   }
 
   void end() {
+    _blip?.cancel();
+    _blip = null;
     _expiry?.cancel();
     _ticker?.cancel();
     _expiry = null;
     _ticker = null;
     if (_state.reconnectWho != null) _state.setReconnect(null, null);
+  }
+}
+
+/// Messenger-style: the loudspeaker comes on when a call turns to video and
+/// goes back to the earpiece when it turns to voice. Only a change of layout
+/// moves it, so the user's own speaker choice stands until the next switch.
+class SpeakerFollowsVideo {
+  SpeakerFollowsVideo(this._setSpeaker);
+
+  final Future<void> Function(bool on) _setSpeaker;
+  bool? _video;
+
+  /// A new call whose speaker was set for [video]; null adopts the next
+  /// layout as it is.
+  void reset([bool? video]) => _video = video;
+
+  void update(bool video) {
+    final was = _video;
+    _video = video;
+    if (was != null && was != video) unawaited(_setSpeaker(video));
   }
 }

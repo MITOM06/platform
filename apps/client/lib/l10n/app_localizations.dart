@@ -6703,18 +6703,6 @@ abstract class AppLocalizations {
   /// **'End call'**
   String get callHangUp;
 
-  /// No description provided for @callReconnecting.
-  ///
-  /// In en, this message translates to:
-  /// **'Reconnecting…'**
-  String get callReconnecting;
-
-  /// No description provided for @callPoorConnection.
-  ///
-  /// In en, this message translates to:
-  /// **'Poor connection'**
-  String get callPoorConnection;
-
   /// Shown in the AI Context screen when the learned-facts (memory) section fails to load.
   ///
   /// In en, this message translates to:
@@ -8226,6 +8214,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Switch to video'**
   String get callSwitchToVideo;
+
+  /// No description provided for @callVideoUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Video isn\'t available in this call — the other person may need to update the app'**
+  String get callVideoUnavailable;
 }
 
 class _AppLocalizationsDelegate

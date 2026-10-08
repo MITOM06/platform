@@ -1666,6 +1666,7 @@
     "waitingForPeer": "En attente de la reconnexion de {name}…",
     "reconnectCountdown": "L'appel prendra fin dans {seconds} s sans reconnexion",
     "switchToVideo": "Passer en vidéo",
+    "videoUnavailable": "La vidéo n'est pas disponible pour cet appel — l'autre personne doit peut-être mettre à jour l'application",
     "declined": "{name} a refusé l'appel",
     "busy": "{name} est déjà en appel",
     "peerMediaError": "{name} n'a pas pu activer son micro ou sa caméra",
@@ -1703,9 +1704,7 @@
     "summaryOverview": "Aperçu",
     "summaryKeyPoints": "Points clés",
     "summaryActionItems": "Actions à mener",
-    "summaryUnavailable": "Résumé indisponible",
-    "reconnecting": "Reconnexion…",
-    "poorConnection": "Connexion faible"
+    "summaryUnavailable": "Résumé indisponible"
   },
   "notFound": {
     "title": "Page introuvable",

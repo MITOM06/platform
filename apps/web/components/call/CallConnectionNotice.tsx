@@ -5,16 +5,18 @@ import { useCallStore } from '@/lib/store/call.store'
 import { networkNotice } from '@/lib/webrtc/call-network'
 import { cn } from '@/lib/utils'
 
-/** Whose network is weak, under the call status (both media paths). */
+/** Whose network is weak (both media paths), or that our video could not be sent. */
 export function CallConnectionNotice({ className }: { className?: string }) {
   const t = useTranslations('call')
   const selfPoor = useCallStore((s) => s.poorConnection)
   const peerPoor = useCallStore((s) => s.peerPoor)
   const peerName = useCallStore((s) => s.peerName)
+  const videoUnavailable = useCallStore((s) => s.videoUnavailable)
   const notice = networkNotice(selfPoor, peerPoor)
-  if (!notice) return null
-  const text =
-    notice === 'self'
+  if (!notice && !videoUnavailable) return null
+  const text = videoUnavailable
+    ? t('videoUnavailable')
+    : notice === 'self'
       ? t('selfWeakNetwork')
       : notice === 'peer'
         ? t('peerWeakNetwork', { name: peerName || t('peerFallback') })

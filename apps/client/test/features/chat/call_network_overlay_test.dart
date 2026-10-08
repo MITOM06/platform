@@ -32,6 +32,15 @@ void main() {
     expect(find.text('Unstable connection'), findsOneWidget);
   });
 
+  testWidgets('says when our video could not be sent', (tester) async {
+    final network = CallNetworkState();
+    await tester.pumpWidget(
+        _wrap(CallNetworkNotice(network: network, peerName: 'Bob')));
+    network.videoUnavailable = true;
+    await tester.pump();
+    expect(find.textContaining("Video isn't available"), findsOneWidget);
+  });
+
   testWidgets('waits for the other person with a countdown', (tester) async {
     final network = CallNetworkState();
     var now = DateTime(2026, 10, 8, 12);

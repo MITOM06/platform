@@ -33,12 +33,21 @@ class MeshInCall {
   final Future<void> Function({bool iceRestart, bool videoLine}) _offer;
   final void Function() _onExpired;
 
+  /// A callee that turned its camera on waits this long for the caller's
+  /// offer with a video line. Same as web `CAMERA_OFFER_WAIT_MS`.
+  static const cameraOfferWait = Duration(seconds: 5);
+
+  /// How long the "video is not available" notice stays up.
+  static const videoUnavailableNotice = Duration(seconds: 6);
+
   late final ReconnectWatch _watch = ReconnectWatch(network);
   late final QualityMonitor _quality = QualityMonitor(_onMyQuality);
 
   /// How well we receive them, and (from their call.state) how well they receive us.
   ReceiveQuality _myReceive = ReceiveQuality.good;
   ReceiveQuality? _peerReceive;
+  Timer? _cameraWait;
+  Timer? _noticeTimer;
 
   bool get reconnecting => _watch.active;
 
@@ -48,8 +57,9 @@ class MeshInCall {
     _quality.start(getStats);
   }
 
-  /// The connection dropped mid-call: wait a minute, recovering on a beat —
-  /// the caller restarts ICE, the callee asks it to.
+  /// The connection dropped mid-call: past a short blip (which ICE often
+  /// rides out by itself), wait a minute, recovering on a beat — the caller
+  /// restarts ICE, the callee asks it to.
   void dropped() {
     void recover() {
       _watch.begin(_who(), _onExpired); // only updates whose connection it is
@@ -60,7 +70,23 @@ class MeshInCall {
       }
     }
 
-    _watch.begin(_who(), _onExpired, tick: recover);
+    _watch.beginAfterBlip(_who(), _onExpired, tick: recover);
+  }
+
+  /// Callee: give the caller [cameraOfferWait] to take the camera we turned
+  /// on. An older caller app never sends the offer: [undo] turns the camera
+  /// back off (false when the offer took it after all) and the call says
+  /// video is not available.
+  void awaitCameraOffer(bool Function() undo) {
+    _cameraWait?.cancel();
+    _cameraWait = Timer(cameraOfferWait, () {
+      _cameraWait = null;
+      if (!undo()) return;
+      network.videoUnavailable = true;
+      _noticeTimer?.cancel();
+      _noticeTimer =
+          Timer(videoUnavailableNotice, () => network.videoUnavailable = false);
+    });
   }
 
   /// In-call state from the other person (already checked to be the peer).
@@ -100,6 +126,10 @@ class MeshInCall {
   }
 
   void reset() {
+    _cameraWait?.cancel();
+    _noticeTimer?.cancel();
+    _cameraWait = null;
+    _noticeTimer = null;
     _watch.end();
     _quality.stop();
     _myReceive = ReceiveQuality.good;

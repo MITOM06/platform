@@ -1255,8 +1255,6 @@
   "callSpeaker": "扬声器",
   "callSwitchCamera": "切换摄像头",
   "callHangUp": "挂断",
-  "callReconnecting": "正在重新连接…",
-  "callPoorConnection": "网络连接不佳",
   "aiContextLearnedFactsLoadError": "无法加载助手已了解的信息。",
   "errTooManyRequests": "请求过于频繁，请稍后再试。",
   "removedFromConversation": "你已不再是此会话的成员",
@@ -1538,5 +1536,6 @@
   "@callReconnectCountdown": {
     "placeholders": { "seconds": { "type": "int" } }
   },
-  "callSwitchToVideo": "切换到视频通话"
+  "callSwitchToVideo": "切换到视频通话",
+  "callVideoUnavailable": "此通话无法开启视频——对方可能需要更新应用"
 }

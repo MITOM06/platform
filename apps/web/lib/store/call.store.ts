@@ -42,6 +42,8 @@ interface CallState {
   peerPoor: boolean
   /** The other person's camera is on (Messenger-style: video while either is). */
   peerCamera: boolean
+  /** Our camera could not be sent (the other side's app cannot take video mid-call). */
+  videoUnavailable: boolean
   /** Someone dropped: whose connection the call is waiting for, until `reconnectDeadline`. */
   reconnectWait: 'self' | 'peer' | null
   /** Epoch ms when the reconnect window ends the call. */
@@ -89,6 +91,7 @@ interface CallState {
   setPoorConnection: (on: boolean) => void
   setPeerPoor: (on: boolean) => void
   setPeerCamera: (on: boolean) => void
+  setVideoUnavailable: (on: boolean) => void
   setReconnectWait: (who: 'self' | 'peer' | null, deadline: number | null) => void
   setPeerName: (name: string) => void
   setConnected: () => void
@@ -130,6 +133,7 @@ const initial = {
   poorConnection: false,
   peerPoor: false,
   peerCamera: false,
+  videoUnavailable: false,
   reconnectWait: null as 'self' | 'peer' | null,
   reconnectDeadline: null as number | null,
 }
@@ -156,6 +160,7 @@ function callMedia(video: boolean) {
     reconnecting: false,
     poorConnection: false,
     peerPoor: false,
+    videoUnavailable: false,
     reconnectWait: null,
     reconnectDeadline: null,
   }
@@ -193,6 +198,7 @@ export const useCallStore = create<CallState>((set) => ({
   setPoorConnection: (poorConnection) => set({ poorConnection }),
   setPeerPoor: (peerPoor) => set({ peerPoor }),
   setPeerCamera: (peerCamera) => set({ peerCamera }),
+  setVideoUnavailable: (videoUnavailable) => set({ videoUnavailable }),
   setReconnectWait: (reconnectWait, reconnectDeadline) => set({ reconnectWait, reconnectDeadline }),
   setPeerName: (peerName) => set({ peerName }),
   // A mid-call renegotiation or reconnect must not restart the call timer.

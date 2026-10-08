@@ -10,6 +10,7 @@ vi.mock('@/lib/api/chat', () => ({ chatService: { sendMessage } }))
 
 import { callManager, DISCONNECT_GRACE_MS, RING_TIMEOUT_MS } from '../call-manager'
 import { useCallStore } from '@/lib/store/call.store'
+import { CAMERA_OFFER_WAIT_MS, RECONNECT_BLIP_MS } from '../call-config'
 
 interface FakeTransceiver {
   receiver: { track: { kind: string } }
@@ -251,9 +252,21 @@ const state = (extra: Record<string, unknown>) =>
   callManager.handleSignal({ type: 'state', senderId: 'bob', conversationId: 'conv-1', ...extra } as never)
 
 describe('connection lost: a minute to reconnect', () => {
+  it('a blip that recovers by itself shows no wait and restarts nothing', async () => {
+    const pc = await connectedCall(true)
+    pc.goTo('disconnected')
+    vi.advanceTimersByTime(RECONNECT_BLIP_MS - 1)
+    pc.goTo('connected')
+    await vi.advanceTimersByTimeAsync(DISCONNECT_GRACE_MS)
+    expect(useCallStore.getState().reconnectWait).toBeNull()
+    expect(offersSent()).toHaveLength(0)
+    expect(endSignals()).toHaveLength(0)
+  })
+
   it('waits a minute for the other person, then ends as failed', async () => {
     const pc = await connectedCall()
     pc.goTo('disconnected')
+    vi.advanceTimersByTime(RECONNECT_BLIP_MS)
     expect(useCallStore.getState().reconnectWait).toBe('peer')
     vi.advanceTimersByTime(DISCONNECT_GRACE_MS - 1)
     expect(endSignals()).toHaveLength(0)
@@ -266,6 +279,7 @@ describe('connection lost: a minute to reconnect', () => {
   it('goes on when the connection comes back in time', async () => {
     const pc = await connectedCall()
     pc.goTo('failed') // not ended at once any more
+    vi.advanceTimersByTime(RECONNECT_BLIP_MS)
     vi.advanceTimersByTime(30_000)
     pc.goTo('connected')
     expect(useCallStore.getState().reconnectWait).toBeNull()
@@ -278,12 +292,14 @@ describe('connection lost: a minute to reconnect', () => {
     const pc = await connectedCall()
     Object.defineProperty(navigator, 'onLine', { value: false, configurable: true })
     pc.goTo('disconnected')
+    vi.advanceTimersByTime(RECONNECT_BLIP_MS)
     expect(useCallStore.getState().reconnectWait).toBe('self')
   })
 
   it('the caller restarts ICE right away and keeps retrying', async () => {
     const pc = await connectedCall(true)
     pc.goTo('disconnected')
+    vi.advanceTimersByTime(RECONNECT_BLIP_MS)
     await vi.advanceTimersByTimeAsync(0)
     expect(pc.createOffer).toHaveBeenLastCalledWith({ iceRestart: true })
     expect(offersSent()).toHaveLength(1)
@@ -294,6 +310,7 @@ describe('connection lost: a minute to reconnect', () => {
   it('does not stack restart offers: the callee asking while we already restart adds none', async () => {
     const pc = await connectedCall(true)
     pc.goTo('disconnected')
+    vi.advanceTimersByTime(RECONNECT_BLIP_MS)
     await vi.advanceTimersByTimeAsync(0)
     state({ restart: true })
     await vi.advanceTimersByTimeAsync(0)
@@ -319,6 +336,7 @@ describe('connection lost: a minute to reconnect', () => {
   it('the callee asks the caller to restart', async () => {
     const pc = await connectedCall(false)
     pc.goTo('disconnected')
+    vi.advanceTimersByTime(RECONNECT_BLIP_MS)
     expect(statesSent()).toContainEqual(expect.objectContaining({ targetId: 'bob', restart: true }))
     expect(offersSent()).toHaveLength(0)
   })
@@ -373,6 +391,35 @@ describe('switching between voice and video', () => {
     // addTrack reuses that line and carries our stream, on every browser.
     expect(pc.addTrack).toHaveBeenLastCalledWith(video, expect.anything())
     expect(answersSent()).toHaveLength(1)
+  })
+
+  it("the callee's camera is turned back off, with a notice, when the caller never renegotiates (an older app)", async () => {
+    await connectedCall(false)
+    const video = cameraStream()
+    callManager.toggleCamera(true)
+    await vi.advanceTimersByTimeAsync(0)
+    publish.mockClear()
+    await vi.advanceTimersByTimeAsync(CAMERA_OFFER_WAIT_MS)
+    expect(video.stop).toHaveBeenCalled()
+    expect(useCallStore.getState().cameraEnabled).toBe(false)
+    expect(useCallStore.getState().video).toBe(false) // still logged as a voice call
+    expect(useCallStore.getState().videoUnavailable).toBe(true)
+    expect(statesSent()).toContainEqual(expect.objectContaining({ video: false }))
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(useCallStore.getState().videoUnavailable).toBe(false) // the notice goes away
+  })
+
+  it("keeps the callee's camera once the caller's offer took it", async () => {
+    const pc = await connectedCall(false)
+    const video = cameraStream()
+    callManager.toggleCamera(true)
+    await vi.advanceTimersByTimeAsync(0)
+    pc.videoLine()
+    callManager.handleSignal({ type: 'offer', senderId: 'bob', targetId: 'alice', conversationId: 'conv-1', sdp: 'v=2' })
+    await vi.advanceTimersByTimeAsync(CAMERA_OFFER_WAIT_MS)
+    expect(video.stop).not.toHaveBeenCalled()
+    expect(useCallStore.getState().cameraEnabled).toBe(true)
+    expect(useCallStore.getState().videoUnavailable).toBe(false)
   })
 
   it('the caller adds a video line when the callee wants to send video', async () => {

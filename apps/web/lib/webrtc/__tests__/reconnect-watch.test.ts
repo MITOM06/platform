@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ReconnectWatch } from '../reconnect-watch'
-import { RECONNECT_GRACE_MS } from '../call-config'
+import { RECONNECT_BLIP_MS, RECONNECT_GRACE_MS } from '../call-config'
 import { useCallStore } from '@/lib/store/call.store'
 
 beforeEach(() => {
@@ -57,5 +57,40 @@ describe('ReconnectWatch', () => {
     watch.begin('self', vi.fn())
     expect(useCallStore.getState().reconnectWait).toBe('self')
     expect(useCallStore.getState().reconnectDeadline).toBe(deadline)
+  })
+})
+
+describe('ReconnectWatch.beginAfterBlip', () => {
+  it('shows nothing for a blip that recovers in time', () => {
+    const watch = new ReconnectWatch()
+    const tick = vi.fn()
+    watch.beginAfterBlip('peer', vi.fn(), tick)
+    vi.advanceTimersByTime(RECONNECT_BLIP_MS - 1)
+    expect(useCallStore.getState().reconnectWait).toBeNull()
+    watch.end()
+    vi.advanceTimersByTime(RECONNECT_GRACE_MS)
+    expect(useCallStore.getState().reconnectWait).toBeNull()
+    expect(tick).not.toHaveBeenCalled()
+  })
+
+  it('opens the full minute once the drop outlasts the blip', () => {
+    const watch = new ReconnectWatch()
+    const tick = vi.fn()
+    const expire = vi.fn()
+    watch.beginAfterBlip('peer', expire, tick)
+    vi.advanceTimersByTime(RECONNECT_BLIP_MS)
+    expect(useCallStore.getState().reconnectWait).toBe('peer')
+    expect(useCallStore.getState().reconnectDeadline).toBe(Date.now() + RECONNECT_GRACE_MS)
+    expect(tick).toHaveBeenCalledOnce()
+    vi.advanceTimersByTime(RECONNECT_GRACE_MS)
+    expect(expire).toHaveBeenCalledOnce()
+  })
+
+  it('a direct begin meanwhile opens at once and drops the pending one', () => {
+    const watch = new ReconnectWatch()
+    watch.beginAfterBlip('self', vi.fn())
+    watch.begin('peer', vi.fn())
+    vi.advanceTimersByTime(RECONNECT_BLIP_MS)
+    expect(useCallStore.getState().reconnectWait).toBe('peer')
   })
 })

@@ -332,6 +332,8 @@ class ChatControllerTest {
     dto.setVideo(true);
     dto.setQuality("poor");
     dto.setRestart(true);
+    when(membershipCache.isMember("conv-999", SENDER_ID)).thenReturn(true);
+    when(membershipCache.isMember("conv-999", "user-789")).thenReturn(true);
 
     chatController.callState(dto, principal);
 
@@ -343,5 +345,36 @@ class ChatControllerTest {
     org.assertj.core.api.Assertions.assertThat(sent.getValue().getVideo()).isTrue();
     org.assertj.core.api.Assertions.assertThat(sent.getValue().getQuality()).isEqualTo("poor");
     org.assertj.core.api.Assertions.assertThat(sent.getValue().getRestart()).isTrue();
+  }
+
+  /** call.state only travels between two members of the conversation it names. */
+  @Test
+  void callState_DropsStateOutsideTheConversation() {
+    com.platform.chatservice.dto.WebRTCSignalDto noTarget =
+        new com.platform.chatservice.dto.WebRTCSignalDto();
+    noTarget.setConversationId("conv-999");
+    chatController.callState(noTarget, principal);
+
+    com.platform.chatservice.dto.WebRTCSignalDto noConversation =
+        new com.platform.chatservice.dto.WebRTCSignalDto();
+    noConversation.setTargetId("user-789");
+    chatController.callState(noConversation, principal);
+
+    com.platform.chatservice.dto.WebRTCSignalDto stranger =
+        new com.platform.chatservice.dto.WebRTCSignalDto();
+    stranger.setTargetId("user-789");
+    stranger.setConversationId("conv-999");
+    when(membershipCache.isMember("conv-999", SENDER_ID)).thenReturn(true);
+    when(membershipCache.isMember("conv-999", "user-789")).thenReturn(false);
+    chatController.callState(stranger, principal);
+
+    com.platform.chatservice.dto.WebRTCSignalDto notOurs =
+        new com.platform.chatservice.dto.WebRTCSignalDto();
+    notOurs.setTargetId("user-789");
+    notOurs.setConversationId("conv-other");
+    when(membershipCache.isMember("conv-other", SENDER_ID)).thenReturn(false);
+    chatController.callState(notOurs, principal);
+
+    verify(clusterBroker, never()).convertAndSendToUser(anyString(), anyString(), any());
   }
 }

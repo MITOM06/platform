@@ -3598,12 +3598,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callHangUp => 'End call';
 
   @override
-  String get callReconnecting => 'Reconnecting…';
-
-  @override
-  String get callPoorConnection => 'Poor connection';
-
-  @override
   String get aiContextLearnedFactsLoadError =>
       'Couldn\'t load what the assistant has learned.';
 
@@ -4519,4 +4513,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get callSwitchToVideo => 'Switch to video';
+
+  @override
+  String get callVideoUnavailable =>
+      'Video isn\'t available in this call — the other person may need to update the app';
 }

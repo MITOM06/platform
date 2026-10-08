@@ -1255,8 +1255,6 @@
   "callSpeaker": "Loa ngoài",
   "callSwitchCamera": "Đổi camera",
   "callHangUp": "Kết thúc",
-  "callReconnecting": "Đang kết nối lại…",
-  "callPoorConnection": "Kết nối yếu",
   "aiContextLearnedFactsLoadError": "Không tải được những điều trợ lý đã ghi nhớ.",
   "errTooManyRequests": "Quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại.",
   "removedFromConversation": "Bạn không còn là thành viên của cuộc trò chuyện này",
@@ -1538,5 +1536,6 @@
   "@callReconnectCountdown": {
     "placeholders": { "seconds": { "type": "int" } }
   },
-  "callSwitchToVideo": "Chuyển sang gọi video"
+  "callSwitchToVideo": "Chuyển sang gọi video",
+  "callVideoUnavailable": "Không thể bật video trong cuộc gọi này — người kia có thể cần cập nhật ứng dụng"
 }

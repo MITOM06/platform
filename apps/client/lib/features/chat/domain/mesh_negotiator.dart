@@ -122,6 +122,13 @@ class MeshNegotiator {
   void holdCamera(MediaStreamTrack track, MediaStream stream) =>
       _heldCamera = (track: track, stream: stream);
 
+  /// Callee: stop holding [track] — true when no offer took it yet.
+  bool releaseHeldCamera(MediaStreamTrack track) {
+    if (_heldCamera?.track != track) return false;
+    _heldCamera = null;
+    return true;
+  }
+
   void reset() {
     _pending = false;
     _queued = null;

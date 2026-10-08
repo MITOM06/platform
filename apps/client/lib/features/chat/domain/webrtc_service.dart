@@ -120,8 +120,11 @@ class WebRTCService implements DirectCallEngine {
   bool _micOn = true;
   bool _cameraOn = true;
   bool _speakerOn = false;
+  late final _speaker = SpeakerFollowsVideo(setSpeakerOn);
 
-  WebRTCService(this._stompService);
+  WebRTCService(this._stompService) {
+    network.addListener(_followLayout); // their camera
+  }
 
   /// True while a 1-on-1 call holds a peer connection (ringing or connected).
   bool get isActive => _peerConnection != null;
@@ -199,11 +202,12 @@ class WebRTCService implements DirectCallEngine {
     _conversationId = conversationId;
     _isVideo = isVideo;
     _remoteStream = null;
+    _cameraOn = isVideo;
+    _speaker.reset(isVideo); // set below, before the call starts
     network.reset(peerCamera: isVideo);
     _connected = false;
     _mediaSince = null;
     _micOn = true;
-    _cameraOn = isVideo;
 
     final pc = await createPeerConnection({
       'iceServers': [
@@ -437,6 +441,7 @@ class WebRTCService implements DirectCallEngine {
     for (final t in tracks) {
       t.enabled = on;
     }
+    _followLayout();
     if (isActive) _inCall.cameraChanged(on);
   }
 
@@ -468,6 +473,7 @@ class WebRTCService implements DirectCallEngine {
     _iceConnected = false;
     _inCall.reset();
     _negotiator.reset();
+    _speaker.reset();
     network.reset();
     _remoteStream = null;
     for (final track in _localStream?.getTracks() ?? <MediaStreamTrack>[]) {

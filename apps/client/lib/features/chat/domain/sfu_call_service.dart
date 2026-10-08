@@ -34,6 +34,7 @@ class SfuCallService implements DirectCallEngine {
   final RtcSessionFactory _sessionFactory;
   final Future<bool> Function(bool video) _probeMedia;
   final Duration _peerGrace;
+  final Duration _reconnectBlip;
 
   /// How long a hang-up before `call.started` waits for that id to cancel it.
   final Duration _pendingStartDeadline;
@@ -46,6 +47,7 @@ class SfuCallService implements DirectCallEngine {
     required RtcSessionFactory sessionFactory,
     required Future<bool> Function(bool video) probeMedia,
     Duration peerGrace = ReconnectWatch.reconnectGrace,
+    Duration reconnectBlip = ReconnectWatch.blipDelay,
     Duration pendingStartDeadline = const Duration(seconds: 15),
   })  : _port = port,
         _api = api,
@@ -53,7 +55,10 @@ class SfuCallService implements DirectCallEngine {
         _sessionFactory = sessionFactory,
         _probeMedia = probeMedia,
         _peerGrace = peerGrace,
-        _pendingStartDeadline = pendingStartDeadline;
+        _reconnectBlip = reconnectBlip,
+        _pendingStartDeadline = pendingStartDeadline {
+    network.addListener(_followLayout); // their camera
+  }
 
   @override
   Function(MediaStream)? onLocalStream;
@@ -66,11 +71,8 @@ class SfuCallService implements DirectCallEngine {
   @override
   Function(String content)? onSendCallLog;
 
-  /// Shown under the call status: LiveKit is re-establishing the connection.
+  /// LiveKit is re-establishing the connection.
   final ValueNotifier<bool> reconnecting = ValueNotifier(false);
-
-  /// Shown under the call status: our own connection is poor.
-  final ValueNotifier<bool> poorConnection = ValueNotifier(false);
 
   RtcSession? _session;
   StreamSubscription<Map<String, dynamic>>? _eventsSub;
@@ -91,7 +93,8 @@ class SfuCallService implements DirectCallEngine {
   final CallNetworkState network = CallNetworkState();
 
   /// Someone dropped: the one-minute "waiting to reconnect" window.
-  late final ReconnectWatch _watch = ReconnectWatch(network, grace: _peerGrace);
+  late final ReconnectWatch _watch =
+      ReconnectWatch(network, grace: _peerGrace, blip: _reconnectBlip);
 
   /// A rejoin of the room is in flight.
   bool _rejoining = false;
@@ -99,6 +102,7 @@ class SfuCallService implements DirectCallEngine {
   bool _micOn = true;
   bool _cameraOn = true;
   bool _speakerOn = false;
+  late final _speaker = SpeakerFollowsVideo(setSpeakerOn);
 
   /// A LiveKit 1-on-1 is starting, ringing out, or running.
   bool get isActive =>
@@ -237,6 +241,7 @@ class SfuCallService implements DirectCallEngine {
   Future<void> setCameraOn(bool on) async {
     _cameraOn = on;
     if (on) _isVideo = true;
+    _followLayout();
     await _session?.setCamera(on);
   }
 
@@ -265,7 +270,7 @@ class SfuCallService implements DirectCallEngine {
     _micOn = true;
     _cameraOn = isVideo;
     reconnecting.value = false;
-    poorConnection.value = false;
+    _speaker.reset();
     network.reset(peerCamera: isVideo);
   }
 
@@ -360,16 +365,10 @@ class SfuCallService implements DirectCallEngine {
       ..onPeersChanged = ((_) => _onPeers())
       ..onReconnecting = (on) {
         reconnecting.value = on;
-        if (on) {
-          _watch.begin(ReconnectWho.self, _giveUp);
-        } else if (_peerInRoom()) {
-          _watch.end();
-        }
+        // Resumed: _onPeers ends the wait, or waits for them if they left.
+        on ? _watch.beginAfterBlip(ReconnectWho.self, _giveUp) : _onPeers();
       }
-      ..onLocalPoorConnection = (poor) {
-        poorConnection.value = poor;
-        network.selfPoor = poor;
-      }
+      ..onLocalPoorConnection = ((poor) => network.selfPoor = poor)
       ..onDisconnected = (reason) {
         if (_session != session) return;
         if (reason == RtcEnd.ended) {
@@ -394,13 +393,20 @@ class SfuCallService implements DirectCallEngine {
       return;
     }
     if (_session != session) return;
-    if (!rejoin) return setSpeakerOn(_isVideo);
+    if (!rejoin) {
+      _speaker.reset(_isVideo);
+      return setSpeakerOn(_isVideo);
+    }
     // Back in the room: restore what connect() reset, see whether they are here.
     if (!_micOn) await session.setMic(false); // connect() always opens the mic
     await setSpeakerOn(_speakerOn);
     reconnecting.value = false;
     _onPeers();
   }
+
+  /// Messenger-style speaker: loud while either camera is on.
+  void _followLayout() =>
+      _speaker.update(showsVideo(_cameraOn, network.peerCamera));
 
   void _giveUp() => unawaited(endCall(reason: CallEndReason.failed));
 
@@ -414,18 +420,14 @@ class SfuCallService implements DirectCallEngine {
     }
   }
 
-  bool _peerInRoom() {
-    final target = _targetId;
-    return target != null && _session?.peer(target) != null;
-  }
-
   void _onPeers() {
     final target = _targetId;
     final peer = target == null ? null : _session?.peer(target);
     if (peer == null) {
       // Gone without the call ending (crash, lost network): wait a minute,
-      // as the server does.
-      if (_connected) _watch.begin(ReconnectWho.peer, _giveUp);
+      // as the server does. LiveKit reports them gone only once their own
+      // reconnect gives up (~15-20 s), so it starts with the server's minute.
+      _connected ? _watch.begin(ReconnectWho.peer, _giveUp) : _watch.end();
       return;
     }
     if (!reconnecting.value) _watch.end();
@@ -456,7 +458,6 @@ class SfuCallService implements DirectCallEngine {
     _lastRemote = null;
     _mediaSince = null;
     reconnecting.value = false;
-    poorConnection.value = false;
     if (!keepPending) {
       _pendingTimer?.cancel();
       _pendingTimer = null;

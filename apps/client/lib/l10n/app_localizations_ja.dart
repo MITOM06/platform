@@ -3522,12 +3522,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get callHangUp => '通話を終了';
 
   @override
-  String get callReconnecting => '再接続中…';
-
-  @override
-  String get callPoorConnection => '接続が不安定です';
-
-  @override
   String get aiContextLearnedFactsLoadError => 'アシスタントが記憶した内容を読み込めませんでした。';
 
   @override
@@ -4376,4 +4370,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get callSwitchToVideo => 'ビデオ通話に切り替え';
+
+  @override
+  String get callVideoUnavailable => 'この通話ではビデオを使えません。相手のアプリの更新が必要な可能性があります';
 }

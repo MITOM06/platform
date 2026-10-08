@@ -1,5 +1,5 @@
 import { useCallStore } from '@/lib/store/call.store'
-import { RECONNECT_GRACE_MS } from './call-config'
+import { RECONNECT_BLIP_MS, RECONNECT_GRACE_MS } from './call-config'
 
 export type ReconnectWho = 'self' | 'peer'
 
@@ -11,6 +11,7 @@ export type ReconnectWho = 'self' | 'peer'
 export class ReconnectWatch {
   private expiry: ReturnType<typeof setTimeout> | null = null
   private ticker: ReturnType<typeof setInterval> | null = null
+  private blip: ReturnType<typeof setTimeout> | null = null
 
   get active(): boolean {
     return this.expiry !== null
@@ -18,6 +19,7 @@ export class ReconnectWatch {
 
   /** Open the window (or, while open, just update whose connection it waits for). */
   begin(who: ReconnectWho, onExpire: () => void, tick?: () => void, tickMs = 4_000): void {
+    this.clearBlip()
     const store = useCallStore.getState()
     if (this.expiry) {
       store.setReconnectWait(who, store.reconnectDeadline)
@@ -32,12 +34,30 @@ export class ReconnectWatch {
     if (tick) this.startTicker(tick, tickMs)
   }
 
+  /**
+   * Open the window only if the drop outlasts a blip (`RECONNECT_BLIP_MS`):
+   * `end()` meanwhile — the connection came back — and nothing is shown.
+   */
+  beginAfterBlip(who: ReconnectWho, onExpire: () => void, tick?: () => void, tickMs = 4_000): void {
+    if (this.expiry || this.blip) return
+    this.blip = setTimeout(() => {
+      this.blip = null
+      this.begin(who, onExpire, tick, tickMs)
+    }, RECONNECT_BLIP_MS)
+  }
+
+  private clearBlip(): void {
+    if (this.blip) clearTimeout(this.blip)
+    this.blip = null
+  }
+
   private startTicker(tick: () => void, tickMs: number): void {
     tick()
     this.ticker = setInterval(tick, tickMs)
   }
 
   end(): void {
+    this.clearBlip()
     if (this.expiry) clearTimeout(this.expiry)
     if (this.ticker) clearInterval(this.ticker)
     this.expiry = null

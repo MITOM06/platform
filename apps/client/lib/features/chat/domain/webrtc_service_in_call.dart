@@ -91,30 +91,61 @@ extension WebRTCServiceInCall on WebRTCService {
     final pc = _peerConnection;
     final stream = _localStream;
     if (pc == null || stream == null) return;
-    MediaStreamTrack? track;
+    final MediaStream camera;
     try {
-      final camera = await navigator.mediaDevices.getUserMedia({'video': true});
-      track = camera.getVideoTracks().firstOrNull;
+      camera = await navigator.mediaDevices.getUserMedia({'video': true});
     } catch (e) {
       debugPrint('camera refused: $e'); // the call stays voice
       return;
     }
-    if (track == null) return;
-    if (_peerConnection != pc) {
-      await track.stop();
+    final track = camera.getVideoTracks().firstOrNull;
+    if (track == null || _peerConnection != pc) {
+      for (final t in camera.getTracks()) {
+        await t.stop();
+      }
+      await camera.dispose();
       return;
     }
+    // The track moves into the call's stream. Taken out of its own stream
+    // first, disposing that one leaves the camera running.
+    await camera.removeTrack(track);
+    await camera.dispose();
     await stream.addTrack(track);
     onLocalStream?.call(stream);
+    final wasVideo = _isVideo;
     if (_outgoing) {
       await pc.addTrack(track, stream);
       unawaited(_negotiator.offer());
     } else {
       _negotiator.holdCamera(track, stream);
+      _inCall.awaitCameraOffer(() {
+        if (!_negotiator.releaseHeldCamera(track)) return false;
+        _undoCamera(stream, track, wasVideo: wasVideo);
+        return true;
+      });
     }
     _cameraOn = true;
     _isVideo = true;
     _inCall.cameraChanged(true, askForOffer: !_outgoing);
-    await setSpeakerOn(true);
+    _followLayout();
   }
+
+  /// No offer took the camera we turned on (an older caller app): off again.
+  void _undoCamera(MediaStream stream, MediaStreamTrack track,
+      {required bool wasVideo}) {
+    if (_localStream != stream) return;
+    _cameraOn = false;
+    _isVideo = wasVideo;
+    _inCall.cameraChanged(false);
+    _followLayout();
+    unawaited(() async {
+      await stream.removeTrack(track);
+      await track.stop();
+      onLocalStream?.call(stream);
+    }());
+  }
+
+  /// Messenger-style speaker: loud while either camera is on.
+  void _followLayout() =>
+      _speaker.update(showsVideo(_cameraOn, network.peerCamera));
 }

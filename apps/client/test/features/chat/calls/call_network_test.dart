@@ -96,4 +96,77 @@ void main() {
       watch.end();
     });
   });
+
+  group('ReconnectWatch.beginAfterBlip', () {
+    testWidgets('shows nothing for a blip that recovers in time',
+        (tester) async {
+      final state = CallNetworkState();
+      final watch = ReconnectWatch(state);
+      var ticks = 0;
+      watch.beginAfterBlip(ReconnectWho.peer, () {}, tick: () => ticks++);
+      await tester
+          .pump(ReconnectWatch.blipDelay - const Duration(milliseconds: 1));
+      expect(state.reconnectWho, isNull);
+      watch.end();
+      await tester.pump(const Duration(seconds: 70));
+      expect(state.reconnectWho, isNull);
+      expect(ticks, 0);
+    });
+
+    testWidgets('opens the full minute once the drop outlasts the blip',
+        (tester) async {
+      final state = CallNetworkState();
+      final watch = ReconnectWatch(state);
+      var expired = 0;
+      var ticks = 0;
+      watch.beginAfterBlip(ReconnectWho.peer, () => expired++,
+          tick: () => ticks++);
+      await tester.pump(ReconnectWatch.blipDelay);
+      expect(state.reconnectWho, ReconnectWho.peer);
+      expect(ticks, 1);
+      await tester.pump(ReconnectWatch.reconnectGrace);
+      expect(expired, 1);
+    });
+
+    testWidgets(
+        'a direct begin meanwhile opens at once and drops the pending one',
+        (tester) async {
+      final state = CallNetworkState();
+      final watch = ReconnectWatch(state);
+      watch.beginAfterBlip(ReconnectWho.self, () {});
+      watch.begin(ReconnectWho.peer, () {});
+      await tester.pump(ReconnectWatch.blipDelay);
+      expect(state.reconnectWho, ReconnectWho.peer);
+      watch.end();
+    });
+  });
+
+  group('SpeakerFollowsVideo', () {
+    test('switches the speaker only when the layout changes', () {
+      final calls = <bool>[];
+      final speaker = SpeakerFollowsVideo((on) async => calls.add(on))
+        ..reset(false);
+      speaker.update(false);
+      expect(calls, isEmpty);
+      speaker.update(true); // a camera came on: loudspeaker
+      speaker.update(true);
+      speaker.update(false); // back to voice: earpiece
+      expect(calls, [true, false]);
+    });
+
+    test('after a reset it adopts the next layout without switching', () {
+      final calls = <bool>[];
+      final speaker = SpeakerFollowsVideo((on) async => calls.add(on))..reset();
+      speaker.update(true);
+      expect(calls, isEmpty);
+      speaker.update(false);
+      expect(calls, [false]);
+    });
+  });
+
+  test('a new call clears the video-unavailable notice', () {
+    final state = CallNetworkState()..videoUnavailable = true;
+    state.reset();
+    expect(state.videoUnavailable, isFalse);
+  });
 }

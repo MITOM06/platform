@@ -77,7 +77,7 @@ vi.mock('@/lib/rtc/livekit-session', () => ({
 }))
 
 import { SfuDirectCall } from '../sfu-call'
-import { RING_TIMEOUT_MS } from '../call-config'
+import { RECONNECT_BLIP_MS, RING_TIMEOUT_MS } from '../call-config'
 import { useCallStore } from '@/lib/store/call.store'
 
 const hooks = {
@@ -486,8 +486,40 @@ describe('weak network, reconnecting and switching to video', () => {
   it("LiveKit reconnecting shows that it is our own connection", async () => {
     await connect()
     m.FakeSession.last!.onReconnecting?.(true)
+    vi.advanceTimersByTime(RECONNECT_BLIP_MS)
     expect(store().reconnectWait).toBe('self')
     m.FakeSession.last!.onReconnecting?.(false)
+    expect(store().reconnectWait).toBeNull()
+  })
+
+  it('a LiveKit blip that resumes in time shows no wait', async () => {
+    await connect()
+    m.FakeSession.last!.onReconnecting?.(true)
+    vi.advanceTimersByTime(RECONNECT_BLIP_MS - 1)
+    m.FakeSession.last!.onReconnecting?.(false)
+    vi.advanceTimersByTime(RECONNECT_BLIP_MS)
+    expect(store().reconnectWait).toBeNull()
+  })
+
+  it('resumed while they are gone: the wait turns to them', async () => {
+    await connect()
+    const session = m.FakeSession.last!
+    session.onReconnecting?.(true)
+    vi.advanceTimersByTime(RECONNECT_BLIP_MS)
+    session.peersById.delete('bob') // they left while we were away
+    session.onReconnecting?.(false)
+    expect(store().reconnectWait).toBe('peer')
+    session.join('bob')
+    expect(store().reconnectWait).toBeNull()
+  })
+
+  it('a resume before anyone answered leaves no wait behind', async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    started()
+    await flush()
+    m.FakeSession.last!.onReconnecting?.(true)
+    m.FakeSession.last!.onReconnecting?.(false)
+    vi.advanceTimersByTime(RECONNECT_BLIP_MS)
     expect(store().reconnectWait).toBeNull()
   })
 

@@ -1255,8 +1255,6 @@
   "callSpeaker": "Altavoz",
   "callSwitchCamera": "Cambiar cámara",
   "callHangUp": "Colgar",
-  "callReconnecting": "Reconectando…",
-  "callPoorConnection": "Conexión débil",
   "aiContextLearnedFactsLoadError": "No se pudo cargar lo que el asistente ha aprendido.",
   "errTooManyRequests": "Demasiadas solicitudes. Espera un momento y vuelve a intentarlo.",
   "removedFromConversation": "Ya no eres miembro de esta conversación",
@@ -1538,5 +1536,6 @@
   "@callReconnectCountdown": {
     "placeholders": { "seconds": { "type": "int" } }
   },
-  "callSwitchToVideo": "Cambiar a videollamada"
+  "callSwitchToVideo": "Cambiar a videollamada",
+  "callVideoUnavailable": "El vídeo no está disponible en esta llamada; puede que la otra persona tenga que actualizar la app"
 }

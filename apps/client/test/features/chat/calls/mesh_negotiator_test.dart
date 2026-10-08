@@ -165,4 +165,16 @@ void main() {
     expect(line.sender.replaced, isNull);
     expect(to('/app/call.answer').single['sdp'], 'answer-sdp');
   });
+
+  test('a held camera can be released until an offer takes it', () async {
+    final camera = _Track('video');
+    negotiator.holdCamera(camera, _Stream());
+    expect(negotiator.releaseHeldCamera(camera), isTrue);
+    expect(negotiator.releaseHeldCamera(camera), isFalse);
+
+    negotiator.holdCamera(camera, _Stream());
+    pc.lines.add(_Transceiver('video'));
+    await negotiator.answer('remote-sdp');
+    expect(negotiator.releaseHeldCamera(camera), isFalse); // already sent
+  });
 }

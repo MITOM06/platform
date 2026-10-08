@@ -1666,6 +1666,7 @@
     "waitingForPeer": "{name}さんの再接続を待っています…",
     "reconnectCountdown": "再接続できない場合、{seconds}秒後に通話が終了します",
     "switchToVideo": "ビデオ通話に切り替え",
+    "videoUnavailable": "この通話ではビデオを使えません。相手のアプリの更新が必要な可能性があります",
     "declined": "{name}さんが通話を拒否しました",
     "busy": "{name}さんは別の通話中です",
     "peerMediaError": "{name}さんのマイクまたはカメラを起動できませんでした",
@@ -1703,9 +1704,7 @@
     "summaryOverview": "概要",
     "summaryKeyPoints": "要点",
     "summaryActionItems": "アクション項目",
-    "summaryUnavailable": "要約は利用できません",
-    "reconnecting": "再接続中…",
-    "poorConnection": "接続が不安定です"
+    "summaryUnavailable": "要約は利用できません"
   },
   "notFound": {
     "title": "ページが見つかりません",

@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../domain/call_network.dart';
 
-/// Whose network is weak, under the call status (both media paths). Mirrors
-/// web `CallConnectionNotice`.
+/// Whose network is weak (both media paths), or that our video could not be
+/// sent, under the call status. Mirrors web `CallConnectionNotice`.
 class CallNetworkNotice extends StatelessWidget {
   const CallNetworkNotice(
       {super.key, required this.network, required this.peerName});
@@ -20,18 +20,22 @@ class CallNetworkNotice extends StatelessWidget {
       listenable: network,
       builder: (context, _) {
         final notice = networkNotice(network.selfPoor, network.peerPoor);
-        if (notice == null) return const SizedBox.shrink();
         final l10n = context.l10n;
-        final text = switch (notice) {
-          NetworkNotice.self => l10n.callSelfWeakNetwork,
-          NetworkNotice.peer => l10n.callPeerWeakNetwork(peerName),
-          NetworkNotice.both => l10n.callUnstableNetwork,
-        };
+        final text = network.videoUnavailable
+            ? l10n.callVideoUnavailable
+            : switch (notice) {
+                NetworkNotice.self => l10n.callSelfWeakNetwork,
+                NetworkNotice.peer => l10n.callPeerWeakNetwork(peerName),
+                NetworkNotice.both => l10n.callUnstableNetwork,
+                null => null,
+              };
+        if (text == null) return const SizedBox.shrink();
         return Padding(
-          padding: const EdgeInsets.only(top: 4),
+          padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
           child: Semantics(
             liveRegion: true,
             child: Text(text,
+                textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white70, fontSize: 12)),
           ),
         );

@@ -1666,6 +1666,7 @@
     "waitingForPeer": "Waiting for {name} to reconnect…",
     "reconnectCountdown": "The call ends in {seconds}s if it cannot reconnect",
     "switchToVideo": "Switch to video",
+    "videoUnavailable": "Video isn't available in this call — the other person may need to update the app",
     "declined": "{name} declined the call",
     "busy": "{name} is on another call",
     "peerMediaError": "{name} couldn't turn on their microphone or camera",
@@ -1703,9 +1704,7 @@
     "summaryOverview": "Overview",
     "summaryKeyPoints": "Key points",
     "summaryActionItems": "Action items",
-    "summaryUnavailable": "Summary unavailable",
-    "reconnecting": "Reconnecting…",
-    "poorConnection": "Poor connection"
+    "summaryUnavailable": "Summary unavailable"
   },
   "notFound": {
     "title": "Page not found",

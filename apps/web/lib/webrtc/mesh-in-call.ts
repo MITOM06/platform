@@ -1,7 +1,7 @@
 import { stompService } from '@/lib/stomp/client'
 import { useCallStore } from '@/lib/store/call.store'
 import type { CallEndReason } from './call-end-notice'
-import type { WebRTCSignal } from './call-config'
+import { CAMERA_OFFER_WAIT_MS, VIDEO_UNAVAILABLE_NOTICE_MS, type WebRTCSignal } from './call-config'
 import { attributeQuality, type ReceiveQuality } from './call-network'
 import type { MeshNegotiator } from './mesh-negotiator'
 import { QualityMonitor } from './quality-monitor'
@@ -29,6 +29,9 @@ export class MeshInCall {
   /** How well we receive them, and (from their call.state) how well they receive us. */
   private myReceive: ReceiveQuality = 'good'
   private peerReceive: ReceiveQuality | null = null
+  /** Callee: the camera waiting for the caller's video line; then the notice's timer. */
+  private cameraWait: ReturnType<typeof setTimeout> | null = null
+  private noticeTimer: ReturnType<typeof setTimeout> | null = null
 
   constructor(
     private readonly link: InCallLink,
@@ -42,6 +45,7 @@ export class MeshInCall {
   }
 
   reset(): void {
+    this.clearTimers()
     this.reconnect.end()
     this.quality.stop()
     this.myReceive = 'good'
@@ -81,9 +85,35 @@ export class MeshInCall {
       pc.addTrack(track, stream)
       void this.negotiator.offer()
     } else {
+      const wasVideo = useCallStore.getState().video
       this.negotiator.holdCamera(track, stream)
+      this.cameraWait = setTimeout(() => this.cameraNotTaken(track, stream, wasVideo), CAMERA_OFFER_WAIT_MS)
     }
     this.cameraChanged(true, !this.link.isCaller())
+  }
+
+  /** No offer took our camera (an older caller app): turn it back off and say so. */
+  private cameraNotTaken(track: MediaStreamTrack, stream: MediaStream, wasVideo: boolean): void {
+    this.cameraWait = null
+    if (!this.negotiator.releaseHeldCamera(track)) return
+    stream.removeTrack?.(track)
+    track.stop()
+    this.link.onLocalStream(stream)
+    useCallStore.getState().setCamera(false)
+    useCallStore.setState({ video: wasVideo })
+    this.sendState({ video: false })
+    useCallStore.getState().setVideoUnavailable(true)
+    this.noticeTimer = setTimeout(() => {
+      this.noticeTimer = null
+      useCallStore.getState().setVideoUnavailable(false)
+    }, VIDEO_UNAVAILABLE_NOTICE_MS)
+  }
+
+  private clearTimers(): void {
+    if (this.cameraWait) clearTimeout(this.cameraWait)
+    if (this.noticeTimer) clearTimeout(this.noticeTimer)
+    this.cameraWait = null
+    this.noticeTimer = null
   }
 
   private cameraChanged(on: boolean, askForOffer = false): void {
@@ -137,7 +167,10 @@ export class MeshInCall {
     })
   }
 
-  /** The connection dropped mid-call: wait a minute, recovering on a beat. */
+  /**
+   * The connection dropped mid-call: past a short blip (which ICE often rides
+   * out by itself), wait a minute, recovering on a beat.
+   */
   dropped(): void {
     const expire = () => this.link.endCall('failed')
     const recover = () => {
@@ -145,7 +178,7 @@ export class MeshInCall {
       if (this.link.isCaller()) void this.negotiator.offer({ iceRestart: true })
       else this.sendState({ restart: true })
     }
-    this.reconnect.begin(whoDropped(), expire, recover)
+    this.reconnect.beginAfterBlip(whoDropped(), expire, recover)
   }
 }
 

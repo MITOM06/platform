@@ -3485,12 +3485,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get callHangUp => '挂断';
 
   @override
-  String get callReconnecting => '正在重新连接…';
-
-  @override
-  String get callPoorConnection => '网络连接不佳';
-
-  @override
   String get aiContextLearnedFactsLoadError => '无法加载助手已了解的信息。';
 
   @override
@@ -4328,4 +4322,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get callSwitchToVideo => '切换到视频通话';
+
+  @override
+  String get callVideoUnavailable => '此通话无法开启视频——对方可能需要更新应用';
 }

@@ -289,8 +289,8 @@ export class SfuDirectCall {
     session.onPeersChanged = () => this.onPeers()
     session.onReconnecting = (on) => {
       store().setReconnecting(on)
-      if (on) this.watch.begin('self', () => this.endCall('failed'))
-      else if (this.peerInRoom()) this.watch.end()
+      if (on) this.watch.beginAfterBlip('self', () => this.endCall('failed'))
+      else this.onPeers() // resumed: ends the wait, or waits for them if they left meanwhile
     }
     session.onLocalPoorConnection = (poor) => store().setPoorConnection(poor)
     session.onDisconnected = (reason) => {
@@ -332,17 +332,15 @@ export class SfuDirectCall {
     this.onPeers()
   }
 
-  private peerInRoom(): boolean {
-    const peerId = store().peerId
-    return !!(peerId && this.session?.peer(peerId))
-  }
-
   private onPeers(): void {
     const peerId = store().peerId
     const peer = peerId ? this.session?.peer(peerId) : undefined
     if (!peer) {
-      // They left without the call ending (crash, lost network): wait a minute, as the server does.
+      // They left without the call ending (crash, lost network): wait a minute, as the server
+      // does. LiveKit only reports them gone once their own reconnect gives up (~15-20 s), so
+      // this minute starts later than theirs; the server's, which ends the call, starts with ours.
       if (store().status === 'connected') this.watch.begin('peer', () => this.endCall('failed'))
+      else this.watch.end()
       return
     }
     if (!store().reconnecting) this.watch.end()

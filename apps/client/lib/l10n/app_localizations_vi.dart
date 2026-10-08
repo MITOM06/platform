@@ -3600,12 +3600,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get callHangUp => 'Kết thúc';
 
   @override
-  String get callReconnecting => 'Đang kết nối lại…';
-
-  @override
-  String get callPoorConnection => 'Kết nối yếu';
-
-  @override
   String get aiContextLearnedFactsLoadError =>
       'Không tải được những điều trợ lý đã ghi nhớ.';
 
@@ -4494,4 +4488,8 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get callSwitchToVideo => 'Chuyển sang gọi video';
+
+  @override
+  String get callVideoUnavailable =>
+      'Không thể bật video trong cuộc gọi này — người kia có thể cần cập nhật ứng dụng';
 }

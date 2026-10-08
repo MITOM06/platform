@@ -1709,8 +1709,6 @@
   "callSpeaker": "Speaker",
   "callSwitchCamera": "Switch camera",
   "callHangUp": "End call",
-  "callReconnecting": "Reconnecting…",
-  "callPoorConnection": "Poor connection",
   "aiContextLearnedFactsLoadError": "Couldn't load what the assistant has learned.",
   "@aiContextLearnedFactsLoadError": {
     "description": "Shown in the AI Context screen when the learned-facts (memory) section fails to load."
@@ -2251,5 +2249,6 @@
   "@callReconnectCountdown": {
     "placeholders": { "seconds": { "type": "int" } }
   },
-  "callSwitchToVideo": "Switch to video"
+  "callSwitchToVideo": "Switch to video",
+  "callVideoUnavailable": "Video isn't available in this call — the other person may need to update the app"
 }

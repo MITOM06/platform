@@ -1255,8 +1255,6 @@
   "callSpeaker": "스피커",
   "callSwitchCamera": "카메라 전환",
   "callHangUp": "통화 종료",
-  "callReconnecting": "다시 연결하는 중…",
-  "callPoorConnection": "연결 상태가 좋지 않음",
   "aiContextLearnedFactsLoadError": "어시스턴트가 기억한 내용을 불러오지 못했습니다.",
   "errTooManyRequests": "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
   "removedFromConversation": "더 이상 이 대화의 멤버가 아닙니다",
@@ -1538,5 +1536,6 @@
   "@callReconnectCountdown": {
     "placeholders": { "seconds": { "type": "int" } }
   },
-  "callSwitchToVideo": "영상 통화로 전환"
+  "callSwitchToVideo": "영상 통화로 전환",
+  "callVideoUnavailable": "이 통화에서는 영상을 켤 수 없습니다. 상대방이 앱을 업데이트해야 할 수 있습니다"
 }
