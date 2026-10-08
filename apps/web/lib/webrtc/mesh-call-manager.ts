@@ -2,6 +2,7 @@ import { stompService } from '@/lib/stomp/client'
 import { useCallStore } from '@/lib/store/call.store'
 import { chatService } from '@/lib/api/chat'
 import type { CallEndReason } from './call-end-notice'
+import { IceQueue } from './ice-queue'
 import type { CallHooks } from './call-hooks'
 import {
   CallCancelledError,
@@ -27,18 +28,9 @@ export class MeshCallManager {
   private remoteStream: MediaStream | null = null
   private targetId: string | null = null
   private conversationId: string | null = null
-  private remoteDescriptionSet = false
-  private pendingCandidates: RTCIceCandidateInit[] = []
   private ringTimer: ReturnType<typeof setTimeout> | null = null
   private disconnectTimer: ReturnType<typeof setTimeout> | null = null
-  /**
-   * The caller trickles ICE candidates right after its offer — while we are
-   * still ringing and have no peer connection. They are kept here (only from
-   * the caller that is ringing) and applied on answer; dropping them made
-   * calls across NATs connect without audio.
-   */
-  private expectingFrom: string | null = null
-  private earlyCandidates: RTCIceCandidateInit[] = []
+  private readonly ice = new IceQueue()
   /** Caller only: the offer has left. Before that, hanging up signals nothing. */
   private offerSent = false
 
@@ -108,9 +100,19 @@ export class MeshCallManager {
       this.endCall('media_error')
       return
     }
+    await this.answerOffer(pc, peerId, conversationId, pendingOfferSdp)
+  }
+
+  /** Apply `sdp` and send our answer; an unusable offer ends the call instead of hanging. */
+  private async answerOffer(
+    pc: RTCPeerConnection,
+    peerId: string,
+    conversationId: string,
+    sdp: string,
+  ): Promise<void> {
     try {
-      await pc.setRemoteDescription({ type: 'offer', sdp: pendingOfferSdp })
-      await this.flushPending()
+      await pc.setRemoteDescription({ type: 'offer', sdp })
+      await this.ice.flush(pc)
       this.assertLive(pc)
       const answer = await pc.createAnswer()
       this.assertLive(pc)
@@ -124,8 +126,36 @@ export class MeshCallManager {
       })
     } catch (err) {
       if (err instanceof CallCancelledError) return
-      this.endCall('failed') // unusable offer: don't leave the prompt stuck
+      this.endCall('failed')
     }
+  }
+
+  /**
+   * Both tapped Call and the offers crossed. Exactly one side must answer: the
+   * one whose user id sorts first drops its own offer (silently — the peer
+   * ignores it) and answers theirs; the other keeps its offer and waits.
+   */
+  private async answerCrossedCall(from: string, conversationId: string, sdp: string): Promise<void> {
+    const peerName = useCallStore.getState().peerName
+    const video = sdp.includes('m=video')
+    this.teardown(false)
+    this.ice.expect(from) // their candidates follow their offer
+    // Keep showing "Calling…" until media flows; the call takes their media.
+    useCallStore.getState().setOutgoing({ peerId: from, peerName, conversationId, video })
+    let pc: RTCPeerConnection
+    try {
+      pc = await this.setup(from, conversationId, video)
+    } catch (err) {
+      if (err instanceof CallCancelledError) return
+      this.endCall('media_error')
+      return
+    }
+    this.offerSent = true // the peer knows about this call: hanging up must tell them
+    // Fresh tracks start live: keep what the user muted while "Calling…".
+    const { micEnabled, cameraEnabled } = useCallStore.getState()
+    if (!micEnabled) this.toggleMic(false)
+    if (!cameraEnabled) this.toggleCamera(false)
+    await this.answerOffer(pc, from, conversationId, sdp)
   }
 
   /** Route an inbound 1-on-1 signal (from `/user/queue/webrtc`). */
@@ -138,7 +168,7 @@ export class MeshCallManager {
         void this.handleAnswer(signal.sdp ?? '')
         break
       case 'ice':
-        if (signal.candidate) void this.addCandidate(signal.candidate, signal.senderId)
+        if (signal.candidate) void this.ice.add(this.pc, signal.candidate, signal.senderId)
         break
       case 'end':
         this.handleRemoteEnd(signal)
@@ -177,8 +207,7 @@ export class MeshCallManager {
 
   /** The incoming prompt timed out locally (caller vanished without `end`). */
   dismissIncoming(): void {
-    this.expectingFrom = null
-    this.earlyCandidates = []
+    this.ice.reset()
     if (useCallStore.getState().status === 'incoming') useCallStore.getState().reset()
   }
 
@@ -198,13 +227,18 @@ export class MeshCallManager {
     const sdp = signal.sdp
     if (!from || !conversationId || !sdp) return
     const st = useCallStore.getState()
+    if (st.status === 'outgoing' && st.peerId === from && st.conversationId === conversationId) {
+      // We are calling each other. `targetId` is us, as the caller addressed it.
+      const me = signal.targetId
+      if (me && me < from) void this.answerCrossedCall(from, conversationId, sdp)
+      return
+    }
     if (st.status !== 'idle' || st.groupCallId) {
       // Same caller re-sending (reconnect) → keep ringing; anyone else → busy.
       if (st.peerId !== from) this.publishEnd(from, conversationId, 'busy')
       return
     }
-    this.expectingFrom = from
-    this.earlyCandidates = []
+    this.ice.expect(from)
     st.setIncoming({
       peerId: from,
       peerName: '',
@@ -259,15 +293,10 @@ export class MeshCallManager {
   ): Promise<RTCPeerConnection> {
     this.targetId = targetId
     this.conversationId = conversationId
-    this.remoteDescriptionSet = false
-    this.pendingCandidates = []
 
     const pc = new RTCPeerConnection(ICE_SERVERS)
     this.pc = pc
-    // Candidates the caller sent while we were ringing (see earlyCandidates).
-    if (this.expectingFrom === targetId) this.pendingCandidates.push(...this.earlyCandidates)
-    this.expectingFrom = null
-    this.earlyCandidates = []
+    this.ice.attach(targetId) // candidates the caller sent while we were ringing
 
     pc.onicecandidate = (e) => {
       if (e.candidate) {
@@ -323,31 +352,7 @@ export class MeshCallManager {
   private async handleAnswer(sdp: string): Promise<void> {
     if (!this.pc) return
     await this.pc.setRemoteDescription({ type: 'answer', sdp })
-    await this.flushPending()
-  }
-
-  private async addCandidate(candidate: RTCIceCandidateInit, from?: string): Promise<void> {
-    if (!this.pc) {
-      if (from && from === this.expectingFrom) this.earlyCandidates.push(candidate)
-      return
-    }
-    if (!this.remoteDescriptionSet) {
-      this.pendingCandidates.push(candidate)
-      return
-    }
-    await this.pc.addIceCandidate(candidate)
-  }
-
-  private async flushPending(): Promise<void> {
-    this.remoteDescriptionSet = true
-    for (const c of this.pendingCandidates) {
-      try {
-        await this.pc?.addIceCandidate(c)
-      } catch {
-        // ignore malformed late candidates
-      }
-    }
-    this.pendingCandidates = []
+    await this.ice.flush(this.pc)
   }
 
   private clearRingTimer(): void {
@@ -372,10 +377,7 @@ export class MeshCallManager {
     pc?.close()
     this.targetId = null
     this.conversationId = null
-    this.remoteDescriptionSet = false
-    this.pendingCandidates = []
-    this.expectingFrom = null
-    this.earlyCandidates = []
+    this.ice.reset()
     this.offerSent = false
     if (notifyUi) {
       this.hooks.onEnded?.()

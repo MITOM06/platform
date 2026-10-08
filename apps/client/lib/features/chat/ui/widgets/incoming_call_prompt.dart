@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
-import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/chat_repository.dart';
 import '../../data/stomp_service.dart';
@@ -11,6 +10,7 @@ import '../../domain/call_name_resolver.dart';
 import '../../domain/call_rules.dart';
 import '../../domain/incoming_call.dart';
 import '../../domain/webrtc_service.dart';
+import '../call_launcher.dart';
 
 /// Global overlay for an incoming 1-on-1 call (mirror of web `CallOverlay`'s
 /// `status === 'incoming'` prompt). Accept → open the call screen, which
@@ -22,19 +22,6 @@ import '../../domain/webrtc_service.dart';
 class IncomingCallPrompt extends ConsumerWidget {
   final Widget child;
   const IncomingCallPrompt({super.key, required this.child});
-
-  void _accept(WidgetRef ref, IncomingCall call, String callerName) {
-    ref.read(incomingCallProvider.notifier).clear();
-    ref.read(appRouterProvider).push('/call', extra: {
-      'targetId': call.senderId, // we reply back to the caller
-      'targetName': callerName,
-      'conversationId': call.conversationId,
-      'isCaller': false,
-      'isVideo': call.isVideo,
-      'initialOfferSdp': call.callId == null ? call.sdp : null,
-      'callId': call.callId, // LiveKit call: answered by SfuCallService
-    });
-  }
 
   void _decline(WidgetRef ref, IncomingCall call) {
     ref.read(incomingCallProvider.notifier).clear();
@@ -88,7 +75,7 @@ class IncomingCallPrompt extends ConsumerWidget {
                 child: _IncomingCallCard(
                   isVideo: call.isVideo,
                   caller: caller,
-                  onAccept: () => _accept(ref, call, caller),
+                  onAccept: () => acceptIncomingCall(ref, call, caller),
                   onDecline: () => _decline(ref, call),
                 ),
               ),

@@ -44,6 +44,12 @@ class CallManager implements CallHooks {
   }
 
   startCall(targetId: string, targetName: string, conversationId: string, video = true): Promise<void> {
+    const st = useCallStore.getState()
+    // Tapping Call on the person who is ringing us answers their call.
+    if (st.status === 'incoming' && st.peerId === targetId && st.conversationId === conversationId) {
+      return this.acceptIncoming()
+    }
+    if (st.status !== 'idle' || st.groupCallId) return Promise.resolve() // already in a call
     const engine = getCallTransport() === 'sfu' ? this.sfu : this.mesh
     return engine.startCall(targetId, targetName, conversationId, video)
   }
@@ -55,7 +61,10 @@ class CallManager implements CallHooks {
   /** Inbound `/user/queue/webrtc` signal for a 1-on-1 call. */
   handleSignal(signal: WebRTCSignal): void {
     const sfu =
-      signal.transport === 'sfu' || signal.type === 'call-ring-cancel' || signal.type === 'call-declined'
+      signal.transport === 'sfu' ||
+      signal.type === 'call-ring-cancel' ||
+      signal.type === 'call-declined' ||
+      signal.type === 'call-merged'
     if (sfu) {
       this.sfu.handleSignal(signal)
       return

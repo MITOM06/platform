@@ -153,7 +153,7 @@ void main() {
       await call.startOutgoing(
           targetId: 'bob', conversationId: 'conv', isVideo: false);
       expect(port.to('/app/call.start'), [
-        {'conversationId': 'conv', 'media': 'audio'}
+        {'conversationId': 'conv', 'media': 'audio', 'merge': true}
       ]);
       expect(port.held, ['conv']);
       port.events.add(started());
@@ -388,5 +388,86 @@ void main() {
       expect(sessions.single.speakerCalls, [false]);
     });
   });
-}
 
+  group('both call each other at the same time', () {
+    Map<String, dynamic> merged({String callId = 'c-a'}) => {
+          'type': 'call-merged',
+          'callId': callId,
+          'conversationId': 'conv',
+          'senderId': 'alice',
+          'media': 'video',
+          'transport': 'sfu',
+          'kind': 'direct',
+        };
+
+    test('joins their call when the server merges ours into it', () async {
+      await call.startOutgoing(
+          targetId: 'alice', conversationId: 'conv', isVideo: false);
+      expect(call.isCallingTo('alice', 'conv'), isTrue);
+
+      call.handleSignal(merged());
+      await flush();
+      expect(sessions.single.connected, isTrue);
+      expect(call.isVideo, isTrue); // the call's media wins
+
+      // Our other devices stop ringing for their call: not our hang-up.
+      call.handleSignal({
+        'type': 'call-ring-cancel',
+        'callId': 'c-a',
+        'reason': 'answered_elsewhere'
+      });
+      expect(ended, 0);
+      sessions.single.join('alice');
+      expect(remoteStreams, 1);
+      expect(call.isCallingTo('alice', 'conv'), isFalse);
+    });
+
+    test("does not take the other person's call.started for our own start",
+        () async {
+      await call.startOutgoing(
+          targetId: 'alice', conversationId: 'conv', isVideo: false);
+      port.events.add({
+        'event': 'call.started',
+        'callId': 'c-a',
+        'conversationId': 'conv',
+        'transport': 'sfu',
+        'kind': 'direct',
+        'startedBy': 'alice',
+      });
+      await flush();
+      expect(sessions, isEmpty);
+
+      call.handleSignal(merged());
+      await flush();
+      expect(sessions, hasLength(1)); // one room session, not two
+    });
+
+    test('a repeated merge does not join the room twice', () async {
+      await call.startOutgoing(
+          targetId: 'alice', conversationId: 'conv', isVideo: false);
+      call.handleSignal(merged());
+      call.handleSignal(merged());
+      await flush();
+      expect(sessions, hasLength(1));
+    });
+
+    test('ignores a merge for a call we are not making', () async {
+      call.handleSignal(merged());
+      await flush();
+      expect(sessions, isEmpty);
+    });
+
+    test('leaves their call when we hung up before the merge arrived',
+        () async {
+      await call.startOutgoing(
+          targetId: 'alice', conversationId: 'conv', isVideo: false);
+      await call.endCall();
+      call.handleSignal(merged());
+      await flush();
+      expect(port.to('/app/call.leave'), [
+        {'callId': 'c-a'}
+      ]);
+      expect(sessions, isEmpty);
+    });
+  });
+}

@@ -70,7 +70,15 @@ void handleWebRtcSignal(
         // A LiveKit 1-on-1 in progress counts as busy too.
         inGroupCall: ref.read(groupCallControllerProvider).isActive ||
             ref.read(sfuCallServiceProvider).isActive,
+        // Both tapped Call: our offer crossed theirs. `targetId` is us, as
+        // the caller addressed it.
+        callingTo: webrtc.isCallingTo(senderId, convId) ? senderId : null,
+        selfId: signal['targetId'] as String?,
       )) {
+        case IncomingOfferAction.answerCrossed:
+          unawaited(webrtc.answerCrossed(
+              from: senderId, conversationId: convId, sdp: sdp));
+          return;
         case IncomingOfferAction.ignore:
           return; // the same caller re-sent its offer
         case IncomingOfferAction.replyBusy:
