@@ -370,3 +370,56 @@ describe('final-review fixes', () => {
   })
 })
 
+
+describe('both call each other at the same time', () => {
+  const merged = (callId = 'c-a', media: 'audio' | 'video' = 'video') =>
+    call.handleSignal({
+      type: 'call-merged',
+      callId,
+      conversationId: 'conv',
+      senderId: 'alice',
+      media,
+      transport: 'sfu',
+      kind: 'direct',
+    })
+
+  it('does not answer "busy" to the person we are calling — the server joins the two calls', async () => {
+    await call.startCall('alice', 'Alice', 'conv', false)
+    ring('c-a')
+    expect(sent('/app/call.decline')).toEqual([])
+    expect(store().status).toBe('outgoing')
+  })
+
+  it('joins their call when the server merges ours into it, then connects', async () => {
+    await call.startCall('alice', 'Alice', 'conv', false)
+    merged('c-a', 'video')
+    await flush()
+    expect(store().callId).toBe('c-a')
+    expect(store().video).toBe(true) // the call's media wins
+    expect(m.getToken).toHaveBeenCalledWith('c-a')
+    expect(m.FakeSession.last!.connect).toHaveBeenCalledWith('wss://rtc', 'tok', { video: true })
+
+    // Our other devices stop ringing for their call: that echo must not end ours.
+    call.handleSignal({ type: 'call-ring-cancel', callId: 'c-a', reason: 'answered_elsewhere' })
+    m.FakeSession.last!.join('alice')
+    expect(store().status).toBe('connected')
+    vi.advanceTimersByTime(RING_TIMEOUT_MS)
+    expect(sent('/app/call.cancel')).toEqual([])
+  })
+
+  it('ignores a merge for a call we are not making', async () => {
+    merged()
+    await flush()
+    expect(store().status).toBe('idle')
+    expect(m.getToken).not.toHaveBeenCalled()
+  })
+
+  it('leaves their call when we hung up before the merge arrived', async () => {
+    await call.startCall('alice', 'Alice', 'conv', false)
+    call.endCall('hangup')
+    merged()
+    await flush()
+    expect(sent('/app/call.leave')).toEqual([{ callId: 'c-a' }])
+    expect(m.getToken).not.toHaveBeenCalled()
+  })
+})

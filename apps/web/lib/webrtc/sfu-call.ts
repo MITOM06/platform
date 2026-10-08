@@ -78,6 +78,9 @@ export class SfuDirectCall {
       case 'call-declined':
         this.onDeclined(signal)
         break
+      case 'call-merged':
+        this.onMerged(signal)
+        break
     }
   }
 
@@ -192,6 +195,9 @@ export class SfuDirectCall {
     const { callId, conversationId, senderId } = signal
     if (!callId || !conversationId || !senderId) return
     const st = store()
+    // We are calling the person who is calling us (both tapped Call): not busy —
+    // the server answers their call for us and sends call-merged.
+    if (st.status === 'outgoing' && st.peerId === senderId && st.conversationId === conversationId) return
     if (st.status !== 'idle' || st.groupCallId) {
       if (st.callId !== callId) stompService.publish('/app/call.decline', { callId, reason: 'busy' })
       return
@@ -207,6 +213,29 @@ export class SfuDirectCall {
       callId,
       transport: 'sfu',
     })
+  }
+
+  /** Both tapped Call: the server accepted us into their call instead of ringing them. */
+  private onMerged(signal: WebRTCSignal): void {
+    const { callId, conversationId, senderId } = signal
+    if (!callId || !conversationId || !senderId) return
+    if (this.cancelledBeforeStart && this.pendingStart?.conversationId === conversationId) {
+      // We hung up before the server answered: leave the call it put us in.
+      this.pendingStart = null
+      this.cancelledBeforeStart = null
+      stompService.publish('/app/call.leave', { callId })
+      this.unsubscribeTopic()
+      return
+    }
+    const st = store()
+    if (st.status !== 'outgoing' || st.peerId !== senderId || st.conversationId !== conversationId) return
+    this.pendingStart = null // our own call.start was folded into theirs: no call.started comes
+    this.callId = callId
+    this.accepting = true // already accepted by the server: its answered-elsewhere echo is ours
+    const video = signal.media === 'video'
+    st.setCallId(callId)
+    if (st.video !== video) useCallStore.setState({ video })
+    void this.join(video)
   }
 
   private onRingCancel(signal: WebRTCSignal): void {
