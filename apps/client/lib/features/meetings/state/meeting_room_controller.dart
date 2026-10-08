@@ -95,8 +95,7 @@ class MeetingRoomController extends RoomMedia
     await _enter(showJoining: true);
   }
 
-  /// My last mic/camera state in the room (not the pre-join choice), fresh
-  /// token.
+  /// My last in-room mic/camera (not the pre-join choice), fresh token.
   Future<void> rejoin() =>
       _enter(showJoining: store.value.phase != RoomPhase.waiting);
 
@@ -204,8 +203,7 @@ class MeetingRoomController extends RoomMedia
     set((s) => s.copyWith(phase: ended ? RoomPhase.ended : RoomPhase.left));
   }
 
-  /// The app is going away while waiting: drop the lobby entry
-  /// (best-effort).
+  /// The app is going away while waiting: drop the lobby entry (best-effort).
   void leaveLobbyOnExit() {
     if (store.value.phase == RoomPhase.waiting) _leaveLobbyQuietly();
   }
@@ -325,13 +323,17 @@ class MeetingRoomController extends RoomMedia
     }
   }
 
-  void onRoster(List<RosterEntry> roster) {
-    final change = roleChange(roster, _myId, store.value.myRole);
+  /// [readLobby]: false from a resync, which reads the lobby itself.
+  void onRoster(List<RosterEntry> roster, {bool readLobby = true}) {
+    final was = store.value.myRole;
+    final change = roleChange(roster, _myId, was);
     if (change == null) return;
     set((s) => s.copyWith(
         myRole: change.role, lobby: change.lostLobby ? const [] : null));
     final notice = change.notice;
     if (notice != null) notify(NoticeLevel.info, notice);
+    final promoted = !isManagerRoom(was) && isManagerRoom(change.role);
+    if (promoted && readLobby) refreshLobby(); // who is already waiting
   }
 
   void onSettings(MeetingSettings settings) {
@@ -379,7 +381,7 @@ class MeetingRoomController extends RoomMedia
         return onEnded();
       }
       set((s) => s.copyWith(roster: fresh.roster));
-      onRoster(fresh.roster);
+      onRoster(fresh.roster, readLobby: false);
       onSettings(fresh.meeting.settings);
     }
     final h = await hands;

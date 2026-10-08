@@ -4130,6 +4130,14 @@ void main() {
   16. H "Kết thúc cho mọi người" ⇒ mọi người về chi tiết với banner "Cuộc họp đã kết thúc"; mở lại link ⇒ chi tiết (Review Focus 5); điểm danh có thời lượng.
   17. 7+ người trên phone ⇒ ô "+N", người bị ẩn vẫn nghe tiếng; 320 dp: thanh điều khiển không tràn, sheet dùng được một tay.
   18. Cuộc gọi 1-1 và nhóm (Module B) vẫn chạy như cũ — âm thanh, video, mic/cam/loa, đổi camera, chuông (Review Focus 9).
+  19. **Lỗi quyền getUserMedia (màn chờ):** từ chối quyền micro/camera trên Android và iOS ⇒ thông báo "Quyền micro hoặc camera đang tắt…" (`meetingMediaBlocked`), nút mic/cam về tắt, vẫn vào được; máy không có camera / camera đang bị app khác giữ ⇒ "Không tìm thấy micro hoặc camera" (`meetingMediaUnavailable`). Ghi lại chuỗi lỗi thật của plugin trên từng máy nếu bị phân loại sai (phân loại hiện tại: chứa `NotAllowed` / `Permission` / `denied` / `SecurityError` ⇒ blocked).
+  20. **Vòng đời renderer video:** vào/rời phòng 5 lần liên tiếp, bật/tắt camera nhiều lần, ghim/bỏ ghim, Lưới ⇄ Người nói, xoay máy, người khác vào/ra liên tục ⇒ không ô đen kẹt, không crash, bộ nhớ ổn định (đo `--profile`); ô của mình chỉ lật gương với camera trước; ô share hiển thị `contain`.
+  21. **Thông báo trình bày màn hình (Android):** khi trình bày, thông báo foreground hiện đúng tiêu đề/nội dung theo ngôn ngữ app (kiểm vi + en, đổi ngôn ngữ trong Cài đặt rồi trình bày lại); dừng từ thông báo ⇒ nút Trình bày về tắt, thông báo biến mất.
+  22. **Trợ năng:** TalkBack + VoiceOver đọc thanh điều khiển theo thứ tự nhìn thấy (mic, camera, giơ tay, reaction, thêm, rời) với trạng thái bật/tắt; reaction của người khác được đọc tối đa 1 lần / 2 s; banner "Đang kết nối lại…" được đọc khi xuất hiện; màn trạng thái (bị mời ra, khoá…) đọc tiêu đề ngay khi mở. Chữ 200% (Cài đặt hệ thống): thanh điều khiển, màn chờ, menu Thêm vẫn dùng được, không tràn.
+  23. **Âm thanh nền iOS (`UIBackgroundModes: audio`):** đang họp thì khoá màn hình / chuyển app 1–2 phút ⇒ vẫn nghe và nói được cả hai chiều; mở lại ⇒ camera tự bật lại nếu trước đó đang bật. Android 11+: lặp lại, ghi kết quả micro khi ở nền lâu (owner quyết định 5).
+  24. **STOMP giữ khi ở nền trong lúc họp:** đang họp, đưa app xuống nền ⇒ người khác chat, giơ tay, host tắt mic mình ⇒ mở lại thấy đủ (không cần tải lại), mic đã tắt; **rời họp rồi** đưa app xuống nền ⇒ STOMP ngắt như cũ (server gửi FCM tin nhắn thường bình thường).
+  25. **Nhớ thiết bị + loa:** chọn mic/cam/camera sau/loa trong, vào họp, thoát app, mở lại link ⇒ màn chờ nhớ đúng lựa chọn; "Dùng loa ngoài" bật/tắt trong phòng thực sự đổi đường ra (loa ngoài ⇄ loa trong; tai nghe Bluetooth/có dây được hệ thống ưu tiên).
+  26. **Sao chép link:** bản build có `PON_WEB_URL` ⇒ chép `https://<web>/meet/{code}`; bản release không có `PON_WEB_URL`/`PON_DOMAIN` ⇒ chép mã, không crash.
 - [ ] Commit `docs: meetings mobile client (MT6–MT7)`
 
 ---

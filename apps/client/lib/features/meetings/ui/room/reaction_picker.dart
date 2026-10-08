@@ -35,10 +35,9 @@ class _Picker extends StatelessWidget {
               excludeSemantics: true,
               child: InkResponse(
                 radius: 28,
+                // Stays open for more (web popover); too fast ⇒ a nudge.
                 onTap: () {
-                  if (controller.sendReaction(emoji)) {
-                    Navigator.of(context).pop();
-                  } else {
+                  if (!controller.sendReaction(emoji)) {
                     HapticFeedback.selectionClick();
                   }
                 },

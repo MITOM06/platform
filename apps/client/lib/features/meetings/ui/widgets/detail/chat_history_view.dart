@@ -10,9 +10,6 @@ import '../../../domain/schedule.dart';
 import '../../../state/meetings_providers.dart';
 import '../../meeting_text_l10n.dart';
 
-/// Lines from the same person this close together share one name header.
-const _groupGap = Duration(minutes: 2);
-
 /// Read-only history of the in-meeting chat, oldest → newest — mirror of web
 /// `ChatHistory`. Plain text only: chat from other people is untrusted.
 /// A 403 is handled by the detail screen (removed / guest notice).
@@ -114,20 +111,19 @@ class _Lines extends StatelessWidget {
                       child: CircularProgressIndicator(strokeWidth: 2))
                   : Text(l10n.meetingChatLoadOlder),
             ),
-          for (final (i, m) in lines.indexed)
+          // Like web: every line has its name and date + time (a past
+          // meeting's history is read days later — no grouping).
+          for (final m in lines)
             _Line(
               message: m,
-              showHeader: i == 0 || !_sameGroup(lines[i - 1], m),
-              time: formatClockTime(locale, m.createdAt, const DeviceZone()),
+              showHeader: true,
+              time: formatMeetingRange(
+                  locale, m.createdAt, null, const DeviceZone()),
             ),
         ],
       ),
     );
   }
-
-  static bool _sameGroup(MeetingChatMessage a, MeetingChatMessage b) =>
-      a.sender.userId == b.sender.userId &&
-      b.createdAt.difference(a.createdAt).abs() <= _groupGap;
 }
 
 class _Line extends StatelessWidget {

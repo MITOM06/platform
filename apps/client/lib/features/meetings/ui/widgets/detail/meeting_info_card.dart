@@ -9,7 +9,7 @@ import '../../../domain/meeting_models.dart';
 import '../../../domain/schedule.dart';
 import '../../../state/meetings_providers.dart';
 
-const _maxPeopleShown = 6;
+const _maxPeopleShown = 8; // web MeetingInfoCard
 
 /// When, code, description and people — mirror of web `MeetingInfoCard`.
 /// Names only: never a user id, `removedIds` or a department id.
@@ -94,7 +94,7 @@ class _PersonLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = personName(person, context.l10n.meetingSomeone);
+    final name = personName(person, context.l10n.meetingParticipantFallback);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(children: [

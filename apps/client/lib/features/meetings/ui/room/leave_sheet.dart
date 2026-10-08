@@ -16,6 +16,7 @@ Future<void> showLeaveSheet(BuildContext context,
   final choice = await showRoomSheet<_LeaveChoice>(
     context,
     tall: false,
+    title: context.l10n.meetingLeave,
     builder: (sheet) => _LeaveOptions(manager: manager),
   );
   if (!context.mounted) return;

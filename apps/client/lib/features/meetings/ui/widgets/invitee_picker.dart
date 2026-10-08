@@ -225,6 +225,13 @@ class _ResultTile extends StatelessWidget {
           fallbackLetter: name.characters.first.toUpperCase(),
           size: 32),
       title: Text(name, overflow: TextOverflow.ellipsis),
+      // Web shows the email under the name (tells namesakes apart).
+      subtitle: user.email.isEmpty
+          ? null
+          : Text(user.email,
+              overflow: TextOverflow.ellipsis,
+              style:
+                  TextStyle(fontSize: 12, color: AppTheme.mutedText(context))),
     );
   }
 }

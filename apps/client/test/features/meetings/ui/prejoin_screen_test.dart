@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:platform_client/core/widgets/pon_widgets.dart';
 import 'package:platform_client/features/meetings/domain/meeting_models.dart';
@@ -87,5 +88,18 @@ void main() {
     h.preview.setMic(false);
     await tester.pump();
     expect(find.text(roomL10n(tester).meetingMediaBlocked), findsOneWidget);
+  });
+
+  testWidgets('fits 320 dp at 200 % text', (tester) async {
+    tester.view.physicalSize = const Size(320 * 3, 640 * 3);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await pumpPrejoin(tester,
+        settings: const MeetingSettings(muteOnEntry: true));
+    expect(tester.takeException(), isNull);
+    expect(
+        find.byTooltip(roomL10n(tester).meetingSwitchCamera), findsOneWidget);
   });
 }

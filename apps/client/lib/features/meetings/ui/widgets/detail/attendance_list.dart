@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../../core/l10n/l10n_ext.dart';
@@ -7,17 +9,55 @@ import '../../../domain/attendance.dart';
 import '../../../domain/display.dart';
 import '../../../domain/meeting_models.dart';
 
-/// Who attended and for how long — mirror of web `AttendanceList`. `now` is
-/// taken once per build (no ticking timer).
-class AttendanceList extends StatelessWidget {
+/// Who attended and for how long — mirror of web `AttendanceList`. While the
+/// meeting is live the open sessions keep counting (refreshed every 30 s,
+/// like web).
+class AttendanceList extends StatefulWidget {
   const AttendanceList({super.key, required this.meeting});
 
   final Meeting meeting;
 
   @override
+  State<AttendanceList> createState() => _AttendanceListState();
+}
+
+class _AttendanceListState extends State<AttendanceList> {
+  Timer? _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncTick();
+  }
+
+  @override
+  void didUpdateWidget(AttendanceList old) {
+    super.didUpdateWidget(old);
+    _syncTick();
+  }
+
+  void _syncTick() {
+    final live = widget.meeting.status == MeetingStatus.live;
+    if (live && _tick == null) {
+      _tick = Timer.periodic(const Duration(seconds: 30), (_) {
+        if (mounted) setState(() {});
+      });
+    } else if (!live) {
+      _tick?.cancel();
+      _tick = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final m = meeting;
+    final m = widget.meeting;
     final rows = summarizeAttendance(m.attendance, DateTime.now().toUtc(),
         endedAt: m.endedAt ?? m.cancelledAt);
     return Column(

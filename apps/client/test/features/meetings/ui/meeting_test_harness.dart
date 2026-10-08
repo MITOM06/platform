@@ -22,7 +22,9 @@ Future<void> pumpMeetingWidget(WidgetTester tester, Widget child,
     {List<Override> overrides = const [],
     Locale locale = const Locale('en'),
     bool fakeAuth = true,
-    bool wrapInScaffold = true}) async {
+    bool wrapInScaffold = true,
+    bool dark = false,
+    bool settle = true}) async {
   final router = GoRouter(routes: [
     GoRoute(
         path: '/',
@@ -37,14 +39,19 @@ Future<void> pumpMeetingWidget(WidgetTester tester, Widget child,
       ...overrides,
     ],
     child: MaterialApp.router(
+      debugShowCheckedModeBanner: false,
       routerConfig: router,
       locale: locale,
-      theme: AppTheme.lightTheme,
+      theme: dark ? AppTheme.darkTheme : AppTheme.lightTheme,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
     ),
   ));
-  await tester.pumpAndSettle();
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump(const Duration(milliseconds: 500));
+  }
 }
 
 AppLocalizations l10nOf(WidgetTester tester) =>

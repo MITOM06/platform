@@ -219,7 +219,7 @@ class _PrejoinInfo extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         TextButton(
-          onPressed: busy ? null : () => context.go('/meetings'),
+          onPressed: () => context.go('/meetings'),
           child: Text(l.meetingBackToList),
         ),
       ],

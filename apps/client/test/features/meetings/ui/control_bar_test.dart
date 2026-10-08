@@ -123,4 +123,36 @@ void main() {
     // me + 4 people + "+3"
     expect(find.text(l.meetingOverflowTiles(3)), findsOneWidget);
   });
+
+  testWidgets('the bar fits 320 dp at 200 % text (labels live in tooltips)',
+      (tester) async {
+    tester.view.physicalSize = const Size(320 * 3, 640 * 3);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await pumpRoom(tester,
+        role: MeetingRoomRole.host,
+        peers: [fakePeer('bob', 'Bob')],
+        child: const MeetingRoomView());
+    await tester.pump();
+    final l = l10nOf(tester);
+    for (final tip in [
+      l.meetingMicOff,
+      l.meetingCamOn,
+      l.meetingRaiseHand,
+      l.meetingReactions,
+      l.meetingMore,
+      l.meetingLeave,
+    ]) {
+      final r = tester.getRect(find.byTooltip(tip));
+      expect(r.width, greaterThanOrEqualTo(44), reason: tip);
+      expect(r.right, lessThanOrEqualTo(320), reason: tip);
+    }
+    // The More sheet scrolls instead of overflowing.
+    await tester.tap(find.byTooltip(l.meetingMore));
+    await tester.pumpAndSettle();
+    expect(find.text(l.meetingPeople), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

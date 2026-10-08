@@ -76,17 +76,24 @@ class _CameraOff extends StatelessWidget {
   final String name;
   final String? avatarUrl;
 
+  /// Above the toggle row; shrinks (never overflows) on small screens or
+  /// with large text.
   @override
-  Widget build(BuildContext context) => Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          RoomAvatar(name: name, avatarUrl: avatarUrl, size: 64),
-          const SizedBox(height: 8),
-          Text(context.l10n.meetingPrejoinCameraOff,
-              style: TextStyle(
-                  fontSize: 14, color: Colors.white.withValues(alpha: 0.8))),
-          const SizedBox(height: 56),
-        ],
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 72),
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              RoomAvatar(name: name, avatarUrl: avatarUrl, size: 64),
+              const SizedBox(height: 8),
+              Text(context.l10n.meetingPrejoinCameraOff,
+                  style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.8))),
+            ]),
+          ),
+        ),
       );
 }
 

@@ -39,7 +39,8 @@ class MeetingScheduleFields extends StatelessWidget {
 
   Future<void> _pickDate(BuildContext context) async {
     final today = DateTime(now.year, now.month, now.day);
-    final last = today.add(const Duration(days: 365));
+    // Web only blocks past days; the picker needs an end — far enough out.
+    final last = DateTime(today.year + 10, today.month, today.day);
     var initial = parseDateString(schedule.date) ?? today;
     if (initial.isBefore(today)) initial = today;
     if (initial.isAfter(last)) initial = last;

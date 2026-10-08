@@ -71,10 +71,9 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
                 enabled: online,
                 minLines: 1,
                 maxLines: 5,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) {
-                  if (canSend) _send();
-                },
+                // Return adds a line (web: Shift+Enter); the button sends.
+                keyboardType: TextInputType.multiline,
+                textInputAction: TextInputAction.newline,
                 decoration: InputDecoration(
                   hintText: l.meetingChatPlaceholder,
                   isDense: true,

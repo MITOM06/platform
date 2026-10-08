@@ -6,13 +6,14 @@ import '../../../../core/theme/app_theme.dart';
 import '../../domain/display.dart';
 import '../../domain/meeting_code.dart';
 import '../../domain/meeting_models.dart';
+import '../../domain/permissions.dart';
 import '../../domain/schedule.dart';
 import 'copy_meeting_link.dart';
 import '../meeting_text_l10n.dart';
 import 'meeting_status_chip.dart';
 
 /// One meeting in a list — mirror of web `MeetingRow`. The whole row opens the
-/// detail screen; Join (LIVE) and copy-link sit on top of it.
+/// detail screen; Join and copy-link (any meeting not ended) sit on top of it.
 class MeetingRow extends StatelessWidget {
   const MeetingRow({super.key, required this.meeting});
 
@@ -31,7 +32,10 @@ class MeetingRow extends StatelessWidget {
     final host = m.viewerRole == MeetingViewerRole.host
         ? l10n.meetingRoleHost
         : l10n.meetingHostedBy(personName(m.host, l10n.meetingSomeone));
-    final open = m.status != MeetingStatus.ended;
+    // Same rule as web `MeetingRow` (detailActions): every meeting that has
+    // not ended can be joined — scheduled ones too (the first to join starts
+    // it); `canHost` only matters for "meet again".
+    final actions = detailActions(m, canHost: false);
     return InkWell(
       onTap: () => context.push('/meetings/${Uri.encodeComponent(m.id)}'),
       child: Padding(
@@ -71,12 +75,12 @@ class MeetingRow extends StatelessWidget {
               ],
             ),
           ),
-          if (m.status == MeetingStatus.live)
+          if (actions.join)
             TextButton(
               onPressed: () => context.push(meetingPath(m.code)),
               child: Text(l10n.meetingJoin),
             ),
-          if (open) CopyMeetingLink(code: m.code),
+          if (actions.copyLink) CopyMeetingLink(code: m.code),
         ]),
       ),
     );

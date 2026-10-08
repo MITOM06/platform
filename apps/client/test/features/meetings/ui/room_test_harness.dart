@@ -226,6 +226,7 @@ Future<RoomHarness> pumpRoom(
   await tester.pumpWidget(UncontrolledProviderScope(
     container: container,
     child: MaterialApp.router(
+      debugShowCheckedModeBanner: false,
       routerConfig: router,
       locale: locale,
       theme: dark ? AppTheme.darkTheme : AppTheme.lightTheme,

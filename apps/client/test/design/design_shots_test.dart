@@ -53,6 +53,8 @@ import 'package:platform_client/features/skills/ui/skills_screen.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'meeting_shots.dart';
+
 const _size = Size(390, 844); // iPhone 15/16/17 logical size
 final _outDir = Directory('build/design_shots');
 
@@ -360,4 +362,7 @@ void main() {
       });
     }
   }
+
+  // Meetings: list, detail, pre-join, removed, room (fake data, real scope).
+  meetingShots(enabled: enabled, only: only, out: _outDir);
 }

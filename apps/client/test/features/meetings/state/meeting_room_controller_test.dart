@@ -345,6 +345,17 @@ void main() {
     expect(s.myRole, MeetingRoomRole.attendee);
   });
 
+  test('a new co-host reads who is already waiting (web fetches the lobby on promotion)', () async {
+    await inRoom();
+    await settle();
+    final before = api.lobbyCalls;
+    api.lobbies.add(const [LobbyEntry(userId: 'g', displayName: 'Guest')]);
+    c.onRoster([RosterEntry(userId: 'me', role: MeetingRoomRole.cohost, joinedAt: clock)]);
+    await settle();
+    expect(api.lobbyCalls, before + 1);
+    expect(s.lobby.single.userId, 'g');
+  });
+
   group('reactions', () {
     test('sends at most one per second over the lossy channel', () async {
       await inRoom();

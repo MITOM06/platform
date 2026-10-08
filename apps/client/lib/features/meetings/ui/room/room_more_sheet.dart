@@ -21,7 +21,9 @@ enum _More { people, chat, notes, share, switchCamera, manage }
 Future<void> showRoomMoreSheet(BuildContext context) async {
   final controller = MeetingRoomScope.read(context).controller;
   final choice = await showRoomSheet<_More>(context,
-      tall: false, builder: (_) => const _MoreList());
+      tall: false,
+      title: context.l10n.meetingMore,
+      builder: (_) => const _MoreList());
   if (!context.mounted) return;
   switch (choice) {
     case _More.people:
@@ -128,6 +130,8 @@ class _MoreList extends ConsumerWidget {
   }
 }
 
+/// Grid / Speaker as a radio group (web: a radio menu) — wraps at any text
+/// size, unlike a segmented control next to the label.
 class _LayoutRow extends StatelessWidget {
   const _LayoutRow({required this.layout, required this.onChanged});
 
@@ -137,21 +141,29 @@ class _LayoutRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    return ListTile(
-      leading: const Icon(Icons.dashboard_rounded),
-      title: Text(l.meetingLayout),
-      trailing: SegmentedButton<LayoutMode>(
-        segments: [
-          ButtonSegment(
-              value: LayoutMode.grid, label: Text(l.meetingLayoutGrid)),
-          ButtonSegment(
-              value: LayoutMode.spotlight,
-              label: Text(l.meetingLayoutSpotlight)),
-        ],
-        selected: {layout},
-        showSelectedIcon: false,
-        onSelectionChanged: (v) => onChanged(v.first),
-      ),
+    final muted = TextStyle(fontSize: 12, color: AppTheme.mutedText(context));
+    return RadioGroup<LayoutMode>(
+      groupValue: layout,
+      onChanged: (v) {
+        if (v != null) onChanged(v);
+      },
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: Semantics(
+              header: true, child: Text(l.meetingLayout, style: muted)),
+        ),
+        RadioListTile<LayoutMode>(
+          value: LayoutMode.grid,
+          secondary: const Icon(Icons.grid_view_rounded),
+          title: Text(l.meetingLayoutGrid),
+        ),
+        RadioListTile<LayoutMode>(
+          value: LayoutMode.spotlight,
+          secondary: const Icon(Icons.person_pin_rounded),
+          title: Text(l.meetingLayoutSpotlight),
+        ),
+      ]),
     );
   }
 }

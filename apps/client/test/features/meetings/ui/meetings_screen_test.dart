@@ -23,12 +23,13 @@ Meeting live() => Meeting(
 
 class _Api implements MeetingsApi {
   final created = <MeetingInput>[];
+  List<Meeting> upcoming = [live()];
 
   @override
   Future<MeetingPage> list(MeetingListScope scope,
           {String? cursor, int size = 20}) async =>
       scope == MeetingListScope.upcoming
-          ? MeetingPage(content: [live()], hasNext: false)
+          ? MeetingPage(content: upcoming, hasNext: false)
           : const MeetingPage(content: [], hasNext: false);
 
   @override
@@ -91,8 +92,7 @@ void main() {
     expect(find.text('/meet/abc-defg-hjk'), findsOneWidget);
   });
 
-  testWidgets('joins by a pasted code in any case and spacing',
-      (tester) async {
+  testWidgets('joins by a pasted code in any case and spacing', (tester) async {
     await pump(tester);
     await tester.enterText(find.byType(TextField), 'ABC DEFG HJK');
     await tester.pump();
@@ -128,5 +128,30 @@ void main() {
     await tester.tap(find.text(l10nOf(tester).meetingTabPast));
     await tester.pumpAndSettle();
     expect(find.text(l10nOf(tester).meetingEmptyPast), findsOneWidget);
+  });
+
+  testWidgets('a scheduled meeting can be joined from its row, like on web',
+      (tester) async {
+    api.upcoming = [
+      Meeting(
+          id: 'm2',
+          code: 'xyz-wxyz-wxy',
+          title: 'Planning',
+          host: const MeetingPerson(userId: 'h', displayName: 'Lan'),
+          status: MeetingStatus.scheduled,
+          scheduledStart: DateTime.now().add(const Duration(days: 1)),
+          viewerRole: MeetingViewerRole.invited,
+          createdAt: DateTime.utc(2026, 10, 7)),
+    ];
+    await pump(tester);
+    final l = l10nOf(tester);
+    final row = find.ancestor(
+        of: find.text('Planning'), matching: find.byType(InkWell));
+    final join =
+        find.descendant(of: row.first, matching: find.text(l.meetingJoin));
+    expect(join, findsOneWidget);
+    await tester.tap(join);
+    await tester.pumpAndSettle();
+    expect(find.text('/meet/xyz-wxyz-wxy'), findsOneWidget);
   });
 }

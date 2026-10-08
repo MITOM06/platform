@@ -17,6 +17,7 @@ import 'meeting_room_chat.dart';
 import 'meeting_room_deps.dart';
 import 'meeting_room_state.dart';
 import 'room_media.dart';
+import 'room_sync.dart';
 
 mixin RoomCommands on RoomMedia {
   String get meetingId;
@@ -78,6 +79,17 @@ mixin RoomCommands on RoomMedia {
       final at = deps.now();
       set((s) => s.copyWith(pendingHost: {...s.pendingHost, action: at}));
     }
+  }
+
+  /// Re-read the lobby (host / co-host in the room); a failed read is quiet.
+  void refreshLobby() {
+    if (store.value.phase != RoomPhase.inRoom) return;
+    final run = epoch;
+    unawaited(rereadLobby(deps, meetingId).then((lobby) {
+      if (run == epoch && lobby != null) {
+        set((s) => s.copyWith(lobby: lobby));
+      }
+    }));
   }
 
   Future<void> admit(String userId) =>

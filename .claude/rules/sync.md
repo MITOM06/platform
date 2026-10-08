@@ -22,11 +22,30 @@ Examples:
    - `apps/web/components/chat/ConversationHeader.tsx` ↔ `apps/client/lib/features/chat/ui/widgets/chat_app_bar.dart`
    - `apps/web/app/(main)/friends/page.tsx` ↔ `apps/client/lib/features/friends/ui/friends_screen.dart`
    - `apps/web/app/(main)/settings/page.tsx` ↔ `apps/client/lib/features/settings/ui/settings_screen.dart`
-   - Meetings (web done in MT4–MT5; the Flutter side is created in MT6–MT7):
+   - Meetings (web MT4–MT5, Flutter MT6–MT7 — both done):
      - `apps/web/app/(main)/meetings/page.tsx` ↔ `apps/client/lib/features/meetings/ui/meetings_screen.dart`
      - `apps/web/app/(main)/meetings/[id]/page.tsx` ↔ `apps/client/lib/features/meetings/ui/meeting_detail_screen.dart`
      - `apps/web/app/(main)/meet/[code]/page.tsx` ↔ `apps/client/lib/features/meetings/ui/room/meeting_room_screen.dart`
      - `apps/web/lib/meetings/meeting-room-controller.ts` ↔ `apps/client/lib/features/meetings/state/meeting_room_controller.dart`
+       (split on mobile into `room_media.dart` + `room_commands.dart`; `meeting-room-chat.ts` ↔ `state/meeting_room_chat.dart`,
+       `room-session.ts` ↔ `state/meeting_room_deps.dart` + `state/room_session_wiring.dart`, `room-sync.ts` ↔ `state/room_sync.dart`,
+       `active-room.ts` ↔ `state/active_room.dart`)
+     - Pure logic: `apps/web/lib/meetings/<name>.ts` ↔ `apps/client/lib/features/meetings/domain/<name>.dart` (same name,
+       kebab → snake: `meeting-errors`, `meeting-events`, `cache-updates`, `schedule`, `meeting-form`, `meeting-code`,
+       `attendance`, `permissions`, `note-sync`, `room-phase`, `stage-layout`, `reactions`, `room-host`, `room-events`,
+       `display`; `devices.ts` ↔ `device_prefs.dart`; `lib/realtime/meeting-queue.ts` ↔ `domain/meeting_queue.dart`)
+     - `apps/web/components/meeting/NotesEditor.tsx` ↔ `apps/client/lib/features/meetings/ui/widgets/notes_editor.dart` (+ `note_tab.dart`)
+     - Room UI: `apps/web/components/meeting/room/<Name>.tsx` ↔ `apps/client/lib/features/meetings/ui/room/<name>.dart` —
+       `MeetingSession` ↔ `meeting_session_view`, `PreJoinLobby` ↔ `prejoin_screen`, `PrejoinPreview` (+ `DeviceSelects`) ↔
+       `prejoin_preview`, `WaitingScreen` ↔ `waiting_screen`, `RoomStatusScreen` ↔ `room_status_screen`, `MeetingRoom` ↔
+       `meeting_room_view` (+ `room_banners`), `MeetingStage` ↔ `meeting_stage`, `MeetingTile` ↔ `meeting_tile`
+       (+ `tile_badges`), `ControlBar` ↔ `control_bar`, `ControlBarMore` ↔ `room_more_sheet`, `LeaveMenu` ↔ `leave_sheet`,
+       `ReactionPicker` / `ReactionOverlay` ↔ `reaction_picker` / `reaction_overlay`, `SidePanel` ↔ `room_panels`
+       (+ `room_sheet`), `ParticipantsPanel` ↔ `participants_sheet`, `LobbySection` ↔ `lobby_section`, `ParticipantRow` ↔
+       `participant_row`, `HostMenu` ↔ `host_actions_sheet`, `RoomManageMenu` ↔ `room_manage_section`,
+       `MeetingChatPanel` / `MeetingChatLines` / `MeetingChatComposer` ↔ `meeting_chat_sheet` / `chat_lines` /
+       `chat_composer`, `NotesPanel` ↔ `notes_sheet`. Web-only (no mobile mirror): `RemoteAudio` (native WebRTC plays
+       audio), `MicLevel`, `RoomDevicesDialog`, `shortcuts.ts`.
 
 2. **Read the mirror file** before implementing. Match the logic, not just the UI.
 
