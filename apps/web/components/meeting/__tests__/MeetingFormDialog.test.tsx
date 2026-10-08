@@ -39,6 +39,11 @@ function invalid(field: string, max?: number): AxiosError {
 }
 
 beforeEach(() => {
+  // The form is built from NOW but submit validates against the clock: pin the
+  // clock to NOW, or the default start is "in the past" once that day has gone by.
+  // Only Date is faked — userEvent still needs real timers.
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(NOW)
   // Radix Switch/Select measure themselves; jsdom has no ResizeObserver.
   globalThis.ResizeObserver ??= class {
     observe() {}
@@ -50,7 +55,10 @@ beforeEach(() => {
   }) as unknown as typeof window.matchMedia
   auth.getMyDepartments.mockResolvedValue([])
 })
-afterEach(() => vi.clearAllMocks())
+afterEach(() => {
+  vi.useRealTimers()
+  vi.clearAllMocks()
+})
 
 describe('MeetingFormDialog', () => {
   it('shows a server field error inline instead of a toast', async () => {
