@@ -75,7 +75,8 @@ export function VoiceCallModal() {
         )}
       </div>
 
-      <div className="flex items-center justify-center gap-6">
+      {/* Above the reconnect overlay: hanging up stays possible while waiting. */}
+      <div className="relative z-20 flex items-center justify-center gap-6">
         <button
           onClick={() => callManager.toggleMic(!micEnabled)}
           className={cn(
