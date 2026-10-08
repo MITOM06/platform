@@ -102,6 +102,11 @@ class _ConversationListScreenState
                   onPressed: () => context.push('/explore'),
                 ),
                 IconButton(
+                  icon: const Icon(Icons.videocam_rounded),
+                  tooltip: context.l10n.meetingTitle,
+                  onPressed: () => context.push('/meetings'),
+                ),
+                IconButton(
                   icon: const Icon(Icons.people_alt_rounded),
                   tooltip: context.l10n.contacts,
                   onPressed: () => context.push('/friends'),

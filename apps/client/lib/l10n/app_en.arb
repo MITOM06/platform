@@ -2340,5 +2340,9 @@
   "@meetingNotifCancelled": {
     "placeholders": { "title": { "type": "String" } }
   },
-  "meetingNotifCancelledUnknown": "A meeting you were invited to was cancelled"
+  "meetingNotifCancelledUnknown": "A meeting you were invited to was cancelled",
+  "meetingTitle": "Meetings",
+  "meetingPushInvited": "You're invited to a meeting",
+  "meetingPushStarting": "Your meeting starts in 10 minutes",
+  "meetingPushChannel": "Meetings"
 }

@@ -1627,5 +1627,9 @@
   "@meetingNotifCancelled": {
     "placeholders": { "title": { "type": "String" } }
   },
-  "meetingNotifCancelledUnknown": "Une réunion à laquelle vous étiez invité a été annulée"
+  "meetingNotifCancelledUnknown": "Une réunion à laquelle vous étiez invité a été annulée",
+  "meetingTitle": "Réunions",
+  "meetingPushInvited": "Vous êtes invité à une réunion",
+  "meetingPushStarting": "Votre réunion commence dans 10 minutes",
+  "meetingPushChannel": "Réunions"
 }

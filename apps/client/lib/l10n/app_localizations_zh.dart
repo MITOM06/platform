@@ -4526,4 +4526,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get meetingNotifCancelledUnknown => '你受邀参加的一个会议已取消';
+
+  @override
+  String get meetingTitle => '会议';
+
+  @override
+  String get meetingPushInvited => '你受邀参加一个会议';
+
+  @override
+  String get meetingPushStarting => '你的会议将在 10 分钟后开始';
+
+  @override
+  String get meetingPushChannel => '会议';
 }

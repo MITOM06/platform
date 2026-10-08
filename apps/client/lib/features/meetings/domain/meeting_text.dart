@@ -49,6 +49,8 @@ enum MeetingText {
   notifStartingBody,
   notifCancelled,
   notifCancelledUnknown,
+  someone,
+  untitled,
 }
 
 /// A [MeetingText] plus its arguments (`max`/`count`: int;

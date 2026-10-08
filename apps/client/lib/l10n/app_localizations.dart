@@ -8544,6 +8544,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A meeting you were invited to was cancelled'**
   String get meetingNotifCancelledUnknown;
+
+  /// No description provided for @meetingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meetings'**
+  String get meetingTitle;
+
+  /// No description provided for @meetingPushInvited.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re invited to a meeting'**
+  String get meetingPushInvited;
+
+  /// No description provided for @meetingPushStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Your meeting starts in 10 minutes'**
+  String get meetingPushStarting;
+
+  /// No description provided for @meetingPushChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Meetings'**
+  String get meetingPushChannel;
 }
 
 class _AppLocalizationsDelegate

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Push bodies localized on the device (FCM body_loc_key, docs/api-spec.md
+     § Meetings › FCM). Same text as the ARB keys meetingPushInvited /
+     meetingPushStarting — test/core/native_push_strings_test.dart keeps them equal. -->
+<resources>
+    <string name="meeting_push_invited">Te han invitado a una reunión</string>
+    <string name="meeting_push_starting">Tu reunión empieza en 10 minutos</string>
+</resources>

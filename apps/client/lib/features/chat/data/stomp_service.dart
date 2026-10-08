@@ -61,6 +61,11 @@ class StompService extends _$StompService {
       _streams.kbStatusCtrl.stream;
   // Group-call events: {event: call.started|call.roster|call.ended, ...}.
   Stream<Map<String, dynamic>> get callEvents => _streams.callEventCtrl.stream;
+
+  /// `/user/queue/meeting` frames, decoded (junk dropped).
+  Stream<Map<String, dynamic>> get meetingQueue =>
+      _streams.meetingQueueCtrl.stream;
+
   // Fires whenever the STOMP socket reconnects after a prior disconnect.
   Stream<void> get reconnects => _streams.reconnectCtrl.stream;
 
@@ -231,8 +236,9 @@ class StompService extends _$StompService {
   }
 
   /// `/user/queue/notifications` (messages, conversation views, rejections,
-  /// CLAIMS_CHANGED) + `/user/queue/webrtc` (incoming calls). Guarded per key,
-  /// so an existing notification sub never blocks the webrtc one.
+  /// CLAIMS_CHANGED) + `/user/queue/webrtc` (incoming calls) +
+  /// `/user/queue/meeting` (personal meeting events). Guarded per key, so an
+  /// existing notification sub never blocks the others.
   void subscribeNotifications() {
     final subscriber = _liveSubscriber;
     _subs.add(
@@ -250,6 +256,15 @@ class StompService extends _$StompService {
       (frame) {
         final data = StompStreams.decode(frame.body);
         if (data != null) _streams.webrtcCtrl.add(data);
+      },
+      subscriber: subscriber,
+    );
+    _subs.add(
+      'meet',
+      '/user/queue/meeting',
+      (frame) {
+        final data = StompStreams.decode(frame.body);
+        if (data != null) _streams.meetingQueueCtrl.add(data);
       },
       subscriber: subscriber,
     );

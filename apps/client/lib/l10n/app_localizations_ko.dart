@@ -4575,4 +4575,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get meetingNotifCancelledUnknown => '초대받은 회의가 취소되었습니다';
+
+  @override
+  String get meetingTitle => '회의';
+
+  @override
+  String get meetingPushInvited => '회의에 초대되었습니다';
+
+  @override
+  String get meetingPushStarting => '회의가 10분 후에 시작됩니다';
+
+  @override
+  String get meetingPushChannel => '회의';
 }

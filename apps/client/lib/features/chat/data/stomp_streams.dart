@@ -24,6 +24,8 @@ class StompStreams {
   final kbStatusCtrl = StreamController<Map<String, dynamic>>.broadcast();
   // Group-call lifecycle events (CallEventDto): call.started / roster / ended.
   final callEventCtrl = StreamController<Map<String, dynamic>>.broadcast();
+  // `/user/queue/meeting` — personal meeting events (meet.invited, meet.lobby…).
+  final meetingQueueCtrl = StreamController<Map<String, dynamic>>.broadcast();
   // Emits whenever a STOMP reconnect completes (not on first connect).
   final reconnectCtrl = StreamController<void>.broadcast();
   // Emits on EVERY completed connect, first one included.

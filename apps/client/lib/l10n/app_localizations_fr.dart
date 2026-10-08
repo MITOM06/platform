@@ -4805,4 +4805,16 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get meetingNotifCancelledUnknown =>
       'Une réunion à laquelle vous étiez invité a été annulée';
+
+  @override
+  String get meetingTitle => 'Réunions';
+
+  @override
+  String get meetingPushInvited => 'Vous êtes invité à une réunion';
+
+  @override
+  String get meetingPushStarting => 'Votre réunion commence dans 10 minutes';
+
+  @override
+  String get meetingPushChannel => 'Réunions';
 }

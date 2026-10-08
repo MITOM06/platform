@@ -1627,5 +1627,9 @@
   "@meetingNotifCancelled": {
     "placeholders": { "title": { "type": "String" } }
   },
-  "meetingNotifCancelledUnknown": "招待されていた会議がキャンセルされました"
+  "meetingNotifCancelledUnknown": "招待されていた会議がキャンセルされました",
+  "meetingTitle": "会議",
+  "meetingPushInvited": "会議に招待されました",
+  "meetingPushStarting": "会議が10分後に始まります",
+  "meetingPushChannel": "会議"
 }

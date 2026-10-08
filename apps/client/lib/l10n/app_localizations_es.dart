@@ -4775,4 +4775,16 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get meetingNotifCancelledUnknown =>
       'Se canceló una reunión a la que te invitaron';
+
+  @override
+  String get meetingTitle => 'Reuniones';
+
+  @override
+  String get meetingPushInvited => 'Te han invitado a una reunión';
+
+  @override
+  String get meetingPushStarting => 'Tu reunión empieza en 10 minutos';
+
+  @override
+  String get meetingPushChannel => 'Reuniones';
 }

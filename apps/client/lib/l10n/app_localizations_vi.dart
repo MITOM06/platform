@@ -4704,4 +4704,16 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get meetingNotifCancelledUnknown =>
       'Một cuộc họp bạn được mời đã bị huỷ';
+
+  @override
+  String get meetingTitle => 'Phòng họp';
+
+  @override
+  String get meetingPushInvited => 'Bạn được mời tham gia một cuộc họp';
+
+  @override
+  String get meetingPushStarting => 'Cuộc họp của bạn bắt đầu sau 10 phút';
+
+  @override
+  String get meetingPushChannel => 'Phòng họp';
 }

@@ -11,7 +11,9 @@ import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/api/token_manager.dart';
 import 'core/router/app_router.dart';
+import 'core/router/return_path.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/push_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/app_error.dart';
 import 'core/utils/global_messenger.dart';
@@ -25,12 +27,16 @@ import 'features/chat/domain/conversations_realtime_handlers.dart'
 import 'features/chat/ui/widgets/incoming_group_call_prompt.dart';
 import 'features/chat/ui/widgets/incoming_call_prompt.dart';
 import 'features/integrations/state/oauth_flow_provider.dart';
+import 'features/meetings/domain/meeting_code.dart';
 import 'features/notifications/domain/notifications_provider.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Meeting pushes carry a `notification` block the OS already shows, with
+  // the body localized on the device (strings.xml / Localizable.strings).
+  if (isMeetingPush(message.data)) return;
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   // FCM notification messages are auto-displayed by the OS in background/killed state.
   // Only handle data-only messages (no notification payload) here.
@@ -100,19 +106,18 @@ void main() async {
       sound: false,
     );
 
+    // A tapped push opens its conversation or meeting (push_routes.dart).
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      final conversationId = message.data['conversationId'];
-      if (conversationId != null) {
-        rootNavigatorKey.currentContext?.go('/chat/$conversationId');
-      }
+      final route = pushRouteFor(message.data);
+      if (route != null) rootNavigatorKey.currentContext?.go(route);
     });
 
     FirebaseMessaging.instance.getInitialMessage().then((initialMessage) {
       if (initialMessage != null) {
-        final conversationId = initialMessage.data['conversationId'];
-        if (conversationId != null) {
+        final route = pushRouteFor(initialMessage.data);
+        if (route != null) {
           Future.delayed(const Duration(milliseconds: 1000), () {
-            rootNavigatorKey.currentContext?.go('/chat/$conversationId');
+            rootNavigatorKey.currentContext?.go(route);
           });
         }
       }
@@ -214,6 +219,10 @@ class _PlatformAppState extends ConsumerState<PlatformApp>
       final notification = message.notification;
       final data = message.data;
       final l10n = appL10n();
+      if (isMeetingPush(data)) {
+        _showMeetingPush(l10n, notification?.title, data);
+        return;
+      }
       final title = _nonEmpty(notification?.title) ??
           displayableSenderName(data['senderName'], data['senderId']) ??
           l10n.newNotificationTitle;
@@ -229,12 +238,35 @@ class _PlatformAppState extends ConsumerState<PlatformApp>
     });
   }
 
-  /// Navigate to a conversation when a local notification is tapped.
+  /// A meeting push in the foreground while STOMP is down: the server's
+  /// localized body key resolved here (never the raw key), meeting title or a
+  /// generic title, tap ⇒ the meeting.
+  void _showMeetingPush(
+      AppLocalizations l10n, String? title, Map<String, dynamic> data) {
+    final route = pushRouteFor(data);
+    if (route == null) return;
+    final invited = data['type'] == 'MEETING_INVITED';
+    showMeetingNotification(
+      title: _nonEmpty(title) ??
+          (invited
+              ? l10n.meetingNotifInvitedTitle
+              : l10n.meetingNotifStartingTitle),
+      body: invited ? l10n.meetingPushInvited : l10n.meetingPushStarting,
+      route: route,
+    );
+  }
+
+  /// Navigate when a local notification is tapped: `route:<path>` (meetings)
+  /// or a conversation id (messages).
   void _listenNotificationTaps() {
-    _notifTapSub = notificationTapStream.listen((conversationId) {
-      if (conversationId != null && conversationId.isNotEmpty) {
-        rootNavigatorKey.currentContext?.go('/chat/$conversationId');
+    _notifTapSub = notificationTapStream.listen((payload) {
+      if (payload == null || payload.isEmpty) return;
+      if (payload.startsWith(kRoutePayloadPrefix)) {
+        final path = payload.substring(kRoutePayloadPrefix.length);
+        if (isSafeReturnPath(path)) rootNavigatorKey.currentContext?.go(path);
+        return;
       }
+      rootNavigatorKey.currentContext?.go('/chat/$payload');
     });
   }
 
@@ -273,6 +305,11 @@ class _PlatformAppState extends ConsumerState<PlatformApp>
       if (ref.read(authNotifierProvider).valueOrNull is AuthAuthenticated) {
         ref.read(oauthFlowProvider.notifier).onDeepLink(uri);
       }
+    } else if (uri.host == 'meet') {
+      // platform://meet/{code} — signed out, the router remembers the link
+      // and reopens it after sign-in (core/router/return_path.dart).
+      final code = parseMeetingCodeInput(uri.toString());
+      if (code != null) _goWhenReady(meetingPath(code));
     } else if (uri.host == 'invite') {
       // "Open in the PON app" from the web invite page.
       final token = uri.queryParameters['token'];

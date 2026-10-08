@@ -41,6 +41,7 @@
             <!-- OAuth deeplink: platform://auth?code=xxx | platform://auth?error=CODE -->
             <!-- Invitation deeplink: platform://invite?token=xxx (web invite page "Open in the app") -->
             <!-- Connector OAuth return: platform://integrations?connected=slug | ?error=CODE&provider=slug -->
+            <!-- Meeting link: platform://meet/abc-defg-hjk -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -48,6 +49,7 @@
                 <data android:scheme="platform" android:host="auth"/>
                 <data android:scheme="platform" android:host="invite"/>
                 <data android:scheme="platform" android:host="integrations"/>
+                <data android:scheme="platform" android:host="meet"/>
             </intent-filter>
         </activity>
         <!-- FCM: use high-importance channel for all notification messages -->

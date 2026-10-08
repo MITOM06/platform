@@ -1627,5 +1627,9 @@
   "@meetingNotifCancelled": {
     "placeholders": { "title": { "type": "String" } }
   },
-  "meetingNotifCancelledUnknown": "你受邀参加的一个会议已取消"
+  "meetingNotifCancelledUnknown": "你受邀参加的一个会议已取消",
+  "meetingTitle": "会议",
+  "meetingPushInvited": "你受邀参加一个会议",
+  "meetingPushStarting": "你的会议将在 10 分钟后开始",
+  "meetingPushChannel": "会议"
 }

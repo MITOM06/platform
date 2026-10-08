@@ -4574,4 +4574,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get meetingNotifCancelledUnknown => '招待されていた会議がキャンセルされました';
+
+  @override
+  String get meetingTitle => '会議';
+
+  @override
+  String get meetingPushInvited => '会議に招待されました';
+
+  @override
+  String get meetingPushStarting => '会議が10分後に始まります';
+
+  @override
+  String get meetingPushChannel => '会議';
 }

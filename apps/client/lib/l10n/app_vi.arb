@@ -1627,5 +1627,9 @@
   "@meetingNotifCancelled": {
     "placeholders": { "title": { "type": "String" } }
   },
-  "meetingNotifCancelledUnknown": "Một cuộc họp bạn được mời đã bị huỷ"
+  "meetingNotifCancelledUnknown": "Một cuộc họp bạn được mời đã bị huỷ",
+  "meetingTitle": "Phòng họp",
+  "meetingPushInvited": "Bạn được mời tham gia một cuộc họp",
+  "meetingPushStarting": "Cuộc họp của bạn bắt đầu sau 10 phút",
+  "meetingPushChannel": "Phòng họp"
 }

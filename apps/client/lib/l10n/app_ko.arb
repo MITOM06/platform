@@ -1627,5 +1627,9 @@
   "@meetingNotifCancelled": {
     "placeholders": { "title": { "type": "String" } }
   },
-  "meetingNotifCancelledUnknown": "초대받은 회의가 취소되었습니다"
+  "meetingNotifCancelledUnknown": "초대받은 회의가 취소되었습니다",
+  "meetingTitle": "회의",
+  "meetingPushInvited": "회의에 초대되었습니다",
+  "meetingPushStarting": "회의가 10분 후에 시작됩니다",
+  "meetingPushChannel": "회의"
 }

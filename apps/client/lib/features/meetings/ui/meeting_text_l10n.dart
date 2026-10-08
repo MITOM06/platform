@@ -67,6 +67,8 @@ String meetingText(AppLocalizations l, MeetingNotice n) => switch (n.text) {
         l.meetingNotifStartingBody(_str(n, 'title'), _str(n, 'time')),
       MeetingText.notifCancelled => l.meetingNotifCancelled(_str(n, 'title')),
       MeetingText.notifCancelledUnknown => l.meetingNotifCancelledUnknown,
+      MeetingText.someone => l.meetingSomeone,
+      MeetingText.untitled => l.meetingUntitled,
     };
 
 /// Localized text for any thrown error — never the raw exception text.

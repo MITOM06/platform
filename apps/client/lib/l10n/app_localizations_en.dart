@@ -4730,4 +4730,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get meetingNotifCancelledUnknown =>
       'A meeting you were invited to was cancelled';
+
+  @override
+  String get meetingTitle => 'Meetings';
+
+  @override
+  String get meetingPushInvited => 'You\'re invited to a meeting';
+
+  @override
+  String get meetingPushStarting => 'Your meeting starts in 10 minutes';
+
+  @override
+  String get meetingPushChannel => 'Meetings';
 }
