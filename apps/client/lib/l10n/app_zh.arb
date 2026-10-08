@@ -1523,5 +1523,109 @@
   "authErrMfaAlreadyEnrolled": "此账号已设置双重验证。",
   "authErrMfaResetForbidden": "只有所有者才能重置双重验证。",
   "authErrMfaResetSelfForbidden": "你不能重置自己的双重验证。",
-  "adminCapHostMeeting": "主持会议"
+  "adminCapHostMeeting": "主持会议",
+  "meetingErrNotFound": "该会议不存在",
+  "meetingErrForbidden": "你无权在此会议中执行此操作",
+  "meetingErrCreateForbidden": "你的角色无法主持会议",
+  "meetingErrDepartmentForbidden": "你无法为该部门创建会议",
+  "meetingErrRemoved": "你已被移出此会议",
+  "meetingErrLocked": "此会议已锁定",
+  "meetingErrEnded": "此会议已结束",
+  "meetingErrFull": "此会议已满（{max} 人）",
+  "@meetingErrFull": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrNotCancellable": "已有人加入，无法取消",
+  "meetingErrUnavailable": "会议功能暂时不可用，请稍后再试。",
+  "meetingErrNotesReadOnly": "只有主持人可以编辑共享笔记",
+  "meetingErrNoteConflict": "有人保存了更新的版本",
+  "meetingErrRateLimited": "发送太快了，请稍等片刻。",
+  "meetingErrChatTooLong": "消息最多 {max} 个字符",
+  "@meetingErrChatTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrNoteTooLong": "笔记最多 {max} 个字符",
+  "@meetingErrNoteTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrInviteeInvalid": "名单中有人无法被邀请",
+  "meetingErrDepartmentInvalid": "该部门不可用",
+  "meetingErrStartInvalid": "开始时间无效",
+  "meetingErrEndInvalid": "会议必须在开始之后且 24 小时内结束",
+  "meetingErrTargetUnavailable": "此人已不在会议中",
+  "meetingErrInvalid": "请求中有无效内容",
+  "meetingErrNetwork": "无法连接服务器，请检查网络。",
+  "meetingErrGeneric": "出了点问题，请重试。",
+  "meetingValTitleTooLong": "标题最多 {max} 个字符",
+  "@meetingValTitleTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValDescriptionTooLong": "描述最多 {max} 个字符",
+  "@meetingValDescriptionTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValTooManyInvitees": "最多只能邀请 {max} 人",
+  "@meetingValTooManyInvitees": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValStartPast": "请选择未来的时间",
+  "meetingValScheduleInvalid": "请选择有效的日期和时间",
+  "meetingUntitled": "会议",
+  "meetingSomeone": "某人",
+  "meetingParticipantFallback": "参会者",
+  "meetingYou": "你",
+  "meetingRoleHost": "主持人",
+  "meetingRoleCohost": "联合主持人",
+  "meetingRoleAttendee": "参会者",
+  "meetingStatusLive": "进行中",
+  "meetingStatusScheduled": "已安排",
+  "meetingStatusEnded": "已结束",
+  "meetingStatusCancelled": "已取消",
+  "meetingDurationMinutes": "{count, plural, other {{count} 分钟}}",
+  "@meetingDurationMinutes": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingDurationHours": "{count, plural, other {{count} 小时}}",
+  "@meetingDurationHours": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingDurationHoursMinutes": "{hours} 小时 {minutes} 分钟",
+  "@meetingDurationHoursMinutes": {
+    "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } }
+  },
+  "meetingRealtimeOffline": "聊天、举手和主持人控制已暂停，恢复联网后继续",
+  "meetingMutedBy": "{name} 将你的麦克风静音了",
+  "@meetingMutedBy": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingMutedByUnknown": "主持人将你的麦克风静音了",
+  "meetingMadeCohost": "你现在是联合主持人",
+  "meetingRevokedCohost": "你已不再是联合主持人",
+  "meetingEndedToast": "会议已结束",
+  "meetingMediaFailed": "无法开启麦克风或摄像头",
+  "meetingShareRevoked": "主持人已关闭屏幕共享",
+  "meetingShareFailed": "无法开始演示",
+  "meetingLobbyWaiting": "{count, plural, other {{count} 人正在等待加入}}",
+  "@meetingLobbyWaiting": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingNotifInvitedTitle": "会议邀请",
+  "meetingNotifInvitedBody": "{name} 邀请你参加“{title}”",
+  "@meetingNotifInvitedBody": {
+    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" } }
+  },
+  "meetingNotifInvitedBodyAt": "{name} 邀请你于 {time} 参加“{title}”",
+  "@meetingNotifInvitedBodyAt": {
+    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" }, "time": { "type": "String" } }
+  },
+  "meetingNotifStartingTitle": "会议即将开始",
+  "meetingNotifStartingBody": "“{title}”将于 {time} 开始",
+  "@meetingNotifStartingBody": {
+    "placeholders": { "title": { "type": "String" }, "time": { "type": "String" } }
+  },
+  "meetingNotifCancelled": "“{title}”已取消",
+  "@meetingNotifCancelled": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "meetingNotifCancelledUnknown": "你受邀参加的一个会议已取消"
 }

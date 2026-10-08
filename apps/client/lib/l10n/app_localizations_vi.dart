@@ -4470,4 +4470,238 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get adminCapHostMeeting => 'Tổ chức cuộc họp';
+
+  @override
+  String get meetingErrNotFound => 'Cuộc họp không tồn tại';
+
+  @override
+  String get meetingErrForbidden =>
+      'Bạn không có quyền làm việc này trong cuộc họp';
+
+  @override
+  String get meetingErrCreateForbidden =>
+      'Vai trò của bạn không được tổ chức cuộc họp';
+
+  @override
+  String get meetingErrDepartmentForbidden =>
+      'Bạn không thể tạo cuộc họp cho phòng ban này';
+
+  @override
+  String get meetingErrRemoved => 'Bạn đã bị mời ra khỏi cuộc họp này';
+
+  @override
+  String get meetingErrLocked => 'Cuộc họp đã bị khoá';
+
+  @override
+  String get meetingErrEnded => 'Cuộc họp đã kết thúc';
+
+  @override
+  String meetingErrFull(int max) {
+    return 'Cuộc họp đã đủ $max người';
+  }
+
+  @override
+  String get meetingErrNotCancellable =>
+      'Đã có người vào họp nên không huỷ được';
+
+  @override
+  String get meetingErrUnavailable =>
+      'Phòng họp tạm thời không dùng được. Hãy thử lại sau.';
+
+  @override
+  String get meetingErrNotesReadOnly =>
+      'Chỉ người tổ chức được sửa ghi chú chung';
+
+  @override
+  String get meetingErrNoteConflict => 'Đã có người lưu bản mới hơn';
+
+  @override
+  String get meetingErrRateLimited => 'Bạn gửi quá nhanh. Hãy chờ một chút.';
+
+  @override
+  String meetingErrChatTooLong(int max) {
+    return 'Tin nhắn tối đa $max ký tự';
+  }
+
+  @override
+  String meetingErrNoteTooLong(int max) {
+    return 'Ghi chú tối đa $max ký tự';
+  }
+
+  @override
+  String get meetingErrInviteeInvalid =>
+      'Có người trong danh sách không mời được';
+
+  @override
+  String get meetingErrDepartmentInvalid => 'Phòng ban không hợp lệ';
+
+  @override
+  String get meetingErrStartInvalid => 'Thời gian bắt đầu không hợp lệ';
+
+  @override
+  String get meetingErrEndInvalid =>
+      'Cuộc họp phải kết thúc sau khi bắt đầu và trong vòng 24 giờ';
+
+  @override
+  String get meetingErrTargetUnavailable =>
+      'Người này không còn trong cuộc họp';
+
+  @override
+  String get meetingErrInvalid => 'Yêu cầu không hợp lệ';
+
+  @override
+  String get meetingErrNetwork =>
+      'Không kết nối được máy chủ. Hãy kiểm tra mạng.';
+
+  @override
+  String get meetingErrGeneric => 'Đã có lỗi xảy ra. Hãy thử lại.';
+
+  @override
+  String meetingValTitleTooLong(int max) {
+    return 'Tiêu đề tối đa $max ký tự';
+  }
+
+  @override
+  String meetingValDescriptionTooLong(int max) {
+    return 'Mô tả tối đa $max ký tự';
+  }
+
+  @override
+  String meetingValTooManyInvitees(int max) {
+    return 'Chỉ mời được tối đa $max người';
+  }
+
+  @override
+  String get meetingValStartPast => 'Hãy chọn thời điểm trong tương lai';
+
+  @override
+  String get meetingValScheduleInvalid => 'Hãy chọn ngày giờ hợp lệ';
+
+  @override
+  String get meetingUntitled => 'Cuộc họp';
+
+  @override
+  String get meetingSomeone => 'Ai đó';
+
+  @override
+  String get meetingParticipantFallback => 'Người tham dự';
+
+  @override
+  String get meetingYou => 'Bạn';
+
+  @override
+  String get meetingRoleHost => 'Người tổ chức';
+
+  @override
+  String get meetingRoleCohost => 'Đồng tổ chức';
+
+  @override
+  String get meetingRoleAttendee => 'Người tham dự';
+
+  @override
+  String get meetingStatusLive => 'Đang diễn ra';
+
+  @override
+  String get meetingStatusScheduled => 'Đã lên lịch';
+
+  @override
+  String get meetingStatusEnded => 'Đã kết thúc';
+
+  @override
+  String get meetingStatusCancelled => 'Đã huỷ';
+
+  @override
+  String meetingDurationMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count phút',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingDurationHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count giờ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingDurationHoursMinutes(int hours, int minutes) {
+    return '$hours giờ $minutes phút';
+  }
+
+  @override
+  String get meetingRealtimeOffline =>
+      'Chat, giơ tay và quyền người tổ chức tạm dừng tới khi có mạng lại';
+
+  @override
+  String meetingMutedBy(String name) {
+    return '$name đã tắt micro của bạn';
+  }
+
+  @override
+  String get meetingMutedByUnknown => 'Người tổ chức đã tắt micro của bạn';
+
+  @override
+  String get meetingMadeCohost => 'Bạn đã được làm đồng tổ chức';
+
+  @override
+  String get meetingRevokedCohost => 'Bạn không còn là đồng tổ chức';
+
+  @override
+  String get meetingEndedToast => 'Cuộc họp đã kết thúc';
+
+  @override
+  String get meetingMediaFailed => 'Không bật được micro hoặc camera';
+
+  @override
+  String get meetingShareRevoked => 'Người tổ chức đã tắt trình bày màn hình';
+
+  @override
+  String get meetingShareFailed => 'Không trình bày được màn hình';
+
+  @override
+  String meetingLobbyWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count người đang chờ vào',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingNotifInvitedTitle => 'Lời mời họp';
+
+  @override
+  String meetingNotifInvitedBody(String name, String title) {
+    return '$name mời bạn tham gia “$title”';
+  }
+
+  @override
+  String meetingNotifInvitedBodyAt(String name, String title, String time) {
+    return '$name mời bạn tham gia “$title” lúc $time';
+  }
+
+  @override
+  String get meetingNotifStartingTitle => 'Cuộc họp sắp bắt đầu';
+
+  @override
+  String meetingNotifStartingBody(String title, String time) {
+    return '“$title” bắt đầu lúc $time';
+  }
+
+  @override
+  String meetingNotifCancelled(String title) {
+    return '“$title” đã bị huỷ';
+  }
+
+  @override
+  String get meetingNotifCancelledUnknown =>
+      'Một cuộc họp bạn được mời đã bị huỷ';
 }

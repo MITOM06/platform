@@ -4495,4 +4495,239 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminCapHostMeeting => 'Host meetings';
+
+  @override
+  String get meetingErrNotFound => 'This meeting doesn\'t exist';
+
+  @override
+  String get meetingErrForbidden => 'You can\'t do that in this meeting';
+
+  @override
+  String get meetingErrCreateForbidden => 'Your role can\'t host meetings';
+
+  @override
+  String get meetingErrDepartmentForbidden =>
+      'You can\'t create a meeting for that department';
+
+  @override
+  String get meetingErrRemoved => 'You were removed from this meeting';
+
+  @override
+  String get meetingErrLocked => 'This meeting is locked';
+
+  @override
+  String get meetingErrEnded => 'This meeting has ended';
+
+  @override
+  String meetingErrFull(int max) {
+    return 'This meeting is full ($max people)';
+  }
+
+  @override
+  String get meetingErrNotCancellable =>
+      'Someone has already joined, so it can\'t be cancelled';
+
+  @override
+  String get meetingErrUnavailable =>
+      'Meetings are unavailable right now. Try again shortly.';
+
+  @override
+  String get meetingErrNotesReadOnly => 'Only hosts can edit the shared notes';
+
+  @override
+  String get meetingErrNoteConflict => 'Someone saved a newer version';
+
+  @override
+  String get meetingErrRateLimited =>
+      'You\'re sending too fast. Wait a moment.';
+
+  @override
+  String meetingErrChatTooLong(int max) {
+    return 'Messages can be at most $max characters';
+  }
+
+  @override
+  String meetingErrNoteTooLong(int max) {
+    return 'Notes can be at most $max characters';
+  }
+
+  @override
+  String get meetingErrInviteeInvalid =>
+      'Someone on the list can\'t be invited';
+
+  @override
+  String get meetingErrDepartmentInvalid => 'That department isn\'t available';
+
+  @override
+  String get meetingErrStartInvalid => 'The start time isn\'t valid';
+
+  @override
+  String get meetingErrEndInvalid =>
+      'The meeting must end after it starts and within 24 hours';
+
+  @override
+  String get meetingErrTargetUnavailable =>
+      'That person isn\'t in the meeting any more';
+
+  @override
+  String get meetingErrInvalid => 'Something in the request isn\'t valid';
+
+  @override
+  String get meetingErrNetwork =>
+      'Can\'t reach the server. Check your connection.';
+
+  @override
+  String get meetingErrGeneric => 'Something went wrong. Try again.';
+
+  @override
+  String meetingValTitleTooLong(int max) {
+    return 'Title can be at most $max characters';
+  }
+
+  @override
+  String meetingValDescriptionTooLong(int max) {
+    return 'Description can be at most $max characters';
+  }
+
+  @override
+  String meetingValTooManyInvitees(int max) {
+    return 'You can invite at most $max people';
+  }
+
+  @override
+  String get meetingValStartPast => 'Pick a time in the future';
+
+  @override
+  String get meetingValScheduleInvalid => 'Pick a valid date and time';
+
+  @override
+  String get meetingUntitled => 'Meeting';
+
+  @override
+  String get meetingSomeone => 'Someone';
+
+  @override
+  String get meetingParticipantFallback => 'Participant';
+
+  @override
+  String get meetingYou => 'You';
+
+  @override
+  String get meetingRoleHost => 'Host';
+
+  @override
+  String get meetingRoleCohost => 'Co-host';
+
+  @override
+  String get meetingRoleAttendee => 'Participant';
+
+  @override
+  String get meetingStatusLive => 'Live';
+
+  @override
+  String get meetingStatusScheduled => 'Scheduled';
+
+  @override
+  String get meetingStatusEnded => 'Ended';
+
+  @override
+  String get meetingStatusCancelled => 'Cancelled';
+
+  @override
+  String meetingDurationMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count min',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingDurationHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours',
+      one: '$count hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingDurationHoursMinutes(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String get meetingRealtimeOffline =>
+      'Chat, hands and host controls are paused until you\'re back online';
+
+  @override
+  String meetingMutedBy(String name) {
+    return '$name muted your microphone';
+  }
+
+  @override
+  String get meetingMutedByUnknown => 'A host muted your microphone';
+
+  @override
+  String get meetingMadeCohost => 'You\'re now a co-host';
+
+  @override
+  String get meetingRevokedCohost => 'You\'re no longer a co-host';
+
+  @override
+  String get meetingEndedToast => 'The meeting has ended';
+
+  @override
+  String get meetingMediaFailed =>
+      'Couldn\'t turn on your microphone or camera';
+
+  @override
+  String get meetingShareRevoked => 'The host turned off screen sharing';
+
+  @override
+  String get meetingShareFailed => 'Couldn\'t start presenting';
+
+  @override
+  String meetingLobbyWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people are waiting to join',
+      one: '$count person is waiting to join',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingNotifInvitedTitle => 'Meeting invitation';
+
+  @override
+  String meetingNotifInvitedBody(String name, String title) {
+    return '$name invited you to “$title”';
+  }
+
+  @override
+  String meetingNotifInvitedBodyAt(String name, String title, String time) {
+    return '$name invited you to “$title” on $time';
+  }
+
+  @override
+  String get meetingNotifStartingTitle => 'Meeting starting soon';
+
+  @override
+  String meetingNotifStartingBody(String title, String time) {
+    return '“$title” starts at $time';
+  }
+
+  @override
+  String meetingNotifCancelled(String title) {
+    return '“$title” was cancelled';
+  }
+
+  @override
+  String get meetingNotifCancelledUnknown =>
+      'A meeting you were invited to was cancelled';
 }

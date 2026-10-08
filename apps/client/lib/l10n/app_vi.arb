@@ -1523,5 +1523,109 @@
   "authErrMfaAlreadyEnrolled": "Tài khoản này đã thiết lập xác thực hai yếu tố.",
   "authErrMfaResetForbidden": "Chỉ Chủ sở hữu mới có thể đặt lại xác thực hai yếu tố.",
   "authErrMfaResetSelfForbidden": "Bạn không thể tự đặt lại xác thực hai yếu tố của chính mình.",
-  "adminCapHostMeeting": "Tổ chức cuộc họp"
+  "adminCapHostMeeting": "Tổ chức cuộc họp",
+  "meetingErrNotFound": "Cuộc họp không tồn tại",
+  "meetingErrForbidden": "Bạn không có quyền làm việc này trong cuộc họp",
+  "meetingErrCreateForbidden": "Vai trò của bạn không được tổ chức cuộc họp",
+  "meetingErrDepartmentForbidden": "Bạn không thể tạo cuộc họp cho phòng ban này",
+  "meetingErrRemoved": "Bạn đã bị mời ra khỏi cuộc họp này",
+  "meetingErrLocked": "Cuộc họp đã bị khoá",
+  "meetingErrEnded": "Cuộc họp đã kết thúc",
+  "meetingErrFull": "Cuộc họp đã đủ {max} người",
+  "@meetingErrFull": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrNotCancellable": "Đã có người vào họp nên không huỷ được",
+  "meetingErrUnavailable": "Phòng họp tạm thời không dùng được. Hãy thử lại sau.",
+  "meetingErrNotesReadOnly": "Chỉ người tổ chức được sửa ghi chú chung",
+  "meetingErrNoteConflict": "Đã có người lưu bản mới hơn",
+  "meetingErrRateLimited": "Bạn gửi quá nhanh. Hãy chờ một chút.",
+  "meetingErrChatTooLong": "Tin nhắn tối đa {max} ký tự",
+  "@meetingErrChatTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrNoteTooLong": "Ghi chú tối đa {max} ký tự",
+  "@meetingErrNoteTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrInviteeInvalid": "Có người trong danh sách không mời được",
+  "meetingErrDepartmentInvalid": "Phòng ban không hợp lệ",
+  "meetingErrStartInvalid": "Thời gian bắt đầu không hợp lệ",
+  "meetingErrEndInvalid": "Cuộc họp phải kết thúc sau khi bắt đầu và trong vòng 24 giờ",
+  "meetingErrTargetUnavailable": "Người này không còn trong cuộc họp",
+  "meetingErrInvalid": "Yêu cầu không hợp lệ",
+  "meetingErrNetwork": "Không kết nối được máy chủ. Hãy kiểm tra mạng.",
+  "meetingErrGeneric": "Đã có lỗi xảy ra. Hãy thử lại.",
+  "meetingValTitleTooLong": "Tiêu đề tối đa {max} ký tự",
+  "@meetingValTitleTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValDescriptionTooLong": "Mô tả tối đa {max} ký tự",
+  "@meetingValDescriptionTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValTooManyInvitees": "Chỉ mời được tối đa {max} người",
+  "@meetingValTooManyInvitees": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValStartPast": "Hãy chọn thời điểm trong tương lai",
+  "meetingValScheduleInvalid": "Hãy chọn ngày giờ hợp lệ",
+  "meetingUntitled": "Cuộc họp",
+  "meetingSomeone": "Ai đó",
+  "meetingParticipantFallback": "Người tham dự",
+  "meetingYou": "Bạn",
+  "meetingRoleHost": "Người tổ chức",
+  "meetingRoleCohost": "Đồng tổ chức",
+  "meetingRoleAttendee": "Người tham dự",
+  "meetingStatusLive": "Đang diễn ra",
+  "meetingStatusScheduled": "Đã lên lịch",
+  "meetingStatusEnded": "Đã kết thúc",
+  "meetingStatusCancelled": "Đã huỷ",
+  "meetingDurationMinutes": "{count, plural, other {{count} phút}}",
+  "@meetingDurationMinutes": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingDurationHours": "{count, plural, other {{count} giờ}}",
+  "@meetingDurationHours": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingDurationHoursMinutes": "{hours} giờ {minutes} phút",
+  "@meetingDurationHoursMinutes": {
+    "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } }
+  },
+  "meetingRealtimeOffline": "Chat, giơ tay và quyền người tổ chức tạm dừng tới khi có mạng lại",
+  "meetingMutedBy": "{name} đã tắt micro của bạn",
+  "@meetingMutedBy": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingMutedByUnknown": "Người tổ chức đã tắt micro của bạn",
+  "meetingMadeCohost": "Bạn đã được làm đồng tổ chức",
+  "meetingRevokedCohost": "Bạn không còn là đồng tổ chức",
+  "meetingEndedToast": "Cuộc họp đã kết thúc",
+  "meetingMediaFailed": "Không bật được micro hoặc camera",
+  "meetingShareRevoked": "Người tổ chức đã tắt trình bày màn hình",
+  "meetingShareFailed": "Không trình bày được màn hình",
+  "meetingLobbyWaiting": "{count, plural, other {{count} người đang chờ vào}}",
+  "@meetingLobbyWaiting": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingNotifInvitedTitle": "Lời mời họp",
+  "meetingNotifInvitedBody": "{name} mời bạn tham gia “{title}”",
+  "@meetingNotifInvitedBody": {
+    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" } }
+  },
+  "meetingNotifInvitedBodyAt": "{name} mời bạn tham gia “{title}” lúc {time}",
+  "@meetingNotifInvitedBodyAt": {
+    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" }, "time": { "type": "String" } }
+  },
+  "meetingNotifStartingTitle": "Cuộc họp sắp bắt đầu",
+  "meetingNotifStartingBody": "“{title}” bắt đầu lúc {time}",
+  "@meetingNotifStartingBody": {
+    "placeholders": { "title": { "type": "String" }, "time": { "type": "String" } }
+  },
+  "meetingNotifCancelled": "“{title}” đã bị huỷ",
+  "@meetingNotifCancelled": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "meetingNotifCancelledUnknown": "Một cuộc họp bạn được mời đã bị huỷ"
 }

@@ -2236,5 +2236,109 @@
   "authErrMfaAlreadyEnrolled": "Two-factor authentication is already set up for this account.",
   "authErrMfaResetForbidden": "Only an Owner can reset two-factor authentication.",
   "authErrMfaResetSelfForbidden": "You can't reset your own two-factor authentication.",
-  "adminCapHostMeeting": "Host meetings"
+  "adminCapHostMeeting": "Host meetings",
+  "meetingErrNotFound": "This meeting doesn't exist",
+  "meetingErrForbidden": "You can't do that in this meeting",
+  "meetingErrCreateForbidden": "Your role can't host meetings",
+  "meetingErrDepartmentForbidden": "You can't create a meeting for that department",
+  "meetingErrRemoved": "You were removed from this meeting",
+  "meetingErrLocked": "This meeting is locked",
+  "meetingErrEnded": "This meeting has ended",
+  "meetingErrFull": "This meeting is full ({max} people)",
+  "@meetingErrFull": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrNotCancellable": "Someone has already joined, so it can't be cancelled",
+  "meetingErrUnavailable": "Meetings are unavailable right now. Try again shortly.",
+  "meetingErrNotesReadOnly": "Only hosts can edit the shared notes",
+  "meetingErrNoteConflict": "Someone saved a newer version",
+  "meetingErrRateLimited": "You're sending too fast. Wait a moment.",
+  "meetingErrChatTooLong": "Messages can be at most {max} characters",
+  "@meetingErrChatTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrNoteTooLong": "Notes can be at most {max} characters",
+  "@meetingErrNoteTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrInviteeInvalid": "Someone on the list can't be invited",
+  "meetingErrDepartmentInvalid": "That department isn't available",
+  "meetingErrStartInvalid": "The start time isn't valid",
+  "meetingErrEndInvalid": "The meeting must end after it starts and within 24 hours",
+  "meetingErrTargetUnavailable": "That person isn't in the meeting any more",
+  "meetingErrInvalid": "Something in the request isn't valid",
+  "meetingErrNetwork": "Can't reach the server. Check your connection.",
+  "meetingErrGeneric": "Something went wrong. Try again.",
+  "meetingValTitleTooLong": "Title can be at most {max} characters",
+  "@meetingValTitleTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValDescriptionTooLong": "Description can be at most {max} characters",
+  "@meetingValDescriptionTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValTooManyInvitees": "You can invite at most {max} people",
+  "@meetingValTooManyInvitees": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValStartPast": "Pick a time in the future",
+  "meetingValScheduleInvalid": "Pick a valid date and time",
+  "meetingUntitled": "Meeting",
+  "meetingSomeone": "Someone",
+  "meetingParticipantFallback": "Participant",
+  "meetingYou": "You",
+  "meetingRoleHost": "Host",
+  "meetingRoleCohost": "Co-host",
+  "meetingRoleAttendee": "Participant",
+  "meetingStatusLive": "Live",
+  "meetingStatusScheduled": "Scheduled",
+  "meetingStatusEnded": "Ended",
+  "meetingStatusCancelled": "Cancelled",
+  "meetingDurationMinutes": "{count, plural, other {{count} min}}",
+  "@meetingDurationMinutes": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingDurationHours": "{count, plural, one {{count} hour} other {{count} hours}}",
+  "@meetingDurationHours": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingDurationHoursMinutes": "{hours} h {minutes} min",
+  "@meetingDurationHoursMinutes": {
+    "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } }
+  },
+  "meetingRealtimeOffline": "Chat, hands and host controls are paused until you're back online",
+  "meetingMutedBy": "{name} muted your microphone",
+  "@meetingMutedBy": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingMutedByUnknown": "A host muted your microphone",
+  "meetingMadeCohost": "You're now a co-host",
+  "meetingRevokedCohost": "You're no longer a co-host",
+  "meetingEndedToast": "The meeting has ended",
+  "meetingMediaFailed": "Couldn't turn on your microphone or camera",
+  "meetingShareRevoked": "The host turned off screen sharing",
+  "meetingShareFailed": "Couldn't start presenting",
+  "meetingLobbyWaiting": "{count, plural, one {{count} person is waiting to join} other {{count} people are waiting to join}}",
+  "@meetingLobbyWaiting": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingNotifInvitedTitle": "Meeting invitation",
+  "meetingNotifInvitedBody": "{name} invited you to “{title}”",
+  "@meetingNotifInvitedBody": {
+    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" } }
+  },
+  "meetingNotifInvitedBodyAt": "{name} invited you to “{title}” on {time}",
+  "@meetingNotifInvitedBodyAt": {
+    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" }, "time": { "type": "String" } }
+  },
+  "meetingNotifStartingTitle": "Meeting starting soon",
+  "meetingNotifStartingBody": "“{title}” starts at {time}",
+  "@meetingNotifStartingBody": {
+    "placeholders": { "title": { "type": "String" }, "time": { "type": "String" } }
+  },
+  "meetingNotifCancelled": "“{title}” was cancelled",
+  "@meetingNotifCancelled": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "meetingNotifCancelledUnknown": "A meeting you were invited to was cancelled"
 }

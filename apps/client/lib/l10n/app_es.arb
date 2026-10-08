@@ -1523,5 +1523,109 @@
   "authErrMfaAlreadyEnrolled": "Esta cuenta ya tiene configurada la autenticación de dos factores.",
   "authErrMfaResetForbidden": "Solo un Propietario puede restablecer la autenticación de dos factores.",
   "authErrMfaResetSelfForbidden": "No puedes restablecer tu propia autenticación de dos factores.",
-  "adminCapHostMeeting": "Organizar reuniones"
+  "adminCapHostMeeting": "Organizar reuniones",
+  "meetingErrNotFound": "Esta reunión no existe",
+  "meetingErrForbidden": "No puedes hacer eso en esta reunión",
+  "meetingErrCreateForbidden": "Tu rol no puede organizar reuniones",
+  "meetingErrDepartmentForbidden": "No puedes crear una reunión para ese departamento",
+  "meetingErrRemoved": "Te han expulsado de esta reunión",
+  "meetingErrLocked": "Esta reunión está bloqueada",
+  "meetingErrEnded": "Esta reunión ha terminado",
+  "meetingErrFull": "Esta reunión está llena ({max} personas)",
+  "@meetingErrFull": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrNotCancellable": "Alguien ya se ha unido, así que no se puede cancelar",
+  "meetingErrUnavailable": "Las reuniones no están disponibles en este momento. Inténtalo de nuevo en breve.",
+  "meetingErrNotesReadOnly": "Solo los organizadores pueden editar las notas compartidas",
+  "meetingErrNoteConflict": "Alguien guardó una versión más reciente",
+  "meetingErrRateLimited": "Estás enviando demasiado rápido. Espera un momento.",
+  "meetingErrChatTooLong": "Los mensajes pueden tener como máximo {max} caracteres",
+  "@meetingErrChatTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrNoteTooLong": "Las notas pueden tener como máximo {max} caracteres",
+  "@meetingErrNoteTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrInviteeInvalid": "Alguien de la lista no se puede invitar",
+  "meetingErrDepartmentInvalid": "Ese departamento no está disponible",
+  "meetingErrStartInvalid": "La hora de inicio no es válida",
+  "meetingErrEndInvalid": "La reunión debe terminar después de empezar y en un plazo de 24 horas",
+  "meetingErrTargetUnavailable": "Esa persona ya no está en la reunión",
+  "meetingErrInvalid": "Algo en la solicitud no es válido",
+  "meetingErrNetwork": "No se puede conectar con el servidor. Comprueba tu conexión.",
+  "meetingErrGeneric": "Algo salió mal. Inténtalo de nuevo.",
+  "meetingValTitleTooLong": "El título puede tener como máximo {max} caracteres",
+  "@meetingValTitleTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValDescriptionTooLong": "La descripción puede tener como máximo {max} caracteres",
+  "@meetingValDescriptionTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValTooManyInvitees": "Puedes invitar como máximo a {max} personas",
+  "@meetingValTooManyInvitees": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValStartPast": "Elige una hora en el futuro",
+  "meetingValScheduleInvalid": "Elige una fecha y hora válidas",
+  "meetingUntitled": "Reunión",
+  "meetingSomeone": "Alguien",
+  "meetingParticipantFallback": "Participante",
+  "meetingYou": "Tú",
+  "meetingRoleHost": "Organizador",
+  "meetingRoleCohost": "Coorganizador",
+  "meetingRoleAttendee": "Participante",
+  "meetingStatusLive": "En curso",
+  "meetingStatusScheduled": "Programada",
+  "meetingStatusEnded": "Finalizada",
+  "meetingStatusCancelled": "Cancelada",
+  "meetingDurationMinutes": "{count, plural, other {{count} min}}",
+  "@meetingDurationMinutes": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingDurationHours": "{count, plural, one {{count} hora} other {{count} horas}}",
+  "@meetingDurationHours": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingDurationHoursMinutes": "{hours} h {minutes} min",
+  "@meetingDurationHoursMinutes": {
+    "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } }
+  },
+  "meetingRealtimeOffline": "El chat, las manos levantadas y los controles del organizador están en pausa hasta que vuelvas a estar en línea",
+  "meetingMutedBy": "{name} ha silenciado tu micrófono",
+  "@meetingMutedBy": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingMutedByUnknown": "Un organizador ha silenciado tu micrófono",
+  "meetingMadeCohost": "Ahora eres coorganizador",
+  "meetingRevokedCohost": "Ya no eres coorganizador",
+  "meetingEndedToast": "La reunión ha terminado",
+  "meetingMediaFailed": "No se pudo activar el micrófono o la cámara",
+  "meetingShareRevoked": "El organizador ha desactivado la presentación de pantalla",
+  "meetingShareFailed": "No se pudo empezar a presentar",
+  "meetingLobbyWaiting": "{count, plural, one {{count} persona está esperando para entrar} other {{count} personas están esperando para entrar}}",
+  "@meetingLobbyWaiting": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingNotifInvitedTitle": "Invitación a una reunión",
+  "meetingNotifInvitedBody": "{name} te invitó a «{title}»",
+  "@meetingNotifInvitedBody": {
+    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" } }
+  },
+  "meetingNotifInvitedBodyAt": "{name} te invitó a «{title}» el {time}",
+  "@meetingNotifInvitedBodyAt": {
+    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" }, "time": { "type": "String" } }
+  },
+  "meetingNotifStartingTitle": "La reunión empieza pronto",
+  "meetingNotifStartingBody": "«{title}» empieza a las {time}",
+  "@meetingNotifStartingBody": {
+    "placeholders": { "title": { "type": "String" }, "time": { "type": "String" } }
+  },
+  "meetingNotifCancelled": "«{title}» se ha cancelado",
+  "@meetingNotifCancelled": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "meetingNotifCancelledUnknown": "Se canceló una reunión a la que te invitaron"
 }

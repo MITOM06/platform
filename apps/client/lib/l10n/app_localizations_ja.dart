@@ -4352,4 +4352,226 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get adminCapHostMeeting => '会議を主催';
+
+  @override
+  String get meetingErrNotFound => 'この会議は存在しません';
+
+  @override
+  String get meetingErrForbidden => 'この会議ではその操作を行う権限がありません';
+
+  @override
+  String get meetingErrCreateForbidden => 'あなたのロールでは会議を主催できません';
+
+  @override
+  String get meetingErrDepartmentForbidden => 'この部署の会議は作成できません';
+
+  @override
+  String get meetingErrRemoved => 'この会議から退出させられました';
+
+  @override
+  String get meetingErrLocked => 'この会議はロックされています';
+
+  @override
+  String get meetingErrEnded => 'この会議は終了しました';
+
+  @override
+  String meetingErrFull(int max) {
+    return 'この会議は満員です（$max 人）';
+  }
+
+  @override
+  String get meetingErrNotCancellable => 'すでに参加者がいるため、キャンセルできません';
+
+  @override
+  String get meetingErrUnavailable => '現在、会議機能を利用できません。しばらくしてからもう一度お試しください。';
+
+  @override
+  String get meetingErrNotesReadOnly => '共有メモを編集できるのは主催者のみです';
+
+  @override
+  String get meetingErrNoteConflict => '他の人が新しいバージョンを保存しました';
+
+  @override
+  String get meetingErrRateLimited => '送信が速すぎます。少し待ってください。';
+
+  @override
+  String meetingErrChatTooLong(int max) {
+    return 'メッセージは最大 $max 文字です';
+  }
+
+  @override
+  String meetingErrNoteTooLong(int max) {
+    return 'メモは最大 $max 文字です';
+  }
+
+  @override
+  String get meetingErrInviteeInvalid => 'リストに招待できない人が含まれています';
+
+  @override
+  String get meetingErrDepartmentInvalid => 'この部署は利用できません';
+
+  @override
+  String get meetingErrStartInvalid => '開始時刻が無効です';
+
+  @override
+  String get meetingErrEndInvalid => '会議は開始後、24 時間以内に終了する必要があります';
+
+  @override
+  String get meetingErrTargetUnavailable => 'この人はもう会議にいません';
+
+  @override
+  String get meetingErrInvalid => 'リクエストに無効な内容があります';
+
+  @override
+  String get meetingErrNetwork => 'サーバーに接続できません。ネットワークを確認してください。';
+
+  @override
+  String get meetingErrGeneric => '問題が発生しました。もう一度お試しください。';
+
+  @override
+  String meetingValTitleTooLong(int max) {
+    return 'タイトルは最大 $max 文字です';
+  }
+
+  @override
+  String meetingValDescriptionTooLong(int max) {
+    return '説明は最大 $max 文字です';
+  }
+
+  @override
+  String meetingValTooManyInvitees(int max) {
+    return '招待できるのは最大 $max 人です';
+  }
+
+  @override
+  String get meetingValStartPast => '未来の日時を選んでください';
+
+  @override
+  String get meetingValScheduleInvalid => '有効な日付と時刻を選んでください';
+
+  @override
+  String get meetingUntitled => '会議';
+
+  @override
+  String get meetingSomeone => '誰か';
+
+  @override
+  String get meetingParticipantFallback => '参加者';
+
+  @override
+  String get meetingYou => 'あなた';
+
+  @override
+  String get meetingRoleHost => '主催者';
+
+  @override
+  String get meetingRoleCohost => '共同主催者';
+
+  @override
+  String get meetingRoleAttendee => '参加者';
+
+  @override
+  String get meetingStatusLive => '開催中';
+
+  @override
+  String get meetingStatusScheduled => '予定済み';
+
+  @override
+  String get meetingStatusEnded => '終了';
+
+  @override
+  String get meetingStatusCancelled => 'キャンセル済み';
+
+  @override
+  String meetingDurationMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 分',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingDurationHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 時間',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingDurationHoursMinutes(int hours, int minutes) {
+    return '$hours 時間 $minutes 分';
+  }
+
+  @override
+  String get meetingRealtimeOffline => 'オンラインに戻るまで、チャット・挙手・主催者の操作は一時停止しています';
+
+  @override
+  String meetingMutedBy(String name) {
+    return '$name があなたのマイクをミュートしました';
+  }
+
+  @override
+  String get meetingMutedByUnknown => '主催者があなたのマイクをミュートしました';
+
+  @override
+  String get meetingMadeCohost => '共同主催者になりました';
+
+  @override
+  String get meetingRevokedCohost => '共同主催者ではなくなりました';
+
+  @override
+  String get meetingEndedToast => '会議は終了しました';
+
+  @override
+  String get meetingMediaFailed => 'マイクまたはカメラをオンにできませんでした';
+
+  @override
+  String get meetingShareRevoked => '主催者が画面共有をオフにしました';
+
+  @override
+  String get meetingShareFailed => '画面を共有できませんでした';
+
+  @override
+  String meetingLobbyWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 人が参加を待っています',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingNotifInvitedTitle => '会議への招待';
+
+  @override
+  String meetingNotifInvitedBody(String name, String title) {
+    return '$name さんが「$title」に招待しました';
+  }
+
+  @override
+  String meetingNotifInvitedBodyAt(String name, String title, String time) {
+    return '$name さんが $time の「$title」に招待しました';
+  }
+
+  @override
+  String get meetingNotifStartingTitle => 'まもなく会議が始まります';
+
+  @override
+  String meetingNotifStartingBody(String title, String time) {
+    return '「$title」は $time に始まります';
+  }
+
+  @override
+  String meetingNotifCancelled(String title) {
+    return '「$title」はキャンセルされました';
+  }
+
+  @override
+  String get meetingNotifCancelledUnknown => '招待されていた会議がキャンセルされました';
 }

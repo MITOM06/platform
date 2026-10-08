@@ -4352,4 +4352,227 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get adminCapHostMeeting => '회의 주최';
+
+  @override
+  String get meetingErrNotFound => '존재하지 않는 회의입니다';
+
+  @override
+  String get meetingErrForbidden => '이 회의에서 해당 작업을 할 권한이 없습니다';
+
+  @override
+  String get meetingErrCreateForbidden => '현재 역할로는 회의를 주최할 수 없습니다';
+
+  @override
+  String get meetingErrDepartmentForbidden => '이 부서의 회의는 만들 수 없습니다';
+
+  @override
+  String get meetingErrRemoved => '이 회의에서 내보내졌습니다';
+
+  @override
+  String get meetingErrLocked => '이 회의는 잠겨 있습니다';
+
+  @override
+  String get meetingErrEnded => '이 회의는 종료되었습니다';
+
+  @override
+  String meetingErrFull(int max) {
+    return '회의 인원이 가득 찼습니다($max명)';
+  }
+
+  @override
+  String get meetingErrNotCancellable => '이미 참여한 사람이 있어 취소할 수 없습니다';
+
+  @override
+  String get meetingErrUnavailable => '지금은 회의를 사용할 수 없습니다. 잠시 후 다시 시도하세요.';
+
+  @override
+  String get meetingErrNotesReadOnly => '공유 메모는 주최자만 편집할 수 있습니다';
+
+  @override
+  String get meetingErrNoteConflict => '다른 사람이 더 최신 버전을 저장했습니다';
+
+  @override
+  String get meetingErrRateLimited => '너무 빠르게 보내고 있습니다. 잠시 기다려 주세요.';
+
+  @override
+  String meetingErrChatTooLong(int max) {
+    return '메시지는 최대 $max자까지 가능합니다';
+  }
+
+  @override
+  String meetingErrNoteTooLong(int max) {
+    return '메모는 최대 $max자까지 가능합니다';
+  }
+
+  @override
+  String get meetingErrInviteeInvalid => '목록에 초대할 수 없는 사람이 있습니다';
+
+  @override
+  String get meetingErrDepartmentInvalid => '사용할 수 없는 부서입니다';
+
+  @override
+  String get meetingErrStartInvalid => '시작 시간이 올바르지 않습니다';
+
+  @override
+  String get meetingErrEndInvalid => '회의는 시작 이후, 24시간 이내에 끝나야 합니다';
+
+  @override
+  String get meetingErrTargetUnavailable => '이 사람은 더 이상 회의에 없습니다';
+
+  @override
+  String get meetingErrInvalid => '요청에 올바르지 않은 내용이 있습니다';
+
+  @override
+  String get meetingErrNetwork => '서버에 연결할 수 없습니다. 네트워크를 확인하세요.';
+
+  @override
+  String get meetingErrGeneric => '문제가 발생했습니다. 다시 시도하세요.';
+
+  @override
+  String meetingValTitleTooLong(int max) {
+    return '제목은 최대 $max자까지 가능합니다';
+  }
+
+  @override
+  String meetingValDescriptionTooLong(int max) {
+    return '설명은 최대 $max자까지 가능합니다';
+  }
+
+  @override
+  String meetingValTooManyInvitees(int max) {
+    return '최대 $max명까지 초대할 수 있습니다';
+  }
+
+  @override
+  String get meetingValStartPast => '미래의 시간을 선택하세요';
+
+  @override
+  String get meetingValScheduleInvalid => '올바른 날짜와 시간을 선택하세요';
+
+  @override
+  String get meetingUntitled => '회의';
+
+  @override
+  String get meetingSomeone => '누군가';
+
+  @override
+  String get meetingParticipantFallback => '참가자';
+
+  @override
+  String get meetingYou => '나';
+
+  @override
+  String get meetingRoleHost => '주최자';
+
+  @override
+  String get meetingRoleCohost => '공동 주최자';
+
+  @override
+  String get meetingRoleAttendee => '참가자';
+
+  @override
+  String get meetingStatusLive => '진행 중';
+
+  @override
+  String get meetingStatusScheduled => '예약됨';
+
+  @override
+  String get meetingStatusEnded => '종료됨';
+
+  @override
+  String get meetingStatusCancelled => '취소됨';
+
+  @override
+  String meetingDurationMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count분',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingDurationHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count시간',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingDurationHoursMinutes(int hours, int minutes) {
+    return '$hours시간 $minutes분';
+  }
+
+  @override
+  String get meetingRealtimeOffline =>
+      '다시 온라인 상태가 될 때까지 채팅, 손들기, 주최자 제어가 일시 중지됩니다';
+
+  @override
+  String meetingMutedBy(String name) {
+    return '$name님이 내 마이크를 음소거했습니다';
+  }
+
+  @override
+  String get meetingMutedByUnknown => '주최자가 내 마이크를 음소거했습니다';
+
+  @override
+  String get meetingMadeCohost => '이제 공동 주최자입니다';
+
+  @override
+  String get meetingRevokedCohost => '더 이상 공동 주최자가 아닙니다';
+
+  @override
+  String get meetingEndedToast => '회의가 종료되었습니다';
+
+  @override
+  String get meetingMediaFailed => '마이크 또는 카메라를 켤 수 없습니다';
+
+  @override
+  String get meetingShareRevoked => '주최자가 화면 공유를 껐습니다';
+
+  @override
+  String get meetingShareFailed => '화면을 공유할 수 없습니다';
+
+  @override
+  String meetingLobbyWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count명이 참여를 기다리고 있습니다',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingNotifInvitedTitle => '회의 초대';
+
+  @override
+  String meetingNotifInvitedBody(String name, String title) {
+    return '$name님이 “$title” 회의에 초대했습니다';
+  }
+
+  @override
+  String meetingNotifInvitedBodyAt(String name, String title, String time) {
+    return '$name님이 $time “$title” 회의에 초대했습니다';
+  }
+
+  @override
+  String get meetingNotifStartingTitle => '곧 회의가 시작됩니다';
+
+  @override
+  String meetingNotifStartingBody(String title, String time) {
+    return '“$title” 회의가 $time에 시작됩니다';
+  }
+
+  @override
+  String meetingNotifCancelled(String title) {
+    return '“$title” 회의가 취소되었습니다';
+  }
+
+  @override
+  String get meetingNotifCancelledUnknown => '초대받은 회의가 취소되었습니다';
 }

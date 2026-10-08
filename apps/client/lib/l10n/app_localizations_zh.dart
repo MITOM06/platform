@@ -4304,4 +4304,226 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminCapHostMeeting => '主持会议';
+
+  @override
+  String get meetingErrNotFound => '该会议不存在';
+
+  @override
+  String get meetingErrForbidden => '你无权在此会议中执行此操作';
+
+  @override
+  String get meetingErrCreateForbidden => '你的角色无法主持会议';
+
+  @override
+  String get meetingErrDepartmentForbidden => '你无法为该部门创建会议';
+
+  @override
+  String get meetingErrRemoved => '你已被移出此会议';
+
+  @override
+  String get meetingErrLocked => '此会议已锁定';
+
+  @override
+  String get meetingErrEnded => '此会议已结束';
+
+  @override
+  String meetingErrFull(int max) {
+    return '此会议已满（$max 人）';
+  }
+
+  @override
+  String get meetingErrNotCancellable => '已有人加入，无法取消';
+
+  @override
+  String get meetingErrUnavailable => '会议功能暂时不可用，请稍后再试。';
+
+  @override
+  String get meetingErrNotesReadOnly => '只有主持人可以编辑共享笔记';
+
+  @override
+  String get meetingErrNoteConflict => '有人保存了更新的版本';
+
+  @override
+  String get meetingErrRateLimited => '发送太快了，请稍等片刻。';
+
+  @override
+  String meetingErrChatTooLong(int max) {
+    return '消息最多 $max 个字符';
+  }
+
+  @override
+  String meetingErrNoteTooLong(int max) {
+    return '笔记最多 $max 个字符';
+  }
+
+  @override
+  String get meetingErrInviteeInvalid => '名单中有人无法被邀请';
+
+  @override
+  String get meetingErrDepartmentInvalid => '该部门不可用';
+
+  @override
+  String get meetingErrStartInvalid => '开始时间无效';
+
+  @override
+  String get meetingErrEndInvalid => '会议必须在开始之后且 24 小时内结束';
+
+  @override
+  String get meetingErrTargetUnavailable => '此人已不在会议中';
+
+  @override
+  String get meetingErrInvalid => '请求中有无效内容';
+
+  @override
+  String get meetingErrNetwork => '无法连接服务器，请检查网络。';
+
+  @override
+  String get meetingErrGeneric => '出了点问题，请重试。';
+
+  @override
+  String meetingValTitleTooLong(int max) {
+    return '标题最多 $max 个字符';
+  }
+
+  @override
+  String meetingValDescriptionTooLong(int max) {
+    return '描述最多 $max 个字符';
+  }
+
+  @override
+  String meetingValTooManyInvitees(int max) {
+    return '最多只能邀请 $max 人';
+  }
+
+  @override
+  String get meetingValStartPast => '请选择未来的时间';
+
+  @override
+  String get meetingValScheduleInvalid => '请选择有效的日期和时间';
+
+  @override
+  String get meetingUntitled => '会议';
+
+  @override
+  String get meetingSomeone => '某人';
+
+  @override
+  String get meetingParticipantFallback => '参会者';
+
+  @override
+  String get meetingYou => '你';
+
+  @override
+  String get meetingRoleHost => '主持人';
+
+  @override
+  String get meetingRoleCohost => '联合主持人';
+
+  @override
+  String get meetingRoleAttendee => '参会者';
+
+  @override
+  String get meetingStatusLive => '进行中';
+
+  @override
+  String get meetingStatusScheduled => '已安排';
+
+  @override
+  String get meetingStatusEnded => '已结束';
+
+  @override
+  String get meetingStatusCancelled => '已取消';
+
+  @override
+  String meetingDurationMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 分钟',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingDurationHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 小时',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingDurationHoursMinutes(int hours, int minutes) {
+    return '$hours 小时 $minutes 分钟';
+  }
+
+  @override
+  String get meetingRealtimeOffline => '聊天、举手和主持人控制已暂停，恢复联网后继续';
+
+  @override
+  String meetingMutedBy(String name) {
+    return '$name 将你的麦克风静音了';
+  }
+
+  @override
+  String get meetingMutedByUnknown => '主持人将你的麦克风静音了';
+
+  @override
+  String get meetingMadeCohost => '你现在是联合主持人';
+
+  @override
+  String get meetingRevokedCohost => '你已不再是联合主持人';
+
+  @override
+  String get meetingEndedToast => '会议已结束';
+
+  @override
+  String get meetingMediaFailed => '无法开启麦克风或摄像头';
+
+  @override
+  String get meetingShareRevoked => '主持人已关闭屏幕共享';
+
+  @override
+  String get meetingShareFailed => '无法开始演示';
+
+  @override
+  String meetingLobbyWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 人正在等待加入',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingNotifInvitedTitle => '会议邀请';
+
+  @override
+  String meetingNotifInvitedBody(String name, String title) {
+    return '$name 邀请你参加“$title”';
+  }
+
+  @override
+  String meetingNotifInvitedBodyAt(String name, String title, String time) {
+    return '$name 邀请你于 $time 参加“$title”';
+  }
+
+  @override
+  String get meetingNotifStartingTitle => '会议即将开始';
+
+  @override
+  String meetingNotifStartingBody(String title, String time) {
+    return '“$title”将于 $time 开始';
+  }
+
+  @override
+  String meetingNotifCancelled(String title) {
+    return '“$title”已取消';
+  }
+
+  @override
+  String get meetingNotifCancelledUnknown => '你受邀参加的一个会议已取消';
 }

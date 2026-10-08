@@ -8190,6 +8190,360 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Host meetings'**
   String get adminCapHostMeeting;
+
+  /// No description provided for @meetingErrNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This meeting doesn\'t exist'**
+  String get meetingErrNotFound;
+
+  /// No description provided for @meetingErrForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t do that in this meeting'**
+  String get meetingErrForbidden;
+
+  /// No description provided for @meetingErrCreateForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Your role can\'t host meetings'**
+  String get meetingErrCreateForbidden;
+
+  /// No description provided for @meetingErrDepartmentForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t create a meeting for that department'**
+  String get meetingErrDepartmentForbidden;
+
+  /// No description provided for @meetingErrRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'You were removed from this meeting'**
+  String get meetingErrRemoved;
+
+  /// No description provided for @meetingErrLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'This meeting is locked'**
+  String get meetingErrLocked;
+
+  /// No description provided for @meetingErrEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'This meeting has ended'**
+  String get meetingErrEnded;
+
+  /// No description provided for @meetingErrFull.
+  ///
+  /// In en, this message translates to:
+  /// **'This meeting is full ({max} people)'**
+  String meetingErrFull(int max);
+
+  /// No description provided for @meetingErrNotCancellable.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone has already joined, so it can\'t be cancelled'**
+  String get meetingErrNotCancellable;
+
+  /// No description provided for @meetingErrUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Meetings are unavailable right now. Try again shortly.'**
+  String get meetingErrUnavailable;
+
+  /// No description provided for @meetingErrNotesReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only hosts can edit the shared notes'**
+  String get meetingErrNotesReadOnly;
+
+  /// No description provided for @meetingErrNoteConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone saved a newer version'**
+  String get meetingErrNoteConflict;
+
+  /// No description provided for @meetingErrRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re sending too fast. Wait a moment.'**
+  String get meetingErrRateLimited;
+
+  /// No description provided for @meetingErrChatTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages can be at most {max} characters'**
+  String meetingErrChatTooLong(int max);
+
+  /// No description provided for @meetingErrNoteTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes can be at most {max} characters'**
+  String meetingErrNoteTooLong(int max);
+
+  /// No description provided for @meetingErrInviteeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone on the list can\'t be invited'**
+  String get meetingErrInviteeInvalid;
+
+  /// No description provided for @meetingErrDepartmentInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That department isn\'t available'**
+  String get meetingErrDepartmentInvalid;
+
+  /// No description provided for @meetingErrStartInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The start time isn\'t valid'**
+  String get meetingErrStartInvalid;
+
+  /// No description provided for @meetingErrEndInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The meeting must end after it starts and within 24 hours'**
+  String get meetingErrEndInvalid;
+
+  /// No description provided for @meetingErrTargetUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'That person isn\'t in the meeting any more'**
+  String get meetingErrTargetUnavailable;
+
+  /// No description provided for @meetingErrInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Something in the request isn\'t valid'**
+  String get meetingErrInvalid;
+
+  /// No description provided for @meetingErrNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t reach the server. Check your connection.'**
+  String get meetingErrNetwork;
+
+  /// No description provided for @meetingErrGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Try again.'**
+  String get meetingErrGeneric;
+
+  /// No description provided for @meetingValTitleTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Title can be at most {max} characters'**
+  String meetingValTitleTooLong(int max);
+
+  /// No description provided for @meetingValDescriptionTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Description can be at most {max} characters'**
+  String meetingValDescriptionTooLong(int max);
+
+  /// No description provided for @meetingValTooManyInvitees.
+  ///
+  /// In en, this message translates to:
+  /// **'You can invite at most {max} people'**
+  String meetingValTooManyInvitees(int max);
+
+  /// No description provided for @meetingValStartPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a time in the future'**
+  String get meetingValStartPast;
+
+  /// No description provided for @meetingValScheduleInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a valid date and time'**
+  String get meetingValScheduleInvalid;
+
+  /// No description provided for @meetingUntitled.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting'**
+  String get meetingUntitled;
+
+  /// No description provided for @meetingSomeone.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone'**
+  String get meetingSomeone;
+
+  /// No description provided for @meetingParticipantFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Participant'**
+  String get meetingParticipantFallback;
+
+  /// No description provided for @meetingYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get meetingYou;
+
+  /// No description provided for @meetingRoleHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get meetingRoleHost;
+
+  /// No description provided for @meetingRoleCohost.
+  ///
+  /// In en, this message translates to:
+  /// **'Co-host'**
+  String get meetingRoleCohost;
+
+  /// No description provided for @meetingRoleAttendee.
+  ///
+  /// In en, this message translates to:
+  /// **'Participant'**
+  String get meetingRoleAttendee;
+
+  /// No description provided for @meetingStatusLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get meetingStatusLive;
+
+  /// No description provided for @meetingStatusScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled'**
+  String get meetingStatusScheduled;
+
+  /// No description provided for @meetingStatusEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended'**
+  String get meetingStatusEnded;
+
+  /// No description provided for @meetingStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get meetingStatusCancelled;
+
+  /// No description provided for @meetingDurationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other {{count} min}}'**
+  String meetingDurationMinutes(int count);
+
+  /// No description provided for @meetingDurationHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one {{count} hour} other {{count} hours}}'**
+  String meetingDurationHours(int count);
+
+  /// No description provided for @meetingDurationHoursMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} min'**
+  String meetingDurationHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @meetingRealtimeOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat, hands and host controls are paused until you\'re back online'**
+  String get meetingRealtimeOffline;
+
+  /// No description provided for @meetingMutedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} muted your microphone'**
+  String meetingMutedBy(String name);
+
+  /// No description provided for @meetingMutedByUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'A host muted your microphone'**
+  String get meetingMutedByUnknown;
+
+  /// No description provided for @meetingMadeCohost.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re now a co-host'**
+  String get meetingMadeCohost;
+
+  /// No description provided for @meetingRevokedCohost.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re no longer a co-host'**
+  String get meetingRevokedCohost;
+
+  /// No description provided for @meetingEndedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'The meeting has ended'**
+  String get meetingEndedToast;
+
+  /// No description provided for @meetingMediaFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t turn on your microphone or camera'**
+  String get meetingMediaFailed;
+
+  /// No description provided for @meetingShareRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'The host turned off screen sharing'**
+  String get meetingShareRevoked;
+
+  /// No description provided for @meetingShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start presenting'**
+  String get meetingShareFailed;
+
+  /// No description provided for @meetingLobbyWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one {{count} person is waiting to join} other {{count} people are waiting to join}}'**
+  String meetingLobbyWaiting(int count);
+
+  /// No description provided for @meetingNotifInvitedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting invitation'**
+  String get meetingNotifInvitedTitle;
+
+  /// No description provided for @meetingNotifInvitedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} invited you to “{title}”'**
+  String meetingNotifInvitedBody(String name, String title);
+
+  /// No description provided for @meetingNotifInvitedBodyAt.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} invited you to “{title}” on {time}'**
+  String meetingNotifInvitedBodyAt(String name, String title, String time);
+
+  /// No description provided for @meetingNotifStartingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting starting soon'**
+  String get meetingNotifStartingTitle;
+
+  /// No description provided for @meetingNotifStartingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'“{title}” starts at {time}'**
+  String meetingNotifStartingBody(String title, String time);
+
+  /// No description provided for @meetingNotifCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'“{title}” was cancelled'**
+  String meetingNotifCancelled(String title);
+
+  /// No description provided for @meetingNotifCancelledUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'A meeting you were invited to was cancelled'**
+  String get meetingNotifCancelledUnknown;
 }
 
 class _AppLocalizationsDelegate
