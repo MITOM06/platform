@@ -321,4 +321,27 @@ class ChatControllerTest {
     verify(clusterBroker, never()).convertAndSend(anyString(), any());
     verify(messageNotificationService, never()).notifyNewMessage(any(), any());
   }
+
+  /** Camera on/off, receive quality and reconnect requests reach the other person as "state". */
+  @Test
+  void callState_RelaysTheCallStateToThePeer() {
+    com.platform.chatservice.dto.WebRTCSignalDto dto =
+        new com.platform.chatservice.dto.WebRTCSignalDto();
+    dto.setTargetId("user-789");
+    dto.setConversationId("conv-999");
+    dto.setVideo(true);
+    dto.setQuality("poor");
+    dto.setRestart(true);
+
+    chatController.callState(dto, principal);
+
+    org.mockito.ArgumentCaptor<com.platform.chatservice.dto.WebRTCSignalDto> sent =
+        org.mockito.ArgumentCaptor.forClass(com.platform.chatservice.dto.WebRTCSignalDto.class);
+    verify(clusterBroker).convertAndSendToUser(eq("user-789"), eq("/queue/webrtc"), sent.capture());
+    org.assertj.core.api.Assertions.assertThat(sent.getValue().getType()).isEqualTo("state");
+    org.assertj.core.api.Assertions.assertThat(sent.getValue().getSenderId()).isEqualTo(SENDER_ID);
+    org.assertj.core.api.Assertions.assertThat(sent.getValue().getVideo()).isTrue();
+    org.assertj.core.api.Assertions.assertThat(sent.getValue().getQuality()).isEqualTo("poor");
+    org.assertj.core.api.Assertions.assertThat(sent.getValue().getRestart()).isTrue();
+  }
 }

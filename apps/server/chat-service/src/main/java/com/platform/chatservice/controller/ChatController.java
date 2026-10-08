@@ -238,6 +238,18 @@ public class ChatController {
    * <p>Historical {@code call_log} messages already in Mongo still render as before; only new ones
    * stop being created.
    */
+  /**
+   * In-call state for the other person of a 1-on-1 (camera on/off, receive quality, reconnect
+   * request) on either media path. Relayed as {@code type:"state"}; older apps ignore it.
+   */
+  @MessageMapping("/call.state")
+  public void callState(
+      @Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
+    dto.setSenderId(principal.getName());
+    dto.setType("state");
+    clusterBroker.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
+  }
+
   @MessageMapping("/call.end")
   public void callEnd(
       @Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
