@@ -4561,4 +4561,31 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get authErrMfaResetSelfForbidden =>
       'Vous ne pouvez pas réinitialiser votre propre authentification à deux facteurs.';
+
+  @override
+  String get callSelfWeakNetwork => 'Votre réseau est faible';
+
+  @override
+  String callPeerWeakNetwork(String name) {
+    return 'Le réseau de $name est faible';
+  }
+
+  @override
+  String get callUnstableNetwork => 'Connexion instable';
+
+  @override
+  String get callReconnectingSelf => 'Connexion perdue, reconnexion…';
+
+  @override
+  String callWaitingForPeer(String name) {
+    return 'En attente de la reconnexion de $name…';
+  }
+
+  @override
+  String callReconnectCountdown(int seconds) {
+    return 'L\'appel prendra fin dans $seconds s sans reconnexion';
+  }
+
+  @override
+  String get callSwitchToVideo => 'Passer en vidéo';
 }

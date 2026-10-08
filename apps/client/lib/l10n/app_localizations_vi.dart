@@ -4467,4 +4467,31 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get authErrMfaResetSelfForbidden =>
       'Bạn không thể tự đặt lại xác thực hai yếu tố của chính mình.';
+
+  @override
+  String get callSelfWeakNetwork => 'Mạng của bạn đang yếu';
+
+  @override
+  String callPeerWeakNetwork(String name) {
+    return 'Mạng của $name đang yếu';
+  }
+
+  @override
+  String get callUnstableNetwork => 'Kết nối không ổn định';
+
+  @override
+  String get callReconnectingSelf => 'Mất kết nối, đang kết nối lại…';
+
+  @override
+  String callWaitingForPeer(String name) {
+    return 'Đang chờ $name kết nối lại…';
+  }
+
+  @override
+  String callReconnectCountdown(int seconds) {
+    return 'Cuộc gọi sẽ kết thúc sau $seconds giây nếu không kết nối lại được';
+  }
+
+  @override
+  String get callSwitchToVideo => 'Chuyển sang gọi video';
 }

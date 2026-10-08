@@ -1522,5 +1522,21 @@
   "authErrMfaNotEnrolled": "Tài khoản này chưa thiết lập xác thực hai yếu tố.",
   "authErrMfaAlreadyEnrolled": "Tài khoản này đã thiết lập xác thực hai yếu tố.",
   "authErrMfaResetForbidden": "Chỉ Chủ sở hữu mới có thể đặt lại xác thực hai yếu tố.",
-  "authErrMfaResetSelfForbidden": "Bạn không thể tự đặt lại xác thực hai yếu tố của chính mình."
+  "authErrMfaResetSelfForbidden": "Bạn không thể tự đặt lại xác thực hai yếu tố của chính mình.",
+  "callSelfWeakNetwork": "Mạng của bạn đang yếu",
+  "callPeerWeakNetwork": "Mạng của {name} đang yếu",
+  "@callPeerWeakNetwork": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callUnstableNetwork": "Kết nối không ổn định",
+  "callReconnectingSelf": "Mất kết nối, đang kết nối lại…",
+  "callWaitingForPeer": "Đang chờ {name} kết nối lại…",
+  "@callWaitingForPeer": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callReconnectCountdown": "Cuộc gọi sẽ kết thúc sau {seconds} giây nếu không kết nối lại được",
+  "@callReconnectCountdown": {
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "callSwitchToVideo": "Chuyển sang gọi video"
 }

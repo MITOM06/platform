@@ -4492,4 +4492,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authErrMfaResetSelfForbidden =>
       'You can\'t reset your own two-factor authentication.';
+
+  @override
+  String get callSelfWeakNetwork => 'Your network is weak';
+
+  @override
+  String callPeerWeakNetwork(String name) {
+    return '$name\'s network is weak';
+  }
+
+  @override
+  String get callUnstableNetwork => 'Unstable connection';
+
+  @override
+  String get callReconnectingSelf => 'Connection lost — reconnecting…';
+
+  @override
+  String callWaitingForPeer(String name) {
+    return 'Waiting for $name to reconnect…';
+  }
+
+  @override
+  String callReconnectCountdown(int seconds) {
+    return 'The call ends in ${seconds}s if it cannot reconnect';
+  }
+
+  @override
+  String get callSwitchToVideo => 'Switch to video';
 }

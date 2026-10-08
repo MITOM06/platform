@@ -1522,5 +1522,21 @@
   "authErrMfaNotEnrolled": "L'authentification à deux facteurs n'est pas encore configurée pour ce compte.",
   "authErrMfaAlreadyEnrolled": "L'authentification à deux facteurs est déjà configurée pour ce compte.",
   "authErrMfaResetForbidden": "Seul un Propriétaire peut réinitialiser l'authentification à deux facteurs.",
-  "authErrMfaResetSelfForbidden": "Vous ne pouvez pas réinitialiser votre propre authentification à deux facteurs."
+  "authErrMfaResetSelfForbidden": "Vous ne pouvez pas réinitialiser votre propre authentification à deux facteurs.",
+  "callSelfWeakNetwork": "Votre réseau est faible",
+  "callPeerWeakNetwork": "Le réseau de {name} est faible",
+  "@callPeerWeakNetwork": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callUnstableNetwork": "Connexion instable",
+  "callReconnectingSelf": "Connexion perdue, reconnexion…",
+  "callWaitingForPeer": "En attente de la reconnexion de {name}…",
+  "@callWaitingForPeer": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callReconnectCountdown": "L'appel prendra fin dans {seconds} s sans reconnexion",
+  "@callReconnectCountdown": {
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "callSwitchToVideo": "Passer en vidéo"
 }

@@ -1522,5 +1522,21 @@
   "authErrMfaNotEnrolled": "このアカウントでは二要素認証がまだ設定されていません。",
   "authErrMfaAlreadyEnrolled": "このアカウントでは二要素認証がすでに設定されています。",
   "authErrMfaResetForbidden": "二要素認証をリセットできるのはオーナーのみです。",
-  "authErrMfaResetSelfForbidden": "自分の二要素認証はリセットできません。"
+  "authErrMfaResetSelfForbidden": "自分の二要素認証はリセットできません。",
+  "callSelfWeakNetwork": "あなたのネットワークが不安定です",
+  "callPeerWeakNetwork": "{name}さんのネットワークが不安定です",
+  "@callPeerWeakNetwork": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callUnstableNetwork": "接続が不安定です",
+  "callReconnectingSelf": "接続が切れました。再接続しています…",
+  "callWaitingForPeer": "{name}さんの再接続を待っています…",
+  "@callWaitingForPeer": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callReconnectCountdown": "再接続できない場合、{seconds}秒後に通話が終了します",
+  "@callReconnectCountdown": {
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "callSwitchToVideo": "ビデオ通話に切り替え"
 }

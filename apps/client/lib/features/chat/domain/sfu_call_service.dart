@@ -8,12 +8,15 @@ import '../../../core/rtc/livekit_session.dart';
 import '../../../core/rtc/rtc_session.dart';
 import '../data/calls_repository.dart';
 import '../data/stomp_service.dart';
+import 'call_network.dart';
 import 'call_rules.dart';
 import 'call_signal_port.dart';
 import 'call_transport.dart';
 import 'direct_call_engine.dart';
 
 export 'call_signal_port.dart';
+
+part 'sfu_call_service_signals.dart';
 
 const _declineReasons = {
   CallEndReason.declined,
@@ -42,7 +45,7 @@ class SfuCallService implements DirectCallEngine {
     required CallTransportCache transport,
     required RtcSessionFactory sessionFactory,
     required Future<bool> Function(bool video) probeMedia,
-    Duration peerGrace = const Duration(seconds: 8),
+    Duration peerGrace = ReconnectWatch.reconnectGrace,
     Duration pendingStartDeadline = const Duration(seconds: 15),
   })  : _port = port,
         _api = api,
@@ -83,7 +86,15 @@ class SfuCallService implements DirectCallEngine {
   bool _pendingStart = false;
   CallEndReason? _cancelledBeforeStart;
   MediaStream? _lastRemote;
-  Timer? _peerGoneTimer;
+  /// Whose network is weak, the other person's camera, the reconnect window.
+  @override
+  final CallNetworkState network = CallNetworkState();
+
+  /// Someone dropped: the one-minute "waiting to reconnect" window.
+  late final ReconnectWatch _watch = ReconnectWatch(network, grace: _peerGrace);
+
+  /// A rejoin of the room is in flight.
+  bool _rejoining = false;
   DateTime? _mediaSince;
   bool _micOn = true;
   bool _cameraOn = true;
@@ -163,35 +174,6 @@ class SfuCallService implements DirectCallEngine {
     await _join();
   }
 
-  /// `/user/queue/webrtc` signals for this call.
-  void handleSignal(Map<String, dynamic> signal) {
-    switch (signal['type']) {
-      case 'call-declined':
-        if (_incoming || _connected) return;
-        final sameCall = signal['callId'] != null
-            ? signal['callId'] == _callId
-            : _pendingStart && signal['conversationId'] == _conversationId;
-        if (!sameCall) return;
-        final reason = CallEndReason.fromWire(signal['reason'] as String?);
-        if (reason == CallEndReason.busy) {
-          onSendCallLog?.call(WebRTCServiceLogs.missed(_isVideo));
-        }
-        onEndNotice?.call(reason, true);
-        dispose();
-      case 'call-blocked':
-        // The callee has us blocked: no call.started will ever come.
-        if (!_incoming && !_connected && (_pendingStart || _callId != null)) {
-          dispose();
-        }
-      case 'call-merged':
-        _onMerged(signal);
-      case 'call-ring-cancel':
-        // Our own answer echoes back as answered_elsewhere: ignore it then.
-        if (!_incoming || _accepting || signal['callId'] != _callId) return;
-        dispose();
-    }
-  }
-
   @override
   Future<void> endCall(
       {int? duration, CallEndReason reason = CallEndReason.hangup}) async {
@@ -250,9 +232,11 @@ class SfuCallService implements DirectCallEngine {
     await _session?.setMic(on);
   }
 
+  /// Our camera on/off — in a voice call this publishes it: a video call now.
   @override
   Future<void> setCameraOn(bool on) async {
     _cameraOn = on;
+    if (on) _isVideo = true;
     await _session?.setCamera(on);
   }
 
@@ -282,6 +266,7 @@ class SfuCallService implements DirectCallEngine {
     _cameraOn = isVideo;
     reconnecting.value = false;
     poorConnection.value = false;
+    network.reset(peerCamera: isVideo);
   }
 
   void _hold(String conversationId) {
@@ -343,49 +328,24 @@ class SfuCallService implements DirectCallEngine {
     unawaited(_join());
   }
 
-  /// Both tapped Call: the server put us in their call. Join it, its media.
-  void _onMerged(Map<String, dynamic> signal) {
-    final callId = signal['callId'] as String?;
-    final conversationId = signal['conversationId'] as String?;
-    final senderId = signal['senderId'] as String?;
-    if (callId == null || conversationId == null || senderId == null) return;
-    if (_pendingStart &&
-        _cancelledBeforeStart != null &&
-        _conversationId == conversationId) {
-      // We hung up before the server answered: leave the call it put us in.
-      _pendingTimer?.cancel();
-      _pendingTimer = null;
-      _pendingStart = false;
-      _cancelledBeforeStart = null;
-      _port.send('/app/call.leave', {'callId': callId});
-      _release();
-      return;
-    }
-    if (!isCallingTo(senderId, conversationId)) return;
-    if (_callId == callId) return; // a repeated merge: already joining
-    _pendingTimer?.cancel();
-    _pendingTimer = null;
-    _pendingStart = false; // our call.start was folded into theirs
-    _callId = callId;
-    _isVideo = signal['media'] == 'video';
-    _cameraOn = _isVideo;
-    unawaited(_join());
-  }
-
   void _remoteEnded(CallEndReason reason) {
     final unanswered = _incoming && !_accepting;
     if (!unanswered) onEndNotice?.call(reason, true);
     dispose();
   }
 
-  Future<void> _join() async {
+  /// Join (or, [rejoin], re-join after losing) the call's room. A failed
+  /// rejoin is retried by the reconnect window.
+  Future<void> _join({bool rejoin = false}) async {
     final callId = _callId;
     if (callId == null) return;
     CallToken token;
     try {
       token = await _api.getToken(callId);
     } catch (_) {
-      if (_callId == callId) await endCall(reason: CallEndReason.failed);
+      if (!rejoin && _callId == callId) {
+        await endCall(reason: CallEndReason.failed);
+      }
       return;
     }
     if (_callId != callId) return;
@@ -398,21 +358,34 @@ class SfuCallService implements DirectCallEngine {
     session
       ..onLocalStream = ((s) => onLocalStream?.call(s))
       ..onPeersChanged = ((_) => _onPeers())
-      ..onReconnecting = ((on) => reconnecting.value = on)
-      ..onLocalPoorConnection = ((poor) => poorConnection.value = poor)
+      ..onReconnecting = (on) {
+        reconnecting.value = on;
+        if (on) {
+          _watch.begin(ReconnectWho.self, _giveUp);
+        } else if (_peerInRoom()) {
+          _watch.end();
+        }
+      }
+      ..onLocalPoorConnection = (poor) {
+        poorConnection.value = poor;
+        network.selfPoor = poor;
+      }
       ..onDisconnected = (reason) {
         if (_session != session) return;
         if (reason == RtcEnd.ended) {
           // The server closed the room: the other side hung up.
           _remoteEnded(CallEndReason.hangup);
         } else {
-          unawaited(endCall(reason: CallEndReason.failed));
+          // LiveKit could not resume: keep the screen, re-join for a minute.
+          _watch.begin(ReconnectWho.self, _giveUp,
+              tick: () => unawaited(_rejoin(callId)));
         }
       };
     try {
       await session.connect(token.url, token.token, video: _isVideo);
+      if (rejoin && _session == session) reconnecting.value = false;
     } catch (e) {
-      if (_session != session) return;
+      if (rejoin || _session != session) return;
       await endCall(
           reason: e is MediaAccessException
               ? CallEndReason.mediaError
@@ -422,20 +395,39 @@ class SfuCallService implements DirectCallEngine {
     if (_session == session) await setSpeakerOn(_isVideo);
   }
 
+  void _giveUp() => unawaited(endCall(reason: CallEndReason.failed));
+
+  Future<void> _rejoin(String callId) async {
+    if (_rejoining || _callId != callId) return;
+    _rejoining = true;
+    try {
+      await _join(rejoin: true);
+    } finally {
+      _rejoining = false;
+    }
+  }
+
+  bool _peerInRoom() {
+    final target = _targetId;
+    return target != null && _session?.peer(target) != null;
+  }
+
   void _onPeers() {
     final target = _targetId;
     final peer = target == null ? null : _session?.peer(target);
     if (peer == null) {
-      if (_connected && _peerGoneTimer == null) {
-        _peerGoneTimer = Timer(_peerGrace, () {
-          _peerGoneTimer = null;
-          if (_connected) unawaited(endCall(reason: CallEndReason.failed));
-        });
-      }
+      // Gone without the call ending (crash, lost network): wait a minute,
+      // as the server does.
+      if (_connected) _watch.begin(ReconnectWho.peer, _giveUp);
       return;
     }
-    _peerGoneTimer?.cancel();
-    _peerGoneTimer = null;
+    if (!reconnecting.value) _watch.end();
+    network.peerPoor = peer.poorConnection;
+    // Their camera: known once they publish video; until then the call kind stands.
+    if ((peer.stream?.getVideoTracks() ?? const []).isNotEmpty) {
+      network.peerCamera = !peer.camMuted;
+      if (!peer.camMuted) _isVideo = true;
+    }
     final stream = peer.stream;
     if (stream == null || identical(stream, _lastRemote)) return;
     _lastRemote = stream;
@@ -445,8 +437,8 @@ class SfuCallService implements DirectCallEngine {
   }
 
   void _teardown({required bool keepPending, bool notify = true}) {
-    _peerGoneTimer?.cancel();
-    _peerGoneTimer = null;
+    _watch.end();
+    _rejoining = false;
     final session = _session;
     _session = null;
     if (session != null) unawaited(session.disconnect());

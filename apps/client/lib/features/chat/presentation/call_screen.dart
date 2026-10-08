@@ -13,7 +13,9 @@ import '../domain/call_transport.dart';
 import '../domain/direct_call_engine.dart';
 import '../domain/sfu_call_service.dart';
 import '../domain/webrtc_service.dart';
+import '../domain/call_network.dart';
 import '../ui/widgets/call_controls.dart';
+import '../ui/widgets/call_network_overlay.dart';
 
 class CallScreen extends ConsumerStatefulWidget {
   final String targetId;
@@ -48,7 +50,6 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   Timer? _ringTimer;
   int _durationSeconds = 0;
   bool _isConnected = false;
-  bool _isVideoCall = true;
   late final CallSounds _sounds;
 
   /// Captured in didChangeDependencies: the end notice may fire after this
@@ -99,8 +100,6 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       if (!mounted) return;
       setState(() {
         _localRenderer.srcObject = stream;
-        // When both tapped Call, the surviving call brings its own media.
-        _isVideoCall = webrtc.isVideo;
       });
     };
     
@@ -143,7 +142,6 @@ class _CallScreenState extends ConsumerState<CallScreen> {
     final effectiveVideo = widget.isCaller || webrtc is SfuCallService
         ? widget.isVideo
         : WebRTCService.sdpHasVideo(widget.initialOfferSdp);
-    _isVideoCall = effectiveVideo;
 
     if (webrtc is SfuCallService) {
       if (widget.isCaller) {
@@ -256,14 +254,25 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   }
 
   Widget _buildCall(BuildContext context) {
+    final network = _engine.network;
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
+      body: ListenableBuilder(
+        listenable: network,
+        builder: (context, _) => _callStack(context, network),
+      ),
+    );
+  }
+
+  /// Video while either camera is on; voice when both are off (Messenger-style).
+  Widget _callStack(BuildContext context, CallNetworkState network) {
+    final video = showsVideo(_engine.cameraOn, network.peerCamera);
+    return Stack(
         children: [
           // Remote Video
           Positioned.fill(
             child: _isConnected
-                ? (_isVideoCall
+                ? (video && network.peerCamera
                     ? RTCVideoView(_remoteRenderer,
                         objectFit:
                             RTCVideoViewObjectFit.RTCVideoViewObjectFitCover)
@@ -291,8 +300,8 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                   ),
           ),
           
-          // Local Video (PIP) — only for video calls.
-          if (_isVideoCall)
+          // Local Video (PIP) — while our camera is on.
+          if (video && _engine.cameraOn)
           Positioned(
             right: 16,
             bottom: 120,
@@ -327,10 +336,13 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                     _formattedDuration,
                     style: const TextStyle(color: Colors.white70, fontSize: 16),
                   ),
-                if (_engine case final SfuCallService sfu) _ConnectionNotice(sfu),
+                CallNetworkNotice(network: network, peerName: widget.targetName),
               ],
             ),
           ),
+
+          // Below the controls, so hanging up stays possible while waiting.
+          CallReconnectOverlay(network: network, peerName: widget.targetName),
 
           // Controls
           Positioned(
@@ -340,7 +352,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
             child: Builder(builder: (context) {
               final webrtc = _engine;
               return CallControls(
-                isVideo: _isVideoCall,
+                isVideo: video,
                 micOn: webrtc.micOn,
                 cameraOn: webrtc.cameraOn,
                 speakerOn: webrtc.speakerOn,
@@ -362,30 +374,6 @@ class _CallScreenState extends ConsumerState<CallScreen> {
             }),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// "Reconnecting…" / "Poor connection" under the call status (LiveKit calls).
-class _ConnectionNotice extends StatelessWidget {
-  final SfuCallService call;
-  const _ConnectionNotice(this.call);
-
-  @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: Listenable.merge([call.reconnecting, call.poorConnection]),
-      builder: (context, _) {
-        final text = call.reconnecting.value
-            ? context.l10n.callReconnecting
-            : (call.poorConnection.value ? context.l10n.callPoorConnection : null);
-        if (text == null) return const SizedBox.shrink();
-        return Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(text, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-        );
-      },
     );
   }
 }

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/l10n/l10n_ext.dart';
 
-/// Bottom controls of the 1-on-1 call screen. Voice: mic · speaker · hang up.
+/// Bottom controls of the 1-on-1 call screen. Voice: mic · speaker · switch
+/// to video · hang up.
 /// Video: mic · camera · switch camera · hang up (video uses the loudspeaker).
 /// Mirrors the web VoiceCallModal / VideoCallModal controls.
 class CallControls extends StatelessWidget {
@@ -55,13 +56,21 @@ class CallControls extends StatelessWidget {
             active: false,
             onPressed: onSwitchCamera,
           ),
-        ] else
+        ] else ...[
           _RoundButton(
             tooltip: l10n.callSpeaker,
             icon: speakerOn ? Icons.volume_up_rounded : Icons.hearing_rounded,
             active: speakerOn,
             onPressed: onToggleSpeaker,
           ),
+          // Turn our camera on: the call switches to video (Messenger-style).
+          _RoundButton(
+            tooltip: l10n.callSwitchToVideo,
+            icon: Icons.videocam_rounded,
+            active: false,
+            onPressed: onToggleCamera,
+          ),
+        ],
         Tooltip(
           message: l10n.callHangUp,
           child: FloatingActionButton(

@@ -4349,4 +4349,31 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get authErrMfaResetSelfForbidden => '自分の二要素認証はリセットできません。';
+
+  @override
+  String get callSelfWeakNetwork => 'あなたのネットワークが不安定です';
+
+  @override
+  String callPeerWeakNetwork(String name) {
+    return '$nameさんのネットワークが不安定です';
+  }
+
+  @override
+  String get callUnstableNetwork => '接続が不安定です';
+
+  @override
+  String get callReconnectingSelf => '接続が切れました。再接続しています…';
+
+  @override
+  String callWaitingForPeer(String name) {
+    return '$nameさんの再接続を待っています…';
+  }
+
+  @override
+  String callReconnectCountdown(int seconds) {
+    return '再接続できない場合、$seconds秒後に通話が終了します';
+  }
+
+  @override
+  String get callSwitchToVideo => 'ビデオ通話に切り替え';
 }

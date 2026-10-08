@@ -4,11 +4,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:platform_client/core/rtc/rtc_session.dart';
 import 'package:platform_client/features/chat/data/calls_repository.dart';
+import 'package:platform_client/features/chat/domain/call_network.dart';
 import 'package:platform_client/features/chat/domain/call_rules.dart';
 import 'package:platform_client/features/chat/domain/call_transport.dart';
 import 'package:platform_client/features/chat/domain/sfu_call_service.dart';
 
+class _FakeTrack implements MediaStreamTrack {
+  @override
+  dynamic noSuchMethod(Invocation i) => null;
+}
+
 class _FakeStream implements MediaStream {
+  bool video = false;
+  @override
+  List<MediaStreamTrack> getVideoTracks() => video ? [_FakeTrack()] : [];
   @override
   dynamic noSuchMethod(Invocation i) => null;
 }
@@ -75,6 +84,15 @@ class _Session implements RtcSession {
     onPeersChanged?.call(peers);
   }
 
+  /// The other person's network / camera changed.
+  void peerState(String id, {bool? poor, bool? video, bool? camMuted}) {
+    final peer = _peers[id]!;
+    if (poor != null) peer.poorConnection = poor;
+    if (video != null) (peer.stream as _FakeStream).video = video;
+    if (camMuted != null) peer.camMuted = camMuted;
+    onPeersChanged?.call(peers);
+  }
+
   void leave(String id) {
     _peers.remove(id);
     onPeersChanged?.call(peers);
@@ -88,8 +106,9 @@ class _Session implements RtcSession {
   MediaStream? get localStream => null;
   @override
   Future<void> setMic(bool on) async => micCalls.add(on);
+  final cameraCalls = <bool>[];
   @override
-  Future<void> setCamera(bool on) async {}
+  Future<void> setCamera(bool on) async => cameraCalls.add(on);
   @override
   Future<void> switchCamera() async {}
   @override
@@ -323,13 +342,53 @@ void main() {
       expect(notices, [(CallEndReason.hangup, true)]);
     });
 
-    test('a real drop ends it as failed', () async {
+    test('a real drop rejoins the room instead of ending the call', () async {
       final s = await connect();
       s.onDisconnected!(RtcEnd.failed);
+      await flush();
+      expect(notices, isEmpty);
+      expect(port.to('/app/call.leave'), isEmpty);
+      expect(call.network.reconnectWho, ReconnectWho.self);
+      expect(sessions, hasLength(2)); // re-joined
+      sessions.last.join('bob');
+      expect(call.network.reconnectWho, isNull);
+    });
+
+    test('gives up after the grace when the room cannot be rejoined',
+        () async {
+      final s = await connect();
+      api.tokenError = Exception('offline');
+      s.onDisconnected!(RtcEnd.failed);
+      await Future<void>.delayed(const Duration(milliseconds: 80));
       expect(notices, [(CallEndReason.failed, false)]);
-      expect(port.to('/app/call.leave'), [
-        {'callId': 'c1'}
-      ]);
+    });
+
+    test('LiveKit reconnecting shows that it is our own connection', () async {
+      final s = await connect();
+      s.onReconnecting!(true);
+      expect(call.network.reconnectWho, ReconnectWho.self);
+      s.onReconnecting!(false);
+      expect(call.network.reconnectWho, isNull);
+    });
+
+    test("shows the other person's weak network and follows their camera",
+        () async {
+      final s = await connect();
+      s.peerState('bob', poor: true);
+      expect(call.network.peerPoor, isTrue);
+      expect(call.network.peerCamera, isFalse);
+      s.peerState('bob', poor: false, video: true);
+      expect(call.network.peerPoor, isFalse);
+      expect(call.network.peerCamera, isTrue);
+      s.peerState('bob', camMuted: true);
+      expect(call.network.peerCamera, isFalse);
+    });
+
+    test('turning the camera on in a voice call publishes it', () async {
+      final s = await connect();
+      await call.setCameraOn(true);
+      expect(s.cameraCalls, [true]);
+      expect(call.isVideo, isTrue);
     });
 
     test(

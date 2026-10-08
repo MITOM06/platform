@@ -4301,4 +4301,31 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get authErrMfaResetSelfForbidden => '你不能重置自己的双重验证。';
+
+  @override
+  String get callSelfWeakNetwork => '你的网络较差';
+
+  @override
+  String callPeerWeakNetwork(String name) {
+    return '$name 的网络较差';
+  }
+
+  @override
+  String get callUnstableNetwork => '连接不稳定';
+
+  @override
+  String get callReconnectingSelf => '连接中断，正在重新连接…';
+
+  @override
+  String callWaitingForPeer(String name) {
+    return '正在等待 $name 重新连接…';
+  }
+
+  @override
+  String callReconnectCountdown(int seconds) {
+    return '若无法重新连接，通话将在 $seconds 秒后结束';
+  }
+
+  @override
+  String get callSwitchToVideo => '切换到视频通话';
 }
