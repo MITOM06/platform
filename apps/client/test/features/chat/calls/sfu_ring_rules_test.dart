@@ -20,4 +20,10 @@ void main() {
     expect(CallEndReason.fromWire('answered_elsewhere'),
         CallEndReason.answeredElsewhere);
   });
+
+  test('a ring from the person we are calling is left to the server', () {
+    // Both tapped Call: the server answers their call for us (call-merged).
+    expect(decideSfuRing(callId: 'c1', inCall: true, callingThem: true),
+        SfuRingAction.ignore);
+  });
 }

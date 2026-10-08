@@ -10,6 +10,7 @@ import '../../domain/chat_state.dart';
 import 'conversation_avatar.dart';
 import 'conversation_info_sidebar.dart';
 import 'group_call_start_sheet.dart';
+import '../call_launcher.dart';
 
 class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final String conversationId;
@@ -207,23 +208,25 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
           if (!isGroup && otherUserId != null && !isAiConversation) ...[
             IconButton(
               icon: const Icon(Icons.call_rounded, size: 22),
-              onPressed: () => context.push('/call', extra: {
-                'targetId': otherUserId,
-                'targetName': displayName,
-                'conversationId': conversationId,
-                'isCaller': true,
-                'isVideo': false,
-              }),
+              onPressed: () => startDirectCall(
+                context,
+                ref,
+                targetId: otherUserId,
+                targetName: displayName,
+                conversationId: conversationId,
+                isVideo: false,
+              ),
             ),
             IconButton(
               icon: const Icon(Icons.videocam_rounded, size: 24),
-              onPressed: () => context.push('/call', extra: {
-                'targetId': otherUserId,
-                'targetName': displayName,
-                'conversationId': conversationId,
-                'isCaller': true,
-                'isVideo': true,
-              }),
+              onPressed: () => startDirectCall(
+                context,
+                ref,
+                targetId: otherUserId,
+                targetName: displayName,
+                conversationId: conversationId,
+                isVideo: true,
+              ),
             ),
           ],
           if (isGroup) ...[

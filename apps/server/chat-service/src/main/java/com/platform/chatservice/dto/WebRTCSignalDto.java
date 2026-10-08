@@ -47,4 +47,10 @@ public class WebRTCSignalDto {
 
   /** Ring payload: "direct" (1-on-1, Messenger-style UI) | "group". */
   private String kind;
+
+  /**
+   * {@code call.start}: the app can join a call it gets merged into ({@code call-merged}) when both
+   * people tap Call at the same time. Apps before that feature leave it out and keep hearing busy.
+   */
+  private Boolean merge;
 }

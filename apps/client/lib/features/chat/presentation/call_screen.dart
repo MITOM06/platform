@@ -99,6 +99,8 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       if (!mounted) return;
       setState(() {
         _localRenderer.srcObject = stream;
+        // When both tapped Call, the surviving call brings its own media.
+        _isVideoCall = webrtc.isVideo;
       });
     };
     

@@ -54,7 +54,8 @@ export class SfuDirectCall {
     this.pendingStart = { conversationId }
     this.cancelledBeforeStart = null
     this.subscribeTopic(conversationId)
-    stompService.publish('/app/call.start', { conversationId, media: video ? 'video' : 'audio' })
+    // `merge`: we can join a call-merged call when they call us at the same time.
+    stompService.publish('/app/call.start', { conversationId, media: video ? 'video' : 'audio', merge: true })
     this.ringTimer = setTimeout(() => {
       this.ringTimer = null
       if (store().status === 'outgoing') this.endCall('no_answer')
@@ -63,7 +64,11 @@ export class SfuDirectCall {
 
   /** `call.started` / `call.ended` from the conversation topic (kind direct, sfu). */
   handleCallEvent(event: CallEvent): void {
-    if (event.event === 'call.started') this.onStarted(event.callId, event.conversationId, event.transport)
+    // The other person's call.started (both tapped Call) is not our pending
+    // start: the server folds ours into theirs and sends call-merged.
+    if (event.event === 'call.started' && event.startedBy !== store().peerId) {
+      this.onStarted(event.callId, event.conversationId, event.transport)
+    }
     if (event.event === 'call.ended') this.onEnded(event.callId, (event.reason as CallEndReason) ?? 'hangup')
   }
 
@@ -77,6 +82,9 @@ export class SfuDirectCall {
         break
       case 'call-declined':
         this.onDeclined(signal)
+        break
+      case 'call-merged':
+        this.onMerged(signal)
         break
     }
   }
@@ -192,6 +200,9 @@ export class SfuDirectCall {
     const { callId, conversationId, senderId } = signal
     if (!callId || !conversationId || !senderId) return
     const st = store()
+    // We are calling the person who is calling us (both tapped Call): not busy —
+    // the server answers their call for us and sends call-merged.
+    if (st.status === 'outgoing' && st.peerId === senderId && st.conversationId === conversationId) return
     if (st.status !== 'idle' || st.groupCallId) {
       if (st.callId !== callId) stompService.publish('/app/call.decline', { callId, reason: 'busy' })
       return
@@ -207,6 +218,30 @@ export class SfuDirectCall {
       callId,
       transport: 'sfu',
     })
+  }
+
+  /** Both tapped Call: the server accepted us into their call instead of ringing them. */
+  private onMerged(signal: WebRTCSignal): void {
+    const { callId, conversationId, senderId } = signal
+    if (!callId || !conversationId || !senderId) return
+    if (this.cancelledBeforeStart && this.pendingStart?.conversationId === conversationId) {
+      // We hung up before the server answered: leave the call it put us in.
+      this.pendingStart = null
+      this.cancelledBeforeStart = null
+      stompService.publish('/app/call.leave', { callId })
+      this.unsubscribeTopic()
+      return
+    }
+    const st = store()
+    if (st.status !== 'outgoing' || st.peerId !== senderId || st.conversationId !== conversationId) return
+    if (this.callId === callId) return // a repeated merge: already joining
+    this.pendingStart = null // our own call.start was folded into theirs: no call.started comes
+    this.callId = callId
+    this.accepting = true // already accepted by the server: its answered-elsewhere echo is ours
+    const video = signal.media === 'video'
+    st.setCallId(callId)
+    if (st.video !== video) useCallStore.setState({ video })
+    void this.join(video)
   }
 
   private onRingCancel(signal: WebRTCSignal): void {
@@ -241,6 +276,11 @@ export class SfuDirectCall {
       return
     }
     if (this.callId !== callId) return // ended while fetching the token
+    // Never two room sessions with one identity. Detach first: its own
+    // onDisconnected must not end the call we are joining.
+    const previous = this.session
+    this.session = null
+    previous?.disconnect()
     const session = new LiveKitSession()
     this.session = session
     session.onLocalStream = (s) => this.hooks.onLocalStream?.(s)

@@ -11,6 +11,9 @@ abstract class DirectCallEngine {
   void Function(CallEndReason reason, bool byPeer)? onEndNotice;
   Function(String content)? onSendCallLog;
 
+  /// Whether this call carries video. Can change once: when both tapped Call,
+  /// the call that survives brings its own media.
+  bool get isVideo;
   bool get micOn;
   bool get cameraOn;
   bool get speakerOn;

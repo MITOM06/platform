@@ -10,6 +10,7 @@ import '../../../friends/data/friends_repository.dart';
 import '../../../friends/domain/friends_provider.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
+import '../call_launcher.dart';
 
 void showConversationTileMenu(
     BuildContext context, WidgetRef ref, ConversationModel conv) {
@@ -104,13 +105,14 @@ void showConversationTileMenu(
                 final profile =
                     ref.read(userProfileProvider(otherUserId)).valueOrNull;
                 final name = profile?.displayName ?? l10n.someone;
-                context.push('/call', extra: {
-                  'targetId': otherUserId,
-                  'targetName': name,
-                  'conversationId': conv.id,
-                  'isCaller': true,
-                  'isVideo': false,
-                });
+                startDirectCall(
+                  context,
+                  ref,
+                  targetId: otherUserId,
+                  targetName: name,
+                  conversationId: conv.id,
+                  isVideo: false,
+                );
               },
             ),
             ListTile(
@@ -122,13 +124,14 @@ void showConversationTileMenu(
                 final profile =
                     ref.read(userProfileProvider(otherUserId)).valueOrNull;
                 final name = profile?.displayName ?? l10n.someone;
-                context.push('/call', extra: {
-                  'targetId': otherUserId,
-                  'targetName': name,
-                  'conversationId': conv.id,
-                  'isCaller': true,
-                  'isVideo': true,
-                });
+                startDirectCall(
+                  context,
+                  ref,
+                  targetId: otherUserId,
+                  targetName: name,
+                  conversationId: conv.id,
+                  isVideo: true,
+                );
               },
             ),
             // Block/Unblock — paired with conversation block-archive/restore.

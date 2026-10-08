@@ -15,6 +15,8 @@ export interface WebRTCSignal {
     | 'call-ring-cancel'
     /** sfu: the callee declined (callId absent when they were busy and no call was made). */
     | 'call-declined'
+    /** sfu: we both tapped Call — the server answered their call for us; join it. */
+    | 'call-merged'
   sdp?: string
   candidate?: RTCIceCandidateInit
   /** On `end`: why the call ended. Absent from older clients (= 'hangup'). */

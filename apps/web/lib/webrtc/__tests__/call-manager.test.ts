@@ -254,3 +254,78 @@ describe('call ended while the mic/camera is still opening', () => {
     expect(publish).not.toHaveBeenCalled()
   })
 })
+
+describe('both call each other at the same time (peer-to-peer)', () => {
+  // Bob's offer crosses ours. `targetId` is us, as the caller addressed it.
+  const crossedOffer = (me: string, sdp = 'v=0\r\nm=audio 9') =>
+    callManager.handleSignal({ type: 'offer', senderId: 'bob', targetId: me, conversationId: 'conv-1', sdp })
+  const answers = () => publish.mock.calls.filter(([dest]) => dest === '/app/call.answer')
+
+  it('the side with the smaller user id answers the other offer instead of ringing', async () => {
+    await callManager.startCall('bob', 'Bob', 'conv-1', false)
+    const ownPc = FakePeerConnection.last!
+    crossedOffer('alice', 'v=0\r\nm=audio 9\r\nm=video 9')
+    ice('bob', 'cand-1')
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(ownPc.close).toHaveBeenCalled() // our own offer is dropped silently
+    expect(endSignals()).toHaveLength(0)
+    expect(answers()).toHaveLength(1)
+    expect(answers()[0][1]).toMatchObject({ targetId: 'bob', conversationId: 'conv-1', type: 'answer' })
+    const pc = FakePeerConnection.last!
+    expect(pc).not.toBe(ownPc)
+    expect(pc.setRemoteDescription).toHaveBeenCalledWith({ type: 'offer', sdp: 'v=0\r\nm=audio 9\r\nm=video 9' })
+    expect(pc.addIceCandidate.mock.calls.map(([c]) => c.candidate)).toEqual(['cand-1'])
+    expect(useCallStore.getState().status).toBe('outgoing') // still "Calling…" until media flows
+    expect(useCallStore.getState().video).toBe(true) // their offer's media wins
+    expect(useCallStore.getState().peerName).toBe('Bob')
+  })
+
+  it('the side with the larger user id keeps its own offer and waits for the answer', async () => {
+    await callManager.startCall('bob', 'Bob', 'conv-1', false)
+    const ownPc = FakePeerConnection.last!
+    crossedOffer('zoe') // 'zoe' > 'bob': Bob answers our offer
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(ownPc.close).not.toHaveBeenCalled()
+    expect(answers()).toHaveLength(0)
+    expect(endSignals()).toHaveLength(0) // not "busy"
+    expect(useCallStore.getState().status).toBe('outgoing')
+  })
+
+  it('keeps the mic muted when it was muted while calling', async () => {
+    await callManager.startCall('bob', 'Bob', 'conv-1', false)
+    callManager.toggleMic(false)
+    const track = { enabled: true, stop: vi.fn() }
+    getUserMedia.mockResolvedValueOnce({ getTracks: () => [track], getAudioTracks: () => [track], getVideoTracks: () => [] })
+    crossedOffer('alice')
+    await vi.advanceTimersByTimeAsync(0)
+    expect(track.enabled).toBe(false)
+    expect(useCallStore.getState().micEnabled).toBe(false)
+  })
+
+  it('the answering side is not left ringing out', async () => {
+    await callManager.startCall('bob', 'Bob', 'conv-1', false)
+    crossedOffer('alice')
+    await vi.advanceTimersByTimeAsync(0)
+    vi.advanceTimersByTime(RING_TIMEOUT_MS)
+    expect(endSignals()).toHaveLength(0) // the old ring timer died with our offer
+  })
+})
+
+describe('tapping Call on someone who is ringing us', () => {
+  it('answers their call instead of placing a second one', async () => {
+    offerFrom('alice')
+    await callManager.startCall('alice', 'Alice', 'conv-1', false)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(publish.mock.calls.filter(([d]) => d === '/app/call.offer')).toHaveLength(0)
+    expect(publish.mock.calls.filter(([d]) => d === '/app/call.answer')).toHaveLength(1)
+  })
+
+  it('does nothing while another call is going on', async () => {
+    offerFrom('alice')
+    await callManager.startCall('carol', 'Carol', 'conv-2', false)
+    expect(publish).not.toHaveBeenCalled()
+    expect(useCallStore.getState().peerId).toBe('alice')
+  })
+})
