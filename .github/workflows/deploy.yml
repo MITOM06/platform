@@ -1,20 +1,10 @@
 name: Deploy to Cloud Run
 
 on:
-  push:
-    branches: [main]
-    # A docs-only commit used to rebuild and roll out all four Cloud Run
-    # services. `paths-ignore` skips the run only when *every* changed file
-    # matches — touch one line of code alongside a README and it still deploys.
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '.claude/**'
-      - '.github/ISSUE_TEMPLATE/**'
-      - '.github/*_TEMPLATE.md'
-      - 'LICENSE'
-  # Manual escape hatch: re-deploy the current main without pushing a commit
-  # (e.g. after rotating a secret, or when a skipped run turns out to be needed).
+  # Manual only since 2026-10-07: production runs on the Mac mini
+  # (build-mini-images.yml + scripts/mini/redeploy.sh) and GCP billing is off,
+  # so a push-triggered Cloud Run deploy only ever failed. Kept runnable for a
+  # return to Cloud Run.
   workflow_dispatch:
 
 permissions:

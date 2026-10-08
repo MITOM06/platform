@@ -31,7 +31,7 @@ bool handleSfuCallSignal(Ref ref, Map<String, dynamic> signal) {
     ref.read(sfuCallServiceProvider).handleSignal(signal);
     return true;
   }
-  if (type == 'call-declined') {
+  if (type == 'call-declined' || type == 'call-merged') {
     ref.read(sfuCallServiceProvider).handleSignal(signal);
     return true;
   }
@@ -50,6 +50,9 @@ void _ringDirect(Ref ref, Map<String, dynamic> signal) {
     inCall: ref.read(webRtcServiceProvider).isActive ||
         ref.read(sfuCallServiceProvider).isActive,
     inGroupCall: ref.read(groupCallControllerProvider).isActive,
+    callingThem: ref
+        .read(sfuCallServiceProvider)
+        .isCallingTo(senderId, conversationId),
   );
   switch (action) {
     case SfuRingAction.ignore:

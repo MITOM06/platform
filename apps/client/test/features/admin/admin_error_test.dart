@@ -38,13 +38,22 @@ void main() {
     });
   });
 
-  test('the AI-context capabilities have real labels, not their codes', () {
-    for (final cap in [
-      Cap.manageAiContext,
-      Cap.viewInternalContext,
-      Cap.viewConfidentialContext,
-    ]) {
-      expect(capabilityLabelOf(l, cap), isNot(cap));
+  test('every capability has a real label in every locale — never its code',
+      () {
+    for (final locale in AppLocalizations.supportedLocales) {
+      final loc = lookupAppLocalizations(locale);
+      for (final cap in Cap.all) {
+        final label = capabilityLabelOf(loc, cap);
+        expect(label, isNot(cap), reason: '$locale $cap');
+        expect(label, isNot(loc.adminCapUnknown), reason: '$locale $cap');
+      }
     }
+  });
+
+  test(
+      'HOST_MEETING is the last row of the role matrix and opens no admin section',
+      () {
+    expect(Cap.all.last, Cap.hostMeeting);
+    expect(Cap.adminSections, isNot(contains(Cap.hostMeeting)));
   });
 }

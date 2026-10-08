@@ -1442,4 +1442,80 @@ describe('AiService', () => {
       { countRequest: false },
     );
   });
+  // ─── OpenRouter light tier (cost split) ───────────────────────────────────
+  describe('OpenRouter light tier', () => {
+    let orStream: jest.Mock;
+
+    beforeEach(() => {
+      // Router on: a short first message with no history is the fast tier.
+      (service as any).routerConfig = { ...(service as any).routerConfig, enabled: true };
+      orStream = jest.fn().mockReturnValue(makeStream(['Chào bạn']));
+      (service as any).llm = {
+        openRouterEnabled: true,
+        lightModel: 'google/gemini-2.5-flash-lite',
+        clientFor: () => ({ messages: { stream: orStream, create: jest.fn() } }),
+      };
+    });
+
+    it('answers a fast-tier turn on the OpenRouter light model, not Claude', async () => {
+      await service.handleRequest(basePayload);
+
+      expect(orStream).toHaveBeenCalledWith(
+        expect.objectContaining({ model: 'google/gemini-2.5-flash-lite' }),
+      );
+      expect(mockStream).not.toHaveBeenCalled();
+      expect(publish).toHaveBeenCalledWith(
+        'conv-test',
+        expect.objectContaining({ type: 'AI_STREAM_DONE', fullContent: 'Chào bạn' }),
+      );
+    });
+
+    it('falls back to the Claude fallback model when OpenRouter fails before any text', async () => {
+      orStream.mockImplementation(() => {
+        throw new Error('OpenRouter 402: no credits');
+      });
+      mockStream.mockReturnValue(makeStream(['From Claude']));
+
+      await service.handleRequest(basePayload);
+
+      expect(mockStream).toHaveBeenCalledWith(expect.objectContaining({ model: 'test-fallback' }));
+      expect(publish).toHaveBeenCalledWith(
+        'conv-test',
+        expect.objectContaining({ type: 'AI_STREAM_DONE', fullContent: 'From Claude' }),
+      );
+    });
+
+    it('runs a tier mapped to an OpenRouter model (mid) on OpenRouter', async () => {
+      (service as any).routerConfig = {
+        ...(service as any).routerConfig,
+        midModel: 'google/gemini-2.5-flash',
+      };
+      await service.handleRequest({ ...basePayload, content: 'x'.repeat(600) });
+
+      expect(orStream).toHaveBeenCalledWith(
+        expect.objectContaining({ model: 'google/gemini-2.5-flash' }),
+      );
+      expect(mockStream).not.toHaveBeenCalled();
+    });
+
+    it('sends an OpenRouter-mapped tier to the Claude fallback when OpenRouter is off', async () => {
+      (service as any).llm = { openRouterEnabled: false, lightModel: 'claude-haiku-4-5' };
+      (service as any).routerConfig = {
+        ...(service as any).routerConfig,
+        midModel: 'google/gemini-2.5-flash',
+      };
+      await service.handleRequest({ ...basePayload, content: 'x'.repeat(600) });
+
+      expect(mockStream).toHaveBeenCalledWith(expect.objectContaining({ model: 'test-fallback' }));
+    });
+
+    it('keeps mid / complex turns on Claude', async () => {
+      await service.handleRequest({ ...basePayload, content: 'x'.repeat(600) });
+
+      expect(orStream).not.toHaveBeenCalled();
+      expect(mockStream).toHaveBeenCalledWith(
+        expect.objectContaining({ model: 'claude-sonnet-4-6' }),
+      );
+    });
+  });
 });

@@ -8,6 +8,7 @@ import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.BadRequestException;
 import com.platform.chatservice.exception.ErrorCodes;
+import com.platform.chatservice.exception.RateLimitExceededException;
 import com.platform.chatservice.service.AiRedisPublisher;
 import com.platform.chatservice.service.ClusterMessageBroker;
 import com.platform.chatservice.service.ConversationMembershipCache;
@@ -78,6 +79,18 @@ class ChatControllerTest {
     verify(clusterBroker, times(1))
         .convertAndSend(eq("/topic/conversation/conv-456"), eq(response));
     verify(messageNotificationService, times(1)).notifyNewMessage(eq(SENDER_ID), eq(response));
+  }
+
+  @Test
+  void send_WhenRateLimited_ShouldSendOnlyTheStableCodeAndNeverExceptionText() {
+    doThrow(new RateLimitExceededException()).when(rateLimiterService).checkMessageRate(SENDER_ID);
+
+    chatController.send(chatDto, principal);
+
+    verify(clusterBroker)
+        .convertAndSendToUser(
+            SENDER_ID, "/queue/notifications", Map.of("type", ErrorCodes.RATE_LIMITED));
+    verifyNoInteractions(messageService);
   }
 
   @Test
@@ -320,5 +333,61 @@ class ChatControllerTest {
                             .equals(((Map<String, Object>) payload).get("conversationId"))));
     verify(clusterBroker, never()).convertAndSend(anyString(), any());
     verify(messageNotificationService, never()).notifyNewMessage(any(), any());
+  }
+
+  /** Camera on/off, receive quality and reconnect requests reach the other person as "state". */
+  @Test
+  void callState_RelaysTheCallStateToThePeer() {
+    com.platform.chatservice.dto.WebRTCSignalDto dto =
+        new com.platform.chatservice.dto.WebRTCSignalDto();
+    dto.setTargetId("user-789");
+    dto.setConversationId("conv-999");
+    dto.setVideo(true);
+    dto.setQuality("poor");
+    dto.setRestart(true);
+    when(membershipCache.isMember("conv-999", SENDER_ID)).thenReturn(true);
+    when(membershipCache.isMember("conv-999", "user-789")).thenReturn(true);
+
+    chatController.callState(dto, principal);
+
+    org.mockito.ArgumentCaptor<com.platform.chatservice.dto.WebRTCSignalDto> sent =
+        org.mockito.ArgumentCaptor.forClass(com.platform.chatservice.dto.WebRTCSignalDto.class);
+    verify(clusterBroker).convertAndSendToUser(eq("user-789"), eq("/queue/webrtc"), sent.capture());
+    org.assertj.core.api.Assertions.assertThat(sent.getValue().getType()).isEqualTo("state");
+    org.assertj.core.api.Assertions.assertThat(sent.getValue().getSenderId()).isEqualTo(SENDER_ID);
+    org.assertj.core.api.Assertions.assertThat(sent.getValue().getVideo()).isTrue();
+    org.assertj.core.api.Assertions.assertThat(sent.getValue().getQuality()).isEqualTo("poor");
+    org.assertj.core.api.Assertions.assertThat(sent.getValue().getRestart()).isTrue();
+  }
+
+  /** call.state only travels between two members of the conversation it names. */
+  @Test
+  void callState_DropsStateOutsideTheConversation() {
+    com.platform.chatservice.dto.WebRTCSignalDto noTarget =
+        new com.platform.chatservice.dto.WebRTCSignalDto();
+    noTarget.setConversationId("conv-999");
+    chatController.callState(noTarget, principal);
+
+    com.platform.chatservice.dto.WebRTCSignalDto noConversation =
+        new com.platform.chatservice.dto.WebRTCSignalDto();
+    noConversation.setTargetId("user-789");
+    chatController.callState(noConversation, principal);
+
+    com.platform.chatservice.dto.WebRTCSignalDto stranger =
+        new com.platform.chatservice.dto.WebRTCSignalDto();
+    stranger.setTargetId("user-789");
+    stranger.setConversationId("conv-999");
+    when(membershipCache.isMember("conv-999", SENDER_ID)).thenReturn(true);
+    when(membershipCache.isMember("conv-999", "user-789")).thenReturn(false);
+    chatController.callState(stranger, principal);
+
+    com.platform.chatservice.dto.WebRTCSignalDto notOurs =
+        new com.platform.chatservice.dto.WebRTCSignalDto();
+    notOurs.setTargetId("user-789");
+    notOurs.setConversationId("conv-other");
+    when(membershipCache.isMember("conv-other", SENDER_ID)).thenReturn(false);
+    chatController.callState(notOurs, principal);
+
+    verify(clusterBroker, never()).convertAndSendToUser(anyString(), anyString(), any());
   }
 }

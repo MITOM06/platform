@@ -31,6 +31,9 @@ class AppConfig {
   static const String _localAi = String.fromEnvironment('PON_AI_URL');
   static const String _localWs = String.fromEnvironment('PON_WS_URL');
 
+  /// Origin of the web app, e.g. `--dart-define=PON_WEB_URL=https://pon.acme.com`.
+  static const String _webUrl = String.fromEnvironment('PON_WEB_URL');
+
   /// Ports of the local stack (`infra/docker-compose/compose.yml`), used only in
   /// debug builds that were given no configuration at all.
   static const Map<String, String> _debugFallback = {
@@ -39,6 +42,7 @@ class AppConfig {
     'ai': 'http://localhost:3002',
     'connector': 'http://localhost:3003',
     'ws': 'ws://localhost:8080/ws',
+    'web': 'http://localhost:3000',
   };
 
   /// True when a self-host domain was provided at build time.
@@ -83,5 +87,16 @@ class AppConfig {
       '--dart-define=PON_DOMAIN=<host> or --dart-define=PON_WS_URL=<url>. '
       'See docs/environments.md.',
     );
+  }
+
+  /// Origin of the web app for shareable links (`…/meet/{code}`): PON_WEB_URL,
+  /// else `https://$PON_DOMAIN`, else (debug) the local web dev server. A
+  /// release build with neither ⇒ null — callers copy the bare code instead.
+  /// Never throws: a missing link origin must not break the app.
+  static String? get webBaseUrl {
+    if (_webUrl.isNotEmpty) return _webUrl;
+    if (usesProxy) return 'https://$_domain';
+    if (!kReleaseMode) return _debugFallback['web'];
+    return null;
   }
 }

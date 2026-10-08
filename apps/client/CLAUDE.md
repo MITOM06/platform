@@ -26,6 +26,9 @@
 - **AI Integration**: `AiMemoryScreen` (Facts & memory), `AiPersonaScreen` (AI Settings), `KbScreen` (RAG Knowledge documents)
 - **Settings & Profile**: `SettingsScreen`, `TokenUsageScreen` (Token usage progress), `UserProfileScreen`, `EditProfileScreen`
 - **Other Features**: `FriendsScreen` (Contacts & Requests), `RemindersScreen` (User Reminders)
+- **Meetings** (Meet/Teams-style, MT6–MT7): `MeetingsScreen` (`/meetings`), `MeetingDetailScreen`
+  (`/meetings/:id`), `MeetingRoomScreen` (`/meet/:code`, full screen on the root navigator: pre-join →
+  waiting room → room, or a status screen)
 
 ## Flutter Directory Structure
 
@@ -47,10 +50,22 @@ lib/
 │   │   ├── domain/   # AuthState, UserModel, AuthNotifier
 │   │   └── ui/       # 6 auth screens
 │   ├── chat/         # data / domain / ui / presentation (+ widgets)
+│   ├── meetings/     # data (MeetingsApi) / domain (pure Dart, mirrors apps/web/lib/meetings/*.ts) /
+│   │                 # state (MeetingsStore, MeetingRoomController + room store) / ui (+ ui/room/)
 │   └── …             # admin, ai_context, ai_hub, assistant, friends, help, home,
 │                     # integrations, notifications, profile, reminders, settings, skills
 └── main.dart
 ```
+
+## Meetings — shared RTC with Calls
+
+- Meetings run on the same `LiveKitSession` / `RtcSession` as Calls (`lib/core/rtc/*`);
+  `MeetingRtcSession` extends it backwards-compatibly (new parameters are optional with the old
+  defaults). The call tests `test/features/chat/calls/*` must stay green **without edits**.
+- Room logic lives in `MeetingRoomController` (plain Dart, injected `MeetingRoomDeps`) writing one
+  immutable `MeetingRoomState` (`meetingRoomStoreProvider`); widgets read it with narrow `select`s
+  and never change a provider while building (activate after the first frame, dispose after it).
+- Widget tests of the room: `test/features/meetings/ui/room_test_harness.dart` (`pumpRoom`).
 
 ## Code Conventions
 

@@ -2,10 +2,12 @@ import { stompService } from '@/lib/stomp/client'
 import { useCallStore } from '@/lib/store/call.store'
 import { chatService } from '@/lib/api/chat'
 import type { CallEndReason } from './call-end-notice'
+import { IceQueue } from './ice-queue'
+import { MeshNegotiator } from './mesh-negotiator'
+import { MeshInCall } from './mesh-in-call'
 import type { CallHooks } from './call-hooks'
 import {
   CallCancelledError,
-  DISCONNECT_GRACE_MS,
   ICE_SERVERS,
   REJECTIONS,
   RING_TIMEOUT_MS,
@@ -27,20 +29,32 @@ export class MeshCallManager {
   private remoteStream: MediaStream | null = null
   private targetId: string | null = null
   private conversationId: string | null = null
-  private remoteDescriptionSet = false
-  private pendingCandidates: RTCIceCandidateInit[] = []
   private ringTimer: ReturnType<typeof setTimeout> | null = null
-  private disconnectTimer: ReturnType<typeof setTimeout> | null = null
-  /**
-   * The caller trickles ICE candidates right after its offer — while we are
-   * still ringing and have no peer connection. They are kept here (only from
-   * the caller that is ringing) and applied on answer; dropping them made
-   * calls across NATs connect without audio.
-   */
-  private expectingFrom: string | null = null
-  private earlyCandidates: RTCIceCandidateInit[] = []
+  private readonly ice = new IceQueue()
   /** Caller only: the offer has left. Before that, hanging up signals nothing. */
   private offerSent = false
+  /** We placed this call: only the caller offers (see MeshNegotiator). */
+  private caller = false
+  /** ICE reached `connected` at least once: only then is a drop worth waiting for. */
+  private iceConnected = false
+  private readonly negotiator = new MeshNegotiator({
+    pc: () => this.pc,
+    target: () =>
+      this.targetId && this.conversationId ? { peerId: this.targetId, conversationId: this.conversationId } : null,
+    flush: (pc) => this.ice.flush(pc),
+  })
+  private readonly inCall = new MeshInCall(
+    {
+      pc: () => this.pc,
+      localStream: () => this.localStream,
+      isCaller: () => this.caller,
+      target: () =>
+        this.targetId && this.conversationId ? { peerId: this.targetId, conversationId: this.conversationId } : null,
+      onLocalStream: (stream) => this.hooks.onLocalStream?.(stream),
+      endCall: (reason) => this.endCall(reason),
+    },
+    this.negotiator,
+  )
 
   constructor(private readonly hooks: CallHooks) {}
 
@@ -63,6 +77,7 @@ export class MeshCallManager {
     video = true,
   ): Promise<void> {
     useCallStore.getState().setOutgoing({ peerId: targetId, peerName: targetName, conversationId, video })
+    this.caller = true
     try {
       const pc = await this.setup(targetId, conversationId, video)
       const offer = await pc.createOffer()
@@ -97,6 +112,7 @@ export class MeshCallManager {
     if (!peerId || !conversationId || !pendingOfferSdp || this.pc) return
     // Match the caller's media: only enable local video if the offer has a video m-line.
     const video = pendingOfferSdp.includes('m=video')
+    this.caller = false
     let pc: RTCPeerConnection
     try {
       pc = await this.setup(peerId, conversationId, video)
@@ -108,24 +124,36 @@ export class MeshCallManager {
       this.endCall('media_error')
       return
     }
+    // An unusable offer ends the call instead of leaving the prompt stuck.
+    if (!(await this.negotiator.answer(pendingOfferSdp)) && this.pc === pc) this.endCall('failed')
+  }
+
+  /**
+   * Both tapped Call and the offers crossed. Exactly one side must answer: the
+   * one whose user id sorts first drops its own offer (silently — the peer
+   * ignores it) and answers theirs; the other keeps its offer and waits.
+   */
+  private async answerCrossedCall(from: string, conversationId: string, sdp: string): Promise<void> {
+    const { peerName, micEnabled, cameraEnabled } = useCallStore.getState()
+    const video = sdp.includes('m=video')
+    this.teardown(false)
+    this.caller = false
+    this.ice.expect(from) // their candidates follow their offer
+    // Keep showing "Calling…" until media flows; the call takes their media.
+    useCallStore.getState().setOutgoing({ peerId: from, peerName, conversationId, video })
+    let pc: RTCPeerConnection
     try {
-      await pc.setRemoteDescription({ type: 'offer', sdp: pendingOfferSdp })
-      await this.flushPending()
-      this.assertLive(pc)
-      const answer = await pc.createAnswer()
-      this.assertLive(pc)
-      await pc.setLocalDescription(answer)
-      this.assertLive(pc)
-      stompService.publish('/app/call.answer', {
-        targetId: peerId,
-        conversationId,
-        type: 'answer',
-        sdp: answer.sdp,
-      })
+      pc = await this.setup(from, conversationId, video)
     } catch (err) {
       if (err instanceof CallCancelledError) return
-      this.endCall('failed') // unusable offer: don't leave the prompt stuck
+      this.endCall('media_error')
+      return
     }
+    this.offerSent = true // the peer knows about this call: hanging up must tell them
+    // Fresh tracks start live: keep what the user muted while "Calling…".
+    if (!micEnabled) this.toggleMic(false)
+    if (video && !cameraEnabled) this.inCall.toggleCamera(false)
+    if (!(await this.negotiator.answer(sdp)) && this.pc === pc) this.endCall('failed')
   }
 
   /** Route an inbound 1-on-1 signal (from `/user/queue/webrtc`). */
@@ -138,10 +166,13 @@ export class MeshCallManager {
         void this.handleAnswer(signal.sdp ?? '')
         break
       case 'ice':
-        if (signal.candidate) void this.addCandidate(signal.candidate, signal.senderId)
+        if (signal.candidate) void this.ice.add(this.pc, signal.candidate, signal.senderId)
         break
       case 'end':
         this.handleRemoteEnd(signal)
+        break
+      case 'state':
+        this.inCall.handleState(signal)
         break
     }
   }
@@ -177,8 +208,7 @@ export class MeshCallManager {
 
   /** The incoming prompt timed out locally (caller vanished without `end`). */
   dismissIncoming(): void {
-    this.expectingFrom = null
-    this.earlyCandidates = []
+    this.ice.reset()
     if (useCallStore.getState().status === 'incoming') useCallStore.getState().reset()
   }
 
@@ -187,9 +217,9 @@ export class MeshCallManager {
     useCallStore.getState().setMic(on)
   }
 
+  /** Turn our camera on/off — in a voice call this switches it to video (Messenger-style). */
   toggleCamera(on: boolean): void {
-    this.localStream?.getVideoTracks().forEach((t) => (t.enabled = on))
-    useCallStore.getState().setCamera(on)
+    this.inCall.toggleCamera(on)
   }
 
   private handleOffer(signal: WebRTCSignal): void {
@@ -198,13 +228,23 @@ export class MeshCallManager {
     const sdp = signal.sdp
     if (!from || !conversationId || !sdp) return
     const st = useCallStore.getState()
+    if (st.status === 'connected' && st.peerId === from && st.conversationId === conversationId && this.pc) {
+      // The caller renegotiates mid-call: an ICE restart, or a camera turned on.
+      void this.negotiator.answer(sdp)
+      return
+    }
+    if (st.status === 'outgoing' && st.peerId === from && st.conversationId === conversationId) {
+      // We are calling each other. `targetId` is us, as the caller addressed it.
+      const me = signal.targetId
+      if (me && me < from) void this.answerCrossedCall(from, conversationId, sdp)
+      return
+    }
     if (st.status !== 'idle' || st.groupCallId) {
       // Same caller re-sending (reconnect) → keep ringing; anyone else → busy.
       if (st.peerId !== from) this.publishEnd(from, conversationId, 'busy')
       return
     }
-    this.expectingFrom = from
-    this.earlyCandidates = []
+    this.ice.expect(from)
     st.setIncoming({
       peerId: from,
       peerName: '',
@@ -259,15 +299,10 @@ export class MeshCallManager {
   ): Promise<RTCPeerConnection> {
     this.targetId = targetId
     this.conversationId = conversationId
-    this.remoteDescriptionSet = false
-    this.pendingCandidates = []
 
     const pc = new RTCPeerConnection(ICE_SERVERS)
     this.pc = pc
-    // Candidates the caller sent while we were ringing (see earlyCandidates).
-    if (this.expectingFrom === targetId) this.pendingCandidates.push(...this.earlyCandidates)
-    this.expectingFrom = null
-    this.earlyCandidates = []
+    this.ice.attach(targetId) // candidates the caller sent while we were ringing
 
     pc.onicecandidate = (e) => {
       if (e.candidate) {
@@ -280,28 +315,27 @@ export class MeshCallManager {
       }
     }
     pc.ontrack = (e) => {
-      if (e.streams[0]) {
-        this.remoteStream = e.streams[0]
-        this.hooks.onRemoteStream?.(e.streams[0])
-        this.clearRingTimer()
-        useCallStore.getState().setConnected()
-      }
+      // A video line added mid-call may come without a stream: join it to theirs.
+      const stream = e.streams[0] ?? this.remoteStream
+      if (!stream) return
+      if (!e.streams[0] && !stream.getTracks().includes(e.track)) stream.addTrack(e.track)
+      this.remoteStream = stream
+      this.hooks.onRemoteStream?.(stream)
+      this.clearRingTimer()
+      useCallStore.getState().setConnected()
     }
     pc.onconnectionstatechange = () => {
       if (this.pc !== pc) return
       switch (pc.connectionState) {
         case 'connected':
-          this.clearDisconnectTimer()
+          this.iceConnected = true
+          this.inCall.connected(pc)
           break
         case 'disconnected':
-          // Often transient (network hand-off): give it a chance to recover.
-          this.disconnectTimer ??= setTimeout(() => {
-            this.disconnectTimer = null
-            if (this.pc === pc) this.endCall('failed')
-          }, DISCONNECT_GRACE_MS)
-          break
         case 'failed':
-          this.endCall('failed')
+          // Mid-call: a minute to recover (network hand-off, a tunnel, lost Wi-Fi).
+          if (this.iceConnected) this.inCall.dropped()
+          else if (pc.connectionState === 'failed') this.endCall('failed') // never connected
           break
       }
     }
@@ -321,33 +355,15 @@ export class MeshCallManager {
   }
 
   private async handleAnswer(sdp: string): Promise<void> {
-    if (!this.pc) return
-    await this.pc.setRemoteDescription({ type: 'answer', sdp })
-    await this.flushPending()
-  }
-
-  private async addCandidate(candidate: RTCIceCandidateInit, from?: string): Promise<void> {
-    if (!this.pc) {
-      if (from && from === this.expectingFrom) this.earlyCandidates.push(candidate)
-      return
+    const pc = this.pc
+    if (!pc || pc.signalingState !== 'have-local-offer') return // late or duplicate
+    try {
+      await pc.setRemoteDescription({ type: 'answer', sdp })
+      await this.ice.flush(pc)
+    } catch {
+      // superseded by a newer offer
     }
-    if (!this.remoteDescriptionSet) {
-      this.pendingCandidates.push(candidate)
-      return
-    }
-    await this.pc.addIceCandidate(candidate)
-  }
-
-  private async flushPending(): Promise<void> {
-    this.remoteDescriptionSet = true
-    for (const c of this.pendingCandidates) {
-      try {
-        await this.pc?.addIceCandidate(c)
-      } catch {
-        // ignore malformed late candidates
-      }
-    }
-    this.pendingCandidates = []
+    this.negotiator.answered()
   }
 
   private clearRingTimer(): void {
@@ -355,15 +371,13 @@ export class MeshCallManager {
     this.ringTimer = null
   }
 
-  private clearDisconnectTimer(): void {
-    if (this.disconnectTimer) clearTimeout(this.disconnectTimer)
-    this.disconnectTimer = null
-  }
-
   /** Tear down media + connection. `notifyUi` resets the store/overlay. */
   private teardown(notifyUi: boolean): void {
     this.clearRingTimer()
-    this.clearDisconnectTimer()
+    this.inCall.reset()
+    this.negotiator.reset()
+    this.caller = false
+    this.iceConnected = false
     this.localStream?.getTracks().forEach((t) => t.stop())
     this.localStream = null
     this.remoteStream = null
@@ -372,10 +386,7 @@ export class MeshCallManager {
     pc?.close()
     this.targetId = null
     this.conversationId = null
-    this.remoteDescriptionSet = false
-    this.pendingCandidates = []
-    this.expectingFrom = null
-    this.earlyCandidates = []
+    this.ice.reset()
     this.offerSent = false
     if (notifyUi) {
       this.hooks.onEnded?.()

@@ -37,6 +37,9 @@ function buildPriceMap(): Record<string, ModelPrice> {
     'claude-opus-5-5': { inputPerMTok: 4, outputPerMTok: 20 },
     'claude-fable-5': { inputPerMTok: 10, outputPerMTok: 50 },
     'claude-fable-5-1': { inputPerMTok: 10, outputPerMTok: 50 },
+    // OpenRouter light tier default (OPENROUTER_MODEL); other ids use AI_PRICE_* or the default.
+    'google/gemini-2.5-flash-lite': { inputPerMTok: 0.1, outputPerMTok: 0.4 },
+    'google/gemini-2.5-flash': { inputPerMTok: 0.3, outputPerMTok: 2.5 },
   };
   const map: Record<string, ModelPrice> = {};
   for (const [model, seed] of Object.entries(seeds)) {
@@ -76,6 +79,17 @@ export default registerAs('config', () => ({
       midMaxChars: parseInt(process.env.ANTHROPIC_ROUTER_MID_MAX_CHARS ?? '1200', 10),
       midMaxHistory: parseInt(process.env.ANTHROPIC_ROUTER_MID_MAX_HISTORY ?? '20', 10),
     },
+  },
+  // Light tier (router fast tier + small utility calls) through OpenRouter.
+  // Unset OPENROUTER_API_KEY = everything stays on Claude, as before.
+  openRouter: {
+    apiKey: process.env.OPENROUTER_API_KEY || undefined,
+    model: process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash-lite',
+    baseUrl: process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',
+    // Shown as the app URL on the OpenRouter dashboard (optional).
+    appUrl: process.env.OPENROUTER_APP_URL || undefined,
+    // After a 429 (free-model limits), skip OpenRouter for this long.
+    cooldownMs: parseInt(process.env.OPENROUTER_COOLDOWN_MS ?? '600000', 10),
   },
   bot: {
     userId: process.env.AI_BOT_USER_ID ?? 'ai-bot-000000000000000000000001',

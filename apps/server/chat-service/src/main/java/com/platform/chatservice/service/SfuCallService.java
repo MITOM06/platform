@@ -46,11 +46,12 @@ public class SfuCallService implements RtcRoomEventHandler {
   private static final ObjectMapper JSON = new ObjectMapper();
 
   /**
-   * How long a 1-on-1 waits after a participant drops before calling it failed. LiveKit removes the
-   * old session before a rejoin/full reconnect becomes active, so "left" then "joined" is the
-   * normal order — ending at once would kill every rejoin. Same 8s the clients use.
+   * How long a 1-on-1 waits after a participant drops before calling it failed: the other person
+   * sees "waiting to reconnect" meanwhile. LiveKit removes the old session before a rejoin/full
+   * reconnect becomes active, so "left" then "joined" is the normal order. Same 60s the clients
+   * use.
    */
-  static final Duration DISCONNECT_GRACE = Duration.ofSeconds(8);
+  static final Duration RECONNECT_GRACE = Duration.ofSeconds(60);
 
   /** What a client needs to join the call's LiveKit room. */
   public record CallToken(String url, String token) {}
@@ -243,7 +244,7 @@ public class SfuCallService implements RtcRoomEventHandler {
                 String callId = s.getCallId();
                 String identity = e.identity();
                 String sid = e.participantSid();
-                timers.after(DISCONNECT_GRACE, () -> endIfStillGone(callId, identity, sid));
+                timers.after(RECONNECT_GRACE, () -> endIfStillGone(callId, identity, sid));
               } else if (s.getParticipants().stream().allMatch(x -> x.getLeftAt() != null)) {
                 calls.endCall(s.getCallId(), "hangup");
               }

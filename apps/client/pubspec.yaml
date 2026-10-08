@@ -1,7 +1,7 @@
 name: platform_client
 description: Platform — Realtime Messaging App (Flutter client)
 publish_to: 'none'
-version: 1.1.0+2
+version: 1.2.0+3
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -58,6 +58,10 @@ dependencies:
   # Inline video playback in chat bubbles (tap-to-play instead of download)
   video_player: ^2.9.5
   chewie: ^1.11.0
+
+  # Meetings: keep the screen on while in the room (already resolved via
+  # chewie — declared directly, same version, no new native pod).
+  wakelock_plus: ^1.5.2
 
   # Deep link handling — OAuth callback (platform://auth?code=xxx)
   app_links: ^6.3.0

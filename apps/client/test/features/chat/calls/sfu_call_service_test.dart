@@ -4,11 +4,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:platform_client/core/rtc/rtc_session.dart';
 import 'package:platform_client/features/chat/data/calls_repository.dart';
+import 'package:platform_client/features/chat/domain/call_network.dart';
 import 'package:platform_client/features/chat/domain/call_rules.dart';
 import 'package:platform_client/features/chat/domain/call_transport.dart';
 import 'package:platform_client/features/chat/domain/sfu_call_service.dart';
 
+class _FakeTrack implements MediaStreamTrack {
+  @override
+  dynamic noSuchMethod(Invocation i) => null;
+}
+
 class _FakeStream implements MediaStream {
+  bool video = false;
+  @override
+  List<MediaStreamTrack> getVideoTracks() => video ? [_FakeTrack()] : [];
   @override
   dynamic noSuchMethod(Invocation i) => null;
 }
@@ -75,6 +84,15 @@ class _Session implements RtcSession {
     onPeersChanged?.call(peers);
   }
 
+  /// The other person's network / camera changed.
+  void peerState(String id, {bool? poor, bool? video, bool? camMuted}) {
+    final peer = _peers[id]!;
+    if (poor != null) peer.poorConnection = poor;
+    if (video != null) (peer.stream as _FakeStream).video = video;
+    if (camMuted != null) peer.camMuted = camMuted;
+    onPeersChanged?.call(peers);
+  }
+
   void leave(String id) {
     _peers.remove(id);
     onPeersChanged?.call(peers);
@@ -88,8 +106,9 @@ class _Session implements RtcSession {
   MediaStream? get localStream => null;
   @override
   Future<void> setMic(bool on) async => micCalls.add(on);
+  final cameraCalls = <bool>[];
   @override
-  Future<void> setCamera(bool on) async {}
+  Future<void> setCamera(bool on) async => cameraCalls.add(on);
   @override
   Future<void> switchCamera() async {}
   @override
@@ -140,6 +159,7 @@ void main() {
       },
       probeMedia: (_) async => probeOk,
       peerGrace: const Duration(milliseconds: 40),
+      reconnectBlip: const Duration(milliseconds: 10),
       pendingStartDeadline: const Duration(milliseconds: 30),
     )
       ..onEndNotice = ((r, byPeer) => notices.add((r, byPeer)))
@@ -148,12 +168,15 @@ void main() {
       ..onCallEnded = (() => ended++);
   });
 
+  // No call's timers may outlive its test (they would write into the next one's lists).
+  tearDown(() => call.dispose());
+
   group('outgoing', () {
     test('starts on the server and joins once the id arrives', () async {
       await call.startOutgoing(
           targetId: 'bob', conversationId: 'conv', isVideo: false);
       expect(port.to('/app/call.start'), [
-        {'conversationId': 'conv', 'media': 'audio'}
+        {'conversationId': 'conv', 'media': 'audio', 'merge': true}
       ]);
       expect(port.held, ['conv']);
       port.events.add(started());
@@ -323,13 +346,108 @@ void main() {
       expect(notices, [(CallEndReason.hangup, true)]);
     });
 
-    test('a real drop ends it as failed', () async {
+    test('a real drop rejoins the room instead of ending the call', () async {
       final s = await connect();
       s.onDisconnected!(RtcEnd.failed);
+      expect(call.network.reconnectWho, ReconnectWho.self);
+      await flush();
+      expect(notices, isEmpty);
+      expect(port.to('/app/call.leave'), isEmpty);
+      expect(sessions, hasLength(2)); // re-joined
+      // We are back; they are not in the new room yet.
+      expect(call.network.reconnectWho, ReconnectWho.peer);
+      sessions.last.join('bob');
+      expect(call.network.reconnectWho, isNull);
+    });
+
+    test('a rejoin keeps mic, camera and speaker as they were', () async {
+      final s = await connect();
+      await call.setMicOn(false);
+      await call.setSpeakerOn(true);
+      s.onReconnecting!(true); // LiveKit tried to resume, then gave up
+      s.onDisconnected!(RtcEnd.failed);
+      await flush();
+      final again = sessions.last;
+      expect(again, isNot(same(s)));
+      expect(again.micCalls.last, isFalse);
+      expect(again.speakerCalls.last, isTrue);
+      again.join('bob');
+      expect(call.network.reconnectWho, isNull);
+    });
+
+    test('gives up after the grace when the room cannot be rejoined',
+        () async {
+      final s = await connect();
+      api.tokenError = Exception('offline');
+      s.onDisconnected!(RtcEnd.failed);
+      await Future<void>.delayed(const Duration(milliseconds: 80));
       expect(notices, [(CallEndReason.failed, false)]);
-      expect(port.to('/app/call.leave'), [
-        {'callId': 'c1'}
-      ]);
+    });
+
+    Future<void> pastBlip() =>
+        Future<void>.delayed(const Duration(milliseconds: 15));
+
+    test('LiveKit reconnecting shows that it is our own connection', () async {
+      final s = await connect();
+      s.onReconnecting!(true);
+      await pastBlip();
+      expect(call.network.reconnectWho, ReconnectWho.self);
+      s.onReconnecting!(false);
+      expect(call.network.reconnectWho, isNull);
+    });
+
+    test('a LiveKit blip that resumes in time shows no wait', () async {
+      final s = await connect();
+      s.onReconnecting!(true);
+      s.onReconnecting!(false);
+      await pastBlip();
+      expect(call.network.reconnectWho, isNull);
+    });
+
+    test('resumed while they are gone: the wait turns to them', () async {
+      final s = await connect();
+      s.onReconnecting!(true);
+      await pastBlip();
+      s._peers.remove('bob'); // they left while we were away (no event reached us)
+      s.onReconnecting!(false);
+      expect(call.network.reconnectWho, ReconnectWho.peer);
+      s.join('bob');
+      expect(call.network.reconnectWho, isNull);
+    });
+
+    test('the speaker follows the layout: loud for video, earpiece for voice',
+        () async {
+      final s = await connect(); // a voice call: earpiece
+      expect(s.speakerCalls, [false]);
+      s.peerState('bob', video: true); // their camera came on
+      expect(s.speakerCalls.last, isTrue);
+      expect(call.speakerOn, isTrue);
+      s.peerState('bob', camMuted: true); // and off again
+      expect(s.speakerCalls.last, isFalse);
+      await call.setCameraOn(true); // ours
+      expect(s.speakerCalls.last, isTrue);
+      s.peerState('bob', poor: true); // no layout change, no switch
+      expect(s.speakerCalls, [false, true, false, true]);
+    });
+
+    test("shows the other person's weak network and follows their camera",
+        () async {
+      final s = await connect();
+      s.peerState('bob', poor: true);
+      expect(call.network.peerPoor, isTrue);
+      expect(call.network.peerCamera, isFalse);
+      s.peerState('bob', poor: false, video: true);
+      expect(call.network.peerPoor, isFalse);
+      expect(call.network.peerCamera, isTrue);
+      s.peerState('bob', camMuted: true);
+      expect(call.network.peerCamera, isFalse);
+    });
+
+    test('turning the camera on in a voice call publishes it', () async {
+      final s = await connect();
+      await call.setCameraOn(true);
+      expect(s.cameraCalls, [true]);
+      expect(call.isVideo, isTrue);
     });
 
     test(
@@ -388,5 +506,86 @@ void main() {
       expect(sessions.single.speakerCalls, [false]);
     });
   });
-}
 
+  group('both call each other at the same time', () {
+    Map<String, dynamic> merged({String callId = 'c-a'}) => {
+          'type': 'call-merged',
+          'callId': callId,
+          'conversationId': 'conv',
+          'senderId': 'alice',
+          'media': 'video',
+          'transport': 'sfu',
+          'kind': 'direct',
+        };
+
+    test('joins their call when the server merges ours into it', () async {
+      await call.startOutgoing(
+          targetId: 'alice', conversationId: 'conv', isVideo: false);
+      expect(call.isCallingTo('alice', 'conv'), isTrue);
+
+      call.handleSignal(merged());
+      await flush();
+      expect(sessions.single.connected, isTrue);
+      expect(call.isVideo, isTrue); // the call's media wins
+
+      // Our other devices stop ringing for their call: not our hang-up.
+      call.handleSignal({
+        'type': 'call-ring-cancel',
+        'callId': 'c-a',
+        'reason': 'answered_elsewhere'
+      });
+      expect(ended, 0);
+      sessions.single.join('alice');
+      expect(remoteStreams, 1);
+      expect(call.isCallingTo('alice', 'conv'), isFalse);
+    });
+
+    test("does not take the other person's call.started for our own start",
+        () async {
+      await call.startOutgoing(
+          targetId: 'alice', conversationId: 'conv', isVideo: false);
+      port.events.add({
+        'event': 'call.started',
+        'callId': 'c-a',
+        'conversationId': 'conv',
+        'transport': 'sfu',
+        'kind': 'direct',
+        'startedBy': 'alice',
+      });
+      await flush();
+      expect(sessions, isEmpty);
+
+      call.handleSignal(merged());
+      await flush();
+      expect(sessions, hasLength(1)); // one room session, not two
+    });
+
+    test('a repeated merge does not join the room twice', () async {
+      await call.startOutgoing(
+          targetId: 'alice', conversationId: 'conv', isVideo: false);
+      call.handleSignal(merged());
+      call.handleSignal(merged());
+      await flush();
+      expect(sessions, hasLength(1));
+    });
+
+    test('ignores a merge for a call we are not making', () async {
+      call.handleSignal(merged());
+      await flush();
+      expect(sessions, isEmpty);
+    });
+
+    test('leaves their call when we hung up before the merge arrived',
+        () async {
+      await call.startOutgoing(
+          targetId: 'alice', conversationId: 'conv', isVideo: false);
+      await call.endCall();
+      call.handleSignal(merged());
+      await flush();
+      expect(port.to('/app/call.leave'), [
+        {'callId': 'c-a'}
+      ]);
+      expect(sessions, isEmpty);
+    });
+  });
+}

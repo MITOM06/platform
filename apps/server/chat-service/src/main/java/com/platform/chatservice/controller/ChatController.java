@@ -6,6 +6,7 @@ import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.exception.BadRequestException;
 import com.platform.chatservice.exception.ConversationNotFoundException;
+import com.platform.chatservice.exception.ErrorCodes;
 import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.exception.RateLimitExceededException;
 import com.platform.chatservice.security.UserPrincipal;
@@ -54,11 +55,10 @@ public class ChatController {
     try {
       rateLimiterService.checkMessageRate(principal.getName());
     } catch (RateLimitExceededException e) {
-      // STOMP has no HTTP status — send an error event to the user's private queue.
+      // STOMP has no HTTP status — send the stable code (never exception text) to the user's
+      // private queue; clients map it to a localized message.
       clusterBroker.convertAndSendToUser(
-          principal.getName(),
-          "/queue/notifications",
-          Map.of("type", "RATE_LIMITED", "message", e.getMessage()));
+          principal.getName(), "/queue/notifications", Map.of("type", ErrorCodes.RATE_LIMITED));
       return;
     }
 
@@ -221,6 +221,27 @@ public class ChatController {
     // Legacy 1-on-1 relay (unchanged).
     dto.setSenderId(principal.getName());
     clusterBroker.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
+  }
+
+  /**
+   * In-call state for the other person of a 1-on-1 (camera on/off, receive quality, reconnect
+   * request) on either media path. Relayed as {@code type:"state"}, only between two members of the
+   * conversation it names; older apps ignore it.
+   */
+  @MessageMapping("/call.state")
+  public void callState(
+      @Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
+    String conversationId = dto.getConversationId();
+    String targetId = dto.getTargetId();
+    if (conversationId == null
+        || targetId == null
+        || !membershipCache.isMember(conversationId, principal.getName())
+        || !membershipCache.isMember(conversationId, targetId)) {
+      return;
+    }
+    dto.setSenderId(principal.getName());
+    dto.setType("state");
+    clusterBroker.convertAndSendToUser(targetId, "/queue/webrtc", dto);
   }
 
   /**

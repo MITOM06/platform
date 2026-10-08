@@ -18,6 +18,7 @@ import 'chat_state.dart';
 import 'conversation_list_ops.dart';
 import 'conversations_realtime_handlers.dart';
 import 'group_call_signaling.dart';
+import '../../meetings/state/meeting_queue_listener.dart';
 
 part 'conversations_notifier.g.dart';
 
@@ -60,6 +61,8 @@ class ConversationsNotifier extends _$ConversationsNotifier {
     // whole session (call-ring + mesh signals + roster/started/ended events).
     ref.read(groupCallSignalingProvider);
     ref.read(activeCallsProvider);
+    // Personal meeting queue (invitations, reminders, lobby, …).
+    ref.read(meetingQueueListenerProvider);
     ref.onDispose(() {
       _notifSub?.cancel();
       _convUpdateSub?.cancel();

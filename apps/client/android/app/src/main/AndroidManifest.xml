@@ -9,6 +9,9 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
     <!-- FCM push notifications (runtime prompt required on Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Meetings: presenting the screen runs a mediaProjection foreground service -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"/>
     <!-- Camera/mic are optional so the app still installs on devices without them -->
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
@@ -41,6 +44,7 @@
             <!-- OAuth deeplink: platform://auth?code=xxx | platform://auth?error=CODE -->
             <!-- Invitation deeplink: platform://invite?token=xxx (web invite page "Open in the app") -->
             <!-- Connector OAuth return: platform://integrations?connected=slug | ?error=CODE&provider=slug -->
+            <!-- Meeting link: platform://meet/abc-defg-hjk -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -48,8 +52,14 @@
                 <data android:scheme="platform" android:host="auth"/>
                 <data android:scheme="platform" android:host="invite"/>
                 <data android:scheme="platform" android:host="integrations"/>
+                <data android:scheme="platform" android:host="meet"/>
             </intent-filter>
         </activity>
+        <!-- Meetings: screen share (MethodChannel pon/screen_share in MainActivity) -->
+        <service
+            android:name=".ScreenShareService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
         <!-- FCM: use high-importance channel for all notification messages -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"

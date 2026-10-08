@@ -16,6 +16,7 @@ import { withAgenticLoopSpan } from './tracing-helpers';
 import { ToolRoundRunner } from './tool-round.runner';
 import { ACTION_PENDING_FALLBACK_TEXT } from './system-notices';
 import { addTokens, countTokens, zeroTokens } from '../usage/token-counts';
+import { LlmClient } from '../llm/openrouter-client';
 
 const MAX_ITER = 5;
 const MAX_ITER_NOTICE = 'I had trouble completing that action. Please try again.';
@@ -23,7 +24,8 @@ const INTERRUPTED_MESSAGE = 'AI stream was interrupted. Please try again.';
 const UNAVAILABLE_MESSAGE = 'AI is temporarily unavailable.';
 
 export interface LoopRunParams {
-  anthropic: Anthropic;
+  /** Anthropic SDK client, or the OpenRouter client behind the same surface. */
+  anthropic: LlmClient;
   model: string;
   ctx: RequestContext;
   state: LoopState;
@@ -36,6 +38,8 @@ export interface LoopRunParams {
 export interface FallbackRunParams extends Omit<LoopRunParams, 'model'> {
   primaryModel: string;
   fallbackModel: string;
+  /** Client for the fallback model when it differs from the primary's (OpenRouter → Claude). */
+  fallbackClient?: LlmClient;
 }
 
 /**
@@ -127,7 +131,7 @@ export class AgenticLoopService {
    * that ends in an error drops its pending actions.
    */
   async runWithFallback(p: FallbackRunParams): Promise<AiTrace> {
-    const { primaryModel, fallbackModel, ...rest } = p;
+    const { primaryModel, fallbackModel, fallbackClient, ...rest } = p;
     const conversationId = p.ctx.conversationId;
     try {
       return await withAgenticLoopSpan(primaryModel, conversationId, () =>
@@ -149,7 +153,7 @@ export class AgenticLoopService {
       }
       try {
         return await withAgenticLoopSpan(fallbackModel, conversationId, () =>
-          this.run({ ...rest, model: fallbackModel }),
+          this.run({ ...rest, anthropic: fallbackClient ?? rest.anthropic, model: fallbackModel }),
         );
       } catch (fallbackError) {
         this.logger.error(
@@ -214,7 +218,7 @@ export class AgenticLoopService {
 
   /** Stream one model turn. Text deltas go to the client as they arrive. */
   private async streamTurn(
-    anthropic: Anthropic,
+    anthropic: LlmClient,
     model: string,
     state: LoopState,
     stream: AiReplyStream,

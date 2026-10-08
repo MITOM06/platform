@@ -1,8 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 import Anthropic from '@anthropic-ai/sdk';
+import { LlmClientsService } from '../llm/llm-clients.service';
 import { RedisPublisherService } from '../redis/redis-publisher.service';
 import { ResolvedAiSettings } from '../settings/resolved-ai-settings';
 import { UsageService } from '../usage/usage.service';
@@ -43,6 +44,7 @@ export class DigestGeneratorService {
     private readonly publisher: RedisPublisherService,
     private readonly configService: ConfigService,
     private readonly usageService?: UsageService,
+    @Optional() private readonly llm?: LlmClientsService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -148,6 +150,12 @@ export class DigestGeneratorService {
     }
   }
 
+  /** The router's fast tier, unless AI_DIGEST_MODEL pins an explicit model. */
+  private fastTierModel(): string | null {
+    if (this.configService.get<string>('config.digest.model')) return null;
+    return this.configService.get<string>('config.anthropic.router.simpleModel') ?? 'claude-haiku-4-5';
+  }
+
   /** Non-streaming summary call mirroring CallSummaryService.generateSummary(). */
   private async summarize(transcript: string, settings: ResolvedAiSettings): Promise<string> {
     const system =
@@ -158,12 +166,17 @@ export class DigestGeneratorService {
       'Reply in the dominant language of the transcript. If there was little of substance, keep ' +
       'it to a single sentence.';
     try {
-      const res = await this.anthropic.messages.create({
-        model: this.resolveModel(settings),
+      const params = {
         max_tokens: 1024,
         system,
-        messages: [{ role: 'user', content: `Transcript:\n\n${transcript}` }],
-      });
+        messages: [{ role: 'user' as const, content: `Transcript:\n\n${transcript}` }],
+      };
+      const model = this.resolveModel(settings);
+      // The fast tier of this batch job runs on the light model when one is wired.
+      const res =
+        this.llm && model === this.fastTierModel()
+          ? (await this.llm.createLight(params)).message
+          : await this.anthropic.messages.create({ ...params, model });
       // Workspace-level job: attributed to the bot user (dashboard totals, no member's quota).
       this.usageService?.recordModelCall(this.botUserId, res.usage, 'daily-digest');
       return res.content

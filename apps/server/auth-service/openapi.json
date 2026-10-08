@@ -348,6 +348,36 @@
         ]
       }
     },
+    "/api/users/me/departments": {
+      "get": {
+        "operationId": "MyDepartmentsController_listMine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MyDepartmentDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The caller's own departments as {id, name}, sorted by name — no capability needed",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/api/friends/request": {
       "post": {
         "operationId": "FriendsController_request",
@@ -2168,6 +2198,23 @@
         },
         "required": [
           "success"
+        ]
+      },
+      "MyDepartmentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "66aa00000000000000000009"
+          },
+          "name": {
+            "type": "string",
+            "example": "Engineering"
+          }
+        },
+        "required": [
+          "id",
+          "name"
         ]
       },
       "FriendRequestDto": {

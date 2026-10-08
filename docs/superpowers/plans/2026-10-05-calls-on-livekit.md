@@ -68,6 +68,7 @@
 | `/user/queue/webrtc` | `call-ring` | như cũ **+** `transport`, `kind` |
 | `/user/queue/webrtc` | `call-ring-cancel` | `{ callId, reason }` — mới; gửi tới **mọi phiên** của người nhận khi: người gọi huỷ (`hangup`/`no_answer`), người nhận nghe ở máy khác (`answered_elsewhere`), hoặc từ chối ở máy khác (`declined`) |
 | `/user/queue/webrtc` | `call-declined` | `{ callId, conversationId, reason, senderId }` (`senderId` = người từ chối; `callId` null khi người nhận đang bận nên không tạo cuộc gọi) — mới; tới người gọi |
+| `/user/queue/webrtc` | `call-merged` | `{ callId, conversationId, senderId, media, transport, kind }` (`senderId` = người đang gọi mình) — mới (2026-10-08); tới người vừa `call.start`: hai bên cùng bấm gọi nhau, server đã nhận cuộc gọi của người kia thay mình ⇒ join `callId` đó |
 
 ### Redis
 
@@ -97,6 +98,7 @@
 
 **Hành vi phải có test:**
 - 1-1 `call.start` khi sfu: tạo session `kind=direct`, ring người kia; người kia đang có `call:user:*` ⇒ `call-declined{reason:busy}` về người gọi, **không** ring.
+- **Hai bên cùng gọi nhau (glare, 2026-10-08):** nếu `call:user:{người kia}` trỏ tới cuộc gọi 1-1 *của chính người kia tới mình* trong cùng hội thoại và chưa ai nghe ⇒ không trả busy — **chỉ khi `call.start` có `merge: true`** (client từ bản glare trở đi; app cũ vẫn nhận `call-declined{busy}` như v1.1.0): server nhận mình vào cuộc gọi đó (`acceptedAt`), gửi `call-ring-cancel{answered_elsewhere}` + `call-merged` cho mình. Hai `call.start` xử lý cùng lúc ⇒ claim nguyên tử `SETNX call:active:{conversationId}`; bên thua xoá session chưa công bố của mình và gộp vào bên thắng (`DirectCallGlare`). Mesh (P2P) xử lý ở client: offer chéo nhau ⇒ bên có userId nhỏ hơn bỏ offer của mình và trả lời offer kia.
 - `call.accept` từ người nhận: thêm participant, gửi `call-ring-cancel{answered_elsewhere}` tới **mọi phiên** của chính người đó (client phiên đang nghe tự bỏ qua vì đã ở trạng thái `connecting`).
 - `call.decline`: 1-1 ⇒ `call-declined` về người gọi + `endCall(reason)`; nhóm ⇒ chỉ ghi nhận, cuộc gọi tiếp tục.
 - `call.cancel` từ người gọi trước khi ai nghe ⇒ `call-ring-cancel` tới mọi người được ring + `endCall`.

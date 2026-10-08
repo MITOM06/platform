@@ -122,6 +122,21 @@ class LiveKitRoomClientTest {
   }
 
   @Test
+  void createRoomSetsTheTimeoutsAndTheParticipantCap() throws Exception {
+    client.createRoom("meet_1", 300, 300, 25);
+
+    HttpRequest request = sentRequest();
+    assertThat(request.uri().getPath()).isEqualTo("/twirp/livekit.RoomService/CreateRoom");
+    assertThat(new ObjectMapper().readValue(bodyOf(request), Map.class))
+        .isEqualTo(
+            Map.of(
+                "name", "meet_1",
+                "empty_timeout", 300,
+                "departure_timeout", 300,
+                "max_participants", 25));
+  }
+
+  @Test
   void deleteRoomTargetsTheRoom() throws Exception {
     client.deleteRoom("call_c1");
 
@@ -181,5 +196,33 @@ class LiveKitRoomClientTest {
     props.setUrl("");
     assertThatThrownBy(() -> client.deleteRoom("call_c1"))
         .isInstanceOf(LiveKitUnavailableException.class);
+  }
+
+  @Test
+  void updateParticipantReplacesThePublishPermission() throws Exception {
+    client.updateParticipant("meet_1", "user-1", List.of(RtcGrant.CAMERA, RtcGrant.MICROPHONE));
+
+    HttpRequest request = sentRequest();
+    assertThat(request.uri().getPath()).isEqualTo("/twirp/livekit.RoomService/UpdateParticipant");
+    assertThat(new ObjectMapper().readValue(bodyOf(request), Map.class))
+        .isEqualTo(
+            Map.of(
+                "room", "meet_1",
+                "identity", "user-1",
+                "permission",
+                    Map.of(
+                        "can_publish", true,
+                        "can_subscribe", true,
+                        "can_publish_data", true,
+                        "can_publish_sources", List.of("CAMERA", "MICROPHONE"))));
+  }
+
+  @Test
+  void updateParticipantWithoutASourceListAllowsEverySource() throws Exception {
+    client.updateParticipant("meet_1", "user-1", null);
+
+    Map<?, ?> body = new ObjectMapper().readValue(bodyOf(sentRequest()), Map.class);
+    assertThat(((Map<?, ?>) body.get("permission")).get("can_publish_sources"))
+        .isEqualTo(List.of());
   }
 }

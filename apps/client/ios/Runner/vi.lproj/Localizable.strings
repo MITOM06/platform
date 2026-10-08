@@ -1,0 +1,6 @@
+/* Push bodies localized on the device (APNs loc-key, docs/api-spec.md
+   § Meetings › FCM). Same text as the ARB keys meetingPushInvited /
+   meetingPushStarting — test/core/native_push_strings_test.dart keeps them equal. */
+
+"meeting_push_invited" = "Bạn được mời tham gia một cuộc họp";
+"meeting_push_starting" = "Cuộc họp của bạn bắt đầu sau 10 phút";

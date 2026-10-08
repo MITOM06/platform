@@ -1,16 +1,23 @@
 package com.platform.chatservice.exception;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+  private static final String MEETINGS_PATH = "/api/meetings";
 
   @ExceptionHandler(ConversationNotFoundException.class)
   public ResponseEntity<Map<String, Object>> handleNotFound(ConversationNotFoundException ex) {
@@ -73,11 +80,31 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(ex.getStatus()).body(body);
   }
 
+  /**
+   * 409 {@code MEETING_NOTE_CONFLICT}: the {@link #handleApi} body plus {@code latest} (the current
+   * note). Spring picks the closest handler in the exception hierarchy, so {@code handleApi} never
+   * sees this one.
+   */
+  @ExceptionHandler(MeetingNoteConflictException.class)
+  public ResponseEntity<Map<String, Object>> handleNoteConflict(MeetingNoteConflictException ex) {
+    Map<String, Object> body = new LinkedHashMap<>();
+    Map<String, Object> base = handleApi(ex).getBody();
+    if (base != null) {
+      body.putAll(base);
+    }
+    body.put("latest", ex.getLatest());
+    return ResponseEntity.status(ex.getStatus()).body(body);
+  }
+
+  /**
+   * 429 with the stable {@code RATE_LIMITED} code (clients localize by code / status) and a {@code
+   * Retry-After} hint — never the exception's English text.
+   */
   @ExceptionHandler(RateLimitExceededException.class)
   public ResponseEntity<Map<String, Object>> handleRateLimit(RateLimitExceededException ex) {
     return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
         .header("Retry-After", "5")
-        .body(Map.of("error", "Too Many Requests", "message", ex.getMessage(), "statusCode", 429));
+        .body(body("Too Many Requests", null, ErrorCodes.RATE_LIMITED, 429));
   }
 
   /**
@@ -98,6 +125,50 @@ public class GlobalExceptionHandler {
     log.warn("Rejected request: {}", ex.toString());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(Map.of("error", "Bad request", "statusCode", 400));
+  }
+
+  /**
+   * Input Spring could not bind — an unparseable JSON body (e.g. a datetime without an offset,
+   * which {@code Instant} rejects), a missing required body, or a query/path value of the wrong
+   * type ({@code size=abc}). A client error: 400 with a stable code and {@code params.field} when
+   * the offending field is known, never the parser's text. On {@code /api/meetings} the code is the
+   * route's own {@code MEETING_INVALID}; elsewhere the generic {@code INVALID_PARAMETER}. Rendered
+   * by {@link #handleApi} so the body shape stays identical.
+   */
+  @ExceptionHandler({
+    HttpMessageNotReadableException.class,
+    MethodArgumentTypeMismatchException.class
+  })
+  public ResponseEntity<Map<String, Object>> handleUnreadable(
+      Exception ex, HttpServletRequest request) {
+    log.warn("Unreadable request input: {}", ex.getClass().getSimpleName());
+    String uri = request == null ? null : request.getRequestURI();
+    boolean meeting =
+        uri != null && (uri.equals(MEETINGS_PATH) || uri.startsWith(MEETINGS_PATH + "/"));
+    String field = offendingField(ex);
+    return handleApi(
+        new ApiException(
+            HttpStatus.BAD_REQUEST,
+            meeting ? ErrorCodes.MEETING_INVALID : ErrorCodes.INVALID_PARAMETER,
+            null,
+            field == null ? null : Map.<String, Object>of("field", field)));
+  }
+
+  /** The request field that failed to bind, when Spring / Jackson can tell; null otherwise. */
+  private static String offendingField(Exception ex) {
+    if (ex instanceof MethodArgumentTypeMismatchException mismatch) {
+      return mismatch.getName();
+    }
+    if (ex.getCause() instanceof JsonMappingException mapping) {
+      List<JsonMappingException.Reference> path = mapping.getPath();
+      for (int i = path.size() - 1; i >= 0; i--) {
+        String name = path.get(i).getFieldName();
+        if (name != null) {
+          return name;
+        }
+      }
+    }
+    return null;
   }
 
   /**

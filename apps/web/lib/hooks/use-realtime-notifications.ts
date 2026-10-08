@@ -4,13 +4,17 @@ import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useNotificationPrefs } from '@/lib/store/notification-prefs'
 import { stompService } from '@/lib/stomp/client'
 import { refreshClaims } from '@/lib/realtime/claims'
 import { CONVERSATIONS_KEY } from '@/lib/realtime/conversation-cache'
 import { createPresenceHandler, handleWebRtcFrame } from '@/lib/realtime/session-handlers'
+import { presentNotice } from '@/lib/realtime/present-notice'
+import { handleMeetingQueueEvent, type MeetingQueueContext } from '@/lib/realtime/meeting-queue'
+import { parseMeetingEvent } from '@/lib/meetings/meeting-events'
+import { getActiveMeetingRoom } from '@/lib/meetings/active-room'
 import {
   handleUserQueueEvent,
   parseUserQueueEvent,
@@ -36,29 +40,17 @@ export function useRealtimeNotifications(): void {
   const currentUserId = useAuthStore((s) => s.user?.id)
   const t = useTranslations('layout')
   const tChat = useTranslations('chat')
+  const tMeeting = useTranslations('meeting')
+  const locale = useLocale()
 
   // Latest context for the durable subscriptions, which are registered once per
   // session and must never run with stale closures (translations, user id…).
   const contextRef = useRef<UserQueueContext | null>(null)
+  const meetingCtxRef = useRef<MeetingQueueContext | null>(null)
   useEffect(() => {
-    const showNotification = ({ conversationId, title, body }: IncomingNotification) => {
-      const open = () => router.push(conversationPath(conversationId))
-      if (
-        typeof Notification !== 'undefined' &&
-        Notification.permission === 'granted' &&
-        document.visibilityState === 'hidden'
-      ) {
-        // Tab in background → OS-level notification.
-        const n = new Notification(title, { body })
-        n.onclick = () => {
-          window.focus()
-          open()
-        }
-      } else {
-        // Tab visible → in-app toast so the user still sees it.
-        toast(title, { description: body, action: { label: t('notificationOpen'), onClick: open } })
-      }
-    }
+    // Tab in background → OS-level notification; visible → in-app toast.
+    const showNotification = ({ conversationId, title, body }: IncomingNotification) =>
+      presentNotice(title, body, () => router.push(conversationPath(conversationId)), t('notificationOpen'))
     contextRef.current = {
       queryClient,
       currentUserId,
@@ -74,6 +66,17 @@ export function useRealtimeNotifications(): void {
         router.replace('/conversations')
       },
       onClaimsChanged: () => void refreshClaims(queryClient),
+    }
+    meetingCtxRef.current = {
+      queryClient,
+      t: tMeeting,
+      locale,
+      now: () => new Date(),
+      notificationsEnabled: () => useNotificationPrefs.getState().enabled,
+      notify: ({ title, body, href }) =>
+        presentNotice(title, body, () => router.push(href), tMeeting('notifOpen')),
+      toastInfo: (message) => toast.info(message),
+      activeRoom: getActiveMeetingRoom,
     }
   })
 
@@ -104,6 +107,12 @@ export function useRealtimeNotifications(): void {
       const event = parseUserQueueEvent(frame.body)
       const ctx = contextRef.current
       if (event && ctx) handleUserQueueEvent(event, ctx)
+    })
+    // Meeting invitations, reminders, cancellations and room events (lobby, admitted…).
+    const offMeeting = stompService.subscribeDurable('/user/queue/meeting', (frame) => {
+      const event = parseMeetingEvent(frame.body)
+      const mctx = meetingCtxRef.current
+      if (event && mctx) handleMeetingQueueEvent(event, mctx)
     })
     const offWebRtc = stompService.subscribeDurable('/user/queue/webrtc', (frame) => {
       const ctx = contextRef.current
@@ -137,6 +146,7 @@ export function useRealtimeNotifications(): void {
     return () => {
       offState()
       offNotifications()
+      offMeeting()
       offWebRtc()
       offPresence()
       presence.dispose()

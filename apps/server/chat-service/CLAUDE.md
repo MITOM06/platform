@@ -52,6 +52,39 @@
 - createdAt: Instant
 ```
 
+### Meeting (`meetings`)
+```
+- id: String (ObjectId)
+- code: String (unique, "abc-defg-hjk" — MeetingCodeGenerator)
+- title / description: String (user text; null = client shows its localized default)
+- hostId: String; coHostIds / inviteeIds / removedIds: List<String> (userIds)
+- departmentId: String (every member of the department is invited)
+- scheduledStart / scheduledEnd: Instant (null start = instant meeting)
+- sortAt: Instant (scheduledStart ?? createdAt — list ordering only, never returned)
+- status: "SCHEDULED" | "LIVE" | "ENDED" (cancelled = ENDED + cancelledAt)
+- settings: { waitingRoom, muteOnEntry, allowAttendeeScreenShare, attendeesCanEditNotes, locked }
+- attendance: List<{ userId, displayName, role, sid, joinedAt, leftAt }> (one row per session)
+- reminded: boolean (10-minute reminder claimed)
+- createdAt / startedAt / endedAt / cancelledAt: Instant
+```
+After the first insert a meeting is **only** changed through atomic updates in `MeetingStore`
+(concurrent LiveKit webhooks) — never `meetingRepository.save(meeting)`. Redis (`MeetingLobby`,
+all keys 24h TTL, dropped on end/cancel): `meet:lobby:{id}` (hash), `meet:admitted:{id}` (set —
+also everyone who once entered without an invitation), `meet:hands:{id}` (zset userId → raise
+epoch ms), `meet:removed:{id}` (set, read per frame by `MeetingTopicOutboundInterceptor`). Code:
+`service/meeting/`, REST `MeetingController`, STOMP `MeetingWsController` (`/app/meet.*`),
+contract in `docs/api-spec.md` § Meetings.
+
+### MeetingMessage (`meeting_messages`) / MeetingNote (`meeting_notes`)
+```
+meeting_messages: id, meetingId, senderId, content (text ≤ 2000), createdAt  — cursor (createdAt, _id)
+meeting_notes:    id, meetingId, scope ("SHARED" | "PRIVATE"), ownerId (PRIVATE only), content (Markdown
+                  ≤ 50 000), version (optimistic lock), updatedBy, updatedAt
+                  — unique {meetingId, scope, ownerId} (MongoIndexInitializer)
+```
+Written with `MongoTemplate` only (`insert` / conditional `findAndModify` on `version`); a stale
+`version` is 409 `MEETING_NOTE_CONFLICT` with `latest` (`MeetingNoteConflictException`).
+
 ---
 
 ## Configuration (`application.yml`)
@@ -77,6 +110,9 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 - `MessageSweepService` — deletes disappearing-messages past each conversation's window
 - `ReminderSweepService` — every `app.reminder.sweep-interval-ms` (60 s default), pushes due
   reminders via FCM and flags them `notified` so each fires exactly once (see ADR-011)
+- `MeetingReminderSweep` — every `app.meeting.sweep-interval-ms` (60 s default, annotation only):
+  claims each meeting starting within 10 min (`reminded` false → true, once cluster-wide) and
+  sends `meet.starting` + FCM `MEETING_STARTING`; retires SCHEDULED meetings 48h past their start
 
 **Cross-service collections read by chat-service** (owned by NestJS services):
 - `user_blocks` — block relationships (replaces former `users.blockedUsers[]`); read via the
@@ -102,10 +138,19 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 - `/app/chat.send` — Send message: `{ conversationId, content, type, replyToId? }`
 - `/app/chat.typing` — Toggle typing status: `{ conversationId, typing: boolean }`
 - `/app/chat.read` — Mark message read: `{ conversationId, messageId }`
+- `/app/meet.hand` · `/app/meet.chat` · `/app/meet.host` — in-meeting commands (`MeetingWsController`);
+  a refusal is `meet.error {errorCode}` to the sender, an attendee's host command is ignored
 
 ### Server-to-Client Broker
 - `/topic/conversation/{conversationId}` — Receive messages, reactions, edits, recalls, and AI streaming.
 - `/topic/conversation/{conversationId}/typing` — Receive typing status: `{ userId, typing: boolean }`
+- `/topic/meeting/{meetingId}` — `meet.roster | meet.settings | meet.ended | meet.hands | meet.chat |
+  meet.notes.updated`; SUBSCRIBE only when `MeetingAccess.decide` lets the user straight into the
+  room (`MeetingTopicAuthorizer`); outbound frames are dropped for people in `meet:removed:{id}`
+  (`MeetingTopicOutboundInterceptor`, next to `ConversationTopicOutboundInterceptor` on the
+  clientOutboundChannel; fail-open on a Redis error)
+- `/user/queue/meeting` — `meet.lobby | meet.admitted | meet.denied | meet.ended | meet.invited |
+  meet.starting | meet.cancelled | meet.removed | meet.muted | meet.error`
 - `/user/queue/notifications` — Receive unread notifications: `{ type: "NEW_MESSAGE", conversationId, senderName }`;
   also `{ type: "CLAIMS_CHANGED" }` (role/department/permissions changed → refresh token, refetch capabilities, reconnect)
 
@@ -151,6 +196,14 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 - `GET /{id}/trace` — Retrieve AI reasoning trace logs
 - `POST /{id}/pin` / `DELETE /{id}/pin` — Pin/unpin message (max 5; 409 `PIN_LIMIT_REACHED` `params.max`)
 - `/search?q={query}&conversationId={id}` — Text search messages in conversation
+
+### `/api/meetings` (see `docs/api-spec.md` § Meetings)
+- `POST /` (needs `HOST_MEETING`, 201) · `GET /?scope=upcoming|past&cursor=&size=` · `GET /{id}` ·
+  `GET /by-code/{code}` · `PATCH /{id}` (host/co-host) · `DELETE /{id}` (cancel, host)
+- `POST /{id}/join` → `{status:"joined", url, token, role}` | `{status:"waiting"}` ·
+  `DELETE /{id}/lobby` · `POST /{id}/lobby/{userId}/admit|deny` · `POST /{id}/end`
+- `GET /{id}/messages?before=&size=` · `GET|PUT /{id}/notes/shared|private` · `GET /{id}/hands`
+- Errors `MEETING_*` / `MEETINGS_UNAVAILABLE` (`ErrorCodes`), checked in the services (no `@PreAuthorize`)
 
 ### Other Services
 - `GET /api/users/{userId}/status` — Fetch online status & lastSeen timestamp

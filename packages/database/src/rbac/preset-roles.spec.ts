@@ -31,8 +31,19 @@ describe('PRESET_ROLES', () => {
     expect(member!.permissions[Capability.USE_PERSONAL_ASSISTANT]).toBe(true);
   });
 
-  it('exposes all 14 capabilities in the catalog', () => {
-    expect(Object.keys(Capability)).toHaveLength(14);
+  it('exposes all 15 capabilities in the catalog', () => {
+    expect(Object.keys(Capability)).toHaveLength(15);
+  });
+
+  it('lists HOST_MEETING last so the role matrices keep their existing order', () => {
+    const all = Object.values(Capability);
+    expect(all[all.length - 1]).toBe(Capability.HOST_MEETING);
+  });
+
+  it('lets every preset role host meetings (spec D9)', () => {
+    for (const role of PRESET_ROLES) {
+      expect(role.permissions[Capability.HOST_MEETING]).toBe(true);
+    }
   });
 
   it('grants AI-context capabilities per the design tiers', () => {

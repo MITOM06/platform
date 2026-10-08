@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
 import { RedisPublisherService } from '../redis/redis-publisher.service';
@@ -8,6 +8,8 @@ import { UsageService } from '../usage/usage.service';
 import { RateLimiterService } from '../usage/rate-limiter.service';
 import { PersonaService } from '../persona/persona.service';
 import { selectModel, RouteSignals, RouterConfig, modelSupportsEffort } from './model-router';
+import { LlmClientsService } from '../llm/llm-clients.service';
+import { LlmClient } from '../llm/openrouter-client';
 import { AiStreamErrorCode } from './ai-stream-error';
 import { FactExtractorService } from './fact-extractor.service';
 import { ContextBuilderService } from './context-builder.service';
@@ -78,6 +80,8 @@ export class AiService {
     private readonly aiSessionService: AiSessionService,
     private readonly compactService: CompactService,
     private readonly agenticLoop: AgenticLoopService,
+    // Optional: without it (unit tests) every turn stays on Claude, as before.
+    @Optional() private readonly llm?: LlmClientsService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -330,7 +334,13 @@ export class AiService {
     try {
       state = await this.agenticLoop.prepare(ctx, content, loopHistory);
       trace = await this.agenticLoop.runWithFallback({
-        anthropic: this.anthropic,
+        // OpenRouter light tier for the fast-tier model; Claude for everything
+        // else and always for the fallback (an OpenRouter failure lands on Claude).
+        anthropic:
+          this.llm && LlmClientsService.isOpenRouterModel(selectedModel)
+            ? this.llm.clientFor(selectedModel)
+            : (this.anthropic as unknown as LlmClient),
+        fallbackClient: this.anthropic as unknown as LlmClient,
         primaryModel: selectedModel,
         fallbackModel: this.fallbackModel,
         ctx,
@@ -388,6 +398,17 @@ export class AiService {
       forcedTier: settings.modelTier,
     };
     let selectedModel = selectModel(routeSignals, this.routerConfig);
+    // Cost split: the fast tier goes to the OpenRouter light model when one is
+    // configured (text-only turns; image turns are forced to Claude below).
+    if (selectedModel === this.routerConfig.simpleModel && this.llm?.openRouterEnabled && !hasImageTurn) {
+      selectedModel = this.llm.lightModel;
+    }
+    // A tier mapped to an OpenRouter model (e.g. ANTHROPIC_MID_MODEL=google/…) while OpenRouter
+    // is off (no key) or cooling down after a 429: the Anthropic API would reject the id, so use
+    // the cheap Claude fallback model instead.
+    if (LlmClientsService.isOpenRouterModel(selectedModel) && !this.llm?.openRouterEnabled) {
+      selectedModel = this.fallbackModel;
+    }
     // TASK-10: the router's haiku/sonnet tiers must not receive image blocks
     // (vision support unconfirmed → would 400). Gated by chat vision.
     if (hasImageTurn && selectedModel !== this.primaryModel) {

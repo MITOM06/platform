@@ -3,6 +3,71 @@
 All notable changes to PON. One version per promotion to `main`; web, mobile and the
 NestJS services share the product version (`apps/client/pubspec.yaml`, `apps/*/package.json`).
 
+## 1.2.0 — 2026-10-08
+
+Batches four feature branches that were tested together on `dev`: `feat/meetings-p1`,
+`fix/call-glare`, `feat/call-network-media` and `feat/openrouter-light-tier`.
+
+### Meetings (new, web + mobile)
+
+- **Meetings** (Meet/Teams-style), separate from calls: meet now in one tap, or schedule / edit /
+  run again with title, description, date, time and duration in the device time zone, invitees,
+  a department and five settings. Upcoming / past lists, a detail page with attendance, shared
+  and private notes (auto-saved, conflicts kept), and the meeting chat history. Join by code or
+  `/meet/{code}` link, kept across sign-in.
+- **Meeting room on LiveKit:** pre-join screen (camera preview, mic / camera, front / back
+  camera, speaker / earpiece), waiting room with admit / deny, grid / speaker / pin layouts,
+  screen share (present from web and Android; iOS can watch), raised hands in order,
+  in-meeting chat, notes, reactions, 13 host actions (mute, remove, lock, end for everyone, …),
+  reconnect after a dropped connection.
+- Invitations, "starting in 10 minutes" reminders and cancellations as in-app banners, OS
+  notifications and push (FCM), translated on the device.
+- New capability `HOST_MEETING`, on for every preset role; stored custom roles are not
+  backfilled (grant it in Roles). `GET /api/users/me/departments` for the department picker.
+
+### Calls (1-on-1)
+
+- **Both calling each other at once** joins them in one call instead of two "busy" rings, on
+  both media paths (server-side claim on LiveKit, the polite peer answers on peer-to-peer).
+- **Whose network is weak:** the call screen says whether it is your connection, the other
+  person's, or both.
+- **A dropped call waits a minute** with a "reconnecting" / "waiting for <name>" screen and a
+  countdown, retrying meanwhile, then returns to the chat. Blips under 2.5 s show nothing.
+- **Switch between voice and video** mid-call, Messenger-style: the call shows video while
+  either camera is on; on mobile the loudspeaker follows (on for video, earpiece for voice).
+- A callee whose camera cannot reach an older caller app is told so and the camera goes back off.
+- `/app/call.state` is relayed only between two members of the conversation it names.
+
+### AI cost
+
+- **Light tier through OpenRouter.** With `OPENROUTER_API_KEY` set, short text-only chat turns
+  (the router's fast tier) and small background calls — conversation titles, history compaction,
+  memory facts, daily digests — run on `OPENROUTER_MODEL` (default `google/gemini-2.5-flash-lite`,
+  about 10x cheaper than Claude Haiku). Longer or harder turns, answers grounded in the knowledge
+  base, images, KB vision and call summaries stay on Claude. Any OpenRouter failure falls back to
+  Claude automatically. Without the key nothing changes.
+- **Demo cost profile on the Mac mini (0 USD light tier):** the fast and mid tiers run on the free
+  `nvidia/nemotron-3-super-120b-a12b:free` (OpenRouter; 50 requests/day until 10 USD of credits were
+  ever bought, then 1000/day) and the complex tier on Claude Sonnet 4.5 instead of Opus. When
+  OpenRouter answers 429 / 402 / 404 the light tier moves to Claude Haiku for 10 minutes
+  (`OPENROUTER_COOLDOWN_MS`). Free models cost 0 on the usage dashboard. Free-model providers may
+  log prompts — demo data only.
+
+### Operations
+
+- The Cloud Run deploy workflow runs only when started by hand (production is on the Mac mini).
+
+### Deploy notes
+
+- **Meetings need LiveKit:** set `LIVEKIT_URL`, `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` for
+  chat-service (runbook `docs/superpowers/runbooks/livekit.md`). Without them meetings can still
+  be scheduled, but joining answers 503 and the apps say meetings are unavailable. 1-on-1 calls
+  keep `CALL_TRANSPORT` (mesh on the mini) and work either way.
+- Optional: add `OPENROUTER_API_KEY` (and `OPENROUTER_MODEL` to pick another model) to the mini
+  `.env.mini`, then `./scripts/mini/up.sh --no-pull`.
+- Mobile 1.2.0+3 adds the Android screen-share foreground service (`mediaProjection`) and its
+  permissions; ship a new build to testers.
+
 ## 1.1.0 — 2026-10-06
 
 First versioned release. Batches four feature branches that were tested together on `dev`:
@@ -73,9 +138,8 @@ First versioned release. Batches four feature branches that were tested together
 
 ### Deploy notes
 
-- **Mac mini (`compose.mini.yml`) needs `PON_API_BASE`** (public API origin, used for
-  `MCP_SERVER_URL`) — the stack refuses to start without it. `SESSION_SECRET` and
-  `INTERNAL_API_KEY` must be set (already required).
+- Mac mini (`compose.mini.yml`): `SESSION_SECRET`, `INTERNAL_API_KEY` and `PON_API_BASE` must be
+  set (all three were already required before 1.1.0).
 - `SESSION_SECRET` now also encrypts 2FA secrets: **rotating it invalidates every 2FA enrollment**
   (an Owner must reset the affected members).
 - Existing privileged users are asked to enroll in 2FA at their next sign-in; existing sessions stay
