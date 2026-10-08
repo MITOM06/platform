@@ -18,6 +18,7 @@ abstract class Cap {
   static const manageAiContext = 'MANAGE_AI_CONTEXT';
   static const viewInternalContext = 'VIEW_INTERNAL_CONTEXT';
   static const viewConfidentialContext = 'VIEW_CONFIDENTIAL_CONTEXT';
+  static const hostMeeting = 'HOST_MEETING';
 
   /// Every capability key, in the canonical order used by the roles matrix.
   static const all = <String>[
@@ -35,6 +36,7 @@ abstract class Cap {
     manageAiContext,
     viewInternalContext,
     viewConfidentialContext,
+    hostMeeting,
   ];
 
   /// Capabilities that grant access to at least one admin console section.

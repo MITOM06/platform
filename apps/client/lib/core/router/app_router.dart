@@ -7,6 +7,7 @@ import '../utils/global_messenger.dart';
 import 'page_transitions.dart';
 import '../../../core/providers/theme_provider.dart';
 import 'app_routes.dart';
+import 'return_path.dart';
 import 'route_guard.dart';
 
 part 'app_router.g.dart';
@@ -56,17 +57,34 @@ GoRouter appRouter(AppRouterRef ref) {
       if (authValue.isLoading) return null;
 
       // Auth / pending 2FA / forced set-password / onboarding gates — see
-      // route_guard.dart.
+      // route_guard.dart. A meeting link opened while signed out is
+      // remembered and reopened right after any kind of sign-in
+      // (return_path.dart).
+      final returnPath = ref.read(returnPathHolderProvider);
+      final path = state.uri.path;
+      final auth = authValue.valueOrNull;
       final target = redirectForAuthState(
-        authValue.valueOrNull,
-        path: state.uri.path,
+        auth,
+        path: path,
         onboardingCompleted: onboardingCompleted,
+        returnTo: returnPath.peek(),
       );
-      if (target != null) return target;
+      if (target == '/login' && isSafeReturnPath(path)) {
+        returnPath.remember(path);
+      }
+      if (target != null) {
+        if (target == returnPath.peek()) returnPath.take();
+        return target;
+      }
+      // Set-password / theme onboarding finish with an explicit go('/').
+      if (path == '/' && auth is AuthAuthenticated) {
+        final back = returnPath.take();
+        if (back != null) return back;
+      }
 
       // Settled on a destination — work out whether this navigation is a step
       // forward or a step back so every page in flight slides the same way.
-      PageNavDirection.resolve(state.uri.path);
+      PageNavDirection.resolve(path);
       return null;
     },
     // Route table lives in app_routes.dart.

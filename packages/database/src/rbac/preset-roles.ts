@@ -26,6 +26,9 @@ const C = Capability;
  * — department-scoped authorization is enforced in the service layer. At the
  * coarse capability level, Manager does not hold the workspace-wide
  * MANAGE_MEMBERS / VIEW_AUDIT_LOG grants.
+ *
+ * HOST_MEETING is on for every preset (spec D9) — admins may switch it off per
+ * role. Stored custom roles are not backfilled: absent means disabled.
  */
 export const PRESET_ROLES: PresetRole[] = [
   {
@@ -51,6 +54,7 @@ export const PRESET_ROLES: PresetRole[] = [
       [C.MANAGE_AI_CONTEXT]: true,
       [C.VIEW_INTERNAL_CONTEXT]: true,
       [C.VIEW_CONFIDENTIAL_CONTEXT]: true,
+      [C.HOST_MEETING]: true,
     },
   },
   {
@@ -71,6 +75,7 @@ export const PRESET_ROLES: PresetRole[] = [
       [C.MANAGE_AI_CONTEXT]: false,
       [C.VIEW_INTERNAL_CONTEXT]: true,
       [C.VIEW_CONFIDENTIAL_CONTEXT]: false,
+      [C.HOST_MEETING]: true,
     },
   },
   {
@@ -91,6 +96,7 @@ export const PRESET_ROLES: PresetRole[] = [
       [C.MANAGE_AI_CONTEXT]: false,
       [C.VIEW_INTERNAL_CONTEXT]: false,
       [C.VIEW_CONFIDENTIAL_CONTEXT]: false,
+      [C.HOST_MEETING]: true,
     },
   },
 ];

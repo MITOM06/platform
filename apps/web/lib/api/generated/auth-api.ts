@@ -203,6 +203,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/users/me/departments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller's own departments as {id, name}, sorted by name — no capability needed */
+        get: operations["MyDepartmentsController_listMine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/friends/request": {
         parameters: {
             query?: never;
@@ -1090,6 +1107,12 @@ export interface components {
             /** @example true */
             success: boolean;
         };
+        MyDepartmentDto: {
+            /** @example 66aa00000000000000000009 */
+            id: string;
+            /** @example Engineering */
+            name: string;
+        };
         FriendRequestDto: {
             /** @description User id of the friend-request recipient */
             recipientId: string;
@@ -1764,6 +1787,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    MyDepartmentsController_listMine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyDepartmentDto"][];
+                };
             };
         };
     };

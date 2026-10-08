@@ -11,7 +11,8 @@ import java.util.regex.Pattern;
  * <p>SUBSCRIBE is an allow-list ({@link #SUBSCRIBE_ALLOW_LIST}) — the in-memory SimpleBroker
  * resolves wildcard patterns, so a client subscribed to {@code /topic/**} used to receive every
  * conversation's private frames. Conversation topics additionally require membership, checked by
- * the interceptor against the {@code conversationId} captured by the rule.
+ * the interceptor against the {@code conversationId} captured by the rule; meeting topics require
+ * being allowed into the room ({@code MeetingTopicAuthorizer}) for the captured {@code meetingId}.
  *
  * <p>SEND is only allowed to the application prefix ({@code /app/**}); a SEND straight to a broker
  * destination ({@code /topic/...}, {@code /queue/...}, {@code /user/...}) would be fanned out to
@@ -25,19 +26,35 @@ public final class StompDestinationPolicy {
   /** Conversation topic root shared by the message and typing topics. */
   public static final String CONVERSATION_TOPIC_PREFIX = "/topic/conversation/";
 
+  /** Meeting room topic ({@code meet.roster}, {@code meet.settings}, {@code meet.hands}, …). */
+  public static final String MEETING_TOPIC_PREFIX = "/topic/meeting/";
+
   private static final String CONVERSATION_ID = "(?<conversationId>[A-Za-z0-9_-]{1,64})";
 
-  /**
-   * One allowed subscription shape. {@code requiresMembership} rules capture a {@code
-   * conversationId} group the subscriber must be a participant of.
-   */
-  public record Rule(Pattern pattern, boolean requiresMembership) {
+  private static final String MEETING_ID = "(?<meetingId>[A-Za-z0-9_-]{1,64})";
+
+  /** What a subscriber must additionally be allowed into once the destination shape matches. */
+  public enum Scope {
+    /** Nothing more — a personal queue or a public topic. */
+    NONE,
+    /** Participant of the captured {@code conversationId}. */
+    CONVERSATION,
+    /** Allowed into the room of the captured {@code meetingId}. */
+    MEETING
+  }
+
+  /** One allowed subscription shape and the extra check its captured id needs. */
+  public record Rule(Pattern pattern, Scope scope) {
     static Rule exact(String destination) {
-      return new Rule(Pattern.compile(Pattern.quote(destination)), false);
+      return new Rule(Pattern.compile(Pattern.quote(destination)), Scope.NONE);
     }
 
     static Rule conversation(String regex) {
-      return new Rule(Pattern.compile(regex), true);
+      return new Rule(Pattern.compile(regex), Scope.CONVERSATION);
+    }
+
+    static Rule meeting(String regex) {
+      return new Rule(Pattern.compile(regex), Scope.MEETING);
     }
   }
 
@@ -51,22 +68,30 @@ public final class StompDestinationPolicy {
           Rule.exact("/user/queue/webrtc"),
           Rule.exact("/topic/presence"),
           Rule.conversation(Pattern.quote(CONVERSATION_TOPIC_PREFIX) + CONVERSATION_ID),
-          Rule.conversation(
-              Pattern.quote(CONVERSATION_TOPIC_PREFIX) + CONVERSATION_ID + "/typing"));
+          Rule.conversation(Pattern.quote(CONVERSATION_TOPIC_PREFIX) + CONVERSATION_ID + "/typing"),
+          Rule.exact("/user/queue/meeting"),
+          Rule.meeting(Pattern.quote(MEETING_TOPIC_PREFIX) + MEETING_ID));
+
+  private static final Pattern MEETING_TOPIC =
+      Pattern.compile(Pattern.quote(MEETING_TOPIC_PREFIX) + MEETING_ID);
 
   private static final Pattern CONVERSATION_TOPIC =
       Pattern.compile(Pattern.quote(CONVERSATION_TOPIC_PREFIX) + CONVERSATION_ID + "(?:/typing)?");
 
-  /** Result of evaluating a SUBSCRIBE destination. */
-  public record SubscribeDecision(boolean allowed, String conversationId) {
-    static final SubscribeDecision DENIED = new SubscribeDecision(false, null);
+  /**
+   * Result of evaluating a SUBSCRIBE destination. At most one of {@code conversationId} / {@code
+   * meetingId} is set, and it still has to be authorized by the caller.
+   */
+  public record SubscribeDecision(boolean allowed, String conversationId, String meetingId) {
+    static final SubscribeDecision DENIED = new SubscribeDecision(false, null, null);
   }
 
   private StompDestinationPolicy() {}
 
   /**
    * Evaluate a SUBSCRIBE destination against the allow-list. A non-null {@code conversationId} in
-   * an allowed decision means the caller must still verify membership.
+   * an allowed decision means the caller must still verify membership; a non-null {@code meetingId}
+   * that the subscriber may enter that meeting's room.
    */
   public static SubscribeDecision evaluateSubscribe(String destination) {
     if (destination == null || hasForbiddenSyntax(destination)) {
@@ -76,7 +101,9 @@ public final class StompDestinationPolicy {
       Matcher m = rule.pattern().matcher(destination);
       if (m.matches()) {
         return new SubscribeDecision(
-            true, rule.requiresMembership() ? m.group("conversationId") : null);
+            true,
+            rule.scope() == Scope.CONVERSATION ? m.group("conversationId") : null,
+            rule.scope() == Scope.MEETING ? m.group("meetingId") : null);
       }
     }
     return SubscribeDecision.DENIED;
@@ -100,6 +127,18 @@ public final class StompDestinationPolicy {
     }
     Matcher m = CONVERSATION_TOPIC.matcher(destination);
     return m.matches() ? m.group("conversationId") : null;
+  }
+
+  /**
+   * The meeting id of exactly {@code /topic/meeting/{id}}, or null for any other destination. Used
+   * by the outbound filter that silences the topic for people removed from the meeting.
+   */
+  public static String meetingIdOfTopic(String destination) {
+    if (destination == null || !destination.startsWith(MEETING_TOPIC_PREFIX)) {
+      return null;
+    }
+    Matcher m = MEETING_TOPIC.matcher(destination);
+    return m.matches() ? m.group("meetingId") : null;
   }
 
   /**

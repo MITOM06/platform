@@ -45,13 +45,18 @@ bool isPublicRoute(String path) => isGuestOnlyRoute(path) || path == '/legal';
 ///    even theme onboarding or `/legal`: there is no way to skip the step.
 /// 3. Theme onboarding until it is completed.
 /// 4. Guest-only routes and a no-longer-needed `/set-password` / `/mfa` → home.
+///
+/// Every "signed in, go home" bounce goes to [returnTo] instead when set — a
+/// meeting link remembered while signed out (`return_path.dart`).
 String? resolveAuthRedirect({
   required String path,
   required bool isAuthenticated,
   required bool mustSetPassword,
   required bool onboardingCompleted,
   bool mfaPending = false,
+  String? returnTo,
 }) {
+  final home = returnTo ?? '/';
   if (mfaPending) return path == kMfaPath ? null : kMfaPath;
 
   if (!isAuthenticated) return isPublicRoute(path) ? null : '/login';
@@ -63,12 +68,12 @@ String? resolveAuthRedirect({
   if (!onboardingCompleted) {
     return path == kThemeOnboardingPath ? null : kThemeOnboardingPath;
   }
-  if (path == kThemeOnboardingPath) return '/';
+  if (path == kThemeOnboardingPath) return home;
 
   // Only bounce authenticated users off guest-only routes. Always-public pages
   // like /legal stay reachable while signed in.
   if (isGuestOnlyRoute(path) || path == kSetPasswordPath || path == kMfaPath) {
-    return '/';
+    return home;
   }
   return null;
 }
@@ -80,6 +85,7 @@ String? redirectForAuthState(
   AuthState? auth, {
   required String path,
   required bool onboardingCompleted,
+  String? returnTo,
 }) =>
     resolveAuthRedirect(
       path: path,
@@ -88,4 +94,5 @@ String? redirectForAuthState(
       onboardingCompleted: onboardingCompleted,
       // Code entry / enrollment, then the one-time backup codes.
       mfaPending: auth is AuthMfaPending || auth is AuthMfaBackupCodes,
+      returnTo: returnTo,
     );

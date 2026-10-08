@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import com.platform.chatservice.service.ConversationQueryService;
 import com.platform.chatservice.service.PresenceService;
+import com.platform.chatservice.service.meeting.MeetingTopicAuthorizer;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,6 +49,7 @@ class AuthChannelInterceptorTest {
   @Mock private SessionValidator sessionValidator;
   @Mock private WsSessionRegistry wsSessionRegistry;
   @Mock private PresenceService presenceService;
+  @Mock private MeetingTopicAuthorizer meetingTopics;
 
   @InjectMocks private AuthChannelInterceptor interceptor;
 
@@ -294,7 +296,13 @@ class AuthChannelInterceptorTest {
   // ---------------------------------------------------------------- SUBSCRIBE rules
 
   @ParameterizedTest
-  @ValueSource(strings = {"/user/queue/notifications", "/user/queue/webrtc", "/topic/presence"})
+  @ValueSource(
+      strings = {
+        "/user/queue/notifications",
+        "/user/queue/webrtc",
+        "/topic/presence",
+        "/user/queue/meeting"
+      })
   void subscribe_toUserQueuesAndPresence_passesWithoutMembershipLookup(String destination) {
     sessionValid();
     Message<byte[]> message = frame(StompCommand.SUBSCRIBE, destination, true);
@@ -348,6 +356,8 @@ class AuthChannelInterceptorTest {
         "/queue/notifications-userws-2",
         "/user/user-002/queue/notifications",
         "/app/chat.send",
+        "/topic/meeting/*",
+        "/topic/meeting/",
         "/"
       })
   void subscribe_outsideAllowList_isRefusedBeforeAnyLookup(String destination) {
@@ -358,6 +368,30 @@ class AuthChannelInterceptorTest {
         .isInstanceOf(MessageDeliveryException.class)
         .hasMessageContaining(AuthChannelInterceptor.FORBIDDEN_DESTINATION);
     verifyNoInteractions(conversationQueryService);
+    verifyNoInteractions(meetingTopics);
+  }
+
+  @Test
+  void subscribe_toMeetingTopic_whenAllowedIntoTheRoom_passes() {
+    sessionValid();
+    when(meetingTopics.canSubscribe(eq("m1"), any(UserPrincipal.class))).thenReturn(true);
+    Message<byte[]> message = frame(StompCommand.SUBSCRIBE, "/topic/meeting/m1", true);
+
+    assertThat(interceptor.preSend(message, channel)).isSameAs(message);
+    verifyNoInteractions(conversationQueryService);
+  }
+
+  @Test
+  void subscribe_toMeetingTopic_whileWaitingOrRemoved_isRefused() {
+    sessionValid();
+    when(meetingTopics.canSubscribe(eq("m1"), any(UserPrincipal.class))).thenReturn(false);
+
+    assertThatThrownBy(
+            () ->
+                interceptor.preSend(
+                    frame(StompCommand.SUBSCRIBE, "/topic/meeting/m1", true), channel))
+        .isInstanceOf(MessageDeliveryException.class)
+        .hasMessageContaining(AuthChannelInterceptor.UNAUTHORIZED_SUBSCRIPTION);
   }
 
   @Test

@@ -2,6 +2,7 @@ package com.platform.chatservice.config;
 
 import com.platform.chatservice.security.AuthChannelInterceptor;
 import com.platform.chatservice.security.ConversationTopicOutboundInterceptor;
+import com.platform.chatservice.security.MeetingTopicOutboundInterceptor;
 import com.platform.chatservice.security.WsSessionRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +28,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   private final AuthChannelInterceptor authChannelInterceptor;
   private final ConversationTopicOutboundInterceptor conversationTopicOutboundInterceptor;
+  private final MeetingTopicOutboundInterceptor meetingTopicOutboundInterceptor;
   private final WsSessionRegistry wsSessionRegistry;
 
   @Value("${app.cors.allowed-origins:*}")
@@ -80,10 +82,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     registration.interceptors(authChannelInterceptor);
   }
 
-  /** Re-checks conversation membership on every outbound conversation-topic frame. */
+  /**
+   * Re-checks access on every outbound topic frame: conversation membership for {@code
+   * /topic/conversation/*}, and "not removed from the meeting" for {@code /topic/meeting/*}.
+   */
   @Override
   public void configureClientOutboundChannel(ChannelRegistration registration) {
-    registration.interceptors(conversationTopicOutboundInterceptor);
+    registration.interceptors(
+        conversationTopicOutboundInterceptor, meetingTopicOutboundInterceptor);
   }
 
   /**

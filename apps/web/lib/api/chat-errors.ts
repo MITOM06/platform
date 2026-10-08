@@ -63,7 +63,8 @@ export function chatErrorKey(
     return { key: 'pinLimitReached', values: { max: max > 0 ? max : MAX_PINNED_MESSAGES } }
   }
   if (info.code && CODE_KEYS[info.code]) return { key: CODE_KEYS[info.code] }
-  // 429 carries no code (link preview 60/min, reactions 30/min, forward/send burst).
+  // 429 now carries `RATE_LIMITED` (mapped above); the bare-status fallback covers any 429
+  // without a code (link preview 60/min, reactions 30/min, forward/send burst, proxies).
   if (info.status === 429) return { key: 'errRateLimited' }
   if (info.network) return { key: 'errNetwork' }
   return null

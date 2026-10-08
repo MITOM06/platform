@@ -31,5 +31,9 @@ void main() {
       expect(AppConfig.connectorBaseUrl, 'http://localhost:3003');
       expect(AppConfig.wsUrl, 'ws://localhost:8080/ws');
     });
+
+    test('shareable links use the local web dev server', () {
+      expect(AppConfig.webBaseUrl, 'http://localhost:3000');
+    });
   });
 }

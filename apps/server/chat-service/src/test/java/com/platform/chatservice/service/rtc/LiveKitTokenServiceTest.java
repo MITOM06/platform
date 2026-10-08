@@ -57,16 +57,14 @@ class LiveKitTokenServiceTest {
   }
 
   @Test
-  void sourcesAndAdminAreEmittedOnlyWhenSet() {
+  void sourcesAreEmittedOnlyWhenSetAndAParticipantIsNeverARoomAdmin() {
     RtcGrant grant =
-        RtcGrant.participant("meet_1")
-            .withSources(List.of(RtcGrant.CAMERA, RtcGrant.MICROPHONE))
-            .asRoomAdmin();
+        RtcGrant.participant("meet_1").withSources(List.of(RtcGrant.CAMERA, RtcGrant.MICROPHONE));
     Map<?, ?> video =
         parse(service.participantToken("u", null, null, grant)).get("video", Map.class);
 
     assertThat(video.get("canPublishSources")).isEqualTo(List.of("camera", "microphone"));
-    assertThat(video.get("roomAdmin")).isEqualTo(true);
+    assertThat(video.containsKey("roomAdmin")).isFalse();
   }
 
   @Test

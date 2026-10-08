@@ -13,6 +13,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -83,8 +84,46 @@ public class LiveKitRoomClient {
     call("MutePublishedTrack", room, body);
   }
 
+  /**
+   * Replaces what {@code identity} may publish in {@code room}. LiveKit swaps the whole permission
+   * object (no merge), so the three grants every meeting token carries are re-sent with it. {@code
+   * publishSources} uses the {@link RtcGrant} constants; {@code null} or empty allows every source.
+   */
+  public void updateParticipant(String room, String identity, List<String> publishSources) {
+    List<String> sources =
+        publishSources == null
+            ? List.of()
+            : publishSources.stream().map(s -> s.toUpperCase(Locale.ROOT)).toList();
+    Map<String, Object> permission = new LinkedHashMap<>();
+    permission.put("can_publish", true);
+    permission.put("can_subscribe", true);
+    permission.put("can_publish_data", true);
+    permission.put("can_publish_sources", sources);
+    Map<String, Object> body = new LinkedHashMap<>();
+    body.put("room", room);
+    body.put("identity", identity);
+    body.put("permission", permission);
+    call("UpdateParticipant", room, body);
+  }
+
   public void removeParticipant(String room, String identity) {
     call("RemoveParticipant", room, Map.of("room", room, "identity", identity));
+  }
+
+  /**
+   * Creates {@code room} with explicit lifetimes before anyone joins. LiveKit returns the existing
+   * room when it already exists, so calling it on every join is harmless. {@code
+   * departureTimeoutSeconds} is how long a room that had people stays open once empty — without it
+   * a host dropping off the network for LiveKit's default ~20 s would end the meeting.
+   */
+  public void createRoom(
+      String room, int emptyTimeoutSeconds, int departureTimeoutSeconds, int maxParticipants) {
+    Map<String, Object> body = new LinkedHashMap<>();
+    body.put("name", room);
+    body.put("empty_timeout", emptyTimeoutSeconds);
+    body.put("departure_timeout", departureTimeoutSeconds);
+    body.put("max_participants", maxParticipants);
+    call("CreateRoom", room, body);
   }
 
   public void deleteRoom(String room) {
