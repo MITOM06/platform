@@ -35,6 +35,8 @@ export class MeshCallManager {
   private offerSent = false
   /** We placed this call: only the caller offers (see MeshNegotiator). */
   private caller = false
+  /** ICE reached `connected` at least once: only then is a drop worth waiting for. */
+  private iceConnected = false
   private readonly negotiator = new MeshNegotiator({
     pc: () => this.pc,
     target: () =>
@@ -326,12 +328,13 @@ export class MeshCallManager {
       if (this.pc !== pc) return
       switch (pc.connectionState) {
         case 'connected':
+          this.iceConnected = true
           this.inCall.connected(pc)
           break
         case 'disconnected':
         case 'failed':
           // Mid-call: a minute to recover (network hand-off, a tunnel, lost Wi-Fi).
-          if (useCallStore.getState().status === 'connected') this.inCall.dropped()
+          if (this.iceConnected) this.inCall.dropped()
           else if (pc.connectionState === 'failed') this.endCall('failed') // never connected
           break
       }
@@ -374,6 +377,7 @@ export class MeshCallManager {
     this.inCall.reset()
     this.negotiator.reset()
     this.caller = false
+    this.iceConnected = false
     this.localStream?.getTracks().forEach((t) => t.stop())
     this.localStream = null
     this.remoteStream = null

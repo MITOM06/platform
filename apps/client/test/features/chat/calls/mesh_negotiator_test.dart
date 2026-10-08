@@ -51,6 +51,14 @@ class _Transceiver implements RTCRtpTransceiver {
 
 class _Pc implements RTCPeerConnection {
   final lines = <_Transceiver>[];
+  final added = <(MediaStreamTrack, MediaStream)>[];
+  @override
+  Future<RTCRtpSender> addTrack(MediaStreamTrack track,
+      [MediaStream? stream]) async {
+    added.add((track, stream!));
+    return _Sender();
+  }
+
   final offerConstraints = <Map<String, dynamic>?>[];
   final remote = <RTCSessionDescription>[];
   @override
@@ -131,10 +139,10 @@ void main() {
     expect(to('/app/call.offer'), hasLength(2));
   });
 
-  test('an ICE restart does not wait for an unanswered offer', () async {
-    await negotiator.offer();
+  test('restart offers never overlap: a fresh one is not replaced', () async {
     await negotiator.offer(iceRestart: true);
-    expect(to('/app/call.offer'), hasLength(2));
+    await negotiator.offer(iceRestart: true);
+    expect(to('/app/call.offer'), hasLength(1));
   });
 
   test('adds a video line the callee can send on', () async {
@@ -152,9 +160,9 @@ void main() {
 
     expect(await negotiator.answer('remote-sdp'), isTrue);
     expect(pc.remote.single.sdp, 'remote-sdp');
-    expect(line.sender.replaced, camera);
-    expect(line.sender.streams, [stream]);
-    expect(line.direction, TransceiverDirection.SendRecv);
+    // addTrack reuses that video line and carries our stream.
+    expect(pc.added.single, (camera, stream));
+    expect(line.sender.replaced, isNull);
     expect(to('/app/call.answer').single['sdp'], 'answer-sdp');
   });
 }

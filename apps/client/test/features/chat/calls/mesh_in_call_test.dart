@@ -88,6 +88,20 @@ void main() {
     expect(offers, [(false, true)]);
   });
 
+  test("a callee's reconnect request gets an ICE restart", () {
+    inCall.handleState({'restart': true});
+    expect(offers, [(true, false)]);
+  });
+
+  testWidgets('while we already restart, the callee asking adds no offer',
+      (tester) async {
+    inCall.dropped();
+    expect(offers, hasLength(1));
+    inCall.handleState({'restart': true});
+    expect(offers, hasLength(1));
+    inCall.reset();
+  });
+
   test('the callee never offers on a restart request', () {
     caller = false;
     inCall.handleState({'restart': true});

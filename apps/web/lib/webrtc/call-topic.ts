@@ -1,4 +1,5 @@
 import { stompService } from '@/lib/stomp/client'
+import { chatService } from '@/lib/api/chat'
 import type { CallEvent } from '@/lib/api/types'
 
 /** Can the browser open the mic (and camera)? Releases the probe at once. */
@@ -30,4 +31,9 @@ export function subscribeCallEvents(
       }
     }) ?? null
   )
+}
+
+/** The call's line in the chat history — best-effort, never blocks a hang-up. */
+export function sendCallLog(conversationId: string, content: string): void {
+  chatService.sendMessage(conversationId, content, 'system').catch(() => {})
 }

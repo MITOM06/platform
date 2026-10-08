@@ -382,8 +382,9 @@ class SfuCallService implements DirectCallEngine {
         }
       };
     try {
-      await session.connect(token.url, token.token, video: _isVideo);
-      if (rejoin && _session == session) reconnecting.value = false;
+      // A rejoin keeps the camera as the user left it.
+      await session.connect(token.url, token.token,
+          video: rejoin ? _cameraOn : _isVideo);
     } catch (e) {
       if (rejoin || _session != session) return;
       await endCall(
@@ -392,7 +393,13 @@ class SfuCallService implements DirectCallEngine {
               : CallEndReason.failed);
       return;
     }
-    if (_session == session) await setSpeakerOn(_isVideo);
+    if (_session != session) return;
+    if (!rejoin) return setSpeakerOn(_isVideo);
+    // Back in the room: restore what connect() reset, see whether they are here.
+    if (!_micOn) await session.setMic(false); // connect() always opens the mic
+    await setSpeakerOn(_speakerOn);
+    reconnecting.value = false;
+    _onPeers();
   }
 
   void _giveUp() => unawaited(endCall(reason: CallEndReason.failed));

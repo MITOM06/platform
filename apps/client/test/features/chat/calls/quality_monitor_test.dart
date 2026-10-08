@@ -29,7 +29,24 @@ void main() {
     for (var i = 0; i < 5; i++) {
       await tester.pump(const Duration(seconds: 3));
     }
-    expect(changes, [ReceiveQuality.poor, ReceiveQuality.good]);
+    // The first sample is always reported: the other side must hear "good" too.
+    expect(changes,
+        [ReceiveQuality.good, ReceiveQuality.poor, ReceiveQuality.good]);
+    monitor.stop();
+  });
+
+  testWidgets('reports afresh after a restart, so a stale "poor" clears',
+      (tester) async {
+    final changes = <ReceiveQuality>[];
+    final monitor =
+        QualityMonitor(changes.add, every: const Duration(seconds: 3));
+    monitor.start(statsOf([(0, 0), (0, 0)]));
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump(const Duration(seconds: 3)); // nothing arriving → poor
+    monitor.start(statsOf([(0, 0)]));
+    await tester.pump(const Duration(seconds: 3));
+    expect(changes,
+        [ReceiveQuality.good, ReceiveQuality.poor, ReceiveQuality.good]);
     monitor.stop();
   });
 

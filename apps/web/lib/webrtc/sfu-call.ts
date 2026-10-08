@@ -1,5 +1,4 @@
 import { stompService } from '@/lib/stomp/client'
-import { chatService } from '@/lib/api/chat'
 import { callsApi } from '@/lib/api/calls'
 import type { CallEvent, CallTransport } from '@/lib/api/types'
 import { LiveKitSession, MediaAccessError } from '@/lib/rtc/livekit-session'
@@ -7,7 +6,7 @@ import { useCallStore } from '@/lib/store/call.store'
 import type { CallEndReason } from './call-end-notice'
 import { RING_TIMEOUT_MS, type WebRTCSignal } from './call-config'
 import { ReconnectWatch } from './reconnect-watch'
-import { canOpenMedia, subscribeCallEvents } from './call-topic'
+import { canOpenMedia, sendCallLog, subscribeCallEvents } from './call-topic'
 import type { CallHooks } from './call-hooks'
 import { refreshCallTransport } from './call-transport'
 
@@ -123,14 +122,14 @@ export class SfuDirectCall {
         const why = DECLINE_REASONS.has(reason) ? reason : 'declined'
         stompService.publish('/app/call.decline', { callId, reason: why })
       }
-      if (conversationId) this.sendCallLog(conversationId, `system.call.missed:${kind}`)
+      if (conversationId) sendCallLog(conversationId, `system.call.missed:${kind}`)
     } else if (st.status === 'outgoing') {
       if (callId) {
         stompService.publish('/app/call.cancel', { callId, reason: reason === 'no_answer' ? 'no_answer' : 'hangup' })
         // The callee may have answered a moment ago — the server then refuses the
         // cancel, and only a leave ends the call. A no-op if the cancel landed.
         stompService.publish('/app/call.leave', { callId })
-        if (conversationId) this.sendCallLog(conversationId, `system.call.missed:${kind}`)
+        if (conversationId) sendCallLog(conversationId, `system.call.missed:${kind}`)
       } else if (this.pendingStart) {
         this.cancelledBeforeStart = reason // the callee never rang: nothing to log
         keepPendingStart = true
@@ -138,7 +137,7 @@ export class SfuDirectCall {
     } else if (callId) {
       stompService.publish('/app/call.leave', { callId })
       if (conversationId) {
-        this.sendCallLog(
+        sendCallLog(
           conversationId,
           st.status === 'connected' ? `system.call.ended:${kind}:${st.durationSeconds}` : `system.call.missed:${kind}`,
         )
@@ -261,7 +260,7 @@ export class SfuDirectCall {
     if (!sameCall) return
     const reason = signal.reason ?? 'declined'
     if (reason === 'busy' && st.conversationId) {
-      this.sendCallLog(st.conversationId, `system.call.missed:${st.video ? 'video' : 'voice'}`)
+      sendCallLog(st.conversationId, `system.call.missed:${st.video ? 'video' : 'voice'}`)
     }
     const peerName = st.peerName
     this.teardown(false)
@@ -303,7 +302,7 @@ export class SfuDirectCall {
     }
     try {
       await session.connect(token.url, token.token, { video })
-      if (rejoin && this.session === session) store().setReconnecting(false)
+      if (rejoin && this.session === session) this.rejoined(session)
     } catch (err) {
       if (rejoin || this.session !== session) return
       this.endCall(err instanceof MediaAccessError ? 'media_error' : 'failed')
@@ -324,6 +323,13 @@ export class SfuDirectCall {
     } finally {
       this.rejoining = false
     }
+  }
+
+  /** Back in the room: restore what connect() reset, and see whether they are here. */
+  private rejoined(session: LiveKitSession): void {
+    if (!store().micEnabled) void session.setMic(false) // connect() always opens the mic
+    store().setReconnecting(false)
+    this.onPeers()
   }
 
   private peerInRoom(): boolean {
@@ -364,12 +370,6 @@ export class SfuDirectCall {
   private unsubscribeTopic(): void {
     this.topicSub?.unsubscribe()
     this.topicSub = null
-  }
-
-  private sendCallLog(conversationId: string, content: string): void {
-    chatService.sendMessage(conversationId, content, 'system').catch(() => {
-      // best-effort — a failed system message must not block hang-up
-    })
   }
 
   private clearRingTimer(): void {

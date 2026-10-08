@@ -8,7 +8,8 @@ import { receiveQuality, type ReceiveQuality, type ReceiveSample } from './call-
 export class QualityMonitor {
   private timer: ReturnType<typeof setInterval> | null = null
   private prev: ReceiveSample | null = null
-  private last: ReceiveQuality = 'good'
+  /** Null until the first sample: that one is always reported, so the peer hears "good" too. */
+  private last: ReceiveQuality | null = null
 
   constructor(
     private readonly onChange: (quality: ReceiveQuality) => void,
@@ -24,7 +25,7 @@ export class QualityMonitor {
     if (this.timer) clearInterval(this.timer)
     this.timer = null
     this.prev = null
-    this.last = 'good'
+    this.last = null // a restart (reconnect) reports afresh, clearing a stale "poor"
   }
 
   private async sample(pc: RTCPeerConnection): Promise<void> {

@@ -291,6 +291,31 @@ describe('connection lost: a minute to reconnect', () => {
     expect(offersSent()).toHaveLength(2)
   })
 
+  it('does not stack restart offers: the callee asking while we already restart adds none', async () => {
+    const pc = await connectedCall(true)
+    pc.goTo('disconnected')
+    await vi.advanceTimersByTimeAsync(0)
+    state({ restart: true })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(offersSent()).toHaveLength(1)
+  })
+
+  it("a callee's reconnect request gets an ICE restart even before we notice the drop", async () => {
+    const pc = await connectedCall(true)
+    state({ restart: true })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(pc.createOffer).toHaveBeenLastCalledWith({ iceRestart: true })
+  })
+
+  it('a call whose connection never came up fails at once, without the reconnect wait', async () => {
+    await callManager.startCall('bob', 'Bob', 'conv-1', false)
+    const pc = FakePeerConnection.last!
+    pc.ontrack?.({ streams: [fakeStream as unknown as MediaStream] }) // SDP in, ICE never connected
+    pc.goTo('failed')
+    expect(useCallStore.getState().reconnectWait).toBeNull()
+    expect(endSignals()[0][1]).toMatchObject({ reason: 'failed' })
+  })
+
   it('the callee asks the caller to restart', async () => {
     const pc = await connectedCall(false)
     pc.goTo('disconnected')
@@ -342,11 +367,11 @@ describe('switching between voice and video', () => {
     await vi.advanceTimersByTimeAsync(0)
     expect(statesSent()).toContainEqual(expect.objectContaining({ video: true, restart: true }))
 
-    const line = pc.videoLine() // the caller's offer brings a video m-line
+    pc.videoLine() // the caller's offer brings a video m-line
     callManager.handleSignal({ type: 'offer', senderId: 'bob', targetId: 'alice', conversationId: 'conv-1', sdp: 'v=2' })
     await vi.advanceTimersByTimeAsync(0)
-    expect(line.sender.replaceTrack).toHaveBeenCalledWith(video)
-    expect(line.direction).toBe('sendrecv')
+    // addTrack reuses that line and carries our stream, on every browser.
+    expect(pc.addTrack).toHaveBeenLastCalledWith(video, expect.anything())
     expect(answersSent()).toHaveLength(1)
   })
 

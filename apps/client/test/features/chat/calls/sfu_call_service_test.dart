@@ -167,6 +167,9 @@ void main() {
       ..onCallEnded = (() => ended++);
   });
 
+  // No call's timers may outlive its test (they would write into the next one's lists).
+  tearDown(() => call.dispose());
+
   group('outgoing', () {
     test('starts on the server and joins once the id arrives', () async {
       await call.startOutgoing(
@@ -345,12 +348,29 @@ void main() {
     test('a real drop rejoins the room instead of ending the call', () async {
       final s = await connect();
       s.onDisconnected!(RtcEnd.failed);
+      expect(call.network.reconnectWho, ReconnectWho.self);
       await flush();
       expect(notices, isEmpty);
       expect(port.to('/app/call.leave'), isEmpty);
-      expect(call.network.reconnectWho, ReconnectWho.self);
       expect(sessions, hasLength(2)); // re-joined
+      // We are back; they are not in the new room yet.
+      expect(call.network.reconnectWho, ReconnectWho.peer);
       sessions.last.join('bob');
+      expect(call.network.reconnectWho, isNull);
+    });
+
+    test('a rejoin keeps mic, camera and speaker as they were', () async {
+      final s = await connect();
+      await call.setMicOn(false);
+      await call.setSpeakerOn(true);
+      s.onReconnecting!(true); // LiveKit tried to resume, then gave up
+      s.onDisconnected!(RtcEnd.failed);
+      await flush();
+      final again = sessions.last;
+      expect(again, isNot(same(s)));
+      expect(again.micCalls.last, isFalse);
+      expect(again.speakerCalls.last, isTrue);
+      again.join('bob');
       expect(call.network.reconnectWho, isNull);
     });
 

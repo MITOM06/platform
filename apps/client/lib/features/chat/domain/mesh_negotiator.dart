@@ -4,6 +4,11 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 /// An unanswered renegotiation older than this no longer blocks the next one.
 const _staleOffer = Duration(seconds: 10);
 
+/// An ICE restart may replace an unanswered offer only after this long: two
+/// restart offers in flight could see answer #1 applied to offer #2, leaving
+/// the two sides with mismatched ICE credentials.
+const _restartRetry = Duration(milliseconds: 3500);
+
 /// Peer-to-peer offer/answer for a 1-on-1, including mid-call renegotiation:
 /// an ICE restart after a drop, or a camera turned on in a voice call.
 ///
@@ -39,9 +44,10 @@ class MeshNegotiator {
     final pc = _pc();
     final target = _target();
     if (pc == null || target == null) return;
-    if (_pending &&
-        !iceRestart &&
-        DateTime.now().difference(_pendingSince) < _staleOffer) {
+    // An ICE restart may replace an offer the lost connection never
+    // answered — not a fresh one.
+    final wait = iceRestart ? _restartRetry : _staleOffer;
+    if (_pending && DateTime.now().difference(_pendingSince) < wait) {
       _queued = (
         iceRestart: (_queued?.iceRestart ?? false) || iceRestart,
         videoLine: (_queued?.videoLine ?? false) || videoLine,
@@ -130,14 +136,10 @@ class MeshNegotiator {
   Future<void> _attachHeldCamera(RTCPeerConnection pc) async {
     final held = _heldCamera;
     if (held == null) return;
-    final lines = await pc.getTransceivers();
-    final line =
-        lines.where((t) => t.receiver.track?.kind == 'video').firstOrNull;
-    if (line == null) return;
-    await line.sender.replaceTrack(held.track);
-    await line.sender
-        .setStreams([held.stream]); // the caller's onTrack gets our stream
-    await line.setDirection(TransceiverDirection.SendRecv);
+    if (!await _hasVideoLine(pc)) return;
+    // addTrack reuses the caller's video line (sendrecv from now on) and
+    // carries our stream id, so the caller's onTrack gets it.
+    await pc.addTrack(held.track, held.stream);
     _heldCamera = null;
   }
 }

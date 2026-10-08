@@ -17,6 +17,12 @@ export interface OfferOptions {
 
 /** An unanswered renegotiation older than this no longer blocks the next one. */
 const STALE_OFFER_MS = 10_000
+/**
+ * An ICE restart may replace an unanswered offer only after this long: two
+ * restart offers in flight could see answer #1 applied to offer #2, leaving
+ * the two sides with mismatched ICE credentials.
+ */
+const RESTART_RETRY_MS = 3_500
 
 /**
  * Peer-to-peer offer/answer for a 1-on-1, including mid-call renegotiation:
@@ -39,8 +45,9 @@ export class MeshNegotiator {
     const pc = this.link.pc()
     const target = this.link.target()
     if (!pc || !target) return
-    // An ICE restart may replace an offer the lost connection never answered.
-    if (this.pending && !opts.iceRestart && Date.now() - this.pendingSince < STALE_OFFER_MS) {
+    // An ICE restart may replace an offer the lost connection never answered — not a fresh one.
+    const wait = opts.iceRestart ? RESTART_RETRY_MS : STALE_OFFER_MS
+    if (this.pending && Date.now() - this.pendingSince < wait) {
       this.queued = {
         iceRestart: !!(this.queued?.iceRestart || opts.iceRestart),
         videoLine: !!(this.queued?.videoLine || opts.videoLine),
@@ -119,11 +126,10 @@ export class MeshNegotiator {
   private async attachHeldCamera(pc: RTCPeerConnection): Promise<void> {
     const held = this.heldCamera
     if (!held) return
-    const line = pc.getTransceivers().find((t) => t.receiver.track?.kind === 'video')
-    if (!line) return
-    await line.sender.replaceTrack(held.track)
-    line.sender.setStreams?.(held.stream) // so the caller's ontrack gets our stream
-    line.direction = 'sendrecv'
+    if (!pc.getTransceivers().some((t) => t.receiver.track?.kind === 'video')) return
+    // addTrack reuses the caller's video line (sendrecv from now on) and carries
+    // our stream id, so the caller's ontrack gets it — on every browser.
+    pc.addTrack(held.track, held.stream)
     this.heldCamera = null
   }
 }

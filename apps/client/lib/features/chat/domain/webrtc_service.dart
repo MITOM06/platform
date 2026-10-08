@@ -56,6 +56,9 @@ class WebRTCService implements DirectCallEngine {
   /// We placed this call (not answering one).
   bool _outgoing = false;
 
+  /// ICE reached connected at least once: only then is a drop worth waiting for.
+  bool _iceConnected = false;
+
   /// When remote media first arrived — the call duration is measured from it.
   DateTime? _mediaSince;
 
@@ -249,7 +252,8 @@ class WebRTCService implements DirectCallEngine {
       if (remote != null) {
         unawaited(remote
             .addTrack(event.track)
-            .then((_) => onRemoteStream?.call(remote)));
+            .then((_) => onRemoteStream?.call(remote))
+            .catchError((Object e) => debugPrint('remote track not shown: $e')));
       }
     };
 
@@ -257,11 +261,12 @@ class WebRTCService implements DirectCallEngine {
       if (_peerConnection != pc) return;
       switch (state) {
         case RTCPeerConnectionState.RTCPeerConnectionStateConnected:
+          _iceConnected = true;
           _inCall.connected(pc.getStats);
         case RTCPeerConnectionState.RTCPeerConnectionStateDisconnected:
         case RTCPeerConnectionState.RTCPeerConnectionStateFailed:
           // Mid-call: a minute to recover (network hand-off, a tunnel, lost Wi-Fi).
-          if (_mediaSince != null) {
+          if (_iceConnected) {
             _inCall.dropped();
           } else if (state ==
               RTCPeerConnectionState.RTCPeerConnectionStateFailed) {
@@ -460,6 +465,7 @@ class WebRTCService implements DirectCallEngine {
     _outgoing = false;
     _targetId = null;
     _conversationId = null;
+    _iceConnected = false;
     _inCall.reset();
     _negotiator.reset();
     network.reset();

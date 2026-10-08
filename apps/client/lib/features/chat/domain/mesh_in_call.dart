@@ -73,7 +73,13 @@ class MeshInCall {
       _applyQuality();
     }
     if (signal['restart'] == true && _isCaller()) {
-      unawaited(_offer(iceRestart: _watch.active, videoLine: video == true));
+      // No camera in it: a reconnect request — ICE-restart, unless our own
+      // reconnect ticker already does. With a camera: it wants a video line.
+      final reconnectRequest = video == null;
+      if (!(reconnectRequest && _watch.active)) {
+        unawaited(
+            _offer(iceRestart: reconnectRequest, videoLine: video == true));
+      }
     }
   }
 

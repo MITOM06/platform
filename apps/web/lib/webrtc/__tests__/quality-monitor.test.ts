@@ -29,7 +29,19 @@ describe('QualityMonitor', () => {
       ]),
     )
     await vi.advanceTimersByTimeAsync(3_000 * 5)
-    expect(onChange.mock.calls.map(([q]) => q)).toEqual(['poor', 'good'])
+    // The first sample is always reported: the other side must hear "good" too.
+    expect(onChange.mock.calls.map(([q]) => q)).toEqual(['good', 'poor', 'good'])
+    monitor.stop()
+  })
+
+  it('reports afresh after a restart (a reconnect), so a stale "poor" clears', async () => {
+    const onChange = vi.fn()
+    const monitor = new QualityMonitor(onChange, 3_000)
+    monitor.start(fakePc([{ packetsReceived: 0, packetsLost: 0 }, { packetsReceived: 0, packetsLost: 0 }]))
+    await vi.advanceTimersByTimeAsync(6_000) // good, then nothing arriving → poor
+    monitor.start(fakePc([{ packetsReceived: 0, packetsLost: 0 }]))
+    await vi.advanceTimersByTimeAsync(3_000)
+    expect(onChange.mock.calls.map(([q]) => q)).toEqual(['good', 'poor', 'good'])
     monitor.stop()
   })
 

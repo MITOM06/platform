@@ -15,7 +15,10 @@ class QualityMonitor {
   final Duration every;
   Timer? _timer;
   ReceiveSample? _prev;
-  ReceiveQuality _last = ReceiveQuality.good;
+
+  /// Null until the first sample: that one is always reported, so the peer
+  /// hears "good" too.
+  ReceiveQuality? _last;
 
   void start(Future<List<StatsReport>> Function() getStats) {
     stop();
@@ -26,7 +29,8 @@ class QualityMonitor {
     _timer?.cancel();
     _timer = null;
     _prev = null;
-    _last = ReceiveQuality.good;
+    _last =
+        null; // a restart (reconnect) reports afresh, clearing a stale "poor"
   }
 
   Future<void> _sample(Future<List<StatsReport>> Function() getStats) async {

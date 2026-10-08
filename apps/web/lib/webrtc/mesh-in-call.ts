@@ -105,7 +105,12 @@ export class MeshInCall {
       this.applyQuality()
     }
     if (signal.restart && this.link.isCaller()) {
-      void this.negotiator.offer({ iceRestart: this.reconnect.active, videoLine: signal.video === true })
+      // No camera in it: a reconnect request — ICE-restart, unless our own
+      // reconnect ticker already does. With a camera: it wants a video line.
+      const reconnectRequest = signal.video === undefined
+      if (!(reconnectRequest && this.reconnect.active)) {
+        void this.negotiator.offer({ iceRestart: reconnectRequest, videoLine: signal.video === true })
+      }
     }
   }
 

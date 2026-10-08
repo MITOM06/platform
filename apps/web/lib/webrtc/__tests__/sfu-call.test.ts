@@ -495,15 +495,32 @@ describe('weak network, reconnecting and switching to video', () => {
     await connect()
     const first = m.FakeSession.last!
     first.onDisconnected?.('failed')
+    expect(store().reconnectWait).toBe('self')
     await flush()
     expect(store().status).toBe('connected')
-    expect(store().reconnectWait).toBe('self')
+    expect(store().reconnectWait).toBe('peer') // we are back; they are not in the room yet
     expect(m.getToken).toHaveBeenCalledTimes(2)
     const second = m.FakeSession.last!
     expect(second).not.toBe(first)
     second.join('bob')
     expect(store().reconnectWait).toBeNull()
     expect(sent('/app/call.leave')).toEqual([])
+  })
+
+  it('a rejoin keeps the mic muted and ends the wait once they are back', async () => {
+    await connect()
+    call.toggleMic(false)
+    const first = m.FakeSession.last!
+    first.onReconnecting?.(true) // LiveKit tried to resume, then gave up
+    first.onDisconnected?.('failed')
+    await flush()
+    const second = m.FakeSession.last!
+    expect(second).not.toBe(first)
+    expect(second.setMic).toHaveBeenCalledWith(false)
+    second.join('bob')
+    expect(store().reconnectWait).toBeNull()
+    await vi.advanceTimersByTimeAsync(8_000)
+    expect(m.FakeSession.last).toBe(second) // no further rejoin tears it down
   })
 
   it('gives up after a minute when the room cannot be rejoined', async () => {
