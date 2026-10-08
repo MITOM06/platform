@@ -54,7 +54,8 @@ export class SfuDirectCall {
     this.pendingStart = { conversationId }
     this.cancelledBeforeStart = null
     this.subscribeTopic(conversationId)
-    stompService.publish('/app/call.start', { conversationId, media: video ? 'video' : 'audio' })
+    // `merge`: we can join a call-merged call when they call us at the same time.
+    stompService.publish('/app/call.start', { conversationId, media: video ? 'video' : 'audio', merge: true })
     this.ringTimer = setTimeout(() => {
       this.ringTimer = null
       if (store().status === 'outgoing') this.endCall('no_answer')
@@ -63,7 +64,11 @@ export class SfuDirectCall {
 
   /** `call.started` / `call.ended` from the conversation topic (kind direct, sfu). */
   handleCallEvent(event: CallEvent): void {
-    if (event.event === 'call.started') this.onStarted(event.callId, event.conversationId, event.transport)
+    // The other person's call.started (both tapped Call) is not our pending
+    // start: the server folds ours into theirs and sends call-merged.
+    if (event.event === 'call.started' && event.startedBy !== store().peerId) {
+      this.onStarted(event.callId, event.conversationId, event.transport)
+    }
     if (event.event === 'call.ended') this.onEnded(event.callId, (event.reason as CallEndReason) ?? 'hangup')
   }
 
@@ -229,6 +234,7 @@ export class SfuDirectCall {
     }
     const st = store()
     if (st.status !== 'outgoing' || st.peerId !== senderId || st.conversationId !== conversationId) return
+    if (this.callId === callId) return // a repeated merge: already joining
     this.pendingStart = null // our own call.start was folded into theirs: no call.started comes
     this.callId = callId
     this.accepting = true // already accepted by the server: its answered-elsewhere echo is ours
@@ -270,6 +276,11 @@ export class SfuDirectCall {
       return
     }
     if (this.callId !== callId) return // ended while fetching the token
+    // Never two room sessions with one identity. Detach first: its own
+    // onDisconnected must not end the call we are joining.
+    const previous = this.session
+    this.session = null
+    previous?.disconnect()
     const session = new LiveKitSession()
     this.session = session
     session.onLocalStream = (s) => this.hooks.onLocalStream?.(s)

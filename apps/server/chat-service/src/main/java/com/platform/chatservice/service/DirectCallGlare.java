@@ -47,9 +47,10 @@ public class DirectCallGlare {
   /**
    * Claim {@code conversationId} for the just-saved {@code own} session. False when a simultaneous
    * start from the other person claimed it first and {@code userId} was merged into that call —
-   * {@code own} is deleted and must not be surfaced. A claim left by an ended call is taken over.
+   * {@code own} is deleted and must not be surfaced (an app without {@code canMerge} hears busy
+   * instead). A claim left by an ended call is taken over.
    */
-  public boolean claimOrMerge(String userId, CallSession own) {
+  public boolean claimOrMerge(String userId, CallSession own, boolean canMerge) {
     String key = CallService.ACTIVE_KEY_PREFIX + own.getConversationId();
     if (Boolean.TRUE.equals(redis.opsForValue().setIfAbsent(key, own.getCallId()))) {
       return true;
@@ -58,6 +59,19 @@ public class DirectCallGlare {
         ringingFor(redis.opsForValue().get(key), userId, own.getConversationId());
     if (theirs.isPresent()) {
       busy.clear(userId, own.getCallId());
+      if (!canMerge) {
+        // An app that cannot join a merged call: drop ours and say busy, as before.
+        sessions.delete(own);
+        send(
+            userId,
+            WebRTCSignalDto.builder()
+                .type("call-declined")
+                .conversationId(own.getConversationId())
+                .reason("busy")
+                .senderId(theirs.get().getStartedBy())
+                .build());
+        return false;
+      }
       if (merge(userId, theirs.get())) {
         sessions.delete(own);
         return false;

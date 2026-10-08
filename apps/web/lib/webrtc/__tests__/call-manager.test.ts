@@ -293,6 +293,17 @@ describe('both call each other at the same time (peer-to-peer)', () => {
     expect(useCallStore.getState().status).toBe('outgoing')
   })
 
+  it('keeps the mic muted when it was muted while calling', async () => {
+    await callManager.startCall('bob', 'Bob', 'conv-1', false)
+    callManager.toggleMic(false)
+    const track = { enabled: true, stop: vi.fn() }
+    getUserMedia.mockResolvedValueOnce({ getTracks: () => [track], getAudioTracks: () => [track], getVideoTracks: () => [] })
+    crossedOffer('alice')
+    await vi.advanceTimersByTimeAsync(0)
+    expect(track.enabled).toBe(false)
+    expect(useCallStore.getState().micEnabled).toBe(false)
+  })
+
   it('the answering side is not left ringing out', async () => {
     await callManager.startCall('bob', 'Bob', 'conv-1', false)
     crossedOffer('alice')

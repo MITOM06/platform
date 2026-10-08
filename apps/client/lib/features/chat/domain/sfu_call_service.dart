@@ -125,7 +125,8 @@ class SfuCallService implements DirectCallEngine {
     _hold(conversationId);
     _port.send('/app/call.start', {
       'conversationId': conversationId,
-      'media': isVideo ? 'video' : 'audio'
+      'media': isVideo ? 'video' : 'audio',
+      'merge': true, // we can join a call-merged call (both tapped Call)
     });
   }
 
@@ -304,6 +305,8 @@ class SfuCallService implements DirectCallEngine {
     }
     switch (e['event']) {
       case 'call.started':
+        // Their call (both tapped Call) is not our start: call-merged follows.
+        if (e['startedBy'] != null && e['startedBy'] == _targetId) return;
         _onStarted(e['callId'] as String?, e['transport'] as String?);
       case 'call.ended':
         if (e['callId'] != null && e['callId'] == _callId) {
@@ -340,8 +343,7 @@ class SfuCallService implements DirectCallEngine {
     unawaited(_join());
   }
 
-  /// Both tapped Call: the server accepted us into their call instead of
-  /// ringing them. Join it, with that call's media.
+  /// Both tapped Call: the server put us in their call. Join it, its media.
   void _onMerged(Map<String, dynamic> signal) {
     final callId = signal['callId'] as String?;
     final conversationId = signal['conversationId'] as String?;
@@ -360,6 +362,7 @@ class SfuCallService implements DirectCallEngine {
       return;
     }
     if (!isCallingTo(senderId, conversationId)) return;
+    if (_callId == callId) return; // a repeated merge: already joining
     _pendingTimer?.cancel();
     _pendingTimer = null;
     _pendingStart = false; // our call.start was folded into theirs
@@ -386,6 +389,10 @@ class SfuCallService implements DirectCallEngine {
       return;
     }
     if (_callId != callId) return;
+    // Never two room sessions per identity; detach so its onDisconnected is moot.
+    final previous = _session;
+    _session = null;
+    if (previous != null) unawaited(previous.disconnect());
     final session = _sessionFactory();
     _session = session;
     session

@@ -120,7 +120,7 @@ describe('outgoing', () => {
     await call.startCall('bob', 'Bob', 'conv', false)
     expect(store().status).toBe('outgoing')
     expect(store().transport).toBe('sfu')
-    expect(sent('/app/call.start')).toEqual([{ conversationId: 'conv', media: 'audio' }])
+    expect(sent('/app/call.start')).toEqual([{ conversationId: 'conv', media: 'audio', merge: true }])
 
     started()
     await flush()
@@ -412,6 +412,36 @@ describe('both call each other at the same time', () => {
     await flush()
     expect(store().status).toBe('idle')
     expect(m.getToken).not.toHaveBeenCalled()
+  })
+
+  it("does not take the other person's call.started for our own start", async () => {
+    await call.startCall('alice', 'Alice', 'conv', false)
+    call.handleCallEvent({
+      event: 'call.started',
+      callId: 'c-a',
+      conversationId: 'conv',
+      media: 'video',
+      aiNotetaker: false,
+      startedBy: 'alice',
+      startedByName: 'alice',
+      participants: [],
+      transport: 'sfu',
+      kind: 'direct',
+    })
+    await flush()
+    expect(m.getToken).not.toHaveBeenCalled()
+
+    merged('c-a')
+    await flush()
+    expect(m.getToken).toHaveBeenCalledTimes(1) // one room session, not two
+  })
+
+  it('a repeated merge does not join the room twice', async () => {
+    await call.startCall('alice', 'Alice', 'conv', false)
+    merged('c-a')
+    merged('c-a')
+    await flush()
+    expect(m.getToken).toHaveBeenCalledTimes(1)
   })
 
   it('leaves their call when we hung up before the merge arrived', async () => {

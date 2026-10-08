@@ -153,7 +153,7 @@ void main() {
       await call.startOutgoing(
           targetId: 'bob', conversationId: 'conv', isVideo: false);
       expect(port.to('/app/call.start'), [
-        {'conversationId': 'conv', 'media': 'audio'}
+        {'conversationId': 'conv', 'media': 'audio', 'merge': true}
       ]);
       expect(port.held, ['conv']);
       port.events.add(started());
@@ -420,6 +420,35 @@ void main() {
       sessions.single.join('alice');
       expect(remoteStreams, 1);
       expect(call.isCallingTo('alice', 'conv'), isFalse);
+    });
+
+    test("does not take the other person's call.started for our own start",
+        () async {
+      await call.startOutgoing(
+          targetId: 'alice', conversationId: 'conv', isVideo: false);
+      port.events.add({
+        'event': 'call.started',
+        'callId': 'c-a',
+        'conversationId': 'conv',
+        'transport': 'sfu',
+        'kind': 'direct',
+        'startedBy': 'alice',
+      });
+      await flush();
+      expect(sessions, isEmpty);
+
+      call.handleSignal(merged());
+      await flush();
+      expect(sessions, hasLength(1)); // one room session, not two
+    });
+
+    test('a repeated merge does not join the room twice', () async {
+      await call.startOutgoing(
+          targetId: 'alice', conversationId: 'conv', isVideo: false);
+      call.handleSignal(merged());
+      call.handleSignal(merged());
+      await flush();
+      expect(sessions, hasLength(1));
     });
 
     test('ignores a merge for a call we are not making', () async {

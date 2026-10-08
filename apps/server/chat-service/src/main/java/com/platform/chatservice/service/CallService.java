@@ -81,6 +81,12 @@ public class CallService {
 
   /** Create a session, mark the conversation active, broadcast call.started, and ring everyone. */
   public void startCall(String userId, String conversationId, String media, boolean aiNotetaker) {
+    startCall(userId, conversationId, media, aiNotetaker, false);
+  }
+
+  /** As above; {@code canMerge}: the app joins a {@code call-merged} call (see DirectCallGlare). */
+  public void startCall(
+      String userId, String conversationId, String media, boolean aiNotetaker, boolean canMerge) {
     if (conversationId == null || conversationId.isBlank()) {
       return;
     }
@@ -110,7 +116,9 @@ public class CallService {
       String callee = members.stream().filter(m -> !m.equals(userId)).findFirst().orElse(null);
       String calleeCall = busyRegistry.busyCallOf(callee);
       // Both tapped Call: they are ringing us right now — answer their call instead of "busy".
-      if (calleeCall != null && glare.joinIfTheyAreCalling(userId, calleeCall, conversationId)) {
+      if (canMerge
+          && calleeCall != null
+          && glare.joinIfTheyAreCalling(userId, calleeCall, conversationId)) {
         return;
       }
       if (calleeCall != null) {
@@ -147,7 +155,7 @@ public class CallService {
     if (sfu) {
       busyRegistry.markBusy(userId, callId);
     }
-    if (sfuDirect && !glare.claimOrMerge(userId, session)) {
+    if (sfuDirect && !glare.claimOrMerge(userId, session, canMerge)) {
       return; // started at the same instant as theirs: joined their call instead
     }
     if (sfu) {

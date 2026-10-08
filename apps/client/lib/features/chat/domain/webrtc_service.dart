@@ -106,11 +106,16 @@ class WebRTCService implements DirectCallEngine {
     required String conversationId,
     required String sdp,
   }) async {
+    // Fresh tracks start live: keep what the user muted while "Calling…".
+    final micOn = _micOn;
+    final cameraOn = _cameraOn;
     _closePeer();
     _ice.expect(from); // their candidates follow their offer
     try {
       await initialize(from, conversationId,
           isVideo: sdpHasVideo(sdp), incoming: true);
+      if (!micOn) await setMicOn(false);
+      if (_isVideo && !cameraOn) await setCameraOn(false);
       await handleOffer(sdp);
     } on CallCancelledException {
       return;

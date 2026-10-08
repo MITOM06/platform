@@ -151,6 +151,10 @@ export class MeshCallManager {
       return
     }
     this.offerSent = true // the peer knows about this call: hanging up must tell them
+    // Fresh tracks start live: keep what the user muted while "Calling…".
+    const { micEnabled, cameraEnabled } = useCallStore.getState()
+    if (!micEnabled) this.toggleMic(false)
+    if (!cameraEnabled) this.toggleCamera(false)
     await this.answerOffer(pc, from, conversationId, sdp)
   }
 

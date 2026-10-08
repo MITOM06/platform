@@ -217,7 +217,7 @@ class CallServiceSfuTest {
     CallSession aliceCall = ringingFrom("alice", "call-a");
     when(busy.busyCallOf("alice")).thenReturn("call-a");
 
-    service.startCall("bob", "conv", "audio", false);
+    service.startCall("bob", "conv", "audio", false, true);
 
     verify(sessions, never()).save(any());
     assertThat(aliceCall.getParticipants())
@@ -286,7 +286,7 @@ class CallServiceSfuTest {
         .thenReturn(false);
     when(values.get(CallService.ACTIVE_KEY_PREFIX + "conv")).thenReturn("call-a");
 
-    service.startCall("bob", "conv", "audio", false);
+    service.startCall("bob", "conv", "audio", false, true);
 
     CallSession bobs = saved();
     verify(sessions).delete(bobs);
@@ -296,6 +296,50 @@ class CallServiceSfuTest {
     assertThat(sentTo("alice")).isEmpty();
     assertThat(broadcast("conv")).isEmpty(); // Bob's own call never surfaced
     verify(timers, never()).after(any(), any());
+  }
+
+  @Test
+  void anOlderAppThatCannotJoinAMergedCallStillHearsBusy() {
+    // Apps before call-merged do not send `merge`: keep v1.1.0 behaviour for them.
+    conversation("conv", "alice", "bob");
+    ringingFrom("alice", "call-a");
+    when(busy.busyCallOf("alice")).thenReturn("call-a");
+
+    service.startCall("bob", "conv", "audio", false);
+
+    verify(busy, never()).markBusy(eq("bob"), anyString());
+    assertThat(sentTo("bob"))
+        .singleElement()
+        .satisfies(
+            d -> {
+              assertThat(d.getType()).isEqualTo("call-declined");
+              assertThat(d.getReason()).isEqualTo("busy");
+            });
+  }
+
+  @Test
+  void anOlderAppLosingASimultaneousStartHearsBusyAndLeavesNoCallBehind() {
+    conversation("conv", "alice", "bob");
+    ringingFrom("alice", "call-a");
+    when(values.setIfAbsent(eq(CallService.ACTIVE_KEY_PREFIX + "conv"), anyString()))
+        .thenReturn(false);
+    when(values.get(CallService.ACTIVE_KEY_PREFIX + "conv")).thenReturn("call-a");
+
+    service.startCall("bob", "conv", "audio", false);
+
+    CallSession bobs = saved();
+    verify(sessions).delete(bobs);
+    verify(busy).clear("bob", bobs.getCallId());
+    verify(busy, never()).markBusy("bob", "call-a");
+    assertThat(sentTo("bob"))
+        .singleElement()
+        .satisfies(
+            d -> {
+              assertThat(d.getType()).isEqualTo("call-declined");
+              assertThat(d.getReason()).isEqualTo("busy");
+              assertThat(d.getSenderId()).isEqualTo("alice");
+            });
+    assertThat(broadcast("conv")).isEmpty();
   }
 
   @Test

@@ -33,7 +33,8 @@ public class CallController {
         principal.getName(),
         dto.getConversationId(),
         dto.getMedia(),
-        Boolean.TRUE.equals(dto.getAiNotetaker()));
+        Boolean.TRUE.equals(dto.getAiNotetaker()),
+        Boolean.TRUE.equals(dto.getMerge()));
   }
 
   @MessageMapping("/call.join")
