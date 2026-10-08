@@ -3627,12 +3627,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get callHangUp => 'Colgar';
 
   @override
-  String get callReconnecting => 'Reconectando…';
-
-  @override
-  String get callPoorConnection => 'Conexión débil';
-
-  @override
   String get aiContextLearnedFactsLoadError =>
       'No se pudo cargar lo que el asistente ha aprendido.';
 
@@ -4532,4 +4526,35 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get authErrMfaResetSelfForbidden =>
       'No puedes restablecer tu propia autenticación de dos factores.';
+
+  @override
+  String get callSelfWeakNetwork => 'Tu red es débil';
+
+  @override
+  String callPeerWeakNetwork(String name) {
+    return 'La red de $name es débil';
+  }
+
+  @override
+  String get callUnstableNetwork => 'Conexión inestable';
+
+  @override
+  String get callReconnectingSelf => 'Conexión perdida, reconectando…';
+
+  @override
+  String callWaitingForPeer(String name) {
+    return 'Esperando a que $name se reconecte…';
+  }
+
+  @override
+  String callReconnectCountdown(int seconds) {
+    return 'La llamada terminará en $seconds s si no se reconecta';
+  }
+
+  @override
+  String get callSwitchToVideo => 'Cambiar a videollamada';
+
+  @override
+  String get callVideoUnavailable =>
+      'El vídeo no está disponible en esta llamada; puede que la otra persona tenga que actualizar la app';
 }

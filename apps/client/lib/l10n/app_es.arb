@@ -1255,8 +1255,6 @@
   "callSpeaker": "Altavoz",
   "callSwitchCamera": "Cambiar cámara",
   "callHangUp": "Colgar",
-  "callReconnecting": "Reconectando…",
-  "callPoorConnection": "Conexión débil",
   "aiContextLearnedFactsLoadError": "No se pudo cargar lo que el asistente ha aprendido.",
   "errTooManyRequests": "Demasiadas solicitudes. Espera un momento y vuelve a intentarlo.",
   "removedFromConversation": "Ya no eres miembro de esta conversación",
@@ -1522,5 +1520,22 @@
   "authErrMfaNotEnrolled": "Esta cuenta aún no tiene configurada la autenticación de dos factores.",
   "authErrMfaAlreadyEnrolled": "Esta cuenta ya tiene configurada la autenticación de dos factores.",
   "authErrMfaResetForbidden": "Solo un Propietario puede restablecer la autenticación de dos factores.",
-  "authErrMfaResetSelfForbidden": "No puedes restablecer tu propia autenticación de dos factores."
+  "authErrMfaResetSelfForbidden": "No puedes restablecer tu propia autenticación de dos factores.",
+  "callSelfWeakNetwork": "Tu red es débil",
+  "callPeerWeakNetwork": "La red de {name} es débil",
+  "@callPeerWeakNetwork": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callUnstableNetwork": "Conexión inestable",
+  "callReconnectingSelf": "Conexión perdida, reconectando…",
+  "callWaitingForPeer": "Esperando a que {name} se reconecte…",
+  "@callWaitingForPeer": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callReconnectCountdown": "La llamada terminará en {seconds} s si no se reconecta",
+  "@callReconnectCountdown": {
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "callSwitchToVideo": "Cambiar a videollamada",
+  "callVideoUnavailable": "El vídeo no está disponible en esta llamada; puede que la otra persona tenga que actualizar la app"
 }

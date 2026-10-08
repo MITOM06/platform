@@ -3521,12 +3521,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get callHangUp => '통화 종료';
 
   @override
-  String get callReconnecting => '다시 연결하는 중…';
-
-  @override
-  String get callPoorConnection => '연결 상태가 좋지 않음';
-
-  @override
   String get aiContextLearnedFactsLoadError => '어시스턴트가 기억한 내용을 불러오지 못했습니다.';
 
   @override
@@ -4349,4 +4343,35 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get authErrMfaResetSelfForbidden => '본인의 2단계 인증은 재설정할 수 없습니다.';
+
+  @override
+  String get callSelfWeakNetwork => '내 네트워크가 약합니다';
+
+  @override
+  String callPeerWeakNetwork(String name) {
+    return '$name님의 네트워크가 약합니다';
+  }
+
+  @override
+  String get callUnstableNetwork => '연결이 불안정합니다';
+
+  @override
+  String get callReconnectingSelf => '연결이 끊겨 다시 연결하는 중…';
+
+  @override
+  String callWaitingForPeer(String name) {
+    return '$name님이 다시 연결되기를 기다리는 중…';
+  }
+
+  @override
+  String callReconnectCountdown(int seconds) {
+    return '다시 연결되지 않으면 $seconds초 후 통화가 종료됩니다';
+  }
+
+  @override
+  String get callSwitchToVideo => '영상 통화로 전환';
+
+  @override
+  String get callVideoUnavailable =>
+      '이 통화에서는 영상을 켤 수 없습니다. 상대방이 앱을 업데이트해야 할 수 있습니다';
 }

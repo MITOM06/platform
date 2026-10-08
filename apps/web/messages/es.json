@@ -1659,6 +1659,14 @@
     "peerFallback": "Usuario",
     "mediaError": "No se puede acceder a la cámara o al micrófono. Revisa los permisos del navegador.",
     "noAnswer": "Sin respuesta",
+    "selfWeakNetwork": "Tu red es débil",
+    "peerWeakNetwork": "La red de {name} es débil",
+    "unstableNetwork": "Conexión inestable",
+    "reconnectingSelf": "Conexión perdida, reconectando…",
+    "waitingForPeer": "Esperando a que {name} se reconecte…",
+    "reconnectCountdown": "La llamada terminará en {seconds} s si no se reconecta",
+    "switchToVideo": "Cambiar a videollamada",
+    "videoUnavailable": "El vídeo no está disponible en esta llamada; puede que la otra persona tenga que actualizar la app",
     "declined": "{name} rechazó la llamada",
     "busy": "{name} está en otra llamada",
     "peerMediaError": "{name} no pudo activar su micrófono o cámara",
@@ -1696,9 +1704,7 @@
     "summaryOverview": "Resumen",
     "summaryKeyPoints": "Puntos clave",
     "summaryActionItems": "Tareas",
-    "summaryUnavailable": "Resumen no disponible",
-    "reconnecting": "Reconectando…",
-    "poorConnection": "Conexión débil"
+    "summaryUnavailable": "Resumen no disponible"
   },
   "notFound": {
     "title": "Página no encontrada",

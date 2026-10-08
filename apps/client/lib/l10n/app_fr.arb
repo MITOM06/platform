@@ -1255,8 +1255,6 @@
   "callSpeaker": "Haut-parleur",
   "callSwitchCamera": "Changer de caméra",
   "callHangUp": "Raccrocher",
-  "callReconnecting": "Reconnexion…",
-  "callPoorConnection": "Connexion faible",
   "aiContextLearnedFactsLoadError": "Impossible de charger ce que l’assistant a appris.",
   "errTooManyRequests": "Trop de requêtes. Patientez un instant puis réessayez.",
   "removedFromConversation": "Vous ne faites plus partie de cette conversation",
@@ -1522,5 +1520,22 @@
   "authErrMfaNotEnrolled": "L'authentification à deux facteurs n'est pas encore configurée pour ce compte.",
   "authErrMfaAlreadyEnrolled": "L'authentification à deux facteurs est déjà configurée pour ce compte.",
   "authErrMfaResetForbidden": "Seul un Propriétaire peut réinitialiser l'authentification à deux facteurs.",
-  "authErrMfaResetSelfForbidden": "Vous ne pouvez pas réinitialiser votre propre authentification à deux facteurs."
+  "authErrMfaResetSelfForbidden": "Vous ne pouvez pas réinitialiser votre propre authentification à deux facteurs.",
+  "callSelfWeakNetwork": "Votre réseau est faible",
+  "callPeerWeakNetwork": "Le réseau de {name} est faible",
+  "@callPeerWeakNetwork": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callUnstableNetwork": "Connexion instable",
+  "callReconnectingSelf": "Connexion perdue, reconnexion…",
+  "callWaitingForPeer": "En attente de la reconnexion de {name}…",
+  "@callWaitingForPeer": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callReconnectCountdown": "L'appel prendra fin dans {seconds} s sans reconnexion",
+  "@callReconnectCountdown": {
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "callSwitchToVideo": "Passer en vidéo",
+  "callVideoUnavailable": "La vidéo n'est pas disponible pour cet appel — l'autre personne doit peut-être mettre à jour l'application"
 }

@@ -224,6 +224,27 @@ public class ChatController {
   }
 
   /**
+   * In-call state for the other person of a 1-on-1 (camera on/off, receive quality, reconnect
+   * request) on either media path. Relayed as {@code type:"state"}, only between two members of the
+   * conversation it names; older apps ignore it.
+   */
+  @MessageMapping("/call.state")
+  public void callState(
+      @Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
+    String conversationId = dto.getConversationId();
+    String targetId = dto.getTargetId();
+    if (conversationId == null
+        || targetId == null
+        || !membershipCache.isMember(conversationId, principal.getName())
+        || !membershipCache.isMember(conversationId, targetId)) {
+      return;
+    }
+    dto.setSenderId(principal.getName());
+    dto.setType("state");
+    clusterBroker.convertAndSendToUser(targetId, "/queue/webrtc", dto);
+  }
+
+  /**
    * Relays a hang-up to the other peer. Deliberately does NOT write a call-log message.
    *
    * <p>It used to save one, as type {@code call_log} with the content hardcoded in English ("Call

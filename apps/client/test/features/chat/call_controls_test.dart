@@ -30,8 +30,9 @@ void main() {
 
     await tester.tap(find.byTooltip('Toggle microphone'));
     await tester.tap(find.byTooltip('Speaker'));
+    await tester.tap(find.byTooltip('Switch to video')); // Messenger-style switch
     await tester.tap(find.byTooltip('End call'));
-    expect(taps, ['mic', 'speaker', 'hangup']);
+    expect(taps, ['mic', 'speaker', 'cam', 'hangup']);
   });
 
   testWidgets('video call: mic, camera, switch camera and hang-up',

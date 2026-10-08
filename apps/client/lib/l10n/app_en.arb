@@ -1709,8 +1709,6 @@
   "callSpeaker": "Speaker",
   "callSwitchCamera": "Switch camera",
   "callHangUp": "End call",
-  "callReconnecting": "Reconnecting…",
-  "callPoorConnection": "Poor connection",
   "aiContextLearnedFactsLoadError": "Couldn't load what the assistant has learned.",
   "@aiContextLearnedFactsLoadError": {
     "description": "Shown in the AI Context screen when the learned-facts (memory) section fails to load."
@@ -2235,5 +2233,22 @@
   "authErrMfaNotEnrolled": "Two-factor authentication isn't set up for this account yet.",
   "authErrMfaAlreadyEnrolled": "Two-factor authentication is already set up for this account.",
   "authErrMfaResetForbidden": "Only an Owner can reset two-factor authentication.",
-  "authErrMfaResetSelfForbidden": "You can't reset your own two-factor authentication."
+  "authErrMfaResetSelfForbidden": "You can't reset your own two-factor authentication.",
+  "callSelfWeakNetwork": "Your network is weak",
+  "callPeerWeakNetwork": "{name}'s network is weak",
+  "@callPeerWeakNetwork": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callUnstableNetwork": "Unstable connection",
+  "callReconnectingSelf": "Connection lost — reconnecting…",
+  "callWaitingForPeer": "Waiting for {name} to reconnect…",
+  "@callWaitingForPeer": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callReconnectCountdown": "The call ends in {seconds}s if it cannot reconnect",
+  "@callReconnectCountdown": {
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "callSwitchToVideo": "Switch to video",
+  "callVideoUnavailable": "Video isn't available in this call — the other person may need to update the app"
 }
