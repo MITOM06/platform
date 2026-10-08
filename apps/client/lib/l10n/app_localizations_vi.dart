@@ -4716,4 +4716,395 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get meetingPushChannel => 'Phòng họp';
+
+  @override
+  String get meetingSubtitle => 'Họp ngay hoặc lên lịch cho cuộc họp sau.';
+
+  @override
+  String get meetingNewInstant => 'Họp ngay';
+
+  @override
+  String get meetingNewScheduled => 'Lên lịch';
+
+  @override
+  String get meetingJoinByCodeLabel => 'Mã hoặc link cuộc họp';
+
+  @override
+  String get meetingJoinByCodePlaceholder => 'abc-defg-hjk';
+
+  @override
+  String get meetingJoinByCode => 'Tham gia';
+
+  @override
+  String get meetingCodeInvalid => 'Mã cuộc họp không hợp lệ';
+
+  @override
+  String get meetingTabUpcoming => 'Sắp tới';
+
+  @override
+  String get meetingTabPast => 'Đã qua';
+
+  @override
+  String get meetingEmptyUpcoming => 'Chưa có cuộc họp sắp tới';
+
+  @override
+  String get meetingEmptyPast => 'Chưa có cuộc họp nào đã qua';
+
+  @override
+  String get meetingLoadMore => 'Xem thêm';
+
+  @override
+  String get meetingListError => 'Không tải được danh sách cuộc họp';
+
+  @override
+  String get meetingInstantMeeting => 'Họp ngay';
+
+  @override
+  String meetingHostedBy(String name) {
+    return 'Tổ chức bởi $name';
+  }
+
+  @override
+  String get meetingCopyLink => 'Sao chép link';
+
+  @override
+  String get meetingLinkCopied => 'Đã sao chép link cuộc họp';
+
+  @override
+  String get meetingCopyFailed => 'Không sao chép được link';
+
+  @override
+  String get meetingJoin => 'Tham gia';
+
+  @override
+  String get meetingStarting => 'Đang tạo…';
+
+  @override
+  String get meetingFormCreateTitle => 'Lên lịch cuộc họp';
+
+  @override
+  String get meetingFormEditTitle => 'Sửa cuộc họp';
+
+  @override
+  String get meetingFormAgainTitle => 'Họp lại';
+
+  @override
+  String get meetingFieldTitle => 'Tiêu đề';
+
+  @override
+  String get meetingFieldTitlePlaceholder => 'Thêm tiêu đề';
+
+  @override
+  String get meetingFieldDescription => 'Mô tả';
+
+  @override
+  String get meetingFieldDescriptionPlaceholder =>
+      'Chương trình, link, điều mọi người cần biết';
+
+  @override
+  String get meetingFieldWhen => 'Thời gian';
+
+  @override
+  String get meetingWhenNow => 'Bắt đầu ngay';
+
+  @override
+  String get meetingWhenLater => 'Lên lịch';
+
+  @override
+  String get meetingFieldDate => 'Ngày';
+
+  @override
+  String get meetingFieldTime => 'Giờ bắt đầu';
+
+  @override
+  String get meetingFieldDuration => 'Thời lượng';
+
+  @override
+  String meetingTimeZoneHint(String zone) {
+    return 'Giờ theo múi $zone';
+  }
+
+  @override
+  String get meetingFieldInvitees => 'Mời người tham dự';
+
+  @override
+  String get meetingInviteeSearchPlaceholder => 'Tìm theo tên hoặc email';
+
+  @override
+  String meetingInviteeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đã mời $count người',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingInviteeNone => 'Chưa mời ai';
+
+  @override
+  String meetingRemoveInvitee(String name) {
+    return 'Bỏ $name';
+  }
+
+  @override
+  String get meetingSearchNoResults => 'Không tìm thấy ai';
+
+  @override
+  String get meetingSearchFailed => 'Chưa tìm được, hãy thử lại';
+
+  @override
+  String get meetingFieldDepartment => 'Phòng ban';
+
+  @override
+  String get meetingDepartmentNone => 'Không chọn phòng ban';
+
+  @override
+  String get meetingDepartmentHint => 'Mọi thành viên phòng ban đều được mời';
+
+  @override
+  String get meetingSettingsTitle => 'Tuỳ chọn cuộc họp';
+
+  @override
+  String get meetingSettingWaitingRoom => 'Phòng chờ';
+
+  @override
+  String get meetingSettingWaitingRoomDesc =>
+      'Người không được mời phải chờ người tổ chức cho vào';
+
+  @override
+  String get meetingSettingMuteOnEntry => 'Tắt micro khi vào';
+
+  @override
+  String get meetingSettingMuteOnEntryDesc =>
+      'Người tham dự vào phòng với micro đã tắt';
+
+  @override
+  String get meetingSettingScreenShare =>
+      'Người tham dự được trình bày màn hình';
+
+  @override
+  String get meetingSettingNotes => 'Người tham dự được sửa ghi chú chung';
+
+  @override
+  String get meetingSettingLocked => 'Khoá cuộc họp';
+
+  @override
+  String get meetingSettingLockedDesc => 'Chỉ người được mời mới vào được';
+
+  @override
+  String get meetingSubmitCreate => 'Lên lịch';
+
+  @override
+  String get meetingSubmitStartNow => 'Bắt đầu ngay';
+
+  @override
+  String get meetingSubmitSave => 'Lưu thay đổi';
+
+  @override
+  String get meetingToastCreated => 'Đã lên lịch cuộc họp';
+
+  @override
+  String get meetingToastUpdated => 'Đã lưu thay đổi';
+
+  @override
+  String meetingCharCounter(int count, int max) {
+    return '$count/$max';
+  }
+
+  @override
+  String get meetingNotesShared => 'Chung';
+
+  @override
+  String get meetingNotesPrivate => 'Của tôi';
+
+  @override
+  String get meetingNotesPrivateHint => 'Chỉ bạn xem được ghi chú này';
+
+  @override
+  String get meetingNotesPlaceholder => 'Viết ghi chú — hỗ trợ Markdown';
+
+  @override
+  String get meetingNotesWrite => 'Viết';
+
+  @override
+  String get meetingNotesPreview => 'Xem trước';
+
+  @override
+  String get meetingNotesSaving => 'Đang lưu…';
+
+  @override
+  String get meetingNotesSaved => 'Đã lưu';
+
+  @override
+  String get meetingNotesUnsaved => 'Chưa lưu';
+
+  @override
+  String get meetingNotesSaveFailed => 'Chưa lưu được';
+
+  @override
+  String get meetingNotesRetry => 'Thử lại';
+
+  @override
+  String get meetingNotesReadOnly => 'Chỉ người tổ chức được sửa ghi chú này';
+
+  @override
+  String meetingNotesRemoteNewer(String name) {
+    return '$name vừa lưu bản mới hơn';
+  }
+
+  @override
+  String get meetingNotesRemoteNewerUnknown => 'Có bản mới hơn vừa được lưu';
+
+  @override
+  String meetingNotesCounter(int count, int max) {
+    return '$count / $max';
+  }
+
+  @override
+  String get meetingNotesConflictTitle => 'Đã có bản mới hơn';
+
+  @override
+  String get meetingNotesConflictDesc =>
+      'Chữ bạn đang gõ vẫn còn nguyên. So sánh hai bản rồi chọn bản giữ lại.';
+
+  @override
+  String get meetingNotesConflictReview => 'So sánh';
+
+  @override
+  String get meetingNotesConflictTheirs => 'Bản mới hơn';
+
+  @override
+  String get meetingNotesConflictMine => 'Bản của bạn';
+
+  @override
+  String get meetingNotesConflictKeepMine => 'Giữ bản của tôi';
+
+  @override
+  String get meetingNotesConflictTakeTheirs => 'Dùng bản mới hơn';
+
+  @override
+  String get meetingNotesConflictSaveMerged => 'Lưu bản đã gộp';
+
+  @override
+  String get meetingNotesConflictDiscardWarning =>
+      'Chữ chưa lưu của bạn sẽ bị bỏ';
+
+  @override
+  String get meetingEdit => 'Sửa';
+
+  @override
+  String get meetingCancelMeeting => 'Huỷ cuộc họp';
+
+  @override
+  String get meetingMeetAgain => 'Họp lại';
+
+  @override
+  String get meetingEndMeeting => 'Kết thúc cuộc họp';
+
+  @override
+  String get meetingCancelConfirmTitle => 'Huỷ cuộc họp này?';
+
+  @override
+  String get meetingCancelConfirmDesc =>
+      'Mọi người được mời sẽ nhận thông báo huỷ.';
+
+  @override
+  String get meetingEndConfirmTitle => 'Kết thúc cuộc họp cho mọi người?';
+
+  @override
+  String get meetingEndConfirmDesc =>
+      'Mọi người sẽ rời phòng và cuộc họp không mở lại được';
+
+  @override
+  String get meetingToastCancelled => 'Đã huỷ cuộc họp';
+
+  @override
+  String get meetingToastEnded => 'Đã kết thúc cuộc họp';
+
+  @override
+  String get meetingBackToList => 'Tất cả cuộc họp';
+
+  @override
+  String get meetingDetailError => 'Không tải được cuộc họp';
+
+  @override
+  String get meetingMeetingCode => 'Mã cuộc họp';
+
+  @override
+  String get meetingSectionPeople => 'Thành phần';
+
+  @override
+  String get meetingCoHosts => 'Đồng tổ chức';
+
+  @override
+  String get meetingInvitees => 'Được mời';
+
+  @override
+  String meetingMoreCount(int count) {
+    return '+$count';
+  }
+
+  @override
+  String get meetingDepartmentGeneric => 'Một phòng ban';
+
+  @override
+  String get meetingSectionAttendance => 'Điểm danh';
+
+  @override
+  String get meetingAttendanceEmpty => 'Chưa có ai tham gia';
+
+  @override
+  String get meetingAttendanceInside => 'Đang trong cuộc họp';
+
+  @override
+  String meetingAttendanceDuration(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes phút',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingAttendanceSessions(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lần vào',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingSectionNotes => 'Ghi chú';
+
+  @override
+  String get meetingSectionChat => 'Chat trong cuộc họp';
+
+  @override
+  String get meetingChatHistoryEmpty => 'Không có tin nhắn';
+
+  @override
+  String get meetingChatLoadOlder => 'Xem tin cũ hơn';
+
+  @override
+  String get meetingChatHistoryError => 'Không tải được chat của cuộc họp';
+
+  @override
+  String get meetingRemovedNotice =>
+      'Bạn đã bị mời ra khỏi cuộc họp nên không xem được ghi chú và chat.';
+
+  @override
+  String get meetingGuestNotice => 'Tham gia cuộc họp để xem ghi chú và chat.';
+
+  @override
+  String meetingCreatedAt(String time) {
+    return 'Tạo lúc $time';
+  }
+
+  @override
+  String get meetingLinkCodeCopied => 'Đã sao chép mã cuộc họp';
 }

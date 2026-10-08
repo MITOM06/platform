@@ -4742,4 +4742,399 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meetingPushChannel => 'Meetings';
+
+  @override
+  String get meetingSubtitle =>
+      'Start a meeting now or schedule one for later.';
+
+  @override
+  String get meetingNewInstant => 'Start a meeting';
+
+  @override
+  String get meetingNewScheduled => 'Schedule';
+
+  @override
+  String get meetingJoinByCodeLabel => 'Meeting code or link';
+
+  @override
+  String get meetingJoinByCodePlaceholder => 'abc-defg-hjk';
+
+  @override
+  String get meetingJoinByCode => 'Join';
+
+  @override
+  String get meetingCodeInvalid => 'That isn\'t a valid meeting code';
+
+  @override
+  String get meetingTabUpcoming => 'Upcoming';
+
+  @override
+  String get meetingTabPast => 'Past';
+
+  @override
+  String get meetingEmptyUpcoming => 'No upcoming meetings';
+
+  @override
+  String get meetingEmptyPast => 'No past meetings';
+
+  @override
+  String get meetingLoadMore => 'Load more';
+
+  @override
+  String get meetingListError => 'Couldn\'t load meetings';
+
+  @override
+  String get meetingInstantMeeting => 'Instant meeting';
+
+  @override
+  String meetingHostedBy(String name) {
+    return 'Hosted by $name';
+  }
+
+  @override
+  String get meetingCopyLink => 'Copy link';
+
+  @override
+  String get meetingLinkCopied => 'Meeting link copied';
+
+  @override
+  String get meetingCopyFailed => 'Couldn\'t copy the link';
+
+  @override
+  String get meetingJoin => 'Join';
+
+  @override
+  String get meetingStarting => 'Starting…';
+
+  @override
+  String get meetingFormCreateTitle => 'Schedule a meeting';
+
+  @override
+  String get meetingFormEditTitle => 'Edit meeting';
+
+  @override
+  String get meetingFormAgainTitle => 'Meet again';
+
+  @override
+  String get meetingFieldTitle => 'Title';
+
+  @override
+  String get meetingFieldTitlePlaceholder => 'Add a title';
+
+  @override
+  String get meetingFieldDescription => 'Description';
+
+  @override
+  String get meetingFieldDescriptionPlaceholder =>
+      'Agenda, links, anything people should know';
+
+  @override
+  String get meetingFieldWhen => 'When';
+
+  @override
+  String get meetingWhenNow => 'Start now';
+
+  @override
+  String get meetingWhenLater => 'Schedule for later';
+
+  @override
+  String get meetingFieldDate => 'Date';
+
+  @override
+  String get meetingFieldTime => 'Start time';
+
+  @override
+  String get meetingFieldDuration => 'Duration';
+
+  @override
+  String meetingTimeZoneHint(String zone) {
+    return 'Times are in $zone';
+  }
+
+  @override
+  String get meetingFieldInvitees => 'Invite people';
+
+  @override
+  String get meetingInviteeSearchPlaceholder => 'Search by name or email';
+
+  @override
+  String meetingInviteeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people invited',
+      one: '$count person invited',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingInviteeNone => 'No one invited yet';
+
+  @override
+  String meetingRemoveInvitee(String name) {
+    return 'Remove $name';
+  }
+
+  @override
+  String get meetingSearchNoResults => 'No one found';
+
+  @override
+  String get meetingSearchFailed => 'Couldn\'t search right now';
+
+  @override
+  String get meetingFieldDepartment => 'Department';
+
+  @override
+  String get meetingDepartmentNone => 'No department';
+
+  @override
+  String get meetingDepartmentHint => 'Everyone in the department is invited';
+
+  @override
+  String get meetingSettingsTitle => 'Meeting options';
+
+  @override
+  String get meetingSettingWaitingRoom => 'Waiting room';
+
+  @override
+  String get meetingSettingWaitingRoomDesc =>
+      'People who aren\'t invited wait until a host lets them in';
+
+  @override
+  String get meetingSettingMuteOnEntry => 'Mute people when they join';
+
+  @override
+  String get meetingSettingMuteOnEntryDesc =>
+      'Participants start with their microphone off';
+
+  @override
+  String get meetingSettingScreenShare =>
+      'Participants can present their screen';
+
+  @override
+  String get meetingSettingNotes => 'Participants can edit shared notes';
+
+  @override
+  String get meetingSettingLocked => 'Lock meeting';
+
+  @override
+  String get meetingSettingLockedDesc => 'Only invited people can join';
+
+  @override
+  String get meetingSubmitCreate => 'Schedule';
+
+  @override
+  String get meetingSubmitStartNow => 'Start now';
+
+  @override
+  String get meetingSubmitSave => 'Save changes';
+
+  @override
+  String get meetingToastCreated => 'Meeting scheduled';
+
+  @override
+  String get meetingToastUpdated => 'Changes saved';
+
+  @override
+  String meetingCharCounter(int count, int max) {
+    return '$count/$max';
+  }
+
+  @override
+  String get meetingNotesShared => 'Shared';
+
+  @override
+  String get meetingNotesPrivate => 'Mine';
+
+  @override
+  String get meetingNotesPrivateHint => 'Only you can see these notes';
+
+  @override
+  String get meetingNotesPlaceholder => 'Write notes — Markdown works';
+
+  @override
+  String get meetingNotesWrite => 'Write';
+
+  @override
+  String get meetingNotesPreview => 'Preview';
+
+  @override
+  String get meetingNotesSaving => 'Saving…';
+
+  @override
+  String get meetingNotesSaved => 'Saved';
+
+  @override
+  String get meetingNotesUnsaved => 'Unsaved changes';
+
+  @override
+  String get meetingNotesSaveFailed => 'Couldn\'t save';
+
+  @override
+  String get meetingNotesRetry => 'Try again';
+
+  @override
+  String get meetingNotesReadOnly => 'Only hosts can edit these notes';
+
+  @override
+  String meetingNotesRemoteNewer(String name) {
+    return '$name saved a newer version';
+  }
+
+  @override
+  String get meetingNotesRemoteNewerUnknown => 'A newer version was saved';
+
+  @override
+  String meetingNotesCounter(int count, int max) {
+    return '$count / $max';
+  }
+
+  @override
+  String get meetingNotesConflictTitle => 'Someone saved a newer version';
+
+  @override
+  String get meetingNotesConflictDesc =>
+      'Your text is safe. Compare both versions and choose what to keep.';
+
+  @override
+  String get meetingNotesConflictReview => 'Compare';
+
+  @override
+  String get meetingNotesConflictTheirs => 'Newer version';
+
+  @override
+  String get meetingNotesConflictMine => 'Your version';
+
+  @override
+  String get meetingNotesConflictKeepMine => 'Keep mine';
+
+  @override
+  String get meetingNotesConflictTakeTheirs => 'Use newer version';
+
+  @override
+  String get meetingNotesConflictSaveMerged => 'Save merged text';
+
+  @override
+  String get meetingNotesConflictDiscardWarning =>
+      'Your unsaved text will be discarded';
+
+  @override
+  String get meetingEdit => 'Edit';
+
+  @override
+  String get meetingCancelMeeting => 'Cancel meeting';
+
+  @override
+  String get meetingMeetAgain => 'Meet again';
+
+  @override
+  String get meetingEndMeeting => 'End meeting';
+
+  @override
+  String get meetingCancelConfirmTitle => 'Cancel this meeting?';
+
+  @override
+  String get meetingCancelConfirmDesc =>
+      'Everyone invited will be told it\'s cancelled.';
+
+  @override
+  String get meetingEndConfirmTitle => 'End the meeting for everyone?';
+
+  @override
+  String get meetingEndConfirmDesc =>
+      'Everyone will leave and the meeting can\'t be restarted';
+
+  @override
+  String get meetingToastCancelled => 'Meeting cancelled';
+
+  @override
+  String get meetingToastEnded => 'Meeting ended';
+
+  @override
+  String get meetingBackToList => 'All meetings';
+
+  @override
+  String get meetingDetailError => 'Couldn\'t load this meeting';
+
+  @override
+  String get meetingMeetingCode => 'Meeting code';
+
+  @override
+  String get meetingSectionPeople => 'People';
+
+  @override
+  String get meetingCoHosts => 'Co-hosts';
+
+  @override
+  String get meetingInvitees => 'Invited';
+
+  @override
+  String meetingMoreCount(int count) {
+    return '+$count';
+  }
+
+  @override
+  String get meetingDepartmentGeneric => 'A department';
+
+  @override
+  String get meetingSectionAttendance => 'Attendance';
+
+  @override
+  String get meetingAttendanceEmpty => 'Nobody joined';
+
+  @override
+  String get meetingAttendanceInside => 'In the meeting now';
+
+  @override
+  String meetingAttendanceDuration(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes min',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingAttendanceSessions(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sessions',
+      one: '$count session',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingSectionNotes => 'Notes';
+
+  @override
+  String get meetingSectionChat => 'Meeting chat';
+
+  @override
+  String get meetingChatHistoryEmpty => 'No messages';
+
+  @override
+  String get meetingChatLoadOlder => 'Load earlier messages';
+
+  @override
+  String get meetingChatHistoryError => 'Couldn\'t load the meeting chat';
+
+  @override
+  String get meetingRemovedNotice =>
+      'You were removed from this meeting, so its notes and chat aren\'t available.';
+
+  @override
+  String get meetingGuestNotice =>
+      'Join the meeting to see its notes and chat.';
+
+  @override
+  String meetingCreatedAt(String time) {
+    return 'Created $time';
+  }
+
+  @override
+  String get meetingLinkCodeCopied => 'Meeting code copied';
 }

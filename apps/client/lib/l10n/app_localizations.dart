@@ -8568,6 +8568,696 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Meetings'**
   String get meetingPushChannel;
+
+  /// No description provided for @meetingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a meeting now or schedule one for later.'**
+  String get meetingSubtitle;
+
+  /// No description provided for @meetingNewInstant.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a meeting'**
+  String get meetingNewInstant;
+
+  /// No description provided for @meetingNewScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get meetingNewScheduled;
+
+  /// No description provided for @meetingJoinByCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting code or link'**
+  String get meetingJoinByCodeLabel;
+
+  /// No description provided for @meetingJoinByCodePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'abc-defg-hjk'**
+  String get meetingJoinByCodePlaceholder;
+
+  /// No description provided for @meetingJoinByCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get meetingJoinByCode;
+
+  /// No description provided for @meetingCodeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That isn\'t a valid meeting code'**
+  String get meetingCodeInvalid;
+
+  /// No description provided for @meetingTabUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get meetingTabUpcoming;
+
+  /// No description provided for @meetingTabPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Past'**
+  String get meetingTabPast;
+
+  /// No description provided for @meetingEmptyUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming meetings'**
+  String get meetingEmptyUpcoming;
+
+  /// No description provided for @meetingEmptyPast.
+  ///
+  /// In en, this message translates to:
+  /// **'No past meetings'**
+  String get meetingEmptyPast;
+
+  /// No description provided for @meetingLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get meetingLoadMore;
+
+  /// No description provided for @meetingListError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load meetings'**
+  String get meetingListError;
+
+  /// No description provided for @meetingInstantMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Instant meeting'**
+  String get meetingInstantMeeting;
+
+  /// No description provided for @meetingHostedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Hosted by {name}'**
+  String meetingHostedBy(String name);
+
+  /// No description provided for @meetingCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get meetingCopyLink;
+
+  /// No description provided for @meetingLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting link copied'**
+  String get meetingLinkCopied;
+
+  /// No description provided for @meetingCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t copy the link'**
+  String get meetingCopyFailed;
+
+  /// No description provided for @meetingJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get meetingJoin;
+
+  /// No description provided for @meetingStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting…'**
+  String get meetingStarting;
+
+  /// No description provided for @meetingFormCreateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule a meeting'**
+  String get meetingFormCreateTitle;
+
+  /// No description provided for @meetingFormEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit meeting'**
+  String get meetingFormEditTitle;
+
+  /// No description provided for @meetingFormAgainTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet again'**
+  String get meetingFormAgainTitle;
+
+  /// No description provided for @meetingFieldTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get meetingFieldTitle;
+
+  /// No description provided for @meetingFieldTitlePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a title'**
+  String get meetingFieldTitlePlaceholder;
+
+  /// No description provided for @meetingFieldDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get meetingFieldDescription;
+
+  /// No description provided for @meetingFieldDescriptionPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Agenda, links, anything people should know'**
+  String get meetingFieldDescriptionPlaceholder;
+
+  /// No description provided for @meetingFieldWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'When'**
+  String get meetingFieldWhen;
+
+  /// No description provided for @meetingWhenNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Start now'**
+  String get meetingWhenNow;
+
+  /// No description provided for @meetingWhenLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule for later'**
+  String get meetingWhenLater;
+
+  /// No description provided for @meetingFieldDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get meetingFieldDate;
+
+  /// No description provided for @meetingFieldTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Start time'**
+  String get meetingFieldTime;
+
+  /// No description provided for @meetingFieldDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get meetingFieldDuration;
+
+  /// No description provided for @meetingTimeZoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Times are in {zone}'**
+  String meetingTimeZoneHint(String zone);
+
+  /// No description provided for @meetingFieldInvitees.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite people'**
+  String get meetingFieldInvitees;
+
+  /// No description provided for @meetingInviteeSearchPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or email'**
+  String get meetingInviteeSearchPlaceholder;
+
+  /// No description provided for @meetingInviteeCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one {{count} person invited} other {{count} people invited}}'**
+  String meetingInviteeCount(int count);
+
+  /// No description provided for @meetingInviteeNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No one invited yet'**
+  String get meetingInviteeNone;
+
+  /// No description provided for @meetingRemoveInvitee.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}'**
+  String meetingRemoveInvitee(String name);
+
+  /// No description provided for @meetingSearchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No one found'**
+  String get meetingSearchNoResults;
+
+  /// No description provided for @meetingSearchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t search right now'**
+  String get meetingSearchFailed;
+
+  /// No description provided for @meetingFieldDepartment.
+  ///
+  /// In en, this message translates to:
+  /// **'Department'**
+  String get meetingFieldDepartment;
+
+  /// No description provided for @meetingDepartmentNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No department'**
+  String get meetingDepartmentNone;
+
+  /// No description provided for @meetingDepartmentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone in the department is invited'**
+  String get meetingDepartmentHint;
+
+  /// No description provided for @meetingSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting options'**
+  String get meetingSettingsTitle;
+
+  /// No description provided for @meetingSettingWaitingRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting room'**
+  String get meetingSettingWaitingRoom;
+
+  /// No description provided for @meetingSettingWaitingRoomDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'People who aren\'t invited wait until a host lets them in'**
+  String get meetingSettingWaitingRoomDesc;
+
+  /// No description provided for @meetingSettingMuteOnEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute people when they join'**
+  String get meetingSettingMuteOnEntry;
+
+  /// No description provided for @meetingSettingMuteOnEntryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants start with their microphone off'**
+  String get meetingSettingMuteOnEntryDesc;
+
+  /// No description provided for @meetingSettingScreenShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants can present their screen'**
+  String get meetingSettingScreenShare;
+
+  /// No description provided for @meetingSettingNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants can edit shared notes'**
+  String get meetingSettingNotes;
+
+  /// No description provided for @meetingSettingLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock meeting'**
+  String get meetingSettingLocked;
+
+  /// No description provided for @meetingSettingLockedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Only invited people can join'**
+  String get meetingSettingLockedDesc;
+
+  /// No description provided for @meetingSubmitCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get meetingSubmitCreate;
+
+  /// No description provided for @meetingSubmitStartNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Start now'**
+  String get meetingSubmitStartNow;
+
+  /// No description provided for @meetingSubmitSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get meetingSubmitSave;
+
+  /// No description provided for @meetingToastCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting scheduled'**
+  String get meetingToastCreated;
+
+  /// No description provided for @meetingToastUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes saved'**
+  String get meetingToastUpdated;
+
+  /// No description provided for @meetingCharCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}/{max}'**
+  String meetingCharCounter(int count, int max);
+
+  /// No description provided for @meetingNotesShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared'**
+  String get meetingNotesShared;
+
+  /// No description provided for @meetingNotesPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Mine'**
+  String get meetingNotesPrivate;
+
+  /// No description provided for @meetingNotesPrivateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Only you can see these notes'**
+  String get meetingNotesPrivateHint;
+
+  /// No description provided for @meetingNotesPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Write notes — Markdown works'**
+  String get meetingNotesPlaceholder;
+
+  /// No description provided for @meetingNotesWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'Write'**
+  String get meetingNotesWrite;
+
+  /// No description provided for @meetingNotesPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get meetingNotesPreview;
+
+  /// No description provided for @meetingNotesSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get meetingNotesSaving;
+
+  /// No description provided for @meetingNotesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get meetingNotesSaved;
+
+  /// No description provided for @meetingNotesUnsaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved changes'**
+  String get meetingNotesUnsaved;
+
+  /// No description provided for @meetingNotesSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save'**
+  String get meetingNotesSaveFailed;
+
+  /// No description provided for @meetingNotesRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get meetingNotesRetry;
+
+  /// No description provided for @meetingNotesReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only hosts can edit these notes'**
+  String get meetingNotesReadOnly;
+
+  /// No description provided for @meetingNotesRemoteNewer.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} saved a newer version'**
+  String meetingNotesRemoteNewer(String name);
+
+  /// No description provided for @meetingNotesRemoteNewerUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'A newer version was saved'**
+  String get meetingNotesRemoteNewerUnknown;
+
+  /// No description provided for @meetingNotesCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} / {max}'**
+  String meetingNotesCounter(int count, int max);
+
+  /// No description provided for @meetingNotesConflictTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone saved a newer version'**
+  String get meetingNotesConflictTitle;
+
+  /// No description provided for @meetingNotesConflictDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your text is safe. Compare both versions and choose what to keep.'**
+  String get meetingNotesConflictDesc;
+
+  /// No description provided for @meetingNotesConflictReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare'**
+  String get meetingNotesConflictReview;
+
+  /// No description provided for @meetingNotesConflictTheirs.
+  ///
+  /// In en, this message translates to:
+  /// **'Newer version'**
+  String get meetingNotesConflictTheirs;
+
+  /// No description provided for @meetingNotesConflictMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Your version'**
+  String get meetingNotesConflictMine;
+
+  /// No description provided for @meetingNotesConflictKeepMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep mine'**
+  String get meetingNotesConflictKeepMine;
+
+  /// No description provided for @meetingNotesConflictTakeTheirs.
+  ///
+  /// In en, this message translates to:
+  /// **'Use newer version'**
+  String get meetingNotesConflictTakeTheirs;
+
+  /// No description provided for @meetingNotesConflictSaveMerged.
+  ///
+  /// In en, this message translates to:
+  /// **'Save merged text'**
+  String get meetingNotesConflictSaveMerged;
+
+  /// No description provided for @meetingNotesConflictDiscardWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Your unsaved text will be discarded'**
+  String get meetingNotesConflictDiscardWarning;
+
+  /// No description provided for @meetingEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get meetingEdit;
+
+  /// No description provided for @meetingCancelMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel meeting'**
+  String get meetingCancelMeeting;
+
+  /// No description provided for @meetingMeetAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet again'**
+  String get meetingMeetAgain;
+
+  /// No description provided for @meetingEndMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'End meeting'**
+  String get meetingEndMeeting;
+
+  /// No description provided for @meetingCancelConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel this meeting?'**
+  String get meetingCancelConfirmTitle;
+
+  /// No description provided for @meetingCancelConfirmDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone invited will be told it\'s cancelled.'**
+  String get meetingCancelConfirmDesc;
+
+  /// No description provided for @meetingEndConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'End the meeting for everyone?'**
+  String get meetingEndConfirmTitle;
+
+  /// No description provided for @meetingEndConfirmDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone will leave and the meeting can\'t be restarted'**
+  String get meetingEndConfirmDesc;
+
+  /// No description provided for @meetingToastCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting cancelled'**
+  String get meetingToastCancelled;
+
+  /// No description provided for @meetingToastEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting ended'**
+  String get meetingToastEnded;
+
+  /// No description provided for @meetingBackToList.
+  ///
+  /// In en, this message translates to:
+  /// **'All meetings'**
+  String get meetingBackToList;
+
+  /// No description provided for @meetingDetailError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this meeting'**
+  String get meetingDetailError;
+
+  /// No description provided for @meetingMeetingCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting code'**
+  String get meetingMeetingCode;
+
+  /// No description provided for @meetingSectionPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get meetingSectionPeople;
+
+  /// No description provided for @meetingCoHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Co-hosts'**
+  String get meetingCoHosts;
+
+  /// No description provided for @meetingInvitees.
+  ///
+  /// In en, this message translates to:
+  /// **'Invited'**
+  String get meetingInvitees;
+
+  /// No description provided for @meetingMoreCount.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count}'**
+  String meetingMoreCount(int count);
+
+  /// No description provided for @meetingDepartmentGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'A department'**
+  String get meetingDepartmentGeneric;
+
+  /// No description provided for @meetingSectionAttendance.
+  ///
+  /// In en, this message translates to:
+  /// **'Attendance'**
+  String get meetingSectionAttendance;
+
+  /// No description provided for @meetingAttendanceEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody joined'**
+  String get meetingAttendanceEmpty;
+
+  /// No description provided for @meetingAttendanceInside.
+  ///
+  /// In en, this message translates to:
+  /// **'In the meeting now'**
+  String get meetingAttendanceInside;
+
+  /// No description provided for @meetingAttendanceDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes, plural, other {{minutes} min}}'**
+  String meetingAttendanceDuration(int minutes);
+
+  /// No description provided for @meetingAttendanceSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one {{count} session} other {{count} sessions}}'**
+  String meetingAttendanceSessions(int count);
+
+  /// No description provided for @meetingSectionNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get meetingSectionNotes;
+
+  /// No description provided for @meetingSectionChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting chat'**
+  String get meetingSectionChat;
+
+  /// No description provided for @meetingChatHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages'**
+  String get meetingChatHistoryEmpty;
+
+  /// No description provided for @meetingChatLoadOlder.
+  ///
+  /// In en, this message translates to:
+  /// **'Load earlier messages'**
+  String get meetingChatLoadOlder;
+
+  /// No description provided for @meetingChatHistoryError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the meeting chat'**
+  String get meetingChatHistoryError;
+
+  /// No description provided for @meetingRemovedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'You were removed from this meeting, so its notes and chat aren\'t available.'**
+  String get meetingRemovedNotice;
+
+  /// No description provided for @meetingGuestNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Join the meeting to see its notes and chat.'**
+  String get meetingGuestNotice;
+
+  /// No description provided for @meetingCreatedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Created {time}'**
+  String meetingCreatedAt(String time);
+
+  /// No description provided for @meetingLinkCodeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting code copied'**
+  String get meetingLinkCodeCopied;
 }
 
 class _AppLocalizationsDelegate

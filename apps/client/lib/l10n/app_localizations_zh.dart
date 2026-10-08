@@ -4538,4 +4538,386 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get meetingPushChannel => '会议';
+
+  @override
+  String get meetingSubtitle => '立即开会，或安排稍后的会议。';
+
+  @override
+  String get meetingNewInstant => '立即开会';
+
+  @override
+  String get meetingNewScheduled => '安排会议';
+
+  @override
+  String get meetingJoinByCodeLabel => '会议代码或链接';
+
+  @override
+  String get meetingJoinByCodePlaceholder => 'abc-defg-hjk';
+
+  @override
+  String get meetingJoinByCode => '加入';
+
+  @override
+  String get meetingCodeInvalid => '会议代码无效';
+
+  @override
+  String get meetingTabUpcoming => '即将开始';
+
+  @override
+  String get meetingTabPast => '已结束';
+
+  @override
+  String get meetingEmptyUpcoming => '暂无即将开始的会议';
+
+  @override
+  String get meetingEmptyPast => '暂无已结束的会议';
+
+  @override
+  String get meetingLoadMore => '加载更多';
+
+  @override
+  String get meetingListError => '无法加载会议';
+
+  @override
+  String get meetingInstantMeeting => '即时会议';
+
+  @override
+  String meetingHostedBy(String name) {
+    return '主持人：$name';
+  }
+
+  @override
+  String get meetingCopyLink => '复制链接';
+
+  @override
+  String get meetingLinkCopied => '已复制会议链接';
+
+  @override
+  String get meetingCopyFailed => '无法复制链接';
+
+  @override
+  String get meetingJoin => '加入';
+
+  @override
+  String get meetingStarting => '正在创建…';
+
+  @override
+  String get meetingFormCreateTitle => '安排会议';
+
+  @override
+  String get meetingFormEditTitle => '编辑会议';
+
+  @override
+  String get meetingFormAgainTitle => '再次开会';
+
+  @override
+  String get meetingFieldTitle => '标题';
+
+  @override
+  String get meetingFieldTitlePlaceholder => '添加标题';
+
+  @override
+  String get meetingFieldDescription => '描述';
+
+  @override
+  String get meetingFieldDescriptionPlaceholder => '议程、链接以及大家需要了解的内容';
+
+  @override
+  String get meetingFieldWhen => '时间';
+
+  @override
+  String get meetingWhenNow => '立即开始';
+
+  @override
+  String get meetingWhenLater => '稍后安排';
+
+  @override
+  String get meetingFieldDate => '日期';
+
+  @override
+  String get meetingFieldTime => '开始时间';
+
+  @override
+  String get meetingFieldDuration => '时长';
+
+  @override
+  String meetingTimeZoneHint(String zone) {
+    return '时间按 $zone 显示';
+  }
+
+  @override
+  String get meetingFieldInvitees => '邀请参会者';
+
+  @override
+  String get meetingInviteeSearchPlaceholder => '按姓名或邮箱搜索';
+
+  @override
+  String meetingInviteeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已邀请 $count 人',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingInviteeNone => '尚未邀请任何人';
+
+  @override
+  String meetingRemoveInvitee(String name) {
+    return '移除 $name';
+  }
+
+  @override
+  String get meetingSearchNoResults => '未找到任何人';
+
+  @override
+  String get meetingSearchFailed => '暂时无法搜索';
+
+  @override
+  String get meetingFieldDepartment => '部门';
+
+  @override
+  String get meetingDepartmentNone => '不选择部门';
+
+  @override
+  String get meetingDepartmentHint => '部门所有成员都会被邀请';
+
+  @override
+  String get meetingSettingsTitle => '会议选项';
+
+  @override
+  String get meetingSettingWaitingRoom => '等候室';
+
+  @override
+  String get meetingSettingWaitingRoomDesc => '未受邀的人需等待主持人准许进入';
+
+  @override
+  String get meetingSettingMuteOnEntry => '参会者加入时静音';
+
+  @override
+  String get meetingSettingMuteOnEntryDesc => '参会者加入时麦克风为关闭状态';
+
+  @override
+  String get meetingSettingScreenShare => '参会者可以共享屏幕';
+
+  @override
+  String get meetingSettingNotes => '参会者可以编辑共享笔记';
+
+  @override
+  String get meetingSettingLocked => '锁定会议';
+
+  @override
+  String get meetingSettingLockedDesc => '只有受邀者可以加入';
+
+  @override
+  String get meetingSubmitCreate => '安排';
+
+  @override
+  String get meetingSubmitStartNow => '立即开始';
+
+  @override
+  String get meetingSubmitSave => '保存更改';
+
+  @override
+  String get meetingToastCreated => '会议已安排';
+
+  @override
+  String get meetingToastUpdated => '更改已保存';
+
+  @override
+  String meetingCharCounter(int count, int max) {
+    return '$count/$max';
+  }
+
+  @override
+  String get meetingNotesShared => '共享';
+
+  @override
+  String get meetingNotesPrivate => '我的';
+
+  @override
+  String get meetingNotesPrivateHint => '只有你能看到这些笔记';
+
+  @override
+  String get meetingNotesPlaceholder => '写笔记——支持 Markdown';
+
+  @override
+  String get meetingNotesWrite => '编辑';
+
+  @override
+  String get meetingNotesPreview => '预览';
+
+  @override
+  String get meetingNotesSaving => '正在保存…';
+
+  @override
+  String get meetingNotesSaved => '已保存';
+
+  @override
+  String get meetingNotesUnsaved => '有未保存的更改';
+
+  @override
+  String get meetingNotesSaveFailed => '保存失败';
+
+  @override
+  String get meetingNotesRetry => '重试';
+
+  @override
+  String get meetingNotesReadOnly => '只有主持人可以编辑这些笔记';
+
+  @override
+  String meetingNotesRemoteNewer(String name) {
+    return '$name 保存了更新的版本';
+  }
+
+  @override
+  String get meetingNotesRemoteNewerUnknown => '已保存了更新的版本';
+
+  @override
+  String meetingNotesCounter(int count, int max) {
+    return '$count / $max';
+  }
+
+  @override
+  String get meetingNotesConflictTitle => '有人保存了更新的版本';
+
+  @override
+  String get meetingNotesConflictDesc => '你的内容仍然保留。比较两个版本，然后选择要保留的内容。';
+
+  @override
+  String get meetingNotesConflictReview => '比较';
+
+  @override
+  String get meetingNotesConflictTheirs => '较新版本';
+
+  @override
+  String get meetingNotesConflictMine => '你的版本';
+
+  @override
+  String get meetingNotesConflictKeepMine => '保留我的';
+
+  @override
+  String get meetingNotesConflictTakeTheirs => '使用较新版本';
+
+  @override
+  String get meetingNotesConflictSaveMerged => '保存合并后的内容';
+
+  @override
+  String get meetingNotesConflictDiscardWarning => '你未保存的内容将被丢弃';
+
+  @override
+  String get meetingEdit => '编辑';
+
+  @override
+  String get meetingCancelMeeting => '取消会议';
+
+  @override
+  String get meetingMeetAgain => '再次开会';
+
+  @override
+  String get meetingEndMeeting => '结束会议';
+
+  @override
+  String get meetingCancelConfirmTitle => '取消此会议？';
+
+  @override
+  String get meetingCancelConfirmDesc => '所有受邀者都会收到取消通知。';
+
+  @override
+  String get meetingEndConfirmTitle => '为所有人结束会议？';
+
+  @override
+  String get meetingEndConfirmDesc => '所有人都将离开，会议无法重新开始';
+
+  @override
+  String get meetingToastCancelled => '会议已取消';
+
+  @override
+  String get meetingToastEnded => '会议已结束';
+
+  @override
+  String get meetingBackToList => '所有会议';
+
+  @override
+  String get meetingDetailError => '无法加载此会议';
+
+  @override
+  String get meetingMeetingCode => '会议代码';
+
+  @override
+  String get meetingSectionPeople => '参会人员';
+
+  @override
+  String get meetingCoHosts => '联合主持人';
+
+  @override
+  String get meetingInvitees => '受邀者';
+
+  @override
+  String meetingMoreCount(int count) {
+    return '+$count';
+  }
+
+  @override
+  String get meetingDepartmentGeneric => '一个部门';
+
+  @override
+  String get meetingSectionAttendance => '出席情况';
+
+  @override
+  String get meetingAttendanceEmpty => '还没有人加入';
+
+  @override
+  String get meetingAttendanceInside => '正在会议中';
+
+  @override
+  String meetingAttendanceDuration(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes 分钟',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingAttendanceSessions(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 次加入',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingSectionNotes => '笔记';
+
+  @override
+  String get meetingSectionChat => '会议聊天';
+
+  @override
+  String get meetingChatHistoryEmpty => '没有消息';
+
+  @override
+  String get meetingChatLoadOlder => '加载更早的消息';
+
+  @override
+  String get meetingChatHistoryError => '无法加载会议聊天';
+
+  @override
+  String get meetingRemovedNotice => '你已被移出此会议，因此无法查看其笔记和聊天。';
+
+  @override
+  String get meetingGuestNotice => '加入会议即可查看笔记和聊天。';
+
+  @override
+  String meetingCreatedAt(String time) {
+    return '创建于 $time';
+  }
+
+  @override
+  String get meetingLinkCodeCopied => '已复制会议代码';
 }

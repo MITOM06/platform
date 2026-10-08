@@ -4587,4 +4587,388 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get meetingPushChannel => '회의';
+
+  @override
+  String get meetingSubtitle => '지금 회의를 시작하거나 나중에 할 회의를 예약하세요.';
+
+  @override
+  String get meetingNewInstant => '지금 회의 시작';
+
+  @override
+  String get meetingNewScheduled => '예약';
+
+  @override
+  String get meetingJoinByCodeLabel => '회의 코드 또는 링크';
+
+  @override
+  String get meetingJoinByCodePlaceholder => 'abc-defg-hjk';
+
+  @override
+  String get meetingJoinByCode => '참여';
+
+  @override
+  String get meetingCodeInvalid => '올바른 회의 코드가 아닙니다';
+
+  @override
+  String get meetingTabUpcoming => '예정';
+
+  @override
+  String get meetingTabPast => '지난 회의';
+
+  @override
+  String get meetingEmptyUpcoming => '예정된 회의가 없습니다';
+
+  @override
+  String get meetingEmptyPast => '지난 회의가 없습니다';
+
+  @override
+  String get meetingLoadMore => '더 보기';
+
+  @override
+  String get meetingListError => '회의를 불러오지 못했습니다';
+
+  @override
+  String get meetingInstantMeeting => '즉석 회의';
+
+  @override
+  String meetingHostedBy(String name) {
+    return '주최: $name';
+  }
+
+  @override
+  String get meetingCopyLink => '링크 복사';
+
+  @override
+  String get meetingLinkCopied => '회의 링크를 복사했습니다';
+
+  @override
+  String get meetingCopyFailed => '링크를 복사하지 못했습니다';
+
+  @override
+  String get meetingJoin => '참여';
+
+  @override
+  String get meetingStarting => '만드는 중…';
+
+  @override
+  String get meetingFormCreateTitle => '회의 예약';
+
+  @override
+  String get meetingFormEditTitle => '회의 수정';
+
+  @override
+  String get meetingFormAgainTitle => '다시 회의 열기';
+
+  @override
+  String get meetingFieldTitle => '제목';
+
+  @override
+  String get meetingFieldTitlePlaceholder => '제목 추가';
+
+  @override
+  String get meetingFieldDescription => '설명';
+
+  @override
+  String get meetingFieldDescriptionPlaceholder => '안건, 링크 등 참석자가 알아야 할 내용';
+
+  @override
+  String get meetingFieldWhen => '시간';
+
+  @override
+  String get meetingWhenNow => '지금 시작';
+
+  @override
+  String get meetingWhenLater => '나중으로 예약';
+
+  @override
+  String get meetingFieldDate => '날짜';
+
+  @override
+  String get meetingFieldTime => '시작 시간';
+
+  @override
+  String get meetingFieldDuration => '진행 시간';
+
+  @override
+  String meetingTimeZoneHint(String zone) {
+    return '시간은 $zone 기준입니다';
+  }
+
+  @override
+  String get meetingFieldInvitees => '참가자 초대';
+
+  @override
+  String get meetingInviteeSearchPlaceholder => '이름 또는 이메일로 검색';
+
+  @override
+  String meetingInviteeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count명 초대함',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingInviteeNone => '아직 초대한 사람이 없습니다';
+
+  @override
+  String meetingRemoveInvitee(String name) {
+    return '$name 제거';
+  }
+
+  @override
+  String get meetingSearchNoResults => '검색 결과가 없습니다';
+
+  @override
+  String get meetingSearchFailed => '지금은 검색할 수 없습니다';
+
+  @override
+  String get meetingFieldDepartment => '부서';
+
+  @override
+  String get meetingDepartmentNone => '부서 없음';
+
+  @override
+  String get meetingDepartmentHint => '부서의 모든 구성원이 초대됩니다';
+
+  @override
+  String get meetingSettingsTitle => '회의 옵션';
+
+  @override
+  String get meetingSettingWaitingRoom => '대기실';
+
+  @override
+  String get meetingSettingWaitingRoomDesc =>
+      '초대받지 않은 사람은 주최자가 입장을 허락할 때까지 기다립니다';
+
+  @override
+  String get meetingSettingMuteOnEntry => '입장 시 음소거';
+
+  @override
+  String get meetingSettingMuteOnEntryDesc => '참가자는 마이크가 꺼진 상태로 입장합니다';
+
+  @override
+  String get meetingSettingScreenShare => '참가자가 화면을 공유할 수 있음';
+
+  @override
+  String get meetingSettingNotes => '참가자가 공유 메모를 편집할 수 있음';
+
+  @override
+  String get meetingSettingLocked => '회의 잠금';
+
+  @override
+  String get meetingSettingLockedDesc => '초대받은 사람만 참여할 수 있습니다';
+
+  @override
+  String get meetingSubmitCreate => '예약';
+
+  @override
+  String get meetingSubmitStartNow => '지금 시작';
+
+  @override
+  String get meetingSubmitSave => '변경 사항 저장';
+
+  @override
+  String get meetingToastCreated => '회의를 예약했습니다';
+
+  @override
+  String get meetingToastUpdated => '변경 사항을 저장했습니다';
+
+  @override
+  String meetingCharCounter(int count, int max) {
+    return '$count/$max';
+  }
+
+  @override
+  String get meetingNotesShared => '공유';
+
+  @override
+  String get meetingNotesPrivate => '내 메모';
+
+  @override
+  String get meetingNotesPrivateHint => '이 메모는 나만 볼 수 있습니다';
+
+  @override
+  String get meetingNotesPlaceholder => '메모 작성 — 마크다운 지원';
+
+  @override
+  String get meetingNotesWrite => '작성';
+
+  @override
+  String get meetingNotesPreview => '미리 보기';
+
+  @override
+  String get meetingNotesSaving => '저장 중…';
+
+  @override
+  String get meetingNotesSaved => '저장됨';
+
+  @override
+  String get meetingNotesUnsaved => '저장되지 않은 변경 사항';
+
+  @override
+  String get meetingNotesSaveFailed => '저장하지 못했습니다';
+
+  @override
+  String get meetingNotesRetry => '다시 시도';
+
+  @override
+  String get meetingNotesReadOnly => '이 메모는 주최자만 편집할 수 있습니다';
+
+  @override
+  String meetingNotesRemoteNewer(String name) {
+    return '$name님이 더 최신 버전을 저장했습니다';
+  }
+
+  @override
+  String get meetingNotesRemoteNewerUnknown => '더 최신 버전이 저장되었습니다';
+
+  @override
+  String meetingNotesCounter(int count, int max) {
+    return '$count / $max';
+  }
+
+  @override
+  String get meetingNotesConflictTitle => '다른 사람이 더 최신 버전을 저장했습니다';
+
+  @override
+  String get meetingNotesConflictDesc =>
+      '작성 중인 내용은 안전합니다. 두 버전을 비교하고 남길 내용을 선택하세요.';
+
+  @override
+  String get meetingNotesConflictReview => '비교';
+
+  @override
+  String get meetingNotesConflictTheirs => '최신 버전';
+
+  @override
+  String get meetingNotesConflictMine => '내 버전';
+
+  @override
+  String get meetingNotesConflictKeepMine => '내 버전 유지';
+
+  @override
+  String get meetingNotesConflictTakeTheirs => '최신 버전 사용';
+
+  @override
+  String get meetingNotesConflictSaveMerged => '병합한 내용 저장';
+
+  @override
+  String get meetingNotesConflictDiscardWarning => '저장하지 않은 내용은 삭제됩니다';
+
+  @override
+  String get meetingEdit => '수정';
+
+  @override
+  String get meetingCancelMeeting => '회의 취소';
+
+  @override
+  String get meetingMeetAgain => '다시 회의 열기';
+
+  @override
+  String get meetingEndMeeting => '회의 종료';
+
+  @override
+  String get meetingCancelConfirmTitle => '이 회의를 취소할까요?';
+
+  @override
+  String get meetingCancelConfirmDesc => '초대받은 모든 사람에게 취소 사실이 알려집니다.';
+
+  @override
+  String get meetingEndConfirmTitle => '모든 사람의 회의를 종료할까요?';
+
+  @override
+  String get meetingEndConfirmDesc => '모두 퇴장하며 회의를 다시 시작할 수 없습니다';
+
+  @override
+  String get meetingToastCancelled => '회의를 취소했습니다';
+
+  @override
+  String get meetingToastEnded => '회의를 종료했습니다';
+
+  @override
+  String get meetingBackToList => '모든 회의';
+
+  @override
+  String get meetingDetailError => '이 회의를 불러오지 못했습니다';
+
+  @override
+  String get meetingMeetingCode => '회의 코드';
+
+  @override
+  String get meetingSectionPeople => '참석자';
+
+  @override
+  String get meetingCoHosts => '공동 주최자';
+
+  @override
+  String get meetingInvitees => '초대된 사람';
+
+  @override
+  String meetingMoreCount(int count) {
+    return '+$count';
+  }
+
+  @override
+  String get meetingDepartmentGeneric => '부서';
+
+  @override
+  String get meetingSectionAttendance => '참석 기록';
+
+  @override
+  String get meetingAttendanceEmpty => '아직 참여한 사람이 없습니다';
+
+  @override
+  String get meetingAttendanceInside => '지금 회의 중';
+
+  @override
+  String meetingAttendanceDuration(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes분',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingAttendanceSessions(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count회 참여',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingSectionNotes => '메모';
+
+  @override
+  String get meetingSectionChat => '회의 채팅';
+
+  @override
+  String get meetingChatHistoryEmpty => '메시지가 없습니다';
+
+  @override
+  String get meetingChatLoadOlder => '이전 메시지 불러오기';
+
+  @override
+  String get meetingChatHistoryError => '회의 채팅을 불러오지 못했습니다';
+
+  @override
+  String get meetingRemovedNotice => '이 회의에서 내보내져 메모와 채팅을 볼 수 없습니다.';
+
+  @override
+  String get meetingGuestNotice => '회의에 참여하면 메모와 채팅을 볼 수 있습니다.';
+
+  @override
+  String meetingCreatedAt(String time) {
+    return '$time에 생성됨';
+  }
+
+  @override
+  String get meetingLinkCodeCopied => '회의 코드를 복사했습니다';
 }

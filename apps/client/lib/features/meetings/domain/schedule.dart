@@ -221,3 +221,26 @@ String formatMeetingRange(
       ? '${full.format(s)} – ${_time(locale).format(e)}'
       : '${full.format(s)} – ${full.format(e)}';
 }
+
+final _monthFormats = <String, DateFormat>{};
+final _dayFormats = <String, DateFormat>{};
+
+/// Short month of a wall-clock date ("Oct", "thg 10") — list date block.
+String monthShort(String locale, DateTime wallClock) => _monthFormats
+    .putIfAbsent(locale, () => DateFormat.MMM(locale))
+    .format(wallClock);
+
+/// Day of month as the locale writes it ("8", "8日").
+String dayOfMonth(String locale, DateTime wallClock) =>
+    _dayFormats.putIfAbsent(locale, () => DateFormat.d(locale)).format(wallClock);
+
+final _dateFormats = <String, DateFormat>{};
+
+/// A wall-clock calendar day, locale-formatted ("Oct 8, 2026").
+String formatLocalDate(String locale, DateTime wallClock) => _dateFormats
+    .putIfAbsent(locale, () => DateFormat.yMMMd(locale))
+    .format(wallClock);
+
+/// Clock time of an instant in [zone] ("9:05 AM", "09:05") — chat lines.
+String formatClockTime(String locale, DateTime utc, LocalZone zone) =>
+    _time(locale).format(zone.wallClock(utc));
