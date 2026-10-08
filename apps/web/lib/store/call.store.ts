@@ -36,8 +36,18 @@ interface CallState {
   callId: string | null
   /** sfu: LiveKit is re-establishing the connection. */
   reconnecting: boolean
-  /** sfu: our own connection quality is poor. */
+  /** Our own connection is poor (sfu: LiveKit's measure; mesh: see call-network.ts). */
   poorConnection: boolean
+  /** The other person's connection is poor. */
+  peerPoor: boolean
+  /** The other person's camera is on (Messenger-style: video while either is). */
+  peerCamera: boolean
+  /** Our camera could not be sent (the other side's app cannot take video mid-call). */
+  videoUnavailable: boolean
+  /** Someone dropped: whose connection the call is waiting for, until `reconnectDeadline`. */
+  reconnectWait: 'self' | 'peer' | null
+  /** Epoch ms when the reconnect window ends the call. */
+  reconnectDeadline: number | null
 
   // ── Group call (mesh) ───────────────────────────────────────────────────────
   /** Non-null while the local user is in a group call. */
@@ -79,6 +89,10 @@ interface CallState {
   setCallId: (callId: string) => void
   setReconnecting: (on: boolean) => void
   setPoorConnection: (on: boolean) => void
+  setPeerPoor: (on: boolean) => void
+  setPeerCamera: (on: boolean) => void
+  setVideoUnavailable: (on: boolean) => void
+  setReconnectWait: (who: 'self' | 'peer' | null, deadline: number | null) => void
   setPeerName: (name: string) => void
   setConnected: () => void
   setDuration: (s: number) => void
@@ -117,6 +131,11 @@ const initial = {
   callId: null as string | null,
   reconnecting: false,
   poorConnection: false,
+  peerPoor: false,
+  peerCamera: false,
+  videoUnavailable: false,
+  reconnectWait: null as 'self' | 'peer' | null,
+  reconnectDeadline: null as number | null,
 }
 
 const initialGroup = {
@@ -132,6 +151,21 @@ const initialGroup = {
   speakingIds: [] as string[],
 }
 
+/** A new 1-on-1: cameras follow the call kind, nothing is poor or waiting yet. */
+function callMedia(video: boolean) {
+  return {
+    video,
+    cameraEnabled: video,
+    peerCamera: video,
+    reconnecting: false,
+    poorConnection: false,
+    peerPoor: false,
+    videoUnavailable: false,
+    reconnectWait: null,
+    reconnectDeadline: null,
+  }
+}
+
 export const useCallStore = create<CallState>((set) => ({
   ...initial,
   ...initialGroup,
@@ -144,11 +178,9 @@ export const useCallStore = create<CallState>((set) => ({
       peerName,
       conversationId,
       pendingOfferSdp: sdp ?? null,
-      video,
       callId: callId ?? null,
       transport: transport ?? 'mesh',
-      reconnecting: false,
-      poorConnection: false,
+      ...callMedia(video),
     }),
   setOutgoing: ({ peerId, peerName, conversationId, video, transport }) =>
     set({
@@ -157,17 +189,20 @@ export const useCallStore = create<CallState>((set) => ({
       peerName,
       conversationId,
       pendingOfferSdp: null,
-      video,
       callId: null,
       transport: transport ?? 'mesh',
-      reconnecting: false,
-      poorConnection: false,
+      ...callMedia(video),
     }),
   setCallId: (callId) => set({ callId }),
   setReconnecting: (reconnecting) => set({ reconnecting }),
   setPoorConnection: (poorConnection) => set({ poorConnection }),
+  setPeerPoor: (peerPoor) => set({ peerPoor }),
+  setPeerCamera: (peerCamera) => set({ peerCamera }),
+  setVideoUnavailable: (videoUnavailable) => set({ videoUnavailable }),
+  setReconnectWait: (reconnectWait, reconnectDeadline) => set({ reconnectWait, reconnectDeadline }),
   setPeerName: (peerName) => set({ peerName }),
-  setConnected: () => set({ status: 'connected', durationSeconds: 0 }),
+  // A mid-call renegotiation or reconnect must not restart the call timer.
+  setConnected: () => set((s) => (s.status === 'connected' ? s : { status: 'connected', durationSeconds: 0 })),
   setDuration: (s) => set({ durationSeconds: s }),
   setMic: (on) => set({ micEnabled: on }),
   setCamera: (on) => set({ cameraEnabled: on }),

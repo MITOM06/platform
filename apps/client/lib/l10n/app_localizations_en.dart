@@ -3598,12 +3598,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callHangUp => 'End call';
 
   @override
-  String get callReconnecting => 'Reconnecting…';
-
-  @override
-  String get callPoorConnection => 'Poor connection';
-
-  @override
   String get aiContextLearnedFactsLoadError =>
       'Couldn\'t load what the assistant has learned.';
 
@@ -5501,4 +5495,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meetingLoading => 'Loading meeting…';
+
+  @override
+  String get callSelfWeakNetwork => 'Your network is weak';
+
+  @override
+  String callPeerWeakNetwork(String name) {
+    return '$name\'s network is weak';
+  }
+
+  @override
+  String get callUnstableNetwork => 'Unstable connection';
+
+  @override
+  String get callReconnectingSelf => 'Connection lost — reconnecting…';
+
+  @override
+  String callWaitingForPeer(String name) {
+    return 'Waiting for $name to reconnect…';
+  }
+
+  @override
+  String callReconnectCountdown(int seconds) {
+    return 'The call ends in ${seconds}s if it cannot reconnect';
+  }
+
+  @override
+  String get callSwitchToVideo => 'Switch to video';
+
+  @override
+  String get callVideoUnavailable =>
+      'Video isn\'t available in this call — the other person may need to update the app';
 }

@@ -1662,6 +1662,14 @@
     "peerFallback": "Người dùng",
     "mediaError": "Không thể truy cập camera hoặc micro. Hãy kiểm tra quyền của trình duyệt.",
     "noAnswer": "Không có người trả lời",
+    "selfWeakNetwork": "Mạng của bạn đang yếu",
+    "peerWeakNetwork": "Mạng của {name} đang yếu",
+    "unstableNetwork": "Kết nối không ổn định",
+    "reconnectingSelf": "Mất kết nối, đang kết nối lại…",
+    "waitingForPeer": "Đang chờ {name} kết nối lại…",
+    "reconnectCountdown": "Cuộc gọi sẽ kết thúc sau {seconds} giây nếu không kết nối lại được",
+    "switchToVideo": "Chuyển sang gọi video",
+    "videoUnavailable": "Không thể bật video trong cuộc gọi này — người kia có thể cần cập nhật ứng dụng",
     "declined": "{name} đã từ chối cuộc gọi",
     "busy": "{name} đang bận cuộc gọi khác",
     "peerMediaError": "{name} không bật được micro hoặc camera",
@@ -1699,9 +1707,7 @@
     "summaryOverview": "Tổng quan",
     "summaryKeyPoints": "Điểm chính",
     "summaryActionItems": "Việc cần làm",
-    "summaryUnavailable": "Không có bản tóm tắt",
-    "reconnecting": "Đang kết nối lại…",
-    "poorConnection": "Kết nối yếu"
+    "summaryUnavailable": "Không có bản tóm tắt"
   },
   "notFound": {
     "title": "Trang không tồn tại",

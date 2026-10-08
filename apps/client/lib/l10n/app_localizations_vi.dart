@@ -3600,12 +3600,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get callHangUp => 'Kết thúc';
 
   @override
-  String get callReconnecting => 'Đang kết nối lại…';
-
-  @override
-  String get callPoorConnection => 'Kết nối yếu';
-
-  @override
   String get aiContextLearnedFactsLoadError =>
       'Không tải được những điều trợ lý đã ghi nhớ.';
 
@@ -5466,4 +5460,35 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get meetingLoading => 'Đang tải cuộc họp…';
+
+  @override
+  String get callSelfWeakNetwork => 'Mạng của bạn đang yếu';
+
+  @override
+  String callPeerWeakNetwork(String name) {
+    return 'Mạng của $name đang yếu';
+  }
+
+  @override
+  String get callUnstableNetwork => 'Kết nối không ổn định';
+
+  @override
+  String get callReconnectingSelf => 'Mất kết nối, đang kết nối lại…';
+
+  @override
+  String callWaitingForPeer(String name) {
+    return 'Đang chờ $name kết nối lại…';
+  }
+
+  @override
+  String callReconnectCountdown(int seconds) {
+    return 'Cuộc gọi sẽ kết thúc sau $seconds giây nếu không kết nối lại được';
+  }
+
+  @override
+  String get callSwitchToVideo => 'Chuyển sang gọi video';
+
+  @override
+  String get callVideoUnavailable =>
+      'Không thể bật video trong cuộc gọi này — người kia có thể cần cập nhật ứng dụng';
 }

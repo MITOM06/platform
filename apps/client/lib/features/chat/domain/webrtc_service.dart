@@ -4,9 +4,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../data/stomp_service.dart';
+import 'call_network.dart';
 import 'call_rules.dart';
 import 'ice_candidate_queue.dart';
+import 'mesh_in_call.dart';
+import 'mesh_negotiator.dart';
 import 'direct_call_engine.dart';
+
+part 'webrtc_service_in_call.dart';
 
 /// The call was ended (hang-up, peer cancel) while setup was still awaiting —
 /// e.g. the OS permission dialog was open. Not an error to report.
@@ -51,6 +56,9 @@ class WebRTCService implements DirectCallEngine {
   /// We placed this call (not answering one).
   bool _outgoing = false;
 
+  /// ICE reached connected at least once: only then is a drop worth waiting for.
+  bool _iceConnected = false;
+
   /// When remote media first arrived — the call duration is measured from it.
   DateTime? _mediaSince;
 
@@ -64,7 +72,42 @@ class WebRTCService implements DirectCallEngine {
   /// Remote candidates that cannot be applied yet (see [IceCandidateQueue]).
   final IceCandidateQueue _ice = IceCandidateQueue();
 
-  Timer? _disconnectTimer;
+  /// What the call screen shows about the connection (both media paths).
+  @override
+  final CallNetworkState network = CallNetworkState();
+
+  /// The peer's stream, so a video line added mid-call can join it.
+  MediaStream? _remoteStream;
+
+  late final MeshNegotiator _negotiator = MeshNegotiator(
+    pc: () => _peerConnection,
+    target: _target,
+    flush: (pc) => _ice.flush(pc),
+    send: _sendJson,
+  );
+
+  late final MeshInCall _inCall = MeshInCall(
+    network: network,
+    isCaller: () => _outgoing,
+    selfOffline: () => !_stompService.isConnected,
+    target: _target,
+    send: _sendJson,
+    offer: ({bool iceRestart = false, bool videoLine = false}) =>
+        _negotiator.offer(iceRestart: iceRestart, videoLine: videoLine),
+    onExpired: () => unawaited(endCall(reason: CallEndReason.failed)),
+  );
+
+  ({String peerId, String conversationId})? _target() {
+    final peer = _targetId;
+    final conversation = _conversationId;
+    return peer != null && conversation != null
+        ? (peerId: peer, conversationId: conversation)
+        : null;
+  }
+
+  void _sendJson(String destination, Map<String, dynamic> body) =>
+      _stompService.sendRawMessage(
+          destination: destination, body: jsonEncode(body));
 
   /// Bumped by [dispose]; setup steps compare it after each await so a call
   /// ended mid-setup stops instead of failing with a bogus media error.
@@ -77,8 +120,11 @@ class WebRTCService implements DirectCallEngine {
   bool _micOn = true;
   bool _cameraOn = true;
   bool _speakerOn = false;
+  late final _speaker = SpeakerFollowsVideo(setSpeakerOn);
 
-  WebRTCService(this._stompService);
+  WebRTCService(this._stompService) {
+    network.addListener(_followLayout); // their camera
+  }
 
   /// True while a 1-on-1 call holds a peer connection (ringing or connected).
   bool get isActive => _peerConnection != null;
@@ -89,41 +135,6 @@ class WebRTCService implements DirectCallEngine {
   @override
   bool get isVideo => _isVideo;
 
-  /// Our own offer to [peerId] in [conversationId] is out and unanswered.
-  bool isCallingTo(String peerId, String conversationId) =>
-      isActive &&
-      _outgoing &&
-      !_connected &&
-      _targetId == peerId &&
-      _conversationId == conversationId;
-
-  /// Both tapped Call and the offers crossed; we are the side that answers
-  /// (see `decideIncomingOffer`). Our own offer is dropped silently — the peer
-  /// ignores it — and theirs is answered on a fresh connection, keeping the
-  /// call screen open. The call takes their offer's media.
-  Future<void> answerCrossed({
-    required String from,
-    required String conversationId,
-    required String sdp,
-  }) async {
-    // Fresh tracks start live: keep what the user muted while "Calling…".
-    final micOn = _micOn;
-    final cameraOn = _cameraOn;
-    _closePeer();
-    _ice.expect(from); // their candidates follow their offer
-    try {
-      await initialize(from, conversationId,
-          isVideo: sdpHasVideo(sdp), incoming: true);
-      if (!micOn) await setMicOn(false);
-      if (_isVideo && !cameraOn) await setCameraOn(false);
-      await handleOffer(sdp);
-    } on CallCancelledException {
-      return;
-    } catch (e) {
-      debugPrint('answering a crossed call failed: $e');
-      await endCall(reason: CallEndReason.failed);
-    }
-  }
   @override
   bool get micOn => _micOn;
   @override
@@ -140,9 +151,6 @@ class WebRTCService implements DirectCallEngine {
   /// Callee-side safety net, slightly longer than the caller's ring.
   static const incomingRingTimeout = Duration(seconds: 50);
 
-  /// How long a `disconnected` connection may recover before the call ends.
-  /// Mirrors web `DISCONNECT_GRACE_MS`.
-  static const disconnectGrace = Duration(seconds: 8);
 
   /// The `system.call.missed:{kind}` call-log content (see [endCall]).
   static String missedCallLog({required bool isVideo}) =>
@@ -193,10 +201,13 @@ class WebRTCService implements DirectCallEngine {
     _targetId = targetId;
     _conversationId = conversationId;
     _isVideo = isVideo;
+    _remoteStream = null;
+    _cameraOn = isVideo;
+    _speaker.reset(isVideo); // set below, before the call starts
+    network.reset(peerCamera: isVideo);
     _connected = false;
     _mediaSince = null;
     _micOn = true;
-    _cameraOn = isVideo;
 
     final pc = await createPeerConnection({
       'iceServers': [
@@ -234,9 +245,19 @@ class WebRTCService implements DirectCallEngine {
 
     // Unified Plan: remote media arrives track-by-track via onTrack.
     pc.onTrack = (RTCTrackEvent event) {
+      _mediaSince ??= DateTime.now();
       if (event.streams.isNotEmpty) {
-        _mediaSince ??= DateTime.now();
+        _remoteStream = event.streams.first;
         onRemoteStream?.call(event.streams.first);
+        return;
+      }
+      // A video line added mid-call may come without a stream: join it to theirs.
+      final remote = _remoteStream;
+      if (remote != null) {
+        unawaited(remote
+            .addTrack(event.track)
+            .then((_) => onRemoteStream?.call(remote))
+            .catchError((Object e) => debugPrint('remote track not shown: $e')));
       }
     };
 
@@ -244,16 +265,17 @@ class WebRTCService implements DirectCallEngine {
       if (_peerConnection != pc) return;
       switch (state) {
         case RTCPeerConnectionState.RTCPeerConnectionStateConnected:
-          _disconnectTimer?.cancel();
-          _disconnectTimer = null;
+          _iceConnected = true;
+          _inCall.connected(pc.getStats);
         case RTCPeerConnectionState.RTCPeerConnectionStateDisconnected:
-          // Often transient (Wi-Fi ↔ 4G): give it a chance to recover.
-          _disconnectTimer ??= Timer(disconnectGrace, () {
-            _disconnectTimer = null;
-            if (_peerConnection == pc) endCall(reason: CallEndReason.failed);
-          });
         case RTCPeerConnectionState.RTCPeerConnectionStateFailed:
-          endCall(reason: CallEndReason.failed);
+          // Mid-call: a minute to recover (network hand-off, a tunnel, lost Wi-Fi).
+          if (_iceConnected) {
+            _inCall.dropped();
+          } else if (state ==
+              RTCPeerConnectionState.RTCPeerConnectionStateFailed) {
+            endCall(reason: CallEndReason.failed); // never connected
+          }
         default:
           break;
       }
@@ -331,11 +353,21 @@ class WebRTCService implements DirectCallEngine {
   }
 
   Future<void> handleAnswer(String sdp) async {
-    if (_peerConnection == null) return;
+    final pc = _peerConnection;
+    if (pc == null) return;
+    final state = pc.signalingState;
+    if (state != null &&
+        state != RTCSignalingState.RTCSignalingStateHaveLocalOffer) {
+      return; // late or duplicate
+    }
     _connected = true;
-    await _peerConnection!
-        .setRemoteDescription(RTCSessionDescription(sdp, 'answer'));
-    await _ice.flush(_peerConnection);
+    try {
+      await pc.setRemoteDescription(RTCSessionDescription(sdp, 'answer'));
+      await _ice.flush(pc);
+    } catch (e) {
+      debugPrint('answer ignored: $e'); // superseded by a newer offer
+    }
+    _negotiator.answered();
   }
 
   Future<void> handleIceCandidate(
@@ -343,34 +375,6 @@ class WebRTCService implements DirectCallEngine {
     String? senderId,
   }) async {
     await _ice.add(_peerConnection, candidateMap, from: senderId);
-  }
-
-  /// The peer sent `end`. Only the current peer can end the active call;
-  /// a ringing caller cancelling just drops its early candidates.
-  void handleRemoteEnd({String? from, String? reasonWire}) {
-    if (!isActive) {
-      // Answering but the peer connection is not built yet: stop that setup.
-      if (from != null && from == _targetId) {
-        dispose();
-      } else {
-        _ice.reset();
-      }
-      return;
-    }
-    if (!endTargetsCurrentCall(from: from, peerId: peerId)) return;
-    final reason = CallEndReason.fromWire(reasonWire);
-    if (reason == CallEndReason.busy) {
-      // The callee never rang: log the attempt as a missed call.
-      onSendCallLog?.call(missedCallLog(isVideo: _isVideo));
-    }
-    final conversationId = _conversationId;
-    if (endsCalleeSessions(reason) && from != null && conversationId != null) {
-      // The callee may be signed in elsewhere (web + phone): one session
-      // rejected, the others are still ringing — tell them all it is over.
-      sendEnd(targetId: from, conversationId: conversationId);
-    }
-    onEndNotice?.call(reason, true);
-    dispose();
   }
 
   /// Hang up / give up: tell the peer why, log the call, tear down.
@@ -425,12 +429,20 @@ class WebRTCService implements DirectCallEngine {
     }
   }
 
+  /// Our camera on/off — in a voice call this switches it to video.
   @override
   Future<void> setCameraOn(bool on) async {
+    final tracks = _localStream?.getVideoTracks() ?? <MediaStreamTrack>[];
+    if (on && tracks.isEmpty) {
+      await _addCamera();
+      return;
+    }
     _cameraOn = on;
-    for (final t in _localStream?.getVideoTracks() ?? <MediaStreamTrack>[]) {
+    for (final t in tracks) {
       t.enabled = on;
     }
+    _followLayout();
+    if (isActive) _inCall.cameraChanged(on);
   }
 
   @override
@@ -458,8 +470,12 @@ class WebRTCService implements DirectCallEngine {
     _outgoing = false;
     _targetId = null;
     _conversationId = null;
-    _disconnectTimer?.cancel();
-    _disconnectTimer = null;
+    _iceConnected = false;
+    _inCall.reset();
+    _negotiator.reset();
+    _speaker.reset();
+    network.reset();
+    _remoteStream = null;
     for (final track in _localStream?.getTracks() ?? <MediaStreamTrack>[]) {
       track.stop();
     }

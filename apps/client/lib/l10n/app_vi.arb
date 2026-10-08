@@ -1255,8 +1255,6 @@
   "callSpeaker": "Loa ngoài",
   "callSwitchCamera": "Đổi camera",
   "callHangUp": "Kết thúc",
-  "callReconnecting": "Đang kết nối lại…",
-  "callPoorConnection": "Kết nối yếu",
   "aiContextLearnedFactsLoadError": "Không tải được những điều trợ lý đã ghi nhớ.",
   "errTooManyRequests": "Quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại.",
   "removedFromConversation": "Bạn không còn là thành viên của cuộc trò chuyện này",
@@ -1930,5 +1928,22 @@
   "meetingMediaBlocked": "Quyền micro hoặc camera đang tắt. Bạn vẫn có thể tham gia và bật lại sau trong Cài đặt.",
   "meetingSwitchCamera": "Đổi camera",
   "meetingSpeakerOn": "Dùng loa ngoài",
-  "meetingLoading": "Đang tải cuộc họp…"
+  "meetingLoading": "Đang tải cuộc họp…",
+  "callSelfWeakNetwork": "Mạng của bạn đang yếu",
+  "callPeerWeakNetwork": "Mạng của {name} đang yếu",
+  "@callPeerWeakNetwork": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callUnstableNetwork": "Kết nối không ổn định",
+  "callReconnectingSelf": "Mất kết nối, đang kết nối lại…",
+  "callWaitingForPeer": "Đang chờ {name} kết nối lại…",
+  "@callWaitingForPeer": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callReconnectCountdown": "Cuộc gọi sẽ kết thúc sau {seconds} giây nếu không kết nối lại được",
+  "@callReconnectCountdown": {
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "callSwitchToVideo": "Chuyển sang gọi video",
+  "callVideoUnavailable": "Không thể bật video trong cuộc gọi này — người kia có thể cần cập nhật ứng dụng"
 }

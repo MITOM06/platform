@@ -63,6 +63,11 @@ void handleWebRtcSignal(
       final sdp = signal['sdp'] as String?;
       if (senderId == null || convId == null || sdp == null) return;
 
+      if (webrtc.isInCallWith(senderId, convId)) {
+        // The caller renegotiates mid-call: an ICE restart, or a camera on.
+        unawaited(webrtc.answerRenegotiation(sdp));
+        return;
+      }
       switch (decideIncomingOffer(
         from: senderId,
         ringingFrom: ref.read(incomingCallProvider)?.senderId,
@@ -112,6 +117,8 @@ void handleWebRtcSignal(
           Map<String, dynamic>.from(candidate),
           senderId: signal['senderId'] as String?,
         );
+      } else if (type == 'state') {
+        webrtc.handleState(signal);
       } else if (type == 'end') {
         // Peer hung up: tear down locally only. Do NOT re-publish /app/call.end
         // or send a system call-log message — the hang-up initiator already

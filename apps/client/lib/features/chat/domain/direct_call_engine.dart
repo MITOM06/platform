@@ -1,5 +1,6 @@
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
+import 'call_network.dart';
 import 'call_rules.dart';
 
 /// What `CallScreen` drives during a 1-on-1 call, whichever media path the
@@ -14,6 +15,9 @@ abstract class DirectCallEngine {
   /// Whether this call carries video. Can change once: when both tapped Call,
   /// the call that survives brings its own media.
   bool get isVideo;
+
+  /// Whose network is weak, the other person's camera, the reconnect window.
+  CallNetworkState get network;
   bool get micOn;
   bool get cameraOn;
   bool get speakerOn;

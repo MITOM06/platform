@@ -1255,8 +1255,6 @@
   "callSpeaker": "扬声器",
   "callSwitchCamera": "切换摄像头",
   "callHangUp": "挂断",
-  "callReconnecting": "正在重新连接…",
-  "callPoorConnection": "网络连接不佳",
   "aiContextLearnedFactsLoadError": "无法加载助手已了解的信息。",
   "errTooManyRequests": "请求过于频繁，请稍后再试。",
   "removedFromConversation": "你已不再是此会话的成员",
@@ -1930,5 +1928,22 @@
   "meetingMediaBlocked": "麦克风或摄像头权限已关闭。你仍可加入，稍后可在“设置”中开启。",
   "meetingSwitchCamera": "切换摄像头",
   "meetingSpeakerOn": "使用扬声器",
-  "meetingLoading": "正在加载会议…"
+  "meetingLoading": "正在加载会议…",
+  "callSelfWeakNetwork": "你的网络较差",
+  "callPeerWeakNetwork": "{name} 的网络较差",
+  "@callPeerWeakNetwork": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callUnstableNetwork": "连接不稳定",
+  "callReconnectingSelf": "连接中断，正在重新连接…",
+  "callWaitingForPeer": "正在等待 {name} 重新连接…",
+  "@callWaitingForPeer": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "callReconnectCountdown": "若无法重新连接，通话将在 {seconds} 秒后结束",
+  "@callReconnectCountdown": {
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "callSwitchToVideo": "切换到视频通话",
+  "callVideoUnavailable": "此通话无法开启视频——对方可能需要更新应用"
 }

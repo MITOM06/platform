@@ -49,7 +49,7 @@ class SfuCallServiceWebhookTest {
   private void runScheduled() {
     org.mockito.ArgumentCaptor<Runnable> task = org.mockito.ArgumentCaptor.forClass(Runnable.class);
     verify(timers, org.mockito.Mockito.atLeastOnce())
-        .after(org.mockito.ArgumentMatchers.eq(SfuCallService.DISCONNECT_GRACE), task.capture());
+        .after(org.mockito.ArgumentMatchers.eq(SfuCallService.RECONNECT_GRACE), task.capture());
     task.getValue().run();
   }
 
@@ -172,5 +172,12 @@ class SfuCallServiceWebhookTest {
 
     verify(calls, never()).broadcastRoster(session);
     verify(busy, never()).markBusy(anyString(), anyString());
+  }
+
+  /** A dropped 1-on-1 gets a minute to come back before the call ends for both. */
+  @Test
+  void aDroppedParticipantHasAMinuteToReconnect() {
+    org.assertj.core.api.Assertions.assertThat(SfuCallService.RECONNECT_GRACE)
+        .isEqualTo(java.time.Duration.ofSeconds(60));
   }
 }

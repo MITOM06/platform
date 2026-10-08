@@ -6703,18 +6703,6 @@ abstract class AppLocalizations {
   /// **'End call'**
   String get callHangUp;
 
-  /// No description provided for @callReconnecting.
-  ///
-  /// In en, this message translates to:
-  /// **'Reconnecting…'**
-  String get callReconnecting;
-
-  /// No description provided for @callPoorConnection.
-  ///
-  /// In en, this message translates to:
-  /// **'Poor connection'**
-  String get callPoorConnection;
-
   /// Shown in the AI Context screen when the learned-facts (memory) section fails to load.
   ///
   /// In en, this message translates to:
@@ -9876,6 +9864,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading meeting…'**
   String get meetingLoading;
+
+  /// No description provided for @callSelfWeakNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Your network is weak'**
+  String get callSelfWeakNetwork;
+
+  /// No description provided for @callPeerWeakNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s network is weak'**
+  String callPeerWeakNetwork(String name);
+
+  /// No description provided for @callUnstableNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Unstable connection'**
+  String get callUnstableNetwork;
+
+  /// No description provided for @callReconnectingSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection lost — reconnecting…'**
+  String get callReconnectingSelf;
+
+  /// No description provided for @callWaitingForPeer.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for {name} to reconnect…'**
+  String callWaitingForPeer(String name);
+
+  /// No description provided for @callReconnectCountdown.
+  ///
+  /// In en, this message translates to:
+  /// **'The call ends in {seconds}s if it cannot reconnect'**
+  String callReconnectCountdown(int seconds);
+
+  /// No description provided for @callSwitchToVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to video'**
+  String get callSwitchToVideo;
+
+  /// No description provided for @callVideoUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Video isn\'t available in this call — the other person may need to update the app'**
+  String get callVideoUnavailable;
 }
 
 class _AppLocalizationsDelegate

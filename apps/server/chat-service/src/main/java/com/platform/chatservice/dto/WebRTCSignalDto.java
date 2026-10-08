@@ -53,4 +53,15 @@ public class WebRTCSignalDto {
    * people tap Call at the same time. Apps before that feature leave it out and keep hearing busy.
    */
   private Boolean merge;
+
+  // ---- 1-on-1 in-call state ({@code type:"state"}, /app/call.state). ----
+
+  /** The sender's camera is on (the call shows video while either camera is). */
+  private Boolean video;
+
+  /** How well the sender receives the other person's media: "good" | "poor". */
+  private String quality;
+
+  /** The sender lost the connection and asks the caller to restart ICE (peer-to-peer). */
+  private Boolean restart;
 }
