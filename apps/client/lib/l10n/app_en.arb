@@ -2236,5 +2236,412 @@
   "authErrMfaAlreadyEnrolled": "Two-factor authentication is already set up for this account.",
   "authErrMfaResetForbidden": "Only an Owner can reset two-factor authentication.",
   "authErrMfaResetSelfForbidden": "You can't reset your own two-factor authentication.",
-  "adminCapHostMeeting": "Host meetings"
+  "adminCapHostMeeting": "Host meetings",
+  "meetingErrNotFound": "This meeting doesn't exist",
+  "meetingErrForbidden": "You can't do that in this meeting",
+  "meetingErrCreateForbidden": "Your role can't host meetings",
+  "meetingErrDepartmentForbidden": "You can't create a meeting for that department",
+  "meetingErrRemoved": "You were removed from this meeting",
+  "meetingErrLocked": "This meeting is locked",
+  "meetingErrEnded": "This meeting has ended",
+  "meetingErrFull": "This meeting is full ({max} people)",
+  "@meetingErrFull": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrNotCancellable": "Someone has already joined, so it can't be cancelled",
+  "meetingErrUnavailable": "Meetings are unavailable right now. Try again shortly.",
+  "meetingErrNotesReadOnly": "Only hosts can edit the shared notes",
+  "meetingErrNoteConflict": "Someone saved a newer version",
+  "meetingErrRateLimited": "You're sending too fast. Wait a moment.",
+  "meetingErrChatTooLong": "Messages can be at most {max} characters",
+  "@meetingErrChatTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrNoteTooLong": "Notes can be at most {max} characters",
+  "@meetingErrNoteTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrInviteeInvalid": "Someone on the list can't be invited",
+  "meetingErrDepartmentInvalid": "That department isn't available",
+  "meetingErrStartInvalid": "The start time isn't valid",
+  "meetingErrEndInvalid": "The meeting must end after it starts and within 24 hours",
+  "meetingErrTargetUnavailable": "That person isn't in the meeting any more",
+  "meetingErrInvalid": "Something in the request isn't valid",
+  "meetingErrNetwork": "Can't reach the server. Check your connection.",
+  "meetingErrGeneric": "Something went wrong. Try again.",
+  "meetingValTitleTooLong": "Title can be at most {max} characters",
+  "@meetingValTitleTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValDescriptionTooLong": "Description can be at most {max} characters",
+  "@meetingValDescriptionTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValTooManyInvitees": "You can invite at most {max} people",
+  "@meetingValTooManyInvitees": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValStartPast": "Pick a time in the future",
+  "meetingValScheduleInvalid": "Pick a valid date and time",
+  "meetingUntitled": "Meeting",
+  "meetingSomeone": "Someone",
+  "meetingParticipantFallback": "Participant",
+  "meetingYou": "You",
+  "meetingRoleHost": "Host",
+  "meetingRoleCohost": "Co-host",
+  "meetingRoleAttendee": "Participant",
+  "meetingStatusLive": "Live",
+  "meetingStatusScheduled": "Scheduled",
+  "meetingStatusEnded": "Ended",
+  "meetingStatusCancelled": "Cancelled",
+  "meetingDurationMinutes": "{count, plural, other {{count} min}}",
+  "@meetingDurationMinutes": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingDurationHours": "{count, plural, one {{count} hour} other {{count} hours}}",
+  "@meetingDurationHours": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingDurationHoursMinutes": "{hours} h {minutes} min",
+  "@meetingDurationHoursMinutes": {
+    "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } }
+  },
+  "meetingRealtimeOffline": "Chat, hands and host controls are paused until you're back online",
+  "meetingMutedBy": "{name} muted your microphone",
+  "@meetingMutedBy": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingMutedByUnknown": "A host muted your microphone",
+  "meetingMadeCohost": "You're now a co-host",
+  "meetingRevokedCohost": "You're no longer a co-host",
+  "meetingEndedToast": "The meeting has ended",
+  "meetingMediaFailed": "Couldn't turn on your microphone or camera",
+  "meetingShareRevoked": "The host turned off screen sharing",
+  "meetingShareFailed": "Couldn't start presenting",
+  "meetingLobbyWaiting": "{count, plural, one {{count} person is waiting to join} other {{count} people are waiting to join}}",
+  "@meetingLobbyWaiting": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingNotifInvitedTitle": "Meeting invitation",
+  "meetingNotifInvitedBody": "{name} invited you to “{title}”",
+  "@meetingNotifInvitedBody": {
+    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" } }
+  },
+  "meetingNotifInvitedBodyAt": "{name} invited you to “{title}” on {time}",
+  "@meetingNotifInvitedBodyAt": {
+    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" }, "time": { "type": "String" } }
+  },
+  "meetingNotifStartingTitle": "Meeting starting soon",
+  "meetingNotifStartingBody": "“{title}” starts at {time}",
+  "@meetingNotifStartingBody": {
+    "placeholders": { "title": { "type": "String" }, "time": { "type": "String" } }
+  },
+  "meetingNotifCancelled": "“{title}” was cancelled",
+  "@meetingNotifCancelled": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "meetingNotifCancelledUnknown": "A meeting you were invited to was cancelled",
+  "meetingTitle": "Meetings",
+  "meetingPushInvited": "You're invited to a meeting",
+  "meetingPushStarting": "Your meeting starts in 10 minutes",
+  "meetingPushChannel": "Meetings",
+  "meetingSubtitle": "Start a meeting now or schedule one for later.",
+  "meetingNewInstant": "Start a meeting",
+  "meetingNewScheduled": "Schedule",
+  "meetingJoinByCodeLabel": "Meeting code or link",
+  "meetingJoinByCodePlaceholder": "abc-defg-hjk",
+  "meetingJoinByCode": "Join",
+  "meetingCodeInvalid": "That isn't a valid meeting code",
+  "meetingTabUpcoming": "Upcoming",
+  "meetingTabPast": "Past",
+  "meetingEmptyUpcoming": "No upcoming meetings",
+  "meetingEmptyPast": "No past meetings",
+  "meetingLoadMore": "Load more",
+  "meetingListError": "Couldn't load meetings",
+  "meetingInstantMeeting": "Instant meeting",
+  "meetingHostedBy": "Hosted by {name}",
+  "@meetingHostedBy": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingCopyLink": "Copy link",
+  "meetingLinkCopied": "Meeting link copied",
+  "meetingCopyFailed": "Couldn't copy the link",
+  "meetingJoin": "Join",
+  "meetingStarting": "Starting…",
+  "meetingFormCreateTitle": "Schedule a meeting",
+  "meetingFormEditTitle": "Edit meeting",
+  "meetingFormAgainTitle": "Meet again",
+  "meetingFieldTitle": "Title",
+  "meetingFieldTitlePlaceholder": "Add a title",
+  "meetingFieldDescription": "Description",
+  "meetingFieldDescriptionPlaceholder": "Agenda, links, anything people should know",
+  "meetingFieldWhen": "When",
+  "meetingWhenNow": "Start now",
+  "meetingWhenLater": "Schedule for later",
+  "meetingFieldDate": "Date",
+  "meetingFieldTime": "Start time",
+  "meetingFieldDuration": "Duration",
+  "meetingTimeZoneHint": "Times are in {zone}",
+  "@meetingTimeZoneHint": {
+    "placeholders": { "zone": { "type": "String" } }
+  },
+  "meetingFieldInvitees": "Invite people",
+  "meetingInviteeSearchPlaceholder": "Search by name or email",
+  "meetingInviteeCount": "{count, plural, one {{count} person invited} other {{count} people invited}}",
+  "@meetingInviteeCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingInviteeNone": "No one invited yet",
+  "meetingRemoveInvitee": "Remove {name}",
+  "@meetingRemoveInvitee": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingSearchNoResults": "No one found",
+  "meetingSearchFailed": "Couldn't search right now",
+  "meetingFieldDepartment": "Department",
+  "meetingDepartmentNone": "No department",
+  "meetingDepartmentHint": "Everyone in the department is invited",
+  "meetingSettingsTitle": "Meeting options",
+  "meetingSettingWaitingRoom": "Waiting room",
+  "meetingSettingWaitingRoomDesc": "People who aren't invited wait until a host lets them in",
+  "meetingSettingMuteOnEntry": "Mute people when they join",
+  "meetingSettingMuteOnEntryDesc": "Participants start with their microphone off",
+  "meetingSettingScreenShare": "Participants can present their screen",
+  "meetingSettingNotes": "Participants can edit shared notes",
+  "meetingSettingLocked": "Lock meeting",
+  "meetingSettingLockedDesc": "Only invited people can join",
+  "meetingSubmitCreate": "Schedule",
+  "meetingSubmitStartNow": "Start now",
+  "meetingSubmitSave": "Save changes",
+  "meetingToastCreated": "Meeting scheduled",
+  "meetingToastUpdated": "Changes saved",
+  "meetingCharCounter": "{count}/{max}",
+  "@meetingCharCounter": {
+    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "meetingNotesShared": "Shared",
+  "meetingNotesPrivate": "Mine",
+  "meetingNotesPrivateHint": "Only you can see these notes",
+  "meetingNotesPlaceholder": "Write notes — Markdown works",
+  "meetingNotesWrite": "Write",
+  "meetingNotesPreview": "Preview",
+  "meetingNotesSaving": "Saving…",
+  "meetingNotesSaved": "Saved",
+  "meetingNotesUnsaved": "Unsaved changes",
+  "meetingNotesSaveFailed": "Couldn't save",
+  "meetingNotesRetry": "Try again",
+  "meetingNotesReadOnly": "Only hosts can edit these notes",
+  "meetingNotesRemoteNewer": "{name} saved a newer version",
+  "@meetingNotesRemoteNewer": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingNotesRemoteNewerUnknown": "A newer version was saved",
+  "meetingNotesCounter": "{count} / {max}",
+  "@meetingNotesCounter": {
+    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "meetingNotesConflictTitle": "Someone saved a newer version",
+  "meetingNotesConflictDesc": "Your text is safe. Compare both versions and choose what to keep.",
+  "meetingNotesConflictReview": "Compare",
+  "meetingNotesConflictTheirs": "Newer version",
+  "meetingNotesConflictMine": "Your version",
+  "meetingNotesConflictKeepMine": "Keep mine",
+  "meetingNotesConflictTakeTheirs": "Use newer version",
+  "meetingNotesConflictSaveMerged": "Save merged text",
+  "meetingNotesConflictDiscardWarning": "Your unsaved text will be discarded",
+  "meetingEdit": "Edit",
+  "meetingCancelMeeting": "Cancel meeting",
+  "meetingMeetAgain": "Meet again",
+  "meetingEndMeeting": "End meeting",
+  "meetingCancelConfirmTitle": "Cancel this meeting?",
+  "meetingCancelConfirmDesc": "Everyone invited will be told it's cancelled.",
+  "meetingEndConfirmTitle": "End the meeting for everyone?",
+  "meetingEndConfirmDesc": "Everyone will leave and the meeting can't be restarted",
+  "meetingToastCancelled": "Meeting cancelled",
+  "meetingToastEnded": "Meeting ended",
+  "meetingBackToList": "All meetings",
+  "meetingDetailError": "Couldn't load this meeting",
+  "meetingMeetingCode": "Meeting code",
+  "meetingSectionPeople": "People",
+  "meetingCoHosts": "Co-hosts",
+  "meetingInvitees": "Invited",
+  "meetingMoreCount": "+{count}",
+  "@meetingMoreCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingDepartmentGeneric": "A department",
+  "meetingSectionAttendance": "Attendance",
+  "meetingAttendanceEmpty": "Nobody joined",
+  "meetingAttendanceInside": "In the meeting now",
+  "meetingAttendanceDuration": "{minutes, plural, other {{minutes} min}}",
+  "@meetingAttendanceDuration": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "meetingAttendanceSessions": "{count, plural, one {{count} session} other {{count} sessions}}",
+  "@meetingAttendanceSessions": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionNotes": "Notes",
+  "meetingSectionChat": "Meeting chat",
+  "meetingChatHistoryEmpty": "No messages",
+  "meetingChatLoadOlder": "Load earlier messages",
+  "meetingChatHistoryError": "Couldn't load the meeting chat",
+  "meetingRemovedNotice": "You were removed from this meeting, so its notes and chat aren't available.",
+  "meetingGuestNotice": "Join the meeting to see its notes and chat.",
+  "meetingCreatedAt": "Created {time}",
+  "@meetingCreatedAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "meetingLinkCodeCopied": "Meeting code copied",
+  "meetingShareNotifTitle": "Presenting your screen",
+  "meetingShareNotifBody": "Everyone in the meeting can see your screen",
+  "meetingJoinNow": "Join now",
+  "meetingAskToJoin": "Ask to join",
+  "meetingPrejoinTitle": "Ready to join?",
+  "meetingPrejoinStartsAt": "Starts {time}",
+  "@meetingPrejoinStartsAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "meetingPrejoinJoiningAs": "You'll join as {name}",
+  "@meetingPrejoinJoiningAs": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingPrejoinCameraOff": "Camera is off",
+  "meetingPrejoinMuteOnEntry": "The host asks people to join muted",
+  "meetingPrejoinLockedHint": "This meeting is locked. Only invited people can join.",
+  "meetingPrejoinInCall": "You're in a call. Hang up to join this meeting.",
+  "meetingMicOn": "Turn on microphone",
+  "meetingMicOff": "Turn off microphone",
+  "meetingCamOn": "Turn on camera",
+  "meetingCamOff": "Turn off camera",
+  "meetingMediaUnavailable": "No microphone or camera found",
+  "meetingWaitingTitle": "Asking to join…",
+  "meetingWaitingDesc": "Someone in the meeting will let you in soon",
+  "meetingWaitingCancel": "Cancel",
+  "meetingDeniedTitle": "You weren't let in",
+  "meetingDeniedDesc": "Someone in the meeting declined your request",
+  "meetingRemovedTitle": "You were removed from the meeting",
+  "meetingRemovedDesc": "You can't rejoin this meeting",
+  "meetingLockedTitle": "This meeting is locked",
+  "meetingLockedDesc": "Only invited people can join right now",
+  "meetingFullTitle": "This meeting is full",
+  "meetingFullDesc": "{max} people are already in. Try again later.",
+  "@meetingFullDesc": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingUnavailableTitle": "Meetings are unavailable",
+  "meetingUnavailableDesc": "Try again in a moment",
+  "meetingNotFoundTitle": "Meeting not found",
+  "meetingNotFoundDesc": "Check the code or link and try again",
+  "meetingLeftTitle": "You left the meeting",
+  "meetingConnectionLostTitle": "Connection lost",
+  "meetingConnectionLostDesc": "We couldn't reconnect you to the meeting",
+  "meetingRejoin": "Rejoin",
+  "meetingTryAgain": "Try again",
+  "meetingViewDetails": "Meeting details",
+  "meetingLeaveMeeting": "Leave meeting",
+  "meetingNameWithYou": "{name} (you)",
+  "@meetingNameWithYou": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingReconnecting": "Reconnecting…",
+  "meetingPoorConnection": "Your connection is unstable",
+  "meetingPresenting": "You're presenting",
+  "meetingStopPresenting": "Stop presenting",
+  "meetingPresentingName": "{name} is presenting",
+  "@meetingPresentingName": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingOverflowTiles": "+{count}",
+  "@meetingOverflowTiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingOverflowMore": "{count, plural, one {{count} more person} other {{count} more people}}",
+  "@meetingOverflowMore": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingPin": "Pin",
+  "meetingUnpin": "Unpin",
+  "meetingTileMenu": "Options for {name}",
+  "@meetingTileMenu": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingMicMutedLabel": "Microphone off",
+  "meetingHandRaisedLabel": "Hand raised",
+  "meetingPoorConnectionPeer": "Unstable connection",
+  "meetingHostBadge": "Host or co-host",
+  "meetingShareStart": "Present screen",
+  "meetingShareDisabled": "The host turned off screen sharing for participants",
+  "meetingRaiseHand": "Raise hand",
+  "meetingLowerHand": "Lower hand",
+  "meetingReactions": "Send a reaction",
+  "meetingChat": "Chat",
+  "meetingNotes": "Notes",
+  "meetingPeople": "People",
+  "meetingMore": "More options",
+  "meetingLayout": "Layout",
+  "meetingLayoutGrid": "Grid",
+  "meetingLayoutSpotlight": "Speaker",
+  "meetingLeave": "Leave",
+  "meetingEndForAll": "End meeting for all",
+  "meetingReactionAria": "{name} reacted {emoji}",
+  "@meetingReactionAria": {
+    "placeholders": { "name": { "type": "String" }, "emoji": { "type": "String" } }
+  },
+  "meetingPeopleTitle": "People",
+  "meetingManageTitle": "Host controls",
+  "meetingSectionHands": "Raised hands ({count})",
+  "@meetingSectionHands": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionLobby": "Waiting to join ({count})",
+  "@meetingSectionLobby": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionInMeeting": "In the meeting ({count})",
+  "@meetingSectionInMeeting": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingAdmit": "Admit",
+  "meetingDeny": "Deny",
+  "meetingAdmitAll": "Admit all",
+  "meetingPersonMenu": "Options for {name}",
+  "@meetingPersonMenu": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingActionMuteMic": "Mute microphone",
+  "meetingActionMuteAll": "Mute everyone",
+  "meetingActionRemove": "Remove from meeting",
+  "meetingActionLowerHand": "Lower hand",
+  "meetingActionLowerAllHands": "Lower all hands",
+  "meetingActionMakeCohost": "Make co-host",
+  "meetingActionRevokeCohost": "Remove as co-host",
+  "meetingRemoveConfirmTitle": "Remove {name}?",
+  "@meetingRemoveConfirmTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingRemoveConfirmDesc": "They won't be able to rejoin this meeting",
+  "meetingMuteAllConfirmTitle": "Mute everyone?",
+  "meetingMuteAllConfirmDesc": "People can unmute themselves",
+  "meetingChatTitle": "Meeting chat",
+  "meetingChatPlaceholder": "Send a message",
+  "meetingChatSend": "Send",
+  "meetingChatEmpty": "Messages are visible to everyone in the meeting",
+  "meetingChatFailed": "Not sent",
+  "meetingChatRetry": "Retry",
+  "meetingChatDiscard": "Discard",
+  "meetingChatSending": "Sending…",
+  "meetingChatOffline": "Reconnecting — you can't send messages right now",
+  "meetingChatCounter": "{count}/{max}",
+  "@meetingChatCounter": {
+    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "meetingChatUnread": "{count, plural, one {{count} new message} other {{count} new messages}}",
+  "@meetingChatUnread": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingMediaBlocked": "Microphone or camera access is off. You can still join and turn it on later in Settings.",
+  "meetingSwitchCamera": "Switch camera",
+  "meetingSpeakerOn": "Use speaker",
+  "meetingLoading": "Loading meeting…"
 }

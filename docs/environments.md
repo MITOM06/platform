@@ -40,6 +40,10 @@ proxy (Caddy) serves the whole API from one host:
 - **Web** — `NEXT_PUBLIC_API_BASE`. Resolution lives in `apps/web/lib/config/env.ts`.
 - **Mobile** — `--dart-define=PON_DOMAIN`. Resolution lives in
   `apps/client/lib/core/config/app_config.dart`.
+- **Mobile, web origin for meeting links** — `--dart-define=PON_WEB_URL=https://<web host>`
+  ("Copy link" builds `<web host>/meet/{code}`). Needed when the web app is not on
+  `https://$PON_DOMAIN` (production: Vercel); without it, and without `PON_DOMAIN`, a release
+  build copies the bare meeting code instead of a link. Never a `localhost` value on `main`.
 
 Both accept per-service overrides (`NEXT_PUBLIC_CHAT_URL`, `PON_CHAT_URL`, …)
 which win individually — that is how you point one service at a local instance

@@ -777,6 +777,31 @@ No contract change; notes for the other clients (Flutter MT6–MT7 should match)
 - Every `errorCode` / REST `code` maps to a localized `meeting.err*` string; ids, `removedIds`,
   room names, tokens and raw error text are never shown.
 
+### Mobile client (MT6–MT7) — how `apps/client` uses this contract
+
+No contract change. Same conventions as the web client above (UTC `Z` times from the device's
+time zone, `clientId` = `c-` + 12 base62, subscribe first then read, on reconnect re-read the
+meeting / hands / newest chat page / shared note, host / co-host re-read `GET /lobby`, a guest
+still **waiting** re-POSTs `/join`, reactions only over the LiveKit data channel, host controls
+only via `/app/meet.host`, the notes switch via `PATCH`). Differences:
+
+- **Background during a meeting:** the app normally disconnects STOMP when it goes to the
+  background (so the server sees it offline and sends FCM). While connecting / in a room it keeps
+  STOMP (and the audio) running — chat, raised hands, host commands and `meet.ended` keep
+  arriving. The camera stops in the background and comes back on return. iOS needs
+  `UIBackgroundModes: audio`.
+- **Waiting room and app exit:** when the app is closed while waiting it best-effort calls
+  `DELETE /lobby` (Android reliable, iOS best effort); coming back to the foreground while
+  waiting re-asks with `/join`.
+- **Push:** a tap on `MEETING_INVITED` / `MEETING_STARTING` opens `/meet/{code}` (or
+  `/meetings/{meetingId}` when the code is missing). The bodies `meeting_push_invited` /
+  `meeting_push_starting` are translated in the app (Android `values-*/strings.xml`, iOS
+  `*.lproj/Localizable.strings`), so the raw key is never shown.
+- **Screen sharing:** presenting is Android only (MediaProjection + a foreground service);
+  iOS can view shares but has no Present button.
+- **Links:** "Copy link" builds `PON_WEB_URL/meet/{code}` (`--dart-define=PON_WEB_URL`, falling
+  back to `https://$PON_DOMAIN`); with neither set a release build copies the bare code.
+
 ### FCM (data)
 
 - `MEETING_INVITED` — to named invitees **when offline**. `MEETING_STARTING` — to everyone who

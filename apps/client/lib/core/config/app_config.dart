@@ -63,6 +63,10 @@ class AppConfig {
   static const int devChatPort = 8080;
   static const int devAiPort = 3002;
   static const int devConnectorPort = 3003;
+  static const int devWebPort = 3000;
+
+  /// Origin of the web app, e.g. `--dart-define=PON_WEB_URL=https://pon.acme.com`.
+  static const String _webUrl = String.fromEnvironment('PON_WEB_URL');
 
   /// True when a self-host domain was provided at build time.
   static bool get usesProxy => _domain.isNotEmpty;
@@ -115,5 +119,17 @@ class AppConfig {
       '--dart-define=PON_DOMAIN=<host> or --dart-define=PON_WS_URL=<url>. '
       'See docs/environments.md.',
     );
+  }
+
+  /// Origin of the web app for shareable links (`…/meet/{code}`): PON_WEB_URL,
+  /// else `https://$PON_DOMAIN`, else (debug) the local web dev server. A
+  /// release build with neither ⇒ null — callers copy the bare code instead.
+  /// Never throws: a missing link origin must not break the app.
+  static String? get webBaseUrl {
+    if (_webUrl.isNotEmpty) return _webUrl;
+    if (usesProxy) return 'https://$_domain';
+    if (_devHost != null) return 'http://$_devHost:$devWebPort';
+    if (!kReleaseMode) return 'http://localhost:$devWebPort';
+    return null;
   }
 }

@@ -136,4 +136,52 @@ void main() {
       expect(_redirect(kThemeOnboardingPath), '/');
     });
   });
+  group('return to a meeting link after signing in', () {
+    const link = '/meet/abc-defg-hjk';
+    test('signed out on a meeting link ⇒ login', () {
+      expect(
+          resolveAuthRedirect(
+              path: link,
+              isAuthenticated: false,
+              mustSetPassword: false,
+              onboardingCompleted: true),
+          '/login');
+    });
+    test('signed in on a guest-only page ⇒ the remembered link instead of home',
+        () {
+      expect(
+          resolveAuthRedirect(
+              path: '/login',
+              isAuthenticated: true,
+              mustSetPassword: false,
+              onboardingCompleted: true,
+              returnTo: link),
+          link);
+      expect(
+          resolveAuthRedirect(
+              path: '/login',
+              isAuthenticated: true,
+              mustSetPassword: false,
+              onboardingCompleted: true),
+          '/');
+    });
+    test('set-password and onboarding still come first; the link waits', () {
+      expect(
+          resolveAuthRedirect(
+              path: '/login',
+              isAuthenticated: true,
+              mustSetPassword: true,
+              onboardingCompleted: true,
+              returnTo: link),
+          '/set-password');
+      expect(
+          resolveAuthRedirect(
+              path: '/theme-onboarding',
+              isAuthenticated: true,
+              mustSetPassword: false,
+              onboardingCompleted: true,
+              returnTo: link),
+          link);
+    });
+  });
 }

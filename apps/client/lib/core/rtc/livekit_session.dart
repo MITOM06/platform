@@ -1,18 +1,31 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
 import 'package:livekit_client/livekit_client.dart';
 
 import 'rtc_session.dart';
+import 'screen_capture.dart';
 
-/// [RtcSession] over a LiveKit [Room], shared by calls and meetings.
+part 'livekit_session_events.dart';
+
+const _screenSources = {TrackSource.screenShareVideo, TrackSource.screenShareAudio};
+
+/// [RtcSession] over a LiveKit [Room], shared by calls and meetings. Calls see
+/// only the [RtcSession] contract; meetings use the [MeetingRtcSession]
+/// extensions (media choice on connect, screen share, data, hidden tiles).
 ///
 /// - No adaptiveStream: it pauses remote video that is not rendered through
 ///   `VideoTrackRenderer`, and our call screens use `RTCVideoRenderer`.
 /// - The server closing the room ([DisconnectReason.roomDeleted] /
 ///   [DisconnectReason.participantRemoved]) is reported as [RtcEnd.ended].
-class LiveKitSession implements RtcSession {
+class LiveKitSession implements MeetingRtcSession {
+  LiveKitSession({ScreenCaptureHost? capture})
+      : _capture = capture ?? const NoScreenCapture();
+
+  final ScreenCaptureHost _capture;
+
   @override
   void Function(rtc.MediaStream stream)? onLocalStream;
   @override
@@ -23,18 +36,32 @@ class LiveKitSession implements RtcSession {
   void Function(bool poor)? onLocalPoorConnection;
   @override
   void Function(RtcEnd reason)? onDisconnected;
+  @override
+  void Function(LocalMediaState state)? onLocalMediaChanged;
+  @override
+  void Function(String topic, List<int> payload, String? fromIdentity)? onData;
 
   Room? _room;
   EventsListener<RoomEvent>? _listener;
   bool _leaving = false;
   final Map<String, RtcPeer> _peers = {};
 
+  /// Peers whose camera we do not want (hidden tiles) — re-applied to every
+  /// new camera publication.
+  final Set<String> _videoOff = {};
+
   @override
-  Future<void> connect(String url, String token, {required bool video}) async {
+  Future<void> connect(String url, String token, {required bool video}) =>
+      connectMeeting(url, token, MeetingConnectOptions(video: video));
+
+  @override
+  Future<void> connectMeeting(
+      String url, String token, MeetingConnectOptions options) async {
     // Video calls default to the loudspeaker, voice calls to the earpiece —
     // otherwise LiveKit's iOS session prefers the speaker for both.
     try {
-      await Hardware.instance.setPreferSpeakerOutput(video);
+      await Hardware.instance
+          .setPreferSpeakerOutput(options.preferSpeaker ?? options.video);
     } catch (_) {
       // not iOS
     }
@@ -44,12 +71,13 @@ class LiveKitSession implements RtcSession {
         dynacast: true,
         // Muting must not stop the mic track: with no local track LiveKit
         // switches the iOS session to playback-only and the call goes silent.
-        defaultAudioCaptureOptions: AudioCaptureOptions(stopAudioCaptureOnMute: false),
+        defaultAudioCaptureOptions:
+            AudioCaptureOptions(stopAudioCaptureOnMute: false),
       ),
     );
     _room = room;
     _leaving = false;
-    _wire(room);
+    _wireRoom(this, room);
     try {
       await room.connect(url, token);
     } catch (_) {
@@ -57,8 +85,15 @@ class LiveKitSession implements RtcSession {
       throw const RoomConnectException();
     }
     try {
-      await room.localParticipant?.setMicrophoneEnabled(true);
-      if (video) await room.localParticipant?.setCameraEnabled(true);
+      final lp = room.localParticipant;
+      if (options.audio) await lp?.setMicrophoneEnabled(true);
+      if (options.video) {
+        await lp?.setCameraEnabled(true,
+            cameraCaptureOptions: options.frontCamera
+                ? null // the room default (front) — the call behaviour
+                : const CameraCaptureOptions(
+                    cameraPosition: CameraPosition.back));
+      }
     } catch (e) {
       await _close();
       if (_isPermissionError(e)) throw const MediaAccessException();
@@ -86,6 +121,28 @@ class LiveKitSession implements RtcSession {
   }
 
   @override
+  rtc.MediaStream? get localScreenStream => _room?.localParticipant
+      ?.getTrackPublicationBySource(TrackSource.screenShareVideo)
+      ?.track
+      ?.mediaStream;
+
+  @override
+  LocalMediaState get localMedia {
+    final lp = _room?.localParticipant;
+    if (lp == null) {
+      return const LocalMediaState(mic: false, camera: false, screen: false);
+    }
+    return LocalMediaState(
+      mic: lp.isMicrophoneEnabled(),
+      camera: lp.isCameraEnabled(),
+      screen: lp.isScreenShareEnabled(),
+    );
+  }
+
+  @override
+  bool get supportsScreenShare => _capture.supported;
+
+  @override
   Future<void> setMic(bool on) async =>
       _room?.localParticipant?.setMicrophoneEnabled(on);
 
@@ -107,6 +164,56 @@ class LiveKitSession implements RtcSession {
   Future<void> setSpeaker(bool on) async => _room?.setSpeakerOn(on);
 
   @override
+  Future<void> setScreenShare(bool on, {ScreenShareNotice? notice}) async {
+    final lp = _room?.localParticipant;
+    if (!supportsScreenShare || lp == null) return;
+    try {
+      if (on) {
+        // Android 14 order: consent → mediaProjection service → publish.
+        final granted = await _capture.begin(notice ??
+            const ScreenShareNotice(title: '', body: ''));
+        if (!granted) throw const ScreenShareCancelled();
+        try {
+          await lp.setScreenShareEnabled(true, captureScreenAudio: false);
+        } catch (_) {
+          await _capture.end();
+          rethrow;
+        }
+      } else {
+        await lp.setScreenShareEnabled(false);
+        await _capture.end();
+      }
+    } finally {
+      _emitLocalMedia();
+    }
+  }
+
+  @override
+  void publishData(String topic, List<int> payload, {bool reliable = false}) {
+    final lp = _room?.localParticipant;
+    if (lp == null) return;
+    try {
+      unawaited(lp
+          .publishData(payload, reliable: reliable, topic: topic)
+          .catchError((Object _) {}));
+    } catch (_) {
+      // ignore — the room is closing
+    }
+  }
+
+  @override
+  void setPeerVideoEnabled(String identity, bool enabled) {
+    if (enabled) {
+      _videoOff.remove(identity);
+    } else {
+      _videoOff.add(identity);
+    }
+    final pub = _room?.remoteParticipants[identity]
+        ?.getTrackPublicationBySource(TrackSource.camera);
+    _setPubEnabled(pub, enabled);
+  }
+
+  @override
   Future<void> disconnect() => _close();
 
   Future<void> _close() async {
@@ -114,86 +221,33 @@ class LiveKitSession implements RtcSession {
     final room = _room;
     _room = null;
     _peers.clear();
+    _videoOff.clear();
     await _listener?.dispose();
     _listener = null;
+    await _capture.end();
     await room?.disconnect();
   }
 
-  void _wire(Room room) {
-    final l = room.createListener();
-    _listener = l;
-    l
-      ..on<ParticipantConnectedEvent>((e) {
-        _ensure(e.participant);
-        _emit();
-      })
-      ..on<ParticipantDisconnectedEvent>((e) {
-        _peers.remove(e.participant.identity);
-        _emit();
-      })
-      ..on<TrackSubscribedEvent>((e) {
-        final peer = _ensure(e.participant);
-        // The camera stream renders the video; a voice call has only audio.
-        if (e.track.kind == TrackType.VIDEO || peer.stream == null) {
-          peer.stream = e.track.mediaStream;
-        }
-        _emit();
-      })
-      ..on<TrackUnsubscribedEvent>((e) {
-        final peer = _peers[e.participant.identity];
-        if (peer != null && peer.stream == e.track.mediaStream) {
-          peer.stream = null;
-        }
-        _emit();
-      })
-      ..on<TrackMutedEvent>((e) => _mute(e.participant, e.publication, true))
-      ..on<TrackUnmutedEvent>((e) => _mute(e.participant, e.publication, false))
-      ..on<LocalTrackPublishedEvent>((_) => _refreshLocal())
-      ..on<ActiveSpeakersChangedEvent>((e) {
-        final ids = e.speakers.map((s) => s.identity).toSet();
-        for (final p in _peers.values) {
-          p.speaking = ids.contains(p.identity);
-        }
-        _emit();
-      })
-      ..on<ParticipantConnectionQualityUpdatedEvent>((e) {
-        final poor = e.connectionQuality == ConnectionQuality.poor ||
-            e.connectionQuality == ConnectionQuality.lost;
-        if (e.participant is LocalParticipant) {
-          onLocalPoorConnection?.call(poor);
-          return;
-        }
-        final peer = _peers[e.participant.identity];
-        if (peer == null) return;
-        peer.poorConnection = poor;
-        _emit();
-      })
-      ..on<RoomReconnectingEvent>((_) => onReconnecting?.call(true))
-      ..on<RoomReconnectedEvent>((_) => onReconnecting?.call(false))
-      ..on<RoomDisconnectedEvent>((e) {
-        if (_leaving) return;
-        _leaving = true;
-        _room = null;
-        final ended = e.reason == DisconnectReason.roomDeleted ||
-            e.reason == DisconnectReason.participantRemoved;
-        onDisconnected?.call(ended ? RtcEnd.ended : RtcEnd.failed);
-      });
+  RtcPeer _ensure(Participant p) {
+    final peer = _peers.putIfAbsent(
+      p.identity,
+      () => RtcPeer(
+        identity: p.identity,
+        name: p.name,
+        avatarUrl: _avatarFromMetadata(p.metadata),
+      ),
+    );
+    _syncMedia(peer, p);
+    return peer;
   }
-
-  void _mute(Participant p, TrackPublication pub, bool muted) {
-    final peer = _peers[p.identity];
-    if (peer == null) return;
-    if (pub.source == TrackSource.microphone) peer.micMuted = muted;
-    if (pub.source == TrackSource.camera) peer.camMuted = muted;
-    _emit();
-  }
-
-  RtcPeer _ensure(Participant p) => _peers.putIfAbsent(
-      p.identity, () => RtcPeer(identity: p.identity, name: p.name));
 
   void _refreshLocal() {
     final s = localStream;
     if (s != null) onLocalStream?.call(s);
+  }
+
+  void _emitLocalMedia() {
+    if (_room != null) onLocalMediaChanged?.call(localMedia);
   }
 
   void _emit() => onPeersChanged?.call(peers);

@@ -1523,5 +1523,412 @@
   "authErrMfaAlreadyEnrolled": "このアカウントでは二要素認証がすでに設定されています。",
   "authErrMfaResetForbidden": "二要素認証をリセットできるのはオーナーのみです。",
   "authErrMfaResetSelfForbidden": "自分の二要素認証はリセットできません。",
-  "adminCapHostMeeting": "会議を主催"
+  "adminCapHostMeeting": "会議を主催",
+  "meetingErrNotFound": "この会議は存在しません",
+  "meetingErrForbidden": "この会議ではその操作を行う権限がありません",
+  "meetingErrCreateForbidden": "あなたのロールでは会議を主催できません",
+  "meetingErrDepartmentForbidden": "この部署の会議は作成できません",
+  "meetingErrRemoved": "この会議から退出させられました",
+  "meetingErrLocked": "この会議はロックされています",
+  "meetingErrEnded": "この会議は終了しました",
+  "meetingErrFull": "この会議は満員です（{max} 人）",
+  "@meetingErrFull": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrNotCancellable": "すでに参加者がいるため、キャンセルできません",
+  "meetingErrUnavailable": "現在、会議機能を利用できません。しばらくしてからもう一度お試しください。",
+  "meetingErrNotesReadOnly": "共有メモを編集できるのは主催者のみです",
+  "meetingErrNoteConflict": "他の人が新しいバージョンを保存しました",
+  "meetingErrRateLimited": "送信が速すぎます。少し待ってください。",
+  "meetingErrChatTooLong": "メッセージは最大 {max} 文字です",
+  "@meetingErrChatTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrNoteTooLong": "メモは最大 {max} 文字です",
+  "@meetingErrNoteTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingErrInviteeInvalid": "リストに招待できない人が含まれています",
+  "meetingErrDepartmentInvalid": "この部署は利用できません",
+  "meetingErrStartInvalid": "開始時刻が無効です",
+  "meetingErrEndInvalid": "会議は開始後、24 時間以内に終了する必要があります",
+  "meetingErrTargetUnavailable": "この人はもう会議にいません",
+  "meetingErrInvalid": "リクエストに無効な内容があります",
+  "meetingErrNetwork": "サーバーに接続できません。ネットワークを確認してください。",
+  "meetingErrGeneric": "問題が発生しました。もう一度お試しください。",
+  "meetingValTitleTooLong": "タイトルは最大 {max} 文字です",
+  "@meetingValTitleTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValDescriptionTooLong": "説明は最大 {max} 文字です",
+  "@meetingValDescriptionTooLong": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValTooManyInvitees": "招待できるのは最大 {max} 人です",
+  "@meetingValTooManyInvitees": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingValStartPast": "未来の日時を選んでください",
+  "meetingValScheduleInvalid": "有効な日付と時刻を選んでください",
+  "meetingUntitled": "会議",
+  "meetingSomeone": "誰か",
+  "meetingParticipantFallback": "参加者",
+  "meetingYou": "あなた",
+  "meetingRoleHost": "主催者",
+  "meetingRoleCohost": "共同主催者",
+  "meetingRoleAttendee": "参加者",
+  "meetingStatusLive": "開催中",
+  "meetingStatusScheduled": "予定済み",
+  "meetingStatusEnded": "終了",
+  "meetingStatusCancelled": "キャンセル済み",
+  "meetingDurationMinutes": "{count, plural, other {{count} 分}}",
+  "@meetingDurationMinutes": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingDurationHours": "{count, plural, other {{count} 時間}}",
+  "@meetingDurationHours": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingDurationHoursMinutes": "{hours} 時間 {minutes} 分",
+  "@meetingDurationHoursMinutes": {
+    "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } }
+  },
+  "meetingRealtimeOffline": "オンラインに戻るまで、チャット・挙手・主催者の操作は一時停止しています",
+  "meetingMutedBy": "{name} があなたのマイクをミュートしました",
+  "@meetingMutedBy": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingMutedByUnknown": "主催者があなたのマイクをミュートしました",
+  "meetingMadeCohost": "共同主催者になりました",
+  "meetingRevokedCohost": "共同主催者ではなくなりました",
+  "meetingEndedToast": "会議は終了しました",
+  "meetingMediaFailed": "マイクまたはカメラをオンにできませんでした",
+  "meetingShareRevoked": "主催者が画面共有をオフにしました",
+  "meetingShareFailed": "画面を共有できませんでした",
+  "meetingLobbyWaiting": "{count, plural, other {{count} 人が参加を待っています}}",
+  "@meetingLobbyWaiting": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingNotifInvitedTitle": "会議への招待",
+  "meetingNotifInvitedBody": "{name} さんが「{title}」に招待しました",
+  "@meetingNotifInvitedBody": {
+    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" } }
+  },
+  "meetingNotifInvitedBodyAt": "{name} さんが {time} の「{title}」に招待しました",
+  "@meetingNotifInvitedBodyAt": {
+    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" }, "time": { "type": "String" } }
+  },
+  "meetingNotifStartingTitle": "まもなく会議が始まります",
+  "meetingNotifStartingBody": "「{title}」は {time} に始まります",
+  "@meetingNotifStartingBody": {
+    "placeholders": { "title": { "type": "String" }, "time": { "type": "String" } }
+  },
+  "meetingNotifCancelled": "「{title}」はキャンセルされました",
+  "@meetingNotifCancelled": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "meetingNotifCancelledUnknown": "招待されていた会議がキャンセルされました",
+  "meetingTitle": "会議",
+  "meetingPushInvited": "会議に招待されました",
+  "meetingPushStarting": "会議が10分後に始まります",
+  "meetingPushChannel": "会議",
+  "meetingSubtitle": "今すぐ会議を始めるか、後の会議を予約しましょう。",
+  "meetingNewInstant": "今すぐ会議",
+  "meetingNewScheduled": "予約",
+  "meetingJoinByCodeLabel": "会議コードまたはリンク",
+  "meetingJoinByCodePlaceholder": "abc-defg-hjk",
+  "meetingJoinByCode": "参加",
+  "meetingCodeInvalid": "有効な会議コードではありません",
+  "meetingTabUpcoming": "今後",
+  "meetingTabPast": "過去",
+  "meetingEmptyUpcoming": "予定されている会議はありません",
+  "meetingEmptyPast": "過去の会議はありません",
+  "meetingLoadMore": "さらに読み込む",
+  "meetingListError": "会議を読み込めませんでした",
+  "meetingInstantMeeting": "即時会議",
+  "meetingHostedBy": "主催：{name}",
+  "@meetingHostedBy": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingCopyLink": "リンクをコピー",
+  "meetingLinkCopied": "会議のリンクをコピーしました",
+  "meetingCopyFailed": "リンクをコピーできませんでした",
+  "meetingJoin": "参加",
+  "meetingStarting": "作成中…",
+  "meetingFormCreateTitle": "会議を予約",
+  "meetingFormEditTitle": "会議を編集",
+  "meetingFormAgainTitle": "もう一度開催",
+  "meetingFieldTitle": "タイトル",
+  "meetingFieldTitlePlaceholder": "タイトルを追加",
+  "meetingFieldDescription": "説明",
+  "meetingFieldDescriptionPlaceholder": "議題、リンク、参加者に伝えたいこと",
+  "meetingFieldWhen": "日時",
+  "meetingWhenNow": "今すぐ開始",
+  "meetingWhenLater": "後で予約",
+  "meetingFieldDate": "日付",
+  "meetingFieldTime": "開始時刻",
+  "meetingFieldDuration": "所要時間",
+  "meetingTimeZoneHint": "時刻は {zone} で表示されます",
+  "@meetingTimeZoneHint": {
+    "placeholders": { "zone": { "type": "String" } }
+  },
+  "meetingFieldInvitees": "参加者を招待",
+  "meetingInviteeSearchPlaceholder": "名前またはメールで検索",
+  "meetingInviteeCount": "{count, plural, other {{count} 人を招待済み}}",
+  "@meetingInviteeCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingInviteeNone": "まだ誰も招待していません",
+  "meetingRemoveInvitee": "{name} を削除",
+  "@meetingRemoveInvitee": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingSearchNoResults": "見つかりませんでした",
+  "meetingSearchFailed": "現在検索できません",
+  "meetingFieldDepartment": "部署",
+  "meetingDepartmentNone": "部署なし",
+  "meetingDepartmentHint": "部署の全員が招待されます",
+  "meetingSettingsTitle": "会議のオプション",
+  "meetingSettingWaitingRoom": "待機室",
+  "meetingSettingWaitingRoomDesc": "招待されていない人は主催者が許可するまで待機します",
+  "meetingSettingMuteOnEntry": "参加時にミュート",
+  "meetingSettingMuteOnEntryDesc": "参加者はマイクがオフの状態で参加します",
+  "meetingSettingScreenShare": "参加者が画面を共有できる",
+  "meetingSettingNotes": "参加者が共有メモを編集できる",
+  "meetingSettingLocked": "会議をロック",
+  "meetingSettingLockedDesc": "招待された人だけが参加できます",
+  "meetingSubmitCreate": "予約",
+  "meetingSubmitStartNow": "今すぐ開始",
+  "meetingSubmitSave": "変更を保存",
+  "meetingToastCreated": "会議を予約しました",
+  "meetingToastUpdated": "変更を保存しました",
+  "meetingCharCounter": "{count}/{max}",
+  "@meetingCharCounter": {
+    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "meetingNotesShared": "共有",
+  "meetingNotesPrivate": "自分用",
+  "meetingNotesPrivateHint": "このメモはあなただけが見られます",
+  "meetingNotesPlaceholder": "メモを書く — Markdown 対応",
+  "meetingNotesWrite": "書く",
+  "meetingNotesPreview": "プレビュー",
+  "meetingNotesSaving": "保存中…",
+  "meetingNotesSaved": "保存しました",
+  "meetingNotesUnsaved": "未保存の変更があります",
+  "meetingNotesSaveFailed": "保存できませんでした",
+  "meetingNotesRetry": "再試行",
+  "meetingNotesReadOnly": "このメモを編集できるのは主催者のみです",
+  "meetingNotesRemoteNewer": "{name} さんが新しいバージョンを保存しました",
+  "@meetingNotesRemoteNewer": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingNotesRemoteNewerUnknown": "新しいバージョンが保存されました",
+  "meetingNotesCounter": "{count} / {max}",
+  "@meetingNotesCounter": {
+    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "meetingNotesConflictTitle": "他の人が新しいバージョンを保存しました",
+  "meetingNotesConflictDesc": "入力中の文章は失われていません。2 つのバージョンを比較して、残す方を選んでください。",
+  "meetingNotesConflictReview": "比較する",
+  "meetingNotesConflictTheirs": "新しいバージョン",
+  "meetingNotesConflictMine": "あなたのバージョン",
+  "meetingNotesConflictKeepMine": "自分の版を残す",
+  "meetingNotesConflictTakeTheirs": "新しいバージョンを使う",
+  "meetingNotesConflictSaveMerged": "統合した文章を保存",
+  "meetingNotesConflictDiscardWarning": "未保存の文章は破棄されます",
+  "meetingEdit": "編集",
+  "meetingCancelMeeting": "会議をキャンセル",
+  "meetingMeetAgain": "もう一度開催",
+  "meetingEndMeeting": "会議を終了",
+  "meetingCancelConfirmTitle": "この会議をキャンセルしますか？",
+  "meetingCancelConfirmDesc": "招待された全員にキャンセルが通知されます。",
+  "meetingEndConfirmTitle": "全員の会議を終了しますか？",
+  "meetingEndConfirmDesc": "全員が退出し、会議を再開することはできません",
+  "meetingToastCancelled": "会議をキャンセルしました",
+  "meetingToastEnded": "会議を終了しました",
+  "meetingBackToList": "すべての会議",
+  "meetingDetailError": "この会議を読み込めませんでした",
+  "meetingMeetingCode": "会議コード",
+  "meetingSectionPeople": "参加者",
+  "meetingCoHosts": "共同主催者",
+  "meetingInvitees": "招待された人",
+  "meetingMoreCount": "+{count}",
+  "@meetingMoreCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingDepartmentGeneric": "部署",
+  "meetingSectionAttendance": "出席状況",
+  "meetingAttendanceEmpty": "まだ誰も参加していません",
+  "meetingAttendanceInside": "現在会議中",
+  "meetingAttendanceDuration": "{minutes, plural, other {{minutes} 分}}",
+  "@meetingAttendanceDuration": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "meetingAttendanceSessions": "{count, plural, other {{count} 回参加}}",
+  "@meetingAttendanceSessions": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionNotes": "メモ",
+  "meetingSectionChat": "会議チャット",
+  "meetingChatHistoryEmpty": "メッセージはありません",
+  "meetingChatLoadOlder": "以前のメッセージを読み込む",
+  "meetingChatHistoryError": "会議チャットを読み込めませんでした",
+  "meetingRemovedNotice": "この会議から退出させられたため、メモとチャットは表示できません。",
+  "meetingGuestNotice": "会議に参加するとメモとチャットを見られます。",
+  "meetingCreatedAt": "{time} に作成",
+  "@meetingCreatedAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "meetingLinkCodeCopied": "会議コードをコピーしました",
+  "meetingShareNotifTitle": "画面を共有しています",
+  "meetingShareNotifBody": "会議の参加者全員があなたの画面を見ることができます",
+  "meetingJoinNow": "今すぐ参加",
+  "meetingAskToJoin": "参加をリクエスト",
+  "meetingPrejoinTitle": "参加の準備はできましたか？",
+  "meetingPrejoinStartsAt": "開始：{time}",
+  "@meetingPrejoinStartsAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "meetingPrejoinJoiningAs": "{name} として参加します",
+  "@meetingPrejoinJoiningAs": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingPrejoinCameraOff": "カメラはオフです",
+  "meetingPrejoinMuteOnEntry": "主催者はミュートでの参加を求めています",
+  "meetingPrejoinLockedHint": "この会議はロックされています。招待された人のみ参加できます。",
+  "meetingPrejoinInCall": "通話中です。この会議に参加するには通話を終了してください。",
+  "meetingMicOn": "マイクをオンにする",
+  "meetingMicOff": "マイクをオフにする",
+  "meetingCamOn": "カメラをオンにする",
+  "meetingCamOff": "カメラをオフにする",
+  "meetingMediaUnavailable": "マイクまたはカメラが見つかりません",
+  "meetingWaitingTitle": "参加をリクエストしています…",
+  "meetingWaitingDesc": "まもなく会議の参加者が入室を許可します",
+  "meetingWaitingCancel": "キャンセル",
+  "meetingDeniedTitle": "入室が許可されませんでした",
+  "meetingDeniedDesc": "会議の参加者がリクエストを拒否しました",
+  "meetingRemovedTitle": "会議から退出させられました",
+  "meetingRemovedDesc": "この会議には再参加できません",
+  "meetingLockedTitle": "この会議はロックされています",
+  "meetingLockedDesc": "現在は招待された人のみ参加できます",
+  "meetingFullTitle": "この会議は満員です",
+  "meetingFullDesc": "すでに {max} 人が参加しています。後でもう一度お試しください。",
+  "@meetingFullDesc": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingUnavailableTitle": "会議は現在利用できません",
+  "meetingUnavailableDesc": "しばらくしてからもう一度お試しください",
+  "meetingNotFoundTitle": "会議が見つかりません",
+  "meetingNotFoundDesc": "コードまたはリンクを確認してもう一度お試しください",
+  "meetingLeftTitle": "会議から退出しました",
+  "meetingConnectionLostTitle": "接続が切れました",
+  "meetingConnectionLostDesc": "会議に再接続できませんでした",
+  "meetingRejoin": "再参加",
+  "meetingTryAgain": "再試行",
+  "meetingViewDetails": "会議の詳細",
+  "meetingLeaveMeeting": "会議から退出",
+  "meetingNameWithYou": "{name}（あなた）",
+  "@meetingNameWithYou": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingReconnecting": "再接続しています…",
+  "meetingPoorConnection": "接続が不安定です",
+  "meetingPresenting": "画面を共有しています",
+  "meetingStopPresenting": "共有を停止",
+  "meetingPresentingName": "{name} さんが画面を共有しています",
+  "@meetingPresentingName": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingOverflowTiles": "+{count}",
+  "@meetingOverflowTiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingOverflowMore": "{count, plural, other {ほか {count} 人}}",
+  "@meetingOverflowMore": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingPin": "固定",
+  "meetingUnpin": "固定を解除",
+  "meetingTileMenu": "{name} のオプション",
+  "@meetingTileMenu": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingMicMutedLabel": "マイクはオフです",
+  "meetingHandRaisedLabel": "挙手しています",
+  "meetingPoorConnectionPeer": "接続が不安定",
+  "meetingHostBadge": "主催者または共同主催者",
+  "meetingShareStart": "画面を共有",
+  "meetingShareDisabled": "主催者が参加者の画面共有をオフにしました",
+  "meetingRaiseHand": "挙手",
+  "meetingLowerHand": "手を下ろす",
+  "meetingReactions": "リアクションを送信",
+  "meetingChat": "チャット",
+  "meetingNotes": "メモ",
+  "meetingPeople": "参加者",
+  "meetingMore": "その他のオプション",
+  "meetingLayout": "レイアウト",
+  "meetingLayoutGrid": "グリッド",
+  "meetingLayoutSpotlight": "発言者",
+  "meetingLeave": "退出",
+  "meetingEndForAll": "全員の会議を終了",
+  "meetingReactionAria": "{name} さんが {emoji} でリアクションしました",
+  "@meetingReactionAria": {
+    "placeholders": { "name": { "type": "String" }, "emoji": { "type": "String" } }
+  },
+  "meetingPeopleTitle": "参加者",
+  "meetingManageTitle": "主催者の操作",
+  "meetingSectionHands": "挙手中（{count}）",
+  "@meetingSectionHands": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionLobby": "参加待ち（{count}）",
+  "@meetingSectionLobby": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionInMeeting": "会議中（{count}）",
+  "@meetingSectionInMeeting": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingAdmit": "参加を許可",
+  "meetingDeny": "拒否",
+  "meetingAdmitAll": "全員を許可",
+  "meetingPersonMenu": "{name} のオプション",
+  "@meetingPersonMenu": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingActionMuteMic": "マイクをミュート",
+  "meetingActionMuteAll": "全員をミュート",
+  "meetingActionRemove": "会議から退出させる",
+  "meetingActionLowerHand": "手を下ろす",
+  "meetingActionLowerAllHands": "全員の手を下ろす",
+  "meetingActionMakeCohost": "共同主催者にする",
+  "meetingActionRevokeCohost": "共同主催者から外す",
+  "meetingRemoveConfirmTitle": "{name} を会議から退出させますか？",
+  "@meetingRemoveConfirmTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingRemoveConfirmDesc": "この会議に再参加できなくなります",
+  "meetingMuteAllConfirmTitle": "全員をミュートしますか？",
+  "meetingMuteAllConfirmDesc": "各自でミュートを解除できます",
+  "meetingChatTitle": "会議のチャット",
+  "meetingChatPlaceholder": "メッセージを送信",
+  "meetingChatSend": "送信",
+  "meetingChatEmpty": "メッセージは会議の参加者全員に表示されます",
+  "meetingChatFailed": "送信できませんでした",
+  "meetingChatRetry": "再送信",
+  "meetingChatDiscard": "破棄",
+  "meetingChatSending": "送信中…",
+  "meetingChatOffline": "再接続中のため、現在メッセージを送信できません",
+  "meetingChatCounter": "{count}/{max}",
+  "@meetingChatCounter": {
+    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "meetingChatUnread": "{count, plural, other {新着メッセージ {count} 件}}",
+  "@meetingChatUnread": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingMediaBlocked": "マイクまたはカメラへのアクセスがオフです。このまま参加して、後で「設定」からオンにできます。",
+  "meetingSwitchCamera": "カメラを切り替え",
+  "meetingSpeakerOn": "スピーカーを使用",
+  "meetingLoading": "会議を読み込み中…"
 }
