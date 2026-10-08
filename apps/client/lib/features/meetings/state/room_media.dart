@@ -81,6 +81,9 @@ abstract class RoomMedia {
 
   Future<void> toggleCamera() => _toggle(false);
 
+  /// This device can present its screen (Android; iOS only views shares).
+  bool get supportsScreenShare => session?.supportsScreenShare ?? false;
+
   Future<void> toggleScreenShare() async {
     final s = _liveSession();
     if (s == null || !s.supportsScreenShare) return;

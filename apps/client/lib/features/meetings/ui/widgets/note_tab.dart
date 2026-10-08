@@ -50,8 +50,16 @@ class _NoteTabState extends ConsumerState<NoteTab> {
     final editor = _editor;
     editor.setCanEdit(widget.canEdit);
     final remote = widget.remote;
-    if (remote != null) editor.remoteUpdated(remote.version, remote.updatedBy);
+    if (remote != null) _remoteAfterBuild(remote);
     widget.registerFlush(widget.scope, () => editor.flush());
+  }
+
+  /// `meet.notes.updated` changes the editor's state: never while the tree
+  /// builds (initState / didUpdateWidget) — right after the frame.
+  void _remoteAfterBuild(RemoteNewer remote) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _editor.remoteUpdated(remote.version, remote.updatedBy);
+    });
   }
 
   @override
@@ -60,7 +68,7 @@ class _NoteTabState extends ConsumerState<NoteTab> {
     if (old.canEdit != widget.canEdit) _editor.setCanEdit(widget.canEdit);
     final remote = widget.remote;
     if (remote != null && remote.version != old.remote?.version) {
-      _editor.remoteUpdated(remote.version, remote.updatedBy);
+      _remoteAfterBuild(remote);
     }
   }
 

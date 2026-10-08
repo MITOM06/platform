@@ -1781,5 +1781,161 @@
   },
   "meetingLinkCodeCopied": "会議コードをコピーしました",
   "meetingShareNotifTitle": "画面を共有しています",
-  "meetingShareNotifBody": "会議の参加者全員があなたの画面を見ることができます"
+  "meetingShareNotifBody": "会議の参加者全員があなたの画面を見ることができます",
+  "meetingJoinNow": "今すぐ参加",
+  "meetingAskToJoin": "参加をリクエスト",
+  "meetingPrejoinTitle": "参加の準備はできましたか？",
+  "meetingPrejoinStartsAt": "開始：{time}",
+  "@meetingPrejoinStartsAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "meetingPrejoinJoiningAs": "{name} として参加します",
+  "@meetingPrejoinJoiningAs": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingPrejoinCameraOff": "カメラはオフです",
+  "meetingPrejoinMuteOnEntry": "主催者はミュートでの参加を求めています",
+  "meetingPrejoinLockedHint": "この会議はロックされています。招待された人のみ参加できます。",
+  "meetingPrejoinInCall": "通話中です。この会議に参加するには通話を終了してください。",
+  "meetingMicOn": "マイクをオンにする",
+  "meetingMicOff": "マイクをオフにする",
+  "meetingCamOn": "カメラをオンにする",
+  "meetingCamOff": "カメラをオフにする",
+  "meetingMediaUnavailable": "マイクまたはカメラが見つかりません",
+  "meetingWaitingTitle": "参加をリクエストしています…",
+  "meetingWaitingDesc": "まもなく会議の参加者が入室を許可します",
+  "meetingWaitingCancel": "キャンセル",
+  "meetingDeniedTitle": "入室が許可されませんでした",
+  "meetingDeniedDesc": "会議の参加者がリクエストを拒否しました",
+  "meetingRemovedTitle": "会議から退出させられました",
+  "meetingRemovedDesc": "この会議には再参加できません",
+  "meetingLockedTitle": "この会議はロックされています",
+  "meetingLockedDesc": "現在は招待された人のみ参加できます",
+  "meetingFullTitle": "この会議は満員です",
+  "meetingFullDesc": "すでに {max} 人が参加しています。後でもう一度お試しください。",
+  "@meetingFullDesc": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingUnavailableTitle": "会議は現在利用できません",
+  "meetingUnavailableDesc": "しばらくしてからもう一度お試しください",
+  "meetingNotFoundTitle": "会議が見つかりません",
+  "meetingNotFoundDesc": "コードまたはリンクを確認してもう一度お試しください",
+  "meetingLeftTitle": "会議から退出しました",
+  "meetingConnectionLostTitle": "接続が切れました",
+  "meetingConnectionLostDesc": "会議に再接続できませんでした",
+  "meetingRejoin": "再参加",
+  "meetingTryAgain": "再試行",
+  "meetingViewDetails": "会議の詳細",
+  "meetingLeaveMeeting": "会議から退出",
+  "meetingNameWithYou": "{name}（あなた）",
+  "@meetingNameWithYou": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingReconnecting": "再接続しています…",
+  "meetingPoorConnection": "接続が不安定です",
+  "meetingPresenting": "画面を共有しています",
+  "meetingStopPresenting": "共有を停止",
+  "meetingPresentingName": "{name} さんが画面を共有しています",
+  "@meetingPresentingName": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingParticipantCount": "{count, plural, other {{count} 人}}",
+  "@meetingParticipantCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingOverflowTiles": "+{count}",
+  "@meetingOverflowTiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingOverflowMore": "{count, plural, other {ほか {count} 人}}",
+  "@meetingOverflowMore": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingPin": "固定",
+  "meetingUnpin": "固定を解除",
+  "meetingTileMenu": "{name} のオプション",
+  "@meetingTileMenu": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingMicMutedLabel": "マイクはオフです",
+  "meetingHandRaisedLabel": "挙手しています",
+  "meetingSpeakingLabel": "発言中",
+  "meetingPoorConnectionPeer": "接続が不安定",
+  "meetingHostBadge": "主催者または共同主催者",
+  "meetingShareStart": "画面を共有",
+  "meetingShareDisabled": "主催者が参加者の画面共有をオフにしました",
+  "meetingRaiseHand": "挙手",
+  "meetingLowerHand": "手を下ろす",
+  "meetingReactions": "リアクションを送信",
+  "meetingChat": "チャット",
+  "meetingNotes": "メモ",
+  "meetingPeople": "参加者",
+  "meetingMore": "その他のオプション",
+  "meetingLayout": "レイアウト",
+  "meetingLayoutGrid": "グリッド",
+  "meetingLayoutSpotlight": "発言者",
+  "meetingDevicesTitle": "音声と動画",
+  "meetingLeave": "退出",
+  "meetingEndForAll": "全員の会議を終了",
+  "meetingReactionAria": "{name} さんが {emoji} でリアクションしました",
+  "@meetingReactionAria": {
+    "placeholders": { "name": { "type": "String" }, "emoji": { "type": "String" } }
+  },
+  "meetingPeopleTitle": "参加者",
+  "meetingManageTitle": "主催者の操作",
+  "meetingSectionHands": "挙手中（{count}）",
+  "@meetingSectionHands": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionLobby": "参加待ち（{count}）",
+  "@meetingSectionLobby": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionInMeeting": "会議中（{count}）",
+  "@meetingSectionInMeeting": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingAdmit": "参加を許可",
+  "meetingDeny": "拒否",
+  "meetingAdmitAll": "全員を許可",
+  "meetingPersonMenu": "{name} のオプション",
+  "@meetingPersonMenu": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingActionMuteMic": "マイクをミュート",
+  "meetingActionMuteAll": "全員をミュート",
+  "meetingActionRemove": "会議から退出させる",
+  "meetingActionLowerHand": "手を下ろす",
+  "meetingActionLowerAllHands": "全員の手を下ろす",
+  "meetingActionMakeCohost": "共同主催者にする",
+  "meetingActionRevokeCohost": "共同主催者から外す",
+  "meetingRemoveConfirmTitle": "{name} を会議から退出させますか？",
+  "@meetingRemoveConfirmTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingRemoveConfirmDesc": "この会議に再参加できなくなります",
+  "meetingMuteAllConfirmTitle": "全員をミュートしますか？",
+  "meetingMuteAllConfirmDesc": "各自でミュートを解除できます",
+  "meetingChatTitle": "会議のチャット",
+  "meetingChatPlaceholder": "メッセージを送信",
+  "meetingChatSend": "送信",
+  "meetingChatEmpty": "メッセージは会議の参加者全員に表示されます",
+  "meetingChatFailed": "送信できませんでした",
+  "meetingChatRetry": "再送信",
+  "meetingChatDiscard": "破棄",
+  "meetingChatSending": "送信中…",
+  "meetingChatOffline": "再接続中のため、現在メッセージを送信できません",
+  "meetingChatCounter": "{count}/{max}",
+  "@meetingChatCounter": {
+    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "meetingChatUnread": "{count, plural, other {新着メッセージ {count} 件}}",
+  "@meetingChatUnread": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingMediaBlocked": "マイクまたはカメラへのアクセスがオフです。このまま参加して、後で「設定」からオンにできます。",
+  "meetingSwitchCamera": "カメラを切り替え",
+  "meetingSpeakerOn": "スピーカーを使用",
+  "meetingSpeakerOff": "受話口を使用",
+  "meetingLoading": "会議を読み込み中…"
 }

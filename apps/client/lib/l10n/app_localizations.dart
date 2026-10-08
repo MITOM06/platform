@@ -9270,6 +9270,636 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Everyone in the meeting can see your screen'**
   String get meetingShareNotifBody;
+
+  /// No description provided for @meetingJoinNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Join now'**
+  String get meetingJoinNow;
+
+  /// No description provided for @meetingAskToJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask to join'**
+  String get meetingAskToJoin;
+
+  /// No description provided for @meetingPrejoinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to join?'**
+  String get meetingPrejoinTitle;
+
+  /// No description provided for @meetingPrejoinStartsAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts {time}'**
+  String meetingPrejoinStartsAt(String time);
+
+  /// No description provided for @meetingPrejoinJoiningAs.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll join as {name}'**
+  String meetingPrejoinJoiningAs(String name);
+
+  /// No description provided for @meetingPrejoinCameraOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera is off'**
+  String get meetingPrejoinCameraOff;
+
+  /// No description provided for @meetingPrejoinMuteOnEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'The host asks people to join muted'**
+  String get meetingPrejoinMuteOnEntry;
+
+  /// No description provided for @meetingPrejoinLockedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This meeting is locked. Only invited people can join.'**
+  String get meetingPrejoinLockedHint;
+
+  /// No description provided for @meetingPrejoinInCall.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re in a call. Hang up to join this meeting.'**
+  String get meetingPrejoinInCall;
+
+  /// No description provided for @meetingMicOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on microphone'**
+  String get meetingMicOn;
+
+  /// No description provided for @meetingMicOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off microphone'**
+  String get meetingMicOff;
+
+  /// No description provided for @meetingCamOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on camera'**
+  String get meetingCamOn;
+
+  /// No description provided for @meetingCamOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off camera'**
+  String get meetingCamOff;
+
+  /// No description provided for @meetingMediaUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No microphone or camera found'**
+  String get meetingMediaUnavailable;
+
+  /// No description provided for @meetingWaitingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Asking to join…'**
+  String get meetingWaitingTitle;
+
+  /// No description provided for @meetingWaitingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone in the meeting will let you in soon'**
+  String get meetingWaitingDesc;
+
+  /// No description provided for @meetingWaitingCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get meetingWaitingCancel;
+
+  /// No description provided for @meetingDeniedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You weren\'t let in'**
+  String get meetingDeniedTitle;
+
+  /// No description provided for @meetingDeniedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone in the meeting declined your request'**
+  String get meetingDeniedDesc;
+
+  /// No description provided for @meetingRemovedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You were removed from the meeting'**
+  String get meetingRemovedTitle;
+
+  /// No description provided for @meetingRemovedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t rejoin this meeting'**
+  String get meetingRemovedDesc;
+
+  /// No description provided for @meetingLockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This meeting is locked'**
+  String get meetingLockedTitle;
+
+  /// No description provided for @meetingLockedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Only invited people can join right now'**
+  String get meetingLockedDesc;
+
+  /// No description provided for @meetingFullTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This meeting is full'**
+  String get meetingFullTitle;
+
+  /// No description provided for @meetingFullDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'{max} people are already in. Try again later.'**
+  String meetingFullDesc(int max);
+
+  /// No description provided for @meetingUnavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meetings are unavailable'**
+  String get meetingUnavailableTitle;
+
+  /// No description provided for @meetingUnavailableDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in a moment'**
+  String get meetingUnavailableDesc;
+
+  /// No description provided for @meetingNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting not found'**
+  String get meetingNotFoundTitle;
+
+  /// No description provided for @meetingNotFoundDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the code or link and try again'**
+  String get meetingNotFoundDesc;
+
+  /// No description provided for @meetingLeftTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You left the meeting'**
+  String get meetingLeftTitle;
+
+  /// No description provided for @meetingConnectionLostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection lost'**
+  String get meetingConnectionLostTitle;
+
+  /// No description provided for @meetingConnectionLostDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t reconnect you to the meeting'**
+  String get meetingConnectionLostDesc;
+
+  /// No description provided for @meetingRejoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejoin'**
+  String get meetingRejoin;
+
+  /// No description provided for @meetingTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get meetingTryAgain;
+
+  /// No description provided for @meetingViewDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting details'**
+  String get meetingViewDetails;
+
+  /// No description provided for @meetingLeaveMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave meeting'**
+  String get meetingLeaveMeeting;
+
+  /// No description provided for @meetingNameWithYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (you)'**
+  String meetingNameWithYou(String name);
+
+  /// No description provided for @meetingReconnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting…'**
+  String get meetingReconnecting;
+
+  /// No description provided for @meetingPoorConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Your connection is unstable'**
+  String get meetingPoorConnection;
+
+  /// No description provided for @meetingPresenting.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re presenting'**
+  String get meetingPresenting;
+
+  /// No description provided for @meetingStopPresenting.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop presenting'**
+  String get meetingStopPresenting;
+
+  /// No description provided for @meetingPresentingName.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is presenting'**
+  String meetingPresentingName(String name);
+
+  /// No description provided for @meetingParticipantCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one {{count} person} other {{count} people}}'**
+  String meetingParticipantCount(int count);
+
+  /// No description provided for @meetingOverflowTiles.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count}'**
+  String meetingOverflowTiles(int count);
+
+  /// No description provided for @meetingOverflowMore.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one {{count} more person} other {{count} more people}}'**
+  String meetingOverflowMore(int count);
+
+  /// No description provided for @meetingPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin'**
+  String get meetingPin;
+
+  /// No description provided for @meetingUnpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get meetingUnpin;
+
+  /// No description provided for @meetingTileMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Options for {name}'**
+  String meetingTileMenu(String name);
+
+  /// No description provided for @meetingMicMutedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone off'**
+  String get meetingMicMutedLabel;
+
+  /// No description provided for @meetingHandRaisedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand raised'**
+  String get meetingHandRaisedLabel;
+
+  /// No description provided for @meetingSpeakingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Speaking'**
+  String get meetingSpeakingLabel;
+
+  /// No description provided for @meetingPoorConnectionPeer.
+  ///
+  /// In en, this message translates to:
+  /// **'Unstable connection'**
+  String get meetingPoorConnectionPeer;
+
+  /// No description provided for @meetingHostBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Host or co-host'**
+  String get meetingHostBadge;
+
+  /// No description provided for @meetingShareStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Present screen'**
+  String get meetingShareStart;
+
+  /// No description provided for @meetingShareDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'The host turned off screen sharing for participants'**
+  String get meetingShareDisabled;
+
+  /// No description provided for @meetingRaiseHand.
+  ///
+  /// In en, this message translates to:
+  /// **'Raise hand'**
+  String get meetingRaiseHand;
+
+  /// No description provided for @meetingLowerHand.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower hand'**
+  String get meetingLowerHand;
+
+  /// No description provided for @meetingReactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a reaction'**
+  String get meetingReactions;
+
+  /// No description provided for @meetingChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get meetingChat;
+
+  /// No description provided for @meetingNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get meetingNotes;
+
+  /// No description provided for @meetingPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get meetingPeople;
+
+  /// No description provided for @meetingMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get meetingMore;
+
+  /// No description provided for @meetingLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Layout'**
+  String get meetingLayout;
+
+  /// No description provided for @meetingLayoutGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid'**
+  String get meetingLayoutGrid;
+
+  /// No description provided for @meetingLayoutSpotlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Speaker'**
+  String get meetingLayoutSpotlight;
+
+  /// No description provided for @meetingDevicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio & video'**
+  String get meetingDevicesTitle;
+
+  /// No description provided for @meetingLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get meetingLeave;
+
+  /// No description provided for @meetingEndForAll.
+  ///
+  /// In en, this message translates to:
+  /// **'End meeting for all'**
+  String get meetingEndForAll;
+
+  /// No description provided for @meetingReactionAria.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} reacted {emoji}'**
+  String meetingReactionAria(String name, String emoji);
+
+  /// No description provided for @meetingPeopleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get meetingPeopleTitle;
+
+  /// No description provided for @meetingManageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Host controls'**
+  String get meetingManageTitle;
+
+  /// No description provided for @meetingSectionHands.
+  ///
+  /// In en, this message translates to:
+  /// **'Raised hands ({count})'**
+  String meetingSectionHands(int count);
+
+  /// No description provided for @meetingSectionLobby.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to join ({count})'**
+  String meetingSectionLobby(int count);
+
+  /// No description provided for @meetingSectionInMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'In the meeting ({count})'**
+  String meetingSectionInMeeting(int count);
+
+  /// No description provided for @meetingAdmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Admit'**
+  String get meetingAdmit;
+
+  /// No description provided for @meetingDeny.
+  ///
+  /// In en, this message translates to:
+  /// **'Deny'**
+  String get meetingDeny;
+
+  /// No description provided for @meetingAdmitAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Admit all'**
+  String get meetingAdmitAll;
+
+  /// No description provided for @meetingPersonMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Options for {name}'**
+  String meetingPersonMenu(String name);
+
+  /// No description provided for @meetingActionMuteMic.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute microphone'**
+  String get meetingActionMuteMic;
+
+  /// No description provided for @meetingActionMuteAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute everyone'**
+  String get meetingActionMuteAll;
+
+  /// No description provided for @meetingActionRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from meeting'**
+  String get meetingActionRemove;
+
+  /// No description provided for @meetingActionLowerHand.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower hand'**
+  String get meetingActionLowerHand;
+
+  /// No description provided for @meetingActionLowerAllHands.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower all hands'**
+  String get meetingActionLowerAllHands;
+
+  /// No description provided for @meetingActionMakeCohost.
+  ///
+  /// In en, this message translates to:
+  /// **'Make co-host'**
+  String get meetingActionMakeCohost;
+
+  /// No description provided for @meetingActionRevokeCohost.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove as co-host'**
+  String get meetingActionRevokeCohost;
+
+  /// No description provided for @meetingRemoveConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}?'**
+  String meetingRemoveConfirmTitle(String name);
+
+  /// No description provided for @meetingRemoveConfirmDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'They won\'t be able to rejoin this meeting'**
+  String get meetingRemoveConfirmDesc;
+
+  /// No description provided for @meetingMuteAllConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute everyone?'**
+  String get meetingMuteAllConfirmTitle;
+
+  /// No description provided for @meetingMuteAllConfirmDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'People can unmute themselves'**
+  String get meetingMuteAllConfirmDesc;
+
+  /// No description provided for @meetingChatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting chat'**
+  String get meetingChatTitle;
+
+  /// No description provided for @meetingChatPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a message'**
+  String get meetingChatPlaceholder;
+
+  /// No description provided for @meetingChatSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get meetingChatSend;
+
+  /// No description provided for @meetingChatEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages are visible to everyone in the meeting'**
+  String get meetingChatEmpty;
+
+  /// No description provided for @meetingChatFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sent'**
+  String get meetingChatFailed;
+
+  /// No description provided for @meetingChatRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get meetingChatRetry;
+
+  /// No description provided for @meetingChatDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get meetingChatDiscard;
+
+  /// No description provided for @meetingChatSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get meetingChatSending;
+
+  /// No description provided for @meetingChatOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting — you can\'t send messages right now'**
+  String get meetingChatOffline;
+
+  /// No description provided for @meetingChatCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}/{max}'**
+  String meetingChatCounter(int count, int max);
+
+  /// No description provided for @meetingChatUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one {{count} new message} other {{count} new messages}}'**
+  String meetingChatUnread(int count);
+
+  /// No description provided for @meetingMediaBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone or camera access is off. You can still join and turn it on later in Settings.'**
+  String get meetingMediaBlocked;
+
+  /// No description provided for @meetingSwitchCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch camera'**
+  String get meetingSwitchCamera;
+
+  /// No description provided for @meetingSpeakerOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Use speaker'**
+  String get meetingSpeakerOn;
+
+  /// No description provided for @meetingSpeakerOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Use earpiece'**
+  String get meetingSpeakerOff;
+
+  /// No description provided for @meetingLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading meeting…'**
+  String get meetingLoading;
 }
 
 class _AppLocalizationsDelegate

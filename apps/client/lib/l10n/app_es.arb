@@ -1781,5 +1781,161 @@
   },
   "meetingLinkCodeCopied": "Código de la reunión copiado",
   "meetingShareNotifTitle": "Presentando tu pantalla",
-  "meetingShareNotifBody": "Todos en la reunión pueden ver tu pantalla"
+  "meetingShareNotifBody": "Todos en la reunión pueden ver tu pantalla",
+  "meetingJoinNow": "Unirse ahora",
+  "meetingAskToJoin": "Solicitar unirse",
+  "meetingPrejoinTitle": "¿Listo para unirte?",
+  "meetingPrejoinStartsAt": "Empieza {time}",
+  "@meetingPrejoinStartsAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "meetingPrejoinJoiningAs": "Te unirás como {name}",
+  "@meetingPrejoinJoiningAs": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingPrejoinCameraOff": "La cámara está apagada",
+  "meetingPrejoinMuteOnEntry": "El organizador pide entrar con el micrófono silenciado",
+  "meetingPrejoinLockedHint": "Esta reunión está bloqueada. Solo pueden unirse las personas invitadas.",
+  "meetingPrejoinInCall": "Estás en una llamada. Cuélgala para unirte a esta reunión.",
+  "meetingMicOn": "Activar micrófono",
+  "meetingMicOff": "Desactivar micrófono",
+  "meetingCamOn": "Activar cámara",
+  "meetingCamOff": "Desactivar cámara",
+  "meetingMediaUnavailable": "No se encontró micrófono ni cámara",
+  "meetingWaitingTitle": "Solicitando unirse…",
+  "meetingWaitingDesc": "Alguien de la reunión te dejará entrar en breve",
+  "meetingWaitingCancel": "Cancelar",
+  "meetingDeniedTitle": "No te dejaron entrar",
+  "meetingDeniedDesc": "Alguien de la reunión rechazó tu solicitud",
+  "meetingRemovedTitle": "Te han expulsado de la reunión",
+  "meetingRemovedDesc": "No puedes volver a unirte a esta reunión",
+  "meetingLockedTitle": "Esta reunión está bloqueada",
+  "meetingLockedDesc": "Ahora solo pueden unirse las personas invitadas",
+  "meetingFullTitle": "Esta reunión está completa",
+  "meetingFullDesc": "Ya hay {max} personas dentro. Inténtalo más tarde.",
+  "@meetingFullDesc": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingUnavailableTitle": "Las reuniones no están disponibles",
+  "meetingUnavailableDesc": "Inténtalo de nuevo en un momento",
+  "meetingNotFoundTitle": "No se encontró la reunión",
+  "meetingNotFoundDesc": "Revisa el código o el enlace e inténtalo de nuevo",
+  "meetingLeftTitle": "Has salido de la reunión",
+  "meetingConnectionLostTitle": "Se perdió la conexión",
+  "meetingConnectionLostDesc": "No pudimos volver a conectarte a la reunión",
+  "meetingRejoin": "Volver a unirse",
+  "meetingTryAgain": "Reintentar",
+  "meetingViewDetails": "Detalles de la reunión",
+  "meetingLeaveMeeting": "Salir de la reunión",
+  "meetingNameWithYou": "{name} (tú)",
+  "@meetingNameWithYou": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingReconnecting": "Reconectando…",
+  "meetingPoorConnection": "Tu conexión es inestable",
+  "meetingPresenting": "Estás presentando",
+  "meetingStopPresenting": "Dejar de presentar",
+  "meetingPresentingName": "{name} está presentando",
+  "@meetingPresentingName": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingParticipantCount": "{count, plural, one {{count} persona} other {{count} personas}}",
+  "@meetingParticipantCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingOverflowTiles": "+{count}",
+  "@meetingOverflowTiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingOverflowMore": "{count, plural, one {{count} persona más} other {{count} personas más}}",
+  "@meetingOverflowMore": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingPin": "Fijar",
+  "meetingUnpin": "Dejar de fijar",
+  "meetingTileMenu": "Opciones de {name}",
+  "@meetingTileMenu": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingMicMutedLabel": "Micrófono desactivado",
+  "meetingHandRaisedLabel": "Mano levantada",
+  "meetingSpeakingLabel": "Hablando",
+  "meetingPoorConnectionPeer": "Conexión inestable",
+  "meetingHostBadge": "Organizador o coorganizador",
+  "meetingShareStart": "Presentar pantalla",
+  "meetingShareDisabled": "El organizador desactivó la presentación de pantalla para los participantes",
+  "meetingRaiseHand": "Levantar la mano",
+  "meetingLowerHand": "Bajar la mano",
+  "meetingReactions": "Enviar una reacción",
+  "meetingChat": "Chat",
+  "meetingNotes": "Notas",
+  "meetingPeople": "Participantes",
+  "meetingMore": "Más opciones",
+  "meetingLayout": "Diseño",
+  "meetingLayoutGrid": "Cuadrícula",
+  "meetingLayoutSpotlight": "Orador",
+  "meetingDevicesTitle": "Audio y vídeo",
+  "meetingLeave": "Salir",
+  "meetingEndForAll": "Finalizar la reunión para todos",
+  "meetingReactionAria": "{name} reaccionó con {emoji}",
+  "@meetingReactionAria": {
+    "placeholders": { "name": { "type": "String" }, "emoji": { "type": "String" } }
+  },
+  "meetingPeopleTitle": "Participantes",
+  "meetingManageTitle": "Controles del organizador",
+  "meetingSectionHands": "Manos levantadas ({count})",
+  "@meetingSectionHands": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionLobby": "Esperando para entrar ({count})",
+  "@meetingSectionLobby": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionInMeeting": "En la reunión ({count})",
+  "@meetingSectionInMeeting": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingAdmit": "Admitir",
+  "meetingDeny": "Rechazar",
+  "meetingAdmitAll": "Admitir a todos",
+  "meetingPersonMenu": "Opciones de {name}",
+  "@meetingPersonMenu": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingActionMuteMic": "Silenciar micrófono",
+  "meetingActionMuteAll": "Silenciar a todos",
+  "meetingActionRemove": "Quitar de la reunión",
+  "meetingActionLowerHand": "Bajar la mano",
+  "meetingActionLowerAllHands": "Bajar todas las manos",
+  "meetingActionMakeCohost": "Hacer coorganizador",
+  "meetingActionRevokeCohost": "Quitar como coorganizador",
+  "meetingRemoveConfirmTitle": "¿Quitar a {name}?",
+  "@meetingRemoveConfirmTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingRemoveConfirmDesc": "No podrá volver a entrar en esta reunión",
+  "meetingMuteAllConfirmTitle": "¿Silenciar a todos?",
+  "meetingMuteAllConfirmDesc": "Cada persona podrá volver a activar su micrófono",
+  "meetingChatTitle": "Chat de la reunión",
+  "meetingChatPlaceholder": "Enviar un mensaje",
+  "meetingChatSend": "Enviar",
+  "meetingChatEmpty": "Todos los participantes de la reunión pueden ver los mensajes",
+  "meetingChatFailed": "No enviado",
+  "meetingChatRetry": "Reintentar",
+  "meetingChatDiscard": "Descartar",
+  "meetingChatSending": "Enviando…",
+  "meetingChatOffline": "Reconectando: ahora mismo no puedes enviar mensajes",
+  "meetingChatCounter": "{count}/{max}",
+  "@meetingChatCounter": {
+    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "meetingChatUnread": "{count, plural, one {{count} mensaje nuevo} other {{count} mensajes nuevos}}",
+  "@meetingChatUnread": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingMediaBlocked": "El acceso al micrófono o a la cámara está desactivado. Puedes unirte igualmente y activarlo más tarde en Ajustes.",
+  "meetingSwitchCamera": "Cambiar cámara",
+  "meetingSpeakerOn": "Usar altavoz",
+  "meetingSpeakerOff": "Usar auricular",
+  "meetingLoading": "Cargando la reunión…"
 }

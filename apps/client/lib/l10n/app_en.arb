@@ -2494,5 +2494,161 @@
   },
   "meetingLinkCodeCopied": "Meeting code copied",
   "meetingShareNotifTitle": "Presenting your screen",
-  "meetingShareNotifBody": "Everyone in the meeting can see your screen"
+  "meetingShareNotifBody": "Everyone in the meeting can see your screen",
+  "meetingJoinNow": "Join now",
+  "meetingAskToJoin": "Ask to join",
+  "meetingPrejoinTitle": "Ready to join?",
+  "meetingPrejoinStartsAt": "Starts {time}",
+  "@meetingPrejoinStartsAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "meetingPrejoinJoiningAs": "You'll join as {name}",
+  "@meetingPrejoinJoiningAs": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingPrejoinCameraOff": "Camera is off",
+  "meetingPrejoinMuteOnEntry": "The host asks people to join muted",
+  "meetingPrejoinLockedHint": "This meeting is locked. Only invited people can join.",
+  "meetingPrejoinInCall": "You're in a call. Hang up to join this meeting.",
+  "meetingMicOn": "Turn on microphone",
+  "meetingMicOff": "Turn off microphone",
+  "meetingCamOn": "Turn on camera",
+  "meetingCamOff": "Turn off camera",
+  "meetingMediaUnavailable": "No microphone or camera found",
+  "meetingWaitingTitle": "Asking to join…",
+  "meetingWaitingDesc": "Someone in the meeting will let you in soon",
+  "meetingWaitingCancel": "Cancel",
+  "meetingDeniedTitle": "You weren't let in",
+  "meetingDeniedDesc": "Someone in the meeting declined your request",
+  "meetingRemovedTitle": "You were removed from the meeting",
+  "meetingRemovedDesc": "You can't rejoin this meeting",
+  "meetingLockedTitle": "This meeting is locked",
+  "meetingLockedDesc": "Only invited people can join right now",
+  "meetingFullTitle": "This meeting is full",
+  "meetingFullDesc": "{max} people are already in. Try again later.",
+  "@meetingFullDesc": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingUnavailableTitle": "Meetings are unavailable",
+  "meetingUnavailableDesc": "Try again in a moment",
+  "meetingNotFoundTitle": "Meeting not found",
+  "meetingNotFoundDesc": "Check the code or link and try again",
+  "meetingLeftTitle": "You left the meeting",
+  "meetingConnectionLostTitle": "Connection lost",
+  "meetingConnectionLostDesc": "We couldn't reconnect you to the meeting",
+  "meetingRejoin": "Rejoin",
+  "meetingTryAgain": "Try again",
+  "meetingViewDetails": "Meeting details",
+  "meetingLeaveMeeting": "Leave meeting",
+  "meetingNameWithYou": "{name} (you)",
+  "@meetingNameWithYou": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingReconnecting": "Reconnecting…",
+  "meetingPoorConnection": "Your connection is unstable",
+  "meetingPresenting": "You're presenting",
+  "meetingStopPresenting": "Stop presenting",
+  "meetingPresentingName": "{name} is presenting",
+  "@meetingPresentingName": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingParticipantCount": "{count, plural, one {{count} person} other {{count} people}}",
+  "@meetingParticipantCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingOverflowTiles": "+{count}",
+  "@meetingOverflowTiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingOverflowMore": "{count, plural, one {{count} more person} other {{count} more people}}",
+  "@meetingOverflowMore": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingPin": "Pin",
+  "meetingUnpin": "Unpin",
+  "meetingTileMenu": "Options for {name}",
+  "@meetingTileMenu": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingMicMutedLabel": "Microphone off",
+  "meetingHandRaisedLabel": "Hand raised",
+  "meetingSpeakingLabel": "Speaking",
+  "meetingPoorConnectionPeer": "Unstable connection",
+  "meetingHostBadge": "Host or co-host",
+  "meetingShareStart": "Present screen",
+  "meetingShareDisabled": "The host turned off screen sharing for participants",
+  "meetingRaiseHand": "Raise hand",
+  "meetingLowerHand": "Lower hand",
+  "meetingReactions": "Send a reaction",
+  "meetingChat": "Chat",
+  "meetingNotes": "Notes",
+  "meetingPeople": "People",
+  "meetingMore": "More options",
+  "meetingLayout": "Layout",
+  "meetingLayoutGrid": "Grid",
+  "meetingLayoutSpotlight": "Speaker",
+  "meetingDevicesTitle": "Audio & video",
+  "meetingLeave": "Leave",
+  "meetingEndForAll": "End meeting for all",
+  "meetingReactionAria": "{name} reacted {emoji}",
+  "@meetingReactionAria": {
+    "placeholders": { "name": { "type": "String" }, "emoji": { "type": "String" } }
+  },
+  "meetingPeopleTitle": "People",
+  "meetingManageTitle": "Host controls",
+  "meetingSectionHands": "Raised hands ({count})",
+  "@meetingSectionHands": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionLobby": "Waiting to join ({count})",
+  "@meetingSectionLobby": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionInMeeting": "In the meeting ({count})",
+  "@meetingSectionInMeeting": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingAdmit": "Admit",
+  "meetingDeny": "Deny",
+  "meetingAdmitAll": "Admit all",
+  "meetingPersonMenu": "Options for {name}",
+  "@meetingPersonMenu": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingActionMuteMic": "Mute microphone",
+  "meetingActionMuteAll": "Mute everyone",
+  "meetingActionRemove": "Remove from meeting",
+  "meetingActionLowerHand": "Lower hand",
+  "meetingActionLowerAllHands": "Lower all hands",
+  "meetingActionMakeCohost": "Make co-host",
+  "meetingActionRevokeCohost": "Remove as co-host",
+  "meetingRemoveConfirmTitle": "Remove {name}?",
+  "@meetingRemoveConfirmTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingRemoveConfirmDesc": "They won't be able to rejoin this meeting",
+  "meetingMuteAllConfirmTitle": "Mute everyone?",
+  "meetingMuteAllConfirmDesc": "People can unmute themselves",
+  "meetingChatTitle": "Meeting chat",
+  "meetingChatPlaceholder": "Send a message",
+  "meetingChatSend": "Send",
+  "meetingChatEmpty": "Messages are visible to everyone in the meeting",
+  "meetingChatFailed": "Not sent",
+  "meetingChatRetry": "Retry",
+  "meetingChatDiscard": "Discard",
+  "meetingChatSending": "Sending…",
+  "meetingChatOffline": "Reconnecting — you can't send messages right now",
+  "meetingChatCounter": "{count}/{max}",
+  "@meetingChatCounter": {
+    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "meetingChatUnread": "{count, plural, one {{count} new message} other {{count} new messages}}",
+  "@meetingChatUnread": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingMediaBlocked": "Microphone or camera access is off. You can still join and turn it on later in Settings.",
+  "meetingSwitchCamera": "Switch camera",
+  "meetingSpeakerOn": "Use speaker",
+  "meetingSpeakerOff": "Use earpiece",
+  "meetingLoading": "Loading meeting…"
 }

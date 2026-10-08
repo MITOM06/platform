@@ -5114,4 +5114,375 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get meetingShareNotifBody =>
       'Mọi người trong cuộc họp đang thấy màn hình của bạn';
+
+  @override
+  String get meetingJoinNow => 'Tham gia ngay';
+
+  @override
+  String get meetingAskToJoin => 'Yêu cầu tham gia';
+
+  @override
+  String get meetingPrejoinTitle => 'Sẵn sàng tham gia?';
+
+  @override
+  String meetingPrejoinStartsAt(String time) {
+    return 'Bắt đầu lúc $time';
+  }
+
+  @override
+  String meetingPrejoinJoiningAs(String name) {
+    return 'Bạn sẽ tham gia với tên $name';
+  }
+
+  @override
+  String get meetingPrejoinCameraOff => 'Camera đang tắt';
+
+  @override
+  String get meetingPrejoinMuteOnEntry =>
+      'Người tổ chức đề nghị tắt micro khi vào';
+
+  @override
+  String get meetingPrejoinLockedHint =>
+      'Cuộc họp đã khoá. Chỉ người được mời mới vào được.';
+
+  @override
+  String get meetingPrejoinInCall =>
+      'Bạn đang trong cuộc gọi. Hãy kết thúc cuộc gọi để vào họp.';
+
+  @override
+  String get meetingMicOn => 'Bật micro';
+
+  @override
+  String get meetingMicOff => 'Tắt micro';
+
+  @override
+  String get meetingCamOn => 'Bật camera';
+
+  @override
+  String get meetingCamOff => 'Tắt camera';
+
+  @override
+  String get meetingMediaUnavailable => 'Không tìm thấy micro hoặc camera';
+
+  @override
+  String get meetingWaitingTitle => 'Đang xin vào…';
+
+  @override
+  String get meetingWaitingDesc =>
+      'Người tổ chức sẽ cho bạn vào trong giây lát';
+
+  @override
+  String get meetingWaitingCancel => 'Huỷ';
+
+  @override
+  String get meetingDeniedTitle => 'Bạn không được cho vào';
+
+  @override
+  String get meetingDeniedDesc => 'Người tổ chức đã từ chối yêu cầu của bạn';
+
+  @override
+  String get meetingRemovedTitle => 'Bạn đã bị mời ra khỏi cuộc họp';
+
+  @override
+  String get meetingRemovedDesc => 'Bạn không thể vào lại cuộc họp này';
+
+  @override
+  String get meetingLockedTitle => 'Cuộc họp đã khoá';
+
+  @override
+  String get meetingLockedDesc => 'Hiện chỉ người được mời mới vào được';
+
+  @override
+  String get meetingFullTitle => 'Cuộc họp đã đủ người';
+
+  @override
+  String meetingFullDesc(int max) {
+    return 'Đã có $max người trong phòng. Hãy thử lại sau.';
+  }
+
+  @override
+  String get meetingUnavailableTitle => 'Phòng họp tạm thời không dùng được';
+
+  @override
+  String get meetingUnavailableDesc => 'Hãy thử lại sau giây lát';
+
+  @override
+  String get meetingNotFoundTitle => 'Không tìm thấy cuộc họp';
+
+  @override
+  String get meetingNotFoundDesc => 'Kiểm tra lại mã hoặc link';
+
+  @override
+  String get meetingLeftTitle => 'Bạn đã rời cuộc họp';
+
+  @override
+  String get meetingConnectionLostTitle => 'Mất kết nối';
+
+  @override
+  String get meetingConnectionLostDesc => 'Không thể kết nối lại vào cuộc họp';
+
+  @override
+  String get meetingRejoin => 'Vào lại';
+
+  @override
+  String get meetingTryAgain => 'Thử lại';
+
+  @override
+  String get meetingViewDetails => 'Chi tiết cuộc họp';
+
+  @override
+  String get meetingLeaveMeeting => 'Rời cuộc họp';
+
+  @override
+  String meetingNameWithYou(String name) {
+    return '$name (bạn)';
+  }
+
+  @override
+  String get meetingReconnecting => 'Đang kết nối lại…';
+
+  @override
+  String get meetingPoorConnection => 'Mạng của bạn không ổn định';
+
+  @override
+  String get meetingPresenting => 'Bạn đang trình bày';
+
+  @override
+  String get meetingStopPresenting => 'Dừng trình bày';
+
+  @override
+  String meetingPresentingName(String name) {
+    return '$name đang trình bày';
+  }
+
+  @override
+  String meetingParticipantCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count người',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingOverflowTiles(int count) {
+    return '+$count';
+  }
+
+  @override
+  String meetingOverflowMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count người khác',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingPin => 'Ghim';
+
+  @override
+  String get meetingUnpin => 'Bỏ ghim';
+
+  @override
+  String meetingTileMenu(String name) {
+    return 'Tuỳ chọn cho $name';
+  }
+
+  @override
+  String get meetingMicMutedLabel => 'Micro đang tắt';
+
+  @override
+  String get meetingHandRaisedLabel => 'Đang giơ tay';
+
+  @override
+  String get meetingSpeakingLabel => 'Đang nói';
+
+  @override
+  String get meetingPoorConnectionPeer => 'Mạng không ổn định';
+
+  @override
+  String get meetingHostBadge => 'Người tổ chức hoặc đồng tổ chức';
+
+  @override
+  String get meetingShareStart => 'Trình bày màn hình';
+
+  @override
+  String get meetingShareDisabled =>
+      'Người tổ chức đã tắt trình bày màn hình của người tham dự';
+
+  @override
+  String get meetingRaiseHand => 'Giơ tay';
+
+  @override
+  String get meetingLowerHand => 'Hạ tay';
+
+  @override
+  String get meetingReactions => 'Gửi biểu cảm';
+
+  @override
+  String get meetingChat => 'Chat';
+
+  @override
+  String get meetingNotes => 'Ghi chú';
+
+  @override
+  String get meetingPeople => 'Mọi người';
+
+  @override
+  String get meetingMore => 'Tuỳ chọn khác';
+
+  @override
+  String get meetingLayout => 'Bố cục';
+
+  @override
+  String get meetingLayoutGrid => 'Lưới';
+
+  @override
+  String get meetingLayoutSpotlight => 'Người nói';
+
+  @override
+  String get meetingDevicesTitle => 'Âm thanh & hình ảnh';
+
+  @override
+  String get meetingLeave => 'Rời';
+
+  @override
+  String get meetingEndForAll => 'Kết thúc cho mọi người';
+
+  @override
+  String meetingReactionAria(String name, String emoji) {
+    return '$name đã thả $emoji';
+  }
+
+  @override
+  String get meetingPeopleTitle => 'Mọi người';
+
+  @override
+  String get meetingManageTitle => 'Quyền người tổ chức';
+
+  @override
+  String meetingSectionHands(int count) {
+    return 'Đang giơ tay ($count)';
+  }
+
+  @override
+  String meetingSectionLobby(int count) {
+    return 'Đang chờ vào ($count)';
+  }
+
+  @override
+  String meetingSectionInMeeting(int count) {
+    return 'Trong cuộc họp ($count)';
+  }
+
+  @override
+  String get meetingAdmit => 'Cho vào';
+
+  @override
+  String get meetingDeny => 'Từ chối';
+
+  @override
+  String get meetingAdmitAll => 'Cho tất cả vào';
+
+  @override
+  String meetingPersonMenu(String name) {
+    return 'Tuỳ chọn cho $name';
+  }
+
+  @override
+  String get meetingActionMuteMic => 'Tắt micro';
+
+  @override
+  String get meetingActionMuteAll => 'Tắt micro mọi người';
+
+  @override
+  String get meetingActionRemove => 'Mời ra khỏi cuộc họp';
+
+  @override
+  String get meetingActionLowerHand => 'Hạ tay';
+
+  @override
+  String get meetingActionLowerAllHands => 'Hạ tất cả tay';
+
+  @override
+  String get meetingActionMakeCohost => 'Làm đồng tổ chức';
+
+  @override
+  String get meetingActionRevokeCohost => 'Bỏ quyền đồng tổ chức';
+
+  @override
+  String meetingRemoveConfirmTitle(String name) {
+    return 'Mời $name ra khỏi cuộc họp?';
+  }
+
+  @override
+  String get meetingRemoveConfirmDesc =>
+      'Người này sẽ không vào lại được cuộc họp';
+
+  @override
+  String get meetingMuteAllConfirmTitle => 'Tắt micro của mọi người?';
+
+  @override
+  String get meetingMuteAllConfirmDesc => 'Mọi người vẫn tự bật lại được';
+
+  @override
+  String get meetingChatTitle => 'Chat trong cuộc họp';
+
+  @override
+  String get meetingChatPlaceholder => 'Gửi tin nhắn';
+
+  @override
+  String get meetingChatSend => 'Gửi';
+
+  @override
+  String get meetingChatEmpty => 'Mọi người trong cuộc họp đều thấy tin nhắn';
+
+  @override
+  String get meetingChatFailed => 'Chưa gửi được';
+
+  @override
+  String get meetingChatRetry => 'Gửi lại';
+
+  @override
+  String get meetingChatDiscard => 'Bỏ';
+
+  @override
+  String get meetingChatSending => 'Đang gửi…';
+
+  @override
+  String get meetingChatOffline => 'Đang kết nối lại — tạm chưa gửi được tin';
+
+  @override
+  String meetingChatCounter(int count, int max) {
+    return '$count/$max';
+  }
+
+  @override
+  String meetingChatUnread(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tin mới',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingMediaBlocked =>
+      'Quyền micro hoặc camera đang tắt. Bạn vẫn có thể tham gia và bật lại sau trong Cài đặt.';
+
+  @override
+  String get meetingSwitchCamera => 'Đổi camera';
+
+  @override
+  String get meetingSpeakerOn => 'Dùng loa ngoài';
+
+  @override
+  String get meetingSpeakerOff => 'Dùng loa trong';
+
+  @override
+  String get meetingLoading => 'Đang tải cuộc họp…';
 }

@@ -25,6 +25,9 @@ mixin RoomCommands on RoomMedia {
   MeetingRoomChat get roomChat;
 
   bool _loadingOlder = false;
+
+  /// The room's clock (injected — tests move it): chat lines go overdue on it.
+  DateTime now() => deps.now();
   Future<void> Function()? _notesFlush;
 
   /// The notes panel hands over its save-now (null when it closes); leaving

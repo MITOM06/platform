@@ -1781,5 +1781,161 @@
   },
   "meetingLinkCodeCopied": "已复制会议代码",
   "meetingShareNotifTitle": "正在共享你的屏幕",
-  "meetingShareNotifBody": "会议中的所有人都能看到你的屏幕"
+  "meetingShareNotifBody": "会议中的所有人都能看到你的屏幕",
+  "meetingJoinNow": "立即加入",
+  "meetingAskToJoin": "请求加入",
+  "meetingPrejoinTitle": "准备好加入了吗？",
+  "meetingPrejoinStartsAt": "开始时间：{time}",
+  "@meetingPrejoinStartsAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "meetingPrejoinJoiningAs": "你将以 {name} 的身份加入",
+  "@meetingPrejoinJoiningAs": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingPrejoinCameraOff": "摄像头已关闭",
+  "meetingPrejoinMuteOnEntry": "主持人要求加入时静音",
+  "meetingPrejoinLockedHint": "此会议已锁定，只有受邀者可以加入。",
+  "meetingPrejoinInCall": "你正在通话中。挂断后才能加入此会议。",
+  "meetingMicOn": "打开麦克风",
+  "meetingMicOff": "关闭麦克风",
+  "meetingCamOn": "打开摄像头",
+  "meetingCamOff": "关闭摄像头",
+  "meetingMediaUnavailable": "未找到麦克风或摄像头",
+  "meetingWaitingTitle": "正在请求加入…",
+  "meetingWaitingDesc": "会议中的人很快会让你进入",
+  "meetingWaitingCancel": "取消",
+  "meetingDeniedTitle": "你未被允许进入",
+  "meetingDeniedDesc": "会议中的人拒绝了你的请求",
+  "meetingRemovedTitle": "你已被移出会议",
+  "meetingRemovedDesc": "你无法重新加入此会议",
+  "meetingLockedTitle": "此会议已锁定",
+  "meetingLockedDesc": "目前只有受邀者可以加入",
+  "meetingFullTitle": "会议人数已满",
+  "meetingFullDesc": "已有 {max} 人在会议中，请稍后再试。",
+  "@meetingFullDesc": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingUnavailableTitle": "会议暂时不可用",
+  "meetingUnavailableDesc": "请稍后再试",
+  "meetingNotFoundTitle": "未找到会议",
+  "meetingNotFoundDesc": "请检查会议代码或链接后重试",
+  "meetingLeftTitle": "你已离开会议",
+  "meetingConnectionLostTitle": "连接已断开",
+  "meetingConnectionLostDesc": "无法重新连接到会议",
+  "meetingRejoin": "重新加入",
+  "meetingTryAgain": "重试",
+  "meetingViewDetails": "会议详情",
+  "meetingLeaveMeeting": "离开会议",
+  "meetingNameWithYou": "{name}（你）",
+  "@meetingNameWithYou": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingReconnecting": "正在重新连接…",
+  "meetingPoorConnection": "你的网络连接不稳定",
+  "meetingPresenting": "你正在共享屏幕",
+  "meetingStopPresenting": "停止共享",
+  "meetingPresentingName": "{name} 正在共享屏幕",
+  "@meetingPresentingName": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingParticipantCount": "{count, plural, other {{count} 人}}",
+  "@meetingParticipantCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingOverflowTiles": "+{count}",
+  "@meetingOverflowTiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingOverflowMore": "{count, plural, other {另外 {count} 人}}",
+  "@meetingOverflowMore": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingPin": "固定",
+  "meetingUnpin": "取消固定",
+  "meetingTileMenu": "{name} 的选项",
+  "@meetingTileMenu": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingMicMutedLabel": "麦克风已关闭",
+  "meetingHandRaisedLabel": "已举手",
+  "meetingSpeakingLabel": "正在发言",
+  "meetingPoorConnectionPeer": "网络不稳定",
+  "meetingHostBadge": "主持人或联合主持人",
+  "meetingShareStart": "共享屏幕",
+  "meetingShareDisabled": "主持人已关闭参会者的屏幕共享",
+  "meetingRaiseHand": "举手",
+  "meetingLowerHand": "放下手",
+  "meetingReactions": "发送表情回应",
+  "meetingChat": "聊天",
+  "meetingNotes": "笔记",
+  "meetingPeople": "参会者",
+  "meetingMore": "更多选项",
+  "meetingLayout": "布局",
+  "meetingLayoutGrid": "网格",
+  "meetingLayoutSpotlight": "发言人",
+  "meetingDevicesTitle": "音频和视频",
+  "meetingLeave": "离开",
+  "meetingEndForAll": "为所有人结束会议",
+  "meetingReactionAria": "{name} 发送了 {emoji}",
+  "@meetingReactionAria": {
+    "placeholders": { "name": { "type": "String" }, "emoji": { "type": "String" } }
+  },
+  "meetingPeopleTitle": "参会者",
+  "meetingManageTitle": "主持人控制",
+  "meetingSectionHands": "举手（{count}）",
+  "@meetingSectionHands": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionLobby": "等待加入（{count}）",
+  "@meetingSectionLobby": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionInMeeting": "会议中（{count}）",
+  "@meetingSectionInMeeting": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingAdmit": "准许加入",
+  "meetingDeny": "拒绝",
+  "meetingAdmitAll": "全部准许",
+  "meetingPersonMenu": "{name} 的选项",
+  "@meetingPersonMenu": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingActionMuteMic": "关闭麦克风",
+  "meetingActionMuteAll": "全员静音",
+  "meetingActionRemove": "移出会议",
+  "meetingActionLowerHand": "放下手",
+  "meetingActionLowerAllHands": "全部放下手",
+  "meetingActionMakeCohost": "设为联合主持人",
+  "meetingActionRevokeCohost": "取消联合主持人",
+  "meetingRemoveConfirmTitle": "要将 {name} 移出会议吗？",
+  "@meetingRemoveConfirmTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingRemoveConfirmDesc": "对方将无法再次加入此会议",
+  "meetingMuteAllConfirmTitle": "要将所有人静音吗？",
+  "meetingMuteAllConfirmDesc": "参会者仍可自行取消静音",
+  "meetingChatTitle": "会议聊天",
+  "meetingChatPlaceholder": "发送消息",
+  "meetingChatSend": "发送",
+  "meetingChatEmpty": "会议中的所有人都能看到消息",
+  "meetingChatFailed": "未发送",
+  "meetingChatRetry": "重试",
+  "meetingChatDiscard": "删除",
+  "meetingChatSending": "正在发送…",
+  "meetingChatOffline": "正在重新连接，暂时无法发送消息",
+  "meetingChatCounter": "{count}/{max}",
+  "@meetingChatCounter": {
+    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "meetingChatUnread": "{count, plural, other {{count} 条新消息}}",
+  "@meetingChatUnread": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingMediaBlocked": "麦克风或摄像头权限已关闭。你仍可加入，稍后可在“设置”中开启。",
+  "meetingSwitchCamera": "切换摄像头",
+  "meetingSpeakerOn": "使用扬声器",
+  "meetingSpeakerOff": "使用听筒",
+  "meetingLoading": "正在加载会议…"
 }

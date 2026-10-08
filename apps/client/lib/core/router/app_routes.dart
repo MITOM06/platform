@@ -38,6 +38,7 @@ import '../../features/settings/ui/legal_screen.dart';
 import '../../features/help/ui/help_screen.dart';
 import '../../features/meetings/ui/meeting_detail_screen.dart';
 import '../../features/meetings/ui/meetings_screen.dart';
+import '../../features/meetings/ui/room/meeting_room_screen.dart';
 import '../l10n/l10n_ext.dart';
 import '../utils/global_messenger.dart';
 import 'page_transitions.dart';
@@ -311,6 +312,16 @@ List<RouteBase> buildAppRoutes() {
       pageBuilder: (context, state) => slidePage(
         state,
         MeetingDetailScreen(meetingId: state.pathParameters['id'] ?? ''),
+      ),
+    ),
+    GoRoute(
+      path: '/meet/:code',
+      name: 'meet',
+      // Full screen over everything (like `/call`).
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) => slidePage(
+        state,
+        MeetingRoomScreen(rawCode: state.pathParameters['code'] ?? ''),
       ),
     ),
     GoRoute(

@@ -152,6 +152,14 @@ class NoteEditorNotifier
   void remoteUpdated(int version, MeetingPerson? by) =>
       _dispatch(RemoteUpdated(version, by));
 
+  /// STOMP came back (a `meet.notes.updated` may have been missed): reload
+  /// when nothing local would be lost; otherwise the next save finds out.
+  void resyncIfClean() {
+    final status = _note.status;
+    final clean = status == NoteStatus.clean || status == NoteStatus.saved;
+    if (clean && !_refetching && !_saving) unawaited(_refetch());
+  }
+
   /// Save now if dirty (closing the panel, leaving the room).
   Future<void> flush() async {
     if (!_canEdit) return;

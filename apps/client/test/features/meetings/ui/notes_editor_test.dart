@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:platform_client/features/meetings/data/meetings_repository.dart';
 import 'package:platform_client/features/meetings/domain/meeting_models.dart';
 import 'package:platform_client/features/meetings/domain/meeting_room_models.dart';
+import 'package:platform_client/features/meetings/domain/note_sync.dart';
 import 'package:platform_client/features/meetings/ui/widgets/notes_editor.dart';
 
 import 'meeting_test_harness.dart';
@@ -126,5 +127,49 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.widget<TextField>(box()).controller!.text, 'base theirs');
     expect(find.text(l.meetingNotesConflictTitle), findsNothing);
+  });
+
+  // In the room the rights and the remote signal change while the editor is
+  // open (role change, `attendeesCanEditNotes`, `meet.notes.updated`).
+  Future<ValueNotifier<(bool, RemoteNewer?)>> pumpLive(WidgetTester t) async {
+    final live = ValueNotifier<(bool, RemoteNewer?)>((true, null));
+    addTearDown(live.dispose);
+    await pumpMeetingWidget(
+        t,
+        ValueListenableBuilder(
+          valueListenable: live,
+          builder: (_, v, __) => NotesEditor(
+              meetingId: 'm1', canEditShared: v.$1, sharedRemote: v.$2),
+        ),
+        overrides: [meetingsRepositoryProvider.overrideWithValue(api)]);
+    return live;
+  }
+
+  testWidgets('losing the right to edit mid-meeting turns read-only, no save',
+      (tester) async {
+    final live = await pumpLive(tester);
+    await tester.enterText(box(), 'base edit');
+    live.value = (false, null);
+    await tester.pump();
+    expect(tester.widget<TextField>(box()).readOnly, isTrue);
+    expect(find.text(l10nOf(tester).meetingNotesReadOnly), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(api.puts, isEmpty);
+  });
+
+  testWidgets('a newer remote version while typing keeps the text and says who',
+      (tester) async {
+    final live = await pumpLive(tester);
+    await tester.enterText(box(), 'base typing');
+    live.value = (
+      true,
+      const RemoteNewer(5, MeetingPerson(userId: 'u2', displayName: 'Minh'))
+    );
+    await tester.pump(); // rebuild, then the signal lands after the frame
+    await tester.pump();
+    expect(find.text(l10nOf(tester).meetingNotesRemoteNewer('Minh')),
+        findsOneWidget);
+    expect(tester.widget<TextField>(box()).controller!.text, 'base typing');
   });
 }

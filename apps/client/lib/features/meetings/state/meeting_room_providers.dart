@@ -1,9 +1,11 @@
 // Riverpod wiring of the meeting room: the one room store, the STOMP adapter,
 // the controller's deps, "a call is running" and "STOMP is up".
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../core/rtc/livekit_session.dart';
 import '../../../core/rtc/rtc_session.dart';
@@ -110,3 +112,25 @@ final stompConnectedProvider = StreamProvider<bool>((ref) async* {
   yield stomp.isConnected;
   yield* stomp.connectionChanges;
 });
+
+/// The STOMP streams the room binding listens to (overridden in widget tests).
+class MeetingRoomStreams {
+  const MeetingRoomStreams(
+      {required this.topicFrames, required this.connections});
+
+  final Stream<Map<String, dynamic>> topicFrames;
+  final Stream<void> connections;
+}
+
+final meetingRoomStreamsProvider = Provider<MeetingRoomStreams>((ref) {
+  final stomp = ref.read(stompServiceProvider.notifier);
+  return MeetingRoomStreams(
+      topicFrames: stomp.meetingTopic, connections: stomp.connections);
+});
+
+/// Keep the screen on while in the room (best-effort; no-op in tests).
+final meetingKeepAwakeProvider = Provider<void Function(bool on)>(
+  (_) => (on) => unawaited(
+      (on ? WakelockPlus.enable() : WakelockPlus.disable())
+          .catchError((Object _) {})),
+);

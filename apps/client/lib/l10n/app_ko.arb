@@ -1781,5 +1781,161 @@
   },
   "meetingLinkCodeCopied": "회의 코드를 복사했습니다",
   "meetingShareNotifTitle": "화면을 공유하는 중",
-  "meetingShareNotifBody": "회의의 모든 참가자가 내 화면을 볼 수 있습니다"
+  "meetingShareNotifBody": "회의의 모든 참가자가 내 화면을 볼 수 있습니다",
+  "meetingJoinNow": "지금 참여",
+  "meetingAskToJoin": "참여 요청",
+  "meetingPrejoinTitle": "참여할 준비가 되셨나요?",
+  "meetingPrejoinStartsAt": "시작: {time}",
+  "@meetingPrejoinStartsAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "meetingPrejoinJoiningAs": "{name}(으)로 참여합니다",
+  "@meetingPrejoinJoiningAs": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingPrejoinCameraOff": "카메라가 꺼져 있습니다",
+  "meetingPrejoinMuteOnEntry": "주최자가 음소거 상태로 참여하도록 요청했습니다",
+  "meetingPrejoinLockedHint": "이 회의는 잠겨 있습니다. 초대받은 사람만 참여할 수 있습니다.",
+  "meetingPrejoinInCall": "통화 중입니다. 이 회의에 참여하려면 통화를 종료하세요.",
+  "meetingMicOn": "마이크 켜기",
+  "meetingMicOff": "마이크 끄기",
+  "meetingCamOn": "카메라 켜기",
+  "meetingCamOff": "카메라 끄기",
+  "meetingMediaUnavailable": "마이크 또는 카메라를 찾을 수 없습니다",
+  "meetingWaitingTitle": "참여 요청 중…",
+  "meetingWaitingDesc": "회의 참가자가 곧 입장을 허용할 것입니다",
+  "meetingWaitingCancel": "취소",
+  "meetingDeniedTitle": "입장이 허용되지 않았습니다",
+  "meetingDeniedDesc": "회의 참가자가 요청을 거절했습니다",
+  "meetingRemovedTitle": "회의에서 내보내졌습니다",
+  "meetingRemovedDesc": "이 회의에 다시 참여할 수 없습니다",
+  "meetingLockedTitle": "이 회의는 잠겨 있습니다",
+  "meetingLockedDesc": "지금은 초대받은 사람만 참여할 수 있습니다",
+  "meetingFullTitle": "회의 인원이 가득 찼습니다",
+  "meetingFullDesc": "이미 {max}명이 참여 중입니다. 나중에 다시 시도하세요.",
+  "@meetingFullDesc": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingUnavailableTitle": "회의를 사용할 수 없습니다",
+  "meetingUnavailableDesc": "잠시 후 다시 시도하세요",
+  "meetingNotFoundTitle": "회의를 찾을 수 없습니다",
+  "meetingNotFoundDesc": "코드 또는 링크를 확인하고 다시 시도하세요",
+  "meetingLeftTitle": "회의에서 나갔습니다",
+  "meetingConnectionLostTitle": "연결이 끊겼습니다",
+  "meetingConnectionLostDesc": "회의에 다시 연결할 수 없습니다",
+  "meetingRejoin": "다시 참여",
+  "meetingTryAgain": "다시 시도",
+  "meetingViewDetails": "회의 세부정보",
+  "meetingLeaveMeeting": "회의 나가기",
+  "meetingNameWithYou": "{name}(나)",
+  "@meetingNameWithYou": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingReconnecting": "다시 연결하는 중…",
+  "meetingPoorConnection": "연결이 불안정합니다",
+  "meetingPresenting": "화면을 공유하고 있습니다",
+  "meetingStopPresenting": "공유 중지",
+  "meetingPresentingName": "{name}님이 화면을 공유하고 있습니다",
+  "@meetingPresentingName": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingParticipantCount": "{count, plural, other {{count}명}}",
+  "@meetingParticipantCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingOverflowTiles": "+{count}",
+  "@meetingOverflowTiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingOverflowMore": "{count, plural, other {외 {count}명}}",
+  "@meetingOverflowMore": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingPin": "고정",
+  "meetingUnpin": "고정 해제",
+  "meetingTileMenu": "{name} 옵션",
+  "@meetingTileMenu": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingMicMutedLabel": "마이크 꺼짐",
+  "meetingHandRaisedLabel": "손을 들었습니다",
+  "meetingSpeakingLabel": "말하는 중",
+  "meetingPoorConnectionPeer": "연결 불안정",
+  "meetingHostBadge": "주최자 또는 공동 주최자",
+  "meetingShareStart": "화면 공유",
+  "meetingShareDisabled": "주최자가 참가자의 화면 공유를 껐습니다",
+  "meetingRaiseHand": "손 들기",
+  "meetingLowerHand": "손 내리기",
+  "meetingReactions": "반응 보내기",
+  "meetingChat": "채팅",
+  "meetingNotes": "메모",
+  "meetingPeople": "참가자",
+  "meetingMore": "추가 옵션",
+  "meetingLayout": "레이아웃",
+  "meetingLayoutGrid": "그리드",
+  "meetingLayoutSpotlight": "발언자",
+  "meetingDevicesTitle": "오디오 및 비디오",
+  "meetingLeave": "나가기",
+  "meetingEndForAll": "모두에게 회의 종료",
+  "meetingReactionAria": "{name}님이 {emoji} 반응을 보냈습니다",
+  "@meetingReactionAria": {
+    "placeholders": { "name": { "type": "String" }, "emoji": { "type": "String" } }
+  },
+  "meetingPeopleTitle": "참가자",
+  "meetingManageTitle": "주최자 제어",
+  "meetingSectionHands": "손 든 사람 ({count})",
+  "@meetingSectionHands": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionLobby": "참여 대기 중 ({count})",
+  "@meetingSectionLobby": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionInMeeting": "회의 참석 중 ({count})",
+  "@meetingSectionInMeeting": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingAdmit": "수락",
+  "meetingDeny": "거부",
+  "meetingAdmitAll": "모두 수락",
+  "meetingPersonMenu": "{name} 옵션",
+  "@meetingPersonMenu": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingActionMuteMic": "마이크 끄기",
+  "meetingActionMuteAll": "모두 음소거",
+  "meetingActionRemove": "회의에서 내보내기",
+  "meetingActionLowerHand": "손 내리기",
+  "meetingActionLowerAllHands": "모든 손 내리기",
+  "meetingActionMakeCohost": "공동 주최자로 지정",
+  "meetingActionRevokeCohost": "공동 주최자 해제",
+  "meetingRemoveConfirmTitle": "{name}님을 내보낼까요?",
+  "@meetingRemoveConfirmTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingRemoveConfirmDesc": "이 회의에 다시 참여할 수 없게 됩니다",
+  "meetingMuteAllConfirmTitle": "모두 음소거할까요?",
+  "meetingMuteAllConfirmDesc": "각자 음소거를 해제할 수 있습니다",
+  "meetingChatTitle": "회의 채팅",
+  "meetingChatPlaceholder": "메시지 보내기",
+  "meetingChatSend": "보내기",
+  "meetingChatEmpty": "메시지는 회의 참가자 모두에게 표시됩니다",
+  "meetingChatFailed": "전송되지 않음",
+  "meetingChatRetry": "다시 보내기",
+  "meetingChatDiscard": "삭제",
+  "meetingChatSending": "보내는 중…",
+  "meetingChatOffline": "다시 연결하는 중이라 지금은 메시지를 보낼 수 없습니다",
+  "meetingChatCounter": "{count}/{max}",
+  "@meetingChatCounter": {
+    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "meetingChatUnread": "{count, plural, other {새 메시지 {count}개}}",
+  "@meetingChatUnread": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingMediaBlocked": "마이크 또는 카메라 권한이 꺼져 있습니다. 지금 참여하고 나중에 설정에서 켤 수 있습니다.",
+  "meetingSwitchCamera": "카메라 전환",
+  "meetingSpeakerOn": "스피커 사용",
+  "meetingSpeakerOff": "수화부 사용",
+  "meetingLoading": "회의를 불러오는 중…"
 }

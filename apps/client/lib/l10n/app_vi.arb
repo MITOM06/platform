@@ -1781,5 +1781,161 @@
   },
   "meetingLinkCodeCopied": "Đã sao chép mã cuộc họp",
   "meetingShareNotifTitle": "Đang trình bày màn hình",
-  "meetingShareNotifBody": "Mọi người trong cuộc họp đang thấy màn hình của bạn"
+  "meetingShareNotifBody": "Mọi người trong cuộc họp đang thấy màn hình của bạn",
+  "meetingJoinNow": "Tham gia ngay",
+  "meetingAskToJoin": "Yêu cầu tham gia",
+  "meetingPrejoinTitle": "Sẵn sàng tham gia?",
+  "meetingPrejoinStartsAt": "Bắt đầu lúc {time}",
+  "@meetingPrejoinStartsAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "meetingPrejoinJoiningAs": "Bạn sẽ tham gia với tên {name}",
+  "@meetingPrejoinJoiningAs": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingPrejoinCameraOff": "Camera đang tắt",
+  "meetingPrejoinMuteOnEntry": "Người tổ chức đề nghị tắt micro khi vào",
+  "meetingPrejoinLockedHint": "Cuộc họp đã khoá. Chỉ người được mời mới vào được.",
+  "meetingPrejoinInCall": "Bạn đang trong cuộc gọi. Hãy kết thúc cuộc gọi để vào họp.",
+  "meetingMicOn": "Bật micro",
+  "meetingMicOff": "Tắt micro",
+  "meetingCamOn": "Bật camera",
+  "meetingCamOff": "Tắt camera",
+  "meetingMediaUnavailable": "Không tìm thấy micro hoặc camera",
+  "meetingWaitingTitle": "Đang xin vào…",
+  "meetingWaitingDesc": "Người tổ chức sẽ cho bạn vào trong giây lát",
+  "meetingWaitingCancel": "Huỷ",
+  "meetingDeniedTitle": "Bạn không được cho vào",
+  "meetingDeniedDesc": "Người tổ chức đã từ chối yêu cầu của bạn",
+  "meetingRemovedTitle": "Bạn đã bị mời ra khỏi cuộc họp",
+  "meetingRemovedDesc": "Bạn không thể vào lại cuộc họp này",
+  "meetingLockedTitle": "Cuộc họp đã khoá",
+  "meetingLockedDesc": "Hiện chỉ người được mời mới vào được",
+  "meetingFullTitle": "Cuộc họp đã đủ người",
+  "meetingFullDesc": "Đã có {max} người trong phòng. Hãy thử lại sau.",
+  "@meetingFullDesc": {
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "meetingUnavailableTitle": "Phòng họp tạm thời không dùng được",
+  "meetingUnavailableDesc": "Hãy thử lại sau giây lát",
+  "meetingNotFoundTitle": "Không tìm thấy cuộc họp",
+  "meetingNotFoundDesc": "Kiểm tra lại mã hoặc link",
+  "meetingLeftTitle": "Bạn đã rời cuộc họp",
+  "meetingConnectionLostTitle": "Mất kết nối",
+  "meetingConnectionLostDesc": "Không thể kết nối lại vào cuộc họp",
+  "meetingRejoin": "Vào lại",
+  "meetingTryAgain": "Thử lại",
+  "meetingViewDetails": "Chi tiết cuộc họp",
+  "meetingLeaveMeeting": "Rời cuộc họp",
+  "meetingNameWithYou": "{name} (bạn)",
+  "@meetingNameWithYou": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingReconnecting": "Đang kết nối lại…",
+  "meetingPoorConnection": "Mạng của bạn không ổn định",
+  "meetingPresenting": "Bạn đang trình bày",
+  "meetingStopPresenting": "Dừng trình bày",
+  "meetingPresentingName": "{name} đang trình bày",
+  "@meetingPresentingName": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingParticipantCount": "{count, plural, other {{count} người}}",
+  "@meetingParticipantCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingOverflowTiles": "+{count}",
+  "@meetingOverflowTiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingOverflowMore": "{count, plural, other {{count} người khác}}",
+  "@meetingOverflowMore": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingPin": "Ghim",
+  "meetingUnpin": "Bỏ ghim",
+  "meetingTileMenu": "Tuỳ chọn cho {name}",
+  "@meetingTileMenu": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingMicMutedLabel": "Micro đang tắt",
+  "meetingHandRaisedLabel": "Đang giơ tay",
+  "meetingSpeakingLabel": "Đang nói",
+  "meetingPoorConnectionPeer": "Mạng không ổn định",
+  "meetingHostBadge": "Người tổ chức hoặc đồng tổ chức",
+  "meetingShareStart": "Trình bày màn hình",
+  "meetingShareDisabled": "Người tổ chức đã tắt trình bày màn hình của người tham dự",
+  "meetingRaiseHand": "Giơ tay",
+  "meetingLowerHand": "Hạ tay",
+  "meetingReactions": "Gửi biểu cảm",
+  "meetingChat": "Chat",
+  "meetingNotes": "Ghi chú",
+  "meetingPeople": "Mọi người",
+  "meetingMore": "Tuỳ chọn khác",
+  "meetingLayout": "Bố cục",
+  "meetingLayoutGrid": "Lưới",
+  "meetingLayoutSpotlight": "Người nói",
+  "meetingDevicesTitle": "Âm thanh & hình ảnh",
+  "meetingLeave": "Rời",
+  "meetingEndForAll": "Kết thúc cho mọi người",
+  "meetingReactionAria": "{name} đã thả {emoji}",
+  "@meetingReactionAria": {
+    "placeholders": { "name": { "type": "String" }, "emoji": { "type": "String" } }
+  },
+  "meetingPeopleTitle": "Mọi người",
+  "meetingManageTitle": "Quyền người tổ chức",
+  "meetingSectionHands": "Đang giơ tay ({count})",
+  "@meetingSectionHands": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionLobby": "Đang chờ vào ({count})",
+  "@meetingSectionLobby": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingSectionInMeeting": "Trong cuộc họp ({count})",
+  "@meetingSectionInMeeting": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingAdmit": "Cho vào",
+  "meetingDeny": "Từ chối",
+  "meetingAdmitAll": "Cho tất cả vào",
+  "meetingPersonMenu": "Tuỳ chọn cho {name}",
+  "@meetingPersonMenu": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingActionMuteMic": "Tắt micro",
+  "meetingActionMuteAll": "Tắt micro mọi người",
+  "meetingActionRemove": "Mời ra khỏi cuộc họp",
+  "meetingActionLowerHand": "Hạ tay",
+  "meetingActionLowerAllHands": "Hạ tất cả tay",
+  "meetingActionMakeCohost": "Làm đồng tổ chức",
+  "meetingActionRevokeCohost": "Bỏ quyền đồng tổ chức",
+  "meetingRemoveConfirmTitle": "Mời {name} ra khỏi cuộc họp?",
+  "@meetingRemoveConfirmTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "meetingRemoveConfirmDesc": "Người này sẽ không vào lại được cuộc họp",
+  "meetingMuteAllConfirmTitle": "Tắt micro của mọi người?",
+  "meetingMuteAllConfirmDesc": "Mọi người vẫn tự bật lại được",
+  "meetingChatTitle": "Chat trong cuộc họp",
+  "meetingChatPlaceholder": "Gửi tin nhắn",
+  "meetingChatSend": "Gửi",
+  "meetingChatEmpty": "Mọi người trong cuộc họp đều thấy tin nhắn",
+  "meetingChatFailed": "Chưa gửi được",
+  "meetingChatRetry": "Gửi lại",
+  "meetingChatDiscard": "Bỏ",
+  "meetingChatSending": "Đang gửi…",
+  "meetingChatOffline": "Đang kết nối lại — tạm chưa gửi được tin",
+  "meetingChatCounter": "{count}/{max}",
+  "@meetingChatCounter": {
+    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "meetingChatUnread": "{count, plural, other {{count} tin mới}}",
+  "@meetingChatUnread": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "meetingMediaBlocked": "Quyền micro hoặc camera đang tắt. Bạn vẫn có thể tham gia và bật lại sau trong Cài đặt.",
+  "meetingSwitchCamera": "Đổi camera",
+  "meetingSpeakerOn": "Dùng loa ngoài",
+  "meetingSpeakerOff": "Dùng loa trong",
+  "meetingLoading": "Đang tải cuộc họp…"
 }

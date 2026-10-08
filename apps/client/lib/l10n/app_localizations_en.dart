@@ -5144,4 +5144,381 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get meetingShareNotifBody =>
       'Everyone in the meeting can see your screen';
+
+  @override
+  String get meetingJoinNow => 'Join now';
+
+  @override
+  String get meetingAskToJoin => 'Ask to join';
+
+  @override
+  String get meetingPrejoinTitle => 'Ready to join?';
+
+  @override
+  String meetingPrejoinStartsAt(String time) {
+    return 'Starts $time';
+  }
+
+  @override
+  String meetingPrejoinJoiningAs(String name) {
+    return 'You\'ll join as $name';
+  }
+
+  @override
+  String get meetingPrejoinCameraOff => 'Camera is off';
+
+  @override
+  String get meetingPrejoinMuteOnEntry => 'The host asks people to join muted';
+
+  @override
+  String get meetingPrejoinLockedHint =>
+      'This meeting is locked. Only invited people can join.';
+
+  @override
+  String get meetingPrejoinInCall =>
+      'You\'re in a call. Hang up to join this meeting.';
+
+  @override
+  String get meetingMicOn => 'Turn on microphone';
+
+  @override
+  String get meetingMicOff => 'Turn off microphone';
+
+  @override
+  String get meetingCamOn => 'Turn on camera';
+
+  @override
+  String get meetingCamOff => 'Turn off camera';
+
+  @override
+  String get meetingMediaUnavailable => 'No microphone or camera found';
+
+  @override
+  String get meetingWaitingTitle => 'Asking to join…';
+
+  @override
+  String get meetingWaitingDesc =>
+      'Someone in the meeting will let you in soon';
+
+  @override
+  String get meetingWaitingCancel => 'Cancel';
+
+  @override
+  String get meetingDeniedTitle => 'You weren\'t let in';
+
+  @override
+  String get meetingDeniedDesc =>
+      'Someone in the meeting declined your request';
+
+  @override
+  String get meetingRemovedTitle => 'You were removed from the meeting';
+
+  @override
+  String get meetingRemovedDesc => 'You can\'t rejoin this meeting';
+
+  @override
+  String get meetingLockedTitle => 'This meeting is locked';
+
+  @override
+  String get meetingLockedDesc => 'Only invited people can join right now';
+
+  @override
+  String get meetingFullTitle => 'This meeting is full';
+
+  @override
+  String meetingFullDesc(int max) {
+    return '$max people are already in. Try again later.';
+  }
+
+  @override
+  String get meetingUnavailableTitle => 'Meetings are unavailable';
+
+  @override
+  String get meetingUnavailableDesc => 'Try again in a moment';
+
+  @override
+  String get meetingNotFoundTitle => 'Meeting not found';
+
+  @override
+  String get meetingNotFoundDesc => 'Check the code or link and try again';
+
+  @override
+  String get meetingLeftTitle => 'You left the meeting';
+
+  @override
+  String get meetingConnectionLostTitle => 'Connection lost';
+
+  @override
+  String get meetingConnectionLostDesc =>
+      'We couldn\'t reconnect you to the meeting';
+
+  @override
+  String get meetingRejoin => 'Rejoin';
+
+  @override
+  String get meetingTryAgain => 'Try again';
+
+  @override
+  String get meetingViewDetails => 'Meeting details';
+
+  @override
+  String get meetingLeaveMeeting => 'Leave meeting';
+
+  @override
+  String meetingNameWithYou(String name) {
+    return '$name (you)';
+  }
+
+  @override
+  String get meetingReconnecting => 'Reconnecting…';
+
+  @override
+  String get meetingPoorConnection => 'Your connection is unstable';
+
+  @override
+  String get meetingPresenting => 'You\'re presenting';
+
+  @override
+  String get meetingStopPresenting => 'Stop presenting';
+
+  @override
+  String meetingPresentingName(String name) {
+    return '$name is presenting';
+  }
+
+  @override
+  String meetingParticipantCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people',
+      one: '$count person',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingOverflowTiles(int count) {
+    return '+$count';
+  }
+
+  @override
+  String meetingOverflowMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more people',
+      one: '$count more person',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingPin => 'Pin';
+
+  @override
+  String get meetingUnpin => 'Unpin';
+
+  @override
+  String meetingTileMenu(String name) {
+    return 'Options for $name';
+  }
+
+  @override
+  String get meetingMicMutedLabel => 'Microphone off';
+
+  @override
+  String get meetingHandRaisedLabel => 'Hand raised';
+
+  @override
+  String get meetingSpeakingLabel => 'Speaking';
+
+  @override
+  String get meetingPoorConnectionPeer => 'Unstable connection';
+
+  @override
+  String get meetingHostBadge => 'Host or co-host';
+
+  @override
+  String get meetingShareStart => 'Present screen';
+
+  @override
+  String get meetingShareDisabled =>
+      'The host turned off screen sharing for participants';
+
+  @override
+  String get meetingRaiseHand => 'Raise hand';
+
+  @override
+  String get meetingLowerHand => 'Lower hand';
+
+  @override
+  String get meetingReactions => 'Send a reaction';
+
+  @override
+  String get meetingChat => 'Chat';
+
+  @override
+  String get meetingNotes => 'Notes';
+
+  @override
+  String get meetingPeople => 'People';
+
+  @override
+  String get meetingMore => 'More options';
+
+  @override
+  String get meetingLayout => 'Layout';
+
+  @override
+  String get meetingLayoutGrid => 'Grid';
+
+  @override
+  String get meetingLayoutSpotlight => 'Speaker';
+
+  @override
+  String get meetingDevicesTitle => 'Audio & video';
+
+  @override
+  String get meetingLeave => 'Leave';
+
+  @override
+  String get meetingEndForAll => 'End meeting for all';
+
+  @override
+  String meetingReactionAria(String name, String emoji) {
+    return '$name reacted $emoji';
+  }
+
+  @override
+  String get meetingPeopleTitle => 'People';
+
+  @override
+  String get meetingManageTitle => 'Host controls';
+
+  @override
+  String meetingSectionHands(int count) {
+    return 'Raised hands ($count)';
+  }
+
+  @override
+  String meetingSectionLobby(int count) {
+    return 'Waiting to join ($count)';
+  }
+
+  @override
+  String meetingSectionInMeeting(int count) {
+    return 'In the meeting ($count)';
+  }
+
+  @override
+  String get meetingAdmit => 'Admit';
+
+  @override
+  String get meetingDeny => 'Deny';
+
+  @override
+  String get meetingAdmitAll => 'Admit all';
+
+  @override
+  String meetingPersonMenu(String name) {
+    return 'Options for $name';
+  }
+
+  @override
+  String get meetingActionMuteMic => 'Mute microphone';
+
+  @override
+  String get meetingActionMuteAll => 'Mute everyone';
+
+  @override
+  String get meetingActionRemove => 'Remove from meeting';
+
+  @override
+  String get meetingActionLowerHand => 'Lower hand';
+
+  @override
+  String get meetingActionLowerAllHands => 'Lower all hands';
+
+  @override
+  String get meetingActionMakeCohost => 'Make co-host';
+
+  @override
+  String get meetingActionRevokeCohost => 'Remove as co-host';
+
+  @override
+  String meetingRemoveConfirmTitle(String name) {
+    return 'Remove $name?';
+  }
+
+  @override
+  String get meetingRemoveConfirmDesc =>
+      'They won\'t be able to rejoin this meeting';
+
+  @override
+  String get meetingMuteAllConfirmTitle => 'Mute everyone?';
+
+  @override
+  String get meetingMuteAllConfirmDesc => 'People can unmute themselves';
+
+  @override
+  String get meetingChatTitle => 'Meeting chat';
+
+  @override
+  String get meetingChatPlaceholder => 'Send a message';
+
+  @override
+  String get meetingChatSend => 'Send';
+
+  @override
+  String get meetingChatEmpty =>
+      'Messages are visible to everyone in the meeting';
+
+  @override
+  String get meetingChatFailed => 'Not sent';
+
+  @override
+  String get meetingChatRetry => 'Retry';
+
+  @override
+  String get meetingChatDiscard => 'Discard';
+
+  @override
+  String get meetingChatSending => 'Sending…';
+
+  @override
+  String get meetingChatOffline =>
+      'Reconnecting — you can\'t send messages right now';
+
+  @override
+  String meetingChatCounter(int count, int max) {
+    return '$count/$max';
+  }
+
+  @override
+  String meetingChatUnread(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new messages',
+      one: '$count new message',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingMediaBlocked =>
+      'Microphone or camera access is off. You can still join and turn it on later in Settings.';
+
+  @override
+  String get meetingSwitchCamera => 'Switch camera';
+
+  @override
+  String get meetingSpeakerOn => 'Use speaker';
+
+  @override
+  String get meetingSpeakerOff => 'Use earpiece';
+
+  @override
+  String get meetingLoading => 'Loading meeting…';
 }

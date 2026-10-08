@@ -4975,4 +4975,369 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get meetingShareNotifBody => '会議の参加者全員があなたの画面を見ることができます';
+
+  @override
+  String get meetingJoinNow => '今すぐ参加';
+
+  @override
+  String get meetingAskToJoin => '参加をリクエスト';
+
+  @override
+  String get meetingPrejoinTitle => '参加の準備はできましたか？';
+
+  @override
+  String meetingPrejoinStartsAt(String time) {
+    return '開始：$time';
+  }
+
+  @override
+  String meetingPrejoinJoiningAs(String name) {
+    return '$name として参加します';
+  }
+
+  @override
+  String get meetingPrejoinCameraOff => 'カメラはオフです';
+
+  @override
+  String get meetingPrejoinMuteOnEntry => '主催者はミュートでの参加を求めています';
+
+  @override
+  String get meetingPrejoinLockedHint => 'この会議はロックされています。招待された人のみ参加できます。';
+
+  @override
+  String get meetingPrejoinInCall => '通話中です。この会議に参加するには通話を終了してください。';
+
+  @override
+  String get meetingMicOn => 'マイクをオンにする';
+
+  @override
+  String get meetingMicOff => 'マイクをオフにする';
+
+  @override
+  String get meetingCamOn => 'カメラをオンにする';
+
+  @override
+  String get meetingCamOff => 'カメラをオフにする';
+
+  @override
+  String get meetingMediaUnavailable => 'マイクまたはカメラが見つかりません';
+
+  @override
+  String get meetingWaitingTitle => '参加をリクエストしています…';
+
+  @override
+  String get meetingWaitingDesc => 'まもなく会議の参加者が入室を許可します';
+
+  @override
+  String get meetingWaitingCancel => 'キャンセル';
+
+  @override
+  String get meetingDeniedTitle => '入室が許可されませんでした';
+
+  @override
+  String get meetingDeniedDesc => '会議の参加者がリクエストを拒否しました';
+
+  @override
+  String get meetingRemovedTitle => '会議から退出させられました';
+
+  @override
+  String get meetingRemovedDesc => 'この会議には再参加できません';
+
+  @override
+  String get meetingLockedTitle => 'この会議はロックされています';
+
+  @override
+  String get meetingLockedDesc => '現在は招待された人のみ参加できます';
+
+  @override
+  String get meetingFullTitle => 'この会議は満員です';
+
+  @override
+  String meetingFullDesc(int max) {
+    return 'すでに $max 人が参加しています。後でもう一度お試しください。';
+  }
+
+  @override
+  String get meetingUnavailableTitle => '会議は現在利用できません';
+
+  @override
+  String get meetingUnavailableDesc => 'しばらくしてからもう一度お試しください';
+
+  @override
+  String get meetingNotFoundTitle => '会議が見つかりません';
+
+  @override
+  String get meetingNotFoundDesc => 'コードまたはリンクを確認してもう一度お試しください';
+
+  @override
+  String get meetingLeftTitle => '会議から退出しました';
+
+  @override
+  String get meetingConnectionLostTitle => '接続が切れました';
+
+  @override
+  String get meetingConnectionLostDesc => '会議に再接続できませんでした';
+
+  @override
+  String get meetingRejoin => '再参加';
+
+  @override
+  String get meetingTryAgain => '再試行';
+
+  @override
+  String get meetingViewDetails => '会議の詳細';
+
+  @override
+  String get meetingLeaveMeeting => '会議から退出';
+
+  @override
+  String meetingNameWithYou(String name) {
+    return '$name（あなた）';
+  }
+
+  @override
+  String get meetingReconnecting => '再接続しています…';
+
+  @override
+  String get meetingPoorConnection => '接続が不安定です';
+
+  @override
+  String get meetingPresenting => '画面を共有しています';
+
+  @override
+  String get meetingStopPresenting => '共有を停止';
+
+  @override
+  String meetingPresentingName(String name) {
+    return '$name さんが画面を共有しています';
+  }
+
+  @override
+  String meetingParticipantCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 人',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meetingOverflowTiles(int count) {
+    return '+$count';
+  }
+
+  @override
+  String meetingOverflowMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ほか $count 人',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingPin => '固定';
+
+  @override
+  String get meetingUnpin => '固定を解除';
+
+  @override
+  String meetingTileMenu(String name) {
+    return '$name のオプション';
+  }
+
+  @override
+  String get meetingMicMutedLabel => 'マイクはオフです';
+
+  @override
+  String get meetingHandRaisedLabel => '挙手しています';
+
+  @override
+  String get meetingSpeakingLabel => '発言中';
+
+  @override
+  String get meetingPoorConnectionPeer => '接続が不安定';
+
+  @override
+  String get meetingHostBadge => '主催者または共同主催者';
+
+  @override
+  String get meetingShareStart => '画面を共有';
+
+  @override
+  String get meetingShareDisabled => '主催者が参加者の画面共有をオフにしました';
+
+  @override
+  String get meetingRaiseHand => '挙手';
+
+  @override
+  String get meetingLowerHand => '手を下ろす';
+
+  @override
+  String get meetingReactions => 'リアクションを送信';
+
+  @override
+  String get meetingChat => 'チャット';
+
+  @override
+  String get meetingNotes => 'メモ';
+
+  @override
+  String get meetingPeople => '参加者';
+
+  @override
+  String get meetingMore => 'その他のオプション';
+
+  @override
+  String get meetingLayout => 'レイアウト';
+
+  @override
+  String get meetingLayoutGrid => 'グリッド';
+
+  @override
+  String get meetingLayoutSpotlight => '発言者';
+
+  @override
+  String get meetingDevicesTitle => '音声と動画';
+
+  @override
+  String get meetingLeave => '退出';
+
+  @override
+  String get meetingEndForAll => '全員の会議を終了';
+
+  @override
+  String meetingReactionAria(String name, String emoji) {
+    return '$name さんが $emoji でリアクションしました';
+  }
+
+  @override
+  String get meetingPeopleTitle => '参加者';
+
+  @override
+  String get meetingManageTitle => '主催者の操作';
+
+  @override
+  String meetingSectionHands(int count) {
+    return '挙手中（$count）';
+  }
+
+  @override
+  String meetingSectionLobby(int count) {
+    return '参加待ち（$count）';
+  }
+
+  @override
+  String meetingSectionInMeeting(int count) {
+    return '会議中（$count）';
+  }
+
+  @override
+  String get meetingAdmit => '参加を許可';
+
+  @override
+  String get meetingDeny => '拒否';
+
+  @override
+  String get meetingAdmitAll => '全員を許可';
+
+  @override
+  String meetingPersonMenu(String name) {
+    return '$name のオプション';
+  }
+
+  @override
+  String get meetingActionMuteMic => 'マイクをミュート';
+
+  @override
+  String get meetingActionMuteAll => '全員をミュート';
+
+  @override
+  String get meetingActionRemove => '会議から退出させる';
+
+  @override
+  String get meetingActionLowerHand => '手を下ろす';
+
+  @override
+  String get meetingActionLowerAllHands => '全員の手を下ろす';
+
+  @override
+  String get meetingActionMakeCohost => '共同主催者にする';
+
+  @override
+  String get meetingActionRevokeCohost => '共同主催者から外す';
+
+  @override
+  String meetingRemoveConfirmTitle(String name) {
+    return '$name を会議から退出させますか？';
+  }
+
+  @override
+  String get meetingRemoveConfirmDesc => 'この会議に再参加できなくなります';
+
+  @override
+  String get meetingMuteAllConfirmTitle => '全員をミュートしますか？';
+
+  @override
+  String get meetingMuteAllConfirmDesc => '各自でミュートを解除できます';
+
+  @override
+  String get meetingChatTitle => '会議のチャット';
+
+  @override
+  String get meetingChatPlaceholder => 'メッセージを送信';
+
+  @override
+  String get meetingChatSend => '送信';
+
+  @override
+  String get meetingChatEmpty => 'メッセージは会議の参加者全員に表示されます';
+
+  @override
+  String get meetingChatFailed => '送信できませんでした';
+
+  @override
+  String get meetingChatRetry => '再送信';
+
+  @override
+  String get meetingChatDiscard => '破棄';
+
+  @override
+  String get meetingChatSending => '送信中…';
+
+  @override
+  String get meetingChatOffline => '再接続中のため、現在メッセージを送信できません';
+
+  @override
+  String meetingChatCounter(int count, int max) {
+    return '$count/$max';
+  }
+
+  @override
+  String meetingChatUnread(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '新着メッセージ $count 件',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meetingMediaBlocked =>
+      'マイクまたはカメラへのアクセスがオフです。このまま参加して、後で「設定」からオンにできます。';
+
+  @override
+  String get meetingSwitchCamera => 'カメラを切り替え';
+
+  @override
+  String get meetingSpeakerOn => 'スピーカーを使用';
+
+  @override
+  String get meetingSpeakerOff => '受話口を使用';
+
+  @override
+  String get meetingLoading => '会議を読み込み中…';
 }
