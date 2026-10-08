@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,35 +9,11 @@ import '../../../core/rtc/rtc_session.dart';
 import '../data/calls_repository.dart';
 import '../data/stomp_service.dart';
 import 'call_rules.dart';
+import 'call_signal_port.dart';
 import 'call_transport.dart';
 import 'direct_call_engine.dart';
 
-/// The STOMP side a LiveKit call needs, so the engine runs without a socket
-/// in tests. [holdConversation] keeps the conversation topic subscribed for
-/// the call's lifetime (ref-counted with the chat screen).
-abstract class CallSignalPort {
-  void send(String destination, Map<String, dynamic> body);
-  void holdConversation(String conversationId);
-  void releaseConversation(String conversationId);
-  Stream<Map<String, dynamic>> get callEvents;
-}
-
-class StompCallSignalPort implements CallSignalPort {
-  final StompService _stomp;
-  StompCallSignalPort(this._stomp);
-
-  @override
-  void send(String destination, Map<String, dynamic> body) =>
-      _stomp.sendRawMessage(destination: destination, body: jsonEncode(body));
-  @override
-  void holdConversation(String conversationId) =>
-      _stomp.subscribeConversation(conversationId);
-  @override
-  void releaseConversation(String conversationId) =>
-      _stomp.unsubscribeConversation(conversationId);
-  @override
-  Stream<Map<String, dynamic>> get callEvents => _stomp.callEvents;
-}
+export 'call_signal_port.dart';
 
 const _declineReasons = {
   CallEndReason.declined,
@@ -119,6 +94,17 @@ class SfuCallService implements DirectCallEngine {
       _callId != null || (_pendingStart && _cancelledBeforeStart == null);
 
   @override
+  bool get isVideo => _isVideo;
+
+  /// Our own outgoing, unanswered call is ringing [peerId] in [conversationId].
+  bool isCallingTo(String peerId, String conversationId) =>
+      !_incoming &&
+      !_connected &&
+      _targetId == peerId &&
+      _conversationId == conversationId &&
+      (_callId != null || (_pendingStart && _cancelledBeforeStart == null));
+
+  @override
   bool get micOn => _micOn;
   @override
   bool get cameraOn => _cameraOn;
@@ -196,6 +182,8 @@ class SfuCallService implements DirectCallEngine {
         if (!_incoming && !_connected && (_pendingStart || _callId != null)) {
           dispose();
         }
+      case 'call-merged':
+        _onMerged(signal);
       case 'call-ring-cancel':
         // Our own answer echoes back as answered_elsewhere: ignore it then.
         if (!_incoming || _accepting || signal['callId'] != _callId) return;
@@ -349,6 +337,35 @@ class SfuCallService implements DirectCallEngine {
       return;
     }
     _callId = callId;
+    unawaited(_join());
+  }
+
+  /// Both tapped Call: the server accepted us into their call instead of
+  /// ringing them. Join it, with that call's media.
+  void _onMerged(Map<String, dynamic> signal) {
+    final callId = signal['callId'] as String?;
+    final conversationId = signal['conversationId'] as String?;
+    final senderId = signal['senderId'] as String?;
+    if (callId == null || conversationId == null || senderId == null) return;
+    if (_pendingStart &&
+        _cancelledBeforeStart != null &&
+        _conversationId == conversationId) {
+      // We hung up before the server answered: leave the call it put us in.
+      _pendingTimer?.cancel();
+      _pendingTimer = null;
+      _pendingStart = false;
+      _cancelledBeforeStart = null;
+      _port.send('/app/call.leave', {'callId': callId});
+      _release();
+      return;
+    }
+    if (!isCallingTo(senderId, conversationId)) return;
+    _pendingTimer?.cancel();
+    _pendingTimer = null;
+    _pendingStart = false; // our call.start was folded into theirs
+    _callId = callId;
+    _isVideo = signal['media'] == 'video';
+    _cameraOn = _isVideo;
     unawaited(_join());
   }
 

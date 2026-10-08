@@ -22,19 +22,22 @@ enum CallEndReason {
       .firstWhere((r) => r.wire == value, orElse: () => CallEndReason.hangup);
 }
 
-enum IncomingOfferAction { ring, ignore, replyBusy }
+enum IncomingOfferAction { ring, ignore, replyBusy, answerCrossed }
 
 enum SfuRingAction { ring, ignore, replyBusy }
 
 /// What to do with a LiveKit 1-on-1 ring [callId] while possibly already
 /// ringing ([ringingCallId]), in a 1-on-1 ([inCall]) or a group call.
+/// [callingThem]: we are calling the person who is calling us — both tapped
+/// Call; the server answers their call for us (`call-merged`), so not busy.
 SfuRingAction decideSfuRing({
   required String callId,
   String? ringingCallId,
   bool inCall = false,
   bool inGroupCall = false,
+  bool callingThem = false,
 }) {
-  if (ringingCallId == callId) return SfuRingAction.ignore;
+  if (ringingCallId == callId || callingThem) return SfuRingAction.ignore;
   if (ringingCallId != null || inCall || inGroupCall) return SfuRingAction.replyBusy;
   return SfuRingAction.ring;
 }
@@ -42,12 +45,23 @@ SfuRingAction decideSfuRing({
 /// What to do with an incoming offer from [from] while possibly already
 /// ringing ([ringingFrom]), in a 1-on-1 call ([inCallWith]) or in a group
 /// call ([inGroupCall]).
+///
+/// [callingTo] is who our own outgoing, unanswered call is ringing. When that
+/// is [from], the offers crossed (both tapped Call): exactly one side answers
+/// — the one whose user id ([selfId]) sorts first; the other keeps its offer.
 IncomingOfferAction decideIncomingOffer({
   required String from,
   String? ringingFrom,
   String? inCallWith,
   bool inGroupCall = false,
+  String? callingTo,
+  String? selfId,
 }) {
+  if (callingTo == from) {
+    return selfId != null && selfId.compareTo(from) < 0
+        ? IncomingOfferAction.answerCrossed
+        : IncomingOfferAction.ignore;
+  }
   if (ringingFrom == from || inCallWith == from) {
     return IncomingOfferAction.ignore;
   }
@@ -55,6 +69,25 @@ IncomingOfferAction decideIncomingOffer({
     return IncomingOfferAction.replyBusy;
   }
   return IncomingOfferAction.ring;
+}
+
+enum CallStartAction { start, answerRinging, ignore }
+
+/// The user tapped Call on [targetId] in [conversationId]. When that person is
+/// ringing us there ([ringingFrom] in [ringingConversation]), answer them
+/// instead of placing a second call; never start one during another call.
+CallStartAction decideCallStart({
+  required String targetId,
+  required String conversationId,
+  String? ringingFrom,
+  String? ringingConversation,
+  bool inCall = false,
+}) {
+  if (ringingFrom == targetId && ringingConversation == conversationId) {
+    return CallStartAction.answerRinging;
+  }
+  if (ringingFrom != null || inCall) return CallStartAction.ignore;
+  return CallStartAction.start;
 }
 
 /// After the callee rejects (declines, is busy, cannot open the mic), the

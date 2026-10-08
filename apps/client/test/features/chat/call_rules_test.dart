@@ -49,6 +49,57 @@ void main() {
     });
   });
 
+  group('crossed offers (both tapped Call)', () {
+    test('the smaller user id answers, the other keeps its own offer', () {
+      expect(
+          decideIncomingOffer(
+              from: 'bob', inCallWith: 'bob', callingTo: 'bob', selfId: 'alice'),
+          IncomingOfferAction.answerCrossed);
+      expect(
+          decideIncomingOffer(
+              from: 'alice',
+              inCallWith: 'alice',
+              callingTo: 'alice',
+              selfId: 'zoe'),
+          IncomingOfferAction.ignore);
+    });
+
+    test('without our own id the old behaviour stays', () {
+      expect(
+          decideIncomingOffer(from: 'bob', inCallWith: 'bob', callingTo: 'bob'),
+          IncomingOfferAction.ignore);
+    });
+  });
+
+  group('decideCallStart', () {
+    test('tapping Call on the person ringing us answers them', () {
+      expect(
+          decideCallStart(
+              targetId: 'bob',
+              conversationId: 'c',
+              ringingFrom: 'bob',
+              ringingConversation: 'c'),
+          CallStartAction.answerRinging);
+    });
+
+    test('nothing starts while another call rings or runs', () {
+      expect(
+          decideCallStart(
+              targetId: 'bob',
+              conversationId: 'c',
+              ringingFrom: 'carol',
+              ringingConversation: 'c2'),
+          CallStartAction.ignore);
+      expect(decideCallStart(targetId: 'bob', conversationId: 'c', inCall: true),
+          CallStartAction.ignore);
+    });
+
+    test('otherwise a new call starts', () {
+      expect(decideCallStart(targetId: 'bob', conversationId: 'c'),
+          CallStartAction.start);
+    });
+  });
+
   group('endTargetsCurrentCall', () {
     test('only the current peer can end the call', () {
       expect(endTargetsCurrentCall(from: 'a', peerId: 'a'), isTrue);
