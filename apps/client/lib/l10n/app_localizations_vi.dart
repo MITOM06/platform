@@ -2599,6 +2599,36 @@ class AppLocalizationsVi extends AppLocalizations {
   String get adminSsoAddMapping => 'Thêm ánh xạ';
 
   @override
+  String get adminSsoEnforce => 'Bắt buộc SSO cho các tên miền này';
+
+  @override
+  String get adminSsoEnforceHint =>
+      'Thành viên có email thuộc các tên miền này phải đăng nhập bằng SSO. Chủ sở hữu vẫn có thể dùng mật khẩu kèm 2FA.';
+
+  @override
+  String get adminSsoEnforceNotReady =>
+      'Hãy bật SSO và thêm ít nhất một tên miền được phép trước.';
+
+  @override
+  String get adminSsoEnforceConfirmTitle =>
+      'Bắt buộc SSO cho các tên miền này?';
+
+  @override
+  String get adminSsoEnforceConfirmPasswords =>
+      'Đăng nhập bằng mật khẩu, đăng nhập bằng Google và đặt lại mật khẩu sẽ bị tắt cho các tên miền này.';
+
+  @override
+  String get adminSsoEnforceConfirmOwners =>
+      'Chủ sở hữu vẫn giữ đăng nhập bằng mật khẩu + 2FA làm tài khoản khẩn cấp.';
+
+  @override
+  String get adminSsoEnforceConfirmSessions =>
+      'Những người thuộc các tên miền này đang đăng nhập không qua SSO sẽ bị đăng xuất khi bạn lưu.';
+
+  @override
+  String get adminSsoEnforceConfirm => 'Bắt buộc SSO';
+
+  @override
   String get sectionDirectoryTitle => 'Danh bạ MCP';
 
   @override
@@ -3355,6 +3385,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get inviteSubmit => 'Tạo tài khoản';
 
   @override
+  String get inviteSsoRequired =>
+      'Tổ chức của bạn yêu cầu đăng nhập SSO cho email này. Hãy đăng nhập bằng SSO để chấp nhận lời mời.';
+
+  @override
   String get inviteInvalidTitle => 'Lời mời không hợp lệ';
 
   @override
@@ -3479,6 +3513,18 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get authErrSsoDomainNotAllowed =>
       'Tên miền email của bạn không được phép dùng SSO.';
+
+  @override
+  String get authErrSsoRequired =>
+      'Tổ chức của bạn yêu cầu đăng nhập một lần (SSO). Hãy dùng \"Đăng nhập bằng SSO\".';
+
+  @override
+  String get authErrSsoUnavailable =>
+      'Hệ thống đăng nhập của tổ chức bạn đang tạm thời không truy cập được. Vui lòng thử lại sau ít phút.';
+
+  @override
+  String get authErrSsoEnforceNotReady =>
+      'Chưa thể bắt buộc SSO. Hãy bật SSO, thêm ít nhất một tên miền được phép và đảm bảo nhà cung cấp danh tính đã được cấu hình.';
 
   @override
   String get adminInviteMember => 'Mời thành viên';
@@ -4412,6 +4458,47 @@ class AppLocalizationsVi extends AppLocalizations {
   String get securityMfaDone => 'Xong';
 
   @override
+  String get securityMfaOptionalHint =>
+      'Thêm một bước xác minh khi đăng nhập. Không bắt buộc với vai trò của bạn.';
+
+  @override
+  String get securityMfaStatusDisabled => 'Tắt';
+
+  @override
+  String get securityMfaTurnOn => 'Bật 2FA';
+
+  @override
+  String get securityMfaTurnedOn => 'Đã bật xác thực hai yếu tố.';
+
+  @override
+  String get securityMfaSetupExpired =>
+      'Phiên thiết lập đã hết hạn. Vui lòng bắt đầu lại.';
+
+  @override
+  String get securityMfaTooManyAttempts =>
+      'Nhập sai mã quá nhiều lần. Vui lòng đợi vài phút rồi thử lại.';
+
+  @override
+  String get securityMfaTurnOff => 'Tắt 2FA';
+
+  @override
+  String get securityMfaTurnOffTitle => 'Tắt xác thực hai yếu tố?';
+
+  @override
+  String get securityMfaTurnOffHint =>
+      'Nhập mã hiện tại từ ứng dụng xác thực để xác nhận. Bạn sẽ không còn phải nhập mã khi đăng nhập.';
+
+  @override
+  String get securityMfaTurnOffSubmit => 'Tắt';
+
+  @override
+  String get securityMfaTurnedOff => 'Đã tắt xác thực hai yếu tố.';
+
+  @override
+  String get authErrMfaRequiredByRole =>
+      'Vai trò của bạn bắt buộc xác thực hai yếu tố nên không thể tắt.';
+
+  @override
   String get adminMfaBadge => 'Đã bật 2FA';
 
   @override
@@ -4425,6 +4512,15 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get adminMfaResetDone =>
       'Đã đặt lại 2FA. Người này sẽ thiết lập lại ở lần đăng nhập tới.';
+
+  @override
+  String adminMfaResetConfirmOptional(String name) {
+    return 'Đặt lại xác thực hai yếu tố cho $name? Người này sẽ bị đăng xuất khỏi mọi thiết bị và xác thực hai yếu tố sẽ bị tắt. Họ có thể bật lại trong Cài đặt → Mật khẩu & Bảo mật.';
+  }
+
+  @override
+  String get adminMfaResetDoneOptional =>
+      'Đã đặt lại 2FA. 2FA của người này hiện đã tắt; họ có thể bật lại trong Cài đặt.';
 
   @override
   String get authMsgMfaRequired =>
@@ -4456,7 +4552,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get authErrMfaResetForbidden =>
-      'Chỉ Chủ sở hữu mới có thể đặt lại xác thực hai yếu tố.';
+      'Bạn không thể đặt lại xác thực hai yếu tố cho thành viên này.';
 
   @override
   String get authErrMfaResetSelfForbidden =>

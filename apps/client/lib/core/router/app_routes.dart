@@ -96,8 +96,10 @@ List<RouteBase> buildAppRoutes() {
       },
     ),
 
-    // Two-factor step of a privileged sign-in (contract 09). The redirect in
-    // app_router.dart makes it reachable only while a challenge is pending.
+    // Two-factor step of a password / Google sign-in that needs 2FA (Owner /
+    // Admin-like roles, or a Member who turned it on — contract 15). The
+    // redirect in app_router.dart makes it reachable only while a challenge
+    // is pending.
     GoRoute(
       path: '/mfa',
       name: 'mfa',

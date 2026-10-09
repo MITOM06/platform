@@ -933,6 +933,14 @@
   "adminSsoGroupDeptMap": "Grupo → Departamento",
   "adminSsoGroupPlaceholder": "Nombre del grupo IdP",
   "adminSsoAddMapping": "Añadir asignación",
+  "adminSsoEnforce": "Exigir SSO para estos dominios",
+  "adminSsoEnforceHint": "Los miembros con estos dominios de correo deben iniciar sesión con SSO. Los Propietarios pueden seguir usando contraseña con 2FA.",
+  "adminSsoEnforceNotReady": "Primero activa SSO y añade al menos un dominio permitido.",
+  "adminSsoEnforceConfirmTitle": "¿Exigir SSO para estos dominios?",
+  "adminSsoEnforceConfirmPasswords": "Se desactivan el inicio de sesión con contraseña, el inicio de sesión con Google y el restablecimiento de contraseña para estos dominios.",
+  "adminSsoEnforceConfirmOwners": "Los Propietarios conservan el inicio de sesión con contraseña + 2FA como cuenta de emergencia.",
+  "adminSsoEnforceConfirmSessions": "Al guardar, se cerrará la sesión de quienes en estos dominios hayan iniciado sesión sin SSO.",
+  "adminSsoEnforceConfirm": "Exigir SSO",
   "sectionDirectoryTitle": "Directorio MCP",
   "sectionDirectoryDesc": "Explora servidores MCP y conéctate con un clic — OAuth se ejecuta automáticamente.",
   "directoryAdd": "Añadir entrada",
@@ -1165,6 +1173,7 @@
   "inviteGoogleHint": "Usa la cuenta de Google de {email}",
   "inviteOrSetPassword": "o crea una contraseña",
   "inviteSubmit": "Crear cuenta",
+  "inviteSsoRequired": "Tu organización requiere inicio de sesión único para este correo. Inicia sesión con SSO para aceptar la invitación.",
   "inviteInvalidTitle": "Invitación no válida",
   "inviteInvalidBody": "Este enlace de invitación no es válido. Revisa el enlace de tu correo o pide una nueva invitación a tu administrador.",
   "inviteExpiredTitle": "Invitación caducada",
@@ -1200,6 +1209,9 @@
   "authErrLastOwnerCannotBeBlocked": "No se puede bloquear al último Owner.",
   "authErrSsoDisabled": "El inicio de sesión único está desactivado.",
   "authErrSsoDomainNotAllowed": "Tu dominio de correo no está permitido para SSO.",
+  "authErrSsoRequired": "Tu organización requiere inicio de sesión único. Usa \"Iniciar sesión con SSO\".",
+  "authErrSsoUnavailable": "El servicio de inicio de sesión de tu organización no está disponible en este momento. Inténtalo de nuevo en unos minutos.",
+  "authErrSsoEnforceNotReady": "Aún no se puede exigir SSO. Activa SSO, añade al menos un dominio permitido y asegúrate de que el proveedor de identidad esté configurado.",
   "adminInviteMember": "Invitar miembro",
   "adminInviteTitle": "Invitar a un miembro",
   "adminInviteEmail": "Correo electrónico",
@@ -1494,6 +1506,18 @@
   "securityMfaRegenerateHint": "Introduce un código actual de tu app de autenticación. Tus códigos de respaldo anteriores dejarán de funcionar.",
   "securityMfaRegenerateSubmit": "Generar",
   "securityMfaDone": "Listo",
+  "securityMfaOptionalHint": "Añade un segundo paso a tu inicio de sesión. Es opcional para tu rol.",
+  "securityMfaStatusDisabled": "Desactivada",
+  "securityMfaTurnOn": "Activar 2FA",
+  "securityMfaTurnedOn": "La autenticación de dos factores está activada.",
+  "securityMfaSetupExpired": "La configuración ha caducado. Vuelve a empezar.",
+  "securityMfaTooManyAttempts": "Demasiados códigos incorrectos. Espera unos minutos y vuelve a intentarlo.",
+  "securityMfaTurnOff": "Desactivar 2FA",
+  "securityMfaTurnOffTitle": "¿Desactivar la autenticación de dos factores?",
+  "securityMfaTurnOffHint": "Introduce un código actual de tu app de autenticación para confirmar. Ya no se te pedirá un código al iniciar sesión.",
+  "securityMfaTurnOffSubmit": "Desactivar",
+  "securityMfaTurnedOff": "La autenticación de dos factores está desactivada.",
+  "authErrMfaRequiredByRole": "Tu rol requiere la autenticación de dos factores, así que no se puede desactivar.",
   "adminMfaBadge": "2FA activada",
   "adminMfaReset": "Restablecer 2FA",
   "adminMfaResetConfirm": "¿Restablecer la autenticación de dos factores de {name}? Se cerrará su sesión en todos los dispositivos y deberá configurarla de nuevo en su próximo inicio de sesión.",
@@ -1505,6 +1529,8 @@
     }
   },
   "adminMfaResetDone": "2FA restablecida. La configurará de nuevo en su próximo inicio de sesión.",
+  "adminMfaResetConfirmOptional": "¿Restablecer la autenticación de dos factores de {name}? Se cerrará su sesión en todos los dispositivos y la autenticación de dos factores se desactivará. Podrá activarla de nuevo en Ajustes → Contraseña y seguridad.",
+  "adminMfaResetDoneOptional": "2FA restablecida. Ahora está desactivada; podrá activarla de nuevo en Ajustes.",
   "authMsgMfaRequired": "Introduce el código de tu app de autenticación para terminar de iniciar sesión.",
   "authErrMfaTokenInvalid": "Tu inicio de sesión ha caducado. Vuelve a iniciar sesión.",
   "authErrMfaCodeInvalid": "Código incorrecto. Inténtalo de nuevo.",
@@ -1519,22 +1545,34 @@
   "authErrMfaTooManyAttempts": "Demasiados códigos incorrectos. Vuelve a iniciar sesión.",
   "authErrMfaNotEnrolled": "Esta cuenta aún no tiene configurada la autenticación de dos factores.",
   "authErrMfaAlreadyEnrolled": "Esta cuenta ya tiene configurada la autenticación de dos factores.",
-  "authErrMfaResetForbidden": "Solo un Propietario puede restablecer la autenticación de dos factores.",
+  "authErrMfaResetForbidden": "No puedes restablecer la autenticación de dos factores de este miembro.",
   "authErrMfaResetSelfForbidden": "No puedes restablecer tu propia autenticación de dos factores.",
   "callSelfWeakNetwork": "Tu red es débil",
   "callPeerWeakNetwork": "La red de {name} es débil",
   "@callPeerWeakNetwork": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "callUnstableNetwork": "Conexión inestable",
   "callReconnectingSelf": "Conexión perdida, reconectando…",
   "callWaitingForPeer": "Esperando a que {name} se reconecte…",
   "@callWaitingForPeer": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "callReconnectCountdown": "La llamada terminará en {seconds} s si no se reconecta",
   "@callReconnectCountdown": {
-    "placeholders": { "seconds": { "type": "int" } }
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
   },
   "callSwitchToVideo": "Cambiar a videollamada",
   "callVideoUnavailable": "El vídeo no está disponible en esta llamada; puede que la otra persona tenga que actualizar la app",
@@ -1548,7 +1586,11 @@
   "meetingErrEnded": "Esta reunión ha terminado",
   "meetingErrFull": "Esta reunión está llena ({max} personas)",
   "@meetingErrFull": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingErrNotCancellable": "Alguien ya se ha unido, así que no se puede cancelar",
   "meetingErrUnavailable": "Las reuniones no están disponibles en este momento. Inténtalo de nuevo en breve.",
@@ -1557,11 +1599,19 @@
   "meetingErrRateLimited": "Estás enviando demasiado rápido. Espera un momento.",
   "meetingErrChatTooLong": "Los mensajes pueden tener como máximo {max} caracteres",
   "@meetingErrChatTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingErrNoteTooLong": "Las notas pueden tener como máximo {max} caracteres",
   "@meetingErrNoteTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingErrInviteeInvalid": "Alguien de la lista no se puede invitar",
   "meetingErrDepartmentInvalid": "Ese departamento no está disponible",
@@ -1573,15 +1623,27 @@
   "meetingErrGeneric": "Algo salió mal. Inténtalo de nuevo.",
   "meetingValTitleTooLong": "El título puede tener como máximo {max} caracteres",
   "@meetingValTitleTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingValDescriptionTooLong": "La descripción puede tener como máximo {max} caracteres",
   "@meetingValDescriptionTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingValTooManyInvitees": "Puedes invitar como máximo a {max} personas",
   "@meetingValTooManyInvitees": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingValStartPast": "Elige una hora en el futuro",
   "meetingValScheduleInvalid": "Elige una fecha y hora válidas",
@@ -1598,20 +1660,39 @@
   "meetingStatusCancelled": "Cancelada",
   "meetingDurationMinutes": "{count, plural, other {{count} min}}",
   "@meetingDurationMinutes": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingDurationHours": "{count, plural, one {{count} hora} other {{count} horas}}",
   "@meetingDurationHours": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingDurationHoursMinutes": "{hours} h {minutes} min",
   "@meetingDurationHoursMinutes": {
-    "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } }
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "meetingRealtimeOffline": "El chat, las manos levantadas y los controles del organizador están en pausa hasta que vuelvas a estar en línea",
   "meetingMutedBy": "{name} ha silenciado tu micrófono",
   "@meetingMutedBy": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingMutedByUnknown": "Un organizador ha silenciado tu micrófono",
   "meetingMadeCohost": "Ahora eres coorganizador",
@@ -1622,25 +1703,57 @@
   "meetingShareFailed": "No se pudo empezar a presentar",
   "meetingLobbyWaiting": "{count, plural, one {{count} persona está esperando para entrar} other {{count} personas están esperando para entrar}}",
   "@meetingLobbyWaiting": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingNotifInvitedTitle": "Invitación a una reunión",
   "meetingNotifInvitedBody": "{name} te invitó a «{title}»",
   "@meetingNotifInvitedBody": {
-    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifInvitedBodyAt": "{name} te invitó a «{title}» el {time}",
   "@meetingNotifInvitedBodyAt": {
-    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" }, "time": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifStartingTitle": "La reunión empieza pronto",
   "meetingNotifStartingBody": "«{title}» empieza a las {time}",
   "@meetingNotifStartingBody": {
-    "placeholders": { "title": { "type": "String" }, "time": { "type": "String" } }
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifCancelled": "«{title}» se ha cancelado",
   "@meetingNotifCancelled": {
-    "placeholders": { "title": { "type": "String" } }
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifCancelledUnknown": "Se canceló una reunión a la que te invitaron",
   "meetingTitle": "Reuniones",
@@ -1663,7 +1776,11 @@
   "meetingInstantMeeting": "Reunión instantánea",
   "meetingHostedBy": "Organizada por {name}",
   "@meetingHostedBy": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingCopyLink": "Copiar enlace",
   "meetingLinkCopied": "Enlace de la reunión copiado",
@@ -1685,18 +1802,30 @@
   "meetingFieldDuration": "Duración",
   "meetingTimeZoneHint": "Las horas están en {zone}",
   "@meetingTimeZoneHint": {
-    "placeholders": { "zone": { "type": "String" } }
+    "placeholders": {
+      "zone": {
+        "type": "String"
+      }
+    }
   },
   "meetingFieldInvitees": "Invitar a personas",
   "meetingInviteeSearchPlaceholder": "Buscar por nombre o correo",
   "meetingInviteeCount": "{count, plural, one {{count} persona invitada} other {{count} personas invitadas}}",
   "@meetingInviteeCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingInviteeNone": "Aún no has invitado a nadie",
   "meetingRemoveInvitee": "Quitar a {name}",
   "@meetingRemoveInvitee": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingSearchNoResults": "No se encontró a nadie",
   "meetingSearchFailed": "No se pudo buscar ahora",
@@ -1719,7 +1848,14 @@
   "meetingToastUpdated": "Cambios guardados",
   "meetingCharCounter": "{count}/{max}",
   "@meetingCharCounter": {
-    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingNotesShared": "Compartidas",
   "meetingNotesPrivate": "Mías",
@@ -1735,12 +1871,23 @@
   "meetingNotesReadOnly": "Solo los organizadores pueden editar estas notas",
   "meetingNotesRemoteNewer": "{name} guardó una versión más reciente",
   "@meetingNotesRemoteNewer": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotesRemoteNewerUnknown": "Se guardó una versión más reciente",
   "meetingNotesCounter": "{count} / {max}",
   "@meetingNotesCounter": {
-    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingNotesConflictTitle": "Alguien guardó una versión más reciente",
   "meetingNotesConflictDesc": "Tu texto está a salvo. Compara ambas versiones y elige cuál conservar.",
@@ -1769,7 +1916,11 @@
   "meetingInvitees": "Invitados",
   "meetingMoreCount": "+{count}",
   "@meetingMoreCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingDepartmentGeneric": "Un departamento",
   "meetingSectionAttendance": "Asistencia",
@@ -1777,11 +1928,19 @@
   "meetingAttendanceInside": "En la reunión ahora",
   "meetingAttendanceDuration": "{minutes, plural, other {{minutes} min}}",
   "@meetingAttendanceDuration": {
-    "placeholders": { "minutes": { "type": "int" } }
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "meetingAttendanceSessions": "{count, plural, one {{count} sesión} other {{count} sesiones}}",
   "@meetingAttendanceSessions": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingSectionNotes": "Notas",
   "meetingSectionChat": "Chat de la reunión",
@@ -1792,7 +1951,11 @@
   "meetingGuestNotice": "Únete a la reunión para ver sus notas y chat.",
   "meetingCreatedAt": "Creada el {time}",
   "@meetingCreatedAt": {
-    "placeholders": { "time": { "type": "String" } }
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingLinkCodeCopied": "Código de la reunión copiado",
   "meetingShareNotifTitle": "Presentando tu pantalla",
@@ -1802,11 +1965,19 @@
   "meetingPrejoinTitle": "¿Listo para unirte?",
   "meetingPrejoinStartsAt": "Empieza {time}",
   "@meetingPrejoinStartsAt": {
-    "placeholders": { "time": { "type": "String" } }
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingPrejoinJoiningAs": "Te unirás como {name}",
   "@meetingPrejoinJoiningAs": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingPrejoinCameraOff": "La cámara está apagada",
   "meetingPrejoinMuteOnEntry": "El organizador pide entrar con el micrófono silenciado",
@@ -1829,7 +2000,11 @@
   "meetingFullTitle": "Esta reunión está completa",
   "meetingFullDesc": "Ya hay {max} personas dentro. Inténtalo más tarde.",
   "@meetingFullDesc": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingUnavailableTitle": "Las reuniones no están disponibles",
   "meetingUnavailableDesc": "Inténtalo de nuevo en un momento",
@@ -1844,7 +2019,11 @@
   "meetingLeaveMeeting": "Salir de la reunión",
   "meetingNameWithYou": "{name} (tú)",
   "@meetingNameWithYou": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingReconnecting": "Reconectando…",
   "meetingPoorConnection": "Tu conexión es inestable",
@@ -1852,21 +2031,37 @@
   "meetingStopPresenting": "Dejar de presentar",
   "meetingPresentingName": "{name} está presentando",
   "@meetingPresentingName": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingOverflowTiles": "+{count}",
   "@meetingOverflowTiles": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingOverflowMore": "{count, plural, one {{count} persona más} other {{count} personas más}}",
   "@meetingOverflowMore": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingPin": "Fijar",
   "meetingUnpin": "Dejar de fijar",
   "meetingTileMenu": "Opciones de {name}",
   "@meetingTileMenu": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingMicMutedLabel": "Micrófono desactivado",
   "meetingHandRaisedLabel": "Mano levantada",
@@ -1888,28 +2083,51 @@
   "meetingEndForAll": "Finalizar la reunión para todos",
   "meetingReactionAria": "{name} reaccionó con {emoji}",
   "@meetingReactionAria": {
-    "placeholders": { "name": { "type": "String" }, "emoji": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "emoji": {
+        "type": "String"
+      }
+    }
   },
   "meetingPeopleTitle": "Participantes",
   "meetingManageTitle": "Controles del organizador",
   "meetingSectionHands": "Manos levantadas ({count})",
   "@meetingSectionHands": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingSectionLobby": "Esperando para entrar ({count})",
   "@meetingSectionLobby": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingSectionInMeeting": "En la reunión ({count})",
   "@meetingSectionInMeeting": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingAdmit": "Admitir",
   "meetingDeny": "Rechazar",
   "meetingAdmitAll": "Admitir a todos",
   "meetingPersonMenu": "Opciones de {name}",
   "@meetingPersonMenu": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingActionMuteMic": "Silenciar micrófono",
   "meetingActionMuteAll": "Silenciar a todos",
@@ -1920,7 +2138,11 @@
   "meetingActionRevokeCohost": "Quitar como coorganizador",
   "meetingRemoveConfirmTitle": "¿Quitar a {name}?",
   "@meetingRemoveConfirmTitle": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingRemoveConfirmDesc": "No podrá volver a entrar en esta reunión",
   "meetingMuteAllConfirmTitle": "¿Silenciar a todos?",
@@ -1936,11 +2158,22 @@
   "meetingChatOffline": "Reconectando: ahora mismo no puedes enviar mensajes",
   "meetingChatCounter": "{count}/{max}",
   "@meetingChatCounter": {
-    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingChatUnread": "{count, plural, one {{count} mensaje nuevo} other {{count} mensajes nuevos}}",
   "@meetingChatUnread": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingMediaBlocked": "El acceso al micrófono o a la cámara está desactivado. Puedes unirte igualmente y activarlo más tarde en Ajustes.",
   "meetingSwitchCamera": "Cambiar cámara",

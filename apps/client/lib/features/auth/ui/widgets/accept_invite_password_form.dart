@@ -4,6 +4,7 @@ import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../domain/auth_provider.dart';
+import '../../domain/auth_state.dart';
 import '../../utils/auth_error.dart';
 import '../../utils/password_policy.dart';
 import 'password_strength_indicator.dart';
@@ -11,16 +12,20 @@ import 'password_strength_indicator.dart';
 /// Display name + password form of the invitation accept screen. Validation
 /// matches the new-password rules (≥8 chars, upper/lower/digit/special).
 /// [agreedToTerms] is owned by the parent screen because the same checkbox
-/// gates the Google button too. On success the auth state flips to
-/// authenticated and the router moves the user on — nothing to do here.
+/// gates the Google button too. On success the auth state moves on and the
+/// router follows (contract 15): a Member invite is signed in directly, an
+/// Owner / Admin-like invite goes to the 2FA enrollment step (`/mfa`). `SSO_REQUIRED` (the email's domain must use the
+/// company IdP) is handed to [onSsoRequired] so the screen can say so.
 class AcceptInvitePasswordForm extends ConsumerStatefulWidget {
   final String token;
   final bool agreedToTerms;
+  final VoidCallback? onSsoRequired;
 
   const AcceptInvitePasswordForm({
     super.key,
     required this.token,
     required this.agreedToTerms,
+    this.onSsoRequired,
   });
 
   @override
@@ -64,9 +69,19 @@ class _AcceptInvitePasswordFormState
             _nameController.text.trim(),
             _passwordController.text,
           );
-      if (mounted) _snack(context.l10n.authMsgInvitationAccepted);
+      // A Member invite is signed in now (confirmed here); a privileged one
+      // continues to `/mfa` (2FA set-up) and this form is gone.
+      if (mounted &&
+          ref.read(authNotifierProvider).valueOrNull is AuthAuthenticated) {
+        _snack(context.l10n.authMsgInvitationAccepted);
+      }
     } catch (e) {
-      if (mounted) _snack(authErrorMessage(context, e));
+      if (!mounted) return;
+      if (authErrorCode(e) == kSsoRequired && widget.onSsoRequired != null) {
+        widget.onSsoRequired?.call();
+      } else {
+        _snack(authErrorMessage(context, e));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

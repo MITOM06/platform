@@ -1236,6 +1236,22 @@
   "adminSsoGroupDeptMap": "Group → Department",
   "adminSsoGroupPlaceholder": "IdP group name",
   "adminSsoAddMapping": "Add mapping",
+  "adminSsoEnforce": "Require SSO for these domains",
+  "@adminSsoEnforce": {},
+  "adminSsoEnforceHint": "Members with these email domains must sign in with SSO. Owners can still use a password with 2FA.",
+  "@adminSsoEnforceHint": {},
+  "adminSsoEnforceNotReady": "Turn on SSO and add at least one allowed domain first.",
+  "@adminSsoEnforceNotReady": {},
+  "adminSsoEnforceConfirmTitle": "Require SSO for these domains?",
+  "@adminSsoEnforceConfirmTitle": {},
+  "adminSsoEnforceConfirmPasswords": "Password sign-in, Google sign-in and password reset are turned off for these domains.",
+  "@adminSsoEnforceConfirmPasswords": {},
+  "adminSsoEnforceConfirmOwners": "Owners keep password + 2FA sign-in as a break-glass account.",
+  "@adminSsoEnforceConfirmOwners": {},
+  "adminSsoEnforceConfirmSessions": "Anyone in these domains who is signed in without SSO is signed out when you save.",
+  "@adminSsoEnforceConfirmSessions": {},
+  "adminSsoEnforceConfirm": "Require SSO",
+  "@adminSsoEnforceConfirm": {},
   "sectionDirectoryTitle": "MCP directory",
   "sectionDirectoryDesc": "Browse MCP servers and connect with one click — OAuth runs automatically.",
   "directoryAdd": "Add entry",
@@ -1577,6 +1593,8 @@
   },
   "inviteOrSetPassword": "or set a password",
   "inviteSubmit": "Create account",
+  "inviteSsoRequired": "Your organization requires single sign-on for this email. Sign in with SSO to accept the invitation.",
+  "@inviteSsoRequired": {},
   "inviteInvalidTitle": "Invalid invitation",
   "inviteInvalidBody": "This invitation link is invalid. Check the link in your email or ask your administrator for a new one.",
   "inviteExpiredTitle": "Invitation expired",
@@ -1619,6 +1637,11 @@
   "authErrLastOwnerCannotBeBlocked": "The last Owner cannot be blocked.",
   "authErrSsoDisabled": "Single sign-on is disabled.",
   "authErrSsoDomainNotAllowed": "Your email domain is not allowed for SSO.",
+  "authErrSsoRequired": "Your organization requires single sign-on. Use \"Sign in with SSO\".",
+  "authErrSsoUnavailable": "Your organization's sign-in service is unavailable right now. Please try again in a moment.",
+  "@authErrSsoRequired": {},
+  "authErrSsoEnforceNotReady": "SSO can't be required yet. Turn on SSO, add at least one allowed domain, and make sure the identity provider is configured.",
+  "@authErrSsoEnforceNotReady": {},
   "adminInviteMember": "Invite member",
   "adminInviteTitle": "Invite a member",
   "adminInviteEmail": "Email address",
@@ -2207,6 +2230,18 @@
   "securityMfaRegenerateHint": "Enter a current code from your authenticator app. Your old backup codes will stop working.",
   "securityMfaRegenerateSubmit": "Generate",
   "securityMfaDone": "Done",
+  "securityMfaOptionalHint": "Add a second step to your sign-in. Optional for your role.",
+  "securityMfaStatusDisabled": "Off",
+  "securityMfaTurnOn": "Turn on 2FA",
+  "securityMfaTurnedOn": "Two-factor authentication is on.",
+  "securityMfaSetupExpired": "The setup timed out. Please start again.",
+  "securityMfaTooManyAttempts": "Too many incorrect codes. Please wait a few minutes and try again.",
+  "securityMfaTurnOff": "Turn off 2FA",
+  "securityMfaTurnOffTitle": "Turn off two-factor authentication?",
+  "securityMfaTurnOffHint": "Enter a current code from your authenticator app to confirm. You won't be asked for a code when you sign in anymore.",
+  "securityMfaTurnOffSubmit": "Turn off",
+  "securityMfaTurnedOff": "Two-factor authentication is off.",
+  "authErrMfaRequiredByRole": "Your role requires two-factor authentication, so it can't be turned off.",
   "adminMfaBadge": "2FA on",
   "adminMfaReset": "Reset 2FA",
   "adminMfaResetConfirm": "Reset two-factor authentication for {name}? They will be signed out everywhere and must set it up again at their next sign-in.",
@@ -2218,6 +2253,15 @@
     }
   },
   "adminMfaResetDone": "2FA reset. They'll set it up again at their next sign-in.",
+  "adminMfaResetConfirmOptional": "Reset two-factor authentication for {name}? They will be signed out everywhere and two-factor authentication will be turned off. They can turn it on again in Settings → Password & Security.",
+  "@adminMfaResetConfirmOptional": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminMfaResetDoneOptional": "2FA reset. It's off for them now; they can turn it on again in Settings.",
   "authMsgMfaRequired": "Enter the code from your authenticator app to finish signing in.",
   "authErrMfaTokenInvalid": "Your sign-in has expired. Please sign in again.",
   "authErrMfaCodeInvalid": "Incorrect code. Please try again.",
@@ -2232,22 +2276,34 @@
   "authErrMfaTooManyAttempts": "Too many incorrect codes. Please sign in again.",
   "authErrMfaNotEnrolled": "Two-factor authentication isn't set up for this account yet.",
   "authErrMfaAlreadyEnrolled": "Two-factor authentication is already set up for this account.",
-  "authErrMfaResetForbidden": "Only an Owner can reset two-factor authentication.",
+  "authErrMfaResetForbidden": "You can't reset two-factor authentication for this member.",
   "authErrMfaResetSelfForbidden": "You can't reset your own two-factor authentication.",
   "callSelfWeakNetwork": "Your network is weak",
   "callPeerWeakNetwork": "{name}'s network is weak",
   "@callPeerWeakNetwork": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "callUnstableNetwork": "Unstable connection",
   "callReconnectingSelf": "Connection lost — reconnecting…",
   "callWaitingForPeer": "Waiting for {name} to reconnect…",
   "@callWaitingForPeer": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "callReconnectCountdown": "The call ends in {seconds}s if it cannot reconnect",
   "@callReconnectCountdown": {
-    "placeholders": { "seconds": { "type": "int" } }
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
   },
   "callSwitchToVideo": "Switch to video",
   "callVideoUnavailable": "Video isn't available in this call — the other person may need to update the app",
@@ -2261,7 +2317,11 @@
   "meetingErrEnded": "This meeting has ended",
   "meetingErrFull": "This meeting is full ({max} people)",
   "@meetingErrFull": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingErrNotCancellable": "Someone has already joined, so it can't be cancelled",
   "meetingErrUnavailable": "Meetings are unavailable right now. Try again shortly.",
@@ -2270,11 +2330,19 @@
   "meetingErrRateLimited": "You're sending too fast. Wait a moment.",
   "meetingErrChatTooLong": "Messages can be at most {max} characters",
   "@meetingErrChatTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingErrNoteTooLong": "Notes can be at most {max} characters",
   "@meetingErrNoteTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingErrInviteeInvalid": "Someone on the list can't be invited",
   "meetingErrDepartmentInvalid": "That department isn't available",
@@ -2286,15 +2354,27 @@
   "meetingErrGeneric": "Something went wrong. Try again.",
   "meetingValTitleTooLong": "Title can be at most {max} characters",
   "@meetingValTitleTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingValDescriptionTooLong": "Description can be at most {max} characters",
   "@meetingValDescriptionTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingValTooManyInvitees": "You can invite at most {max} people",
   "@meetingValTooManyInvitees": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingValStartPast": "Pick a time in the future",
   "meetingValScheduleInvalid": "Pick a valid date and time",
@@ -2311,20 +2391,39 @@
   "meetingStatusCancelled": "Cancelled",
   "meetingDurationMinutes": "{count, plural, other {{count} min}}",
   "@meetingDurationMinutes": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingDurationHours": "{count, plural, one {{count} hour} other {{count} hours}}",
   "@meetingDurationHours": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingDurationHoursMinutes": "{hours} h {minutes} min",
   "@meetingDurationHoursMinutes": {
-    "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } }
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "meetingRealtimeOffline": "Chat, hands and host controls are paused until you're back online",
   "meetingMutedBy": "{name} muted your microphone",
   "@meetingMutedBy": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingMutedByUnknown": "A host muted your microphone",
   "meetingMadeCohost": "You're now a co-host",
@@ -2335,25 +2434,57 @@
   "meetingShareFailed": "Couldn't start presenting",
   "meetingLobbyWaiting": "{count, plural, one {{count} person is waiting to join} other {{count} people are waiting to join}}",
   "@meetingLobbyWaiting": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingNotifInvitedTitle": "Meeting invitation",
   "meetingNotifInvitedBody": "{name} invited you to “{title}”",
   "@meetingNotifInvitedBody": {
-    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifInvitedBodyAt": "{name} invited you to “{title}” on {time}",
   "@meetingNotifInvitedBodyAt": {
-    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" }, "time": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifStartingTitle": "Meeting starting soon",
   "meetingNotifStartingBody": "“{title}” starts at {time}",
   "@meetingNotifStartingBody": {
-    "placeholders": { "title": { "type": "String" }, "time": { "type": "String" } }
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifCancelled": "“{title}” was cancelled",
   "@meetingNotifCancelled": {
-    "placeholders": { "title": { "type": "String" } }
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifCancelledUnknown": "A meeting you were invited to was cancelled",
   "meetingTitle": "Meetings",
@@ -2376,7 +2507,11 @@
   "meetingInstantMeeting": "Instant meeting",
   "meetingHostedBy": "Hosted by {name}",
   "@meetingHostedBy": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingCopyLink": "Copy link",
   "meetingLinkCopied": "Meeting link copied",
@@ -2398,18 +2533,30 @@
   "meetingFieldDuration": "Duration",
   "meetingTimeZoneHint": "Times are in {zone}",
   "@meetingTimeZoneHint": {
-    "placeholders": { "zone": { "type": "String" } }
+    "placeholders": {
+      "zone": {
+        "type": "String"
+      }
+    }
   },
   "meetingFieldInvitees": "Invite people",
   "meetingInviteeSearchPlaceholder": "Search by name or email",
   "meetingInviteeCount": "{count, plural, one {{count} person invited} other {{count} people invited}}",
   "@meetingInviteeCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingInviteeNone": "No one invited yet",
   "meetingRemoveInvitee": "Remove {name}",
   "@meetingRemoveInvitee": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingSearchNoResults": "No one found",
   "meetingSearchFailed": "Couldn't search right now",
@@ -2432,7 +2579,14 @@
   "meetingToastUpdated": "Changes saved",
   "meetingCharCounter": "{count}/{max}",
   "@meetingCharCounter": {
-    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingNotesShared": "Shared",
   "meetingNotesPrivate": "Mine",
@@ -2448,12 +2602,23 @@
   "meetingNotesReadOnly": "Only hosts can edit these notes",
   "meetingNotesRemoteNewer": "{name} saved a newer version",
   "@meetingNotesRemoteNewer": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotesRemoteNewerUnknown": "A newer version was saved",
   "meetingNotesCounter": "{count} / {max}",
   "@meetingNotesCounter": {
-    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingNotesConflictTitle": "Someone saved a newer version",
   "meetingNotesConflictDesc": "Your text is safe. Compare both versions and choose what to keep.",
@@ -2482,7 +2647,11 @@
   "meetingInvitees": "Invited",
   "meetingMoreCount": "+{count}",
   "@meetingMoreCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingDepartmentGeneric": "A department",
   "meetingSectionAttendance": "Attendance",
@@ -2490,11 +2659,19 @@
   "meetingAttendanceInside": "In the meeting now",
   "meetingAttendanceDuration": "{minutes, plural, other {{minutes} min}}",
   "@meetingAttendanceDuration": {
-    "placeholders": { "minutes": { "type": "int" } }
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "meetingAttendanceSessions": "{count, plural, one {{count} session} other {{count} sessions}}",
   "@meetingAttendanceSessions": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingSectionNotes": "Notes",
   "meetingSectionChat": "Meeting chat",
@@ -2505,7 +2682,11 @@
   "meetingGuestNotice": "Join the meeting to see its notes and chat.",
   "meetingCreatedAt": "Created {time}",
   "@meetingCreatedAt": {
-    "placeholders": { "time": { "type": "String" } }
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingLinkCodeCopied": "Meeting code copied",
   "meetingShareNotifTitle": "Presenting your screen",
@@ -2515,11 +2696,19 @@
   "meetingPrejoinTitle": "Ready to join?",
   "meetingPrejoinStartsAt": "Starts {time}",
   "@meetingPrejoinStartsAt": {
-    "placeholders": { "time": { "type": "String" } }
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingPrejoinJoiningAs": "You'll join as {name}",
   "@meetingPrejoinJoiningAs": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingPrejoinCameraOff": "Camera is off",
   "meetingPrejoinMuteOnEntry": "The host asks people to join muted",
@@ -2542,7 +2731,11 @@
   "meetingFullTitle": "This meeting is full",
   "meetingFullDesc": "{max} people are already in. Try again later.",
   "@meetingFullDesc": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingUnavailableTitle": "Meetings are unavailable",
   "meetingUnavailableDesc": "Try again in a moment",
@@ -2557,7 +2750,11 @@
   "meetingLeaveMeeting": "Leave meeting",
   "meetingNameWithYou": "{name} (you)",
   "@meetingNameWithYou": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingReconnecting": "Reconnecting…",
   "meetingPoorConnection": "Your connection is unstable",
@@ -2565,21 +2762,37 @@
   "meetingStopPresenting": "Stop presenting",
   "meetingPresentingName": "{name} is presenting",
   "@meetingPresentingName": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingOverflowTiles": "+{count}",
   "@meetingOverflowTiles": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingOverflowMore": "{count, plural, one {{count} more person} other {{count} more people}}",
   "@meetingOverflowMore": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingPin": "Pin",
   "meetingUnpin": "Unpin",
   "meetingTileMenu": "Options for {name}",
   "@meetingTileMenu": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingMicMutedLabel": "Microphone off",
   "meetingHandRaisedLabel": "Hand raised",
@@ -2601,28 +2814,51 @@
   "meetingEndForAll": "End meeting for all",
   "meetingReactionAria": "{name} reacted {emoji}",
   "@meetingReactionAria": {
-    "placeholders": { "name": { "type": "String" }, "emoji": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "emoji": {
+        "type": "String"
+      }
+    }
   },
   "meetingPeopleTitle": "People",
   "meetingManageTitle": "Host controls",
   "meetingSectionHands": "Raised hands ({count})",
   "@meetingSectionHands": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingSectionLobby": "Waiting to join ({count})",
   "@meetingSectionLobby": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingSectionInMeeting": "In the meeting ({count})",
   "@meetingSectionInMeeting": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingAdmit": "Admit",
   "meetingDeny": "Deny",
   "meetingAdmitAll": "Admit all",
   "meetingPersonMenu": "Options for {name}",
   "@meetingPersonMenu": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingActionMuteMic": "Mute microphone",
   "meetingActionMuteAll": "Mute everyone",
@@ -2633,7 +2869,11 @@
   "meetingActionRevokeCohost": "Remove as co-host",
   "meetingRemoveConfirmTitle": "Remove {name}?",
   "@meetingRemoveConfirmTitle": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingRemoveConfirmDesc": "They won't be able to rejoin this meeting",
   "meetingMuteAllConfirmTitle": "Mute everyone?",
@@ -2649,11 +2889,22 @@
   "meetingChatOffline": "Reconnecting — you can't send messages right now",
   "meetingChatCounter": "{count}/{max}",
   "@meetingChatCounter": {
-    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingChatUnread": "{count, plural, one {{count} new message} other {{count} new messages}}",
   "@meetingChatUnread": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingMediaBlocked": "Microphone or camera access is off. You can still join and turn it on later in Settings.",
   "meetingSwitchCamera": "Switch camera",
