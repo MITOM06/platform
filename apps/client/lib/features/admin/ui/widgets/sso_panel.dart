@@ -4,18 +4,16 @@ import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/global_messenger.dart';
 import '../../../../core/widgets/pon_widgets.dart';
+import '../../../auth/utils/auth_error.dart';
 import '../../data/models/admin_models.dart';
 import '../../state/admin_providers.dart';
+import 'sso_enforce_tile.dart';
+import 'sso_panel_parts.dart';
 
-class _Row {
-  String group;
-  String value;
-  _Row(this.group, this.value);
-}
-
-/// SSO (OIDC) admin config — enable toggle, allowed email domains, default role,
-/// and IdP-group → role / department mappings. Mirrors the web `SsoPanel`.
-/// Provider credentials are set in the deployment .env, not here.
+/// SSO (OIDC) admin config — enable toggle, allowed email domains, "Require
+/// SSO for these domains" (contract 13 §C), default role, and IdP-group →
+/// role / department mappings. Mirrors the web `SsoPanel`. Provider
+/// credentials are set in the deployment .env, not here.
 class SsoPanel extends ConsumerStatefulWidget {
   const SsoPanel({super.key});
 
@@ -26,11 +24,19 @@ class SsoPanel extends ConsumerStatefulWidget {
 class _SsoPanelState extends ConsumerState<SsoPanel> {
   final _domains = TextEditingController();
   bool _enabled = false;
+  bool _enforced = false;
   String? _defaultRole;
-  List<_Row> _roleRows = [];
-  List<_Row> _deptRows = [];
+  List<SsoMapRowData> _roleRows = [];
+  List<SsoMapRowData> _deptRows = [];
   bool _seeded = false;
   bool _saving = false;
+
+  /// At least one allowed domain is typed (the enforce switch needs one).
+  bool _hasDomains = false;
+
+  /// Localized reason the last save failed (e.g. `SSO_ENFORCE_NOT_READY`),
+  /// shown next to the Save button — never the raw server text.
+  String? _saveError;
 
   @override
   void dispose() {
@@ -38,17 +44,34 @@ class _SsoPanelState extends ConsumerState<SsoPanel> {
     super.dispose();
   }
 
+  List<String> get _domainList => _domains.text
+      .split(',')
+      .map((d) => d.trim())
+      .where((d) => d.isNotEmpty)
+      .toList();
+
+  void _onDomainsChanged() {
+    final has = _domainList.isNotEmpty;
+    if (has != _hasDomains) setState(() => _hasDomains = has);
+  }
+
   void _seed(WorkspaceSso sso) {
     if (_seeded) return;
     _seeded = true;
     _enabled = sso.enabled;
+    _enforced = sso.enforced;
     _domains.text = sso.allowedDomains.join(', ');
+    _hasDomains = _domainList.isNotEmpty;
     _defaultRole = sso.defaultRole;
-    _roleRows = sso.groupRoleMap.entries.map((e) => _Row(e.key, e.value)).toList();
-    _deptRows = sso.groupDeptMap.entries.map((e) => _Row(e.key, e.value)).toList();
+    _roleRows = sso.groupRoleMap.entries
+        .map((e) => SsoMapRowData(e.key, e.value))
+        .toList();
+    _deptRows = sso.groupDeptMap.entries
+        .map((e) => SsoMapRowData(e.key, e.value))
+        .toList();
   }
 
-  Map<String, String> _toMap(List<_Row> rows) {
+  Map<String, String> _toMap(List<SsoMapRowData> rows) {
     final out = <String, String>{};
     for (final r in rows) {
       final g = r.group.trim();
@@ -57,18 +80,24 @@ class _SsoPanelState extends ConsumerState<SsoPanel> {
     return out;
   }
 
+  void _setEnabled(bool v) => setState(() {
+        _enabled = v;
+        // Enforcement needs SSO on — switching SSO off also lifts it.
+        if (!v) _enforced = false;
+      });
+
   Future<void> _save() async {
     final l10n = context.l10n;
-    setState(() => _saving = true);
+    setState(() {
+      _saving = true;
+      _saveError = null;
+    });
     try {
       await ref.read(workspaceProvider.notifier).save({
         'sso': {
           'enabled': _enabled,
-          'allowedDomains': _domains.text
-              .split(',')
-              .map((d) => d.trim())
-              .where((d) => d.isNotEmpty)
-              .toList(),
+          'enforced': _enforced,
+          'allowedDomains': _domainList,
           'groupRoleMap': _toMap(_roleRows),
           'groupDeptMap': _toMap(_deptRows),
           if (_defaultRole != null && _defaultRole!.isNotEmpty)
@@ -77,7 +106,8 @@ class _SsoPanelState extends ConsumerState<SsoPanel> {
       });
       if (mounted) showInfoSnackBar(l10n.adminToastSaved);
     } catch (e) {
-      if (mounted) showErrorSnackBar(l10n.adminToastError);
+      // Typed codes (SSO_ENFORCE_NOT_READY, …) → their own message.
+      if (mounted) setState(() => _saveError = authErrorMessage(context, e));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -95,7 +125,7 @@ class _SsoPanelState extends ConsumerState<SsoPanel> {
       error: (e, _) => Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text('$e',
+          child: Text(authErrorMessage(context, e),
               textAlign: TextAlign.center,
               style: TextStyle(color: AppTheme.mutedText(context))),
         ),
@@ -107,26 +137,35 @@ class _SsoPanelState extends ConsumerState<SsoPanel> {
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           children: [
-            _Title(l10n.adminSsoTitle),
-            _Muted(l10n.adminSsoHint),
+            SsoSectionTitle(l10n.adminSsoTitle),
+            SsoMutedText(l10n.adminSsoHint),
             const SizedBox(height: 8),
             SwitchListTile(
+              key: const ValueKey('sso-enabled-switch'),
               contentPadding: EdgeInsets.zero,
               activeThumbColor: AppTheme.ponAccent,
               title: Text(l10n.adminSsoEnabled,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface)),
               value: _enabled,
-              onChanged: (v) => setState(() => _enabled = v),
+              onChanged: _setEnabled,
             ),
             const SizedBox(height: 8),
             PonTextField(
               controller: _domains,
               labelText: l10n.adminSsoAllowedDomains,
               prefixIcon: Icons.alternate_email_rounded,
+              onChanged: (_) => _onDomainsChanged(),
             ),
-            _Muted(l10n.adminSsoAllowedDomainsHint),
+            SsoMutedText(l10n.adminSsoAllowedDomainsHint),
+            const SizedBox(height: 8),
+            SsoEnforceTile(
+              value: _enforced,
+              ready: _enabled && _hasDomains,
+              onChanged: (v) => setState(() => _enforced = v),
+            ),
             const SizedBox(height: 16),
-            _RoleDropdown(
+            SsoRoleDropdown(
               label: l10n.adminSsoDefaultRole,
               noneLabel: l10n.adminSsoNone,
               roles: roles,
@@ -134,36 +173,46 @@ class _SsoPanelState extends ConsumerState<SsoPanel> {
               onChanged: (v) => setState(() => _defaultRole = v),
             ),
             const SizedBox(height: 24),
-            _Title(l10n.adminSsoGroupRoleMap),
-            ..._roleRows.asMap().entries.map((e) => _MapRow(
+            SsoSectionTitle(l10n.adminSsoGroupRoleMap),
+            ..._roleRows.asMap().entries.map((e) => SsoMapRow(
                   row: e.value,
                   noneLabel: l10n.adminSsoNone,
                   placeholder: l10n.adminSsoGroupPlaceholder,
                   options: {for (final r in roles) r.name: r.name},
                   onChanged: () => setState(() {}),
-                  onRemove: () =>
-                      setState(() => _roleRows.removeAt(e.key)),
+                  onRemove: () => setState(() => _roleRows.removeAt(e.key)),
                 )),
-            _AddBtn(
+            SsoAddButton(
               label: l10n.adminSsoAddMapping,
-              onTap: () => setState(() => _roleRows.add(_Row('', ''))),
+              onTap: () =>
+                  setState(() => _roleRows.add(SsoMapRowData('', ''))),
             ),
             const SizedBox(height: 24),
-            _Title(l10n.adminSsoGroupDeptMap),
-            ..._deptRows.asMap().entries.map((e) => _MapRow(
+            SsoSectionTitle(l10n.adminSsoGroupDeptMap),
+            ..._deptRows.asMap().entries.map((e) => SsoMapRow(
                   row: e.value,
                   noneLabel: l10n.adminSsoNone,
                   placeholder: l10n.adminSsoGroupPlaceholder,
                   options: {for (final d in depts) d.id: d.name},
                   onChanged: () => setState(() {}),
-                  onRemove: () =>
-                      setState(() => _deptRows.removeAt(e.key)),
+                  onRemove: () => setState(() => _deptRows.removeAt(e.key)),
                 )),
-            _AddBtn(
+            SsoAddButton(
               label: l10n.adminSsoAddMapping,
-              onTap: () => setState(() => _deptRows.add(_Row('', ''))),
+              onTap: () =>
+                  setState(() => _deptRows.add(SsoMapRowData('', ''))),
             ),
             const SizedBox(height: 24),
+            if (_saveError != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  _saveError!, // safe: checked non-null on the line above
+                  key: const ValueKey('sso-save-error'),
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.error, fontSize: 13),
+                ),
+              ),
             PonButton(
               onPressed: _saving ? null : _save,
               child: Text(_saving ? l10n.adminSaving : l10n.adminSave),
@@ -173,159 +222,4 @@ class _SsoPanelState extends ConsumerState<SsoPanel> {
       },
     );
   }
-}
-
-class _RoleDropdown extends StatelessWidget {
-  final String label;
-  final String noneLabel;
-  final List<Role> roles;
-  final String? value;
-  final ValueChanged<String?> onChanged;
-  const _RoleDropdown({
-    required this.label,
-    required this.noneLabel,
-    required this.roles,
-    required this.value,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) => InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: AppTheme.mutedText(context)),
-          border: const OutlineInputBorder(),
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<String?>(
-            isExpanded: true,
-            dropdownColor: Theme.of(context).colorScheme.surface,
-            value: roles.any((r) => r.name == value) ? value : null,
-            hint: Text(noneLabel,
-                style: TextStyle(color: AppTheme.mutedText(context))),
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-            items: [
-              DropdownMenuItem<String?>(value: null, child: Text(noneLabel)),
-              ...roles.map((r) =>
-                  DropdownMenuItem<String?>(value: r.name, child: Text(r.name))),
-            ],
-            onChanged: onChanged,
-          ),
-        ),
-      );
-}
-
-class _MapRow extends StatelessWidget {
-  final _Row row;
-  final String noneLabel;
-  final String placeholder;
-  final Map<String, String> options; // value -> label
-  final VoidCallback onChanged;
-  final VoidCallback onRemove;
-  const _MapRow({
-    required this.row,
-    required this.noneLabel,
-    required this.placeholder,
-    required this.options,
-    required this.onChanged,
-    required this.onRemove,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextFormField(
-              initialValue: row.group,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-              decoration: InputDecoration(
-                hintText: placeholder,
-                hintStyle:
-                    TextStyle(color: AppTheme.mutedText(context)),
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
-              onChanged: (v) {
-                row.group = v;
-                onChanged();
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text('→', style: TextStyle(color: AppTheme.mutedText(context))),
-          ),
-          Expanded(
-            child: DropdownButtonFormField<String>(
-              initialValue:
-                  options.containsKey(row.value) ? row.value : null,
-              isExpanded: true,
-              dropdownColor: Theme.of(context).colorScheme.surface,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                isDense: true,
-              ),
-              hint: Text(noneLabel,
-                  style:
-                      TextStyle(color: AppTheme.mutedText(context))),
-              items: options.entries
-                  .map((e) =>
-                      DropdownMenuItem<String>(value: e.key, child: Text(e.value)))
-                  .toList(),
-              onChanged: (v) {
-                row.value = v ?? '';
-                onChanged();
-              },
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.delete_outline_rounded, color: AppTheme.mutedText(context)),
-            onPressed: onRemove,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AddBtn extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  const _AddBtn({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) => Align(
-        alignment: Alignment.centerLeft,
-        child: TextButton.icon(
-          onPressed: onTap,
-          icon: const Icon(Icons.add_rounded, color: AppTheme.ponAccent, size: 18),
-          label: Text(label, style: const TextStyle(color: AppTheme.ponAccent)),
-        ),
-      );
-}
-
-class _Title extends StatelessWidget {
-  final String text;
-  const _Title(this.text);
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Text(text,
-            style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.bold)),
-      );
-}
-
-class _Muted extends StatelessWidget {
-  final String text;
-  const _Muted(this.text);
-
-  @override
-  Widget build(BuildContext context) => Text(text,
-      style: TextStyle(color: AppTheme.mutedText(context), fontSize: 13));
 }

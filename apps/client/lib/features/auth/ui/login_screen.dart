@@ -15,6 +15,7 @@ import '../domain/auth_state.dart';
 import '../utils/auth_error.dart';
 import 'widgets/invite_link_dialog.dart';
 import 'widgets/logout_reason_banner.dart';
+import 'widgets/sso_sign_in_button.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -30,14 +31,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _ssoEnabled = false;
+  bool _ssoEnforced = false;
 
   @override
   void initState() {
     super.initState();
-    // Discover whether this deployment offers OIDC SSO (shows the SSO button).
+    // Discover whether this deployment offers OIDC SSO (shows the SSO button)
+    // and whether it is required for some domains (emphasises it).
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final info = await ref.read(authRepositoryProvider).getSsoInfo();
-      if (mounted) setState(() => _ssoEnabled = info.enabled);
+      if (mounted) {
+        setState(() {
+          _ssoEnabled = info.enabled;
+          _ssoEnforced = info.enforced;
+        });
+      }
     });
     // Listen for login errors
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -96,22 +104,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  // OIDC SSO uses the PON_DOMAIN-aware base; the IdP redirect deep-links back
-  // via the existing platform://auth?code=… handler (provider-agnostic).
-  Future<void> _launchSso() async {
-    final uri =
-        Uri.parse('${AppConfig.authBaseUrl}/auth/oidc/login?platform=mobile');
-    try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.errCannotOpenLink)),
-        );
-      }
-    }
-  }
-
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
@@ -124,6 +116,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // `SSO_REQUIRED` (refused password sign-in, Google redirect or forced
+    // logout — contract 13 §C): the banner says to use SSO, so the SSO button
+    // is shown even if `/auth/sso/info` failed, and emphasised. A deployment
+    // enforcing SSO for some domains emphasises it for everyone.
+    final auth = ref.watch(authNotifierProvider).valueOrNull;
+    final ssoRequired =
+        auth is AuthUnauthenticated && auth.reason == kSsoRequired;
+    final showSso = _ssoEnabled || ssoRequired;
+    final emphasiseSso = showSso && (ssoRequired || _ssoEnforced);
+
     return Scaffold(
       // No decorative accent orbs: the accent means "primary action" only
       // (UI-REDESIGN-DIRECTION.md §2 rules 1-2).
@@ -169,7 +171,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 28),
-                              // Forced logout (e.g. account blocked) → why.
+                              // Forced logout / refused sign-in → why (e.g.
+                              // account blocked, SSO required).
                               const LogoutReasonBanner(),
 
                               // Email
@@ -267,6 +270,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  if (emphasiseSso) ...[
+                    const SsoSignInButton(emphasised: true),
+                    const SizedBox(height: 12),
+                  ],
                   StaggeredEntrance(
                     index: 3,
                     child: OutlinedButton.icon(
@@ -281,18 +288,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
 
-                  if (_ssoEnabled) ...[
+                  if (showSso && !emphasiseSso) ...[
                     const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: _launchSso,
-                      icon: const Icon(Icons.vpn_key_rounded, size: 18),
-                      label: Text(context.l10n.loginWithSso),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor:
-                            Theme.of(context).colorScheme.onSurface,
-                        side: BorderSide(color: AppTheme.hairline(context)),
-                      ),
-                    ),
+                    const SsoSignInButton(),
                   ],
 
                   // Invite-only: no self sign-up. Invitees open the link

@@ -222,6 +222,9 @@ String _codeToString(
       return l10n.authErrMfaResetForbidden;
     case 'MFA_RESET_SELF_FORBIDDEN':
       return l10n.authErrMfaResetSelfForbidden;
+    // Turning 2FA off (contract 15) while the role makes it mandatory.
+    case 'MFA_REQUIRED_BY_ROLE':
+      return l10n.authErrMfaRequiredByRole;
 
     // ── Token / session errors ───────────────────────────────────────────────
     case 'TOKEN_INVALID':
@@ -255,6 +258,16 @@ String _codeToString(
       return l10n.authErrSsoDisabled;
     case 'SSO_DOMAIN_NOT_ALLOWED':
       return l10n.authErrSsoDomainNotAllowed;
+    // "Require SSO" (contract 13 §C): password / Google / forgot-password /
+    // invitation accept refused for an SSO-enforced email domain.
+    case 'SSO_REQUIRED':
+      return l10n.authErrSsoRequired;
+    // The company IdP could not be reached (OIDC discovery failed); retryable.
+    case 'SSO_UNAVAILABLE':
+      return l10n.authErrSsoUnavailable;
+    // Admin → SSO: enforcement needs SSO on, allowed domains and OIDC env.
+    case 'SSO_ENFORCE_NOT_READY':
+      return l10n.authErrSsoEnforceNotReady;
 
     default:
       return l10n.errActionFailed;

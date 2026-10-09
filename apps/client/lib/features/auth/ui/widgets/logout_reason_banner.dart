@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/auth_provider.dart';
 import '../../domain/auth_state.dart';
 import '../../utils/auth_error.dart';
+import 'auth_notice_box.dart';
 
-/// Explains a forced logout on the login screen (e.g. "This account has been
-/// blocked…"). Renders nothing for a normal logout. Mirror of the web login
-/// page's `?reason=` alert. The reason is an allow-listed code
-/// ([kLogoutReasons]) mapped to a localized string — never raw server text.
+/// Explains a forced logout / refused sign-in on the login screen (e.g. "This
+/// account has been blocked…", "Your organization requires single sign-on…").
+/// Renders nothing for a normal logout. Mirror of the web login page's
+/// `?reason=` alert. The reason is an allow-listed code ([kLoginNotices])
+/// mapped to a localized string — never raw server text.
 class LogoutReasonBanner extends ConsumerWidget {
   const LogoutReasonBanner({super.key});
 
@@ -16,36 +18,19 @@ class LogoutReasonBanner extends ConsumerWidget {
     final auth = ref.watch(authNotifierProvider).valueOrNull;
     final reason = auth is AuthUnauthenticated ? auth.reason : null;
     if (reason == null) return const SizedBox.shrink();
-    final error = Theme.of(context).colorScheme.error;
+    // SSO_REQUIRED is guidance (use the SSO button below), not a failure.
+    final isSso = reason == kSsoRequired;
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
-      child: Container(
+      child: AuthNoticeBox(
         key: const ValueKey('logout-reason'),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: error.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: error.withValues(alpha: 0.4)),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              reason == 'ACCOUNT_BLOCKED'
-                  ? Icons.block_rounded
-                  : Icons.error_outline_rounded,
-              size: 18,
-              color: error,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                authCodeToString(context, reason),
-                style: TextStyle(color: error, fontSize: 13),
-              ),
-            ),
-          ],
-        ),
+        message: authCodeToString(context, reason),
+        isError: !isSso,
+        icon: switch (reason) {
+          'ACCOUNT_BLOCKED' => Icons.block_rounded,
+          kSsoRequired => Icons.vpn_key_rounded,
+          _ => Icons.error_outline_rounded,
+        },
       ),
     );
   }

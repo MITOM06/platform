@@ -5,8 +5,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../../auth/ui/widgets/backup_codes_panel.dart';
 import '../../../auth/ui/widgets/mfa_code_field.dart';
-import '../../../auth/utils/auth_error.dart';
 import '../../../auth/utils/mfa_code.dart';
+import '../../utils/two_factor_error.dart';
 
 /// "Regenerate backup codes" (Settings → Security, contract 09): asks for a
 /// current authenticator code, then shows the 10 new codes once (Copy + the
@@ -57,10 +57,11 @@ class _RegenerateBackupCodesDialogState
           .regenerateBackupCodes(normalizeTotpCode(_codeController.text));
       if (mounted) setState(() => _codes = codes);
     } catch (e) {
-      // MFA_CODE_INVALID / MFA_NOT_ENROLLED / network → localized, never raw.
+      // MFA_CODE_INVALID / MFA_NOT_ENROLLED / too many codes / network →
+      // localized, never raw.
       if (!mounted) return;
       setState(() {
-        _errorText = authErrorMessage(context, e);
+        _errorText = twoFactorErrorMessage(context, e);
         _codeController.clear();
       });
     } finally {

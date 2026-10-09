@@ -27,15 +27,31 @@ class AuthNotifier extends _$AuthNotifier {
 
   Future<void> login(String email, String password) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final next = await AsyncValue.guard(() async {
       final result =
           await ref.read(authRepositoryProvider).login(email, password);
       return _afterFirstFactor(result);
     });
+    state = _ssoNoticeOr(next);
   }
 
-  /// A full session signs in; a privileged member (contract 09) parks on
-  /// [AuthMfaPending] and the router sends them to `/mfa`.
+  /// 403 `SSO_REQUIRED` (contract 13 §C — the email's domain must use the
+  /// company IdP) is not a failed sign-in but a login notice: the login
+  /// screen shows the persistent banner and emphasises "Sign in with SSO",
+  /// the same as a forced logout for that reason. Anything else is unchanged.
+  AsyncValue<AuthState> _ssoNoticeOr(AsyncValue<AuthState> next) {
+    final error = next.error;
+    if (next.hasError &&
+        error != null &&
+        authErrorCode(error) == kSsoRequired) {
+      return const AsyncData(AuthUnauthenticated(reason: kSsoRequired));
+    }
+    return next;
+  }
+
+  /// A full session signs in; a pending second factor (an Owner / Admin-like
+  /// member, or a Member who turned 2FA on — contract 15) parks on
+  /// [AuthMfaPending] and the router sends the member to `/mfa`.
   AuthState _afterFirstFactor(SignInResult result) {
     switch (result) {
       case SignInSuccess(:final user):
@@ -46,23 +62,26 @@ class AuthNotifier extends _$AuthNotifier {
     }
   }
 
-  /// Accepts an invitation with a password and signs the new member in.
+  /// Accepts an invitation with a password and starts the new member's
+  /// sign-in (contract 15). A Member invite signs in directly
+  /// ([AuthAuthenticated]). An Owner / Admin-like invite answers
+  /// `MFA_REQUIRED` (enrollment): the state becomes [AuthMfaPending] and the
+  /// router moves the member to `/mfa` to set up 2FA — the session only exists
+  /// after that.
   ///
-  /// Mirrors [login]'s success path (persist tokens → register FCM → commit
-  /// [AuthAuthenticated]) but deliberately does NOT route through
-  /// AsyncLoading/guard: an AsyncError on the global auth state would be
-  /// picked up by unrelated listeners, while the accept form owns its own
-  /// loading flag and shows the typed error itself. Failures propagate.
+  /// Deliberately does NOT route through AsyncLoading/guard: an AsyncError on
+  /// the global auth state would be picked up by unrelated listeners, while
+  /// the accept form owns its own loading flag and shows the typed error
+  /// itself (incl. `SSO_REQUIRED`). Failures propagate.
   Future<void> acceptInvitation(
     String token,
     String displayName,
     String password,
   ) async {
-    final user = await ref
+    final result = await ref
         .read(authRepositoryProvider)
         .acceptInvitationWithPassword(token, displayName, password);
-    _registerFcmToken();
-    state = AsyncData(AuthAuthenticated(user));
+    state = AsyncData(_afterFirstFactor(result));
   }
 
   Future<void> _registerFcmToken() async {
@@ -131,8 +150,9 @@ class AuthNotifier extends _$AuthNotifier {
 
   /// Called by DioClient / STOMP when the session is dead (refresh rejected,
   /// account blocked) — skips server-side logout. When the server said why
-  /// (e.g. `ACCOUNT_BLOCKED`), the reason rides on [AuthUnauthenticated] so the
-  /// login screen can show the localized explanation.
+  /// (`ACCOUNT_BLOCKED`, or `SSO_REQUIRED` for a session revoked because
+  /// "Require SSO" was switched on), the reason rides on [AuthUnauthenticated]
+  /// so the login screen can show the localized explanation.
   void forceLogout() {
     final code = TokenManager.shared.takeRejectionCode();
     final reason = kLogoutReasons.contains(code) ? code : null;
@@ -206,6 +226,25 @@ class AuthNotifier extends _$AuthNotifier {
     final fresh = await ref.read(authRepositoryProvider).getMe();
     ref.invalidate(userProfileProvider(fresh.id));
     state = AsyncData(AuthAuthenticated(fresh));
+  }
+
+  /// Settings → Security changed the member's own 2FA (contract 15), or a
+  /// refusal showed the cached 2FA flags are stale: re-sync `/me`. When the
+  /// server just turned it on / off ([enabled] given) and only this refresh
+  /// fails, the flag is flipped locally instead so the status stays right;
+  /// otherwise a failed refresh keeps the current state.
+  Future<void> resyncMfa({bool? enabled}) async {
+    final repo = ref.read(authRepositoryProvider);
+    try {
+      await refreshUser();
+    } catch (_) {
+      final current = state.valueOrNull;
+      // A 401 during the refresh already forced a logout — nothing to update.
+      if (enabled == null || current is! AuthAuthenticated) return;
+      final user = current.user.withMfaEnabled(enabled);
+      await repo.cacheUser(user);
+      state = AsyncData(AuthAuthenticated(user));
+    }
   }
 
   /// Creates the first PON password of a member who must have one

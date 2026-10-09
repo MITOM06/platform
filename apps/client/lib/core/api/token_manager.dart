@@ -87,6 +87,20 @@ class TokenManager {
   /// answering 403 `ACCOUNT_BLOCKED`) so the forced logout can explain it.
   void recordRejection(String? code) => _lastRejectionCode = code;
 
+  /// The auth code of a rejected refresh body (`{ code, params }`). A session
+  /// revoked because "Require SSO" was switched on for the member's domain
+  /// (contract 13 §C — revocation reason `sso_enforced`, top level or in
+  /// `params`) is reported as `SSO_REQUIRED`, the same notice as a refused
+  /// password sign-in, so the login screen explains why.
+  static String? rejectionCodeOf(Object? data) {
+    if (data is! Map) return null;
+    final params = data['params'];
+    final reason = data['reason'] ?? (params is Map ? params['reason'] : null);
+    if (reason == 'sso_enforced') return 'SSO_REQUIRED';
+    final code = data['code'];
+    return code is String && code.isNotEmpty ? code : null;
+  }
+
   /// True when a refresh token + sid are stored (i.e. a session may exist).
   Future<bool> hasRefreshCredentials() async =>
       await _storage.read(key: _keyRefreshToken) != null &&
@@ -171,10 +185,7 @@ class TokenManager {
       final status = e.response?.statusCode;
       if (status == 401 || status == 403) {
         // Server genuinely rejected the refresh token — the session is dead.
-        final data = e.response?.data;
-        final code = data is Map && data['code'] is String
-            ? data['code'] as String
-            : null;
+        final code = rejectionCodeOf(e.response?.data);
         debugPrint('[TokenManager] refresh rejected by server ($status $code)');
         _lastRejectionCode = code;
         throw RefreshRejectedException(code: code);
