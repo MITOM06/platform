@@ -1,0 +1,62 @@
+# DEV ONLY — lives on the `dev` branch, never on `main`
+# (.claude/rules/dev-local-only.md).
+#
+# Local Keycloak IdP for testing PON's OIDC SSO, layered on the main stack.
+# `scripts/dev/up.sh --sso` does all of this; by hand:
+#
+#   set -a && . infra/docker-compose/.env.dev-secrets && set +a
+#   docker compose -f infra/docker-compose/compose.yml \
+#                  -f scripts/dev/keycloak/compose.sso.yml up -d --no-build keycloak auth-service
+#
+# Paths below are relative to infra/docker-compose/ — compose resolves every
+# file of a multi-file project against the FIRST file's directory.
+#
+# One issuer URL for both sides of the flow. The browser is redirected to the
+# Keycloak login page and auth-service fetches discovery/token from Keycloak
+# server-to-server, and openid-client checks the ID token's `iss` against the
+# discovered issuer, so both must use the very same http://<host>:8180/realms/pon.
+#   - browser:      <host> → the published port on this machine
+#   - auth-service: <host> → host-gateway (extra_hosts below) → the same port
+# <host> is PON_SSO_HOST, default `keycloak.localhost`: Chrome, Edge, Firefox
+# and curl resolve every `*.localhost` name to loopback by themselves, so it
+# needs no hosts-file entry and Keycloak stays on 127.0.0.1. The alternative,
+# PON_SSO_HOST=host.docker.internal, only works where the HOST resolves that
+# name too (Docker Desktop's optional hosts-file entry, mapped to the LAN IP,
+# hence PON_SSO_BIND=0.0.0.0 — which exposes Keycloak on the LAN).
+# KC_HOSTNAME pins that URL so Keycloak never derives another one from a
+# request's Host header.
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.5
+    container_name: pon-keycloak
+    # start-dev: in-container H2 DB, HTTP allowed, themes uncached. The realm is
+    # imported on every fresh container; an existing realm is left as-is, so
+    # after editing realm-pon.json recreate it: `... up -d --force-recreate keycloak`.
+    command: ["start-dev", "--import-realm", "--http-port=8180"]
+    environment:
+      KC_HOSTNAME: http://${PON_SSO_HOST:-keycloak.localhost}:8180
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${PON_KC_ADMIN_PASSWORD:-admin}
+    ports:
+      # Loopback by default. Only a non-loopback PON_SSO_HOST (host.docker.internal,
+      # which Docker Desktop maps to the LAN IP) needs PON_SSO_BIND=0.0.0.0.
+      - "${PON_SSO_BIND:-127.0.0.1}:8180:8180"
+    volumes:
+      - ../../scripts/dev/keycloak/realm-pon.json:/opt/keycloak/data/import/realm-pon.json:ro
+    networks:
+      - app-net
+
+  auth-service:
+    # Same image, same env as compose.yml — this only adds the OIDC settings
+    # read by apps/server/auth-service/src/modules/auth/oidc/oidc.service.ts.
+    environment:
+      OIDC_ENABLED: "true"
+      OIDC_ISSUER: http://${PON_SSO_HOST:-keycloak.localhost}:8180/realms/pon
+      OIDC_CLIENT_ID: pon-auth
+      # Dev-only client secret, also in realm-pon.json. Never reuse it anywhere.
+      OIDC_CLIENT_SECRET: pon-dev-only
+      OIDC_REDIRECT_URI: http://localhost:3001/auth/oidc/callback
+      OIDC_GROUPS_CLAIM: groups
+    extra_hosts:
+      - "${PON_SSO_HOST:-keycloak.localhost}:host-gateway"

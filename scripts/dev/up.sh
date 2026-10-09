@@ -8,6 +8,7 @@
 #   ./scripts/dev/up.sh --no-web        # backends only, don't start the Next.js dev server
 #   ./scripts/dev/up.sh --phone         # run the Flutter app on a real phone over the LAN
 #   ./scripts/dev/up.sh --flutter       # ...or on an iOS simulator (heavier on the Mac)
+#   ./scripts/dev/up.sh --sso           # + local Keycloak IdP, auth-service gets OIDC env
 #
 # Flags combine. Everything here is idempotent — safe to re-run.
 
@@ -17,7 +18,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 COMPOSE="docker compose -f $ROOT/infra/docker-compose/compose.yml"
 SIMULATOR="${PON_SIMULATOR:-iPhone 17 Pro}"
 
-DO_BUILD=0 DO_SEED=0 DO_WEB=1 DO_FLUTTER=0 DO_PHONE=0
+DO_BUILD=0 DO_SEED=0 DO_WEB=1 DO_FLUTTER=0 DO_PHONE=0 DO_SSO=0
 for arg in "$@"; do
   case "$arg" in
     --build)   DO_BUILD=1 ;;
@@ -25,7 +26,8 @@ for arg in "$@"; do
     --no-web)  DO_WEB=0 ;;
     --flutter) DO_FLUTTER=1 ;;
     --phone)   DO_PHONE=1 ;;
-    -h|--help) sed -n '3,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --sso)     DO_SSO=1 ;;
+    -h|--help) sed -n '3,13p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown flag: $arg (try --help)" >&2; exit 2 ;;
   esac
 done
@@ -115,6 +117,28 @@ if [ -n "$file_jwt" ] && [ "$file_jwt" != "$JWT_ACCESS_SECRET" ]; then
         sed -i '' 's|^JWT_ACCESS_SECRET=.*|JWT_ACCESS_SECRET=$JWT_ACCESS_SECRET|' apps/server/auth-service/.env"
 fi
 
+# --sso: layer scripts/dev/keycloak/compose.sso.yml on the stack — a Keycloak
+# dev IdP plus the OIDC env for auth-service. Every $COMPOSE below then includes
+# it, so `up`, `build` and the printed `down` all cover Keycloak too.
+SSO_ISSUER=""
+if [ "$DO_SSO" = 1 ]; then
+  # The browser and the auth-service container must reach Keycloak under ONE
+  # issuer URL (see the header of compose.sso.yml for why this name).
+  export PON_SSO_HOST="${PON_SSO_HOST:-keycloak.localhost}"
+  case "$PON_SSO_HOST" in
+    localhost|*.localhost) export PON_SSO_BIND="${PON_SSO_BIND:-127.0.0.1}" ;;
+    *)                     export PON_SSO_BIND="${PON_SSO_BIND:-0.0.0.0}" ;;
+  esac
+  # curl exits 6 only when the name does not resolve on this machine. Without
+  # it the browser cannot reach the login page however healthy Keycloak is.
+  rc=0; curl -s -o /dev/null --max-time 2 "http://$PON_SSO_HOST:9/" || rc=$?
+  [ "$rc" != 6 ] || die "this machine cannot resolve $PON_SSO_HOST, so the browser could
+      not reach the Keycloak login page. Unset PON_SSO_HOST (default keycloak.localhost)."
+  SSO_ISSUER="http://$PON_SSO_HOST:8180/realms/pon"
+  COMPOSE="$COMPOSE -f $ROOT/scripts/dev/keycloak/compose.sso.yml"
+  ok "SSO: Keycloak issuer $SSO_ISSUER"
+fi
+
 # ------------------------------------------------------------------ build
 if [ "$DO_BUILD" = 1 ]; then
   step "Rebuilding backend images (Maven build for chat-service takes a few minutes)"
@@ -126,6 +150,13 @@ fi
 step "Starting containers"
 $COMPOSE up -d
 ok "compose up"
+# Without --sso the plain compose file just recreated auth-service without the
+# OIDC env, so a Keycloak left from an earlier --sso run is idle (compose calls
+# it an "orphan"). Harmless, but say so rather than leave SSO half-working.
+if [ "$DO_SSO" = 0 ] && docker ps --format '{{.Names}}' | grep -qx pon-keycloak; then
+  warn "Keycloak is still running but SSO is off for auth-service — re-run with --sso,
+      or remove it: docker rm -f pon-keycloak"
+fi
 
 # ------------------------------------------------- wait for health + repair
 # `ai.requests` is declared with a 30s TTL + DLX. A queue left behind by an
@@ -203,6 +234,40 @@ check_realtime() {
 }
 step "Checking realtime"
 check_realtime
+
+# ---------------------------------------------------------------- sso check
+check_sso() {
+  # Keycloak boots in ~15-30s (longer the first time: image pull + realm import).
+  wait_http keycloak "$SSO_ISSUER/.well-known/openid-configuration" 200 90 \
+    || die "Keycloak never served realm pon — docker logs pon-keycloak"
+  # A container recreated from compose.yml alone (e.g. someone's `up --build`)
+  # silently has no OIDC env, and the login page just stops offering SSO.
+  local running
+  running="$(docker exec auth-service printenv OIDC_ISSUER 2>/dev/null || true)"
+  [ "$running" = "$SSO_ISSUER" ] || die "auth-service runs without the SSO override (OIDC_ISSUER='$running').
+      Something recreated it from compose.yml alone — re-run ./scripts/dev/up.sh --sso"
+  # Same URL from inside the container: discovery is the first thing
+  # /auth/oidc/login does, and the ID token's iss must match it exactly.
+  docker exec auth-service node -e '
+    const iss = process.argv[1];
+    fetch(iss + "/.well-known/openid-configuration")
+      .then((r) => r.json())
+      .then((j) => process.exit(j.issuer === iss ? 0 : 3))
+      .catch(() => process.exit(1));' "$SSO_ISSUER" \
+    || die "auth-service cannot fetch $SSO_ISSUER from inside its container — SSO would fail"
+  ok "issuer answers on this machine and inside auth-service (same URL)"
+  # The env half is done here; turning SSO on is a workspace (Owner) decision.
+  if curl -s --max-time 3 http://localhost:3001/auth/sso/info | grep -q '"enabled":true'; then
+    ok "workspace SSO is on — /login shows \"Sign in with SSO\""
+  else
+    warn "workspace SSO is still off — Admin → SSO (scripts/dev/README.md), or:
+      docker exec -i chat-mongo mongosh platform --quiet --eval \"\$(cat scripts/dev/keycloak/workspace-sso.js)\""
+  fi
+}
+if [ "$DO_SSO" = 1 ]; then
+  step "Checking SSO (Keycloak)"
+  check_sso
+fi
 
 # ------------------------------------------------------------------- seed
 if [ "$DO_SEED" = 1 ]; then
@@ -286,6 +351,17 @@ cat <<EOF
 
   stop everything:  $COMPOSE down
 EOF
+if [ "$DO_SSO" = 1 ]; then
+  cat <<EOF
+
+  SSO (Keycloak dev IdP)   issuer $SSO_ISSUER
+    admin console  http://$PON_SSO_HOST:8180/admin   admin / ${PON_KC_ADMIN_PASSWORD:-admin}
+    IdP users      alice@pon.local (staff)  bob@pon.local (admins)  carol@pon.local (staff, not in PON yet)
+                   password: Devpass123!
+    add your own:  ./scripts/dev/keycloak/add-user.sh <email> [group] [password]
+    walkthrough:   scripts/dev/README.md → "SSO with a local Keycloak"
+EOF
+fi
 
 if [ "$DO_PHONE" = 1 ]; then
   step "Launching Flutter on a physical device"
