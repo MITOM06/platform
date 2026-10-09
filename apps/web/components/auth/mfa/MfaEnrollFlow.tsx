@@ -1,11 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import Image from 'next/image'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
-import { toast } from 'sonner'
-import { Copy, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { authService } from '@/lib/api/auth'
 import {
   isMfaRestartCode,
@@ -17,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { MfaEnrollCodesStep } from './MfaEnrollCodesStep'
+import { MfaSetupKey } from './MfaSetupKey'
 import { MfaAlert, MfaCardHeader, MfaCodeInput, MfaStep, completeCode, emptyCode } from './mfa-parts'
 
 interface Props {
@@ -27,13 +26,9 @@ interface Props {
   onRestart: (code?: MfaRestartCode) => void
 }
 
-/** Base32 secret in groups of four, easier to type by hand. Copy uses the raw value. */
-function groupSecret(secret: string): string {
-  return secret.replace(/(.{4})/g, '$1 ').trim()
-}
-
 /**
- * `/mfa` enroll mode (first sign-in since becoming privileged):
+ * `/mfa` enroll mode (an Owner/Admin-like account signing in before 2FA is set
+ * up — mandatory for those roles; Members turn it on in Settings instead):
  * 1. install an authenticator app and scan the QR (or type the key),
  * 2. confirm one 6-digit code — 2FA is on, the backup codes are issued, but
  *    the server returns no tokens yet,
@@ -129,15 +124,6 @@ function MfaEnrollSetup({
     void confirm(code)
   }
 
-  const copySecret = async (secret: string) => {
-    try {
-      await navigator.clipboard.writeText(secret)
-      toast.success(t('mfa.keyCopied'))
-    } catch {
-      toast.error(t('mfa.copyFailed'))
-    }
-  }
-
   const setupData = setup.data
   const ready = !!setupData
 
@@ -160,43 +146,7 @@ function MfaEnrollSetup({
               </Button>
             </div>
           )}
-          {setupData && (
-            <div className="space-y-3">
-              <Image
-                src={setupData.qrDataUrl}
-                alt={t('mfa.qrAlt')}
-                width={192}
-                height={192}
-                unoptimized
-                className="mx-auto rounded-lg bg-white p-2"
-              />
-              <a
-                href={setupData.otpauthUrl}
-                className="block text-center text-sm font-medium text-primary hover:underline underline-offset-4 md:hidden"
-              >
-                {t('mfa.openInApp')}
-              </a>
-              <p className="text-xs text-muted-foreground">{t('mfa.manualKeyLabel')}</p>
-              <div className="flex items-center gap-2">
-                <code
-                  data-testid="mfa-secret"
-                  className="min-w-0 flex-1 break-all rounded-md border bg-muted/40 px-3 py-2 font-mono text-sm tracking-wider select-all"
-                >
-                  {groupSecret(setupData.secret)}
-                </code>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  title={t('mfa.copyKey')}
-                  aria-label={t('mfa.copyKey')}
-                  onClick={() => void copySecret(setupData.secret)}
-                >
-                  <Copy className="size-4" />
-                </Button>
-              </div>
-            </div>
-          )}
+          {setupData && <MfaSetupKey setup={setupData} />}
         </MfaStep>
 
         <MfaStep n={2} title={t('mfa.enrollStep2Title')} body={t('mfa.enrollStep2Body')}>

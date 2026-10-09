@@ -66,6 +66,7 @@
       "orContinueWith": "Hoặc tiếp tục với",
       "googleLogin": "Đăng nhập bằng Google",
       "ssoButton": "Đăng nhập bằng SSO",
+      "orSignInWithPassword": "Hoặc đăng nhập bằng mật khẩu",
       "inviteOnlyHint": "PON chỉ dành cho người được mời. Hãy liên hệ quản trị viên để nhận lời mời."
     },
     "password": {
@@ -98,6 +99,7 @@
       "emailLabel": "Email được mời",
       "continueWithGoogle": "Tiếp tục với Google",
       "googleHint": "Dùng tài khoản Google của {email}",
+      "ssoRequired": "{workspace} yêu cầu đăng nhập một lần (SSO) cho địa chỉ email này. Hãy dùng “Đăng nhập bằng SSO” để tham gia.",
       "orSetPassword": "Hoặc đặt mật khẩu",
       "submit": "Tạo tài khoản",
       "submitting": "Đang tạo tài khoản...",
@@ -237,6 +239,9 @@
     "errLastOwnerCannotBeBlocked": "Không thể khóa Chủ sở hữu cuối cùng.",
     "errSsoDisabled": "Đăng nhập một lần (SSO) đang bị tắt.",
     "errSsoDomainNotAllowed": "Tên miền email của bạn không được phép dùng SSO.",
+    "errSsoRequired": "Tổ chức của bạn yêu cầu đăng nhập một lần (SSO). Hãy dùng “Đăng nhập bằng SSO”.",
+    "errSsoUnavailable": "Hệ thống đăng nhập của tổ chức bạn đang tạm thời không truy cập được. Vui lòng thử lại sau ít phút.",
+    "errSsoEnforceNotReady": "Chưa thể bắt buộc SSO. Hãy bật SSO, thêm ít nhất một tên miền email được phép và đảm bảo đăng nhập một lần đã được cấu hình cho hệ thống này.",
     "errRoleGrantExceedsOwnPermissions": "Bạn không thể cấp những quyền mà chính bạn không có: {capabilities}.",
     "errRoleGrantExceedsOwnPermissionsGeneric": "Bạn không thể cấp những quyền mà chính bạn không có.",
     "errCannotEditOwnRole": "Bạn không thể sửa vai trò của chính mình.",
@@ -302,7 +307,10 @@
       "continue": "Tiếp tục",
       "codesLoading": "Đang tải mã dự phòng...",
       "fileHeader": "Mã dự phòng PON của {email}",
-      "fileNote": "Mỗi mã dùng được một lần để đăng nhập khi bạn không dùng được ứng dụng xác thực."
+      "fileNote": "Mỗi mã dùng được một lần để đăng nhập khi bạn không dùng được ứng dụng xác thực.",
+      "stateChanged": "Cài đặt xác thực hai yếu tố của bạn đã được thay đổi ở nơi khác. Trang này hiện hiển thị trạng thái mới nhất.",
+      "ssoManaged": "Đăng nhập một lần (SSO) của tổ chức đang bảo vệ tài khoản của bạn, nên xác thực hai yếu tố được xử lý ở đó.",
+      "setupExpired": "Phiên thiết lập này đã hết hạn. Hãy bật lại 2FA để nhận mã QR mới."
     },
     "msgMfaRequired": "Nhập mã từ ứng dụng xác thực để hoàn tất đăng nhập.",
     "errMfaTokenInvalid": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
@@ -311,8 +319,9 @@
     "errMfaTooManyAttempts": "Bạn đã nhập sai mã quá nhiều lần. Vui lòng đăng nhập lại.",
     "errMfaNotEnrolled": "Tài khoản này chưa thiết lập xác thực hai yếu tố. Vui lòng đăng nhập lại.",
     "errMfaAlreadyEnrolled": "Tài khoản này đã thiết lập xác thực hai yếu tố. Vui lòng đăng nhập lại.",
-    "errMfaResetForbidden": "Chỉ Chủ sở hữu mới có thể đặt lại xác thực hai yếu tố.",
-    "errMfaResetSelfForbidden": "Bạn không thể tự đặt lại xác thực hai yếu tố của chính mình."
+    "errMfaResetForbidden": "Bạn không có quyền đặt lại xác thực hai yếu tố của thành viên này.",
+    "errMfaResetSelfForbidden": "Bạn không thể tự đặt lại xác thực hai yếu tố của chính mình.",
+    "errMfaRequiredByRole": "Vai trò của bạn bắt buộc xác thực hai yếu tố nên không thể tắt."
   },
   "settings": {
     "title": "Cài đặt",
@@ -397,6 +406,7 @@
       "setSuccess": "Đặt mật khẩu thành công",
       "mismatch": "Mật khẩu không khớp",
       "genericError": "Cập nhật mật khẩu thất bại",
+      "ssoPasswordDisabled": "Tổ chức của bạn yêu cầu đăng nhập một lần (SSO), nên đăng nhập bằng mật khẩu đã bị tắt cho tài khoản của bạn.",
       "twoFaTitle": "Xác thực hai yếu tố",
       "twoFaSubtitle": "Thêm một lớp bảo mật cho tài khoản của bạn.",
       "tooShort": "Mật khẩu phải có ít nhất {min} ký tự.",
@@ -410,7 +420,17 @@
       "regenerateTitle": "Tạo lại mã dự phòng",
       "regenerateBody": "Nhập mã hiện tại từ ứng dụng xác thực. Các mã dự phòng cũ sẽ không còn dùng được.",
       "regenerateSubmit": "Tạo mã mới",
-      "regenerateDone": "Xong"
+      "regenerateDone": "Xong",
+      "twoFaOptionalBody": "Thêm một bước thứ hai khi đăng nhập. Không bắt buộc với vai trò của bạn.",
+      "twoFaOptionalOnBody": "Tài khoản của bạn được bảo vệ bằng ứng dụng xác thực. Bạn sẽ nhập mã mỗi lần đăng nhập. Bạn có thể tắt tính năng này bất cứ lúc nào.",
+      "turnOnButton": "Bật 2FA",
+      "turnOnDone": "Xong",
+      "turnOnSuccess": "Đã bật xác thực hai yếu tố",
+      "turnOffButton": "Tắt 2FA",
+      "turnOffTitle": "Tắt xác thực hai yếu tố?",
+      "turnOffBody": "Nhập mã hiện tại từ ứng dụng xác thực hoặc một trong các mã dự phòng của bạn. Khi đăng nhập sẽ không còn hỏi mã nữa và các mã dự phòng sẽ ngừng hoạt động.",
+      "turnOffSubmit": "Tắt",
+      "turnOffSuccess": "Đã tắt xác thực hai yếu tố"
     },
     "adminConsole": "Bảng quản trị",
     "adminConsoleSubtitle": "Không gian làm việc, thành viên, vai trò và cài đặt AI"
@@ -1043,7 +1063,7 @@
     "roleUnknown": "Chưa được gán",
     "noDepartment": "Không có phòng ban",
     "notSet": "Chưa thiết lập",
-    "identityManagedBySuperior": "Những thông tin này do quản lý hoặc admin của bạn thiết lập.",
+    "identityManagedBySuperior": "Những thông tin này do quản trị viên Workspace của bạn thiết lập.",
     "labelRole": "Vai trò",
     "labelDepartment": "Phòng ban",
     "labelJobTitle": "Chức danh",
@@ -1498,8 +1518,8 @@
       "RUN_SENSITIVE_SKILL": "Chạy kỹ năng nhạy cảm",
       "VIEW_AUDIT_LOG": "Xem nhật ký kiểm toán",
       "MANAGE_AI_CONTEXT": "Quản lý ngữ cảnh AI",
-      "VIEW_INTERNAL_CONTEXT": "Xem ngữ cảnh nội bộ",
-      "VIEW_CONFIDENTIAL_CONTEXT": "Xem ngữ cảnh mật",
+      "VIEW_INTERNAL_CONTEXT": "AI được dùng ngữ cảnh nội bộ",
+      "VIEW_CONFIDENTIAL_CONTEXT": "AI được dùng ngữ cảnh mật",
       "HOST_MEETING": "Tổ chức cuộc họp"
     },
     "auditEmpty": "Chưa có bản ghi kiểm toán nào.",
@@ -1511,6 +1531,16 @@
     "ssoEnabled": "Bật SSO",
     "ssoAllowedDomains": "Tên miền email được phép",
     "ssoAllowedDomainsHint": "Phân tách bằng dấu phẩy. Để trống để cho phép mọi email đã xác minh.",
+    "ssoEnforced": "Bắt buộc SSO cho các tên miền này",
+    "ssoEnforcedHint": "Thành viên có email thuộc các tên miền được phép chỉ có thể đăng nhập bằng SSO. Chủ sở hữu vẫn đăng nhập được bằng mật khẩu.",
+    "ssoEnforceSaveHint": "Chưa áp dụng — hãy nhấn Lưu.",
+    "ssoEnforceConfirmTitle": "Bắt buộc SSO cho các tên miền này?",
+    "ssoEnforceConfirmIntro": "Với các thành viên có email thuộc các tên miền được phép:",
+    "ssoEnforceConfirmPasswords": "Đăng nhập bằng mật khẩu, đăng nhập bằng Google và “Quên mật khẩu?” sẽ ngừng hoạt động.",
+    "ssoEnforceConfirmOwners": "Chủ sở hữu vẫn đăng nhập bằng mật khẩu kèm xác thực hai yếu tố, làm tài khoản khẩn cấp.",
+    "ssoEnforceConfirmSessions": "Những ai đang đăng nhập mà không dùng SSO sẽ bị đăng xuất.",
+    "ssoEnforceConfirmRestore": "Mật khẩu được giữ lại, không bị xóa — tắt tùy chọn này sẽ khôi phục đăng nhập bằng mật khẩu.",
+    "ssoEnforceConfirm": "Bắt buộc SSO",
     "ssoDefaultRole": "Vai trò mặc định",
     "ssoNone": "Không",
     "ssoGroupRoleMap": "Nhóm → Vai trò",
@@ -1656,7 +1686,8 @@
     "memberMfaReset": "Đặt lại 2FA",
     "memberMfaResetTitle": "Đặt lại xác thực hai yếu tố?",
     "memberMfaResetConfirm": "{name} sẽ bị đăng xuất khỏi mọi thiết bị và phải thiết lập lại xác thực hai yếu tố ở lần đăng nhập tiếp theo.",
-    "memberMfaResetDone": "Đã đặt lại xác thực hai yếu tố"
+    "memberMfaResetDone": "Đã đặt lại xác thực hai yếu tố",
+    "memberMfaResetConfirmOptional": "{name} sẽ bị đăng xuất trên mọi thiết bị và xác thực hai yếu tố sẽ bị tắt. Họ có thể bật lại trong Cài đặt."
   },
   "call": {
     "peerFallback": "Người dùng",

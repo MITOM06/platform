@@ -66,6 +66,7 @@
       "orContinueWith": "或使用以下方式继续",
       "googleLogin": "使用 Google 登录",
       "ssoButton": "使用 SSO 登录",
+      "orSignInWithPassword": "或使用密码登录",
       "inviteOnlyHint": "PON 仅限受邀使用。请向管理员索取邀请。"
     },
     "password": {
@@ -98,6 +99,7 @@
       "emailLabel": "受邀邮箱",
       "continueWithGoogle": "使用 Google 继续",
       "googleHint": "请使用 {email} 的 Google 账号",
+      "ssoRequired": "{workspace} 要求此邮箱地址使用单点登录。请使用“使用 SSO 登录”加入。",
       "orSetPassword": "或设置密码",
       "submit": "创建账号",
       "submitting": "正在创建账号...",
@@ -237,6 +239,9 @@
     "errLastOwnerCannotBeBlocked": "不能封禁最后一位所有者。",
     "errSsoDisabled": "单点登录已停用。",
     "errSsoDomainNotAllowed": "您的邮箱域名不允许使用单点登录。",
+    "errSsoRequired": "您的组织要求使用单点登录。请使用“使用 SSO 登录”。",
+    "errSsoUnavailable": "你所在组织的登录服务暂时不可用。请稍后再试。",
+    "errSsoEnforceNotReady": "暂时无法强制使用 SSO。请先启用 SSO，添加至少一个允许的邮箱域名，并确保此部署已配置单点登录。",
     "errRoleGrantExceedsOwnPermissions": "您不能授予自己没有的权限：{capabilities}。",
     "errRoleGrantExceedsOwnPermissionsGeneric": "您不能授予自己没有的权限。",
     "errCannotEditOwnRole": "您不能编辑自己的角色。",
@@ -302,7 +307,10 @@
       "continue": "继续",
       "codesLoading": "正在加载您的备用码...",
       "fileHeader": "{email} 的 PON 备用码",
-      "fileNote": "无法使用身份验证器应用时，每个备用码可用于登录一次。"
+      "fileNote": "无法使用身份验证器应用时，每个备用码可用于登录一次。",
+      "stateChanged": "您的双重验证设置已在其他地方更改。此页面现在显示的是当前状态。",
+      "ssoManaged": "您所在组织的单点登录保护着您的账户，因此双重身份验证由其负责。",
+      "setupExpired": "此设置已过期。请重新开启双重验证以获取新的二维码。"
     },
     "msgMfaRequired": "请输入身份验证器应用中的验证码以完成登录。",
     "errMfaTokenInvalid": "登录会话已过期，请重新登录。",
@@ -311,8 +319,9 @@
     "errMfaTooManyAttempts": "验证码错误次数过多，请重新登录。",
     "errMfaNotEnrolled": "此账户尚未设置双重身份验证，请重新登录。",
     "errMfaAlreadyEnrolled": "此账户已设置双重身份验证，请重新登录。",
-    "errMfaResetForbidden": "只有所有者才能重置双重身份验证。",
-    "errMfaResetSelfForbidden": "您不能重置自己的双重身份验证。"
+    "errMfaResetForbidden": "您无权重置该成员的双重身份验证。",
+    "errMfaResetSelfForbidden": "您不能重置自己的双重身份验证。",
+    "errMfaRequiredByRole": "您的角色要求启用双重身份验证，因此无法关闭。"
   },
   "settings": {
     "title": "设置",
@@ -397,6 +406,7 @@
       "setSuccess": "密码设置成功",
       "mismatch": "密码不匹配",
       "genericError": "更新密码失败",
+      "ssoPasswordDisabled": "您的组织要求使用单点登录，因此您的账户已停用密码登录。",
       "twoFaTitle": "双重身份验证",
       "twoFaSubtitle": "为您的账户添加额外的安全层。",
       "tooShort": "密码至少需要 {min} 个字符。",
@@ -410,7 +420,17 @@
       "regenerateTitle": "重新生成备用码",
       "regenerateBody": "请输入身份验证器应用中的当前验证码。旧的备用码将失效。",
       "regenerateSubmit": "生成新备用码",
-      "regenerateDone": "完成"
+      "regenerateDone": "完成",
+      "twoFaOptionalBody": "为登录添加第二个步骤。对您的角色而言是可选的。",
+      "twoFaOptionalOnBody": "您的账户受身份验证器应用保护。每次登录时都需要输入验证码。您可以随时关闭此功能。",
+      "turnOnButton": "开启双重验证",
+      "turnOnDone": "完成",
+      "turnOnSuccess": "双重身份验证已开启",
+      "turnOffButton": "关闭双重验证",
+      "turnOffTitle": "要关闭双重身份验证吗？",
+      "turnOffBody": "请输入身份验证器应用中的当前验证码，或任意一个备用码。登录时将不再要求输入验证码，您的备用码也将失效。",
+      "turnOffSubmit": "关闭",
+      "turnOffSuccess": "双重身份验证已关闭"
     },
     "adminConsole": "管理控制台",
     "adminConsoleSubtitle": "工作区、成员、角色和 AI 设置"
@@ -1043,7 +1063,7 @@
     "roleUnknown": "未分配",
     "noDepartment": "无部门",
     "notSet": "未设置",
-    "identityManagedBySuperior": "这些信息由您的管理者或管理员设置。",
+    "identityManagedBySuperior": "这些信息由您的工作区管理员设置。",
     "labelRole": "角色",
     "labelDepartment": "部门",
     "labelJobTitle": "职位",
@@ -1498,8 +1518,8 @@
       "RUN_SENSITIVE_SKILL": "运行敏感技能",
       "VIEW_AUDIT_LOG": "查看审计日志",
       "MANAGE_AI_CONTEXT": "管理 AI 上下文",
-      "VIEW_INTERNAL_CONTEXT": "查看内部上下文",
-      "VIEW_CONFIDENTIAL_CONTEXT": "查看机密上下文",
+      "VIEW_INTERNAL_CONTEXT": "AI 回答可使用内部上下文",
+      "VIEW_CONFIDENTIAL_CONTEXT": "AI 回答可使用机密上下文",
       "HOST_MEETING": "主持会议"
     },
     "auditEmpty": "暂无审计记录。",
@@ -1511,6 +1531,16 @@
     "ssoEnabled": "启用 SSO",
     "ssoAllowedDomains": "允许的邮箱域名",
     "ssoAllowedDomainsHint": "用逗号分隔。留空则允许任何已验证的邮箱。",
+    "ssoEnforced": "对这些域名强制使用 SSO",
+    "ssoEnforcedHint": "邮箱属于允许域名的成员只能通过 SSO 登录。所有者仍可使用密码登录。",
+    "ssoEnforceSaveHint": "尚未生效 — 请点击保存。",
+    "ssoEnforceConfirmTitle": "要对这些域名强制使用 SSO 吗？",
+    "ssoEnforceConfirmIntro": "对于邮箱属于允许域名的成员：",
+    "ssoEnforceConfirmPasswords": "密码登录、Google 登录和“忘记密码？”将无法使用。",
+    "ssoEnforceConfirmOwners": "所有者仍可使用密码加双重身份验证登录，作为紧急备用账户。",
+    "ssoEnforceConfirmSessions": "当前未通过 SSO 登录的用户将被退出登录。",
+    "ssoEnforceConfirmRestore": "密码会被保留而不会被删除——关闭此选项即可恢复密码登录。",
+    "ssoEnforceConfirm": "强制使用 SSO",
     "ssoDefaultRole": "默认角色",
     "ssoNone": "无",
     "ssoGroupRoleMap": "组 → 角色",
@@ -1656,7 +1686,8 @@
     "memberMfaReset": "重置 2FA",
     "memberMfaResetTitle": "重置双重身份验证？",
     "memberMfaResetConfirm": "{name} 将在所有设备上退出登录，并需在下次登录时重新设置双重身份验证。",
-    "memberMfaResetDone": "双重身份验证已重置"
+    "memberMfaResetDone": "双重身份验证已重置",
+    "memberMfaResetConfirmOptional": "{name} 将在所有设备上退出登录，双重身份验证将被关闭。对方可以在设置中重新开启。"
   },
   "call": {
     "peerFallback": "用户",
