@@ -24,7 +24,8 @@ import {
   ChangePasswordDto,
   ChangePasswordResponseDto,
 } from './dto/change-password.dto';
-import { isMfaPrivileged } from '../mfa/mfa-policy';
+import { SsoPolicyService } from '../sso/sso-policy.service';
+import { isAdminLike, mfaStatus } from '../mfa/mfa-policy';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -34,6 +35,7 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly friendsService: FriendsService,
+    private readonly ssoPolicy: SsoPolicyService,
   ) {}
 
   @Get('me')
@@ -45,18 +47,30 @@ export class UsersController {
     ]);
     if (!user) return null;
     // user is a Mongoose Document — spread via toObject() so we can add hasPassword.
-    // The raw 2FA sub-document never leaves the server; only the two flags do.
+    // The raw 2FA sub-document never leaves the server; only the flags do.
     const { mfa, ...doc } = user.toObject();
+    const [roleName, ssoEnforced] = await Promise.all([
+      this.usersService.getRoleName(doc.roleId),
+      // Require SSO: such a member signs in only with SSO (no PON 2FA, no
+      // set-password step). Owners are never covered (break-glass).
+      this.ssoPolicy.isEnforcedFor(doc),
+    ]);
     return {
       ...doc,
       hasPassword,
-      // 2FA: enrolled, and required (Owner / Admin-like role, from the token claims).
-      mfaEnabled: mfa?.enabled === true,
-      mfaRequired: isMfaPrivileged(req.user),
+      // 2FA: mfaEnabled (enrolled), mfaRequired (mandatory: Owner / Admin-like
+      // role, from the access-token claims; a role change revokes sessions),
+      // mfaAvailable (can use / turn on 2FA at all: no bot, no "Require SSO").
+      ...mfaStatus({
+        enrolled: mfa?.enabled === true,
+        privileged: isAdminLike(req.user),
+        ssoEnforced,
+        isBot: doc.isBot === true,
+      }),
       // Google-invite onboarding gate (clients force "create your PON password").
-      mustSetPassword: doc.mustSetPassword === true,
-      // Effective role: Owner / Admin / Manager / Member (unassigned → Member).
-      roleName: await this.usersService.getRoleName(doc.roleId),
+      mustSetPassword: doc.mustSetPassword === true && !ssoEnforced,
+      // Effective role: Owner / Admin / Member or a custom role (unassigned → Member).
+      roleName,
     };
   }
 
@@ -87,7 +101,9 @@ export class UsersController {
       'Change the password, or set the first one (also clears mustSetPassword)',
   })
   @ApiCreatedResponse({ type: ChangePasswordResponseDto })
-  changePassword(@Req() req: any, @Body() body: ChangePasswordDto) {
+  async changePassword(@Req() req: any, @Body() body: ChangePasswordDto) {
+    // Require SSO: a covered member has no PON password to change or set (403).
+    await this.ssoPolicy.assertNotEnforcedForUserId(req.user.sub);
     return this.usersService.changePassword(
       req.user.sub,
       body.currentPassword,

@@ -19,11 +19,18 @@ export enum AuthCode {
   /** @deprecated Self sign-up was removed (invite-only onboarding). No longer emitted. */
   REGISTER_SUCCESS = 'REGISTER_SUCCESS',
   ACCOUNT_UNVERIFIED_OTP_SENT = 'ACCOUNT_UNVERIFIED_OTP_SENT',
-  /** 201 body of POST /auth/invitations/:token/accept-password. */
+  /**
+   * @deprecated No longer emitted (2026-10-06): accept-password answers like a
+   * password login — MFA_REQUIRED (enrollment) for an Owner / Admin-like
+   * invite role, else LOGIN_SUCCESS with tokens (since 2026-10-07).
+   */
   INVITATION_ACCEPTED = 'INVITATION_ACCEPTED',
-  /** 201 body of POST /auth/login and /auth/exchange for a privileged user: 2FA step needed, no tokens yet. */
+  /** 201 body of POST /auth/login, /auth/exchange (Google) and invitation accept-password: 2FA step needed, no tokens yet. */
   MFA_REQUIRED = 'MFA_REQUIRED',
-  /** 201 body of POST /auth/mfa/enroll/confirm: enrolled, backup codes issued, no tokens until enroll/complete. */
+  /**
+   * 201 body of POST /auth/mfa/enroll/confirm (enrolled, backup codes issued,
+   * no tokens until enroll/complete) and of POST /api/users/me/mfa/enroll/confirm.
+   */
   MFA_BACKUP_CODES_ISSUED = 'MFA_BACKUP_CODES_ISSUED',
 
   // ── 400 Bad Request ─────────────────────────────────────────────────────
@@ -48,12 +55,25 @@ export enum AuthCode {
   CURRENT_PASSWORD_REQUIRED = 'CURRENT_PASSWORD_REQUIRED',
   /** POST /api/users/me/change-password — `currentPassword` does not match. */
   CURRENT_PASSWORD_INCORRECT = 'CURRENT_PASSWORD_INCORRECT',
-  /** /auth/mfa/verify on an enrollment token, or enroll/confirm before enroll/start. */
+  /**
+   * /auth/mfa/verify on an enrollment token, enroll/confirm before enroll/start
+   * (also the self-service one), or managing 2FA that was never turned on.
+   */
   MFA_NOT_ENROLLED = 'MFA_NOT_ENROLLED',
-  /** /auth/mfa/enroll/* on a token whose user is already enrolled. */
+  /** /auth/mfa/enroll/* (or the self-service enroll) for an enrolled user. */
   MFA_ALREADY_ENROLLED = 'MFA_ALREADY_ENROLLED',
   /** POST /admin/members/:id/mfa/reset on the caller's own account. */
   MFA_RESET_SELF_FORBIDDEN = 'MFA_RESET_SELF_FORBIDDEN',
+  /**
+   * POST /api/users/me/mfa/disable — 2FA is mandatory for the caller's role
+   * (Owner / Admin-like); only optional 2FA can be turned off.
+   */
+  MFA_REQUIRED_BY_ROLE = 'MFA_REQUIRED_BY_ROLE',
+  /**
+   * PATCH /admin/workspace — "Require SSO" (`sso.enforced`) needs SSO enabled,
+   * at least one allowed domain and OIDC configured on the server.
+   */
+  SSO_ENFORCE_NOT_READY = 'SSO_ENFORCE_NOT_READY',
 
   // ── 401 Unauthorized ────────────────────────────────────────────────────
   ACCOUNT_LOCKED = 'ACCOUNT_LOCKED',
@@ -88,8 +108,17 @@ export enum AuthCode {
   INVITATION_EMAIL_MISMATCH = 'INVITATION_EMAIL_MISMATCH',
   OWNER_ROLE_ASSIGN_FORBIDDEN = 'OWNER_ROLE_ASSIGN_FORBIDDEN',
   OWNER_BLOCK_FORBIDDEN = 'OWNER_BLOCK_FORBIDDEN',
-  /** Only an Owner can reset another member's 2FA. */
+  /**
+   * The actor may not reset this member's 2FA: not an Owner / member manager,
+   * or a non-Owner targeting an Owner / admin-like member.
+   */
   MFA_RESET_FORBIDDEN = 'MFA_RESET_FORBIDDEN',
+  /**
+   * The workspace requires SSO for this email domain: password / Google
+   * sign-in, password recovery and password changes are refused (also the
+   * `?error=` of OAuth redirects and the refresh of a non-SSO session).
+   */
+  SSO_REQUIRED = 'SSO_REQUIRED',
 
   // ── 404 Not Found ───────────────────────────────────────────────────────
   EMAIL_NOT_FOUND = 'EMAIL_NOT_FOUND',
@@ -129,6 +158,11 @@ export enum AuthCode {
    * recovers.
    */
   OTP_SEND_FAILED = 'OTP_SEND_FAILED',
+  /**
+   * The identity provider could not be reached (OIDC discovery failed). Sent as
+   * the `?error=` of /auth/oidc/login and /auth/oidc/callback; retry later.
+   */
+  SSO_UNAVAILABLE = 'SSO_UNAVAILABLE',
 
   // ── Validation (class-validator, used as message string in decorators) ──
   VAL_EMAIL_INVALID = 'VAL_EMAIL_INVALID',

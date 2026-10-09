@@ -31,6 +31,10 @@ import { UpdateMemberDto, UpdateMemberStatusDto } from './dto/member.dto';
 import { AuthCode } from '../../common/auth-code.enum';
 import { CreateRoleDto, UpdateRoleDto } from './dto/role.dto';
 import { UpdateWorkspaceDto } from './dto/workspace.dto';
+import {
+  SsoEnforcementService,
+  SsoUpdatePlan,
+} from '../sso/sso-enforcement.service';
 
 /**
  * Admin domain operations for the enterprise foundation: departments, members,
@@ -65,6 +69,7 @@ export class AdminService {
     private readonly session: SessionService,
     private readonly audit: AuditService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    private readonly ssoEnforcement: SsoEnforcementService,
   ) {}
 
   // ===================== DEPARTMENTS =====================
@@ -344,9 +349,14 @@ export class AdminService {
    * `ai:settings:invalidate` so ai-service drops its cache (next AI request
    * reloads). A 60s TTL on the ai-service side is the safety net if the publish
    * is ever missed.
+   *
+   * `sso` replaces the stored SSO object, except that an omitted `enforced`
+   * keeps its value. "Require SSO" is validated first (400
+   * SSO_ENFORCE_NOT_READY) and, once saved, members it now covers are signed
+   * out of their non-SSO sessions.
    */
   async updateWorkspace(actorId: string, dto: UpdateWorkspaceDto) {
-    const { aiSettings, ...rest } = dto;
+    const { aiSettings, sso, ...rest } = dto;
 
     // Build a flat $set: top-level fields as-is, aiSettings keys as dot-paths so
     // unspecified aiSettings fields are preserved (deep-merge semantics).
@@ -357,6 +367,11 @@ export class AdminService {
         if (value === undefined) continue; // skip absent keys; null is meaningful
         set[`aiSettings.${key}`] = value;
       }
+    }
+    let ssoPlan: SsoUpdatePlan | null = null;
+    if (sso !== undefined) {
+      ssoPlan = await this.ssoEnforcement.plan(sso);
+      set.sso = ssoPlan.sso;
     }
 
     const ws = await this.workspaceModel
@@ -370,6 +385,7 @@ export class AdminService {
       targetId: ws?._id?.toString(),
       meta: { changes: dto },
     });
+    if (ssoPlan) await this.ssoEnforcement.apply(ssoPlan, actorId);
 
     if (aiSettings !== undefined) {
       try {

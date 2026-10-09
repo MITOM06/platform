@@ -16,16 +16,18 @@ import {
   PRESET_ROLES,
 } from '@platform/database';
 import { InvitationsService } from '../invitations/invitations.service';
+import { PresetRoleMigrationService } from './preset-role-migration.service';
 
 /**
  * Seeds the single-deployment enterprise foundation on startup:
  *   1. the singleton Workspace config doc,
- *   2. the preset Role templates (Owner/Admin/Manager/Member),
- *   3. the first Owner (a user matching BOOTSTRAP_OWNER_EMAIL with no role yet),
+ *   2. the preset Role templates (Owner/Admin/Member),
+ *   3. removal of retired presets (the former "Manager": holders → Member),
+ *   4. the first Owner (a user matching BOOTSTRAP_OWNER_EMAIL with no role yet),
  *      or — when no such user exists — an Owner invitation emailed to it.
  *
  * Every step is idempotent — running it twice yields exactly one workspace and
- * four roles, so it is safe to re-run on every boot and on every redeploy.
+ * the three preset roles, so it is safe to re-run on every boot and redeploy.
  */
 @Injectable()
 export class BootstrapService implements OnApplicationBootstrap {
@@ -38,12 +40,28 @@ export class BootstrapService implements OnApplicationBootstrap {
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly configService: ConfigService,
     private readonly invitations: InvitationsService,
+    private readonly presetMigration: PresetRoleMigrationService,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
     await this.ensureWorkspace();
     await this.ensurePresetRoles();
+    await this.removeRetiredPresets();
     await this.ensureBootstrapOwner();
+  }
+
+  /**
+   * Never blocks boot. Each step is idempotent, so an interrupted run (e.g.
+   * users moved, role not yet deleted) finishes at the next boot.
+   */
+  private async removeRetiredPresets(): Promise<void> {
+    try {
+      await this.presetMigration.removeRetiredPresets();
+    } catch (err) {
+      this.logger.error(
+        `Retired preset role removal failed (retried next boot): ${err instanceof Error ? err.message : typeof err}`,
+      );
+    }
   }
 
   /** Upsert the singleton workspace (created once, name is not overwritten on re-run). */

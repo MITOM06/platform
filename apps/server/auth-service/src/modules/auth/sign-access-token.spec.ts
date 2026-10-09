@@ -8,13 +8,14 @@ import { AuthService } from './auth.service';
 import { SessionService } from './session.service';
 import { ClaimsService } from './claims.service';
 import { UsersService } from '../users/users.service';
-import { MailService } from '../Email/mail.service';
 import { SocialProvisioningService } from './social-provisioning.service';
 import { OAuthRedirectService } from './oauth-redirect.service';
 import { LoginAttemptsService } from './login-attempts.service';
 import { SsoMappingService } from './oidc/sso-mapping.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MfaChallengeService } from '../mfa/mfa-challenge.service';
+import { SsoPolicyService } from '../sso/sso-policy.service';
+import { PasswordRecoveryService } from './password-recovery.service';
 
 describe('AuthService.signAccessToken — RBAC claims', () => {
   let service: AuthService;
@@ -30,13 +31,14 @@ describe('AuthService.signAccessToken — RBAC claims', () => {
         { provide: SessionService, useValue: {} },
         { provide: ClaimsService, useValue: {} },
         { provide: UsersService, useValue: {} },
-        { provide: MailService, useValue: {} },
         { provide: SocialProvisioningService, useValue: {} },
         { provide: OAuthRedirectService, useValue: {} },
         { provide: LoginAttemptsService, useValue: {} },
         { provide: SsoMappingService, useValue: {} },
         { provide: NotificationsService, useValue: {} },
         { provide: MfaChallengeService, useValue: {} },
+        { provide: SsoPolicyService, useValue: {} },
+        { provide: PasswordRecoveryService, useValue: {} },
         {
           provide: ConfigService,
           useValue: { get: (k: string) => (k === 'JWT_ACCESS_SECRET' ? 'secret' : undefined) },

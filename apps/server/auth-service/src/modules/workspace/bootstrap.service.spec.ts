@@ -1,3 +1,5 @@
+jest.mock('nanoid', () => ({ nanoid: () => 'test-id' }));
+
 import { Test } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
@@ -9,6 +11,7 @@ import {
 } from '@platform/database';
 import { BootstrapService } from './bootstrap.service';
 import { InvitationsService } from '../invitations/invitations.service';
+import { PresetRoleMigrationService } from './preset-role-migration.service';
 
 /**
  * In-memory fakes that emulate just enough of the Mongoose model surface the
@@ -58,6 +61,7 @@ describe('BootstrapService', () => {
   let userModel: any;
   let config: Record<string, string>;
   let invitations: { createBootstrapOwnerInvite: jest.Mock };
+  let presetMigration: { removeRetiredPresets: jest.Mock };
 
   async function build() {
     const moduleRef = await Test.createTestingModule({
@@ -67,6 +71,7 @@ describe('BootstrapService', () => {
         { provide: getModelToken(Role.name), useValue: roleModel },
         { provide: getModelToken(User.name), useValue: userModel },
         { provide: InvitationsService, useValue: invitations },
+        { provide: PresetRoleMigrationService, useValue: presetMigration },
         {
           provide: ConfigService,
           useValue: { get: (k: string, d?: any) => config[k] ?? d },
@@ -82,9 +87,10 @@ describe('BootstrapService', () => {
     userModel = makeCollectionModel();
     config = { WORKSPACE_NAME: 'Acme Inc' };
     invitations = { createBootstrapOwnerInvite: jest.fn().mockResolvedValue(undefined) };
+    presetMigration = { removeRetiredPresets: jest.fn().mockResolvedValue([]) };
   });
 
-  it('seeds exactly 1 workspace and 4 roles, idempotently (run twice)', async () => {
+  it('seeds exactly 1 workspace and 3 roles (no Manager), idempotently (run twice)', async () => {
     const service = await build();
 
     await service.onApplicationBootstrap();
@@ -95,10 +101,30 @@ describe('BootstrapService', () => {
     expect(roleModel.docs).toHaveLength(PRESET_ROLES.length);
     expect(roleModel.docs.map((r: any) => r.name).sort()).toEqual([
       'Admin',
-      'Manager',
       'Member',
       'Owner',
     ]);
+  });
+
+  it('removes retired presets after the current ones exist, on every boot', async () => {
+    presetMigration.removeRetiredPresets.mockImplementation(async () => {
+      // Member must already be seeded when the migration runs.
+      expect(roleModel.docs.map((r: any) => r.name)).toContain('Member');
+      return [];
+    });
+    const service = await build();
+    await service.onApplicationBootstrap();
+    await service.onApplicationBootstrap();
+    expect(presetMigration.removeRetiredPresets).toHaveBeenCalledTimes(2);
+  });
+
+  it('a failing preset removal never blocks boot (retried next boot)', async () => {
+    config = { BOOTSTRAP_OWNER_EMAIL: 'boss@acme.com' };
+    presetMigration.removeRetiredPresets.mockRejectedValue(new Error('redis down'));
+    const service = await build();
+    await expect(service.onApplicationBootstrap()).resolves.toBeUndefined();
+    // Later steps still ran.
+    expect(invitations.createBootstrapOwnerInvite).toHaveBeenCalled();
   });
 
   it('uses the default workspace name when WORKSPACE_NAME is unset', async () => {

@@ -1,7 +1,15 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { REDIS_CLIENT, Redis } from '@platform/database';
 import { Issuer, generators, Client } from 'openid-client';
+import { AuthCode } from '../../../common/auth-code.enum';
+import { isOidcConfiguredByEnv } from './oidc-env';
 
 interface OidcFlow {
   codeVerifier: string;
@@ -11,6 +19,7 @@ interface OidcFlow {
 
 @Injectable()
 export class OidcService {
+  private readonly logger = new Logger(OidcService.name);
   private clientPromise?: Promise<Client>;
 
   constructor(
@@ -19,12 +28,7 @@ export class OidcService {
   ) {}
 
   isEnabledByEnv(): boolean {
-    const enabled = (this.config.get<string>('OIDC_ENABLED') || '').toLowerCase();
-    return (
-      (enabled === 'true' || enabled === '1') &&
-      !!this.config.get<string>('OIDC_ISSUER') &&
-      !!this.config.get<string>('OIDC_CLIENT_ID')
-    );
+    return isOidcConfiguredByEnv(this.config);
   }
 
   private redirectUri(): string {
@@ -34,9 +38,15 @@ export class OidcService {
     return `https://${domain}/api/auth/oidc/callback`;
   }
 
+  /**
+   * The discovered OIDC client. A successful discovery is cached for the
+   * process lifetime; a failed one (IdP down / unreachable) is NOT, so the
+   * next request retries instead of failing until a restart. The failure
+   * surfaces as 503 SSO_UNAVAILABLE (an `?error=` redirect at the endpoints).
+   */
   private getClient(): Promise<Client> {
     if (!this.clientPromise) {
-      this.clientPromise = (async () => {
+      const attempt = (async () => {
         const issuer = await Issuer.discover(
           this.config.get<string>('OIDC_ISSUER')!,
         );
@@ -46,7 +56,16 @@ export class OidcService {
           redirect_uris: [this.redirectUri()],
           response_types: ['code'],
         });
-      })();
+      })().catch((err: unknown) => {
+        if (this.clientPromise === attempt) this.clientPromise = undefined;
+        this.logger.warn(
+          `OIDC discovery failed (retried on the next request): ${err instanceof Error ? err.message : typeof err}`,
+        );
+        throw new ServiceUnavailableException({
+          code: AuthCode.SSO_UNAVAILABLE,
+        });
+      });
+      this.clientPromise = attempt;
     }
     return this.clientPromise;
   }

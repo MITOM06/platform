@@ -16,6 +16,7 @@ import {
 } from '@platform/database';
 import { AuditModule } from '../audit/audit.module';
 import { UsersModule } from '../users/users.module';
+import { SsoModule } from '../sso/sso.module';
 import { RequirePermissionGuard } from '../auth/guards/require-permission.guard';
 import { InvitationsService } from './invitations.service';
 import { InvitationAcceptService } from './invitation-accept.service';
@@ -31,6 +32,7 @@ import { AdminInvitationsController } from './admin-invitations.controller';
     DatabaseRedisModule,
     AuditModule,
     UsersModule,
+    SsoModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     MongooseModule.forFeature([
       { name: Invitation.name, schema: InvitationSchema },

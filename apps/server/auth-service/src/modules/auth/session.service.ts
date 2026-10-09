@@ -9,9 +9,11 @@ import * as argon2 from 'argon2';
 import { nanoid } from 'nanoid';
 import { Redis, REDIS_CLIENT } from '@platform/database';
 import { AuthCode } from '../../common/auth-code.enum';
+import type { SessionMethod } from './session-method';
 
 /**
- * Redis Pub/Sub channel published at the end of every `revokeAllSessions`.
+ * Redis Pub/Sub channel published at the end of every `revokeAllSessions` (and
+ * of `revokeSessionsNotCreatedBy` when it revoked something).
  * Payload: `{"userId":"<id>","reason":"<reason>"}`. Other services (chat-service
  * WebSocket/STOMP, ai-service, connector-service) subscribe and drop every live
  * connection / cached session for that user immediately.
@@ -24,7 +26,10 @@ export type SessionRevokeReason =
   | 'password_reset'
   | 'refresh_reuse'
   | 'mfa_reset'
+  | 'sso_enforced'
   | 'other';
+
+export type { SessionMethod } from './session-method';
 
 /**
  * Refresh-token reuse-detection (rotating refresh tokens).
@@ -133,6 +138,7 @@ export class SessionService {
     userId: string;
     deviceId?: string;
     platform?: string;
+    method?: SessionMethod;
   }) {
     const sid = nanoid(24);
     const initialVersion = 0;
@@ -148,6 +154,7 @@ export class SessionService {
         userId: params.userId,
         deviceId: params.deviceId ?? '',
         platform: params.platform ?? '',
+        method: params.method ?? '',
         refreshHash,
         prevRefreshHash: '',
         tokenVersion: initialVersion.toString(),
@@ -309,14 +316,64 @@ export class SessionService {
   }
 
   /**
-   * userId stored on `sess:{sid}`, ignoring the `revoked` flag (null if the
-   * hash is gone). Lets refresh check the account status BEFORE session
-   * validity; callers must confirm ownership with refreshTokenBelongsToSession
-   * before revealing anything derived from it.
+   * Revokes the user's sessions that were NOT created by `keep` (Require SSO:
+   * keep `oidc`). A session without a `method` (created before it was
+   * recorded) counts as not `keep`. Publishes the revocation event only when
+   * something was revoked, so a user with only kept sessions is left alone.
+   * Returns how many sessions were revoked.
    */
-  async peekSessionUserId(sid: string): Promise<string | null> {
-    const userId = await this.redis.hget(this.sessKey(sid), 'userId');
-    return userId || null;
+  async revokeSessionsNotCreatedBy(
+    userId: string,
+    keep: SessionMethod,
+    reason: SessionRevokeReason,
+  ): Promise<number> {
+    const userSessKey = this.userSessSetKey(userId);
+    const sids: string[] = (await this.redis.smembers(userSessKey)) ?? [];
+    if (sids.length === 0) return 0;
+
+    const read = this.redis.pipeline();
+    for (const sid of sids) read.hmget(this.sessKey(sid), 'userId', 'method');
+    const rows = (await read.exec()) ?? [];
+
+    const write = this.redis.pipeline();
+    let revoked = 0;
+    sids.forEach((sid, i) => {
+      const [err, fields] = (rows[i] ?? [null, null]) as [
+        Error | null,
+        (string | null)[] | null,
+      ];
+      if (err) return;
+      const [owner, method] = fields ?? [null, null];
+      // Hash gone (expired): drop the stale sid, never recreate `sess:<sid>`.
+      if (!owner) {
+        write.srem(userSessKey, sid);
+        return;
+      }
+      if (owner !== userId || method === keep) return;
+      write.hset(this.sessKey(sid), { revoked: '1' });
+      write.srem(userSessKey, sid);
+      revoked += 1;
+    });
+    await write.exec();
+    if (revoked > 0) await this.publishSessionsRevoked(userId, reason);
+    return revoked;
+  }
+
+  /**
+   * userId and `method` stored on `sess:{sid}`, ignoring the `revoked` flag
+   * (null if the hash is gone). Lets refresh check the account status BEFORE
+   * session validity; callers must confirm ownership with
+   * refreshTokenBelongsToSession before revealing anything derived from it.
+   */
+  async peekSession(
+    sid: string,
+  ): Promise<{ userId: string; method: string } | null> {
+    const [userId, method] = await this.redis.hmget(
+      this.sessKey(sid),
+      'userId',
+      'method',
+    );
+    return userId ? { userId, method: method ?? '' } : null;
   }
 
   /** True when the token matches the current or previous refresh hash (revoked or not). */

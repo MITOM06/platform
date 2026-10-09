@@ -13,6 +13,7 @@ import {
 import { AdminService, AI_SETTINGS_INVALIDATE_CHANNEL } from './admin.service';
 import { SessionService } from '../auth/session.service';
 import { AuditService } from '../audit/audit.service';
+import { SsoEnforcementService } from '../sso/sso-enforcement.service';
 
 function execable(value: any) {
   return { exec: jest.fn().mockResolvedValue(value) };
@@ -60,6 +61,7 @@ describe('AdminService', () => {
         { provide: SessionService, useValue: session },
         { provide: AuditService, useValue: audit },
         { provide: REDIS_CLIENT, useValue: redis },
+        { provide: SsoEnforcementService, useValue: {} },
       ],
     }).compile();
 

@@ -4,6 +4,7 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { FriendsModule } from '../friends/friends.module';
 import { FirebaseAdminModule } from '../firebase/firebase.module';
+import { SsoModule } from '../sso/sso.module';
 import {
   Role,
   RoleSchema,
@@ -26,6 +27,8 @@ import {
     FriendsModule,
     // FirebaseAdminService xác thực Firebase Phone Auth ID token
     FirebaseAdminModule,
+    // Require SSO: /me flags + change-password refusal.
+    SsoModule,
   ],
   controllers: [UsersController],
   providers: [UsersService],

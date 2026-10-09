@@ -108,12 +108,12 @@ describe('MfaCodeService', () => {
       expect(await codes.failures('signin', 'u1')).toBe(0);
       expect(await codes.recordFailure('signin', 'u1')).toBe(1);
       expect(await codes.recordFailure('signin', 'u1')).toBe(2);
-      expect(await codes.failures('regen', 'u1')).toBe(0);
+      expect(await codes.failures('account', 'u1')).toBe(0);
       jest.advanceTimersByTime(15 * 60 * 1000);
       expect(await codes.failures('signin', 'u1')).toBe(0);
-      await codes.recordFailure('regen', 'u1');
-      await codes.clearFailures('regen', 'u1');
-      expect(await codes.failures('regen', 'u1')).toBe(0);
+      await codes.recordFailure('account', 'u1');
+      await codes.clearFailures('account', 'u1');
+      expect(await codes.failures('account', 'u1')).toBe(0);
     });
   });
 });
