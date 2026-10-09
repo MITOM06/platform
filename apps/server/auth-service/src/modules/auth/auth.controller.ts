@@ -17,6 +17,7 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiExtraModels,
+  ApiOkResponse,
   ApiOperation,
   ApiQuery,
   ApiResponse,
@@ -28,7 +29,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { GoogleOAuthGuard } from './guards/google-oauth.guard';
 import { AuthService } from './auth.service';
 import { OidcService } from './oidc/oidc.service';
-import { SsoMappingService } from './oidc/sso-mapping.service';
 import type { Response } from 'express';
 import { LoginDto } from './dto/login.dto';
 import { ConfigService } from '@nestjs/config';
@@ -46,8 +46,11 @@ import { InvitationAcceptService } from '../invitations/invitation-accept.servic
 import { OAuthRedirectService } from './oauth-redirect.service';
 import { SENSITIVE_THROTTLE } from './throttle';
 import { MfaRequiredResponseDto } from '../mfa/dto/mfa.dto';
+import { SsoPolicyService } from '../sso/sso-policy.service';
+import { SsoInfoResponseDto } from '../sso/dto/sso-info.dto';
+import { PasswordRecoveryService } from './password-recovery.service';
 
-/** 201 of login / exchange: tokens, or MFA_REQUIRED for a privileged user. */
+/** 201 of login / exchange: MFA_REQUIRED (2FA step), or tokens (SSO / bot). */
 const signInResponse = (tokens: Type<unknown>, description: string) => ({
   status: 201,
   description,
@@ -71,7 +74,8 @@ export class AuthController {
     private readonly auth: AuthService,
     private readonly configService: ConfigService,
     private readonly oidc: OidcService,
-    private readonly ssoMapping: SsoMappingService,
+    private readonly ssoPolicy: SsoPolicyService,
+    private readonly recovery: PasswordRecoveryService,
     private readonly invitations: InvitationAcceptService,
     private readonly oauthRedirect: OAuthRedirectService,
   ) {}
@@ -189,8 +193,13 @@ export class AuthController {
     if (!this.oidc.isEnabledByEnv()) {
       return res.status(404).send('SSO not configured');
     }
-    const url = await this.oidc.buildAuthorizeUrl(platform || 'web');
-    return res.redirect(url);
+    // IdP unreachable (discovery failed) → ?error=SSO_UNAVAILABLE, not a raw 500.
+    try {
+      const url = await this.oidc.buildAuthorizeUrl(platform || 'web');
+      return res.redirect(url);
+    } catch (err) {
+      return this.oauthRedirect.redirectWithError(res, platform || 'web', err);
+    }
   }
 
   @Get('oidc/callback')
@@ -210,15 +219,12 @@ export class AuthController {
   }
 
   @Get('sso/info')
-  @ApiOperation({ summary: 'Public: whether the SSO button should show' })
-  async ssoInfo() {
-    const gate = await this.ssoMapping.getGate();
-    const enabled = this.oidc.isEnabledByEnv() && gate.enabled;
-    return {
-      enabled,
-      loginUrl: enabled ? '/auth/oidc/login' : null,
-      buttonLabel: 'Sign in with SSO',
-    };
+  @ApiOperation({
+    summary: 'Public: whether the SSO button shows and whether SSO is required',
+  })
+  @ApiOkResponse({ type: SsoInfoResponseDto })
+  ssoInfo() {
+    return this.ssoPolicy.publicInfo();
   }
 
   // ===================== AUTH ENDPOINTS =====================
@@ -228,7 +234,7 @@ export class AuthController {
   @ApiResponse(
     signInResponse(
       ExchangeResponseDto,
-      'Tokens issued, or MFA_REQUIRED (privileged user, Google sign-in)',
+      'MFA_REQUIRED (Google sign-in of an Owner / Admin-like role, or of a member who turned 2FA on), else tokens (incl. OIDC SSO). 403 SSO_REQUIRED when the workspace requires SSO for this member',
     ),
   )
   async exchange(@Body() body: ExchangeDto) {
@@ -250,10 +256,14 @@ export class AuthController {
   @ApiResponse(
     signInResponse(
       LoginTokensResponseDto,
-      'LOGIN_SUCCESS + tokens, or MFA_REQUIRED (privileged user)',
+      'MFA_REQUIRED (2FA step: always for Owner / Admin-like roles, for other members once they turned 2FA on), else LOGIN_SUCCESS + tokens',
     ),
   )
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ApiResponse({
+    status: 403,
+    description: 'SSO_REQUIRED: the workspace requires SSO for this email domain',
+  })
   async login(
     @Body() dto: LoginDto,
     @Headers('accept-language') acceptLang?: string,
@@ -282,7 +292,7 @@ export class AuthController {
     @Body() dto: ForgotPasswordDto,
     @Headers('accept-language') acceptLang?: string,
   ) {
-    return this.auth.forgotPassword(dto.email, normalizeLocale(acceptLang));
+    return this.recovery.forgotPassword(dto.email, normalizeLocale(acceptLang));
   }
 
   @Post('verify-otp')
@@ -290,7 +300,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Verify a password-reset OTP' })
   @ApiBody({ type: VerifyOtpDto })
   async verify(@Body() dto: VerifyOtpDto) {
-    return this.auth.verifyOtp(dto.email, dto.otp);
+    return this.recovery.verifyOtp(dto.email, dto.otp);
   }
 
   @Post('resend-otp')
@@ -301,7 +311,7 @@ export class AuthController {
     @Body() dto: ResendOtpDto,
     @Headers('accept-language') acceptLang?: string,
   ) {
-    return this.auth.resendOtp(dto.email, normalizeLocale(acceptLang));
+    return this.recovery.resendOtp(dto.email, normalizeLocale(acceptLang));
   }
 
   @Post('reset-password')
@@ -309,6 +319,6 @@ export class AuthController {
   @ApiOperation({ summary: 'Reset password using a verified OTP' })
   @ApiBody({ type: ResetPasswordDto })
   async reset(@Body() dto: ResetPasswordDto) {
-    return this.auth.resetPassword(dto.email, dto.otp, dto.password);
+    return this.recovery.resetPassword(dto.email, dto.otp, dto.password);
   }
 }

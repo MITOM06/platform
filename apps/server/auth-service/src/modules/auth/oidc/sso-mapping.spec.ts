@@ -3,7 +3,7 @@ import { resolveSsoMapping } from './sso-mapping';
 const roleMap = new Map([
   ['Owner', 'rid-owner'],
   ['Admin', 'rid-admin'],
-  ['Manager', 'rid-mgr'],
+  ['Ops lead', 'rid-ops'],
   ['Member', 'rid-member'],
 ]);
 
@@ -21,10 +21,23 @@ describe('resolveSsoMapping', () => {
   it('picks the highest-precedence role when groups map to several', () => {
     const r = resolveSsoMapping(
       ['g1', 'g2'],
-      { groupRoleMap: { g1: 'Member', g2: 'Manager' }, groupDeptMap: {} },
+      { groupRoleMap: { g1: 'Member', g2: 'Admin' }, groupDeptMap: {} },
       roleMap,
     );
-    expect(r.roleId).toBe('rid-mgr');
+    expect(r.roleId).toBe('rid-admin');
+  });
+
+  it('a custom role ranks below the presets', () => {
+    const r = resolveSsoMapping(
+      ['g1', 'g2'],
+      { groupRoleMap: { g1: 'Ops lead', g2: 'Member' }, groupDeptMap: {} },
+      roleMap,
+    );
+    expect(r.roleId).toBe('rid-member');
+    expect(
+      resolveSsoMapping(['g1'], { groupRoleMap: { g1: 'Ops lead' }, groupDeptMap: {} }, roleMap)
+        .roleId,
+    ).toBe('rid-ops');
   });
 
   it('falls back to defaultRole when no group matches', () => {

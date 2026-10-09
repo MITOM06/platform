@@ -6,7 +6,7 @@ export type RoleDocument = Role & Document;
 
 /**
  * A role template carrying a permission matrix as DATA (hybrid RBAC). Preset
- * roles (Owner/Admin/Manager/Member) are seeded idempotently on bootstrap;
+ * roles (Owner/Admin/Member) are seeded idempotently on bootstrap;
  * admins may clone/edit non-preset roles. The Owner role is undeletable and
  * always holds every capability. Role names are unique.
  */
