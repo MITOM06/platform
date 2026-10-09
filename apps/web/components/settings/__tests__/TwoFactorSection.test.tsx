@@ -23,6 +23,10 @@ vi.mock('@/lib/api/auth', () => ({
 }))
 
 const me = { id: 'o1', email: 'owner@acme.com', displayName: 'Olga' }
+/** Owner/Admin-like: 2FA mandatory. */
+const REQUIRED = { mfaAvailable: true, mfaRequired: true }
+/** Member: 2FA is their choice. */
+const OPTIONAL = { mfaAvailable: true, mfaRequired: false }
 const NEW_CODES = Array.from({ length: 10 }, (_, i) => `NEWAA${i}-NEWBB${i}`)
 
 function serverError(status: number, data: unknown) {
@@ -41,12 +45,16 @@ function renderSection() {
   )
 }
 
+function buttonNames() {
+  return screen.getAllByRole('button').map((b) => b.textContent?.trim())
+}
+
 function typeCode(code: string) {
   const boxes = within(screen.getByRole('group', { name: 'auth.mfa.codeLabel' })).getAllByRole('textbox')
   code.split('').forEach((d, i) => fireEvent.change(boxes[i], { target: { value: d } }))
 }
 
-describe('Settings → Security: two-factor section', () => {
+describe('Settings → Security: two-factor section states (contract 15)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     useAuthStore.setState({ user: me, accessToken: 'tok' })
@@ -59,32 +67,61 @@ describe('Settings → Security: two-factor section', () => {
     }) as unknown as typeof window.matchMedia
   })
 
-  it('is not offered to non-privileged users', async () => {
+  it('is hidden when the account can not use PON 2FA (SSO-enforced: the IdP does MFA)', async () => {
+    getMe.mockResolvedValue({ ...me, mfaAvailable: false, mfaRequired: false, mfaEnabled: false })
+    const { container } = renderSection()
+    await waitFor(() => expect(getMe).toHaveBeenCalled())
+    expect(container).toBeEmptyDOMElement()
+  })
+
+  it('falls back to mfaRequired on an older server without mfaAvailable', async () => {
     getMe.mockResolvedValue({ ...me, mfaRequired: false, mfaEnabled: false })
     const { container } = renderSection()
     await waitFor(() => expect(getMe).toHaveBeenCalled())
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('shows "On" and the regenerate action, with no way to turn 2FA off', async () => {
-    getMe.mockResolvedValue({ ...me, mfaRequired: true, mfaEnabled: true })
+  it('required by the role and on: "On" and regenerate, with no way to turn 2FA off', async () => {
+    getMe.mockResolvedValue({ ...me, ...REQUIRED, mfaEnabled: true })
     renderSection()
     expect(await screen.findByTestId('two-factor-status')).toHaveTextContent('settings.security.twoFaOn')
     expect(screen.getByText('settings.security.twoFaEnabledBody')).toBeInTheDocument()
-    const buttons = screen.getAllByRole('button').map((b) => b.textContent?.trim())
-    expect(buttons).toEqual(['settings.security.regenerateButton'])
+    expect(buttonNames()).toEqual(['settings.security.regenerateButton'])
   })
 
-  it('explains the pending setup when the role requires 2FA but it is not set up yet', async () => {
-    getMe.mockResolvedValue({ ...me, mfaRequired: true, mfaEnabled: false })
+  it('required by the role but not set up yet: explains the setup at the next sign-in, no actions', async () => {
+    getMe.mockResolvedValue({ ...me, ...REQUIRED, mfaEnabled: false })
     renderSection()
     expect(await screen.findByTestId('two-factor-status')).toHaveTextContent('settings.security.twoFaOff')
     expect(screen.getByText('settings.security.twoFaPendingBody')).toBeInTheDocument()
     expect(screen.queryByRole('button')).toBeNull()
   })
 
+  it('an older server (mfaRequired, no mfaAvailable) shows the required state', async () => {
+    getMe.mockResolvedValue({ ...me, mfaRequired: true, mfaEnabled: false })
+    renderSection()
+    expect(await screen.findByText('settings.security.twoFaPendingBody')).toBeInTheDocument()
+    expect(screen.queryByRole('button')).toBeNull()
+  })
+
+  it('optional (Member) and off: the explanation and only "Turn on 2FA"', async () => {
+    getMe.mockResolvedValue({ ...me, ...OPTIONAL, mfaEnabled: false })
+    renderSection()
+    expect(await screen.findByTestId('two-factor-status')).toHaveTextContent('settings.security.twoFaOff')
+    expect(screen.getByText('settings.security.twoFaOptionalBody')).toBeInTheDocument()
+    expect(buttonNames()).toEqual(['settings.security.turnOnButton'])
+  })
+
+  it('optional (Member) and on: "On", "Turn off 2FA" and regenerate', async () => {
+    getMe.mockResolvedValue({ ...me, ...OPTIONAL, mfaEnabled: true })
+    renderSection()
+    expect(await screen.findByTestId('two-factor-status')).toHaveTextContent('settings.security.twoFaOn')
+    expect(screen.getByText('settings.security.twoFaOptionalOnBody')).toBeInTheDocument()
+    expect(buttonNames()).toEqual(['settings.security.turnOffButton', 'settings.security.regenerateButton'])
+  })
+
   it('regenerates with the current code and shows the new codes once, behind the checkbox', async () => {
-    getMe.mockResolvedValue({ ...me, mfaRequired: true, mfaEnabled: true })
+    getMe.mockResolvedValue({ ...me, ...REQUIRED, mfaEnabled: true })
     regenerateBackupCodes.mockResolvedValue({ backupCodes: NEW_CODES })
     renderSection()
     fireEvent.click(await screen.findByRole('button', { name: 'settings.security.regenerateButton' }))
@@ -100,7 +137,7 @@ describe('Settings → Security: two-factor section', () => {
   })
 
   it('shows a wrong current code as a localized message', async () => {
-    getMe.mockResolvedValue({ ...me, mfaRequired: true, mfaEnabled: true })
+    getMe.mockResolvedValue({ ...me, ...OPTIONAL, mfaEnabled: true })
     regenerateBackupCodes.mockRejectedValue(serverError(401, { code: 'MFA_CODE_INVALID', message: 'bad totp' }))
     renderSection()
     fireEvent.click(await screen.findByRole('button', { name: 'settings.security.regenerateButton' }))

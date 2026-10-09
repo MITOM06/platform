@@ -3,10 +3,11 @@ import type { MfaChallenge } from '@/lib/api/types'
 import { authCodeToI18nKey, parseAuthError } from '@/lib/auth/auth-error'
 
 /**
- * Second sign-in step for privileged users (contract 09). `POST /auth/login`
- * and `POST /auth/exchange` answer `{ code: 'MFA_REQUIRED', mfaToken, … }`
- * instead of tokens; the login / oauth-callback screens park that challenge
- * here and send the browser to `/mfa`, which finishes the sign-in.
+ * Second sign-in step (contracts 09, 15 — Owner/Admin-like roles always, and
+ * Members who turned 2FA on, when signing in with a password or Google).
+ * `POST /auth/login`, `POST /auth/exchange` and the invitation accept-password
+ * answer `{ code: 'MFA_REQUIRED', mfaToken, … }` instead of tokens; the login / oauth-callback / invite screens park that
+ * challenge here and send the browser to `/mfa`, which finishes the sign-in.
  *
  * The challenge lives in memory. sessionStorage is only a fallback for a reload
  * of `/mfa` (same tab, gone when the tab closes) and is cleared on success or
@@ -189,6 +190,35 @@ export function mfaErrorMessage(err: unknown): MfaErrorMessage & { code: string 
 export function mfaAccountErrorMessage(err: unknown): MfaErrorMessage & { code: string } {
   const msg = mfaErrorMessage(err)
   return msg.code === 'MFA_TOO_MANY_ATTEMPTS' ? { code: msg.code, key: 'mfa.rateLimited' } : msg
+}
+
+/**
+ * Codes after which the 2FA state Settings → Security shows is stale (changed
+ * in another tab/device, a role change, an SSO policy): refetch `/me`.
+ */
+export const MFA_SELF_STALE_CODES = [
+  'MFA_ALREADY_ENROLLED',
+  'MFA_NOT_ENROLLED',
+  'MFA_REQUIRED_BY_ROLE',
+  'SSO_REQUIRED',
+] as const
+
+/**
+ * Mapping for the signed-in "Turn on / Turn off 2FA" calls (contract 15). Like
+ * `mfaAccountErrorMessage`, but the sign-in wording ("sign in again") never
+ * fits here — the session is fine:
+ * - already on / already off → "changed elsewhere, the page is updated";
+ * - SSO-enforced → the company identity provider handles the second factor;
+ * - `stale` = refetch `/me` so the section re-renders from the real state.
+ */
+export function mfaSelfErrorMessage(err: unknown): MfaErrorMessage & { code: string; stale: boolean } {
+  const msg = mfaAccountErrorMessage(err)
+  const stale = (MFA_SELF_STALE_CODES as readonly string[]).includes(msg.code)
+  if (msg.code === 'MFA_ALREADY_ENROLLED' || msg.code === 'MFA_NOT_ENROLLED') {
+    return { code: msg.code, key: 'mfa.stateChanged', stale }
+  }
+  if (msg.code === 'SSO_REQUIRED') return { code: msg.code, key: 'mfa.ssoManaged', stale }
+  return { ...msg, stale }
 }
 
 /** 6-digit authenticator code. */

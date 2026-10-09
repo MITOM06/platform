@@ -19,6 +19,11 @@ import type {
   MfaVerifyRequest,
   MfaBackupCodesResponse,
   RegenerateBackupCodesRequest,
+  SelfMfaEnrollStartResponse,
+  SelfMfaEnrollConfirmRequest,
+  SelfMfaEnrollConfirmResponse,
+  MfaDisableRequest,
+  MfaDisableResponse,
 } from './types'
 
 /** Profile gender — kept as a loose string union to mirror the auth-service
@@ -47,9 +52,19 @@ export interface UserProfile extends AuthUser {
   friendsCount?: number
   /** Self only: 2FA (authenticator app) is set up for this account. */
   mfaEnabled?: boolean
-  /** Self only: the role is privileged, so every sign-in needs a 2FA code. */
+  /**
+   * Self only: the role makes 2FA mandatory (Owner/Admin-like — contract 15),
+   * so every password / Google sign-in needs a code and it can't be turned off.
+   * False for Members (2FA is their choice) and for SSO-enforced accounts.
+   */
   mfaRequired?: boolean
-  /** Workspace role name (Owner/Admin/Manager/Member or custom). Null/undefined
+  /**
+   * Self only: the account can use 2FA at all — false for SSO-enforced accounts
+   * (the company identity provider does the second factor) and bots. Absent on
+   * an older server: fall back to `mfaRequired`.
+   */
+  mfaAvailable?: boolean
+  /** Workspace role name (Owner/Admin/Member or custom). Null/undefined
    *  = user has no assigned role → client renders the default "Member". Always
    *  public (no privacy gate), but omitted on blocked-by-owner minimal profiles. */
   roleName?: string | null
@@ -83,8 +98,9 @@ export interface LoginResponse {
 }
 
 /**
- * `POST /auth/login` / `POST /auth/exchange`: tokens, or — for a privileged
- * user — a 2FA challenge to finish on `/mfa` (see `lib/auth/mfa.ts`).
+ * `POST /auth/login` / `POST /auth/exchange` / invitation accept-password: a 2FA
+ * challenge to finish on `/mfa` (see `lib/auth/mfa.ts`) — Owner/Admin-like
+ * roles always, Members who turned 2FA on — or tokens for everyone else.
  */
 export type SignInResponse = LoginResponse | MfaChallenge
 
@@ -100,6 +116,12 @@ export interface VerifyOtpResponse {
 
 export interface SsoInfo {
   enabled: boolean
+  /**
+   * "Require SSO" is on for some email domains (contract 13 C). The domain list
+   * is never exposed, so the login screen only emphasises the SSO button.
+   * Optional: an older server omits it (= not enforced).
+   */
+  enforced?: boolean
   loginUrl: string | null
   buttonLabel: string
 }
@@ -157,6 +179,25 @@ export const authService = {
       .post<MfaBackupCodesResponse>('/api/users/me/mfa/backup-codes', { code } satisfies RegenerateBackupCodesRequest)
       .then((r) => r.data),
 
+  // ── Optional 2FA for Members (contract 15, JWT) — never touch the session ──
+  /** Pending authenticator secret for "Turn on 2FA" (QR + manual key, 10 min). */
+  selfMfaEnrollStart: () =>
+    authApi.post<SelfMfaEnrollStartResponse>('/api/users/me/mfa/enroll/start').then((r) => r.data),
+
+  /** Turns 2FA on and returns the 10 backup codes (shown once). */
+  selfMfaEnrollConfirm: (code: string) =>
+    authApi
+      .post<SelfMfaEnrollConfirmResponse>('/api/users/me/mfa/enroll/confirm', {
+        code,
+      } satisfies SelfMfaEnrollConfirmRequest)
+      .then((r) => r.data),
+
+  /** Turns 2FA off after a current authenticator code or an unused backup code. */
+  selfMfaDisable: (proof: MfaProof) =>
+    authApi
+      .post<MfaDisableResponse>('/api/users/me/mfa/disable', proof satisfies MfaDisableRequest)
+      .then((r) => r.data),
+
   // ── Invitations (public, no JWT) ──────────────────────────────────────────
   // The raw token only travels in the path (URL-encoded); it is never logged.
   getInvitation: (token: string) =>
@@ -164,10 +205,15 @@ export const authService = {
       .get<InvitationPreview>(`/auth/invitations/${encodeURIComponent(token)}`)
       .then((r) => r.data),
 
-  /** Accept by choosing a display name + password → same body as login (+ `code`). */
+  /**
+   * Accept by choosing a display name + password. A Member invite answers
+   * tokens (2FA is optional for Members); an Owner/Admin-like invite answers the
+   * `MFA_REQUIRED` challenge (2FA enrollment on `/mfa`). 403 `SSO_REQUIRED` when
+   * the invited email's domain must use single sign-on.
+   */
   acceptInvitation: (token: string, displayName: string, password: string) =>
     authApi
-      .post<LoginResponse & { code?: string }>(
+      .post<SignInResponse>(
         `/auth/invitations/${encodeURIComponent(token)}/accept-password`,
         { displayName, password, deviceId: 'web', platform: 'web' } satisfies AcceptInvitationRequest,
       )

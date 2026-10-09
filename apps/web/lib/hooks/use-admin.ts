@@ -37,15 +37,23 @@ export function useWorkspace() {
 export function useUpdateWorkspace() {
   const qc = useQueryClient()
   const t = useTranslations('admin')
+  const tAuth = useTranslations('auth')
   return useMutation({
     mutationFn: (input: UpdateWorkspaceInput) =>
       adminService.updateWorkspace(input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-workspace'] })
       qc.invalidateQueries({ queryKey: ['me-capabilities'] })
+      qc.invalidateQueries({ queryKey: ['sso-info'] })
       toast.success(t('toastSaved'))
     },
-    onError: () => toast.error(t('toastError')),
+    // A typed code with its own message (e.g. SSO_ENFORCE_NOT_READY) is shown
+    // localized; anything else keeps the generic admin error.
+    onError: (err) => {
+      const { code, params } = parseAuthError(err)
+      const key = authCodeToI18nKey(code)
+      toast.error(key === 'errGeneric' ? t('toastError') : tAuth(key, params))
+    },
   })
 }
 
@@ -151,7 +159,8 @@ export function useSetMemberStatus() {
 }
 
 /**
- * Owner only: reset a member's 2FA (`POST /admin/members/:id/mfa/reset`).
+ * Reset a member's 2FA (`POST /admin/members/:id/mfa/reset`): an Owner on anyone
+ * else, a member manager on non-admin members (see `canResetMemberMfa`).
  * MFA_RESET_FORBIDDEN / MFA_RESET_SELF_FORBIDDEN / MEMBER_NOT_FOUND → localized toast.
  */
 export function useResetMemberMfa() {

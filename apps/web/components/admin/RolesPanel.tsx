@@ -16,10 +16,14 @@ import type { Capability, PermissionMatrix, Role } from '@/lib/api/admin-types'
 import { RolesPanelMobile } from './RolesPanelMobile'
 
 const OWNER = 'Owner'
+// Stable fallback while roles load: a fresh `[]` on every render would make the
+// "reseed when roles change" check below fire forever (Too many re-renders).
+const NO_ROLES: Role[] = []
 
 export function RolesPanel() {
   const t = useTranslations('admin')
-  const { data: roles = [], isLoading } = useRoles()
+  const { data, isLoading } = useRoles()
+  const roles = data ?? NO_ROLES
   const { create, update } = useRoleActions()
 
   // Per-role pending permission matrices, seeded from the server roles.

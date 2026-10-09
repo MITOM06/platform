@@ -64,6 +64,7 @@
       "orContinueWith": "O continúe con",
       "googleLogin": "Iniciar sesión con Google",
       "ssoButton": "Iniciar sesión con SSO",
+      "orSignInWithPassword": "O inicia sesión con una contraseña",
       "inviteOnlyHint": "PON es solo por invitación. Pide una invitación a tu administrador."
     },
     "password": {
@@ -96,6 +97,7 @@
       "emailLabel": "Correo invitado",
       "continueWithGoogle": "Continuar con Google",
       "googleHint": "Usa la cuenta de Google de {email}",
+      "ssoRequired": "{workspace} exige el inicio de sesión único para esta dirección de correo. Usa «Iniciar sesión con SSO» para unirte.",
       "orSetPassword": "O establece una contraseña",
       "submit": "Crear cuenta",
       "submitting": "Creando cuenta...",
@@ -161,7 +163,10 @@
       "continue": "Continuar",
       "codesLoading": "Cargando tus códigos de respaldo...",
       "fileHeader": "Códigos de respaldo de PON para {email}",
-      "fileNote": "Cada código se puede usar una vez para iniciar sesión cuando no puedas usar tu aplicación de autenticación."
+      "fileNote": "Cada código se puede usar una vez para iniciar sesión cuando no puedas usar tu aplicación de autenticación.",
+      "stateChanged": "Tu configuración de dos factores se cambió en otro lugar. Esta página ya muestra el estado actual.",
+      "ssoManaged": "El inicio de sesión único de tu organización protege tu cuenta, así que la autenticación de dos factores se gestiona allí.",
+      "setupExpired": "Esta configuración ha caducado. Vuelve a activar 2FA para obtener un nuevo código QR."
     },
     "verifyOtp": {
       "title": "Verificar OTP",
@@ -287,6 +292,9 @@
     "errLastOwnerCannotBeBlocked": "No se puede bloquear al último Propietario.",
     "errSsoDisabled": "El inicio de sesión único está desactivado.",
     "errSsoDomainNotAllowed": "El dominio de tu correo no está permitido para SSO.",
+    "errSsoRequired": "Tu organización exige el inicio de sesión único. Usa «Iniciar sesión con SSO».",
+    "errSsoUnavailable": "El servicio de inicio de sesión de tu organización no está disponible en este momento. Inténtalo de nuevo en unos minutos.",
+    "errSsoEnforceNotReady": "Todavía no se puede exigir el SSO. Activa el SSO, añade al menos un dominio de correo permitido y asegúrate de que el inicio de sesión único esté configurado en esta implementación.",
     "msgMfaRequired": "Introduce el código de tu aplicación de autenticación para terminar de iniciar sesión.",
     "errMfaTokenInvalid": "Tu inicio de sesión ha caducado. Vuelve a iniciar sesión.",
     "errMfaCodeInvalid": "Código incorrecto. Inténtalo de nuevo.",
@@ -294,8 +302,9 @@
     "errMfaTooManyAttempts": "Demasiados códigos incorrectos. Vuelve a iniciar sesión.",
     "errMfaNotEnrolled": "La autenticación de dos factores aún no está configurada en esta cuenta. Vuelve a iniciar sesión.",
     "errMfaAlreadyEnrolled": "La autenticación de dos factores ya está configurada en esta cuenta. Vuelve a iniciar sesión.",
-    "errMfaResetForbidden": "Solo un Propietario puede restablecer la autenticación de dos factores.",
-    "errMfaResetSelfForbidden": "No puedes restablecer tu propia autenticación de dos factores."
+    "errMfaResetForbidden": "No tienes permiso para restablecer la autenticación de dos factores de este miembro.",
+    "errMfaResetSelfForbidden": "No puedes restablecer tu propia autenticación de dos factores.",
+    "errMfaRequiredByRole": "Tu rol exige la autenticación de dos factores, así que no se puede desactivar."
   },
   "settings": {
     "title": "Ajustes",
@@ -378,6 +387,7 @@
       "setSuccess": "Contraseña establecida correctamente",
       "mismatch": "Las contraseñas no coinciden",
       "genericError": "No se pudo actualizar la contraseña",
+      "ssoPasswordDisabled": "Tu organización exige el inicio de sesión único, por lo que el inicio de sesión con contraseña está desactivado en tu cuenta.",
       "twoFaTitle": "Autenticación de dos factores",
       "twoFaSubtitle": "Añade una capa extra de seguridad a tu cuenta.",
       "twoFaOn": "Activada",
@@ -388,7 +398,17 @@
       "regenerateTitle": "Regenerar códigos de respaldo",
       "regenerateBody": "Introduce el código actual de tu aplicación de autenticación. Tus códigos de respaldo anteriores dejarán de funcionar.",
       "regenerateSubmit": "Generar códigos nuevos",
-      "regenerateDone": "Listo"
+      "regenerateDone": "Listo",
+      "twoFaOptionalBody": "Añade un segundo paso a tu inicio de sesión. Es opcional para tu rol.",
+      "twoFaOptionalOnBody": "Tu cuenta está protegida con una aplicación de autenticación. Introducirás un código cada vez que inicies sesión. Puedes desactivarlo en cualquier momento.",
+      "turnOnButton": "Activar 2FA",
+      "turnOnDone": "Listo",
+      "turnOnSuccess": "La autenticación de dos factores está activada",
+      "turnOffButton": "Desactivar 2FA",
+      "turnOffTitle": "¿Desactivar la autenticación de dos factores?",
+      "turnOffBody": "Introduce el código actual de tu aplicación de autenticación o uno de tus códigos de respaldo. El inicio de sesión ya no pedirá un código y tus códigos de respaldo dejarán de funcionar.",
+      "turnOffSubmit": "Desactivar",
+      "turnOffSuccess": "La autenticación de dos factores está desactivada"
     }
   },
   "profile": {
@@ -934,7 +954,7 @@
     "roleUnknown": "Sin asignar",
     "noDepartment": "Sin departamento",
     "notSet": "Sin definir",
-    "identityManagedBySuperior": "Estos datos los define su responsable o administrador.",
+    "identityManagedBySuperior": "Estos datos los define el administrador de su espacio de trabajo.",
     "labelRole": "Rol",
     "labelDepartment": "Departamento",
     "labelJobTitle": "Puesto",
@@ -1323,7 +1343,10 @@
       "USE_PERSONAL_ASSISTANT": "Usar asistente personal",
       "USE_GROUP_BOT": "Usar bot de grupo",
       "RUN_SENSITIVE_SKILL": "Ejecutar habilidades sensibles",
-      "VIEW_AUDIT_LOG": "Ver registro de auditoría"
+      "VIEW_AUDIT_LOG": "Ver registro de auditoría",
+      "MANAGE_AI_CONTEXT": "Gestionar el contexto de IA",
+      "VIEW_INTERNAL_CONTEXT": "Ver contexto interno en las respuestas de IA",
+      "VIEW_CONFIDENTIAL_CONTEXT": "Ver contexto confidencial en las respuestas de IA"
     },
     "auditEmpty": "Aún no hay registros de auditoría.",
     "auditPrev": "Anterior",
@@ -1334,6 +1357,16 @@
     "ssoEnabled": "Activar SSO",
     "ssoAllowedDomains": "Dominios de correo permitidos",
     "ssoAllowedDomainsHint": "Separados por comas. Déjalo vacío para permitir cualquier correo verificado.",
+    "ssoEnforced": "Exigir SSO para estos dominios",
+    "ssoEnforcedHint": "Los miembros con un correo de los dominios permitidos solo pueden iniciar sesión con SSO. Los Propietarios conservan el inicio de sesión con contraseña.",
+    "ssoEnforceSaveHint": "Aún no se ha aplicado: haz clic en Guardar.",
+    "ssoEnforceConfirmTitle": "¿Exigir SSO para estos dominios?",
+    "ssoEnforceConfirmIntro": "Para los miembros cuyo correo pertenece a los dominios permitidos:",
+    "ssoEnforceConfirmPasswords": "El inicio de sesión con contraseña, con Google y «¿Olvidó su contraseña?» dejan de funcionar.",
+    "ssoEnforceConfirmOwners": "Los Propietarios conservan el inicio de sesión con contraseña y autenticación de dos factores como cuenta de emergencia.",
+    "ssoEnforceConfirmSessions": "Se cerrará la sesión de quien haya iniciado sesión sin SSO.",
+    "ssoEnforceConfirmRestore": "Las contraseñas se conservan, no se eliminan: al desactivar esta opción se restablece el inicio de sesión con contraseña.",
+    "ssoEnforceConfirm": "Exigir SSO",
     "ssoDefaultRole": "Rol predeterminado",
     "ssoNone": "Ninguno",
     "ssoGroupRoleMap": "Grupo → Rol",
@@ -1427,7 +1460,8 @@
     "memberMfaReset": "Restablecer 2FA",
     "memberMfaResetTitle": "¿Restablecer la autenticación de dos factores?",
     "memberMfaResetConfirm": "{name} cerrará sesión en todos sus dispositivos y deberá configurar de nuevo la autenticación de dos factores en su próximo inicio de sesión.",
-    "memberMfaResetDone": "Se ha restablecido la autenticación de dos factores"
+    "memberMfaResetDone": "Se ha restablecido la autenticación de dos factores",
+    "memberMfaResetConfirmOptional": "{name} cerrará sesión en todos los dispositivos y se desactivará la autenticación de dos factores. Podrá volver a activarla en Ajustes."
   },
   "call": {
     "peerFallback": "Usuario",

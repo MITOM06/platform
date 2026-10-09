@@ -19,7 +19,8 @@ export default function OAuthCallbackPage() {
   useEffect(() => {
     // OAuth error-redirect contract (plan §1.5): the auth-service sends the
     // browser back here with `?error=<AuthCode>` when Google/SSO sign-in or an
-    // invitation accept fails (e.g. ACCOUNT_NOT_PROVISIONED, ACCOUNT_BLOCKED).
+    // invitation accept fails (e.g. ACCOUNT_NOT_PROVISIONED, ACCOUNT_BLOCKED,
+    // SSO_REQUIRED when the email's domain must use single sign-on).
     // The reason is handed to /login as a persistent banner rather than a
     // toast: on a slow load the toast is gone before /login has rendered.
     const error = searchParams.get('error')
@@ -37,8 +38,8 @@ export default function OAuthCallbackPage() {
     authService
       .exchangeCode(code)
       .then(async ({ data }) => {
-        // Owner / Admin signing in with Google: finish with the authenticator
-        // code (or first-time 2FA setup) on /mfa before any session exists.
+        // Signing in with Google: finish with the authenticator code (or
+        // first-time 2FA setup) on /mfa before any session exists.
         if (isMfaChallenge(data)) {
           savePendingMfa(data)
           router.replace(MFA_PATH)

@@ -20,7 +20,7 @@ vi.mock('@/lib/hooks/use-capabilities', () => ({
 const roles: Role[] = [
   { _id: 'r-owner', name: 'Owner', isPreset: true, permissions: {} },
   { _id: 'r-member', name: 'Member', isPreset: true, permissions: {} },
-  { _id: 'r-manager', name: 'Manager', isPreset: true, permissions: {} },
+  { _id: 'r-sales', name: 'Sales', isPreset: false, permissions: {} },
 ]
 
 describe('InviteMemberDialog', () => {

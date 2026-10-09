@@ -458,7 +458,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Public: whether the SSO button should show */
+        /** Public: whether the SSO button shows and whether SSO is required */
         get: operations["AuthController_ssoInfo"];
         put?: never;
         post?: never;
@@ -630,7 +630,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Accept an invitation by choosing a display name + password */
+        /** Accept an invitation by choosing a display name + password; Owner / Admin-like roles continue with 2FA enrollment */
         post: operations["InvitationAcceptController_acceptPassword"];
         delete?: never;
         options?: never;
@@ -792,6 +792,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/users/me/mfa/enroll/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turn 2FA on from Settings: QR + manual key of a pending secret (10 minutes, the same one on every call) */
+        post: operations["MfaSelfController_enrollStart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/me/mfa/enroll/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm the Settings enrollment with one code; returns the backup codes once (session unchanged) */
+        post: operations["MfaSelfController_enrollConfirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/me/mfa/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turn optional 2FA off (a current authenticator code or an unused backup code) */
+        post: operations["MfaSelfController_disable"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/members/{id}/mfa/reset": {
         parameters: {
             query?: never;
@@ -801,7 +852,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Owner only: reset a member's 2FA and revoke their sessions */
+        /** Reset a member's 2FA and revoke their sessions (Owner: anyone else; MANAGE_MEMBERS: non-admin members) */
         post: operations["MfaAdminController_reset"];
         delete?: never;
         options?: never;
@@ -1121,7 +1172,7 @@ export interface components {
         };
         LoginTokensResponseDto: {
             /**
-             * @description LOGIN_SUCCESS (login) or INVITATION_ACCEPTED (accept-password)
+             * @description LOGIN_SUCCESS (login, MFA verify / enroll-complete, accept-password); INVITATION_ACCEPTED is no longer emitted
              * @example LOGIN_SUCCESS
              */
             code: string;
@@ -1143,9 +1194,19 @@ export interface components {
             code: "MFA_REQUIRED";
             /** @description Opaque, single-use, valid for 5 minutes */
             mfaToken: string;
-            /** @description true = first sign-in since becoming privileged: enroll an authenticator first */
+            /** @description true = 2FA is mandatory for the role (Owner / Admin-like) and the account never enrolled: set up an authenticator first. false = enter a code (enrolled; for a Member, 2FA they turned on) */
             enrollmentRequired: boolean;
             user: components["schemas"]["MfaUserDto"];
+        };
+        SsoInfoResponseDto: {
+            /** @description Show the "Sign in with SSO" button */
+            enabled: boolean;
+            /** @description The workspace requires SSO for its domains (password / Google sign-in are refused there, Owners excepted) */
+            enforced: boolean;
+            /** @example /auth/oidc/login */
+            loginUrl: string | null;
+            /** @example Sign in with SSO */
+            buttonLabel: string;
         };
         ExchangeDto: {
             /** @description One-time login code returned by the OAuth/login flow */
@@ -1307,7 +1368,7 @@ export interface components {
         };
         MfaEnrollCompleteResponseDto: {
             /**
-             * @description LOGIN_SUCCESS (login) or INVITATION_ACCEPTED (accept-password)
+             * @description LOGIN_SUCCESS (login, MFA verify / enroll-complete, accept-password); INVITATION_ACCEPTED is no longer emitted
              * @example LOGIN_SUCCESS
              */
             code: string;
@@ -1338,7 +1399,7 @@ export interface components {
         };
         MfaVerifyResponseDto: {
             /**
-             * @description LOGIN_SUCCESS (login) or INVITATION_ACCEPTED (accept-password)
+             * @description LOGIN_SUCCESS (login, MFA verify / enroll-complete, accept-password); INVITATION_ACCEPTED is no longer emitted
              * @example LOGIN_SUCCESS
              */
             code: string;
@@ -1414,6 +1475,39 @@ export interface components {
             /** @description 10 new single-use backup codes (the old ones stop working). Shown once. */
             backupCodes: string[];
         };
+        MfaSelfEnrollConfirmDto: {
+            /**
+             * @description 6-digit code from the authenticator app just set up
+             * @example 123456
+             */
+            code: string;
+        };
+        MfaSelfEnrollConfirmResponseDto: {
+            /**
+             * @example MFA_BACKUP_CODES_ISSUED
+             * @enum {string}
+             */
+            code: "MFA_BACKUP_CODES_ISSUED";
+            /**
+             * @description 10 single-use backup codes (stored hashed). Shown once: they cannot be read again.
+             * @example [
+             *       "ABCDE-FGH23"
+             *     ]
+             */
+            backupCodes: string[];
+        };
+        MfaDisableDto: {
+            /**
+             * @description Current authenticator code (send exactly one of code / backupCode)
+             * @example 123456
+             */
+            code?: string;
+            /**
+             * @description An unused backup code (send exactly one of code / backupCode)
+             * @example ABCDE-FGH23
+             */
+            backupCode?: string;
+        };
         CreateDepartmentDto: {
             name: string;
             description?: string;
@@ -1463,7 +1557,28 @@ export interface components {
             /** @description capability key -> enabled flag */
             permissions?: Record<string, never>;
         };
-        WorkspaceSsoDto: Record<string, never>;
+        WorkspaceSsoDto: {
+            /** @description Show / allow "Sign in with SSO" */
+            enabled?: boolean;
+            /** @description Require SSO for members whose email domain is in allowedDomains (Owners exempt). Needs enabled + a non-empty allowedDomains + OIDC configured on the server, else 400 SSO_ENFORCE_NOT_READY. Omitted = keep the stored value. */
+            enforced?: boolean;
+            /**
+             * @example [
+             *       "acme.com"
+             *     ]
+             */
+            allowedDomains?: string[];
+            /** @description IdP group → PON role name */
+            groupRoleMap?: {
+                [key: string]: string;
+            };
+            /** @description IdP group → department id */
+            groupDeptMap?: {
+                [key: string]: string;
+            };
+            /** @description Role name when no group matches */
+            defaultRole?: string;
+        };
         WorkspaceAiSettingsDto: {
             personaName?: Record<string, never> | null;
             /** @enum {string|null} */
@@ -2033,7 +2148,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SsoInfoResponseDto"];
+                };
             };
         };
     };
@@ -2050,7 +2167,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Tokens issued, or MFA_REQUIRED (privileged user, Google sign-in) */
+            /** @description MFA_REQUIRED (Google sign-in of an Owner / Admin-like role, or of a member who turned 2FA on), else tokens (incl. OIDC SSO). 403 SSO_REQUIRED when the workspace requires SSO for this member */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -2105,7 +2222,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description LOGIN_SUCCESS + tokens, or MFA_REQUIRED (privileged user) */
+            /** @description MFA_REQUIRED (2FA step: always for Owner / Admin-like roles, for other members once they turned 2FA on), else LOGIN_SUCCESS + tokens */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -2116,6 +2233,13 @@ export interface operations {
             };
             /** @description Invalid credentials */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description SSO_REQUIRED: the workspace requires SSO for this email domain */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2264,13 +2388,21 @@ export interface operations {
             };
         };
         responses: {
+            /** @description LOGIN_SUCCESS + tokens (Member / non-admin role), or MFA_REQUIRED with enrollmentRequired: true (Owner / Admin-like role) */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LoginTokensResponseDto"];
+                    "application/json": components["schemas"]["LoginTokensResponseDto"] | components["schemas"]["MfaRequiredResponseDto"];
                 };
+            };
+            /** @description SSO_REQUIRED: the workspace requires SSO for this email domain */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -2540,6 +2672,113 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["BackupCodesResponseDto"];
                 };
+            };
+        };
+    };
+    MfaSelfController_enrollStart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MfaEnrollStartResponseDto"];
+                };
+            };
+            /** @description MFA_ALREADY_ENROLLED */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description SSO_REQUIRED: the workspace requires SSO for this member (no PON 2FA) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MfaSelfController_enrollConfirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MfaSelfEnrollConfirmDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MfaSelfEnrollConfirmResponseDto"];
+                };
+            };
+            /** @description MFA_CODE_INVALID (params.remaining) / MFA_TOO_MANY_ATTEMPTS / MFA_NOT_ENROLLED (no pending secret: start again) / MFA_ALREADY_ENROLLED */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description SSO_REQUIRED: the workspace requires SSO for this member (no PON 2FA) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MfaSelfController_disable: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MfaDisableDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponseDto"];
+                };
+            };
+            /** @description MFA_REQUIRED_BY_ROLE (Owner / Admin-like) / MFA_NOT_ENROLLED / MFA_CODE_INVALID (params.remaining) / MFA_TOO_MANY_ATTEMPTS */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description SSO_REQUIRED: the workspace requires SSO for this member (no PON 2FA) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

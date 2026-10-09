@@ -98,13 +98,24 @@ export function MembersPanel() {
 
   const roleName = (id?: string) => roles.find((r) => r._id === id)?.name
 
-  // "Reset 2FA": Owner only, never on their own row (contract 09).
+  // The target's role is Owner/Admin-like; no role = Member; a role this caller
+  // can't resolve (no role list) = unknown → no reset offered to a non-Owner.
+  const targetPrivileged = (m: Member): boolean | null => {
+    if (!m.roleId) return false
+    const role = roles.find((r) => r._id === m.roleId)
+    return role ? isPrivilegedRole(role) : null
+  }
+
+  // "Reset 2FA" (contracts 13 B, 15): Owner on anyone else; member managers on
+  // members that aren't Owner/Admin-like; never on your own row; only where
+  // 2FA is on.
   const canResetMfa = (m: Member) =>
     canResetMemberMfa({
       callerIsOwner,
+      callerCanManageMembers: canManageMembers,
       isSelf: m._id === selfId,
-      targetPrivileged: isPrivilegedRole(roles.find((r) => r._id === m.roleId)),
       targetMfaEnabled: m.mfaEnabled === true,
+      targetPrivileged: targetPrivileged(m),
     })
 
   // Own row and (for non-Owners) an Owner's row: role is read-only, departments
@@ -163,7 +174,11 @@ export function MembersPanel() {
         />
       ))}
 
-      <ResetMfaDialog member={mfaTarget} onClose={() => setMfaTarget(null)} />
+      <ResetMfaDialog
+        member={mfaTarget}
+        targetPrivileged={mfaTarget ? targetPrivileged(mfaTarget) : null}
+        onClose={() => setMfaTarget(null)}
+      />
 
       {canManageMembers && (
         <InviteMemberDialog

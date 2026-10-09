@@ -14,8 +14,9 @@ const noopSubscribe = () => () => {}
 const noChallengeOnServer = () => undefined
 
 /**
- * Second sign-in step for privileged users (Owner / Admin / admin-like roles).
- * Reached only from the login or Google-callback screens with a parked
+ * Second step of a password / Google sign-in when 2FA applies (contract 15:
+ * Owner/Admin-like roles always, Members who turned it on).
+ * Reached only from the login, Google-callback or invite screens with a parked
  * challenge (`lib/auth/mfa.ts`); without one the visitor goes back to /login
  * (with the "expired" notice when the parked one outlived the server TTL).
  * Guest-only like /login (middleware): no session exists until this step ends —

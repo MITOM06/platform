@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
+import { SsoEnforceToggle } from '@/components/admin/SsoEnforceToggle'
+import { parseAuthError } from '@/lib/auth/auth-error'
 import {
   useWorkspace,
   useUpdateWorkspace,
@@ -21,6 +23,13 @@ function toRows(map: Record<string, string> | undefined): Row[] {
   return Object.entries(map ?? {}).map(([group, value]) => ({ group, value }))
 }
 
+function parseDomains(text: string): string[] {
+  return text
+    .split(',')
+    .map((d) => d.trim())
+    .filter(Boolean)
+}
+
 function toMap(rows: Row[]): Record<string, string> {
   const out: Record<string, string> = {}
   for (const r of rows) {
@@ -31,11 +40,13 @@ function toMap(rows: Row[]): Record<string, string> {
 }
 
 /**
- * SSO (OIDC) admin config: enable toggle, allowed email domains, default role,
- * and IdP-group → role / department mappings. Provider creds stay in .env.
+ * SSO (OIDC) admin config: enable toggle, "Require SSO" for the allowed email
+ * domains, default role, and IdP-group → role / department mappings. Provider
+ * creds stay in .env.
  */
 export function SsoPanel() {
   const t = useTranslations('admin')
+  const tAuth = useTranslations('auth')
   const { data: ws, isLoading } = useWorkspace()
   const { data: roles = [] } = useRoles()
   const { data: departments = [] } = useDepartments()
@@ -43,6 +54,8 @@ export function SsoPanel() {
 
   const [prevWs, setPrevWs] = useState(ws)
   const [enabled, setEnabled] = useState(ws?.sso?.enabled ?? false)
+  const [enforced, setEnforced] = useState(ws?.sso?.enforced ?? false)
+  const [enforceError, setEnforceError] = useState<string | null>(null)
   const [domains, setDomains] = useState((ws?.sso?.allowedDomains ?? []).join(', '))
   const [defaultRole, setDefaultRole] = useState(ws?.sso?.defaultRole ?? '')
   const [roleRows, setRoleRows] = useState<Row[]>(toRows(ws?.sso?.groupRoleMap))
@@ -51,25 +64,48 @@ export function SsoPanel() {
   if (prevWs !== ws && ws) {
     setPrevWs(ws)
     setEnabled(ws.sso?.enabled ?? false)
+    setEnforced(ws.sso?.enforced ?? false)
     setDomains((ws.sso?.allowedDomains ?? []).join(', '))
     setDefaultRole(ws.sso?.defaultRole ?? '')
     setRoleRows(toRows(ws.sso?.groupRoleMap))
     setDeptRows(toRows(ws.sso?.groupDeptMap))
   }
 
-  const onSave = () =>
-    save.mutate({
-      sso: {
-        enabled,
-        allowedDomains: domains
-          .split(',')
-          .map((d) => d.trim())
-          .filter(Boolean),
-        groupRoleMap: toMap(roleRows),
-        groupDeptMap: toMap(deptRows),
-        defaultRole: defaultRole || undefined,
+  // Turning SSO off also releases the "Require SSO" switch (it only means
+  // something while SSO is on), so a later re-enable asks for confirmation again.
+  const onEnabledChange = (next: boolean) => {
+    setEnabled(next)
+    if (!next) setEnforced(false)
+  }
+
+  const onEnforcedChange = (next: boolean) => {
+    setEnforceError(null)
+    setEnforced(next)
+  }
+
+  const onSave = () => {
+    setEnforceError(null)
+    save.mutate(
+      {
+        sso: {
+          enabled,
+          enforced: enabled && enforced,
+          allowedDomains: parseDomains(domains),
+          groupRoleMap: toMap(roleRows),
+          groupDeptMap: toMap(deptRows),
+          defaultRole: defaultRole || undefined,
+        },
       },
-    })
+      {
+        // Also toasted by the hook; kept next to the switch so it's clear what to fix.
+        onError: (err) => {
+          if (parseAuthError(err).code === 'SSO_ENFORCE_NOT_READY') {
+            setEnforceError(tAuth('errSsoEnforceNotReady'))
+          }
+        },
+      },
+    )
+  }
 
   if (isLoading) return <Skeleton className="h-96 rounded-xl" />
 
@@ -95,7 +131,7 @@ export function SsoPanel() {
 
         <div className="flex items-center justify-between rounded-lg border px-4 py-2.5">
           <span className="text-sm font-medium">{t('ssoEnabled')}</span>
-          <Switch checked={enabled} onCheckedChange={setEnabled} />
+          <Switch checked={enabled} onCheckedChange={onEnabledChange} />
         </div>
 
         <div className="space-y-1.5">
@@ -108,6 +144,14 @@ export function SsoPanel() {
           />
           <p className="text-xs text-muted-foreground">{t('ssoAllowedDomainsHint')}</p>
         </div>
+
+        <SsoEnforceToggle
+          checked={enforced}
+          saved={ws?.sso?.enforced === true}
+          ready={enabled && parseDomains(domains).length > 0}
+          error={enforceError}
+          onCheckedChange={onEnforcedChange}
+        />
 
         <div className="space-y-1.5">
           <Label htmlFor="sso-default-role">{t('ssoDefaultRole')}</Label>

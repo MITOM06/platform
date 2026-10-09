@@ -86,9 +86,11 @@ export default function SecurityPage() {
     } catch (e: unknown) {
       // Typed auth code (CURRENT_PASSWORD_INCORRECT, VAL_PASSWORD_TOO_SHORT, …) →
       // localized text; never the raw server body (.claude/rules/no-raw-system-data-in-ui.md).
-      // An unknown failure keeps this screen's own generic copy.
+      // An unknown failure keeps this screen's own generic copy; SSO_REQUIRED
+      // (passwords are off for an SSO-enforced domain) gets this screen's wording.
       const { code, params } = parseAuthError(e)
-      setError(code === 'GENERIC_ERROR' ? t('genericError') : tAuth(authCodeToI18nKey(code), params))
+      if (code === 'SSO_REQUIRED') setError(t('ssoPasswordDisabled'))
+      else setError(code === 'GENERIC_ERROR' ? t('genericError') : tAuth(authCodeToI18nKey(code), params))
     } finally {
       setSaving(false)
     }
