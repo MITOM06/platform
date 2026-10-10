@@ -1,6 +1,7 @@
 package com.platform.chatservice.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.platform.chatservice.model.AiSource;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,45 @@ public record MessageResponse(
     List<String> mentions,
     @JsonInclude(JsonInclude.Include.NON_EMPTY) List<PendingActionDto> pendingActions,
     // ai-service stream replyId of an AI reply (null otherwise) — exact placeholder swap.
-    @JsonInclude(JsonInclude.Include.NON_NULL) String aiReplyId) {
+    @JsonInclude(JsonInclude.Include.NON_NULL) String aiReplyId,
+    // RAG / web citations of an AI reply, so its source chips survive a reload.
+    @JsonInclude(JsonInclude.Include.NON_EMPTY) List<AiSource> sources) {
+
+  /** Constructor without {@code sources} (every message but a cited AI reply). */
+  public MessageResponse(
+      String id,
+      String conversationId,
+      String senderId,
+      String content,
+      String type,
+      List<String> readBy,
+      Instant createdAt,
+      String replyToId,
+      ReplyPreviewDto replyPreview,
+      List<ReactionDto> reactions,
+      boolean recalled,
+      Instant editedAt,
+      List<String> mentions,
+      List<PendingActionDto> pendingActions,
+      String aiReplyId) {
+    this(
+        id,
+        conversationId,
+        senderId,
+        content,
+        type,
+        readBy,
+        createdAt,
+        replyToId,
+        replyPreview,
+        reactions,
+        recalled,
+        editedAt,
+        mentions,
+        pendingActions,
+        aiReplyId,
+        null);
+  }
 
   public MessageResponse(
       String id,

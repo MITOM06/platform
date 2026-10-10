@@ -218,9 +218,20 @@ public class ChatController {
       callService.relaySignal(principal.getName(), type, dto);
       return;
     }
-    // Legacy 1-on-1 relay (unchanged).
+    // Legacy 1-on-1 relay.
     dto.setSenderId(principal.getName());
     clusterBroker.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
+    if ("answer".equals(type)) {
+      // The callee may be signed in elsewhere (web + phone), all of them ringing: the ones that
+      // did not answer stop. The answering session ignores it (it is no longer ringing).
+      com.platform.chatservice.dto.WebRTCSignalDto answered =
+          new com.platform.chatservice.dto.WebRTCSignalDto();
+      answered.setType("answered-elsewhere");
+      answered.setSenderId(dto.getTargetId());
+      answered.setTargetId(principal.getName());
+      answered.setConversationId(dto.getConversationId());
+      clusterBroker.convertAndSendToUser(principal.getName(), "/queue/webrtc", answered);
+    }
   }
 
   /**

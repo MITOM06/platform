@@ -19,6 +19,8 @@ export interface WebRTCSignal {
     | 'call-merged'
     /** 1-on-1 in-call state from the other person (`/app/call.state`). */
     | 'state'
+    /** mesh: we answered `senderId`'s call on another device — stop ringing here. */
+    | 'answered-elsewhere'
   sdp?: string
   candidate?: RTCIceCandidateInit
   /** On `end`: why the call ended. Absent from older clients (= 'hangup'). */

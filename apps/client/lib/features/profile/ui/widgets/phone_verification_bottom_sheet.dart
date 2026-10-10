@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart' show Firebase;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
@@ -90,6 +91,9 @@ class _PhoneVerificationBottomSheetState
 
   Future<void> _sendOtp() async {
     if (!_hasValidNumber || _sending) return;
+    if (Firebase.apps.isEmpty) { // this build has no Firebase project
+      return setState(() => _phoneError = context.l10n.phoneSendOtpError);
+    }
     final e164 = _e164;
     setState(() {
       _sending = true;

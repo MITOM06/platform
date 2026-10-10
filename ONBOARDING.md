@@ -158,7 +158,7 @@ Each client resolves every backend URL from **one** value:
 | | Local | Deployed |
 |---|---|---|
 | Web | `apps/web/.env.development.local` (written by `up.sh`) | `NEXT_PUBLIC_API_BASE` |
-| Mobile | `--dart-define=PON_CHAT_URL=http://…` | `--dart-define=PON_DOMAIN=<host>` |
+| Mobile | `--dart-define=PON_CHAT_URL=http://…` (flavor `dev`, the default) | `--flavor prod --dart-define=PON_DOMAIN=<host>` |
 
 Per-service overrides (`NEXT_PUBLIC_CHAT_URL`, `PON_CHAT_URL`, …) win
 individually — that is how you point one service at your machine while the rest
