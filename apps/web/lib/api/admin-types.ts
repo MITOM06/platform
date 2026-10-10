@@ -48,6 +48,13 @@ export interface MeCapabilities {
 /** Admin-editable SSO mapping config (provider creds live in .env, not here). */
 export interface WorkspaceSso {
   enabled: boolean
+  /**
+   * "Require SSO for these domains": members whose email domain is in
+   * `allowedDomains` (Owners excepted — break-glass) can only sign in with SSO.
+   * Turning it on needs `enabled`, a non-empty `allowedDomains` and OIDC set up
+   * in the deployment env, else `400 SSO_ENFORCE_NOT_READY`. Absent = false.
+   */
+  enforced?: boolean
   allowedDomains: string[]
   groupRoleMap: Record<string, string>
   groupDeptMap: Record<string, string>

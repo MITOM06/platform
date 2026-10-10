@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import * as QRCode from 'qrcode';
 import { User, UserDocument } from '@platform/database';
 import { AuthCode } from '../../common/auth-code.enum';
 import { AuditService } from '../audit/audit.service';
@@ -19,7 +18,8 @@ import {
   MfaSignInContext,
   MfaStage,
 } from './mfa-pending.store';
-import { generateTotpSecret, totpKeyUri } from './totp';
+import { enrollmentView } from './mfa-enroll-view';
+import { generateTotpSecret } from './totp';
 
 /** Client-supplied session fields of confirm / complete / verify. */
 export interface MfaDeviceInput {
@@ -35,7 +35,7 @@ export interface MfaSignInResult extends MfaSignInContext {
 const SECRET_FIELDS = '+mfa.secretEnc +mfa.backupCodeHashes';
 
 /**
- * Second step of a privileged sign-in (public endpoints, authenticated by the
+ * Second step of a password / Google sign-in (public endpoints, authenticated by the
  * mfaToken only): enroll an authenticator (start → confirm → codes → complete),
  * or verify a TOTP / backup code. Never issues tokens itself; the auth-side
  * controller does once enroll/complete or verify passes.
@@ -62,14 +62,7 @@ export class MfaService {
       ));
     if (!secretEnc) throw tokenInvalid();
 
-    const secret = this.crypto.decrypt(secretEnc, p.userId);
-    const otpauthUrl = totpKeyUri(user.email, secret);
-    const qrDataUrl = await QRCode.toDataURL(otpauthUrl, {
-      errorCorrectionLevel: 'M',
-      margin: 1,
-      width: 256,
-    });
-    return { otpauthUrl, secret, qrDataUrl };
+    return enrollmentView(user.email, this.crypto.decrypt(secretEnc, p.userId));
   }
 
   /**
@@ -310,7 +303,10 @@ function isPresent(value: unknown): boolean {
   return value !== undefined && value !== null && value !== '';
 }
 
-/** Session fields: the client's own (if usable), else those of the sign-in. */
+/**
+ * Session fields: device / platform are the client's own (if usable), else
+ * those of the sign-in; the method always comes from the sign-in.
+ */
 function signInContext(
   p: MfaSignInContext,
   dto: MfaDeviceInput,
@@ -318,6 +314,7 @@ function signInContext(
   return {
     deviceId: deviceField(dto.deviceId) ?? p.deviceId,
     platform: deviceField(dto.platform) ?? p.platform,
+    ...(p.method ? { method: p.method } : {}),
   };
 }
 

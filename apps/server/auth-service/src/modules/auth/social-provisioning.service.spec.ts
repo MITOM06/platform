@@ -6,6 +6,7 @@ import { SocialProvisioningService } from './social-provisioning.service';
 import { UsersService } from '../users/users.service';
 import { InvitationsService } from '../invitations/invitations.service';
 import { InvitationAcceptService } from '../invitations/invitation-accept.service';
+import { SsoPolicyService } from '../sso/sso-policy.service';
 
 const ex = (v: any) => ({ exec: jest.fn().mockResolvedValue(v) });
 const oid = (s: string) => ({ toString: () => s });
@@ -17,6 +18,8 @@ describe('SocialProvisioningService (invite-only rules D7/D8)', () => {
   let accept: { acceptWithSso: jest.Mock; consumeForUser: jest.Mock };
   let config: Record<string, string>;
   let roleModel: { findOne: jest.Mock };
+  /** Emails covered by Require SSO in this test. */
+  let enforced: string[];
 
   const profile = {
     id: 'g-1',
@@ -38,6 +41,7 @@ describe('SocialProvisioningService (invite-only rules D7/D8)', () => {
       consumeForUser: jest.fn().mockResolvedValue(undefined),
     };
     config = {};
+    enforced = [];
     roleModel = {
       findOne: jest
         .fn()
@@ -52,6 +56,25 @@ describe('SocialProvisioningService (invite-only rules D7/D8)', () => {
         { provide: InvitationAcceptService, useValue: accept },
         { provide: ConfigService, useValue: { get: (k: string) => config[k] } },
         { provide: getModelToken(Role.name), useValue: roleModel },
+        {
+          provide: SsoPolicyService,
+          useValue: {
+            assertNotEnforced: jest.fn(
+              async (s: { email?: string; roleId?: unknown }) => {
+                const email = String(s?.email ?? '').toLowerCase();
+                // An Owner (invitation) is exempt, as in SsoPolicyService.
+                if (
+                  enforced.includes(email) &&
+                  String(s?.roleId) !== 'role-owner'
+                ) {
+                  const { ssoRequired } =
+                    await import('../sso/sso-policy.service');
+                  throw ssoRequired();
+                }
+              },
+            ),
+          },
+        },
       ],
     }).compile();
     service = moduleRef.get(SocialProvisioningService);
@@ -215,6 +238,62 @@ describe('SocialProvisioningService (invite-only rules D7/D8)', () => {
   it('OIDC without allowJit → ACCOUNT_NOT_PROVISIONED', async () => {
     await expect(service.resolveUserId(profile, 'oidc')).rejects.toMatchObject({
       response: { code: 'ACCOUNT_NOT_PROVISIONED' },
+    });
+  });
+
+  describe('Require SSO (Google sign-in)', () => {
+    it('existing enforced member → 403 SSO_REQUIRED, Google id not linked', async () => {
+      enforced = ['jane@acme.com'];
+      users.findByEmailInsensitive.mockResolvedValue({
+        _id: oid('u1'),
+        email: 'jane@acme.com',
+        status: 'active',
+        socialLinks: {},
+      });
+      await expect(
+        service.resolveUserId(profile, 'google'),
+      ).rejects.toMatchObject({
+        status: 403,
+        response: { code: 'SSO_REQUIRED' },
+      });
+      expect(users.updateSocialId).not.toHaveBeenCalled();
+    });
+
+    it('no account + pending invitation in an enforced domain → SSO_REQUIRED (not INVITATION_PENDING)', async () => {
+      enforced = ['jane@acme.com'];
+      invitations.findPendingByEmail.mockResolvedValue({
+        _id: oid('inv'),
+        roleId: oid('role-member'),
+      });
+      await expect(
+        service.resolveUserId(profile, 'google'),
+      ).rejects.toMatchObject({
+        response: { code: 'SSO_REQUIRED' },
+      });
+    });
+
+    it('no account + pending OWNER invitation → still INVITATION_PENDING (Owners exempt)', async () => {
+      enforced = ['jane@acme.com'];
+      invitations.findPendingByEmail.mockResolvedValue({
+        _id: oid('inv'),
+        roleId: oid('role-owner'),
+      });
+      await expect(
+        service.resolveUserId(profile, 'google'),
+      ).rejects.toMatchObject({
+        response: { code: 'INVITATION_PENDING' },
+      });
+    });
+
+    it('the OIDC path is never refused for SSO (it IS the SSO sign-in)', async () => {
+      enforced = ['jane@acme.com'];
+      users.findByEmailInsensitive.mockResolvedValue({
+        _id: oid('u1'),
+        email: 'jane@acme.com',
+        status: 'active',
+        socialLinks: {},
+      });
+      await expect(service.resolveUserId(profile, 'oidc')).resolves.toBe('u1');
     });
   });
 });

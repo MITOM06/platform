@@ -553,6 +553,53 @@ describe('axios 401-refresh interceptor', () => {
       expect(nav.href).toBe('')
     })
 
+    it('sends an SSO-enforced user to /login?reason=SSO_REQUIRED when the refresh says so', async () => {
+      // Session revoked because the workspace now requires SSO (contract 13 C):
+      // the refresh proxy forwards SSO_REQUIRED (also mapped from `sso_enforced`).
+      const ssoRequired = httpError(401, { error: 'refresh_rejected', code: 'SSO_REQUIRED' }, '/api/auth/refresh')
+      const adapter = buildSequentialAdapter([
+        { type: 'reject', error: ssoRequired },
+        { type: 'resolve', data: {} }, // clear-cookie
+      ])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      axios.defaults.adapter = adapter as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      chatApi.defaults.adapter = adapter as any
+
+      const handler = getInterceptorHandler()
+      await expect(handler(make401('/api/conversations'))).rejects.toBe(ssoRequired)
+
+      expect(getStoreState().clearAuth).toHaveBeenCalledTimes(1)
+      expect(nav.href).toBe('/login?reason=SSO_REQUIRED')
+    })
+
+    it('maps a refresh rejected for the sso_enforced revocation reason to the same notice', async () => {
+      const revoked = httpError(
+        401,
+        { error: 'refresh_rejected', code: 'SESSION_REVOKED', params: { reason: 'sso_enforced' } },
+        '/api/auth/refresh',
+      )
+      const adapter = buildSequentialAdapter([
+        { type: 'reject', error: revoked },
+        { type: 'resolve', data: {} }, // clear-cookie
+      ])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      axios.defaults.adapter = adapter as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      chatApi.defaults.adapter = adapter as any
+
+      const handler = getInterceptorHandler()
+      await expect(handler(make401('/api/conversations'))).rejects.toBe(revoked)
+      expect(nav.href).toBe('/login?reason=SSO_REQUIRED')
+    })
+
+    it('does not log out on a 403 SSO_REQUIRED from a signed-in call (e.g. change-password over SSO)', async () => {
+      const handler = getInterceptorHandler()
+      await expect(handler(httpError(403, { code: 'SSO_REQUIRED' }))).rejects.toThrow()
+      expect(getStoreState().clearAuth).not.toHaveBeenCalled()
+      expect(nav.href).toBe('')
+    })
+
     it('ignores a 403 that is not ACCOUNT_BLOCKED (plain permission error)', async () => {
       const handler = getInterceptorHandler()
       await expect(handler(httpError(403, { code: 'INSUFFICIENT_PERMISSION' }))).rejects.toThrow()

@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { createHash, randomBytes } from 'node:crypto';
 import { REDIS_CLIENT, Redis } from '@platform/database';
+import { SESSION_METHODS, SessionMethod } from '../auth/session-method';
 
 export const MFA_TOKEN_TTL_SECONDS = 5 * 60;
 /** Lifetime of a `codes_pending` record, counted from enroll/confirm. */
@@ -18,6 +19,11 @@ const STAGES: readonly string[] = ['enroll', 'verify', 'codes_pending'];
 export interface MfaSignInContext {
   deviceId: string;
   platform: string;
+  /**
+   * How the first factor was passed; becomes the session's `method`. Absent on
+   * records created before it existed (the session is then `password`).
+   */
+  method?: SessionMethod;
 }
 
 export interface MfaPending extends MfaSignInContext {
@@ -69,6 +75,7 @@ export class MfaPendingStore {
         stage: record.stage,
         deviceId: record.deviceId,
         platform: record.platform,
+        method: record.method ?? '',
         attempts: '0',
       })
       .expire(key, MFA_TOKEN_TTL_SECONDS)
@@ -92,6 +99,9 @@ export class MfaPendingStore {
       attempts: Number(h.attempts ?? 0),
       secretEnc: h.secretEnc || undefined,
     };
+    if ((SESSION_METHODS as readonly string[]).includes(h.method)) {
+      p.method = h.method as SessionMethod;
+    }
     if (p.stage === 'codes_pending') {
       const enrolledAt = Number(h.enrolledAt);
       p.backupCodesEnc = h.backupCodesEnc || undefined;
@@ -117,6 +127,7 @@ export class MfaPendingStore {
         stage: 'codes_pending',
         deviceId: record.deviceId,
         platform: record.platform,
+        method: record.method ?? '',
         attempts: '0',
         backupCodesEnc: record.backupCodesEnc,
         enrolledAt: String(record.enrolledAt),

@@ -27,6 +27,7 @@ jest.mock('openid-client', () => ({
   },
 }));
 
+import { Issuer } from 'openid-client';
 import { OidcService } from './oidc.service';
 
 function makeService(redisStore: Record<string, string>) {
@@ -129,5 +130,46 @@ describe('OidcService', () => {
     await expect(
       makeService(store).handleCallback({ code: 'c', state: 'state-abc' }),
     ).rejects.toThrow();
+  });
+
+  describe('discovery failures (IdP down)', () => {
+    const discover = Issuer.discover as unknown as jest.Mock;
+
+    it('answers 503 SSO_UNAVAILABLE and retries on the next request (failure not cached)', async () => {
+      const svc = makeService({});
+      discover.mockRejectedValueOnce(new Error('connect ECONNREFUSED'));
+      await expect(svc.buildAuthorizeUrl('web')).rejects.toMatchObject({
+        status: 503,
+        response: { code: 'SSO_UNAVAILABLE' },
+      });
+      const calls = discover.mock.calls.length;
+      // IdP back: the very next request discovers again and succeeds.
+      await expect(svc.buildAuthorizeUrl('web')).resolves.toContain(
+        'https://idp.example.com/authorize',
+      );
+      expect(discover.mock.calls.length).toBe(calls + 1);
+    });
+
+    it('a successful discovery is cached', async () => {
+      const svc = makeService({});
+      await svc.buildAuthorizeUrl('web');
+      const calls = discover.mock.calls.length;
+      await svc.buildAuthorizeUrl('mobile');
+      expect(discover.mock.calls.length).toBe(calls);
+    });
+
+    it('the callback also maps a failed discovery to SSO_UNAVAILABLE', async () => {
+      const store: Record<string, string> = {
+        'oidc:flow:state-abc': JSON.stringify({
+          codeVerifier: 'v',
+          nonce: 'n',
+          platform: 'web',
+        }),
+      };
+      discover.mockRejectedValueOnce(new Error('timeout'));
+      await expect(
+        makeService(store).handleCallback({ code: 'c', state: 'state-abc' }),
+      ).rejects.toMatchObject({ response: { code: 'SSO_UNAVAILABLE' } });
+    });
   });
 });

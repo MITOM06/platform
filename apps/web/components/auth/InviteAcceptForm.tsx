@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useSyncExternalStore } from 'react'
+import { useMemo, useState, useSyncExternalStore } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -11,9 +11,9 @@ import { Smartphone } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
 import type { InvitationPreview } from '@/lib/api/types'
-import { useAuthStore } from '@/lib/store/auth.store'
 import { parseAuthError, authCodeToI18nKey } from '@/lib/auth/auth-error'
 import { MFA_PATH, isMfaChallenge, savePendingMfa } from '@/lib/auth/mfa'
+import { establishSession } from '@/lib/auth/sign-in'
 import { maybeRequestNotificationPermission } from '@/lib/notifications'
 import { AUTH_URL } from '@/lib/config/env'
 import { Button } from '@/components/ui/button'
@@ -25,6 +25,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter'
 import { GoogleIcon } from '@/components/auth/GoogleIcon'
 import { RevealableInput } from '@/components/auth/RevealableInput'
+import { SsoButton, SsoRequiredNotice } from '@/components/auth/SsoSignIn'
 
 type FormData = { displayName: string; password: string; confirmPassword: string; agreeToTerms: boolean }
 
@@ -44,15 +45,52 @@ interface Props {
   preview: InvitationPreview
 }
 
+/** Invitation title + "X invited you to join Y (as Z)". */
+function InviteHeader({ preview }: { preview: InvitationPreview }) {
+  const t = useTranslations('auth')
+  return (
+    <CardHeader>
+      <CardTitle className="text-2xl">{t('invite.title')}</CardTitle>
+      <CardDescription>
+        {preview.roleName
+          ? t('invite.subtitle', {
+              inviter: preview.inviterName,
+              workspace: preview.workspaceName,
+              role: preview.roleName,
+            })
+          : t('invite.subtitleNoRole', {
+              inviter: preview.inviterName,
+              workspace: preview.workspaceName,
+            })}
+      </CardDescription>
+    </CardHeader>
+  )
+}
+
+/** Read-only invited email. */
+function InvitedEmail({ email }: { email: string }) {
+  const t = useTranslations('auth')
+  return (
+    <div className="space-y-1">
+      <Label htmlFor="invite-email">{t('invite.emailLabel')}</Label>
+      <Input id="invite-email" value={email} readOnly disabled className="h-11 text-base" />
+    </div>
+  )
+}
+
 /**
  * Accept an invitation either with Google (the Google email must match the
  * invited one — enforced server-side) or by choosing a display name + password.
- * Agreeing to the terms is required for both paths.
+ * Agreeing to the terms is required for both paths. With a password, a Member
+ * invite signs in right away; an Owner/Admin-like invite first sets up 2FA on
+ * `/mfa` (contract 15). When the invited email's domain must use single sign-on
+ * (`SSO_REQUIRED`), the card switches to "Sign in with SSO", which consumes the
+ * pending invitation.
  */
 export function InviteAcceptForm({ token, preview }: Props) {
   const t = useTranslations('auth')
   const router = useRouter()
-  const setAuth = useAuthStore((s) => s.setAuth)
+  const [ssoRequired, setSsoRequired] = useState(false)
   // Read the UA without a hydration mismatch (server snapshot = '').
   const ua = useSyncExternalStore(noopSubscribe, () => navigator.userAgent, () => '')
   const isMobile = MOBILE_UA.test(ua)
@@ -115,51 +153,46 @@ export function InviteAcceptForm({ token, preview }: Props) {
   const onSubmit = async (data: FormData) => {
     try {
       const result = await authService.acceptInvitation(token, data.displayName.trim(), data.password)
-      // Defensive: should the server ever ask an invited Owner/Admin for 2FA
-      // right away, finish on /mfa instead of storing tokens that aren't there.
+      // Owner/Admin-like invite: 2FA is mandatory, so the session only comes
+      // from the first-time setup on /mfa — same as a password sign-in.
       if (isMfaChallenge(result)) {
         savePendingMfa(result)
         router.replace(MFA_PATH)
         return
       }
-      const { accessToken, refreshToken, sid, user } = result
-      await fetch('/api/auth/set-cookie', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessToken, refreshToken, sid }),
-      })
-      setAuth(user, accessToken)
+      // Member invite (2FA optional, contract 15): tokens — a normal sign-in.
+      const path = await establishSession(result)
       toast.success(t('invite.welcome', { workspace: preview.workspaceName }))
       void maybeRequestNotificationPermission()
-      router.replace('/')
+      router.replace(path)
     } catch (err: unknown) {
       const { code, params } = parseAuthError(err)
+      if (code === 'SSO_REQUIRED') {
+        setSsoRequired(true)
+        return
+      }
       toast.error(t(authCodeToI18nKey(code), params))
     }
   }
 
+  if (ssoRequired) {
+    return (
+      <Card className="w-full max-w-md shadow-none border-border">
+        <InviteHeader preview={preview} />
+        <CardContent className="space-y-4">
+          <InvitedEmail email={preview.email} />
+          <SsoRequiredNotice message={t('invite.ssoRequired', { workspace: preview.workspaceName })} />
+          <SsoButton emphasised />
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className="w-full max-w-md shadow-none border-border">
-      <CardHeader>
-        <CardTitle className="text-2xl">{t('invite.title')}</CardTitle>
-        <CardDescription>
-          {preview.roleName
-            ? t('invite.subtitle', {
-                inviter: preview.inviterName,
-                workspace: preview.workspaceName,
-                role: preview.roleName,
-              })
-            : t('invite.subtitleNoRole', {
-                inviter: preview.inviterName,
-                workspace: preview.workspaceName,
-              })}
-        </CardDescription>
-      </CardHeader>
+      <InviteHeader preview={preview} />
       <CardContent className="space-y-4">
-        <div className="space-y-1">
-          <Label htmlFor="invite-email">{t('invite.emailLabel')}</Label>
-          <Input id="invite-email" value={preview.email} readOnly disabled className="h-11 text-base" />
-        </div>
+        <InvitedEmail email={preview.email} />
 
         <div className="flex flex-row items-start gap-3 py-1">
           <Checkbox

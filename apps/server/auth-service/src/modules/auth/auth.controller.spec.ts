@@ -12,7 +12,8 @@ import { REDIS_CLIENT } from '@platform/database';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { OidcService } from './oidc/oidc.service';
-import { SsoMappingService } from './oidc/sso-mapping.service';
+import { SsoPolicyService } from '../sso/sso-policy.service';
+import { PasswordRecoveryService } from './password-recovery.service';
 import { OAuthRedirectService } from './oauth-redirect.service';
 import { InvitationAcceptService } from '../invitations/invitation-accept.service';
 import { AuthCode } from '../../common/auth-code.enum';
@@ -24,6 +25,8 @@ async function buildController(overrides: {
   auth?: Record<string, unknown>;
   invitations?: Record<string, unknown>;
   oidc?: Record<string, unknown>;
+  ssoPolicy?: Record<string, unknown>;
+  recovery?: Record<string, unknown>;
 }) {
   const redis = { set: jest.fn().mockResolvedValue('OK') };
   const module: TestingModule = await Test.createTestingModule({
@@ -37,7 +40,8 @@ async function buildController(overrides: {
         },
       },
       { provide: OidcService, useValue: overrides.oidc ?? {} },
-      { provide: SsoMappingService, useValue: {} },
+      { provide: SsoPolicyService, useValue: overrides.ssoPolicy ?? {} },
+      { provide: PasswordRecoveryService, useValue: overrides.recovery ?? {} },
       {
         provide: InvitationAcceptService,
         useValue: overrides.invitations ?? {},
@@ -454,4 +458,66 @@ describe('AuthController — SSO email verification errors redirect with a typed
       expect(redirect).toHaveBeenCalledWith(`${WEB}?error=${code}`);
     },
   );
+});
+
+describe('AuthController — SSO info, IdP down, password recovery routing', () => {
+  it('GET /auth/sso/info returns the policy view incl. enforced', async () => {
+    const info = {
+      enabled: true,
+      enforced: true,
+      loginUrl: '/auth/oidc/login',
+      buttonLabel: 'Sign in with SSO',
+    };
+    const { controller } = await buildController({
+      ssoPolicy: { publicInfo: jest.fn().mockResolvedValue(info) },
+    });
+    await expect(controller.ssoInfo()).resolves.toEqual(info);
+  });
+
+  it('/auth/oidc/login with the IdP unreachable → ?error=SSO_UNAVAILABLE, not a raw 500', async () => {
+    const { ServiceUnavailableException } = await import('@nestjs/common');
+    const { controller } = await buildController({
+      oidc: {
+        isEnabledByEnv: () => true,
+        buildAuthorizeUrl: jest
+          .fn()
+          .mockRejectedValue(
+            new ServiceUnavailableException({ code: AuthCode.SSO_UNAVAILABLE }),
+          ),
+      },
+    });
+    const redirect = jest.fn();
+    await controller.oidcLogin('web', { redirect } as unknown as Response);
+    expect(redirect).toHaveBeenCalledWith(`${WEB}?error=SSO_UNAVAILABLE`);
+  });
+
+  it('an unknown 5xx in the OIDC flow still becomes GENERIC_ERROR', async () => {
+    const { controller } = await buildController({
+      oidc: {
+        isEnabledByEnv: () => true,
+        buildAuthorizeUrl: jest.fn().mockRejectedValue(new Error('boom')),
+      },
+    });
+    const redirect = jest.fn();
+    await controller.oidcLogin('web', { redirect } as unknown as Response);
+    expect(redirect).toHaveBeenCalledWith(`${WEB}?error=GENERIC_ERROR`);
+  });
+
+  it('forgot / verify / resend / reset go to PasswordRecoveryService', async () => {
+    const recovery = {
+      forgotPassword: jest.fn().mockResolvedValue({ code: 'OTP_SENT' }),
+      verifyOtp: jest.fn().mockResolvedValue({ code: 'OTP_VALID' }),
+      resendOtp: jest.fn().mockResolvedValue({ code: 'OTP_RESENT' }),
+      resetPassword: jest.fn().mockResolvedValue({ code: 'PASSWORD_UPDATED' }),
+    };
+    const { controller } = await buildController({ recovery });
+    await controller.forgot({ email: 'a@b.co' } as any, 'vi');
+    await controller.verify({ email: 'a@b.co', otp: '1' } as any);
+    await controller.resend({ email: 'a@b.co' } as any, undefined);
+    await controller.reset({ email: 'a@b.co', otp: '1', password: 'p' } as any);
+    expect(recovery.forgotPassword).toHaveBeenCalledWith('a@b.co', 'vi');
+    expect(recovery.verifyOtp).toHaveBeenCalledWith('a@b.co', '1');
+    expect(recovery.resendOtp).toHaveBeenCalledWith('a@b.co', 'en');
+    expect(recovery.resetPassword).toHaveBeenCalledWith('a@b.co', '1', 'p');
+  });
 });

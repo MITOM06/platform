@@ -1,15 +1,19 @@
 import { Capability } from './capabilities';
-import { PRESET_ROLES } from './preset-roles';
+import { PRESET_ROLES, REMOVED_PRESET_ROLE_NAMES } from './preset-roles';
 
 describe('PRESET_ROLES', () => {
-  it('defines exactly 4 preset roles', () => {
-    expect(PRESET_ROLES).toHaveLength(4);
+  it('defines exactly 3 preset roles: Owner, Admin, Member', () => {
+    expect(PRESET_ROLES).toHaveLength(3);
     expect(PRESET_ROLES.map((r) => r.name).sort()).toEqual([
       'Admin',
-      'Manager',
       'Member',
       'Owner',
     ]);
+  });
+
+  it('no longer ships the Manager preset (removed from deployments at bootstrap)', () => {
+    expect(PRESET_ROLES.map((r) => r.name)).not.toContain('Manager');
+    expect(REMOVED_PRESET_ROLE_NAMES).toEqual(['Manager']);
   });
 
   it('marks every preset role as isPreset', () => {
@@ -57,11 +61,6 @@ describe('PRESET_ROLES', () => {
     expect(byName('Admin')[Capability.MANAGE_AI_CONTEXT]).toBe(true);
     expect(byName('Admin')[Capability.VIEW_INTERNAL_CONTEXT]).toBe(true);
     expect(byName('Admin')[Capability.VIEW_CONFIDENTIAL_CONTEXT]).toBe(true);
-
-    // Manager: internal view only, no workspace-wide manage, no confidential
-    expect(byName('Manager')[Capability.MANAGE_AI_CONTEXT]).toBe(false);
-    expect(byName('Manager')[Capability.VIEW_INTERNAL_CONTEXT]).toBe(true);
-    expect(byName('Manager')[Capability.VIEW_CONFIDENTIAL_CONTEXT]).toBe(false);
 
     // Member: none
     expect(byName('Member')[Capability.MANAGE_AI_CONTEXT]).toBe(false);

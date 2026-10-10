@@ -63,6 +63,8 @@ void main() {
       'USER_BLOCKED': l10n.authErrUserBlocked,
       'CURRENT_PASSWORD_REQUIRED': l10n.authErrCurrentPasswordRequired,
       'CURRENT_PASSWORD_INCORRECT': l10n.errCurrentPasswordIncorrect,
+      'SSO_REQUIRED': l10n.authErrSsoRequired,
+      'SSO_ENFORCE_NOT_READY': l10n.authErrSsoEnforceNotReady,
     };
     for (final e in expected.entries) {
       expect(authCodeToString(ctx, e.key), e.value, reason: e.key);
@@ -96,6 +98,20 @@ void main() {
           })),
       l10n.authErrValPasswordTooShort,
     );
+  });
+
+  testWidgets('the require-SSO codes map from an HTTP error too',
+      (tester) async {
+    final ctx = await _context(tester);
+    final l10n = AppLocalizations.of(ctx);
+    // 403 from login / forgot-password / reset / change-password / accept.
+    expect(authErrorMessage(ctx, _dio(403, {'code': 'SSO_REQUIRED'})),
+        l10n.authErrSsoRequired);
+    // 400 from PATCH /admin/workspace when enforcement can't be switched on.
+    expect(
+        authErrorMessage(ctx, _dio(400, {'code': 'SSO_ENFORCE_NOT_READY'})),
+        l10n.authErrSsoEnforceNotReady);
+    expect(l10n.authErrSsoRequired, isNot(contains('SSO_REQUIRED')));
   });
 
   testWidgets('SESSION_CHECK_UNAVAILABLE reads as a transient server error',
@@ -157,6 +173,7 @@ void main() {
       'MFA_ALREADY_ENROLLED': l10n.authErrMfaAlreadyEnrolled,
       'MFA_RESET_FORBIDDEN': l10n.authErrMfaResetForbidden,
       'MFA_RESET_SELF_FORBIDDEN': l10n.authErrMfaResetSelfForbidden,
+      'MFA_REQUIRED_BY_ROLE': l10n.authErrMfaRequiredByRole,
     };
     for (final e in expected.entries) {
       expect(authErrorToString(ctx, _dio(401, {'code': e.key})), e.value,

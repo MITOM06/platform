@@ -66,6 +66,7 @@
       "orContinueWith": "Ou continuer avec",
       "googleLogin": "Se connecter avec Google",
       "ssoButton": "Se connecter avec SSO",
+      "orSignInWithPassword": "Ou connectez-vous avec un mot de passe",
       "inviteOnlyHint": "PON fonctionne sur invitation uniquement. Demandez une invitation à votre administrateur."
     },
     "password": {
@@ -98,6 +99,7 @@
       "emailLabel": "E-mail invité",
       "continueWithGoogle": "Continuer avec Google",
       "googleHint": "Utilisez le compte Google de {email}",
+      "ssoRequired": "{workspace} exige l’authentification unique pour cette adresse e-mail. Utilisez « Se connecter avec SSO » pour rejoindre l’espace de travail.",
       "orSetPassword": "Ou définissez un mot de passe",
       "submit": "Créer le compte",
       "submitting": "Création du compte...",
@@ -237,6 +239,9 @@
     "errLastOwnerCannotBeBlocked": "Le dernier Propriétaire ne peut pas être bloqué.",
     "errSsoDisabled": "L'authentification unique est désactivée.",
     "errSsoDomainNotAllowed": "Le domaine de votre e-mail n'est pas autorisé pour le SSO.",
+    "errSsoRequired": "Votre organisation exige l’authentification unique. Utilisez « Se connecter avec SSO ».",
+    "errSsoUnavailable": "Le service de connexion de votre organisation est momentanément indisponible. Réessayez dans quelques instants.",
+    "errSsoEnforceNotReady": "Impossible d’exiger le SSO pour l’instant. Activez le SSO, ajoutez au moins un domaine d’e-mail autorisé et vérifiez que l’authentification unique est configurée pour ce déploiement.",
     "errRoleGrantExceedsOwnPermissions": "Vous ne pouvez pas accorder des autorisations que vous n'avez pas : {capabilities}.",
     "errRoleGrantExceedsOwnPermissionsGeneric": "Vous ne pouvez pas accorder des autorisations que vous n'avez pas.",
     "errCannotEditOwnRole": "Vous ne pouvez pas modifier votre propre rôle.",
@@ -302,7 +307,10 @@
       "continue": "Continuer",
       "codesLoading": "Chargement de vos codes de secours...",
       "fileHeader": "Codes de secours PON pour {email}",
-      "fileNote": "Chaque code permet de se connecter une fois lorsque vous ne pouvez pas utiliser votre application d'authentification."
+      "fileNote": "Chaque code permet de se connecter une fois lorsque vous ne pouvez pas utiliser votre application d'authentification.",
+      "stateChanged": "Vos paramètres de double authentification ont été modifiés ailleurs. Cette page affiche maintenant leur état actuel.",
+      "ssoManaged": "L'authentification unique de votre organisation protège votre compte : la double authentification y est gérée.",
+      "setupExpired": "Cette configuration a expiré. Activez à nouveau la 2FA pour obtenir un nouveau code QR."
     },
     "msgMfaRequired": "Saisissez le code de votre application d'authentification pour terminer la connexion.",
     "errMfaTokenInvalid": "Votre connexion a expiré. Veuillez vous reconnecter.",
@@ -311,8 +319,9 @@
     "errMfaTooManyAttempts": "Trop de codes incorrects. Veuillez vous reconnecter.",
     "errMfaNotEnrolled": "L'authentification à deux facteurs n'est pas encore configurée pour ce compte. Veuillez vous reconnecter.",
     "errMfaAlreadyEnrolled": "L'authentification à deux facteurs est déjà configurée pour ce compte. Veuillez vous reconnecter.",
-    "errMfaResetForbidden": "Seul un Propriétaire peut réinitialiser l'authentification à deux facteurs.",
-    "errMfaResetSelfForbidden": "Vous ne pouvez pas réinitialiser votre propre authentification à deux facteurs."
+    "errMfaResetForbidden": "Vous n’avez pas l’autorisation de réinitialiser l’authentification à deux facteurs de ce membre.",
+    "errMfaResetSelfForbidden": "Vous ne pouvez pas réinitialiser votre propre authentification à deux facteurs.",
+    "errMfaRequiredByRole": "Votre rôle exige l'authentification à deux facteurs : elle ne peut pas être désactivée."
   },
   "settings": {
     "title": "Paramètres",
@@ -397,6 +406,7 @@
       "setSuccess": "Mot de passe défini avec succès",
       "mismatch": "Les mots de passe ne correspondent pas",
       "genericError": "Échec de la mise à jour du mot de passe",
+      "ssoPasswordDisabled": "Votre organisation exige l’authentification unique : la connexion par mot de passe est donc désactivée pour votre compte.",
       "twoFaTitle": "Authentification à deux facteurs",
       "twoFaSubtitle": "Ajoutez une couche de sécurité supplémentaire à votre compte.",
       "tooShort": "Le mot de passe doit contenir au moins {min} caractères.",
@@ -410,7 +420,17 @@
       "regenerateTitle": "Régénérer les codes de secours",
       "regenerateBody": "Saisissez le code actuel de votre application d'authentification. Vos anciens codes de secours ne fonctionneront plus.",
       "regenerateSubmit": "Générer de nouveaux codes",
-      "regenerateDone": "Terminé"
+      "regenerateDone": "Terminé",
+      "twoFaOptionalBody": "Ajoutez une deuxième étape à votre connexion. Facultatif pour votre rôle.",
+      "twoFaOptionalOnBody": "Votre compte est protégé par une application d'authentification. Vous saisirez un code à chaque connexion. Vous pouvez la désactiver à tout moment.",
+      "turnOnButton": "Activer la 2FA",
+      "turnOnDone": "Terminé",
+      "turnOnSuccess": "L'authentification à deux facteurs est activée",
+      "turnOffButton": "Désactiver la 2FA",
+      "turnOffTitle": "Désactiver l'authentification à deux facteurs ?",
+      "turnOffBody": "Saisissez le code actuel de votre application d'authentification ou l'un de vos codes de secours. La connexion ne demandera plus de code et vos codes de secours ne fonctionneront plus.",
+      "turnOffSubmit": "Désactiver",
+      "turnOffSuccess": "L'authentification à deux facteurs est désactivée"
     },
     "adminConsole": "Console d'administration",
     "adminConsoleSubtitle": "Espace de travail, membres, rôles et réglages IA"
@@ -1043,7 +1063,7 @@
     "roleUnknown": "Non attribué",
     "noDepartment": "Aucun département",
     "notSet": "Non défini",
-    "identityManagedBySuperior": "Ces éléments sont définis par votre responsable ou administrateur.",
+    "identityManagedBySuperior": "Ces éléments sont définis par l’administrateur de votre espace de travail.",
     "labelRole": "Rôle",
     "labelDepartment": "Département",
     "labelJobTitle": "Fonction",
@@ -1498,8 +1518,8 @@
       "RUN_SENSITIVE_SKILL": "Exécuter des compétences sensibles",
       "VIEW_AUDIT_LOG": "Voir le journal d'audit",
       "MANAGE_AI_CONTEXT": "Gérer le contexte IA",
-      "VIEW_INTERNAL_CONTEXT": "Voir le contexte interne",
-      "VIEW_CONFIDENTIAL_CONTEXT": "Voir le contexte confidentiel",
+      "VIEW_INTERNAL_CONTEXT": "Voir le contexte interne dans les réponses de l'IA",
+      "VIEW_CONFIDENTIAL_CONTEXT": "Voir le contexte confidentiel dans les réponses de l'IA",
       "HOST_MEETING": "Organiser des réunions"
     },
     "auditEmpty": "Aucune entrée d'audit pour le moment.",
@@ -1511,6 +1531,16 @@
     "ssoEnabled": "Activer le SSO",
     "ssoAllowedDomains": "Domaines d’e-mail autorisés",
     "ssoAllowedDomainsHint": "Séparés par des virgules. Laissez vide pour autoriser tout e-mail vérifié.",
+    "ssoEnforced": "Exiger le SSO pour ces domaines",
+    "ssoEnforcedHint": "Les membres dont l’e-mail appartient aux domaines autorisés ne peuvent se connecter qu’avec le SSO. Les Propriétaires conservent la connexion par mot de passe.",
+    "ssoEnforceSaveHint": "Pas encore appliqué — cliquez sur Enregistrer.",
+    "ssoEnforceConfirmTitle": "Exiger le SSO pour ces domaines ?",
+    "ssoEnforceConfirmIntro": "Pour les membres dont l’e-mail appartient aux domaines autorisés :",
+    "ssoEnforceConfirmPasswords": "La connexion par mot de passe, la connexion avec Google et « Mot de passe oublié ? » ne fonctionnent plus.",
+    "ssoEnforceConfirmOwners": "Les Propriétaires conservent la connexion par mot de passe avec authentification à deux facteurs comme compte de secours.",
+    "ssoEnforceConfirmSessions": "Toute personne connectée sans SSO est déconnectée.",
+    "ssoEnforceConfirmRestore": "Les mots de passe sont conservés, pas supprimés : désactiver cette option rétablit la connexion par mot de passe.",
+    "ssoEnforceConfirm": "Exiger le SSO",
     "ssoDefaultRole": "Rôle par défaut",
     "ssoNone": "Aucun",
     "ssoGroupRoleMap": "Groupe → Rôle",
@@ -1656,7 +1686,8 @@
     "memberMfaReset": "Réinitialiser la 2FA",
     "memberMfaResetTitle": "Réinitialiser l'authentification à deux facteurs ?",
     "memberMfaResetConfirm": "{name} sera déconnecté(e) de tous ses appareils et devra reconfigurer l'authentification à deux facteurs à sa prochaine connexion.",
-    "memberMfaResetDone": "L'authentification à deux facteurs a été réinitialisée"
+    "memberMfaResetDone": "L'authentification à deux facteurs a été réinitialisée",
+    "memberMfaResetConfirmOptional": "{name} sera déconnecté(e) sur tous les appareils et l'authentification à deux facteurs sera désactivée. Cette personne pourra la réactiver dans les Paramètres."
   },
   "call": {
     "peerFallback": "Utilisateur",

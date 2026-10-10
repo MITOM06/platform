@@ -38,14 +38,21 @@ class UserModel {
   /// `/api/users/me` and the login / exchange / accept-password `user` payloads.
   final bool mustSetPassword;
 
-  /// Two-factor authentication (contract 09). [mfaRequired]: the member's role
-  /// is privileged (Owner / Admin / admin-like capabilities), so every sign-in
-  /// asks for an authenticator code. [mfaEnabled]: enrollment is done. Only on
-  /// the self response (`GET /api/users/me`); both default to `false`.
+  /// Two-factor authentication (contract 15). Only on the self response
+  /// (`GET /api/users/me`); all default to `false`.
+  /// - [mfaRequired]: the role makes 2FA mandatory (Owner, Admin or a role
+  ///   that manages the workspace / members / roles) — it can't be turned off.
+  /// - [mfaAvailable]: the member may use / turn on 2FA at all; `false` for a
+  ///   member covered by an enforced SSO policy (their IdP does MFA) and bots.
+  ///   Available but not required = optional: the member turns it on and off
+  ///   in Settings → Security, and once on every password / Google sign-in
+  ///   asks for a code.
+  /// - [mfaEnabled]: enrollment is done.
   final bool mfaEnabled;
   final bool mfaRequired;
+  final bool mfaAvailable;
 
-  /// Workspace role name (Owner/Admin/Manager/Member or custom). `null` = the
+  /// Workspace role name (Owner/Admin/Member or custom). `null` = the
   /// user has no assigned role → UI renders the default "Member". Always public
   /// (no privacy gate); omitted on blocked-by-owner minimal profiles.
   final String? roleName;
@@ -80,12 +87,15 @@ class UserModel {
     this.mustSetPassword = false,
     this.mfaEnabled = false,
     this.mfaRequired = false,
+    this.mfaAvailable = false,
     this.roleName,
     this.matchedBy,
     this.isBlockedByOwner = false,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    final mfaEnabled = json['mfaEnabled'] as bool? ?? false;
+    final mfaRequired = json['mfaRequired'] as bool? ?? false;
     return UserModel(
       id: json['_id'] as String? ?? json['id'] as String,
       email: json['email'] as String? ?? '',
@@ -107,8 +117,13 @@ class UserModel {
       showGender: json['showGender'] as bool?,
       hasPassword: json['hasPassword'] as bool? ?? false,
       mustSetPassword: json['mustSetPassword'] as bool? ?? false,
-      mfaEnabled: json['mfaEnabled'] as bool? ?? false,
-      mfaRequired: json['mfaRequired'] as bool? ?? false,
+      mfaEnabled: mfaEnabled,
+      mfaRequired: mfaRequired,
+      // A session cached before contract 15 (or an older server) has no
+      // `mfaAvailable`: whoever is required or enrolled can clearly use 2FA.
+      // The Security screen re-syncs `/me` anyway.
+      mfaAvailable:
+          json['mfaAvailable'] as bool? ?? (mfaRequired || mfaEnabled),
       roleName: json['roleName'] as String?,
       matchedBy: json['matchedBy'] as String?,
       isBlockedByOwner: json['isBlockedByOwner'] as bool? ?? false,
@@ -135,13 +150,27 @@ class UserModel {
         'mustSetPassword': mustSetPassword,
         'mfaEnabled': mfaEnabled,
         'mfaRequired': mfaRequired,
+        'mfaAvailable': mfaAvailable,
         if (roleName != null) 'roleName': roleName,
       };
 
   /// Copy of this user after a password was created: it now has one and is no
   /// longer gated. Used when the follow-up `/me` refresh fails although the
   /// server already accepted the password (see `AuthNotifier.setInitialPassword`).
-  UserModel withPasswordSet() => UserModel(
+  UserModel withPasswordSet() =>
+      _copyWith(hasPassword: true, mustSetPassword: false);
+
+  /// Copy of this user after they turned their own 2FA on / off in Settings →
+  /// Security, for when the follow-up `/me` refresh fails although the server
+  /// already made the change (see `AuthNotifier.resyncMfa`).
+  UserModel withMfaEnabled(bool enabled) => _copyWith(mfaEnabled: enabled);
+
+  UserModel _copyWith({
+    bool? hasPassword,
+    bool? mustSetPassword,
+    bool? mfaEnabled,
+  }) =>
+      UserModel(
         id: id,
         email: email,
         displayName: displayName,
@@ -157,10 +186,11 @@ class UserModel {
         showDateOfBirth: showDateOfBirth,
         showPhoneNumber: showPhoneNumber,
         showGender: showGender,
-        hasPassword: true,
-        mustSetPassword: false,
-        mfaEnabled: mfaEnabled,
+        hasPassword: hasPassword ?? this.hasPassword,
+        mustSetPassword: mustSetPassword ?? this.mustSetPassword,
+        mfaEnabled: mfaEnabled ?? this.mfaEnabled,
         mfaRequired: mfaRequired,
+        mfaAvailable: mfaAvailable,
         roleName: roleName,
         matchedBy: matchedBy,
         isBlockedByOwner: isBlockedByOwner,
@@ -189,7 +219,14 @@ class AuthAuthenticated extends AuthState {
 /// Forced-logout reasons the login screen explains (allow-list — anything else
 /// is a plain logout with no message, so raw server codes never reach the UI).
 /// Mirror of web `LOGOUT_REASONS` (`lib/auth/force-logout.ts`).
-const kLogoutReasons = {'ACCOUNT_BLOCKED'};
+///
+/// `SSO_REQUIRED` (contract 13 §C): "Require SSO" was switched on for the
+/// member's email domain and their non-SSO session was revoked — or a password
+/// sign-in / Google redirect was refused for the same reason.
+const kLogoutReasons = {'ACCOUNT_BLOCKED', kSsoRequired};
+
+/// The member's email domain must sign in with the company IdP (contract 13).
+const kSsoRequired = 'SSO_REQUIRED';
 
 /// Codes the login screen may show as a persistent notice: the forced-logout
 /// reasons plus every code a Google / SSO error deep link
@@ -207,6 +244,8 @@ const kLoginNotices = {
   'SOCIAL_EMAIL_UNAVAILABLE',
   'SSO_DISABLED',
   'SSO_DOMAIN_NOT_ALLOWED',
+  // "Sign in with SSO" while the company IdP is unreachable (auth-service 503).
+  'SSO_UNAVAILABLE',
   'SSO_EMAIL_UNVERIFIED',
   'SOCIAL_ACCOUNT_CONFLICT',
   'GENERIC_ERROR',

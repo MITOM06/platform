@@ -933,6 +933,14 @@
   "adminSsoGroupDeptMap": "グループ → 部門",
   "adminSsoGroupPlaceholder": "IdP グループ名",
   "adminSsoAddMapping": "マッピングを追加",
+  "adminSsoEnforce": "これらのドメインで SSO を必須にする",
+  "adminSsoEnforceHint": "これらのメールドメインのメンバーは SSO でのサインインが必須です。オーナーは引き続きパスワードと 2FA を使用できます。",
+  "adminSsoEnforceNotReady": "先に SSO を有効にし、許可するドメインを 1 つ以上追加してください。",
+  "adminSsoEnforceConfirmTitle": "これらのドメインで SSO を必須にしますか？",
+  "adminSsoEnforceConfirmPasswords": "これらのドメインでは、パスワードでのサインイン、Google でのサインイン、パスワードの再設定が無効になります。",
+  "adminSsoEnforceConfirmOwners": "オーナーは緊急用アカウントとして、パスワード + 2FA でのサインインを引き続き使用できます。",
+  "adminSsoEnforceConfirmSessions": "保存すると、これらのドメインで SSO 以外の方法でサインインしているユーザーはサインアウトされます。",
+  "adminSsoEnforceConfirm": "SSO を必須にする",
   "sectionDirectoryTitle": "MCP ディレクトリ",
   "sectionDirectoryDesc": "MCP サーバーを閲覧してワンクリックで接続——OAuth は自動で実行されます。",
   "directoryAdd": "項目を追加",
@@ -1165,6 +1173,7 @@
   "inviteGoogleHint": "{email} の Google アカウントを使用してください",
   "inviteOrSetPassword": "またはパスワードを設定",
   "inviteSubmit": "アカウントを作成",
+  "inviteSsoRequired": "組織ではこのメールアドレスにシングルサインオンが必須です。招待を承諾するには SSO でログインしてください。",
   "inviteInvalidTitle": "無効な招待",
   "inviteInvalidBody": "この招待リンクは無効です。メール内のリンクを確認するか、管理者に新しい招待を依頼してください。",
   "inviteExpiredTitle": "招待の有効期限切れ",
@@ -1200,6 +1209,9 @@
   "authErrLastOwnerCannotBeBlocked": "最後の Owner はブロックできません。",
   "authErrSsoDisabled": "シングルサインオンは無効です。",
   "authErrSsoDomainNotAllowed": "お使いのメールドメインは SSO で許可されていません。",
+  "authErrSsoRequired": "組織ではシングルサインオンが必須です。「SSO でログイン」を使用してください。",
+  "authErrSsoUnavailable": "組織のサインインサービスに現在接続できません。しばらくしてからもう一度お試しください。",
+  "authErrSsoEnforceNotReady": "まだ SSO を必須にできません。SSO を有効にし、許可するドメインを 1 つ以上追加して、ID プロバイダーが設定されていることを確認してください。",
   "adminInviteMember": "メンバーを招待",
   "adminInviteTitle": "メンバーを招待する",
   "adminInviteEmail": "メールアドレス",
@@ -1494,6 +1506,18 @@
   "securityMfaRegenerateHint": "認証アプリに表示されている現在のコードを入力してください。古いバックアップコードは使えなくなります。",
   "securityMfaRegenerateSubmit": "生成",
   "securityMfaDone": "完了",
+  "securityMfaOptionalHint": "サインインに2つ目のステップを追加します。あなたのロールでは任意です。",
+  "securityMfaStatusDisabled": "オフ",
+  "securityMfaTurnOn": "2FAをオンにする",
+  "securityMfaTurnedOn": "二要素認証をオンにしました。",
+  "securityMfaSetupExpired": "設定の有効期限が切れました。もう一度やり直してください。",
+  "securityMfaTooManyAttempts": "誤ったコードの入力が多すぎます。数分待ってからもう一度お試しください。",
+  "securityMfaTurnOff": "2FAをオフにする",
+  "securityMfaTurnOffTitle": "二要素認証をオフにしますか？",
+  "securityMfaTurnOffHint": "確認のため、認証アプリに表示されている現在のコードを入力してください。今後はサインイン時にコードを求められなくなります。",
+  "securityMfaTurnOffSubmit": "オフにする",
+  "securityMfaTurnedOff": "二要素認証をオフにしました。",
+  "authErrMfaRequiredByRole": "あなたのロールでは二要素認証が必須のため、オフにできません。",
   "adminMfaBadge": "2FA オン",
   "adminMfaReset": "2FA をリセット",
   "adminMfaResetConfirm": "{name} さんの二要素認証をリセットしますか？すべての端末からサインアウトされ、次回のサインイン時に再設定が必要になります。",
@@ -1505,6 +1529,8 @@
     }
   },
   "adminMfaResetDone": "2FA をリセットしました。次回のサインイン時に再設定されます。",
+  "adminMfaResetConfirmOptional": "{name} さんの二要素認証をリセットしますか？すべての端末からサインアウトされ、二要素認証はオフになります。「設定 → パスワードとセキュリティ」から再びオンにできます。",
+  "adminMfaResetDoneOptional": "2FA をリセットしました。現在はオフになっており、設定から再びオンにできます。",
   "authMsgMfaRequired": "サインインを完了するには、認証アプリのコードを入力してください。",
   "authErrMfaTokenInvalid": "サインインの有効期限が切れました。もう一度サインインしてください。",
   "authErrMfaCodeInvalid": "コードが正しくありません。もう一度お試しください。",
@@ -1519,22 +1545,34 @@
   "authErrMfaTooManyAttempts": "コードの誤りが多すぎます。もう一度サインインしてください。",
   "authErrMfaNotEnrolled": "このアカウントでは二要素認証がまだ設定されていません。",
   "authErrMfaAlreadyEnrolled": "このアカウントでは二要素認証がすでに設定されています。",
-  "authErrMfaResetForbidden": "二要素認証をリセットできるのはオーナーのみです。",
+  "authErrMfaResetForbidden": "このメンバーの二要素認証はリセットできません。",
   "authErrMfaResetSelfForbidden": "自分の二要素認証はリセットできません。",
   "callSelfWeakNetwork": "あなたのネットワークが不安定です",
   "callPeerWeakNetwork": "{name}さんのネットワークが不安定です",
   "@callPeerWeakNetwork": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "callUnstableNetwork": "接続が不安定です",
   "callReconnectingSelf": "接続が切れました。再接続しています…",
   "callWaitingForPeer": "{name}さんの再接続を待っています…",
   "@callWaitingForPeer": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "callReconnectCountdown": "再接続できない場合、{seconds}秒後に通話が終了します",
   "@callReconnectCountdown": {
-    "placeholders": { "seconds": { "type": "int" } }
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
   },
   "callSwitchToVideo": "ビデオ通話に切り替え",
   "callVideoUnavailable": "この通話ではビデオを使えません。相手のアプリの更新が必要な可能性があります",
@@ -1548,7 +1586,11 @@
   "meetingErrEnded": "この会議は終了しました",
   "meetingErrFull": "この会議は満員です（{max} 人）",
   "@meetingErrFull": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingErrNotCancellable": "すでに参加者がいるため、キャンセルできません",
   "meetingErrUnavailable": "現在、会議機能を利用できません。しばらくしてからもう一度お試しください。",
@@ -1557,11 +1599,19 @@
   "meetingErrRateLimited": "送信が速すぎます。少し待ってください。",
   "meetingErrChatTooLong": "メッセージは最大 {max} 文字です",
   "@meetingErrChatTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingErrNoteTooLong": "メモは最大 {max} 文字です",
   "@meetingErrNoteTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingErrInviteeInvalid": "リストに招待できない人が含まれています",
   "meetingErrDepartmentInvalid": "この部署は利用できません",
@@ -1573,15 +1623,27 @@
   "meetingErrGeneric": "問題が発生しました。もう一度お試しください。",
   "meetingValTitleTooLong": "タイトルは最大 {max} 文字です",
   "@meetingValTitleTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingValDescriptionTooLong": "説明は最大 {max} 文字です",
   "@meetingValDescriptionTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingValTooManyInvitees": "招待できるのは最大 {max} 人です",
   "@meetingValTooManyInvitees": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingValStartPast": "未来の日時を選んでください",
   "meetingValScheduleInvalid": "有効な日付と時刻を選んでください",
@@ -1598,20 +1660,39 @@
   "meetingStatusCancelled": "キャンセル済み",
   "meetingDurationMinutes": "{count, plural, other {{count} 分}}",
   "@meetingDurationMinutes": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingDurationHours": "{count, plural, other {{count} 時間}}",
   "@meetingDurationHours": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingDurationHoursMinutes": "{hours} 時間 {minutes} 分",
   "@meetingDurationHoursMinutes": {
-    "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } }
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "meetingRealtimeOffline": "オンラインに戻るまで、チャット・挙手・主催者の操作は一時停止しています",
   "meetingMutedBy": "{name} があなたのマイクをミュートしました",
   "@meetingMutedBy": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingMutedByUnknown": "主催者があなたのマイクをミュートしました",
   "meetingMadeCohost": "共同主催者になりました",
@@ -1622,25 +1703,57 @@
   "meetingShareFailed": "画面を共有できませんでした",
   "meetingLobbyWaiting": "{count, plural, other {{count} 人が参加を待っています}}",
   "@meetingLobbyWaiting": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingNotifInvitedTitle": "会議への招待",
   "meetingNotifInvitedBody": "{name} さんが「{title}」に招待しました",
   "@meetingNotifInvitedBody": {
-    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifInvitedBodyAt": "{name} さんが {time} の「{title}」に招待しました",
   "@meetingNotifInvitedBodyAt": {
-    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" }, "time": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifStartingTitle": "まもなく会議が始まります",
   "meetingNotifStartingBody": "「{title}」は {time} に始まります",
   "@meetingNotifStartingBody": {
-    "placeholders": { "title": { "type": "String" }, "time": { "type": "String" } }
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifCancelled": "「{title}」はキャンセルされました",
   "@meetingNotifCancelled": {
-    "placeholders": { "title": { "type": "String" } }
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifCancelledUnknown": "招待されていた会議がキャンセルされました",
   "meetingTitle": "会議",
@@ -1663,7 +1776,11 @@
   "meetingInstantMeeting": "即時会議",
   "meetingHostedBy": "主催：{name}",
   "@meetingHostedBy": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingCopyLink": "リンクをコピー",
   "meetingLinkCopied": "会議のリンクをコピーしました",
@@ -1685,18 +1802,30 @@
   "meetingFieldDuration": "所要時間",
   "meetingTimeZoneHint": "時刻は {zone} で表示されます",
   "@meetingTimeZoneHint": {
-    "placeholders": { "zone": { "type": "String" } }
+    "placeholders": {
+      "zone": {
+        "type": "String"
+      }
+    }
   },
   "meetingFieldInvitees": "参加者を招待",
   "meetingInviteeSearchPlaceholder": "名前またはメールで検索",
   "meetingInviteeCount": "{count, plural, other {{count} 人を招待済み}}",
   "@meetingInviteeCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingInviteeNone": "まだ誰も招待していません",
   "meetingRemoveInvitee": "{name} を削除",
   "@meetingRemoveInvitee": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingSearchNoResults": "見つかりませんでした",
   "meetingSearchFailed": "現在検索できません",
@@ -1719,7 +1848,14 @@
   "meetingToastUpdated": "変更を保存しました",
   "meetingCharCounter": "{count}/{max}",
   "@meetingCharCounter": {
-    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingNotesShared": "共有",
   "meetingNotesPrivate": "自分用",
@@ -1735,12 +1871,23 @@
   "meetingNotesReadOnly": "このメモを編集できるのは主催者のみです",
   "meetingNotesRemoteNewer": "{name} さんが新しいバージョンを保存しました",
   "@meetingNotesRemoteNewer": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotesRemoteNewerUnknown": "新しいバージョンが保存されました",
   "meetingNotesCounter": "{count} / {max}",
   "@meetingNotesCounter": {
-    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingNotesConflictTitle": "他の人が新しいバージョンを保存しました",
   "meetingNotesConflictDesc": "入力中の文章は失われていません。2 つのバージョンを比較して、残す方を選んでください。",
@@ -1769,7 +1916,11 @@
   "meetingInvitees": "招待された人",
   "meetingMoreCount": "+{count}",
   "@meetingMoreCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingDepartmentGeneric": "部署",
   "meetingSectionAttendance": "出席状況",
@@ -1777,11 +1928,19 @@
   "meetingAttendanceInside": "現在会議中",
   "meetingAttendanceDuration": "{minutes, plural, other {{minutes} 分}}",
   "@meetingAttendanceDuration": {
-    "placeholders": { "minutes": { "type": "int" } }
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "meetingAttendanceSessions": "{count, plural, other {{count} 回参加}}",
   "@meetingAttendanceSessions": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingSectionNotes": "メモ",
   "meetingSectionChat": "会議チャット",
@@ -1792,7 +1951,11 @@
   "meetingGuestNotice": "会議に参加するとメモとチャットを見られます。",
   "meetingCreatedAt": "{time} に作成",
   "@meetingCreatedAt": {
-    "placeholders": { "time": { "type": "String" } }
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingLinkCodeCopied": "会議コードをコピーしました",
   "meetingShareNotifTitle": "画面を共有しています",
@@ -1802,11 +1965,19 @@
   "meetingPrejoinTitle": "参加の準備はできましたか？",
   "meetingPrejoinStartsAt": "開始：{time}",
   "@meetingPrejoinStartsAt": {
-    "placeholders": { "time": { "type": "String" } }
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingPrejoinJoiningAs": "{name} として参加します",
   "@meetingPrejoinJoiningAs": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingPrejoinCameraOff": "カメラはオフです",
   "meetingPrejoinMuteOnEntry": "主催者はミュートでの参加を求めています",
@@ -1829,7 +2000,11 @@
   "meetingFullTitle": "この会議は満員です",
   "meetingFullDesc": "すでに {max} 人が参加しています。後でもう一度お試しください。",
   "@meetingFullDesc": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingUnavailableTitle": "会議は現在利用できません",
   "meetingUnavailableDesc": "しばらくしてからもう一度お試しください",
@@ -1844,7 +2019,11 @@
   "meetingLeaveMeeting": "会議から退出",
   "meetingNameWithYou": "{name}（あなた）",
   "@meetingNameWithYou": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingReconnecting": "再接続しています…",
   "meetingPoorConnection": "接続が不安定です",
@@ -1852,21 +2031,37 @@
   "meetingStopPresenting": "共有を停止",
   "meetingPresentingName": "{name} さんが画面を共有しています",
   "@meetingPresentingName": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingOverflowTiles": "+{count}",
   "@meetingOverflowTiles": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingOverflowMore": "{count, plural, other {ほか {count} 人}}",
   "@meetingOverflowMore": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingPin": "固定",
   "meetingUnpin": "固定を解除",
   "meetingTileMenu": "{name} のオプション",
   "@meetingTileMenu": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingMicMutedLabel": "マイクはオフです",
   "meetingHandRaisedLabel": "挙手しています",
@@ -1888,28 +2083,51 @@
   "meetingEndForAll": "全員の会議を終了",
   "meetingReactionAria": "{name} さんが {emoji} でリアクションしました",
   "@meetingReactionAria": {
-    "placeholders": { "name": { "type": "String" }, "emoji": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "emoji": {
+        "type": "String"
+      }
+    }
   },
   "meetingPeopleTitle": "参加者",
   "meetingManageTitle": "主催者の操作",
   "meetingSectionHands": "挙手中（{count}）",
   "@meetingSectionHands": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingSectionLobby": "参加待ち（{count}）",
   "@meetingSectionLobby": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingSectionInMeeting": "会議中（{count}）",
   "@meetingSectionInMeeting": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingAdmit": "参加を許可",
   "meetingDeny": "拒否",
   "meetingAdmitAll": "全員を許可",
   "meetingPersonMenu": "{name} のオプション",
   "@meetingPersonMenu": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingActionMuteMic": "マイクをミュート",
   "meetingActionMuteAll": "全員をミュート",
@@ -1920,7 +2138,11 @@
   "meetingActionRevokeCohost": "共同主催者から外す",
   "meetingRemoveConfirmTitle": "{name} を会議から退出させますか？",
   "@meetingRemoveConfirmTitle": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingRemoveConfirmDesc": "この会議に再参加できなくなります",
   "meetingMuteAllConfirmTitle": "全員をミュートしますか？",
@@ -1936,11 +2158,22 @@
   "meetingChatOffline": "再接続中のため、現在メッセージを送信できません",
   "meetingChatCounter": "{count}/{max}",
   "@meetingChatCounter": {
-    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingChatUnread": "{count, plural, other {新着メッセージ {count} 件}}",
   "@meetingChatUnread": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingMediaBlocked": "マイクまたはカメラへのアクセスがオフです。このまま参加して、後で「設定」からオンにできます。",
   "meetingSwitchCamera": "カメラを切り替え",
