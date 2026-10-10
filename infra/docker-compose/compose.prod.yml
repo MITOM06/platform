@@ -87,6 +87,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
+      OTEL_ENABLED: "false" # no trace collector on this host
       # Default = the containers in this file (fully self-hosted). Override to run
       # "hybrid": compute here, data in a managed service (Atlas / Upstash / …).
       # Set the *_URI/URL forms for managed providers — they carry credentials and
@@ -244,6 +245,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3003
+      OTEL_ENABLED: "false" # no trace collector on this host
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017/platform}
       # Access-token session check (sess:{sid}) — shared Redis with auth-service.

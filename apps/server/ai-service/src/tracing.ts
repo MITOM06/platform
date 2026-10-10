@@ -6,28 +6,31 @@
  * Guard: OTEL_ENABLED=false → no-ops entirely.
  */
 
-import { NodeSDK } from '@opentelemetry/sdk-node';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
-} from '@opentelemetry/semantic-conventions';
-import { resourceFromAttributes } from '@opentelemetry/resources';
+} from "@opentelemetry/semantic-conventions";
+import { resourceFromAttributes } from "@opentelemetry/resources";
 import {
   SimpleSpanProcessor,
   ConsoleSpanExporter,
   SpanExporter,
   BatchSpanProcessor,
-} from '@opentelemetry/sdk-trace-node';
-import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
+} from "@opentelemetry/sdk-trace-node";
+import { diag, DiagConsoleLogger, DiagLogLevel } from "@opentelemetry/api";
+import { applyExporterDefaults } from "./tracing-defaults";
 
-if (process.env.OTEL_ENABLED !== 'false') {
+if (process.env.OTEL_ENABLED !== "false") {
   // Enable OTel diagnostic logging at WARN level to surface export errors without spamming.
   diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.WARN);
+  // Traces only: no metrics/logs export to a Jaeger that 404s them every minute.
+  applyExporterDefaults(process.env);
 
   const endpoint =
-    process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318';
+    process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? "http://localhost:4318";
 
   const exporters: SpanExporter[] = [];
 
@@ -44,15 +47,14 @@ if (process.env.OTEL_ENABLED !== 'false') {
   // Console fallback: active when no OTLP endpoint is configured OR explicitly enabled.
   if (
     !process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
-    process.env.OTEL_TRACES_CONSOLE === 'true'
+    process.env.OTEL_TRACES_CONSOLE === "true"
   ) {
     exporters.push(new ConsoleSpanExporter());
   }
 
   const resource = resourceFromAttributes({
-    [ATTR_SERVICE_NAME]:
-      process.env.OTEL_SERVICE_NAME ?? 'ai-service',
-    [ATTR_SERVICE_VERSION]: process.env.npm_package_version ?? '0.0.1',
+    [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME ?? "ai-service",
+    [ATTR_SERVICE_VERSION]: process.env.npm_package_version ?? "0.0.1",
   });
 
   // Build span processors — BatchSpanProcessor for OTLP, SimpleSpanProcessor for console.
@@ -66,7 +68,7 @@ if (process.env.OTEL_ENABLED !== 'false') {
     instrumentations: [
       getNodeAutoInstrumentations({
         // Disable noisy fs instrumentation; keep http, ioredis, amqplib.
-        '@opentelemetry/instrumentation-fs': { enabled: false },
+        "@opentelemetry/instrumentation-fs": { enabled: false },
       }),
     ],
   });
