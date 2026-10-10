@@ -1,3 +1,4 @@
+import './tracing'; // first: OpenTelemetry patches modules before they load
 import * as Sentry from '@sentry/node';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';

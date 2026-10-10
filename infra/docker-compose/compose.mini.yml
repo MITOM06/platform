@@ -29,6 +29,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
+      OTEL_ENABLED: "false" # no trace collector on this host
       # --- managed data tier (required; no container to fall back to) ---
       MONGO_URI: ${MONGODB_URI:?set MONGODB_URI to the Atlas connection string}
       MONGODB_URI: ${MONGODB_URI:?set MONGODB_URI to the Atlas connection string}
@@ -191,6 +192,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3003
+      OTEL_ENABLED: "false" # no trace collector on this host
       MONGO_URI: ${MONGODB_URI:?required}
       # Access-token session check (sess:{sid}) — same Redis as auth-service.
       REDIS_URL: ${REDIS_URL:?required}
