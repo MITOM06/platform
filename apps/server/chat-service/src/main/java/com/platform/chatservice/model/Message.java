@@ -84,6 +84,9 @@ public class Message {
    */
   private String aiReplyId;
 
+  /** RAG / web citations of an AI reply — null on every other message. */
+  private List<AiSource> sources;
+
   @CreatedDate private Instant createdAt;
 
   @Data

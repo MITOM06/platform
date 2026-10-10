@@ -134,7 +134,7 @@ class AiResponseListenerTest {
             List.of(),
             Instant.now());
     when(messageService.persistAiMessage(
-            eq("conv-1"), eq("Full AI reply"), isNull(), anyList(), any()))
+            eq("conv-1"), eq("Full AI reply"), isNull(), anyList(), any(), any()))
         .thenReturn(saved);
 
     listener.onMessage(redisMessage, null);
@@ -174,12 +174,12 @@ class AiResponseListenerTest {
     verify(valueOperations).setIfAbsent(eq("ai:done:conv-1:reply-a"), anyString(), any());
     verify(valueOperations).setIfAbsent(eq("ai:done:conv-1:reply-b"), anyString(), any());
     verify(messageService, org.mockito.Mockito.times(2))
-        .persistAiMessage(eq("conv-1"), eq("Đã nhớ!"), isNull(), anyList(), any());
+        .persistAiMessage(eq("conv-1"), eq("Đã nhớ!"), isNull(), anyList(), any(), any());
     // Each saved reply records the stream id it came from (exact client placeholder swap).
     verify(messageService)
-        .persistAiMessage(eq("conv-1"), eq("Đã nhớ!"), isNull(), anyList(), eq("reply-a"));
+        .persistAiMessage(eq("conv-1"), eq("Đã nhớ!"), isNull(), anyList(), eq("reply-a"), any());
     verify(messageService)
-        .persistAiMessage(eq("conv-1"), eq("Đã nhớ!"), isNull(), anyList(), eq("reply-b"));
+        .persistAiMessage(eq("conv-1"), eq("Đã nhớ!"), isNull(), anyList(), eq("reply-b"), any());
   }
 
   @Test
@@ -217,7 +217,7 @@ class AiResponseListenerTest {
 
     listener.onMessage(redisMessage, null);
 
-    verify(messageService, never()).persistAiMessage(any(), any(), any(), any(), any());
+    verify(messageService, never()).persistAiMessage(any(), any(), any(), any(), any(), any());
     verify(notificationService, never()).notifyNewMessage(any(), any());
     verifyNoInteractions(messagingTemplate, clusterBroker);
   }
@@ -250,7 +250,7 @@ class AiResponseListenerTest {
             "fullContent", "Full AI reply",
             "conversationId", "conv-1");
     when(redisMessage.getBody()).thenReturn(objectMapper.writeValueAsBytes(payload));
-    when(messageService.persistAiMessage(any(), any(), any(), any(), any()))
+    when(messageService.persistAiMessage(any(), any(), any(), any(), any(), any()))
         .thenThrow(new RuntimeException("mongo down"));
 
     listener.onMessage(redisMessage, null);
@@ -277,7 +277,7 @@ class AiResponseListenerTest {
 
     listener.onMessage(redisMessage, null);
 
-    verify(messageService, never()).persistAiMessage(any(), any(), any(), any(), any());
+    verify(messageService, never()).persistAiMessage(any(), any(), any(), any(), any(), any());
     verify(messagingTemplate)
         .convertAndSend(
             eq("/topic/conversation/conv-1"),
@@ -522,6 +522,7 @@ class AiResponseListenerTest {
             eq("I will send it once you confirm."),
             traceArg.capture(),
             actionsArg.capture(),
+            any(),
             any());
     org.assertj.core.api.Assertions.assertThat(traceArg.getValue().getCachedInputTokens())
         .isEqualTo(900);
@@ -544,7 +545,8 @@ class AiResponseListenerTest {
     MessageResponse saved =
         new MessageResponse(
             "msg-ai-1", "conv-1", AiConstants.AI_BOT_USER_ID, "ok", "ai", List.of(), Instant.now());
-    when(messageService.persistAiMessage(any(), any(), any(), any(), any())).thenReturn(saved);
+    when(messageService.persistAiMessage(any(), any(), any(), any(), any(), any()))
+        .thenReturn(saved);
     receive(
         Map.of(
             "type", "AI_STREAM_DONE",
@@ -562,5 +564,33 @@ class AiResponseListenerTest {
         .containsEntry("replyId", "r-1")
         .containsEntry("requesterId", "user-9")
         .containsKey("pendingActions");
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void onMessage_AI_STREAM_DONE_storesTheCitationsWithTheReply() throws Exception {
+    Map<String, Object> payload =
+        Map.of(
+            "type",
+            "AI_STREAM_DONE",
+            "fullContent",
+            "Per [Source 1] the policy says…",
+            "conversationId",
+            "conv-1",
+            "replyId",
+            "reply-1",
+            "sources",
+            List.of(Map.of("documentId", "doc-1", "fileName", "policy.pdf", "score", 0.82)));
+    when(redisMessage.getBody()).thenReturn(objectMapper.writeValueAsBytes(payload));
+
+    listener.onMessage(redisMessage, null);
+
+    org.mockito.ArgumentCaptor<List<com.platform.chatservice.model.AiSource>> sources =
+        org.mockito.ArgumentCaptor.forClass(List.class);
+    verify(messageService)
+        .persistAiMessage(eq("conv-1"), any(), any(), anyList(), eq("reply-1"), sources.capture());
+    org.assertj.core.api.Assertions.assertThat(sources.getValue())
+        .containsExactly(
+            new com.platform.chatservice.model.AiSource("doc-1", "policy.pdf", 0.82, null, null));
   }
 }

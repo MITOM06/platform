@@ -370,6 +370,18 @@ public class MessageService {
         conversationId, content, trace, pendingActions, aiReplyId);
   }
 
+  /** Same, also storing the reply's RAG / web citations. */
+  public MessageResponse persistAiMessage(
+      String conversationId,
+      String content,
+      AiTraceData trace,
+      List<PendingAction> pendingActions,
+      String aiReplyId,
+      List<com.platform.chatservice.model.AiSource> sources) {
+    return aiMessageService.persistAiMessage(
+        conversationId, content, trace, pendingActions, aiReplyId, sources);
+  }
+
   /**
    * Returns the AI trace for a message. Throws 404 if message not found or trace is null (regular
    * non-AI messages have no trace).
