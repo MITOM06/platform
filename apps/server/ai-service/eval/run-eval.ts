@@ -14,6 +14,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
 import { evaluateGate } from '../src/eval/eval-gate';
+import { parseJudgeVerdict, type JudgeVerdict } from '../src/eval/judge-verdict';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -27,10 +28,7 @@ interface EvalCase {
   rubric: string;
 }
 
-interface JudgeResult {
-  pass: boolean;
-  reason: string;
-}
+type JudgeResult = JudgeVerdict;
 
 type CaseResult =
   | { status: 'pass' | 'fail'; id: string; category: string; answer: string; reason: string }
@@ -122,6 +120,9 @@ Grade whether the answer satisfies ALL rubric criteria.
 Respond with ONLY a valid JSON object — no markdown, no extra text.
 Format: {"pass": true|false, "reason": "concise explanation under 120 chars"}`;
 
+/** A judge reply without a readable verdict is asked once more before the case errors. */
+const JUDGE_ATTEMPTS = 2;
+
 async function callJudge(
   client: Anthropic,
   evalCase: EvalCase,
@@ -133,48 +134,28 @@ async function callJudge(
     (evalCase.context.trim() ? `GROUNDING CONTEXT:\n${evalCase.context}\n\n` : '') +
     `ASSISTANT ANSWER:\n${answer}`;
 
-  // Haiku does NOT support adaptive thinking or effort param — plain call only.
-  const response = await client.messages.create({
-    model: JUDGE_MODEL,
-    max_tokens: 256,
-    temperature: 0, // deterministic judgments
-    system: JUDGE_SYSTEM,
-    messages: [{ role: 'user', content: userMessage }],
-  });
-
-  const raw = response.content
-    .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-    .map((b) => b.text)
-    .join('')
-    .trim();
-
-  // Robust JSON extraction — handles models that add markdown despite instructions.
-  const jsonMatch = raw.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    return { pass: false, reason: `Judge produced non-JSON response: ${raw.slice(0, 80)}` };
+  let lastRaw = '';
+  for (let attempt = 1; attempt <= JUDGE_ATTEMPTS; attempt++) {
+    // Haiku does NOT support adaptive thinking or effort param — plain call only.
+    const response = await client.messages.create({
+      model: JUDGE_MODEL,
+      // Room for the whole verdict: a reply cut off mid-reason used to fail the case.
+      max_tokens: 512,
+      temperature: 0, // deterministic judgments
+      system: JUDGE_SYSTEM,
+      messages: [{ role: 'user', content: userMessage }],
+    });
+    lastRaw = response.content
+      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+      .map((b) => b.text)
+      .join('')
+      .trim();
+    // Tolerates fences, stray text, unescaped quotes and a truncated reason.
+    const verdict = parseJudgeVerdict(lastRaw);
+    if (verdict) return verdict;
   }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(jsonMatch[0]);
-  } catch {
-    return { pass: false, reason: `Judge JSON parse failed: ${raw.slice(0, 80)}` };
-  }
-
-  if (
-    typeof parsed !== 'object' ||
-    parsed === null ||
-    typeof (parsed as Record<string, unknown>)['pass'] !== 'boolean' ||
-    typeof (parsed as Record<string, unknown>)['reason'] !== 'string'
-  ) {
-    return { pass: false, reason: `Judge returned unexpected shape: ${raw.slice(0, 80)}` };
-  }
-
-  const p = parsed as Record<string, unknown>;
-  return {
-    pass: p['pass'] as boolean,
-    reason: p['reason'] as string,
-  };
+  // No verdict is a harness problem, not a bad answer: the case becomes an error.
+  throw new Error(`no verdict in judge reply: ${lastRaw.slice(0, 80)}`);
 }
 
 // ---------------------------------------------------------------------------
