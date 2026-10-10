@@ -47,7 +47,7 @@ dataset.jsonl  ──► callSut()  ──► SUT model answer
 
 - **SUT model** (`EVAL_SUT_MODEL`, default `claude-opus-4-8`): called with a lean version of the production system prompt + optional grounding context. No RAG/Redis/Qdrant required — context is injected directly from the dataset.
 - **Judge model** (`EVAL_JUDGE_MODEL`, default `claude-haiku-4-5`): called plainly (no thinking, no effort param — Haiku does not support those). Returns a JSON `{pass: boolean, reason: string}`.
-- **Resilience**: if any single case throws (API error, timeout), it is marked `ERROR` and the run continues. Exit code is always 0 — this is a report tool, not a CI gate.
+- **Resilience**: if any single case throws (API error, timeout), it is marked `ERROR` and the run continues. The judge's verdict is read leniently (`src/eval/judge-verdict.ts`: code fences, stray text, unescaped quotes, a reply cut off mid-reason); a reply with no readable verdict is asked once more, then the case is an `ERROR`, never a quality `FAIL`. Exit code is 0 unless `EVAL_MIN_PASS_RATE` is set (`pnpm eval:gate`, CI), where errors count against the pass rate.
 
 ## Cost Estimate
 
