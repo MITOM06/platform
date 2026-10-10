@@ -82,12 +82,17 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      jaeger:
+        condition: service_healthy
     env_file:
       - ../../apps/server/auth-service/.env
     environment:
       MONGO_URI: mongodb://mongo:27017/platform
       MONGODB_URI: mongodb://mongo:27017/platform
       REDIS_HOST: redis
+      OTEL_ENABLED: ${OTEL_ENABLED:-true}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_SERVICE_NAME: auth-service
     networks:
       - app-net
 
@@ -206,6 +211,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      jaeger:
+        condition: service_healthy
     environment:
       # Local stack — never "production". The prod guards (main.ts) and every
       # isProd branch must describe the deployed environment, not this one.
@@ -226,6 +233,9 @@ services:
       NOTION_MCP_URL: ${NOTION_MCP_URL:-https://mcp.notion.com/sse}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      OTEL_ENABLED: ${OTEL_ENABLED:-true}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_SERVICE_NAME: connector-service
     networks:
       - app-net
     restart: unless-stopped

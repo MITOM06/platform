@@ -1,9 +1,19 @@
+import './tracing'; // first: OpenTelemetry patches modules before they load
+import * as Sentry from '@sentry/node';
+import helmet from 'helmet';
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { findEnvProblems, findEnvWarnings, resolveAllowedOrigins } from './config/env-guard';
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN ?? '',
+  environment: process.env.NODE_ENV ?? 'development',
+  tracesSampleRate: 0.1,
+  enabled: !!process.env.SENTRY_DSN,
+});
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -26,6 +36,17 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
+
+  // Same security headers as auth-service and ai-service. The OAuth callbacks
+  // redirect a popup back to the web app, which then reads the popup's URL: a
+  // same-origin opener policy would cut that link, so it stays off.
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+      crossOriginOpenerPolicy: false,
+    }),
+  );
 
   // Restrict CORS to an allow-list. The previous `origin: true` fallback reflected
   // *any* origin back with `credentials: true`, so a missing CLIENT_REDIRECT_URL
