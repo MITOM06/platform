@@ -233,14 +233,9 @@ describe('MfaService enroll/confirm → codes → complete', () => {
     jest.advanceTimersByTime(MFA_CODES_PENDING_TTL_SECONDS * 1000);
     expect(redis.keys('mfa:pending:')).toEqual([]);
 
-    const challenge = new MfaChallengeService(
-      {
-        resolve: jest
-          .fn()
-          .mockResolvedValue({ role: 'Owner', perms: [], depts: [] }),
-      } as never,
-      pending,
-    );
+    // Enrolled: verify mode whatever the role (no role lookup needed).
+    const claims = { resolve: jest.fn() };
+    const challenge = new MfaChallengeService(claims as never, pending);
     const user = await users.findById(UID).exec();
     const res = await challenge.challengeIfRequired(user!, {
       deviceId: 'web-login',

@@ -66,6 +66,7 @@
       "orContinueWith": "Or continue with",
       "googleLogin": "Sign in with Google",
       "ssoButton": "Sign in with SSO",
+      "orSignInWithPassword": "Or sign in with a password",
       "inviteOnlyHint": "PON is invite-only. Ask your administrator for an invitation."
     },
     "password": {
@@ -98,6 +99,7 @@
       "emailLabel": "Invited email",
       "continueWithGoogle": "Continue with Google",
       "googleHint": "Use the Google account for {email}",
+      "ssoRequired": "{workspace} requires single sign-on for this email address. Use “Sign in with SSO” to join.",
       "orSetPassword": "Or set a password",
       "submit": "Create account",
       "submitting": "Creating account...",
@@ -237,6 +239,9 @@
     "errLastOwnerCannotBeBlocked": "The last Owner cannot be blocked.",
     "errSsoDisabled": "Single sign-on is disabled.",
     "errSsoDomainNotAllowed": "Your email domain is not allowed for SSO.",
+    "errSsoRequired": "Your organization requires single sign-on. Use “Sign in with SSO”.",
+    "errSsoUnavailable": "Your organization's sign-in service is unavailable right now. Please try again in a moment.",
+    "errSsoEnforceNotReady": "SSO can’t be required yet. Turn on SSO, add at least one allowed email domain, and make sure single sign-on is configured for this deployment.",
     "errRoleGrantExceedsOwnPermissions": "You can't grant permissions you don't have yourself: {capabilities}.",
     "errRoleGrantExceedsOwnPermissionsGeneric": "You can't grant permissions you don't have yourself.",
     "errCannotEditOwnRole": "You can't edit your own role.",
@@ -302,7 +307,10 @@
       "continue": "Continue",
       "codesLoading": "Loading your backup codes...",
       "fileHeader": "PON backup codes for {email}",
-      "fileNote": "Each code can be used once to sign in when you can't use your authenticator app."
+      "fileNote": "Each code can be used once to sign in when you can't use your authenticator app.",
+      "stateChanged": "Your two-factor settings were changed somewhere else. This page now shows the current state.",
+      "ssoManaged": "Your organization's single sign-on protects your account, so two-factor authentication is handled there.",
+      "setupExpired": "This setup has expired. Turn on 2FA again to get a new QR code."
     },
     "msgMfaRequired": "Enter the code from your authenticator app to finish signing in.",
     "errMfaTokenInvalid": "Your sign-in has expired. Please sign in again.",
@@ -311,8 +319,9 @@
     "errMfaTooManyAttempts": "Too many incorrect codes. Please sign in again.",
     "errMfaNotEnrolled": "Two-factor authentication isn't set up for this account yet. Please sign in again.",
     "errMfaAlreadyEnrolled": "Two-factor authentication is already set up for this account. Please sign in again.",
-    "errMfaResetForbidden": "Only an Owner can reset two-factor authentication.",
-    "errMfaResetSelfForbidden": "You can't reset your own two-factor authentication."
+    "errMfaResetForbidden": "You don't have permission to reset this member's two-factor authentication.",
+    "errMfaResetSelfForbidden": "You can't reset your own two-factor authentication.",
+    "errMfaRequiredByRole": "Your role requires two-factor authentication, so it can't be turned off."
   },
   "settings": {
     "title": "Settings",
@@ -397,6 +406,7 @@
       "setSuccess": "Password set successfully",
       "mismatch": "Passwords don't match",
       "genericError": "Failed to update password",
+      "ssoPasswordDisabled": "Your organization requires single sign-on, so password sign-in is turned off for your account.",
       "twoFaTitle": "Two-factor authentication",
       "twoFaSubtitle": "Add an extra layer of security to your account.",
       "tooShort": "Password must be at least {min} characters.",
@@ -410,7 +420,17 @@
       "regenerateTitle": "Regenerate backup codes",
       "regenerateBody": "Enter the current code from your authenticator app. Your old backup codes will stop working.",
       "regenerateSubmit": "Generate new codes",
-      "regenerateDone": "Done"
+      "regenerateDone": "Done",
+      "twoFaOptionalBody": "Add a second step to your sign-in. Optional for your role.",
+      "twoFaOptionalOnBody": "Your account is protected by an authenticator app. You'll enter a code every time you sign in. You can turn this off at any time.",
+      "turnOnButton": "Turn on 2FA",
+      "turnOnDone": "Done",
+      "turnOnSuccess": "Two-factor authentication is on",
+      "turnOffButton": "Turn off 2FA",
+      "turnOffTitle": "Turn off two-factor authentication?",
+      "turnOffBody": "Enter the current code from your authenticator app, or one of your backup codes. Sign-in will no longer ask for a code, and your backup codes will stop working.",
+      "turnOffSubmit": "Turn off",
+      "turnOffSuccess": "Two-factor authentication is off"
     },
     "adminConsole": "Admin console",
     "adminConsoleSubtitle": "Workspace, members, roles and AI settings"
@@ -1043,7 +1063,7 @@
     "roleUnknown": "Not assigned",
     "noDepartment": "No department",
     "notSet": "Not set",
-    "identityManagedBySuperior": "These are set by your manager or admin.",
+    "identityManagedBySuperior": "These are set by your workspace admin.",
     "labelRole": "Role",
     "labelDepartment": "Department",
     "labelJobTitle": "Job title",
@@ -1498,8 +1518,8 @@
       "RUN_SENSITIVE_SKILL": "Run sensitive skills",
       "VIEW_AUDIT_LOG": "View audit log",
       "MANAGE_AI_CONTEXT": "Manage AI context",
-      "VIEW_INTERNAL_CONTEXT": "View internal context",
-      "VIEW_CONFIDENTIAL_CONTEXT": "View confidential context",
+      "VIEW_INTERNAL_CONTEXT": "See internal context in AI answers",
+      "VIEW_CONFIDENTIAL_CONTEXT": "See confidential context in AI answers",
       "HOST_MEETING": "Host meetings"
     },
     "auditEmpty": "No audit entries yet.",
@@ -1511,6 +1531,16 @@
     "ssoEnabled": "Enable SSO",
     "ssoAllowedDomains": "Allowed email domains",
     "ssoAllowedDomainsHint": "Comma-separated. Leave empty to allow any verified email.",
+    "ssoEnforced": "Require SSO for these domains",
+    "ssoEnforcedHint": "Members with an email in the allowed domains can only sign in with SSO. Owners keep password sign-in.",
+    "ssoEnforceSaveHint": "Not applied yet — click Save.",
+    "ssoEnforceConfirmTitle": "Require SSO for these domains?",
+    "ssoEnforceConfirmIntro": "For members whose email is in the allowed domains:",
+    "ssoEnforceConfirmPasswords": "Password sign-in, Google sign-in and “Forgot password?” stop working.",
+    "ssoEnforceConfirmOwners": "Owners keep password sign-in with two-factor authentication as a break-glass account.",
+    "ssoEnforceConfirmSessions": "Anyone currently signed in without SSO is signed out.",
+    "ssoEnforceConfirmRestore": "Passwords are kept, not deleted — turning this off restores password sign-in.",
+    "ssoEnforceConfirm": "Require SSO",
     "ssoDefaultRole": "Default role",
     "ssoNone": "None",
     "ssoGroupRoleMap": "Group → Role",
@@ -1656,7 +1686,8 @@
     "memberMfaReset": "Reset 2FA",
     "memberMfaResetTitle": "Reset two-factor authentication?",
     "memberMfaResetConfirm": "{name} will be signed out on every device and must set up two-factor authentication again at the next sign-in.",
-    "memberMfaResetDone": "Two-factor authentication has been reset"
+    "memberMfaResetDone": "Two-factor authentication has been reset",
+    "memberMfaResetConfirmOptional": "{name} will be signed out on every device and two-factor authentication will be turned off. They can turn it on again in Settings."
   },
   "call": {
     "peerFallback": "User",

@@ -141,16 +141,11 @@ describe('SsoMappingService.apply', () => {
     expect(r.changed).toBe(false);
   });
 
-  it('never demotes the LAST active Owner (departments may still update)', async () => {
+  it('a current Owner keeps the role (no demotion); departments still follow the IdP', async () => {
     const d = deps();
     d.membership.roleId = 'rid-owner';
-    d.usersService.countActiveWithRole.mockResolvedValue(0);
     const svc = make(d);
     const r = await svc.apply('u1', 'alice@acme.com', ['pon-admins', 'eng']);
-    expect(d.usersService.countActiveWithRole).toHaveBeenCalledWith(
-      'rid-owner',
-      'u1',
-    );
     expect(d.usersService.setRoleAndDepartments).toHaveBeenCalledWith(
       'u1',
       'rid-owner',
@@ -162,21 +157,42 @@ describe('SsoMappingService.apply', () => {
     d.usersService.setRoleAndDepartments.mockClear();
     const r2 = await svc.apply('u1', 'alice@acme.com', ['pon-admins']);
     expect(r2.changed).toBe(false);
-    expect(d.usersService.setRoleAndDepartments).toHaveBeenCalledTimes(0);
+    expect(d.usersService.setRoleAndDepartments).not.toHaveBeenCalled();
   });
 
-  it('an Owner can be demoted by the mapping while another active Owner remains', async () => {
+  it('a current Owner with no group at all is not demoted to the default role', async () => {
     const d = deps();
     d.membership.roleId = 'rid-owner';
-    d.usersService.countActiveWithRole.mockResolvedValue(2);
     const svc = make(d);
-    const r = await svc.apply('u1', 'alice@acme.com', ['pon-admins']);
-    expect(r.changed).toBe(true);
-    expect(d.usersService.setRoleAndDepartments).toHaveBeenCalledWith(
+    const r = await svc.apply('u1', 'alice@acme.com', []);
+    expect(r.changed).toBe(false);
+    expect(d.usersService.setRoleAndDepartments).not.toHaveBeenCalled();
+  });
+
+  it('a group mapped to Owner does not grant it (next mapping / default applies)', async () => {
+    const d = deps();
+    const svc = make(d);
+    await svc.apply('u1', 'alice@acme.com', ['pon-owners']);
+    expect(d.usersService.setRoleAndDepartments).toHaveBeenLastCalledWith(
+      'u1',
+      'rid-member',
+      [],
+    );
+    await svc.apply('u1', 'alice@acme.com', ['pon-owners', 'pon-admins']);
+    expect(d.usersService.setRoleAndDepartments).toHaveBeenLastCalledWith(
       'u1',
       'rid-admin',
       [],
     );
+  });
+
+  it('defaultRole "Owner" is not granted either', async () => {
+    const d = deps();
+    d.sso.defaultRole = 'Owner';
+    const svc = make(d);
+    const r = await svc.apply('u1', 'alice@acme.com', ['unmapped']);
+    expect(r.changed).toBe(false);
+    expect(d.usersService.setRoleAndDepartments).not.toHaveBeenCalled();
   });
 
   it('unknown user → no change', async () => {

@@ -20,9 +20,11 @@ class AuthRepository {
 
   const AuthRepository(this._storage, this._dio);
 
-  /// Password sign-in. A privileged member (Owner / Admin — contract 09) gets
-  /// [SignInMfaRequired] instead of a session: nothing is persisted until the
-  /// second factor succeeds (`mfaVerify` / `mfaEnrollComplete`).
+  /// Password sign-in. An Owner / Admin-like member — and a Member who turned
+  /// 2FA on (contract 15) — gets [SignInMfaRequired] instead of a session:
+  /// nothing is persisted until the second factor succeeds (`mfaVerify` /
+  /// `mfaEnrollComplete`). Any other Member signs in directly. A member whose
+  /// email domain must use SSO is refused with 403 `SSO_REQUIRED`.
   Future<SignInResult> login(String email, String password) async {
     final response = await _dio.post('/auth/login', data: {
       'email': email,
@@ -119,6 +121,39 @@ class AuthRepository {
     return _codeList((res.data as Map)['backupCodes']);
   }
 
+  // ── Own optional 2FA (contract 15 — Settings → Security) ────────────────
+  // Signed-in (JWT) calls for a member whose role doesn't require 2FA. Errors
+  // are 400 `MFA_*` (never 401), so a mistyped code can't trip the Dio
+  // refresh-then-logout handling. `SSO_REQUIRED` for an SSO-enforced member.
+
+  /// "Turn on 2FA", step 1: secret + QR for the authenticator app (pending
+  /// server-side for 10 minutes). `MFA_ALREADY_ENROLLED` if it is already on.
+  Future<MfaEnrollment> selfMfaEnrollStart() async {
+    final res = await _dio.post('/api/users/me/mfa/enroll/start');
+    return MfaEnrollment.fromJson(Map<String, dynamic>.from(res.data as Map));
+  }
+
+  /// "Turn on 2FA", step 2: the first [code] turns 2FA on (the session is
+  /// untouched) and returns the 10 backup codes, shown once
+  /// (`MFA_BACKUP_CODES_ISSUED`). Wrong code → `MFA_CODE_INVALID`
+  /// (`params.remaining`); 5 wrong → `MFA_TOO_MANY_ATTEMPTS`.
+  Future<List<String>> selfMfaEnrollConfirm(String code) async {
+    final res = await _dio.post('/api/users/me/mfa/enroll/confirm', data: {
+      'code': code,
+    });
+    return _codeList((res.data as Map)['backupCodes']);
+  }
+
+  /// "Turn off 2FA" with exactly one of a current TOTP [code] or an unused
+  /// [backupCode] (`XXXXX-XXXXX`). Refused with `MFA_REQUIRED_BY_ROLE` when
+  /// the role requires 2FA, `MFA_NOT_ENROLLED` when it is already off.
+  Future<void> selfMfaDisable({String? code, String? backupCode}) async {
+    await _dio.post('/api/users/me/mfa/disable', data: {
+      if (code != null) 'code': code,
+      if (backupCode != null) 'backupCode': backupCode,
+    });
+  }
+
   static List<String> _codeList(dynamic raw) =>
       (raw as List<dynamic>? ?? const []).map((e) => e.toString()).toList();
 
@@ -133,10 +168,13 @@ class AuthRepository {
   }
 
   /// Accepts an invitation by choosing a display name + password
-  /// (`POST /auth/invitations/:token/accept-password`). The response is the
-  /// same LoginTokens body as `/auth/login`, so the session is persisted the
-  /// same way and the signed-in user is returned.
-  Future<UserModel> acceptInvitationWithPassword(
+  /// (`POST /auth/invitations/:token/accept-password`). The response has the
+  /// same shapes as `/auth/login` (contract 15): an Owner / Admin-like invite
+  /// gets the `MFA_REQUIRED` challenge (enrollment) — nothing is persisted
+  /// until 2FA is set up — while a Member invite gets a login-success body,
+  /// persisted like any sign-in. An email in an SSO-enforced domain is refused
+  /// with `SSO_REQUIRED`.
+  Future<SignInResult> acceptInvitationWithPassword(
     String token,
     String displayName,
     String password,
@@ -149,7 +187,7 @@ class AuthRepository {
         'platform': 'mobile',
       },
     );
-    return _persistSession(response.data as Map<String, dynamic>);
+    return _signInResult(Map<String, dynamic>.from(response.data as Map));
   }
 
   Future<void> verifyOtp(String email, String otpCode) async {
@@ -187,7 +225,9 @@ class AuthRepository {
   }
 
   /// Đổi OAuth code (từ deeplink platform://auth?code=xxx) lấy JWT tokens.
-  /// Like [login], a privileged member gets [SignInMfaRequired] first.
+  /// Like [login], a Google sign-in of a member who needs 2FA gets
+  /// [SignInMfaRequired] first; an OIDC / SSO sign-in is exempt (the company
+  /// IdP does MFA) and signs in directly.
   Future<SignInResult> exchangeCode(String code) async {
     final response = await _dio.post('/auth/exchange', data: {
       'code': code,

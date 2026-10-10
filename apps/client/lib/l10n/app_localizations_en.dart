@@ -2598,6 +2598,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminSsoAddMapping => 'Add mapping';
 
   @override
+  String get adminSsoEnforce => 'Require SSO for these domains';
+
+  @override
+  String get adminSsoEnforceHint =>
+      'Members with these email domains must sign in with SSO. Owners can still use a password with 2FA.';
+
+  @override
+  String get adminSsoEnforceNotReady =>
+      'Turn on SSO and add at least one allowed domain first.';
+
+  @override
+  String get adminSsoEnforceConfirmTitle => 'Require SSO for these domains?';
+
+  @override
+  String get adminSsoEnforceConfirmPasswords =>
+      'Password sign-in, Google sign-in and password reset are turned off for these domains.';
+
+  @override
+  String get adminSsoEnforceConfirmOwners =>
+      'Owners keep password + 2FA sign-in as a break-glass account.';
+
+  @override
+  String get adminSsoEnforceConfirmSessions =>
+      'Anyone in these domains who is signed in without SSO is signed out when you save.';
+
+  @override
+  String get adminSsoEnforceConfirm => 'Require SSO';
+
+  @override
   String get sectionDirectoryTitle => 'MCP directory';
 
   @override
@@ -3353,6 +3382,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inviteSubmit => 'Create account';
 
   @override
+  String get inviteSsoRequired =>
+      'Your organization requires single sign-on for this email. Sign in with SSO to accept the invitation.';
+
+  @override
   String get inviteInvalidTitle => 'Invalid invitation';
 
   @override
@@ -3476,6 +3509,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authErrSsoDomainNotAllowed =>
       'Your email domain is not allowed for SSO.';
+
+  @override
+  String get authErrSsoRequired =>
+      'Your organization requires single sign-on. Use \"Sign in with SSO\".';
+
+  @override
+  String get authErrSsoUnavailable =>
+      'Your organization\'s sign-in service is unavailable right now. Please try again in a moment.';
+
+  @override
+  String get authErrSsoEnforceNotReady =>
+      'SSO can\'t be required yet. Turn on SSO, add at least one allowed domain, and make sure the identity provider is configured.';
 
   @override
   String get adminInviteMember => 'Invite member';
@@ -4437,6 +4482,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityMfaDone => 'Done';
 
   @override
+  String get securityMfaOptionalHint =>
+      'Add a second step to your sign-in. Optional for your role.';
+
+  @override
+  String get securityMfaStatusDisabled => 'Off';
+
+  @override
+  String get securityMfaTurnOn => 'Turn on 2FA';
+
+  @override
+  String get securityMfaTurnedOn => 'Two-factor authentication is on.';
+
+  @override
+  String get securityMfaSetupExpired =>
+      'The setup timed out. Please start again.';
+
+  @override
+  String get securityMfaTooManyAttempts =>
+      'Too many incorrect codes. Please wait a few minutes and try again.';
+
+  @override
+  String get securityMfaTurnOff => 'Turn off 2FA';
+
+  @override
+  String get securityMfaTurnOffTitle => 'Turn off two-factor authentication?';
+
+  @override
+  String get securityMfaTurnOffHint =>
+      'Enter a current code from your authenticator app to confirm. You won\'t be asked for a code when you sign in anymore.';
+
+  @override
+  String get securityMfaTurnOffSubmit => 'Turn off';
+
+  @override
+  String get securityMfaTurnedOff => 'Two-factor authentication is off.';
+
+  @override
+  String get authErrMfaRequiredByRole =>
+      'Your role requires two-factor authentication, so it can\'t be turned off.';
+
+  @override
   String get adminMfaBadge => '2FA on';
 
   @override
@@ -4450,6 +4536,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminMfaResetDone =>
       '2FA reset. They\'ll set it up again at their next sign-in.';
+
+  @override
+  String adminMfaResetConfirmOptional(String name) {
+    return 'Reset two-factor authentication for $name? They will be signed out everywhere and two-factor authentication will be turned off. They can turn it on again in Settings → Password & Security.';
+  }
+
+  @override
+  String get adminMfaResetDoneOptional =>
+      '2FA reset. It\'s off for them now; they can turn it on again in Settings.';
 
   @override
   String get authMsgMfaRequired =>
@@ -4481,7 +4576,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authErrMfaResetForbidden =>
-      'Only an Owner can reset two-factor authentication.';
+      'You can\'t reset two-factor authentication for this member.';
 
   @override
   String get authErrMfaResetSelfForbidden =>

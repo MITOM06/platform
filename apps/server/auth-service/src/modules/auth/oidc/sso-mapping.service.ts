@@ -37,18 +37,21 @@ export class SsoMappingService {
    *  - role: set only when a group mapping matched or `defaultRole` is
    *    configured (and resolves) — with empty maps every SSO login used to
    *    reset the role to null (= Member) and revoke all sessions;
+   *  - the Owner role is never granted by a group mapping (only by an Owner's
+   *    explicit action), and a user who is an Owner keeps that role (no SSO
+   *    demotion); their departments still follow the IdP;
    *  - departments: set only when at least one group maps to an EXISTING
    *    department;
-   *  - the last active Owner is never demoted by a mapping;
-   *  - `changed` is true only when a stored value really differs, and every
-   *    change is audited as `member.sso_update` (actor `system`).
+   *  - the bootstrap owner email is never touched at all (break-glass);
+   *  - `changed` is true only when a stored value really differs (the caller
+   *    then revokes sessions, so an unchanged repeat sign-in signs nobody out),
+   *    and every change is audited as `member.sso_update` (actor `system`).
    */
   async apply(
     userId: string,
     email: string,
     groups: string[],
   ): Promise<{ changed: boolean }> {
-    // Break-glass: never demote the bootstrap owner via group mapping.
     const ownerEmail = this.config.get<string>('BOOTSTRAP_OWNER_EMAIL');
     if (ownerEmail && email.toLowerCase() === ownerEmail.toLowerCase()) {
       return { changed: false };
@@ -57,37 +60,33 @@ export class SsoMappingService {
     const ws = await this.workspaceModel.findOne().exec();
     const sso = ws?.sso;
     if (!sso) return { changed: false };
-
     const current = await this.usersService.getMembership(userId);
     if (!current) return { changed: false };
 
     const roles = await this.roleModel.find().exec();
-    const roleNameToId = new Map<string, string>(
-      roles.map((r: any) => [r.name, r._id.toString()]),
+    const ownerRoleId = roles
+      .find((r: any) => r.name === OWNER_ROLE_NAME)
+      ?._id.toString();
+    // Owner is never granted through a mapping: groups mapped to it are ignored.
+    const assignable = new Map<string, string>(
+      roles
+        .filter((r: any) => r.name !== OWNER_ROLE_NAME)
+        .map((r: any) => [r.name, r._id.toString()]),
     );
-    const mapping = resolveSsoMapping(groups ?? [], sso, roleNameToId);
+    const mapping = resolveSsoMapping(groups ?? [], sso, assignable);
 
     // Filter to departments that still exist.
     const existing = await this.departmentModel.find().exec();
     const validIds = new Set(existing.map((d: any) => d._id.toString()));
     const mappedDepts = mapping.departmentIds.filter((d) => validIds.has(d));
 
-    let nextRoleId = mapping.roleId ?? current.roleId;
+    // ...nor removed by one: an Owner keeps the role whatever the groups say.
+    const isOwner = !!ownerRoleId && current.roleId === ownerRoleId;
+    const nextRoleId = isOwner
+      ? current.roleId
+      : (mapping.roleId ?? current.roleId);
     const nextDepts =
       mappedDepts.length > 0 ? mappedDepts : current.departmentIds;
-
-    const ownerRoleId = roleNameToId.get(OWNER_ROLE_NAME);
-    if (
-      ownerRoleId &&
-      current.roleId === ownerRoleId &&
-      nextRoleId !== ownerRoleId &&
-      (await this.usersService.countActiveWithRole(ownerRoleId, userId)) === 0
-    ) {
-      this.logger.warn(
-        `SSO mapping would demote the last active Owner (user=${userId}); role kept`,
-      );
-      nextRoleId = current.roleId;
-    }
 
     const roleChanged = nextRoleId !== current.roleId;
     const deptsChanged = !sameIdSet(nextDepts, current.departmentIds);

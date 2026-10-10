@@ -933,6 +933,14 @@
   "adminSsoGroupDeptMap": "组 → 部门",
   "adminSsoGroupPlaceholder": "IdP 组名称",
   "adminSsoAddMapping": "添加映射",
+  "adminSsoEnforce": "要求这些域名使用 SSO",
+  "adminSsoEnforceHint": "使用这些邮箱域名的成员必须通过 SSO 登录。所有者仍可使用密码加双重验证登录。",
+  "adminSsoEnforceNotReady": "请先启用 SSO 并添加至少一个允许的域名。",
+  "adminSsoEnforceConfirmTitle": "要求这些域名使用 SSO？",
+  "adminSsoEnforceConfirmPasswords": "这些域名将无法使用密码登录、Google 登录和重置密码。",
+  "adminSsoEnforceConfirmOwners": "所有者保留密码 + 双重验证登录，作为紧急备用账号。",
+  "adminSsoEnforceConfirmSessions": "保存后，这些域名中未通过 SSO 登录的用户将被登出。",
+  "adminSsoEnforceConfirm": "要求 SSO",
   "sectionDirectoryTitle": "MCP 目录",
   "sectionDirectoryDesc": "浏览 MCP 服务器并一键连接——OAuth 自动完成。",
   "directoryAdd": "添加条目",
@@ -1165,6 +1173,7 @@
   "inviteGoogleHint": "请使用 {email} 的 Google 账号",
   "inviteOrSetPassword": "或设置密码",
   "inviteSubmit": "创建账号",
+  "inviteSsoRequired": "你的组织要求此邮箱使用单点登录。请使用 SSO 登录以接受邀请。",
   "inviteInvalidTitle": "邀请无效",
   "inviteInvalidBody": "此邀请链接无效。请检查邮件中的链接，或请管理员重新邀请。",
   "inviteExpiredTitle": "邀请已过期",
@@ -1200,6 +1209,9 @@
   "authErrLastOwnerCannotBeBlocked": "无法封禁最后一位 Owner。",
   "authErrSsoDisabled": "单点登录已停用。",
   "authErrSsoDomainNotAllowed": "您的邮箱域名不允许使用 SSO。",
+  "authErrSsoRequired": "你的组织要求使用单点登录。请使用“使用 SSO 登录”。",
+  "authErrSsoUnavailable": "你所在组织的登录服务暂时不可用。请稍后再试。",
+  "authErrSsoEnforceNotReady": "暂时无法强制使用 SSO。请先启用 SSO、添加至少一个允许的域名，并确认已配置身份提供商。",
   "adminInviteMember": "邀请成员",
   "adminInviteTitle": "邀请一位成员",
   "adminInviteEmail": "邮箱地址",
@@ -1494,6 +1506,18 @@
   "securityMfaRegenerateHint": "请输入身份验证器应用中的当前验证码。旧的备用码将失效。",
   "securityMfaRegenerateSubmit": "生成",
   "securityMfaDone": "完成",
+  "securityMfaOptionalHint": "为登录添加第二步验证。对你的角色而言为可选项。",
+  "securityMfaStatusDisabled": "未开启",
+  "securityMfaTurnOn": "开启双重验证",
+  "securityMfaTurnedOn": "双重验证已开启。",
+  "securityMfaSetupExpired": "设置已超时，请重新开始。",
+  "securityMfaTooManyAttempts": "错误验证码次数过多。请等待几分钟后再试。",
+  "securityMfaTurnOff": "关闭双重验证",
+  "securityMfaTurnOffTitle": "要关闭双重验证吗？",
+  "securityMfaTurnOffHint": "输入身份验证器应用中的当前验证码以确认。之后登录时将不再要求输入验证码。",
+  "securityMfaTurnOffSubmit": "关闭",
+  "securityMfaTurnedOff": "双重验证已关闭。",
+  "authErrMfaRequiredByRole": "你的角色要求启用双重验证，因此无法关闭。",
   "adminMfaBadge": "已开启双重验证",
   "adminMfaReset": "重置双重验证",
   "adminMfaResetConfirm": "要重置 {name} 的双重验证吗？对方将在所有设备上被登出，并需在下次登录时重新设置。",
@@ -1505,6 +1529,8 @@
     }
   },
   "adminMfaResetDone": "已重置双重验证。对方将在下次登录时重新设置。",
+  "adminMfaResetConfirmOptional": "要重置 {name} 的双重验证吗？对方将在所有设备上被登出，双重验证将被关闭。对方可以在“设置 → 密码与安全”中重新开启。",
+  "adminMfaResetDoneOptional": "已重置双重验证。对方的双重验证现已关闭，可在设置中重新开启。",
   "authMsgMfaRequired": "请输入身份验证器应用中的验证码以完成登录。",
   "authErrMfaTokenInvalid": "登录已过期，请重新登录。",
   "authErrMfaCodeInvalid": "验证码不正确，请重试。",
@@ -1519,7 +1545,7 @@
   "authErrMfaTooManyAttempts": "验证码错误次数过多，请重新登录。",
   "authErrMfaNotEnrolled": "此账号尚未设置双重验证。",
   "authErrMfaAlreadyEnrolled": "此账号已设置双重验证。",
-  "authErrMfaResetForbidden": "只有所有者才能重置双重验证。",
+  "authErrMfaResetForbidden": "你无法重置该成员的双重验证。",
   "authErrMfaResetSelfForbidden": "你不能重置自己的双重验证。",
   "adminCapHostMeeting": "主持会议",
   "meetingErrNotFound": "该会议不存在",
@@ -1531,7 +1557,11 @@
   "meetingErrEnded": "此会议已结束",
   "meetingErrFull": "此会议已满（{max} 人）",
   "@meetingErrFull": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingErrNotCancellable": "已有人加入，无法取消",
   "meetingErrUnavailable": "会议功能暂时不可用，请稍后再试。",
@@ -1540,11 +1570,19 @@
   "meetingErrRateLimited": "发送太快了，请稍等片刻。",
   "meetingErrChatTooLong": "消息最多 {max} 个字符",
   "@meetingErrChatTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingErrNoteTooLong": "笔记最多 {max} 个字符",
   "@meetingErrNoteTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingErrInviteeInvalid": "名单中有人无法被邀请",
   "meetingErrDepartmentInvalid": "该部门不可用",
@@ -1556,15 +1594,27 @@
   "meetingErrGeneric": "出了点问题，请重试。",
   "meetingValTitleTooLong": "标题最多 {max} 个字符",
   "@meetingValTitleTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingValDescriptionTooLong": "描述最多 {max} 个字符",
   "@meetingValDescriptionTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingValTooManyInvitees": "最多只能邀请 {max} 人",
   "@meetingValTooManyInvitees": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingValStartPast": "请选择未来的时间",
   "meetingValScheduleInvalid": "请选择有效的日期和时间",
@@ -1581,20 +1631,39 @@
   "meetingStatusCancelled": "已取消",
   "meetingDurationMinutes": "{count, plural, other {{count} 分钟}}",
   "@meetingDurationMinutes": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingDurationHours": "{count, plural, other {{count} 小时}}",
   "@meetingDurationHours": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingDurationHoursMinutes": "{hours} 小时 {minutes} 分钟",
   "@meetingDurationHoursMinutes": {
-    "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } }
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "meetingRealtimeOffline": "聊天、举手和主持人控制已暂停，恢复联网后继续",
   "meetingMutedBy": "{name} 将你的麦克风静音了",
   "@meetingMutedBy": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingMutedByUnknown": "主持人将你的麦克风静音了",
   "meetingMadeCohost": "你现在是联合主持人",
@@ -1605,25 +1674,57 @@
   "meetingShareFailed": "无法开始演示",
   "meetingLobbyWaiting": "{count, plural, other {{count} 人正在等待加入}}",
   "@meetingLobbyWaiting": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingNotifInvitedTitle": "会议邀请",
   "meetingNotifInvitedBody": "{name} 邀请你参加“{title}”",
   "@meetingNotifInvitedBody": {
-    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifInvitedBodyAt": "{name} 邀请你于 {time} 参加“{title}”",
   "@meetingNotifInvitedBodyAt": {
-    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" }, "time": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifStartingTitle": "会议即将开始",
   "meetingNotifStartingBody": "“{title}”将于 {time} 开始",
   "@meetingNotifStartingBody": {
-    "placeholders": { "title": { "type": "String" }, "time": { "type": "String" } }
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifCancelled": "“{title}”已取消",
   "@meetingNotifCancelled": {
-    "placeholders": { "title": { "type": "String" } }
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifCancelledUnknown": "你受邀参加的一个会议已取消",
   "meetingTitle": "会议",
@@ -1646,7 +1747,11 @@
   "meetingInstantMeeting": "即时会议",
   "meetingHostedBy": "主持人：{name}",
   "@meetingHostedBy": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingCopyLink": "复制链接",
   "meetingLinkCopied": "已复制会议链接",
@@ -1668,18 +1773,30 @@
   "meetingFieldDuration": "时长",
   "meetingTimeZoneHint": "时间按 {zone} 显示",
   "@meetingTimeZoneHint": {
-    "placeholders": { "zone": { "type": "String" } }
+    "placeholders": {
+      "zone": {
+        "type": "String"
+      }
+    }
   },
   "meetingFieldInvitees": "邀请参会者",
   "meetingInviteeSearchPlaceholder": "按姓名或邮箱搜索",
   "meetingInviteeCount": "{count, plural, other {已邀请 {count} 人}}",
   "@meetingInviteeCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingInviteeNone": "尚未邀请任何人",
   "meetingRemoveInvitee": "移除 {name}",
   "@meetingRemoveInvitee": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingSearchNoResults": "未找到任何人",
   "meetingSearchFailed": "暂时无法搜索",
@@ -1702,7 +1819,14 @@
   "meetingToastUpdated": "更改已保存",
   "meetingCharCounter": "{count}/{max}",
   "@meetingCharCounter": {
-    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingNotesShared": "共享",
   "meetingNotesPrivate": "我的",
@@ -1718,12 +1842,23 @@
   "meetingNotesReadOnly": "只有主持人可以编辑这些笔记",
   "meetingNotesRemoteNewer": "{name} 保存了更新的版本",
   "@meetingNotesRemoteNewer": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotesRemoteNewerUnknown": "已保存了更新的版本",
   "meetingNotesCounter": "{count} / {max}",
   "@meetingNotesCounter": {
-    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingNotesConflictTitle": "有人保存了更新的版本",
   "meetingNotesConflictDesc": "你的内容仍然保留。比较两个版本，然后选择要保留的内容。",
@@ -1752,7 +1887,11 @@
   "meetingInvitees": "受邀者",
   "meetingMoreCount": "+{count}",
   "@meetingMoreCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingDepartmentGeneric": "一个部门",
   "meetingSectionAttendance": "出席情况",
@@ -1760,11 +1899,19 @@
   "meetingAttendanceInside": "正在会议中",
   "meetingAttendanceDuration": "{minutes, plural, other {{minutes} 分钟}}",
   "@meetingAttendanceDuration": {
-    "placeholders": { "minutes": { "type": "int" } }
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "meetingAttendanceSessions": "{count, plural, other {{count} 次加入}}",
   "@meetingAttendanceSessions": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingSectionNotes": "笔记",
   "meetingSectionChat": "会议聊天",
@@ -1775,7 +1922,11 @@
   "meetingGuestNotice": "加入会议即可查看笔记和聊天。",
   "meetingCreatedAt": "创建于 {time}",
   "@meetingCreatedAt": {
-    "placeholders": { "time": { "type": "String" } }
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingLinkCodeCopied": "已复制会议代码",
   "meetingShareNotifTitle": "正在共享你的屏幕",
@@ -1785,11 +1936,19 @@
   "meetingPrejoinTitle": "准备好加入了吗？",
   "meetingPrejoinStartsAt": "开始时间：{time}",
   "@meetingPrejoinStartsAt": {
-    "placeholders": { "time": { "type": "String" } }
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingPrejoinJoiningAs": "你将以 {name} 的身份加入",
   "@meetingPrejoinJoiningAs": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingPrejoinCameraOff": "摄像头已关闭",
   "meetingPrejoinMuteOnEntry": "主持人要求加入时静音",
@@ -1812,7 +1971,11 @@
   "meetingFullTitle": "会议人数已满",
   "meetingFullDesc": "已有 {max} 人在会议中，请稍后再试。",
   "@meetingFullDesc": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingUnavailableTitle": "会议暂时不可用",
   "meetingUnavailableDesc": "请稍后再试",
@@ -1827,7 +1990,11 @@
   "meetingLeaveMeeting": "离开会议",
   "meetingNameWithYou": "{name}（你）",
   "@meetingNameWithYou": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingReconnecting": "正在重新连接…",
   "meetingPoorConnection": "你的网络连接不稳定",
@@ -1835,21 +2002,37 @@
   "meetingStopPresenting": "停止共享",
   "meetingPresentingName": "{name} 正在共享屏幕",
   "@meetingPresentingName": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingOverflowTiles": "+{count}",
   "@meetingOverflowTiles": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingOverflowMore": "{count, plural, other {另外 {count} 人}}",
   "@meetingOverflowMore": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingPin": "固定",
   "meetingUnpin": "取消固定",
   "meetingTileMenu": "{name} 的选项",
   "@meetingTileMenu": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingMicMutedLabel": "麦克风已关闭",
   "meetingHandRaisedLabel": "已举手",
@@ -1871,28 +2054,51 @@
   "meetingEndForAll": "为所有人结束会议",
   "meetingReactionAria": "{name} 发送了 {emoji}",
   "@meetingReactionAria": {
-    "placeholders": { "name": { "type": "String" }, "emoji": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "emoji": {
+        "type": "String"
+      }
+    }
   },
   "meetingPeopleTitle": "参会者",
   "meetingManageTitle": "主持人控制",
   "meetingSectionHands": "举手（{count}）",
   "@meetingSectionHands": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingSectionLobby": "等待加入（{count}）",
   "@meetingSectionLobby": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingSectionInMeeting": "会议中（{count}）",
   "@meetingSectionInMeeting": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingAdmit": "准许加入",
   "meetingDeny": "拒绝",
   "meetingAdmitAll": "全部准许",
   "meetingPersonMenu": "{name} 的选项",
   "@meetingPersonMenu": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingActionMuteMic": "关闭麦克风",
   "meetingActionMuteAll": "全员静音",
@@ -1903,7 +2109,11 @@
   "meetingActionRevokeCohost": "取消联合主持人",
   "meetingRemoveConfirmTitle": "要将 {name} 移出会议吗？",
   "@meetingRemoveConfirmTitle": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingRemoveConfirmDesc": "对方将无法再次加入此会议",
   "meetingMuteAllConfirmTitle": "要将所有人静音吗？",
@@ -1919,11 +2129,22 @@
   "meetingChatOffline": "正在重新连接，暂时无法发送消息",
   "meetingChatCounter": "{count}/{max}",
   "@meetingChatCounter": {
-    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingChatUnread": "{count, plural, other {{count} 条新消息}}",
   "@meetingChatUnread": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingMediaBlocked": "麦克风或摄像头权限已关闭。你仍可加入，稍后可在“设置”中开启。",
   "meetingSwitchCamera": "切换摄像头",
@@ -1932,17 +2153,29 @@
   "callSelfWeakNetwork": "你的网络较差",
   "callPeerWeakNetwork": "{name} 的网络较差",
   "@callPeerWeakNetwork": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "callUnstableNetwork": "连接不稳定",
   "callReconnectingSelf": "连接中断，正在重新连接…",
   "callWaitingForPeer": "正在等待 {name} 重新连接…",
   "@callWaitingForPeer": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "callReconnectCountdown": "若无法重新连接，通话将在 {seconds} 秒后结束",
   "@callReconnectCountdown": {
-    "placeholders": { "seconds": { "type": "int" } }
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
   },
   "callSwitchToVideo": "切换到视频通话",
   "callVideoUnavailable": "此通话无法开启视频——对方可能需要更新应用"

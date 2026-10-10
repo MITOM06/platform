@@ -2543,6 +2543,34 @@ class AppLocalizationsKo extends AppLocalizations {
   String get adminSsoAddMapping => '매핑 추가';
 
   @override
+  String get adminSsoEnforce => '이 도메인에 SSO 필수 적용';
+
+  @override
+  String get adminSsoEnforceHint =>
+      '이 이메일 도메인의 멤버는 SSO로 로그인해야 합니다. 소유자는 계속 비밀번호와 2FA를 사용할 수 있습니다.';
+
+  @override
+  String get adminSsoEnforceNotReady => '먼저 SSO를 켜고 허용 도메인을 하나 이상 추가하세요.';
+
+  @override
+  String get adminSsoEnforceConfirmTitle => '이 도메인에 SSO를 필수로 적용할까요?';
+
+  @override
+  String get adminSsoEnforceConfirmPasswords =>
+      '이 도메인에서는 비밀번호 로그인, Google 로그인, 비밀번호 재설정이 비활성화됩니다.';
+
+  @override
+  String get adminSsoEnforceConfirmOwners =>
+      '소유자는 비상용 계정으로 비밀번호 + 2FA 로그인을 계속 사용할 수 있습니다.';
+
+  @override
+  String get adminSsoEnforceConfirmSessions =>
+      '저장하면 이 도메인에서 SSO 없이 로그인한 사용자는 로그아웃됩니다.';
+
+  @override
+  String get adminSsoEnforceConfirm => 'SSO 필수 적용';
+
+  @override
   String get sectionDirectoryTitle => 'MCP 디렉터리';
 
   @override
@@ -3289,6 +3317,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get inviteSubmit => '계정 만들기';
 
   @override
+  String get inviteSsoRequired =>
+      '조직에서 이 이메일에 싱글 사인온(SSO)을 요구합니다. 초대를 수락하려면 SSO로 로그인하세요.';
+
+  @override
   String get inviteInvalidTitle => '유효하지 않은 초대';
 
   @override
@@ -3400,6 +3432,18 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get authErrSsoDomainNotAllowed => '이메일 도메인이 SSO에 허용되지 않습니다.';
+
+  @override
+  String get authErrSsoRequired =>
+      '조직에서 싱글 사인온(SSO)을 요구합니다. \'SSO로 로그인\'을 사용하세요.';
+
+  @override
+  String get authErrSsoUnavailable =>
+      '조직의 로그인 서비스를 지금 사용할 수 없습니다. 잠시 후 다시 시도하세요.';
+
+  @override
+  String get authErrSsoEnforceNotReady =>
+      '아직 SSO를 필수로 설정할 수 없습니다. SSO를 켜고 허용 도메인을 하나 이상 추가한 뒤 ID 공급자가 구성되어 있는지 확인하세요.';
 
   @override
   String get adminInviteMember => '멤버 초대';
@@ -4302,6 +4346,45 @@ class AppLocalizationsKo extends AppLocalizations {
   String get securityMfaDone => '완료';
 
   @override
+  String get securityMfaOptionalHint =>
+      '로그인에 두 번째 단계를 추가합니다. 회원님의 역할에서는 선택 사항입니다.';
+
+  @override
+  String get securityMfaStatusDisabled => '꺼짐';
+
+  @override
+  String get securityMfaTurnOn => '2단계 인증 켜기';
+
+  @override
+  String get securityMfaTurnedOn => '2단계 인증이 켜졌습니다.';
+
+  @override
+  String get securityMfaSetupExpired => '설정 시간이 초과되었습니다. 다시 시작해 주세요.';
+
+  @override
+  String get securityMfaTooManyAttempts =>
+      '잘못된 코드를 너무 많이 입력했습니다. 몇 분 후에 다시 시도해 주세요.';
+
+  @override
+  String get securityMfaTurnOff => '2단계 인증 끄기';
+
+  @override
+  String get securityMfaTurnOffTitle => '2단계 인증을 끄시겠습니까?';
+
+  @override
+  String get securityMfaTurnOffHint =>
+      '확인을 위해 인증 앱의 현재 코드를 입력하세요. 이후 로그인할 때 더 이상 코드를 묻지 않습니다.';
+
+  @override
+  String get securityMfaTurnOffSubmit => '끄기';
+
+  @override
+  String get securityMfaTurnedOff => '2단계 인증이 꺼졌습니다.';
+
+  @override
+  String get authErrMfaRequiredByRole => '회원님의 역할에는 2단계 인증이 필수이므로 끌 수 없습니다.';
+
+  @override
   String get adminMfaBadge => '2FA 켜짐';
 
   @override
@@ -4314,6 +4397,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get adminMfaResetDone => '2FA를 재설정했습니다. 다음 로그인 시 다시 설정하게 됩니다.';
+
+  @override
+  String adminMfaResetConfirmOptional(String name) {
+    return '$name님의 2단계 인증을 재설정할까요? 모든 기기에서 로그아웃되며 2단계 인증이 꺼집니다. 설정 → 비밀번호 및 보안에서 다시 켤 수 있습니다.';
+  }
+
+  @override
+  String get adminMfaResetDoneOptional =>
+      '2FA를 재설정했습니다. 현재 꺼져 있으며 설정에서 다시 켤 수 있습니다.';
 
   @override
   String get authMsgMfaRequired => '로그인을 완료하려면 인증 앱의 코드를 입력하세요.';
@@ -4339,7 +4431,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authErrMfaAlreadyEnrolled => '이 계정은 이미 2단계 인증이 설정되어 있습니다.';
 
   @override
-  String get authErrMfaResetForbidden => '소유자만 2단계 인증을 재설정할 수 있습니다.';
+  String get authErrMfaResetForbidden => '이 멤버의 2단계 인증을 재설정할 수 없습니다.';
 
   @override
   String get authErrMfaResetSelfForbidden => '본인의 2단계 인증은 재설정할 수 없습니다.';

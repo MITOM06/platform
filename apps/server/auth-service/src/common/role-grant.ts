@@ -10,13 +10,11 @@ import { AuthCode } from './auth-code.enum';
 export const OWNER_ROLE_NAME = 'Owner';
 export const MEMBER_ROLE_NAME = 'Member';
 
-/** Seeded preset role names. Reserved: no other role may take one of them (any casing). */
-export const PRESET_ROLE_NAMES = [
-  'Owner',
-  'Admin',
-  'Manager',
-  'Member',
-] as const;
+/**
+ * Seeded preset role names. Reserved: no other role may take one of them (any
+ * casing). The former "Manager" preset is retired, so the name is free again.
+ */
+export const PRESET_ROLE_NAMES = ['Owner', 'Admin', 'Member'] as const;
 
 /** The acting user as seen in the access token (`JwtUser` satisfies this). */
 export interface RoleActor {

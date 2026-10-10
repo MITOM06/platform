@@ -1,6 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
 import { REDIS_CLIENT, Redis } from '@platform/database';
+import { AuthCode } from '../../common/auth-code.enum';
 import { matchTotpStep, normalizeTotpInput, TOTP_STEP_SECONDS } from './totp';
 
 export const BACKUP_CODE_COUNT = 10;
@@ -11,13 +12,19 @@ const BACKUP_CODE_LENGTH = 10;
  * Per-user failure budgets, on top of the 5 attempts per mfaToken:
  * - `signin`: wrong codes across ALL mfaTokens of a user. Stops someone who
  *   knows the password from minting fresh tokens to keep guessing.
- * - `regen`: wrong codes on "regenerate backup codes" (signed-in user).
+ * - `account`: wrong codes of a signed-in user against their enrolled secret
+ *   ("regenerate backup codes" and "turn off 2FA" share it, so the two
+ *   endpoints cannot be combined to guess more).
+ * - `enroll`: wrong codes on the self-service enrollment confirm (Settings).
  */
 export const MFA_FAILURE_LIMITS = {
   signin: { limit: 20, windowSeconds: 15 * 60 },
-  regen: { limit: 5, windowSeconds: 15 * 60 },
+  account: { limit: 5, windowSeconds: 15 * 60 },
+  enroll: { limit: 5, windowSeconds: 15 * 60 },
 } as const;
 export type MfaFailureScope = keyof typeof MFA_FAILURE_LIMITS;
+/** Budgets of the signed-in (JWT) endpoints, whose errors are 400, never 401. */
+export type MfaAccountScope = Exclude<MfaFailureScope, 'signin'>;
 
 export interface NewBackupCodes {
   /** Shown to the user once, `XXXXX-XXXXX`. */
@@ -106,6 +113,39 @@ export class MfaCodeService {
 
   async clearFailures(scope: MfaFailureScope, userId: string): Promise<void> {
     await this.redis.del(failureKey(scope, userId));
+  }
+
+  /**
+   * JWT endpoints: 400 MFA_TOO_MANY_ATTEMPTS while the budget is spent. Never
+   * 401, so a mistyped code cannot trigger the clients' refresh-then-logout.
+   */
+  async assertWithinBudget(
+    scope: MfaAccountScope,
+    userId: string,
+  ): Promise<void> {
+    const { limit } = MFA_FAILURE_LIMITS[scope];
+    if ((await this.failures(scope, userId)) >= limit) {
+      throw new BadRequestException({ code: AuthCode.MFA_TOO_MANY_ATTEMPTS });
+    }
+  }
+
+  /**
+   * JWT endpoints, wrong code: counts it, then 400 MFA_CODE_INVALID
+   * (`params.remaining`), or MFA_TOO_MANY_ATTEMPTS once the budget is spent.
+   */
+  async rejectWrongCode(
+    scope: MfaAccountScope,
+    userId: string,
+  ): Promise<never> {
+    const { limit } = MFA_FAILURE_LIMITS[scope];
+    const failures = await this.recordFailure(scope, userId);
+    if (failures >= limit) {
+      throw new BadRequestException({ code: AuthCode.MFA_TOO_MANY_ATTEMPTS });
+    }
+    throw new BadRequestException({
+      code: AuthCode.MFA_CODE_INVALID,
+      params: { remaining: limit - failures },
+    });
   }
 }
 

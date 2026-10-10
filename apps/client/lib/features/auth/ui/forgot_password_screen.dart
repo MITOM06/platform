@@ -6,6 +6,8 @@ import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../data/auth_repository.dart';
+import '../domain/auth_provider.dart';
+import '../domain/auth_state.dart';
 import '../utils/auth_error.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -39,11 +41,16 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             '/verify-otp?email=${Uri.encodeComponent(_emailController.text.trim())}&isForgotPassword=true');
       }
     } on DioException catch (e) {
-      if (mounted) {
-        final msg = authErrorToString(context, e);
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(msg)));
+      if (!mounted) return;
+      // The email's domain must use SSO (contract 13 §C): there is no PON
+      // password to reset. Back to sign-in with the SSO notice + button.
+      if (authErrorCode(e) == kSsoRequired) {
+        ref.read(authNotifierProvider.notifier).showSignInNotice(kSsoRequired);
+        context.go('/login');
+        return;
       }
+      final msg = authErrorToString(context, e);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -27,7 +27,15 @@ describe('UsersController — /me (2FA, roleName) and change-password body', () 
       getRoleName: jest.fn().mockResolvedValue('Admin'),
     };
     passwordChange = { changePassword: jest.fn().mockResolvedValue({ success: true }) };
-    controller = new UsersController(users as any, passwordChange as any, {} as any);
+    controller = new UsersController(
+      users as any,
+      passwordChange as any,
+      {} as any,
+      {
+        isEnforcedFor: jest.fn().mockResolvedValue(false),
+        assertNotEnforcedForUserId: jest.fn().mockResolvedValue(undefined),
+      } as any,
+    );
   });
 
   describe('GET /api/users/me', () => {

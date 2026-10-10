@@ -933,6 +933,14 @@
   "adminSsoGroupDeptMap": "Nhóm → Phòng ban",
   "adminSsoGroupPlaceholder": "Tên nhóm IdP",
   "adminSsoAddMapping": "Thêm ánh xạ",
+  "adminSsoEnforce": "Bắt buộc SSO cho các tên miền này",
+  "adminSsoEnforceHint": "Thành viên có email thuộc các tên miền này phải đăng nhập bằng SSO. Chủ sở hữu vẫn có thể dùng mật khẩu kèm 2FA.",
+  "adminSsoEnforceNotReady": "Hãy bật SSO và thêm ít nhất một tên miền được phép trước.",
+  "adminSsoEnforceConfirmTitle": "Bắt buộc SSO cho các tên miền này?",
+  "adminSsoEnforceConfirmPasswords": "Đăng nhập bằng mật khẩu, đăng nhập bằng Google và đặt lại mật khẩu sẽ bị tắt cho các tên miền này.",
+  "adminSsoEnforceConfirmOwners": "Chủ sở hữu vẫn giữ đăng nhập bằng mật khẩu + 2FA làm tài khoản khẩn cấp.",
+  "adminSsoEnforceConfirmSessions": "Những người thuộc các tên miền này đang đăng nhập không qua SSO sẽ bị đăng xuất khi bạn lưu.",
+  "adminSsoEnforceConfirm": "Bắt buộc SSO",
   "sectionDirectoryTitle": "Danh bạ MCP",
   "sectionDirectoryDesc": "Duyệt các máy chủ MCP và kết nối chỉ với một nhấp — OAuth chạy tự động.",
   "directoryAdd": "Thêm mục",
@@ -1165,6 +1173,7 @@
   "inviteGoogleHint": "Dùng tài khoản Google của {email}",
   "inviteOrSetPassword": "hoặc đặt mật khẩu",
   "inviteSubmit": "Tạo tài khoản",
+  "inviteSsoRequired": "Tổ chức của bạn yêu cầu đăng nhập SSO cho email này. Hãy đăng nhập bằng SSO để chấp nhận lời mời.",
   "inviteInvalidTitle": "Lời mời không hợp lệ",
   "inviteInvalidBody": "Liên kết lời mời không hợp lệ. Hãy kiểm tra liên kết trong email hoặc nhờ quản trị viên gửi lời mời mới.",
   "inviteExpiredTitle": "Lời mời đã hết hạn",
@@ -1200,6 +1209,9 @@
   "authErrLastOwnerCannotBeBlocked": "Không thể khóa Owner cuối cùng.",
   "authErrSsoDisabled": "Đăng nhập một lần (SSO) đang bị tắt.",
   "authErrSsoDomainNotAllowed": "Tên miền email của bạn không được phép dùng SSO.",
+  "authErrSsoRequired": "Tổ chức của bạn yêu cầu đăng nhập một lần (SSO). Hãy dùng \"Đăng nhập bằng SSO\".",
+  "authErrSsoUnavailable": "Hệ thống đăng nhập của tổ chức bạn đang tạm thời không truy cập được. Vui lòng thử lại sau ít phút.",
+  "authErrSsoEnforceNotReady": "Chưa thể bắt buộc SSO. Hãy bật SSO, thêm ít nhất một tên miền được phép và đảm bảo nhà cung cấp danh tính đã được cấu hình.",
   "adminInviteMember": "Mời thành viên",
   "adminInviteTitle": "Mời một thành viên",
   "adminInviteEmail": "Địa chỉ email",
@@ -1494,6 +1506,18 @@
   "securityMfaRegenerateHint": "Nhập mã hiện tại từ ứng dụng xác thực. Các mã dự phòng cũ sẽ không còn dùng được.",
   "securityMfaRegenerateSubmit": "Tạo mã",
   "securityMfaDone": "Xong",
+  "securityMfaOptionalHint": "Thêm một bước xác minh khi đăng nhập. Không bắt buộc với vai trò của bạn.",
+  "securityMfaStatusDisabled": "Tắt",
+  "securityMfaTurnOn": "Bật 2FA",
+  "securityMfaTurnedOn": "Đã bật xác thực hai yếu tố.",
+  "securityMfaSetupExpired": "Phiên thiết lập đã hết hạn. Vui lòng bắt đầu lại.",
+  "securityMfaTooManyAttempts": "Nhập sai mã quá nhiều lần. Vui lòng đợi vài phút rồi thử lại.",
+  "securityMfaTurnOff": "Tắt 2FA",
+  "securityMfaTurnOffTitle": "Tắt xác thực hai yếu tố?",
+  "securityMfaTurnOffHint": "Nhập mã hiện tại từ ứng dụng xác thực để xác nhận. Bạn sẽ không còn phải nhập mã khi đăng nhập.",
+  "securityMfaTurnOffSubmit": "Tắt",
+  "securityMfaTurnedOff": "Đã tắt xác thực hai yếu tố.",
+  "authErrMfaRequiredByRole": "Vai trò của bạn bắt buộc xác thực hai yếu tố nên không thể tắt.",
   "adminMfaBadge": "Đã bật 2FA",
   "adminMfaReset": "Đặt lại 2FA",
   "adminMfaResetConfirm": "Đặt lại xác thực hai yếu tố cho {name}? Người này sẽ bị đăng xuất khỏi mọi thiết bị và phải thiết lập lại ở lần đăng nhập tới.",
@@ -1505,6 +1529,8 @@
     }
   },
   "adminMfaResetDone": "Đã đặt lại 2FA. Người này sẽ thiết lập lại ở lần đăng nhập tới.",
+  "adminMfaResetConfirmOptional": "Đặt lại xác thực hai yếu tố cho {name}? Người này sẽ bị đăng xuất khỏi mọi thiết bị và xác thực hai yếu tố sẽ bị tắt. Họ có thể bật lại trong Cài đặt → Mật khẩu & Bảo mật.",
+  "adminMfaResetDoneOptional": "Đã đặt lại 2FA. 2FA của người này hiện đã tắt; họ có thể bật lại trong Cài đặt.",
   "authMsgMfaRequired": "Nhập mã từ ứng dụng xác thực để hoàn tất đăng nhập.",
   "authErrMfaTokenInvalid": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
   "authErrMfaCodeInvalid": "Mã không đúng. Vui lòng thử lại.",
@@ -1519,7 +1545,7 @@
   "authErrMfaTooManyAttempts": "Nhập sai mã quá nhiều lần. Vui lòng đăng nhập lại.",
   "authErrMfaNotEnrolled": "Tài khoản này chưa thiết lập xác thực hai yếu tố.",
   "authErrMfaAlreadyEnrolled": "Tài khoản này đã thiết lập xác thực hai yếu tố.",
-  "authErrMfaResetForbidden": "Chỉ Chủ sở hữu mới có thể đặt lại xác thực hai yếu tố.",
+  "authErrMfaResetForbidden": "Bạn không thể đặt lại xác thực hai yếu tố cho thành viên này.",
   "authErrMfaResetSelfForbidden": "Bạn không thể tự đặt lại xác thực hai yếu tố của chính mình.",
   "adminCapHostMeeting": "Tổ chức cuộc họp",
   "meetingErrNotFound": "Cuộc họp không tồn tại",
@@ -1531,7 +1557,11 @@
   "meetingErrEnded": "Cuộc họp đã kết thúc",
   "meetingErrFull": "Cuộc họp đã đủ {max} người",
   "@meetingErrFull": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingErrNotCancellable": "Đã có người vào họp nên không huỷ được",
   "meetingErrUnavailable": "Phòng họp tạm thời không dùng được. Hãy thử lại sau.",
@@ -1540,11 +1570,19 @@
   "meetingErrRateLimited": "Bạn gửi quá nhanh. Hãy chờ một chút.",
   "meetingErrChatTooLong": "Tin nhắn tối đa {max} ký tự",
   "@meetingErrChatTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingErrNoteTooLong": "Ghi chú tối đa {max} ký tự",
   "@meetingErrNoteTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingErrInviteeInvalid": "Có người trong danh sách không mời được",
   "meetingErrDepartmentInvalid": "Phòng ban không hợp lệ",
@@ -1556,15 +1594,27 @@
   "meetingErrGeneric": "Đã có lỗi xảy ra. Hãy thử lại.",
   "meetingValTitleTooLong": "Tiêu đề tối đa {max} ký tự",
   "@meetingValTitleTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingValDescriptionTooLong": "Mô tả tối đa {max} ký tự",
   "@meetingValDescriptionTooLong": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingValTooManyInvitees": "Chỉ mời được tối đa {max} người",
   "@meetingValTooManyInvitees": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingValStartPast": "Hãy chọn thời điểm trong tương lai",
   "meetingValScheduleInvalid": "Hãy chọn ngày giờ hợp lệ",
@@ -1581,20 +1631,39 @@
   "meetingStatusCancelled": "Đã huỷ",
   "meetingDurationMinutes": "{count, plural, other {{count} phút}}",
   "@meetingDurationMinutes": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingDurationHours": "{count, plural, other {{count} giờ}}",
   "@meetingDurationHours": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingDurationHoursMinutes": "{hours} giờ {minutes} phút",
   "@meetingDurationHoursMinutes": {
-    "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } }
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "meetingRealtimeOffline": "Chat, giơ tay và quyền người tổ chức tạm dừng tới khi có mạng lại",
   "meetingMutedBy": "{name} đã tắt micro của bạn",
   "@meetingMutedBy": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingMutedByUnknown": "Người tổ chức đã tắt micro của bạn",
   "meetingMadeCohost": "Bạn đã được làm đồng tổ chức",
@@ -1605,25 +1674,57 @@
   "meetingShareFailed": "Không trình bày được màn hình",
   "meetingLobbyWaiting": "{count, plural, other {{count} người đang chờ vào}}",
   "@meetingLobbyWaiting": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingNotifInvitedTitle": "Lời mời họp",
   "meetingNotifInvitedBody": "{name} mời bạn tham gia “{title}”",
   "@meetingNotifInvitedBody": {
-    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifInvitedBodyAt": "{name} mời bạn tham gia “{title}” lúc {time}",
   "@meetingNotifInvitedBodyAt": {
-    "placeholders": { "name": { "type": "String" }, "title": { "type": "String" }, "time": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifStartingTitle": "Cuộc họp sắp bắt đầu",
   "meetingNotifStartingBody": "“{title}” bắt đầu lúc {time}",
   "@meetingNotifStartingBody": {
-    "placeholders": { "title": { "type": "String" }, "time": { "type": "String" } }
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifCancelled": "“{title}” đã bị huỷ",
   "@meetingNotifCancelled": {
-    "placeholders": { "title": { "type": "String" } }
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotifCancelledUnknown": "Một cuộc họp bạn được mời đã bị huỷ",
   "meetingTitle": "Phòng họp",
@@ -1646,7 +1747,11 @@
   "meetingInstantMeeting": "Họp ngay",
   "meetingHostedBy": "Tổ chức bởi {name}",
   "@meetingHostedBy": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingCopyLink": "Sao chép link",
   "meetingLinkCopied": "Đã sao chép link cuộc họp",
@@ -1668,18 +1773,30 @@
   "meetingFieldDuration": "Thời lượng",
   "meetingTimeZoneHint": "Giờ theo múi {zone}",
   "@meetingTimeZoneHint": {
-    "placeholders": { "zone": { "type": "String" } }
+    "placeholders": {
+      "zone": {
+        "type": "String"
+      }
+    }
   },
   "meetingFieldInvitees": "Mời người tham dự",
   "meetingInviteeSearchPlaceholder": "Tìm theo tên hoặc email",
   "meetingInviteeCount": "{count, plural, other {Đã mời {count} người}}",
   "@meetingInviteeCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingInviteeNone": "Chưa mời ai",
   "meetingRemoveInvitee": "Bỏ {name}",
   "@meetingRemoveInvitee": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingSearchNoResults": "Không tìm thấy ai",
   "meetingSearchFailed": "Chưa tìm được, hãy thử lại",
@@ -1702,7 +1819,14 @@
   "meetingToastUpdated": "Đã lưu thay đổi",
   "meetingCharCounter": "{count}/{max}",
   "@meetingCharCounter": {
-    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingNotesShared": "Chung",
   "meetingNotesPrivate": "Của tôi",
@@ -1718,12 +1842,23 @@
   "meetingNotesReadOnly": "Chỉ người tổ chức được sửa ghi chú này",
   "meetingNotesRemoteNewer": "{name} vừa lưu bản mới hơn",
   "@meetingNotesRemoteNewer": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingNotesRemoteNewerUnknown": "Có bản mới hơn vừa được lưu",
   "meetingNotesCounter": "{count} / {max}",
   "@meetingNotesCounter": {
-    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingNotesConflictTitle": "Đã có bản mới hơn",
   "meetingNotesConflictDesc": "Chữ bạn đang gõ vẫn còn nguyên. So sánh hai bản rồi chọn bản giữ lại.",
@@ -1752,7 +1887,11 @@
   "meetingInvitees": "Được mời",
   "meetingMoreCount": "+{count}",
   "@meetingMoreCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingDepartmentGeneric": "Một phòng ban",
   "meetingSectionAttendance": "Điểm danh",
@@ -1760,11 +1899,19 @@
   "meetingAttendanceInside": "Đang trong cuộc họp",
   "meetingAttendanceDuration": "{minutes, plural, other {{minutes} phút}}",
   "@meetingAttendanceDuration": {
-    "placeholders": { "minutes": { "type": "int" } }
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "meetingAttendanceSessions": "{count, plural, other {{count} lần vào}}",
   "@meetingAttendanceSessions": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingSectionNotes": "Ghi chú",
   "meetingSectionChat": "Chat trong cuộc họp",
@@ -1775,7 +1922,11 @@
   "meetingGuestNotice": "Tham gia cuộc họp để xem ghi chú và chat.",
   "meetingCreatedAt": "Tạo lúc {time}",
   "@meetingCreatedAt": {
-    "placeholders": { "time": { "type": "String" } }
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingLinkCodeCopied": "Đã sao chép mã cuộc họp",
   "meetingShareNotifTitle": "Đang trình bày màn hình",
@@ -1785,11 +1936,19 @@
   "meetingPrejoinTitle": "Sẵn sàng tham gia?",
   "meetingPrejoinStartsAt": "Bắt đầu lúc {time}",
   "@meetingPrejoinStartsAt": {
-    "placeholders": { "time": { "type": "String" } }
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "meetingPrejoinJoiningAs": "Bạn sẽ tham gia với tên {name}",
   "@meetingPrejoinJoiningAs": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingPrejoinCameraOff": "Camera đang tắt",
   "meetingPrejoinMuteOnEntry": "Người tổ chức đề nghị tắt micro khi vào",
@@ -1812,7 +1971,11 @@
   "meetingFullTitle": "Cuộc họp đã đủ người",
   "meetingFullDesc": "Đã có {max} người trong phòng. Hãy thử lại sau.",
   "@meetingFullDesc": {
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingUnavailableTitle": "Phòng họp tạm thời không dùng được",
   "meetingUnavailableDesc": "Hãy thử lại sau giây lát",
@@ -1827,7 +1990,11 @@
   "meetingLeaveMeeting": "Rời cuộc họp",
   "meetingNameWithYou": "{name} (bạn)",
   "@meetingNameWithYou": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingReconnecting": "Đang kết nối lại…",
   "meetingPoorConnection": "Mạng của bạn không ổn định",
@@ -1835,21 +2002,37 @@
   "meetingStopPresenting": "Dừng trình bày",
   "meetingPresentingName": "{name} đang trình bày",
   "@meetingPresentingName": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingOverflowTiles": "+{count}",
   "@meetingOverflowTiles": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingOverflowMore": "{count, plural, other {{count} người khác}}",
   "@meetingOverflowMore": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingPin": "Ghim",
   "meetingUnpin": "Bỏ ghim",
   "meetingTileMenu": "Tuỳ chọn cho {name}",
   "@meetingTileMenu": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingMicMutedLabel": "Micro đang tắt",
   "meetingHandRaisedLabel": "Đang giơ tay",
@@ -1871,28 +2054,51 @@
   "meetingEndForAll": "Kết thúc cho mọi người",
   "meetingReactionAria": "{name} đã thả {emoji}",
   "@meetingReactionAria": {
-    "placeholders": { "name": { "type": "String" }, "emoji": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "emoji": {
+        "type": "String"
+      }
+    }
   },
   "meetingPeopleTitle": "Mọi người",
   "meetingManageTitle": "Quyền người tổ chức",
   "meetingSectionHands": "Đang giơ tay ({count})",
   "@meetingSectionHands": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingSectionLobby": "Đang chờ vào ({count})",
   "@meetingSectionLobby": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingSectionInMeeting": "Trong cuộc họp ({count})",
   "@meetingSectionInMeeting": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingAdmit": "Cho vào",
   "meetingDeny": "Từ chối",
   "meetingAdmitAll": "Cho tất cả vào",
   "meetingPersonMenu": "Tuỳ chọn cho {name}",
   "@meetingPersonMenu": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingActionMuteMic": "Tắt micro",
   "meetingActionMuteAll": "Tắt micro mọi người",
@@ -1903,7 +2109,11 @@
   "meetingActionRevokeCohost": "Bỏ quyền đồng tổ chức",
   "meetingRemoveConfirmTitle": "Mời {name} ra khỏi cuộc họp?",
   "@meetingRemoveConfirmTitle": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "meetingRemoveConfirmDesc": "Người này sẽ không vào lại được cuộc họp",
   "meetingMuteAllConfirmTitle": "Tắt micro của mọi người?",
@@ -1919,11 +2129,22 @@
   "meetingChatOffline": "Đang kết nối lại — tạm chưa gửi được tin",
   "meetingChatCounter": "{count}/{max}",
   "@meetingChatCounter": {
-    "placeholders": { "count": { "type": "int" }, "max": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "meetingChatUnread": "{count, plural, other {{count} tin mới}}",
   "@meetingChatUnread": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "meetingMediaBlocked": "Quyền micro hoặc camera đang tắt. Bạn vẫn có thể tham gia và bật lại sau trong Cài đặt.",
   "meetingSwitchCamera": "Đổi camera",
@@ -1932,17 +2153,29 @@
   "callSelfWeakNetwork": "Mạng của bạn đang yếu",
   "callPeerWeakNetwork": "Mạng của {name} đang yếu",
   "@callPeerWeakNetwork": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "callUnstableNetwork": "Kết nối không ổn định",
   "callReconnectingSelf": "Mất kết nối, đang kết nối lại…",
   "callWaitingForPeer": "Đang chờ {name} kết nối lại…",
   "@callWaitingForPeer": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "callReconnectCountdown": "Cuộc gọi sẽ kết thúc sau {seconds} giây nếu không kết nối lại được",
   "@callReconnectCountdown": {
-    "placeholders": { "seconds": { "type": "int" } }
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
   },
   "callSwitchToVideo": "Chuyển sang gọi video",
   "callVideoUnavailable": "Không thể bật video trong cuộc gọi này — người kia có thể cần cập nhật ứng dụng"

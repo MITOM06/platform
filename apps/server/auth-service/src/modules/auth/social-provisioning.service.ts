@@ -14,6 +14,7 @@ import { InvitationsService } from '../invitations/invitations.service';
 import { InvitationAcceptService } from '../invitations/invitation-accept.service';
 import { normalizeEmail } from '../invitations/invitation.shared';
 import { assertCanSignIn } from './account-status';
+import { SsoPolicyService } from '../sso/sso-policy.service';
 
 export type SocialProvider = 'google' | 'oidc';
 
@@ -43,6 +44,8 @@ export interface SocialProfile {
  *     consuming a live invitation if one exists;
  *   - no user + live invitation → 403 INVITATION_PENDING;
  *   - otherwise → 403 ACCOUNT_NOT_PROVISIONED.
+ * Google sign-in of a member (or of an email without an account) covered by
+ * "Require SSO" → 403 SSO_REQUIRED (an Owner, or an Owner invitation, is exempt).
  */
 @Injectable()
 export class SocialProvisioningService {
@@ -54,6 +57,7 @@ export class SocialProvisioningService {
     private readonly invitationAccept: InvitationAcceptService,
     private readonly configService: ConfigService,
     @InjectModel(Role.name) private readonly roleModel: Model<RoleDocument>,
+    private readonly ssoPolicy: SsoPolicyService,
   ) {}
 
   async resolveUserId(
@@ -87,6 +91,7 @@ export class SocialProvisioningService {
         throw new ForbiddenException({ code: AuthCode.SOCIAL_ACCOUNT_CONFLICT });
       }
       assertCanSignIn(user);
+      if (provider === 'google') await this.ssoPolicy.assertNotEnforced(user);
       if (profile.id && !storedId) {
         await this.usersService.updateSocialId(
           user._id.toString(),
@@ -120,6 +125,14 @@ export class SocialProvisioningService {
     }
 
     const pending = await this.invitations.findPendingByEmail(email);
+    // Require SSO: point a Google sign-in for an enforced domain to SSO (SSO
+    // JIT consumes a pending invitation) instead of INVITATION_PENDING.
+    if (provider === 'google') {
+      await this.ssoPolicy.assertNotEnforced({
+        email,
+        roleId: pending?.roleId,
+      });
+    }
 
     if (opts.allowJit) {
       const created = pending

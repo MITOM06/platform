@@ -32,15 +32,26 @@ const _members = [
       roleId: 'r-admin', departmentIds: [], mfaEnabled: true),
   Member(
       id: 'u-member', displayName: 'Mia', email: 'm@acme.com',
-      roleId: 'r-member', departmentIds: []),
+      roleId: 'r-member', departmentIds: [], mfaEnabled: true),
   Member(
       id: 'u-lead', displayName: 'Leo', email: 'l@acme.com',
-      roleId: 'r-lead', departmentIds: []),
+      roleId: 'r-lead', departmentIds: [], mfaEnabled: true),
+  // No role assigned → a plain Member.
+  Member(
+      id: 'u-norole', displayName: 'Nina', email: 'n@acme.com',
+      departmentIds: [], mfaEnabled: true),
+  // Not enrolled yet → nothing to reset, whoever looks.
+  Member(
+      id: 'u-new', displayName: 'Ned', email: 'ned@acme.com',
+      roleId: 'r-member', departmentIds: []),
 ];
 
 class _FakeAdminRepo implements AdminRepository {
-  _FakeAdminRepo(this.callerRole);
+  _FakeAdminRepo(this.callerRole, {this.rolesVisible = true});
   final String callerRole;
+
+  /// `false` → `GET /admin/roles` is refused (caller lacks MANAGE_ROLES).
+  final bool rolesVisible;
   final resetCalls = <String>[];
 
   @override
@@ -56,8 +67,10 @@ class _FakeAdminRepo implements AdminRepository {
   Future<List<Member>> listMembers() async => _members;
 
   @override
-  Future<List<Role>> listRoles() async =>
-      const [_ownerRole, _adminRole, _memberRole, _deptLeadRole];
+  Future<List<Role>> listRoles() async {
+    if (!rolesVisible) throw StateError('MANAGE_ROLES required');
+    return const [_ownerRole, _adminRole, _memberRole, _deptLeadRole];
+  }
 
   @override
   Future<List<Invitation>> listInvitations({String? status}) async => const [];
@@ -81,12 +94,13 @@ Future<_FakeAdminRepo> _pump(
   WidgetTester tester, {
   required String callerRole,
   required String selfId,
+  bool rolesVisible = true,
 }) async {
-  tester.view.physicalSize = const Size(1200, 2400);
+  tester.view.physicalSize = const Size(1200, 3000);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
 
-  final repo = _FakeAdminRepo(callerRole);
+  final repo = _FakeAdminRepo(callerRole, rolesVisible: rolesVisible);
   await tester.pumpWidget(ProviderScope(
     overrides: [
       adminRepositoryProvider.overrideWithValue(repo),
@@ -117,25 +131,44 @@ void main() {
       expect(isPrivilegedRole(null), isFalse);
     });
 
-    test('reset only for an Owner, never on their own row', () {
+    test('reset rule: Owner → anyone else; Admin → non-admin members only',
+        () {
       bool can({
         bool self = false,
-        bool owner = true,
+        bool owner = false,
+        bool manager = true,
         bool enrolled = true,
-        bool privileged = true,
+        bool privileged = false,
       }) =>
           canResetMemberMfa(
             isSelf: self,
             callerIsOwner: owner,
+            callerCanManageMembers: manager,
             targetMfaEnabled: enrolled,
             targetPrivileged: privileged,
           );
+      // Owner: anyone but themself, admins included.
+      expect(can(owner: true), isTrue);
+      expect(can(owner: true, privileged: true), isTrue);
+      expect(can(owner: true, self: true), isFalse);
+      // Admin (MANAGE_MEMBERS, not Owner): members only.
       expect(can(), isTrue);
+      expect(can(privileged: true), isFalse);
       expect(can(self: true), isFalse);
-      expect(can(owner: false), isFalse);
-      expect(can(enrolled: false), isTrue); // privileged, not yet enrolled
-      expect(can(privileged: false), isTrue); // enrolled, since demoted
-      expect(can(enrolled: false, privileged: false), isFalse);
+      // No MANAGE_MEMBERS → never.
+      expect(can(manager: false), isFalse);
+      // Nothing to reset on a member who never enrolled.
+      expect(can(owner: true, enrolled: false), isFalse);
+      expect(can(enrolled: false), isFalse);
+    });
+
+    test('an unresolvable role counts as privileged; no role is a Member', () {
+      expect(isPrivilegedTarget(roleId: null, role: null), isFalse);
+      expect(isPrivilegedTarget(roleId: 'r-x', role: null), isTrue);
+      expect(
+          isPrivilegedTarget(roleId: 'r-member', role: _memberRole), isFalse);
+      expect(isPrivilegedTarget(roleId: 'r-admin', role: _adminRole), isTrue);
+      expect(isPrivilegedTarget(roleId: 'r-lead', role: _deptLeadRole), isTrue);
     });
 
     test('Member parses mfaEnabled (absent → false) and resets it', () {
@@ -147,28 +180,45 @@ void main() {
   });
 
   group('MembersPanel', () {
-    testWidgets('Owner: reset on other privileged rows, not on own row',
-        (tester) async {
+    testWidgets('Owner: reset on every other enrolled row', (tester) async {
       await _pump(tester, callerRole: 'Owner', selfId: 'u-owner');
 
       expect(_reset('u-owner'), findsNothing); // own row
       expect(_reset('u-admin'), findsOneWidget);
       expect(_reset('u-lead'), findsOneWidget); // admin-like custom role
-      expect(_reset('u-member'), findsNothing); // not privileged, no 2FA
+      expect(_reset('u-member'), findsOneWidget); // enrolled Member (opt-in)
+      expect(_reset('u-norole'), findsOneWidget);
+      expect(_reset('u-new'), findsNothing); // never enrolled
 
       expect(_badge('u-owner'), findsOneWidget);
-      expect(_badge('u-admin'), findsOneWidget);
-      expect(_badge('u-member'), findsNothing);
+      expect(_badge('u-member'), findsOneWidget);
+      expect(_badge('u-new'), findsNothing);
     });
 
-    testWidgets('a non-Owner admin never sees "Reset 2FA"', (tester) async {
+    testWidgets('Admin: reset only on non-admin members, never on own row',
+        (tester) async {
       await _pump(tester, callerRole: 'Admin', selfId: 'u-admin');
 
-      for (final m in _members) {
-        expect(_reset(m.id), findsNothing, reason: m.id);
-      }
+      expect(_reset('u-owner'), findsNothing);
+      expect(_reset('u-admin'), findsNothing); // own row
+      expect(_reset('u-lead'), findsNothing); // admin-like custom role
+      expect(_reset('u-member'), findsOneWidget);
+      expect(_reset('u-norole'), findsOneWidget);
+      expect(_reset('u-new'), findsNothing);
       // The badge is informational for every admin.
       expect(_badge('u-owner'), findsOneWidget);
+    });
+
+    testWidgets('Admin who cannot list roles: only role-less rows',
+        (tester) async {
+      await _pump(tester,
+          callerRole: 'Admin', selfId: 'u-admin', rolesVisible: false);
+
+      // Unknown roles may be Owner / Admin-like → never offered.
+      for (final id in ['u-owner', 'u-lead', 'u-member']) {
+        expect(_reset(id), findsNothing, reason: id);
+      }
+      expect(_reset('u-norole'), findsOneWidget);
     });
 
     testWidgets('reset asks for confirmation, then clears the badge',
@@ -179,7 +229,9 @@ void main() {
 
       await tester.tap(_reset('u-admin'));
       await tester.pumpAndSettle();
+      // Admin-like target: 2FA is mandatory → set up again at next sign-in.
       expect(find.text(l10n.adminMfaResetConfirm('Adam')), findsOneWidget);
+      expect(find.text(l10n.adminMfaResetConfirmOptional('Adam')), findsNothing);
 
       // Cancel does nothing.
       await tester.tap(find.text(l10n.adminCancel));
@@ -196,8 +248,71 @@ void main() {
 
       expect(repo.resetCalls, ['u-admin']);
       expect(_badge('u-admin'), findsNothing);
-      // Still privileged → the action stays available.
-      expect(_reset('u-admin'), findsOneWidget);
+      // Not enrolled any more → nothing left to reset.
+      expect(_reset('u-admin'), findsNothing);
+    });
+
+    testWidgets('an Admin resets a member through the same confirm flow',
+        (tester) async {
+      final repo = await _pump(tester, callerRole: 'Admin', selfId: 'u-admin');
+      final l10n =
+          AppLocalizations.of(tester.element(find.byType(MembersPanel)));
+
+      await tester.tap(_reset('u-member'));
+      await tester.pumpAndSettle();
+      // Member target (contract 15): 2FA is optional → turned off, and they
+      // can turn it on again themselves.
+      expect(find.text(l10n.adminMfaResetConfirmOptional('Mia')), findsOneWidget);
+      expect(find.text(l10n.adminMfaResetConfirm('Mia')), findsNothing);
+      await tester.tap(find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text(l10n.adminMfaReset),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(repo.resetCalls, ['u-member']);
+      expect(_badge('u-member'), findsNothing);
+    });
+
+    testWidgets('the confirm wording follows the target role (contract 15)',
+        (tester) async {
+      await _pump(tester, callerRole: 'Owner', selfId: 'u-owner');
+      final l10n =
+          AppLocalizations.of(tester.element(find.byType(MembersPanel)));
+
+      Future<void> expectConfirm(String id, String expected) async {
+        await tester.tap(_reset(id));
+        await tester.pumpAndSettle();
+        expect(
+          find.descendant(
+              of: find.byType(AlertDialog), matching: find.text(expected)),
+          findsOneWidget,
+          reason: id,
+        );
+        await tester.tap(find.text(l10n.adminCancel));
+        await tester.pumpAndSettle();
+      }
+
+      await expectConfirm('u-admin', l10n.adminMfaResetConfirm('Adam'));
+      // Admin-like custom role: still mandatory.
+      await expectConfirm('u-lead', l10n.adminMfaResetConfirm('Leo'));
+      await expectConfirm('u-member', l10n.adminMfaResetConfirmOptional('Mia'));
+      // No role assigned → a plain Member.
+      await expectConfirm(
+          'u-norole', l10n.adminMfaResetConfirmOptional('Nina'));
+      expect(l10n.adminMfaResetConfirmOptional('Mia'), contains('turned off'));
+    });
+
+    testWidgets('an unresolvable role gets the stricter (required) wording',
+        (tester) async {
+      await _pump(tester,
+          callerRole: 'Owner', selfId: 'u-owner', rolesVisible: false);
+      final l10n =
+          AppLocalizations.of(tester.element(find.byType(MembersPanel)));
+
+      await tester.tap(_reset('u-member'));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.adminMfaResetConfirm('Mia')), findsOneWidget);
     });
   });
 }

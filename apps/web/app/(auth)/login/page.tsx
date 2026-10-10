@@ -23,6 +23,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator'
 import { AUTH_URL } from '@/lib/config/env'
 import { GoogleIcon } from '@/components/auth/GoogleIcon'
+import { SsoButton, SsoRequiredNotice } from '@/components/auth/SsoSignIn'
 
 type FormData = { email: string; password: string }
 
@@ -67,6 +68,15 @@ export default function LoginPage() {
   // always localized.
   const rawReason = searchParams?.get('reason')
   const logoutReason = isLoginNotice(rawReason) ? rawReason : null
+  // A password sign-in just answered SSO_REQUIRED (the email's domain must use
+  // single sign-on): same notice as `?reason=SSO_REQUIRED`, no toast.
+  const [ssoRequired, setSsoRequired] = useState(false)
+  const notice = ssoRequired ? 'SSO_REQUIRED' : logoutReason
+  const ssoNotice = notice === 'SSO_REQUIRED'
+  // The SSO button shows when SSO is on — or the server says it's required —
+  // and becomes the primary way in when the workspace requires SSO.
+  const showSso = ssoNotice || sso?.enabled === true
+  const emphasiseSso = showSso && (ssoNotice || sso?.enforced === true)
   useEffect(() => {
     if (searchParams?.get('cleared') !== '1') return
     const timer = setTimeout(() => {
@@ -101,8 +111,8 @@ export default function LoginPage() {
   const onSubmit = async (data: FormData) => {
     try {
       const { data: result } = await authService.login(data.email, data.password)
-      // Owner / Admin: the password was right but no session exists yet — the
-      // authenticator code (or first-time 2FA setup) is finished on /mfa.
+      // The password was right but no session exists yet — the authenticator
+      // code (or first-time 2FA setup) is finished on /mfa.
       if (isMfaChallenge(result)) {
         savePendingMfa(result)
         router.push(MFA_PATH)
@@ -115,6 +125,11 @@ export default function LoginPage() {
       router.push(path)
     } catch (err: unknown) {
       const { code, params } = parseAuthError(err)
+      if (code === 'SSO_REQUIRED') {
+        setSsoRequired(true)
+        setValue('password', '')
+        return
+      }
       toast.error(t(authCodeToI18nKey(code), params))
       // Unverified account: backend resent a fresh OTP → steer to verification
       // instead of leaving the user stuck on a login error they can't resolve.
@@ -131,14 +146,28 @@ export default function LoginPage() {
         <CardDescription>{t('login.subtitle')}</CardDescription>
       </CardHeader>
       <CardContent>
-        {logoutReason && (
-          <div
-            role="alert"
-            data-testid="logout-reason"
-            className="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
-          >
-            {t(authCodeToI18nKey(logoutReason))}
-          </div>
+        {ssoNotice ? (
+          <SsoRequiredNotice message={t('errSsoRequired')} className="mb-4" />
+        ) : (
+          notice && (
+            <div
+              role="alert"
+              data-testid="logout-reason"
+              className="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            >
+              {t(authCodeToI18nKey(notice))}
+            </div>
+          )
+        )}
+        {emphasiseSso && (
+          <>
+            <SsoButton emphasised />
+            <div className="flex items-center gap-3 my-4">
+              <Separator className="flex-1" />
+              <span className="text-xs text-muted-foreground">{t('login.orSignInWithPassword')}</span>
+              <Separator className="flex-1" />
+            </div>
+          </>
         )}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 motion-safe:pon-stagger">
           <div className="space-y-1">
@@ -189,19 +218,17 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <Button type="submit" className="w-full h-11 text-base font-bold tracking-wide" disabled={isSubmitting}>
+          <Button
+            type="submit"
+            variant={emphasiseSso ? 'outline' : 'default'}
+            className="w-full h-11 text-base font-bold tracking-wide"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? t('login.submitting') : t('login.submit')}
           </Button>
         </form>
 
-        {sso?.enabled && (
-          <a
-            href={`${authBase}/auth/oidc/login?platform=web`}
-            className="mt-3 flex items-center justify-center gap-2 w-full rounded-[10px] border border-border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
-          >
-            {t('login.ssoButton')}
-          </a>
-        )}
+        {showSso && !emphasiseSso && <SsoButton className="mt-3" />}
 
         <>
             <div className="flex items-center gap-3 my-4">

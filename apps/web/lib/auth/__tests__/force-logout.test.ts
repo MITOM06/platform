@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import axios from 'axios'
 import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { isLoginNotice, isLogoutReason, loginPath, logoutReasonFromError } from '@/lib/auth/force-logout'
+import { logoutReasonFromBody } from '@/lib/auth/logout-reason'
 
 function errWith(data: unknown) {
   const config = { headers: new axios.AxiosHeaders() } as InternalAxiosRequestConfig
@@ -36,7 +37,40 @@ describe('force-logout helpers', () => {
     expect(isLoginNotice('INVITATION_PENDING')).toBe(true)
     expect(isLoginNotice('SESSION_REVOKED')).toBe(false)
     expect(isLoginNotice('<script>')).toBe(false)
-    // Only ACCOUNT_BLOCKED may come from a failed request as a forced-logout reason.
+    // Only an allow-listed logout reason may come from a failed request.
     expect(logoutReasonFromError(errWith({ code: 'ACCOUNT_NOT_PROVISIONED' }))).toBeUndefined()
+  })
+
+  describe('SSO_REQUIRED (contract 13 C)', () => {
+    it('is a forced-logout reason and a login notice', () => {
+      expect(isLogoutReason('SSO_REQUIRED')).toBe(true)
+      expect(isLoginNotice('SSO_REQUIRED')).toBe(true)
+      expect(loginPath('SSO_REQUIRED')).toBe('/login?reason=SSO_REQUIRED')
+      // The admin-side error is never a login notice.
+      expect(isLoginNotice('SSO_ENFORCE_NOT_READY')).toBe(false)
+    })
+
+    it('is read from a typed code or from the sso_enforced revocation reason', () => {
+      expect(logoutReasonFromError(errWith({ code: 'SSO_REQUIRED' }))).toBe('SSO_REQUIRED')
+      expect(logoutReasonFromError(errWith({ code: 'SESSION_REVOKED', reason: 'sso_enforced' }))).toBe('SSO_REQUIRED')
+      expect(
+        logoutReasonFromError(errWith({ code: 'SESSION_REVOKED', params: { reason: 'sso_enforced' } })),
+      ).toBe('SSO_REQUIRED')
+      // Other revocation reasons stay a plain logout.
+      expect(logoutReasonFromError(errWith({ code: 'SESSION_REVOKED', reason: 'role_changed' }))).toBeUndefined()
+      expect(logoutReasonFromError(errWith({ code: 'SESSION_REVOKED', params: { reason: '<b>x</b>' } }))).toBeUndefined()
+    })
+  })
+
+  describe('logoutReasonFromBody (shared with the cookie routes)', () => {
+    it('only ever returns an allow-listed reason', () => {
+      expect(logoutReasonFromBody({ code: 'ACCOUNT_BLOCKED' })).toBe('ACCOUNT_BLOCKED')
+      expect(logoutReasonFromBody({ reason: 'SSO_REQUIRED' })).toBe('SSO_REQUIRED')
+      expect(logoutReasonFromBody({ code: 'REFRESH_TOKEN_ROTATED' })).toBeUndefined()
+      expect(logoutReasonFromBody({ params: 'sso_enforced' })).toBeUndefined()
+      expect(logoutReasonFromBody('SSO_REQUIRED')).toBeUndefined()
+      expect(logoutReasonFromBody(null)).toBeUndefined()
+      expect(logoutReasonFromBody(undefined)).toBeUndefined()
+    })
   })
 })

@@ -16,7 +16,8 @@ import { SessionService } from './session.service';
 import { MARK_CLAIMS_STALE_LUA } from './session-claims';
 import { ClaimsService, ResolvedClaims } from './claims.service';
 import { UsersService } from '../users/users.service';
-import { OtpService } from './otp.service';
+import { SsoPolicyService } from '../sso/sso-policy.service';
+import { PasswordRecoveryService } from './password-recovery.service';
 import { SsoMappingService } from './oidc/sso-mapping.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SocialProvisioningService } from './social-provisioning.service';
@@ -230,7 +231,14 @@ describe('F1 — claims-stale access tokens', () => {
         },
         { provide: OAuthRedirectService, useValue: oauthRedirect },
         { provide: LoginAttemptsService, useValue: {} },
-        { provide: OtpService, useValue: {} },
+        {
+          provide: SsoPolicyService,
+          useValue: {
+            isEnforcedFor: jest.fn().mockResolvedValue(false),
+            assertNotEnforced: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        { provide: PasswordRecoveryService, useValue: {} },
         {
           provide: MfaChallengeService,
           useValue: { challengeIfRequired: jest.fn().mockResolvedValue(null) },
@@ -270,7 +278,7 @@ describe('F1 — claims-stale access tokens', () => {
   }
 
   it('token minted before markClaimsStale → 401 TOKEN_CLAIMS_STALE; the token from /auth/refresh passes with fresh claims', async () => {
-    const login = await auth.issueTokensForUser(user, 'web-login', 'web');
+    const login = await auth.issueTokensForUser(user, 'web-login', 'web', 'password');
     await expect(check(login.accessToken)).resolves.toBe('OK');
 
     // 5s later an admin promotes the user.
@@ -304,7 +312,7 @@ describe('F1 — claims-stale access tokens', () => {
 
   it('a token minted earlier in the SAME second as the change is stale too', async () => {
     setNow(T0 + 7_100);
-    const login = await auth.issueTokensForUser(user, 'web-login', 'web');
+    const login = await auth.issueTokensForUser(user, 'web-login', 'web', 'password');
     setNow(T0 + 7_900); // same wall-clock second as the login
     claims = { role: 'Admin', perms: ['MANAGE_MEMBERS'] as any, depts: [] };
     await session.markClaimsStale('u1');
@@ -318,8 +326,8 @@ describe('F1 — claims-stale access tokens', () => {
   });
 
   it('keeps the session TTL, does not sign anyone out, publishes auth:claims-changed {userId}', async () => {
-    const a = await auth.issueTokensForUser(user, 'phone', 'mobile');
-    const b = await auth.issueTokensForUser(user, 'laptop', 'web');
+    const a = await auth.issueTokensForUser(user, 'phone', 'mobile', 'password');
+    const b = await auth.issueTokensForUser(user, 'laptop', 'web', 'password');
     redis.ttls.set(`sess:${a.sid}`, 1234);
     setNow(T0 + 10_000);
 
@@ -343,7 +351,7 @@ describe('F1 — claims-stale access tokens', () => {
   });
 
   it('skips revoked sessions, never recreates an expired hash, prunes dangling sids', async () => {
-    const live = await auth.issueTokensForUser(user, 'phone', 'mobile');
+    const live = await auth.issueTokensForUser(user, 'phone', 'mobile', 'password');
     await redis.sadd('user:u1:sessions', 'gone'); // hash expired, sid left behind
     await redis.hset('sess:revoked-one', { userId: 'u1', revoked: '1' });
     await redis.sadd('user:u1:sessions', 'revoked-one');
@@ -369,7 +377,7 @@ describe('F1 — claims-stale access tokens', () => {
   });
 
   it('claimsAt only moves forward', async () => {
-    const s = await auth.issueTokensForUser(user, 'phone', 'mobile');
+    const s = await auth.issueTokensForUser(user, 'phone', 'mobile', 'password');
     setNow(T0 + 60_000);
     await session.markClaimsStale('u1');
     setNow(T0 + 1_000); // another instance with a slower clock
@@ -380,7 +388,7 @@ describe('F1 — claims-stale access tokens', () => {
   });
 
   it('refresh on an instance whose clock is behind claimsAt still mints a passing token', async () => {
-    const login = await auth.issueTokensForUser(user, 'web-login', 'web');
+    const login = await auth.issueTokensForUser(user, 'web-login', 'web', 'password');
     setNow(T0 + 30_000);
     await session.markClaimsStale('u1');
     setNow(T0 + 28_000); // 2s behind the instance that marked the claims
@@ -390,9 +398,9 @@ describe('F1 — claims-stale access tokens', () => {
   });
 
   it('markClaimsStaleForUsers marks many users in batches and publishes once per marked user', async () => {
-    await auth.issueTokensForUser({ ...user, _id: 'u1' }, 'a', 'web');
-    await auth.issueTokensForUser({ ...user, _id: 'u2' }, 'b', 'web');
-    await auth.issueTokensForUser({ ...user, _id: 'u2' }, 'c', 'web');
+    await auth.issueTokensForUser({ ...user, _id: 'u1' }, 'a', 'web', 'password');
+    await auth.issueTokensForUser({ ...user, _id: 'u2' }, 'b', 'web', 'password');
+    await auth.issueTokensForUser({ ...user, _id: 'u2' }, 'c', 'web', 'password');
 
     await expect(
       session.markClaimsStaleForUsers(['u1', 'u2', 'u2', 'u3', '']),
@@ -403,7 +411,7 @@ describe('F1 — claims-stale access tokens', () => {
   });
 
   it('a failed publish never fails the mark; a failed mark surfaces', async () => {
-    await auth.issueTokensForUser(user, 'phone', 'mobile');
+    await auth.issueTokensForUser(user, 'phone', 'mobile', 'password');
     jest.spyOn(redis, 'publish').mockRejectedValue(new Error('redis down'));
     jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
     await expect(session.markClaimsStale('u1')).resolves.toEqual({
@@ -415,7 +423,7 @@ describe('F1 — claims-stale access tokens', () => {
   });
 
   it('revocation still wins: a revoked session answers SESSION_REVOKED, not TOKEN_CLAIMS_STALE', async () => {
-    const login = await auth.issueTokensForUser(user, 'phone', 'mobile');
+    const login = await auth.issueTokensForUser(user, 'phone', 'mobile', 'password');
     setNow(T0 + 5_000);
     await session.markClaimsStale('u1');
     await session.revokeAllSessions('u1', 'blocked');
@@ -423,7 +431,7 @@ describe('F1 — claims-stale access tokens', () => {
   });
 
   it('SSO login whose group mapping changed the role marks claims stale instead of revoking', async () => {
-    const other = await auth.issueTokensForUser(user, 'phone', 'mobile');
+    const other = await auth.issueTokensForUser(user, 'phone', 'mobile', 'password');
     setNow(T0 + 5_000);
     const revoke = jest.spyOn(session, 'revokeAllSessions');
 

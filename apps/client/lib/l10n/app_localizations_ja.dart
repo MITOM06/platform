@@ -2543,6 +2543,34 @@ class AppLocalizationsJa extends AppLocalizations {
   String get adminSsoAddMapping => 'マッピングを追加';
 
   @override
+  String get adminSsoEnforce => 'これらのドメインで SSO を必須にする';
+
+  @override
+  String get adminSsoEnforceHint =>
+      'これらのメールドメインのメンバーは SSO でのサインインが必須です。オーナーは引き続きパスワードと 2FA を使用できます。';
+
+  @override
+  String get adminSsoEnforceNotReady => '先に SSO を有効にし、許可するドメインを 1 つ以上追加してください。';
+
+  @override
+  String get adminSsoEnforceConfirmTitle => 'これらのドメインで SSO を必須にしますか？';
+
+  @override
+  String get adminSsoEnforceConfirmPasswords =>
+      'これらのドメインでは、パスワードでのサインイン、Google でのサインイン、パスワードの再設定が無効になります。';
+
+  @override
+  String get adminSsoEnforceConfirmOwners =>
+      'オーナーは緊急用アカウントとして、パスワード + 2FA でのサインインを引き続き使用できます。';
+
+  @override
+  String get adminSsoEnforceConfirmSessions =>
+      '保存すると、これらのドメインで SSO 以外の方法でサインインしているユーザーはサインアウトされます。';
+
+  @override
+  String get adminSsoEnforceConfirm => 'SSO を必須にする';
+
+  @override
   String get sectionDirectoryTitle => 'MCP ディレクトリ';
 
   @override
@@ -3289,6 +3317,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get inviteSubmit => 'アカウントを作成';
 
   @override
+  String get inviteSsoRequired =>
+      '組織ではこのメールアドレスにシングルサインオンが必須です。招待を承諾するには SSO でログインしてください。';
+
+  @override
   String get inviteInvalidTitle => '無効な招待';
 
   @override
@@ -3401,6 +3433,17 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get authErrSsoDomainNotAllowed => 'お使いのメールドメインは SSO で許可されていません。';
+
+  @override
+  String get authErrSsoRequired => '組織ではシングルサインオンが必須です。「SSO でログイン」を使用してください。';
+
+  @override
+  String get authErrSsoUnavailable =>
+      '組織のサインインサービスに現在接続できません。しばらくしてからもう一度お試しください。';
+
+  @override
+  String get authErrSsoEnforceNotReady =>
+      'まだ SSO を必須にできません。SSO を有効にし、許可するドメインを 1 つ以上追加して、ID プロバイダーが設定されていることを確認してください。';
 
   @override
   String get adminInviteMember => 'メンバーを招待';
@@ -4302,6 +4345,44 @@ class AppLocalizationsJa extends AppLocalizations {
   String get securityMfaDone => '完了';
 
   @override
+  String get securityMfaOptionalHint => 'サインインに2つ目のステップを追加します。あなたのロールでは任意です。';
+
+  @override
+  String get securityMfaStatusDisabled => 'オフ';
+
+  @override
+  String get securityMfaTurnOn => '2FAをオンにする';
+
+  @override
+  String get securityMfaTurnedOn => '二要素認証をオンにしました。';
+
+  @override
+  String get securityMfaSetupExpired => '設定の有効期限が切れました。もう一度やり直してください。';
+
+  @override
+  String get securityMfaTooManyAttempts =>
+      '誤ったコードの入力が多すぎます。数分待ってからもう一度お試しください。';
+
+  @override
+  String get securityMfaTurnOff => '2FAをオフにする';
+
+  @override
+  String get securityMfaTurnOffTitle => '二要素認証をオフにしますか？';
+
+  @override
+  String get securityMfaTurnOffHint =>
+      '確認のため、認証アプリに表示されている現在のコードを入力してください。今後はサインイン時にコードを求められなくなります。';
+
+  @override
+  String get securityMfaTurnOffSubmit => 'オフにする';
+
+  @override
+  String get securityMfaTurnedOff => '二要素認証をオフにしました。';
+
+  @override
+  String get authErrMfaRequiredByRole => 'あなたのロールでは二要素認証が必須のため、オフにできません。';
+
+  @override
   String get adminMfaBadge => '2FA オン';
 
   @override
@@ -4314,6 +4395,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get adminMfaResetDone => '2FA をリセットしました。次回のサインイン時に再設定されます。';
+
+  @override
+  String adminMfaResetConfirmOptional(String name) {
+    return '$name さんの二要素認証をリセットしますか？すべての端末からサインアウトされ、二要素認証はオフになります。「設定 → パスワードとセキュリティ」から再びオンにできます。';
+  }
+
+  @override
+  String get adminMfaResetDoneOptional =>
+      '2FA をリセットしました。現在はオフになっており、設定から再びオンにできます。';
 
   @override
   String get authMsgMfaRequired => 'サインインを完了するには、認証アプリのコードを入力してください。';
@@ -4339,7 +4429,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get authErrMfaAlreadyEnrolled => 'このアカウントでは二要素認証がすでに設定されています。';
 
   @override
-  String get authErrMfaResetForbidden => '二要素認証をリセットできるのはオーナーのみです。';
+  String get authErrMfaResetForbidden => 'このメンバーの二要素認証はリセットできません。';
 
   @override
   String get authErrMfaResetSelfForbidden => '自分の二要素認証はリセットできません。';

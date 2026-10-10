@@ -145,7 +145,8 @@ export class LoginTokensUserDto {
 export class LoginTokensResponseDto {
   @ApiProperty({
     example: 'LOGIN_SUCCESS',
-    description: 'LOGIN_SUCCESS (login) or INVITATION_ACCEPTED (accept-password)',
+    description:
+      'LOGIN_SUCCESS (login, MFA verify / enroll-complete, accept-password); INVITATION_ACCEPTED is no longer emitted',
   })
   code: string;
 

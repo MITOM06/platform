@@ -7,6 +7,7 @@ import * as argon2 from 'argon2';
 import { REDIS_CLIENT } from '@platform/database';
 import { SessionService, SESSIONS_REVOKED_CHANNEL } from './session.service';
 import { AuthCode } from '../../common/auth-code.enum';
+import { FakeRedis } from '../mfa/fake-redis.spec-helper';
 
 /**
  * rotateRefreshToken — reuse-detection classification.
@@ -253,12 +254,21 @@ describe('SessionService.revokeAllSessions / refresh-owner helpers', () => {
     expect(pipe.exec).toHaveBeenCalled();
   });
 
-  it('peekSessionUserId reads userId even from a revoked session', async () => {
-    redis.hget.mockResolvedValue('u1');
-    await expect(service.peekSessionUserId('s1')).resolves.toBe('u1');
-    expect(redis.hget).toHaveBeenCalledWith('sess:s1', 'userId');
-    redis.hget.mockResolvedValue(null);
-    await expect(service.peekSessionUserId('gone')).resolves.toBeNull();
+  it('peekSession reads userId + method even from a revoked session', async () => {
+    redis.hmget.mockResolvedValue(['u1', 'oidc']);
+    await expect(service.peekSession('s1')).resolves.toEqual({
+      userId: 'u1',
+      method: 'oidc',
+    });
+    expect(redis.hmget).toHaveBeenCalledWith('sess:s1', 'userId', 'method');
+    // A session created before `method` existed.
+    redis.hmget.mockResolvedValue(['u1', null]);
+    await expect(service.peekSession('old')).resolves.toEqual({
+      userId: 'u1',
+      method: '',
+    });
+    redis.hmget.mockResolvedValue([null, null]);
+    await expect(service.peekSession('gone')).resolves.toBeNull();
   });
 
   it('revokeSession only revokes a session the user owns (logout cannot hit others)', async () => {
@@ -361,5 +371,80 @@ describe('SessionService.revokeSession ownership', () => {
     expect(redis.multi).not.toHaveBeenCalled();
     // Only the caller's own session SET may be pruned of the dangling id.
     for (const [key] of redis.srem.mock.calls) expect(key).not.toMatch(/^sess:/);
+  });
+});
+
+/**
+ * Require SSO: sessions record how they were created, and enforcement revokes
+ * only the non-SSO ones (`method !== 'oidc'`, legacy sessions included).
+ */
+describe('SessionService — session method + revokeSessionsNotCreatedBy', () => {
+  let redis: FakeRedis;
+  let service: SessionService;
+
+  beforeEach(() => {
+    redis = new FakeRedis();
+    service = new SessionService(redis as never);
+  });
+
+  const methodOf = async (sid: string) => redis.hget(`sess:${sid}`, 'method');
+
+  it('createSession stores the method (empty when not given)', async () => {
+    const a = await service.createSession({ userId: 'u1', method: 'oidc' });
+    const b = await service.createSession({ userId: 'u1' });
+    expect(a.sid).toBe('test-sid');
+    expect(await methodOf(b.sid)).toBe('');
+    await service.createSession({ userId: 'u2', method: 'invite' });
+    expect(await methodOf('test-sid')).toBe('invite');
+  }, 30_000);
+
+  it('revokes password / google / invite / legacy sessions, keeps oidc, publishes once', async () => {
+    const seed = async (sid: string, method?: string) => {
+      await redis.hset(`sess:${sid}`, {
+        userId: 'u1',
+        revoked: '0',
+        ...(method === undefined ? {} : { method }),
+      });
+      await redis.sadd('user:u1:sessions', sid);
+    };
+    await seed('pw', 'password');
+    await seed('gg', 'google');
+    await seed('inv', 'invite');
+    await seed('legacy');
+    await seed('sso', 'oidc');
+
+    await expect(
+      service.revokeSessionsNotCreatedBy('u1', 'oidc', 'sso_enforced'),
+    ).resolves.toBe(4);
+
+    for (const sid of ['pw', 'gg', 'inv', 'legacy']) {
+      expect(await redis.hget(`sess:${sid}`, 'revoked')).toBe('1');
+    }
+    expect(await redis.hget('sess:sso', 'revoked')).toBe('0');
+    expect(await redis.smembers('user:u1:sessions')).toEqual(['sso']);
+    expect(redis.published).toEqual([
+      {
+        channel: 'auth:sessions-revoked',
+        message: JSON.stringify({ userId: 'u1', reason: 'sso_enforced' }),
+      },
+    ]);
+  });
+
+  it('only SSO sessions → nothing revoked, no event (live SSO sockets stay)', async () => {
+    await redis.hset('sess:sso', { userId: 'u1', method: 'oidc' });
+    await redis.sadd('user:u1:sessions', 'sso');
+    await expect(
+      service.revokeSessionsNotCreatedBy('u1', 'oidc', 'sso_enforced'),
+    ).resolves.toBe(0);
+    expect(redis.published).toEqual([]);
+  });
+
+  it('an expired session hash is dropped from the set, never recreated', async () => {
+    await redis.sadd('user:u1:sessions', 'gone');
+    await expect(
+      service.revokeSessionsNotCreatedBy('u1', 'oidc', 'sso_enforced'),
+    ).resolves.toBe(0);
+    expect(redis.keys('sess:')).toEqual([]);
+    expect(await redis.smembers('user:u1:sessions')).toEqual([]);
   });
 });
