@@ -574,3 +574,33 @@ describe('tapping Call on someone who is ringing us', () => {
     expect(useCallStore.getState().peerId).toBe('alice')
   })
 })
+
+describe('answered on another device', () => {
+  const answeredElsewhere = (senderId = 'bob', conversationId = 'conv-1') =>
+    callManager.handleSignal({ type: 'answered-elsewhere', senderId, conversationId } as never)
+
+  it('stops ringing here, quietly: no end to the caller, no missed-call log', () => {
+    offerFrom('bob')
+    expect(useCallStore.getState().status).toBe('incoming')
+    answeredElsewhere()
+    expect(useCallStore.getState().status).toBe('idle')
+    expect(endSignals()).toHaveLength(0)
+    expect(sendMessage).not.toHaveBeenCalled()
+    expect(onEndNotice).not.toHaveBeenCalled()
+  })
+
+  it('leaves a ring from someone else, or another conversation, alone', () => {
+    offerFrom('bob')
+    answeredElsewhere('carol')
+    answeredElsewhere('bob', 'conv-2')
+    expect(useCallStore.getState().status).toBe('incoming')
+  })
+
+  it('is ignored by the device that answered', async () => {
+    offerFrom('bob')
+    await callManager.acceptIncoming()
+    answeredElsewhere()
+    expect(useCallStore.getState().status).not.toBe('idle')
+    expect(FakePeerConnection.last!.close).not.toHaveBeenCalled()
+  })
+})

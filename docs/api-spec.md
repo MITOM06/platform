@@ -884,5 +884,9 @@ for the whole call; `mesh` (default) keeps the routes above unchanged.
   (to every session of the callee: `answered_elsewhere`, `declined`, or the caller's
   `hangup | no_answer`); new `call-declined { callId, conversationId, reason, senderId }` to the
   caller (`callId` is null when the callee was already busy and no call was created).
+- Peer-to-peer (mesh) 1-on-1: when the callee's `/app/call.answer` is relayed to the caller, every
+  session of the callee also gets `answered-elsewhere { senderId: <caller>, conversationId }`. A
+  session still ringing for that caller in that conversation stops ringing (no end, no call log);
+  the session that answered is no longer ringing and ignores it. Older apps ignore the type.
 
 **LiveKit webhook:** `POST /api/rtc/livekit/webhook` (no user JWT; signed by the LiveKit API secret).

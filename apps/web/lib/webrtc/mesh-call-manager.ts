@@ -174,6 +174,12 @@ export class MeshCallManager {
       case 'state':
         this.inCall.handleState(signal)
         break
+      case 'answered-elsewhere': {
+        // Answered on our other device: stop ringing here, quietly (the one that answered has a pc).
+        const { peerId, conversationId } = useCallStore.getState()
+        if (!this.pc && peerId === signal.senderId && conversationId === signal.conversationId) this.dismissIncoming()
+        break
+      }
     }
   }
 
@@ -190,9 +196,7 @@ export class MeshCallManager {
     if (reachedPeer && targetId && conversationId) {
       this.publishEnd(targetId, conversationId, reason, store.durationSeconds)
     }
-    // Emit a system message so both sides see the call log in the chat history.
-    // Only the hang-up initiator sends this (the peer's teardown via 'end'
-    // signal does not call endCall, preventing duplicate messages).
+    // The call log in the chat, sent only by the side hanging up (a peer's `end` never calls endCall).
     if (reachedPeer && conversationId) {
       const kind = store.video ? 'video' : 'voice'
       this.sendCallLog(
