@@ -100,13 +100,22 @@ flutter analyze
 ### Run
 
 ```bash
-# Default device (emulator or connected phone)
+# Default device (emulator or connected phone) — the `dev` flavor
 flutter run
 
 # Specific platform
 flutter run -d android
 flutter run -d ios
+
+# Production build (published app id + production Firebase)
+flutter build apk --flavor prod --dart-define=PON_DOMAIN=<host>
+flutter build ipa --flavor prod --dart-define=PON_DOMAIN=<host>
 ```
+
+Two flavors, `dev` (the default) and `prod`: each has its own app id, name and
+Firebase project, so a development build installs next to the real app and never
+touches production pushes or phone sign-ins. Setup and the files each one needs:
+[docs/environments.md § Mobile flavors](../../docs/environments.md#mobile-flavors).
 
 ---
 

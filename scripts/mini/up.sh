@@ -190,7 +190,7 @@ if [ "$MODE" = named ]; then
 
   2) FLUTTER — build against this host once:
 
-       flutter build apk --dart-define=PON_DOMAIN=$HOST
+       flutter build apk --flavor prod --dart-define=PON_DOMAIN=$HOST
 
   3) OAUTH CONSOLES — register these once and never again:
 
@@ -237,7 +237,7 @@ else
 
   2) FLUTTER — rebuild against this host:
 
-       flutter build apk --dart-define=PON_DOMAIN=$HOST
+       flutter build apk --flavor prod --dart-define=PON_DOMAIN=$HOST
 
   3) OAUTH CONSOLES — re-register the redirect URIs. Google rejects wildcards,
      so this is manual every time the hostname changes:

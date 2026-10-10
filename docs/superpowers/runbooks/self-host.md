@@ -50,7 +50,7 @@ curl -fsS https://<DOMAIN>/api/auth/health     # {"status":...}
 Point the Flutter app at this deployment at build time:
 ```bash
 cd apps/client
-flutter build apk --dart-define=PON_DOMAIN=<DOMAIN>     # or build ios / appbundle
+flutter build apk --flavor prod --dart-define=PON_DOMAIN=<DOMAIN>     # or build ios / appbundle
 ```
 Without `PON_DOMAIN` the app targets the default Cloud Run hosting.
 
