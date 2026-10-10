@@ -216,7 +216,8 @@ public class AiResponseListener implements MessageListener {
               fullContent,
               trace,
               pendingActions,
-              replyId != null ? replyId.toString() : null);
+              replyId != null ? replyId.toString() : null,
+              com.platform.chatservice.model.AiSource.fromPayload(sources));
       // An action confirmed from the AI_ACTION_PENDING card while this reply was still streaming
       // resolved before the message existed — apply that outcome now.
       saved = pendingActionService.reconcile(saved);

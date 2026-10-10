@@ -172,4 +172,38 @@ void main() {
       expect(m.createdAt, isNotNull);
     });
   });
+
+  group('MessageModel.fromJson — AI citations', () {
+    Map<String, dynamic> aiJson(Object? sources) => {
+          'id': 'm-ai',
+          'conversationId': 'c-1',
+          'senderId': 'ai-bot',
+          'content': 'Per [Source 1]…',
+          'type': 'ai',
+          'createdAt': '2026-10-10T10:00:00Z',
+          if (sources != null) 'sources': sources,
+        };
+
+    test('a reloaded AI reply keeps its citations', () {
+      final m = MessageModel.fromJson(aiJson([
+        {'documentId': 'doc-1', 'fileName': 'policy.pdf', 'score': 0.82},
+        {
+          'documentId': 'web-1',
+          'fileName': 'Docs',
+          'url': 'https://example.com/a',
+          'type': 'web'
+        },
+        {'fileName': 'no id — dropped'},
+      ]));
+      expect(m.sources!.map((s) => s.documentId), ['doc-1', 'web-1']);
+      expect(m.sources!.first.fileName, 'policy.pdf');
+      expect(m.sources!.last.isWeb, isTrue);
+    });
+
+    test('no citations (or a malformed value) means none, never a throw', () {
+      expect(MessageModel.fromJson(aiJson(null)).sources, isNull);
+      expect(MessageModel.fromJson(aiJson(const [])).sources, isNull);
+      expect(MessageModel.fromJson(aiJson('oops')).sources, isNull);
+    });
+  });
 }

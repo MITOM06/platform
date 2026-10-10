@@ -224,7 +224,15 @@ class MessageModel {
               (json['aiReplyId'] as String).isNotEmpty
           ? json['aiReplyId'] as String
           : null,
+      // An AI reply's citations, stored with it so the chips survive a reload.
+      sources: _parseSources(json['sources']),
     );
+  }
+
+  static List<AiSource>? _parseSources(Object? raw) {
+    if (raw is! List) return null;
+    final sources = raw.map(AiSource.tryParse).whereType<AiSource>().toList();
+    return sources.isEmpty ? null : sources;
   }
 
   MessageModel copyWith({

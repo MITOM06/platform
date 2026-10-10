@@ -44,7 +44,8 @@ public class MessageMapper {
         m.getEditedAt(),
         m.getMentions() == null ? List.of() : m.getMentions(),
         pendingActions(m.getPendingActions()),
-        m.getAiReplyId());
+        m.getAiReplyId(),
+        m.getSources());
   }
 
   /** {@code null} (omitted from the JSON) unless the message carries pending AI actions. */
