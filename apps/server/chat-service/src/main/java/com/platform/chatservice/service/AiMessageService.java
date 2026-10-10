@@ -4,6 +4,7 @@ import com.platform.chatservice.dto.AiTraceResponse;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.exception.MessageNotFoundException;
+import com.platform.chatservice.model.AiSource;
 import com.platform.chatservice.model.AiTraceData;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.Message;
@@ -71,6 +72,17 @@ public class AiMessageService {
       AiTraceData trace,
       List<PendingAction> pendingActions,
       String aiReplyId) {
+    return persistAiMessage(conversationId, content, trace, pendingActions, aiReplyId, null);
+  }
+
+  /** Same, also storing the reply's citations (null/empty = none). */
+  public MessageResponse persistAiMessage(
+      String conversationId,
+      String content,
+      AiTraceData trace,
+      List<PendingAction> pendingActions,
+      String aiReplyId,
+      List<AiSource> sources) {
     return persist(
         conversationId,
         AiConstants.AI_BOT_USER_ID,
@@ -78,7 +90,8 @@ public class AiMessageService {
         "ai",
         trace,
         pendingActions,
-        aiReplyId);
+        aiReplyId,
+        sources);
   }
 
   /**
@@ -92,7 +105,8 @@ public class AiMessageService {
 
   private MessageResponse persistAndBroadcast(
       String conversationId, String senderId, String content, String type, AiTraceData trace) {
-    MessageResponse response = persist(conversationId, senderId, content, type, trace, null, null);
+    MessageResponse response =
+        persist(conversationId, senderId, content, type, trace, null, null, null);
     clusterBroker.convertAndSend("/topic/conversation/" + conversationId, response);
     return response;
   }
@@ -104,7 +118,8 @@ public class AiMessageService {
       String type,
       AiTraceData trace,
       List<PendingAction> pendingActions,
-      String aiReplyId) {
+      String aiReplyId,
+      List<AiSource> sources) {
     Message message =
         messageRepository.save(
             Message.builder()
@@ -119,6 +134,7 @@ public class AiMessageService {
                         ? null
                         : new ArrayList<>(pendingActions))
                 .aiReplyId(aiReplyId)
+                .sources(sources == null || sources.isEmpty() ? null : new ArrayList<>(sources))
                 .build());
 
     Instant savedAt = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();

@@ -10,6 +10,7 @@ import com.platform.chatservice.model.Message;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
 import java.time.Instant;
+import java.util.List;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -111,5 +112,30 @@ class AiMessageServiceTest {
     assertThat(last.getType()).isEqualTo("ai");
     assertThat(last.getSenderId()).isEqualTo(AiConstants.AI_BOT_USER_ID);
     verify(conversationCacheService).evict("conv-1");
+  }
+
+  @Test
+  void persistAiMessage_storesTheCitations_andReturnsThem() {
+    List<com.platform.chatservice.model.AiSource> sources =
+        List.of(
+            new com.platform.chatservice.model.AiSource("doc-1", "policy.pdf", 0.8, null, null));
+
+    MessageResponse response =
+        service.persistAiMessage("conv-1", "Per [Source 1]…", null, null, "reply-1", sources);
+
+    ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
+    verify(messageRepository).save(captor.capture());
+    assertThat(captor.getValue().getSources()).isEqualTo(sources);
+    assertThat(response.sources()).isEqualTo(sources);
+  }
+
+  @Test
+  void persistAiMessage_withoutCitations_storesNone() {
+    MessageResponse response = service.persistAiMessage("conv-1", "Hi", null);
+
+    ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
+    verify(messageRepository).save(captor.capture());
+    assertThat(captor.getValue().getSources()).isNull();
+    assertThat(response.sources()).isNull();
   }
 }
