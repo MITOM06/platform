@@ -3,6 +3,57 @@
 All notable changes to PON. One version per promotion to `main`; web, mobile and the
 NestJS services share the product version (`apps/client/pubspec.yaml`, `apps/*/package.json`).
 
+## 1.3.0 — 2026-10-10
+
+Batches five branches that were tested together on `dev`: `feat/flutter-flavors-firebase-split`,
+`fix/call-answered-elsewhere-mesh`, `fix/ai-sources-persisted`, `fix/observability-e2` and
+`fix/ai-eval-judge`.
+
+### Development and production kept apart
+
+- **Mobile flavors `dev` and `prod`, each with its own Firebase project.** Development builds
+  (the default) install as "PON Dev" next to the real app (`com.platform.platform_client.dev` /
+  `com.tranphuckhang.platformClient.dev`) and never register push tokens or phone sign-ins in
+  production. Production keeps its app ids and the `pon-c30fd` project; `main` carries only a stub
+  for the development project, so a build without its own project runs without Firebase rather
+  than borrowing production's. Details: `docs/environments.md` § Mobile flavors.
+- Phone verification says it cannot send a code instead of hanging when a build has no Firebase.
+
+### Calls
+
+- **Answering on one device stops the others ringing** (peer-to-peer calls): a callee signed in
+  on web and phone no longer keeps ringing on the second device until the caller gives up.
+  LiveKit calls already did this.
+
+### AI
+
+- **An AI reply keeps its citations after a reload.** RAG and web-search sources are stored with
+  the message (`sources`) instead of living only in the stream event, so the source chips no
+  longer turn back into a bare "[Source 1]". Replies saved before this release have none.
+- **AI Eval Gate:** the judge's verdict is read through code fences, stray text, unescaped quotes
+  and truncation, a reply with no verdict is retried and then counted as an error (not a failed
+  answer), and three rubrics that flipped between runs say what they mean. Same bar, steadier
+  gate.
+
+### Observability and security
+
+- **auth-service and connector-service send OpenTelemetry traces** like chat-service and
+  ai-service, so one request can be followed across all four services in Jaeger (local stack).
+- No more OTLP metrics/logs exports (and their 404 every minute) from the NestJS services:
+  traces only, unless `OTEL_METRICS_EXPORTER` / `OTEL_LOGS_EXPORTER` are set.
+- connector-service sets the same security headers as the other services (helmet; the OAuth
+  popup keeps working) and reports errors to Sentry when `SENTRY_DSN` is set.
+
+### Deploy notes
+
+- **Build the published mobile app with `--flavor prod`** (e.g.
+  `flutter build apk --flavor prod --dart-define=PON_DOMAIN=<host>`). A build without `--flavor`
+  is a development build. Mobile is now `1.3.0+4`.
+- The Mac mini and self-host compose files set `OTEL_ENABLED=false` for auth-service and
+  connector-service as they already did for ai-service: nothing to configure there.
+- Optional: `SENTRY_DSN` for connector-service.
+- No database migration.
+
 ## 1.2.0 — 2026-10-08
 
 Batches four feature branches that were tested together on `dev`: `feat/meetings-p1`,
