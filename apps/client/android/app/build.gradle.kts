@@ -29,12 +29,38 @@ android {
         versionName = flutter.versionName
     }
 
+    // One install per deployment (docs/environments.md § Mobile flavors). `dev` is
+    // the default (pubspec.yaml `default-flavor`) and gets its own app id, name and
+    // Firebase project (src/dev/google-services.json), so it never touches
+    // production pushes or phone sign-ins. `prod` keeps the published app id.
+    flavorDimensions += "env"
+    productFlavors {
+        create("dev") {
+            dimension = "env"
+            applicationIdSuffix = ".dev"
+            resValue("string", "app_name", "PON Dev")
+        }
+        create("prod") {
+            dimension = "env"
+            resValue("string", "app_name", "platform_client")
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
+    }
+}
+
+// Until the development Firebase project exists (src/dev/google-services.json),
+// dev builds skip the Google Services step and run without push; they never fall
+// back to the production file.
+tasks.configureEach {
+    if (name.startsWith("processDev") && name.endsWith("GoogleServices")) {
+        onlyIf { file("src/dev/google-services.json").exists() }
     }
 }
 

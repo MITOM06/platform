@@ -23,6 +23,7 @@ import 'features/auth/domain/auth_state.dart';
 import 'features/admin/state/capabilities_provider.dart';
 import 'features/auth/domain/invitation_preview.dart';
 import 'features/chat/data/stomp_service.dart';
+import 'core/config/app_flavor.dart';
 import 'features/chat/domain/conversations_realtime_handlers.dart'
     show displayableSenderName;
 import 'features/chat/ui/widgets/incoming_group_call_prompt.dart';
@@ -31,7 +32,6 @@ import 'features/integrations/state/oauth_flow_provider.dart';
 import 'features/meetings/domain/meeting_code.dart';
 import 'features/meetings/state/active_room.dart';
 import 'features/notifications/domain/notifications_provider.dart';
-import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 
 @pragma('vm:entry-point')
@@ -39,7 +39,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Meeting pushes carry a `notification` block the OS already shows, with
   // the body localized on the device (strings.xml / Localizable.strings).
   if (isMeetingPush(message.data)) return;
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(options: firebaseOptionsFor(currentFlavor));
   // FCM notification messages are auto-displayed by the OS in background/killed state.
   // Only handle data-only messages (no notification payload) here.
   if (message.notification != null) return;
@@ -93,8 +93,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform);
+    final firebase = firebaseOptionsFor(currentFlavor);
+    // A dev build without its own Firebase project runs without push and
+    // phone verification rather than borrowing production's.
+    if (firebase == null) {
+      throw StateError('no Firebase project for the ${currentFlavor.name} flavor');
+    }
+    await Firebase.initializeApp(options: firebase);
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     await initNotifications();

@@ -15,7 +15,7 @@ each has its own compose file and its own env template.
 | `NODE_ENV` | `development` | `production` | `production` |
 | Data tier | containers on this machine | Atlas · Upstash · CloudAMQP · Qdrant Cloud | containers in the same stack |
 | Web app | `next dev`, `.env.development.local` | Vercel, `NEXT_PUBLIC_API_BASE` | served by Caddy, no variable needed |
-| Mobile | `--dart-define=PON_CHAT_URL=http://…` | `--dart-define=PON_DOMAIN=<host>` | `--dart-define=PON_DOMAIN=<domain>` |
+| Mobile | flavor `dev` (default), `--dart-define=PON_CHAT_URL=http://…` | `--flavor prod --dart-define=PON_DOMAIN=<host>` | `--flavor prod --dart-define=PON_DOMAIN=<domain>` |
 | LiveKit (calls + meetings) | container `livekit` on `dev` (`ws://localhost:7880`) | separate media host, `infra/livekit/` (the tunnel carries no UDP) | `livekit` service in `compose.prod.yml` (`wss://rtc.<DOMAIN>`) |
 
 ## Calls and meetings — LiveKit
@@ -55,6 +55,49 @@ self-host, wrong on Vercel — the build says so), while a **release** mobile bu
 throws on its first request. Neither silently picks a host: the previous defaults
 pointed at Cloud Run, so an unconfigured build talked to production, and then to
 nothing once those hosts were retired.
+
+## Mobile flavors
+
+The Flutter app has two flavors. `dev` is the default (`pubspec.yaml`
+`default-flavor`), so a build that forgets `--flavor` stays out of production.
+
+| | `dev` | `prod` |
+|---|---|---|
+| Android app id | `com.platform.platform_client.dev` | `com.platform.platform_client` |
+| iOS bundle id | `com.tranphuckhang.platformClient.dev` | `com.tranphuckhang.platformClient` |
+| Name on the home screen | PON Dev | platform_client (Android) · Platform Client (iOS) |
+| Firebase project | the development project | `pon-c30fd` |
+| Dart options | `lib/firebase_options_dev.dart` | `lib/firebase_options_prod.dart` |
+| Android config (gitignored) | `android/app/src/dev/google-services.json` | `android/app/src/prod/google-services.json` (or the old `android/app/google-services.json`) |
+| iOS config (gitignored) | `ios/Runner/Firebase/dev/GoogleService-Info.plist` | `ios/Runner/Firebase/prod/GoogleService-Info.plist` (or the old `ios/Runner/GoogleService-Info.plist`) |
+
+`lib/core/config/app_flavor.dart` picks the Firebase options from `--flavor`;
+Android uses `productFlavors`, iOS the `dev` / `prod` schemes with
+`<Mode>-<flavor>` build configurations (Xcode's own `Runner` scheme stays
+production).
+
+Until a development Firebase project is wired, `firebase_options_dev.dart` is a
+stub and the dev flavor runs **without Firebase** — no push, no phone
+verification — and never borrows production's project. To wire one:
+
+1. Create the project in the Firebase console; add an Android app
+   `com.platform.platform_client.dev` and an iOS app
+   `com.tranphuckhang.platformClient.dev`; enable Phone sign-in and Cloud
+   Messaging (upload an APNs key for iOS).
+2. From `apps/client`: `flutterfire configure --project=<dev-project-id>
+   --out=lib/firebase_options_dev.dart --platforms=android,ios
+   --android-package-name=com.platform.platform_client.dev
+   --ios-bundle-id=com.tranphuckhang.platformClient.dev`. Commit the generated
+   Dart file **on `dev`** only. Put its `google-services.json` and
+   `GoogleService-Info.plist` in the dev paths above.
+3. Point the local backend at the same project: a service account of the
+   development project as `FIREBASE_SERVICE_ACCOUNT_BASE64` for auth-service
+   (phone ID tokens) and chat-service (FCM), and the web's
+   `NEXT_PUBLIC_FIREBASE_*` in `apps/web/.env.development.local`.
+
+A push token belongs to one project: a dev build pointed at the production API
+registers a token production cannot deliver to (and the reverse), which is the
+point.
 
 ## Client IP behind the proxy (rate limiting)
 
@@ -166,8 +209,7 @@ These are not code problems; they need a console and an owner's decision.
   `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` / `SESSION_SECRET` were rotated on
   2026-08-23 and are no longer shared.
 - **One Firebase project (`pon-c30fd`) for development and production** — shared
-  user pool and shared push tokens. A second project separates them; both configs
-  are public web config, so it is a config swap, not a secret.
-- **No Flutter flavors.** Environment comes from `--dart-define` at build time,
-  which is enough to keep the two apart but not enough to stop a mistake: the
-  same bundle id installs over the other one.
+  user pool and shared push tokens. The mobile app is ready for a second project
+  (§ Mobile flavors); what is left is creating it and wiring the local backend and
+  web to it. Both configs are public client config, so it is a config swap, not a
+  secret.
