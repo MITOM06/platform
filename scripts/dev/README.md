@@ -243,7 +243,7 @@ node scripts/dev/seed-company/index.js --reset   # remove the company only
 |---|---|
 | Workspace | renamed *NovaTech Solutions*, AI persona "Nova", daily digest 8:00, connector allow-list |
 | 8 departments | Ban Giám đốc, Kỹ thuật, Sản phẩm & Thiết kế, Kinh doanh, Marketing, Nhân sự, Tài chính - Kế toán, CSKH — each with a lead |
-| 22 employees | `<name>@novatech.local` / `Devpass123!`, all 4 roles (Owner `quan.nguyen`, Admin `ha.tran` / `huy.huynh` / `nhung.vu`, Managers = department leads), avatars, one **blocked** account (`teo.nguyen`). `dev` / `alice` / `bob` join Kỹ thuật |
+| 22 employees | `<name>@novatech.local` / `Devpass123!`, all 3 preset roles (Owner `quan.nguyen`, Admin `ha.tran` / `huy.huynh` / `nhung.vu`, everyone else incl. department leads = Member), avatars, one **blocked** account (`teo.nguyen`). `dev` / `alice` / `bob` join Kỹ thuật |
 | Invitations | 2 pending, 1 revoked, 1 expired |
 | AI context | company + per-department entries, incl. `VIEW_INTERNAL_CONTEXT` / `VIEW_CONFIDENTIAL_CONTEXT`-gated ones (log in as different roles to compare answers); personal context for 6 people |
 | 21 conversations | 8 department groups (with `departmentId` → dept-scoped RAG), a public company channel, a cross-department project group, a muted social group, DMs (unread, call logs, disappearing, archived, a pending message request), an AI chat, DMs between other employees |

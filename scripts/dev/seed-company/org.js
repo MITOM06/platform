@@ -33,37 +33,37 @@ const DEPARTMENTS = [
   { key: 'cs', name: 'Chăm sóc khách hàng', lead: 'viet', description: 'Hỗ trợ khách hàng, xử lý ticket và đo lường CSAT.' },
 ];
 
-// role = preset role name (Owner/Admin/Manager/Member). title feeds the AI
+// role = preset role name (Owner/Admin/Member — the Manager preset was retired). title feeds the AI
 // user context (jobTitle) and the profile bio.
 const PEOPLE = [
   // Ban Giám đốc
   { key: 'quan', email: `quan.nguyen@${DOMAIN}`, name: 'Nguyễn Minh Quân', role: 'Owner', depts: ['bod'], title: 'CEO', gender: 'male', phone: '+84901000001' },
   { key: 'ha', email: `ha.tran@${DOMAIN}`, name: 'Trần Thu Hà', role: 'Admin', depts: ['bod', 'hr'], title: 'COO', gender: 'female' },
   // Kỹ thuật
-  { key: 'nam', email: `nam.le@${DOMAIN}`, name: 'Lê Hoàng Nam', role: 'Manager', depts: ['eng', 'bod'], title: 'CTO / Engineering Lead', gender: 'male' },
+  { key: 'nam', email: `nam.le@${DOMAIN}`, name: 'Lê Hoàng Nam', role: 'Member', depts: ['eng', 'bod'], title: 'CTO / Engineering Lead', gender: 'male' },
   { key: 'anh', email: `anh.pham@${DOMAIN}`, name: 'Phạm Đức Anh', role: 'Member', depts: ['eng'], title: 'Senior Backend Engineer (Spring Boot)', gender: 'male' },
   { key: 'lan', email: `lan.vo@${DOMAIN}`, name: 'Võ Thị Lan', role: 'Member', depts: ['eng'], title: 'Frontend Engineer (Next.js)', gender: 'female' },
   { key: 'bao', email: `bao.dang@${DOMAIN}`, name: 'Đặng Quốc Bảo', role: 'Member', depts: ['eng'], title: 'Mobile Engineer (Flutter)', gender: 'male' },
   { key: 'huy', email: `huy.huynh@${DOMAIN}`, name: 'Huỳnh Gia Huy', role: 'Admin', depts: ['eng'], title: 'DevOps Engineer', gender: 'male' },
   { key: 'linh', email: `linh.ngo@${DOMAIN}`, name: 'Ngô Mỹ Linh', role: 'Member', depts: ['eng'], title: 'QA Engineer', gender: 'female' },
   // Sản phẩm & Thiết kế
-  { key: 'vy', email: `vy.bui@${DOMAIN}`, name: 'Bùi Khánh Vy', role: 'Manager', depts: ['prd'], title: 'Head of Product', gender: 'female' },
+  { key: 'vy', email: `vy.bui@${DOMAIN}`, name: 'Bùi Khánh Vy', role: 'Member', depts: ['prd'], title: 'Head of Product', gender: 'female' },
   { key: 'kiet', email: `kiet.do@${DOMAIN}`, name: 'Đỗ Tuấn Kiệt', role: 'Member', depts: ['prd'], title: 'UI/UX Designer', gender: 'male' },
   // Kinh doanh
-  { key: 'phuc', email: `phuc.truong@${DOMAIN}`, name: 'Trương Văn Phúc', role: 'Manager', depts: ['sales'], title: 'Sales Manager', gender: 'male', phone: '+84901000013' },
+  { key: 'phuc', email: `phuc.truong@${DOMAIN}`, name: 'Trương Văn Phúc', role: 'Member', depts: ['sales'], title: 'Sales Manager', gender: 'male', phone: '+84901000013' },
   { key: 'tram', email: `tram.ly@${DOMAIN}`, name: 'Lý Ngọc Trâm', role: 'Member', depts: ['sales'], title: 'Account Executive', gender: 'female' },
   { key: 'son', email: `son.ho@${DOMAIN}`, name: 'Hồ Thanh Sơn', role: 'Member', depts: ['sales'], title: 'Sales Executive', gender: 'male' },
   // Marketing
-  { key: 'thao', email: `thao.mai@${DOMAIN}`, name: 'Mai Phương Thảo', role: 'Manager', depts: ['mkt'], title: 'Marketing Manager', gender: 'female' },
+  { key: 'thao', email: `thao.mai@${DOMAIN}`, name: 'Mai Phương Thảo', role: 'Member', depts: ['mkt'], title: 'Marketing Manager', gender: 'female' },
   { key: 'minh', email: `minh.phan@${DOMAIN}`, name: 'Phan Nhật Minh', role: 'Member', depts: ['mkt'], title: 'Content Marketing Specialist', gender: 'male' },
   // Nhân sự
   { key: 'nhung', email: `nhung.vu@${DOMAIN}`, name: 'Vũ Hồng Nhung', role: 'Admin', depts: ['hr'], title: 'HR Manager', gender: 'female' },
   { key: 'ngoc', email: `ngoc.chau@${DOMAIN}`, name: 'Châu Bảo Ngọc', role: 'Member', depts: ['hr'], title: 'Recruiter', gender: 'female' },
   // Tài chính - Kế toán
-  { key: 'long', email: `long.dinh@${DOMAIN}`, name: 'Đinh Văn Long', role: 'Manager', depts: ['fin'], title: 'Kế toán trưởng', gender: 'male' },
+  { key: 'long', email: `long.dinh@${DOMAIN}`, name: 'Đinh Văn Long', role: 'Member', depts: ['fin'], title: 'Kế toán trưởng', gender: 'male' },
   { key: 'thu', email: `thu.ta@${DOMAIN}`, name: 'Tạ Minh Thư', role: 'Member', depts: ['fin'], title: 'Kế toán viên', gender: 'female' },
   // Chăm sóc khách hàng
-  { key: 'viet', email: `viet.lam@${DOMAIN}`, name: 'Lâm Quốc Việt', role: 'Manager', depts: ['cs'], title: 'Customer Success Lead', gender: 'male' },
+  { key: 'viet', email: `viet.lam@${DOMAIN}`, name: 'Lâm Quốc Việt', role: 'Member', depts: ['cs'], title: 'Customer Success Lead', gender: 'male' },
   { key: 'mai', email: `mai.cao@${DOMAIN}`, name: 'Cao Thị Mai', role: 'Member', depts: ['cs'], title: 'Support Agent', gender: 'female' },
   // Account blocked by an admin — tests the "account blocked" login path.
   { key: 'teo', email: `teo.nguyen@${DOMAIN}`, name: 'Nguyễn Văn Tèo', role: 'Member', depts: ['eng'], title: 'Thực tập sinh (đã nghỉ)', gender: 'male', status: 'blocked' },

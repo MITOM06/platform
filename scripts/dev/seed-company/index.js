@@ -316,11 +316,11 @@ async function seedAudit(db, { ids, names }) {
     A('quan', 'workspace.update', 'workspace', { field: 'name', value: org.WORKSPACE.name }, 30),
     A('ha', 'department.create', 'department', { name: 'Chăm sóc khách hàng' }, 29),
     A('nhung', 'member.invite', 'invitation', { email: `newhire.backend@${org.DOMAIN}` }, 1),
-    A('nhung', 'member.update', 'user', { field: 'role', from: 'Member', to: 'Manager', user: names.viet }, 12),
+    A('nhung', 'member.update', 'user', { field: 'role', from: 'Admin', to: 'Member', user: names.viet }, 12),
     A('huy', 'connector.connect', 'connection', { provider: 'notion', scope: 'workspace' }, 15),
     A('huy', 'custom_mcp.add', 'custom_mcp', { name: 'SAP ERP (ABC Corp)' }, 4),
     A('ha', 'member.block', 'user', { user: names.teo, reason: 'Hết hợp đồng thực tập' }, 8),
-    A('quan', 'role.update', 'role', { role: 'Manager', capability: 'VIEW_INTERNAL_CONTEXT', value: true }, 18),
+    A('quan', 'role.update', 'role', { role: 'Member', capability: 'VIEW_INTERNAL_CONTEXT', value: false }, 18),
     A('quan', 'ai_context.update', 'ai_context', { label: 'Khung lương (mật)' }, 20),
     A('phuc', 'sensitive_skill.run', 'skill', { tool: 'gmail.send', to: 'contact@minhphat.vn' }, 3),
   ];
