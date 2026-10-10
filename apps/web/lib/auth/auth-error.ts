@@ -111,9 +111,17 @@ export function authCodeToI18nKey(code: string): string {
     MFA_ALREADY_ENROLLED: 'errMfaAlreadyEnrolled',
     MFA_RESET_FORBIDDEN: 'errMfaResetForbidden',
     MFA_RESET_SELF_FORBIDDEN: 'errMfaResetSelfForbidden',
+    // Turning 2FA off is refused: the role (Owner/Admin-like) requires it (contract 15).
+    MFA_REQUIRED_BY_ROLE: 'errMfaRequiredByRole',
     // SSO
     SSO_DISABLED: 'errSsoDisabled',
     SSO_DOMAIN_NOT_ALLOWED: 'errSsoDomainNotAllowed',
+    // Require-SSO switch (contract 13 C): password / Google / reset are off for
+    // this email domain; the admin tried to require SSO before it was set up.
+    SSO_REQUIRED: 'errSsoRequired',
+    // The company IdP could not be reached (OIDC discovery failed); retryable.
+    SSO_UNAVAILABLE: 'errSsoUnavailable',
+    SSO_ENFORCE_NOT_READY: 'errSsoEnforceNotReady',
     SSO_EMAIL_UNVERIFIED: 'errSsoEmailUnverified',
     OIDC_EMAIL_UNVERIFIED: 'errSsoEmailUnverified',
     SOCIAL_ACCOUNT_CONFLICT: 'errSocialAccountConflict',

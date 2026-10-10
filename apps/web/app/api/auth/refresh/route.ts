@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import axios from 'axios'
 import { serverAuthUrl } from '@/lib/config/env'
+import { logoutReasonFromBody } from '@/lib/auth/logout-reason'
 
 // Cookie lifetimes — keep in sync with /api/auth/set-cookie and /api/auth/session.
 const ACCESS_TOKEN_MAX_AGE = 900 // 15 minutes
@@ -57,12 +58,16 @@ export async function POST(request: NextRequest) {
     // Only translate a genuine auth-service rejection (401/403) into a 401 —
     // that is the ONLY signal clients may treat as "session dead → logout".
     // Forward the upstream error code so clients can retry the benign
-    // REFRESH_TOKEN_ROTATED race (another tab rotated first).
+    // REFRESH_TOKEN_ROTATED race (another tab rotated first). A known logout
+    // reason (ACCOUNT_BLOCKED, SSO_REQUIRED — also when only given as the
+    // `sso_enforced` revocation reason) is forwarded as its code so the login
+    // screen can explain the sign-out.
     if (
       axios.isAxiosError(err) &&
       (err.response?.status === 401 || err.response?.status === 403)
     ) {
-      const code = (err.response.data as { code?: string } | undefined)?.code
+      const data = err.response.data as { code?: string } | undefined
+      const code = logoutReasonFromBody(data) ?? data?.code
       return NextResponse.json({ error: 'refresh_rejected', code }, { status: 401 })
     }
     // Transient upstream failure (network, timeout, cold start, 5xx, 429).

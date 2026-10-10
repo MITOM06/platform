@@ -11,11 +11,11 @@ describe('aiContextService', () => {
 
   it('getMine GETs /ai-context/me', async () => {
     vi.mocked(authApi.get).mockResolvedValue({
-      data: { context: { style: 's' }, identity: { role: 'Manager', departmentNames: [] }, entries: [] },
+      data: { context: { style: 's' }, identity: { role: 'Admin', departmentNames: [] }, entries: [] },
     })
     const res = await aiContextService.getMine()
     expect(authApi.get).toHaveBeenCalledWith('/ai-context/me')
-    expect(res.identity.role).toBe('Manager')
+    expect(res.identity.role).toBe('Admin')
   })
 
   it('updateMyStyle PATCHes /ai-context/me/style', async () => {

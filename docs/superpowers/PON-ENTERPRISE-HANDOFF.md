@@ -55,7 +55,8 @@ For now: keep hosting as-is, assume **one test company**, get it working end-to-
 
 ### P0 Part 1 — Identity & RBAC backbone ✅
 - **`packages/database/src/rbac/`**: `capabilities.ts` (11-capability `Capability` enum + helpers),
-  `preset-roles.ts` (`PRESET_ROLES`: Owner/Admin/Manager/Member matrix).
+  `preset-roles.ts` (`PRESET_ROLES`: Owner/Admin/Member matrix; the former Manager preset was
+  removed 2026-10-06 — bootstrap moves its holders to Member, see `docs/auth-error-codes.md`).
 - **`packages/database/src/mongo/`**: `workspace.schema.ts` (singleton config incl.
   `connectorAllowList`), `department.schema.ts`, `role.schema.ts`; `user.schema.ts` gained
   `roleId` + `departmentIds`.

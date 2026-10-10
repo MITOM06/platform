@@ -143,20 +143,33 @@ class MembersPanel extends ConsumerWidget {
     }
   }
 
-  /// Owner-only 2FA reset (contract 09): confirm, then the member re-enrolls
-  /// at next sign-in and is signed out everywhere (server-side).
-  Future<void> _resetMfa(BuildContext context, WidgetRef ref, Member m) async {
+  /// 2FA reset (an Owner on anyone else, an Admin on non-admin members):
+  /// confirm, then the member is signed out everywhere (server-side). What
+  /// happens next depends on the target's role (contract 15): an Owner /
+  /// Admin-like member ([privileged]) must set 2FA up again at the next
+  /// sign-in; for a Member 2FA is optional, so it is simply off until they
+  /// turn it on again in Settings → Password & Security.
+  Future<void> _resetMfa(
+    BuildContext context,
+    WidgetRef ref,
+    Member m, {
+    required bool privileged,
+  }) async {
     final l10n = context.l10n;
     final ok = await confirmAdminAction(
       context,
-      message: l10n.adminMfaResetConfirm(m.displayName),
+      message: privileged
+          ? l10n.adminMfaResetConfirm(m.displayName)
+          : l10n.adminMfaResetConfirmOptional(m.displayName),
       confirmLabel: l10n.adminMfaReset,
       destructive: true,
     );
     if (!ok) return;
     try {
       await ref.read(membersProvider.notifier).resetMfa(m.id);
-      showInfoSnackBar(l10n.adminMfaResetDone);
+      showInfoSnackBar(privileged
+          ? l10n.adminMfaResetDone
+          : l10n.adminMfaResetDoneOptional);
     } catch (e) {
       // MFA_RESET_FORBIDDEN / MFA_RESET_SELF_FORBIDDEN / MEMBER_NOT_FOUND.
       if (context.mounted) showErrorSnackBar(authErrorMessage(context, e));
@@ -204,6 +217,8 @@ class MembersPanel extends ConsumerWidget {
           final m = members[i - 1];
           final role = roles.where((r) => r.id == m.roleId).firstOrNull;
           final isSelf = m.id == selfId;
+          // An unresolvable role counts as privileged (the stricter wording).
+          final privileged = isPrivilegedTarget(roleId: m.roleId, role: role);
           return MemberTile(
             member: m,
             roleName: role?.name,
@@ -212,13 +227,15 @@ class MembersPanel extends ConsumerWidget {
             canResetMfa: canResetMemberMfa(
               isSelf: isSelf,
               callerIsOwner: callerIsOwner,
+              callerCanManageMembers: canManageMembers,
               targetMfaEnabled: m.mfaEnabled,
-              targetPrivileged: isPrivilegedRole(role),
+              targetPrivileged: privileged,
             ),
             onEdit: () => _edit(context, ref, m, isSelf: isSelf),
             onEditAiContext: () => _editAiContext(context, ref, m),
             onToggleBlock: () => _toggleBlock(context, ref, m),
-            onResetMfa: () => _resetMfa(context, ref, m),
+            onResetMfa: () =>
+                _resetMfa(context, ref, m, privileged: privileged),
           );
         },
       ),

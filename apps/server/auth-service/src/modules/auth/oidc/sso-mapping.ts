@@ -16,7 +16,7 @@ export interface SsoMappingResult {
 }
 
 // Higher index = higher precedence. Custom roles (not listed) rank lowest (-1).
-const ROLE_PRECEDENCE = ['Member', 'Manager', 'Admin', 'Owner'];
+const ROLE_PRECEDENCE = ['Member', 'Admin', 'Owner'];
 
 function rank(roleName: string): number {
   return ROLE_PRECEDENCE.indexOf(roleName);
@@ -34,7 +34,10 @@ function mapped(
 
 /**
  * Pure mapping from IdP group names to a PON role id + department ids.
- * No IO — caller supplies the role-name→id map and applies the result.
+ * No IO — caller supplies the role-name→id map and applies the result. Only
+ * roles in that map are candidates: a mapping to an unknown (or deliberately
+ * left out, e.g. Owner) role is skipped, so the next mapped group or the
+ * default role applies instead.
  * Mapped role names that do not exist are skipped (a stale 'Ghost' mapping can
  * no longer shadow a valid one, nor null the role).
  */

@@ -9,18 +9,26 @@ const roles: Role[] = [
   { _id: 'r-owner', name: 'Owner', isPreset: true, permissions: {} },
   { _id: 'r-member', name: 'Member', isPreset: true, permissions: {} },
   { _id: 'r-admin', name: 'Admin', isPreset: true, permissions: {} },
+  // Custom roles: an admin-like clone and a plain one.
+  { _id: 'r-hr', name: 'HR lead', isPreset: false, permissions: { MANAGE_MEMBERS: true } },
+  { _id: 'r-sales', name: 'Sales', isPreset: false, permissions: { USE_GROUP_BOT: true } },
 ]
 
 const members: Member[] = [
   // The signed-in user's own row has 2FA on — still never resettable by themselves.
   { _id: 'me', displayName: 'Admin Me', email: 'me@x.io', status: 'active', roleId: 'r-member', mfaEnabled: true },
+  // 2FA not set up yet — nothing to reset.
   { _id: 'bob', displayName: 'Bob', email: 'bob@x.io', status: 'active', roleId: 'r-member' },
-  { _id: 'eve', displayName: 'Eve', email: 'eve@x.io', status: 'blocked' },
-  { _id: 'olga', displayName: 'Olga', email: 'olga@x.io', status: 'active', roleId: 'r-owner' },
+  { _id: 'eve', displayName: 'Eve', email: 'eve@x.io', status: 'blocked', mfaEnabled: true },
+  { _id: 'olga', displayName: 'Olga', email: 'olga@x.io', status: 'active', roleId: 'r-owner', mfaEnabled: true },
   { _id: 'ada', displayName: 'Ada', email: 'ada@x.io', status: 'active', roleId: 'r-admin', mfaEnabled: true },
+  { _id: 'hal', displayName: 'Hal', email: 'hal@x.io', status: 'active', roleId: 'r-hr', mfaEnabled: true },
+  { _id: 'sam', displayName: 'Sam', email: 'sam@x.io', status: 'active', roleId: 'r-sales', mfaEnabled: true },
+  // A role this caller can't resolve (not in the role list).
+  { _id: 'uma', displayName: 'Uma', email: 'uma@x.io', status: 'active', roleId: 'r-unknown', mfaEnabled: true },
 ]
 
-const caps = vi.hoisted(() => ({ role: 'Admin' }))
+const caps = vi.hoisted(() => ({ role: 'Admin', manageMembers: true }))
 const updateMutate = vi.hoisted(() => vi.fn())
 const resetMfaMutate = vi.hoisted(() => vi.fn())
 
@@ -34,7 +42,7 @@ vi.mock('@/lib/hooks/use-admin', () => ({
   useResetMemberMfa: () => ({ mutate: resetMfaMutate, isPending: false }),
 }))
 vi.mock('@/lib/hooks/use-capabilities', () => ({
-  useHasCapability: () => true,
+  useHasCapability: (cap: string) => (cap === 'MANAGE_MEMBERS' ? caps.manageMembers : true),
   useCapabilities: () => ({ data: { role: caps.role } }),
 }))
 vi.mock('@/components/admin/EditMemberAiContextModal', () => ({ EditMemberAiContextModal: () => null }))
@@ -51,6 +59,7 @@ function openEdit(rowIndex: number) {
 describe('MembersPanel', () => {
   beforeEach(() => {
     caps.role = 'Admin'
+    caps.manageMembers = true
     updateMutate.mockReset()
     resetMfaMutate.mockReset()
     window.matchMedia = vi.fn().mockReturnValue({
@@ -124,23 +133,41 @@ describe('MembersPanel', () => {
       render(<MembersPanel />)
       expect(within(row('ada')).getByTestId('member-mfa-badge')).toHaveTextContent('memberMfaOn')
       expect(within(row('me')).getByTestId('member-mfa-badge')).toBeInTheDocument()
+      expect(within(row('olga')).getByTestId('member-mfa-badge')).toBeInTheDocument()
       expect(within(row('bob')).queryByTestId('member-mfa-badge')).toBeNull()
-      expect(within(row('olga')).queryByTestId('member-mfa-badge')).toBeNull()
     })
 
-    it('never offers "Reset 2FA" to a non-Owner', () => {
+    const resettable = () =>
+      members
+        .filter((m) => within(row(m._id)).queryByLabelText('memberMfaReset'))
+        .map((m) => m._id)
+
+    it('offers "Reset 2FA" to an Owner on every other member with 2FA on, never on their own row', () => {
+      caps.role = 'Owner'
+      render(<MembersPanel />)
+      // Not bob: 2FA isn't set up, so there is nothing to reset.
+      expect(resettable()).toEqual(['eve', 'olga', 'ada', 'hal', 'sam', 'uma'])
+    })
+
+    it('offers "Reset 2FA" to an Admin only on members that are not Owner/Admin-like', () => {
+      render(<MembersPanel />)
+      // sam: plain custom role; eve: no role (= Member). Never the Owner, the
+      // Admin, the admin-like custom role, an unresolvable role, self — or bob
+      // (Member, but 2FA not set up).
+      expect(resettable()).toEqual(['eve', 'sam'])
+    })
+
+    it('never offers "Reset 2FA" without MANAGE_MEMBERS', () => {
+      caps.manageMembers = false
       render(<MembersPanel />)
       expect(screen.queryAllByLabelText('memberMfaReset')).toHaveLength(0)
     })
 
-    it('offers "Reset 2FA" to an Owner on other privileged members, never on their own row', () => {
-      caps.role = 'Owner'
+    it('lets an Admin confirm a reset on a plain member', () => {
       render(<MembersPanel />)
-      expect(within(row('me')).queryByLabelText('memberMfaReset')).toBeNull()
-      expect(within(row('bob')).queryByLabelText('memberMfaReset')).toBeNull()
-      expect(within(row('eve')).queryByLabelText('memberMfaReset')).toBeNull()
-      expect(within(row('olga')).getByLabelText('memberMfaReset')).toBeInTheDocument()
-      expect(within(row('ada')).getByLabelText('memberMfaReset')).toBeInTheDocument()
+      fireEvent.click(within(row('sam')).getByLabelText('memberMfaReset'))
+      fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'memberMfaReset' }))
+      expect(resetMfaMutate).toHaveBeenCalledWith('sam', expect.anything())
     })
 
     it('asks for confirmation before resetting', () => {
@@ -153,6 +180,19 @@ describe('MembersPanel', () => {
       expect(within(dialog).getByText('memberMfaResetTitle')).toBeInTheDocument()
       fireEvent.click(within(dialog).getByRole('button', { name: 'memberMfaReset' }))
       expect(resetMfaMutate).toHaveBeenCalledWith('ada', expect.anything())
+    })
+
+    it('explains a Member reset as "2FA off" and an Owner/Admin-like reset as "set up again" (contract 15)', () => {
+      caps.role = 'Owner'
+      render(<MembersPanel />)
+      // sam: plain custom role → 2FA is optional for them.
+      fireEvent.click(within(row('sam')).getByLabelText('memberMfaReset'))
+      expect(within(screen.getByRole('dialog')).getByText('memberMfaResetConfirmOptional')).toBeInTheDocument()
+      fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'cancel' }))
+
+      // ada: Admin → 2FA is mandatory, set up again at the next sign-in.
+      fireEvent.click(within(row('ada')).getByLabelText('memberMfaReset'))
+      expect(within(screen.getByRole('dialog')).getByText('memberMfaResetConfirm')).toBeInTheDocument()
     })
 
     it('cancelling the confirmation resets nothing', () => {

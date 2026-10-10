@@ -17,6 +17,7 @@ import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { authService } from '@/lib/api/auth'
 import { passwordChangeErrorKey } from '@/lib/auth/password-change-error'
+import { parseAuthError } from '@/lib/auth/auth-error'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -84,9 +85,14 @@ export default function SecurityPage() {
       setConfirmPw('')
     } catch (e: unknown) {
       // Mapped by error `code`, never the raw English server text
-      // (.claude/rules/no-raw-system-data-in-ui.md).
-      const { key, values } = passwordChangeErrorKey(e)
-      setError(t(key, values))
+      // (.claude/rules/no-raw-system-data-in-ui.md). SSO_REQUIRED (passwords are
+      // off for an SSO-enforced domain) gets this screen's own wording.
+      if (parseAuthError(e).code === 'SSO_REQUIRED') {
+        setError(t('ssoPasswordDisabled'))
+      } else {
+        const { key, values } = passwordChangeErrorKey(e)
+        setError(t(key, values))
+      }
     } finally {
       setSaving(false)
     }

@@ -5,33 +5,40 @@ jest.mock('bcrypt', () => ({
   hash: jest.fn().mockResolvedValue('reset-hash'),
 }));
 
-import { createHash } from 'node:crypto';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { createHash } from 'node:crypto';
 import { REDIS_CLIENT } from '@platform/database';
 import { AuthService } from './auth.service';
 import { SessionService } from './session.service';
 import { ClaimsService } from './claims.service';
 import { UsersService } from '../users/users.service';
-import { MailService } from '../Email/mail.service';
 import { OtpService } from './otp.service';
+import { MailService } from '../Email/mail.service';
 import { SsoMappingService } from './oidc/sso-mapping.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SocialProvisioningService } from './social-provisioning.service';
 import { OAuthRedirectService } from './oauth-redirect.service';
 import { LoginAttemptsService } from './login-attempts.service';
 import { MfaChallengeService } from '../mfa/mfa-challenge.service';
+import { MfaPendingStore } from '../mfa/mfa-pending.store';
+import { FakeRedis } from '../mfa/fake-redis.spec-helper';
+import { SsoPolicyService, ssoRequired } from '../sso/sso-policy.service';
+import { PasswordRecoveryService } from './password-recovery.service';
 
-describe('AuthService — account status enforcement (invite-only)', () => {
+describe('AuthService — sign-in, sessions, Require SSO', () => {
   let service: AuthService;
   let users: Record<string, jest.Mock>;
   let session: Record<string, jest.Mock>;
   let attempts: Record<string, jest.Mock>;
   let redis: Record<string, jest.Mock>;
   let mfa: { challengeIfRequired: jest.Mock };
+  let sso: { isEnforcedFor: jest.Mock; assertNotEnforced: jest.Mock };
+  let recovery: { rejectUnverifiedLogin: jest.Mock };
+  let ssoMapping: Record<string, jest.Mock>;
 
   const activeUser = {
     _id: { toString: () => 'u1' },
@@ -56,8 +63,12 @@ describe('AuthService — account status enforcement (invite-only)', () => {
         .fn()
         .mockResolvedValue({ userId: 'u1', newRefreshToken: 'r2' }),
       revokeAllSessions: jest.fn().mockResolvedValue(undefined),
-      peekSessionUserId: jest.fn().mockResolvedValue('u1'),
+      markClaimsStale: jest.fn().mockResolvedValue(undefined),
+      peekSession: jest
+        .fn()
+        .mockResolvedValue({ userId: 'u1', method: 'password' }),
       refreshTokenBelongsToSession: jest.fn().mockResolvedValue(true),
+      revokeSessionsNotCreatedBy: jest.fn().mockResolvedValue(1),
     };
     attempts = {
       checkBruteForce: jest.fn().mockResolvedValue(undefined),
@@ -69,8 +80,27 @@ describe('AuthService — account status enforcement (invite-only)', () => {
       reset: jest.fn().mockResolvedValue(undefined),
     };
     redis = { getdel: jest.fn() };
-    // Default: not privileged → normal sign-in.
+    // Default: no 2FA step (as for a bot) → tokens; 2FA tests override it.
     mfa = { challengeIfRequired: jest.fn().mockResolvedValue(null) };
+    // Default: Require SSO does not apply.
+    sso = {
+      isEnforcedFor: jest.fn().mockResolvedValue(false),
+      assertNotEnforced: jest.fn(),
+    };
+    sso.assertNotEnforced.mockImplementation(async (subject: unknown) => {
+      if (await sso.isEnforcedFor(subject)) throw ssoRequired();
+    });
+    recovery = {
+      rejectUnverifiedLogin: jest
+        .fn()
+        .mockRejectedValue(
+          new UnauthorizedException({ code: 'ACCOUNT_UNVERIFIED_OTP_SENT' }),
+        ),
+    };
+    ssoMapping = {
+      getGate: jest.fn().mockResolvedValue({ enabled: true, allowedDomains: [] }),
+      apply: jest.fn().mockResolvedValue({ changed: false }),
+    };
     (bcrypt.compare as jest.Mock).mockReset().mockResolvedValue(true);
 
     const moduleRef = await Test.createTestingModule({
@@ -90,11 +120,7 @@ describe('AuthService — account status enforcement (invite-only)', () => {
           },
         },
         { provide: UsersService, useValue: users },
-        { provide: MailService, useValue: {} },
-        // Real OtpService over the mocked UsersService/MailService, so OTP
-        // paths behave exactly as they do in production.
-        OtpService,
-        { provide: SsoMappingService, useValue: {} },
+        { provide: SsoMappingService, useValue: ssoMapping },
         {
           provide: NotificationsService,
           useValue: {
@@ -107,6 +133,8 @@ describe('AuthService — account status enforcement (invite-only)', () => {
         { provide: OAuthRedirectService, useValue: {} },
         { provide: LoginAttemptsService, useValue: attempts },
         { provide: MfaChallengeService, useValue: mfa },
+        { provide: SsoPolicyService, useValue: sso },
+        { provide: PasswordRecoveryService, useValue: recovery },
         { provide: ConfigService, useValue: { get: () => undefined } },
         { provide: REDIS_CLIENT, useValue: redis },
       ],
@@ -233,7 +261,7 @@ describe('AuthService — account status enforcement (invite-only)', () => {
     });
   });
 
-  describe('mandatory 2FA gate (privileged users)', () => {
+  describe('2FA gate (when the challenge service asks for it)', () => {
     const challenge = {
       code: 'MFA_REQUIRED',
       mfaToken: 'mfa-token',
@@ -249,6 +277,7 @@ describe('AuthService — account status enforcement (invite-only)', () => {
       expect(mfa.challengeIfRequired).toHaveBeenCalledWith(activeUser, {
         deviceId: 'web-login',
         platform: 'web',
+        method: 'password',
       });
       expect(session.createSession).not.toHaveBeenCalled();
       // The password was right: the brute-force counter is cleared.
@@ -272,6 +301,7 @@ describe('AuthService — account status enforcement (invite-only)', () => {
       expect(mfa.challengeIfRequired).toHaveBeenCalledWith(activeUser, {
         deviceId: 'dev-1',
         platform: 'mobile',
+        method: 'google',
       });
       expect(session.createSession).not.toHaveBeenCalled();
     });
@@ -298,10 +328,6 @@ describe('AuthService — account status enforcement (invite-only)', () => {
 
     it('OIDC SSO callback mints an "oidc" login code (exempt at exchange)', async () => {
       const redirectWithLoginCode = jest.fn().mockResolvedValue(undefined);
-      Object.assign(service['ssoMapping'], {
-        getGate: jest.fn().mockResolvedValue({ enabled: true, allowedDomains: [] }),
-        apply: jest.fn().mockResolvedValue({ changed: false }),
-      });
       Object.assign(service['socialProvisioning'], {
         resolveUserId: jest.fn().mockResolvedValue('u1'),
       });
@@ -355,7 +381,7 @@ describe('AuthService — account status enforcement (invite-only)', () => {
     });
 
     it('unknown session → falls through to the rotation error', async () => {
-      session.peekSessionUserId.mockResolvedValue(null);
+      session.peekSession.mockResolvedValue(null);
       session.rotateRefreshToken.mockRejectedValue(
         new UnauthorizedException({ code: 'SESSION_INVALID' }),
       );
@@ -376,47 +402,318 @@ describe('AuthService — account status enforcement (invite-only)', () => {
     });
   });
 
-  describe('forgot-password / resend-otp', () => {
-    it('blocked user gets 403 ACCOUNT_BLOCKED and no OTP', async () => {
-      redis.incr = jest.fn().mockResolvedValue(1);
-      redis.expire = jest.fn();
-      redis.get = jest.fn().mockResolvedValue(null);
-      users.findByEmail.mockResolvedValue({ ...activeUser, status: 'blocked' });
-      users.updateOtp = jest.fn();
+  describe('2FA policy (real challenge service): mandatory for admins, opt-in for Members', () => {
+    let pendingRedis: FakeRedis;
+    let pending: MfaPendingStore;
+    let claims: { resolve: jest.Mock };
+    const asRole = (role: string, perms: string[] = []) =>
+      claims.resolve.mockResolvedValue({ role, perms, depts: [] });
 
-      await expect(
-        service.forgotPassword('jane@acme.com'),
-      ).rejects.toMatchObject({
-        response: { code: 'ACCOUNT_BLOCKED' },
+    beforeEach(() => {
+      pendingRedis = new FakeRedis();
+      pending = new MfaPendingStore(pendingRedis as never);
+      claims = { resolve: jest.fn() };
+      asRole('Member', ['USE_GROUP_BOT']);
+      const real = new MfaChallengeService(claims as never, pending);
+      mfa.challengeIfRequired.mockImplementation((u, c) =>
+        real.challengeIfRequired(u, c),
+      );
+    });
+
+    it('login of a Member who never turned 2FA on → LOGIN_SUCCESS + tokens, no 2FA step', async () => {
+      users.findByEmail.mockResolvedValue(activeUser);
+      const res = await service.login({ email: 'jane@acme.com', password: 'x' } as any);
+      expect(res).toMatchObject({
+        code: 'LOGIN_SUCCESS',
+        accessToken: 'jwt',
+        refreshToken: 'r1',
+        sid: 's1',
       });
-      await expect(service.resendOtp('jane@acme.com')).rejects.toMatchObject({
-        response: { code: 'ACCOUNT_BLOCKED' },
+      expect(session.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: 'u1', method: 'password' }),
+      );
+      expect(pendingRedis.keys('mfa:pending:')).toEqual([]);
+    });
+
+    it('login of a Member who turned 2FA on → MFA_REQUIRED (verify), no session', async () => {
+      users.findByEmail.mockResolvedValue({ ...activeUser, mfa: { enabled: true } });
+      const res = await service.login({ email: 'jane@acme.com', password: 'x' } as any);
+      expect(res).toMatchObject({ code: 'MFA_REQUIRED', enrollmentRequired: false });
+      expect(session.createSession).not.toHaveBeenCalled();
+      expect(await pending.get((res as any).mfaToken)).toMatchObject({
+        userId: 'u1',
+        stage: 'verify',
+        method: 'password',
       });
-      expect(users.updateOtp).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['Owner', []],
+      ['Admin', ['MANAGE_MEMBERS']],
+      ['a custom role with MANAGE_WORKSPACE', ['MANAGE_WORKSPACE']],
+    ])('login of %s, never enrolled → MFA_REQUIRED (enrollment), no session', async (role, perms) => {
+      asRole(role, perms);
+      users.findByEmail.mockResolvedValue(activeUser);
+      const res = await service.login({ email: 'jane@acme.com', password: 'x' } as any);
+      expect(res).toMatchObject({ code: 'MFA_REQUIRED', enrollmentRequired: true });
+      expect(session.createSession).not.toHaveBeenCalled();
+      expect((await pending.get((res as any).mfaToken))?.stage).toBe('enroll');
+    });
+
+    it('login of an enrolled Admin → MFA_REQUIRED (verify)', async () => {
+      asRole('Admin', ['MANAGE_MEMBERS']);
+      users.findByEmail.mockResolvedValue({ ...activeUser, mfa: { enabled: true } });
+      const res = await service.login({ email: 'jane@acme.com', password: 'x' } as any);
+      expect(res).toMatchObject({ code: 'MFA_REQUIRED', enrollmentRequired: false });
+    });
+
+    it('Google exchange of a Member without 2FA → tokens (google session)', async () => {
+      redis.getdel.mockResolvedValue(JSON.stringify({ userId: 'u1', via: 'google' }));
+      users.findById.mockResolvedValue(activeUser);
+      const res = await service.exchangeLoginCode('c', 'd', 'mobile');
+      expect(res).toMatchObject({ userId: 'u1', sid: 's1', accessToken: 'jwt' });
+      expect(session.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({ method: 'google', platform: 'mobile' }),
+      );
+    });
+
+    it('Google exchange of a Member who turned 2FA on → MFA_REQUIRED (verify), no session', async () => {
+      redis.getdel.mockResolvedValue(JSON.stringify({ userId: 'u1', via: 'google' }));
+      users.findById.mockResolvedValue({ ...activeUser, mfa: { enabled: true } });
+      const res = await service.exchangeLoginCode('c', 'd', 'mobile');
+      expect(res).toMatchObject({ code: 'MFA_REQUIRED', enrollmentRequired: false });
+      expect(session.createSession).not.toHaveBeenCalled();
+      expect((await pending.get((res as any).mfaToken))?.method).toBe('google');
+    });
+
+    it('Google exchange of an Admin → MFA_REQUIRED (enrollment), no session', async () => {
+      asRole('Admin', ['MANAGE_MEMBERS']);
+      redis.getdel.mockResolvedValue(JSON.stringify({ userId: 'u1', via: 'google' }));
+      users.findById.mockResolvedValue(activeUser);
+      const res = await service.exchangeLoginCode('c', 'd', 'mobile');
+      expect(res).toMatchObject({ code: 'MFA_REQUIRED', enrollmentRequired: true });
+      expect(session.createSession).not.toHaveBeenCalled();
+    });
+
+    it('invitation accepted with a password for a Member role → LOGIN_SUCCESS + invite session', async () => {
+      const res = await service.startSignIn(activeUser as any, {
+        deviceId: 'web-login',
+        platform: 'web',
+        method: 'invite',
+      });
+      expect(res).toMatchObject({ code: 'LOGIN_SUCCESS', sid: 's1', accessToken: 'jwt' });
+      expect(session.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({ method: 'invite' }),
+      );
+    });
+
+    it('invitation accepted with a password for an Admin role → MFA_REQUIRED (enrollment), no session', async () => {
+      asRole('Admin', ['MANAGE_MEMBERS']);
+      const res = await service.startSignIn(activeUser as any, {
+        deviceId: 'web-login',
+        platform: 'web',
+        method: 'invite',
+      });
+      expect(res).toMatchObject({ code: 'MFA_REQUIRED', enrollmentRequired: true });
+      expect(session.createSession).not.toHaveBeenCalled();
+      expect((await pending.get((res as any).mfaToken))?.method).toBe('invite');
+    });
+
+    it('a bot account gets tokens directly (even with an admin role)', async () => {
+      asRole('Admin', ['MANAGE_MEMBERS']);
+      const res = await service.startSignIn({ ...activeUser, isBot: true } as any, {
+        deviceId: 'svc',
+        platform: 'web',
+        method: 'password',
+      });
+      expect(res).toMatchObject({ code: 'LOGIN_SUCCESS', sid: 's1' });
+    });
+
+    it('an OIDC exchange skips 2FA entirely (even an enrolled Admin)', async () => {
+      asRole('Admin', ['MANAGE_MEMBERS']);
+      redis.getdel.mockResolvedValue(JSON.stringify({ userId: 'u1', via: 'oidc' }));
+      users.findById.mockResolvedValue({ ...activeUser, mfa: { enabled: true } });
+      await expect(service.exchangeLoginCode('c')).resolves.toMatchObject({ sid: 's1' });
+      expect(pendingRedis.keys('mfa:pending:')).toEqual([]);
     });
   });
 
-  describe('reset-password', () => {
-    it('writes through updatePassword (which clears mustSetPassword) and revokes sessions', async () => {
-      redis.incr = jest.fn().mockResolvedValue(1);
-      redis.expire = jest.fn();
-      redis.del = jest.fn();
-      users.findByEmail.mockResolvedValue({
-        ...activeUser,
-        otpCode: createHash('sha256').update('123456').digest('hex'),
-        otpExpires: new Date(Date.now() + 60_000),
-      });
-      users.setVerified = jest.fn();
-      users.updatePassword = jest.fn().mockResolvedValue(undefined);
-
-      await expect(
-        service.resetPassword('jane@acme.com', '123456', 'N3wPassw0rd'),
-      ).resolves.toEqual({ success: true, code: 'PASSWORD_UPDATED' });
-      expect(users.updatePassword).toHaveBeenCalledWith('u1', 'reset-hash');
-      expect(session.revokeAllSessions).toHaveBeenCalledWith(
-        'u1',
-        'password_reset',
+  describe('Require SSO (enforced member)', () => {
+    const enforcedFor = (...emails: string[]) =>
+      sso.isEnforcedFor.mockImplementation(async (s: { email?: string } | null) =>
+        emails.includes(String(s?.email)),
       );
+
+    describe('password login', () => {
+      it.each([
+        ['right', true],
+        ['wrong', false],
+      ])(
+        '%s password → 403 SSO_REQUIRED; password never compared, nothing counted',
+        async (_l, matches) => {
+          enforcedFor('jane@acme.com');
+          users.findByEmail.mockResolvedValue(activeUser);
+          (bcrypt.compare as jest.Mock).mockResolvedValue(matches);
+          await expect(
+            service.login({ email: 'jane@acme.com', password: 'x' } as any),
+          ).rejects.toMatchObject({ status: 403, response: { code: 'SSO_REQUIRED' } });
+          expect(bcrypt.compare).not.toHaveBeenCalled();
+          expect(attempts.handleFailedLogin).not.toHaveBeenCalled();
+          expect(attempts.reset).not.toHaveBeenCalled();
+          expect(mfa.challengeIfRequired).not.toHaveBeenCalled();
+          expect(session.createSession).not.toHaveBeenCalled();
+        },
+      );
+
+      it('unknown email in an enforced domain → the same SSO_REQUIRED (no enumeration)', async () => {
+        enforcedFor('ghost@acme.com');
+        users.findByEmail.mockResolvedValue(null);
+        await expect(
+          service.login({ email: 'ghost@acme.com', password: 'x' } as any),
+        ).rejects.toMatchObject({ response: { code: 'SSO_REQUIRED' } });
+        expect(sso.isEnforcedFor).toHaveBeenCalledWith({ email: 'ghost@acme.com' });
+        expect(attempts.handleFailedLogin).not.toHaveBeenCalled();
+      });
+
+      it('a blocked enforced member gets SSO_REQUIRED (status not revealed without a password check)', async () => {
+        enforcedFor('jane@acme.com');
+        users.findByEmail.mockResolvedValue({ ...activeUser, status: 'blocked' });
+        await expect(
+          service.login({ email: 'jane@acme.com', password: 'x' } as any),
+        ).rejects.toMatchObject({ response: { code: 'SSO_REQUIRED' } });
+      });
+
+      it('not enforced (e.g. an Owner) → normal password flow', async () => {
+        users.findByEmail.mockResolvedValue(activeUser);
+        await expect(
+          service.login({ email: 'jane@acme.com', password: 'x' } as any),
+        ).resolves.toMatchObject({ code: 'LOGIN_SUCCESS' });
+        expect(bcrypt.compare).toHaveBeenCalled();
+        expect(session.createSession).toHaveBeenCalledWith(
+          expect.objectContaining({ method: 'password' }),
+        );
+      });
+
+      it('unverified account → OTP path (never a session)', async () => {
+        users.findByEmail.mockResolvedValue({ ...activeUser, isVerified: false });
+        await expect(
+          service.login({ email: 'jane@acme.com', password: 'x' } as any, 'vi'),
+        ).rejects.toMatchObject({ response: { code: 'ACCOUNT_UNVERIFIED_OTP_SENT' } });
+        expect(recovery.rejectUnverifiedLogin).toHaveBeenCalledWith(
+          expect.objectContaining({ email: 'jane@acme.com' }),
+          'vi',
+        );
+        expect(session.createSession).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('login-code exchange', () => {
+      it('Google code → 403 SSO_REQUIRED before 2FA, no session', async () => {
+        enforcedFor('jane@acme.com');
+        redis.getdel.mockResolvedValue(JSON.stringify({ userId: 'u1', via: 'google' }));
+        users.findById.mockResolvedValue(activeUser);
+        await expect(service.exchangeLoginCode('c')).rejects.toMatchObject({
+          status: 403,
+          response: { code: 'SSO_REQUIRED' },
+        });
+        expect(mfa.challengeIfRequired).not.toHaveBeenCalled();
+        expect(session.createSession).not.toHaveBeenCalled();
+      });
+
+      it('OIDC code → oidc session; the set-password gate does not apply', async () => {
+        enforcedFor('jane@acme.com');
+        redis.getdel.mockResolvedValue(JSON.stringify({ userId: 'u1', via: 'oidc' }));
+        users.findById.mockResolvedValue({ ...activeUser, mustSetPassword: true });
+        const res = await service.exchangeLoginCode('c', 'd', 'web');
+        expect(res).toMatchObject({ sid: 's1', user: { mustSetPassword: false } });
+        expect(session.createSession).toHaveBeenCalledWith({
+          userId: 'u1',
+          deviceId: 'd',
+          platform: 'web',
+          method: 'oidc',
+        });
+      });
+    });
+
+    it('issueTokensForUser refuses a non-SSO session (enforcement switched on during 2FA)', async () => {
+      enforcedFor('jane@acme.com');
+      for (const method of ['password', 'google', 'invite'] as const) {
+        await expect(
+          service.issueTokensForUser(activeUser, 'd', 'web', method),
+        ).rejects.toMatchObject({ response: { code: 'SSO_REQUIRED' } });
+      }
+      expect(session.createSession).not.toHaveBeenCalled();
+    });
+
+    describe('refresh', () => {
+      it.each(['password', 'google', 'invite', ''])(
+        'session method "%s" → revoke non-SSO sessions + 403 SSO_REQUIRED, no rotation',
+        async (method) => {
+          enforcedFor('jane@acme.com');
+          users.findById.mockResolvedValue(activeUser);
+          session.peekSession.mockResolvedValue({ userId: 'u1', method });
+          await expect(service.refresh('s1', 'r1')).rejects.toMatchObject({
+            status: 403,
+            response: { code: 'SSO_REQUIRED' },
+          });
+          expect(session.revokeSessionsNotCreatedBy).toHaveBeenCalledWith(
+            'u1',
+            'oidc',
+            'sso_enforced',
+          );
+          expect(session.rotateRefreshToken).not.toHaveBeenCalled();
+        },
+      );
+
+      it('an SSO (oidc) session keeps refreshing', async () => {
+        enforcedFor('jane@acme.com');
+        users.findById.mockResolvedValue(activeUser);
+        session.peekSession.mockResolvedValue({ userId: 'u1', method: 'oidc' });
+        await expect(service.refresh('s1', 'r1')).resolves.toEqual({
+          accessToken: 'jwt',
+          refreshToken: 'r2',
+        });
+        expect(session.revokeSessionsNotCreatedBy).not.toHaveBeenCalled();
+      });
+
+      it('a foreign refresh token → normal session error, nothing revoked or revealed', async () => {
+        enforcedFor('jane@acme.com');
+        users.findById.mockResolvedValue(activeUser);
+        session.refreshTokenBelongsToSession.mockResolvedValue(false);
+        session.rotateRefreshToken.mockRejectedValue(
+          new UnauthorizedException({ code: 'REFRESH_TOKEN_INVALID' }),
+        );
+        await expect(service.refresh('s1', 'bogus')).rejects.toMatchObject({
+          response: { code: 'REFRESH_TOKEN_INVALID' },
+        });
+        expect(session.revokeSessionsNotCreatedBy).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('OIDC sign-in: other sessions are touched only when the mapping changed something', () => {
+    const profile = { email: 'jane@acme.com', displayName: 'Jane', id: 'sub', groups: ['g'] };
+    beforeEach(() => {
+      Object.assign(service['socialProvisioning'], {
+        resolveUserId: jest.fn().mockResolvedValue('u1'),
+      });
+      Object.assign(service['oauthRedirect'], {
+        redirectWithLoginCode: jest.fn().mockResolvedValue(undefined),
+      });
+    });
+
+    it('unchanged role / departments → other sessions stay', async () => {
+      ssoMapping.apply.mockResolvedValue({ changed: false });
+      await service.handleOidcLogin(profile, {} as any, 'web');
+      expect(session.revokeAllSessions).not.toHaveBeenCalled();
+      expect(session.markClaimsStale).not.toHaveBeenCalled();
+    });
+
+    it('changed → claims marked stale (other devices refresh, nobody is signed out)', async () => {
+      ssoMapping.apply.mockResolvedValue({ changed: true });
+      await service.handleOidcLogin(profile, {} as any, 'web');
+      expect(session.markClaimsStale).toHaveBeenCalledWith('u1');
+      expect(session.revokeAllSessions).not.toHaveBeenCalled();
     });
   });
 });
@@ -428,6 +725,8 @@ describe('AuthService — account status enforcement (invite-only)', () => {
  */
 describe('AuthService — OTP / email-normalization flows', () => {
   let service: AuthService;
+  // forgot / verify / reset / resend moved to PasswordRecoveryService (real, over the mocks).
+  let recovery: PasswordRecoveryService;
   let store: Map<string, string>;
   let user: any;
   let users: Record<string, jest.Mock>;
@@ -517,10 +816,20 @@ describe('AuthService — OTP / email-normalization flows', () => {
         { provide: LoginAttemptsService, useValue: attempts },
         { provide: ConfigService, useValue: { get: (_k: string, d?: unknown) => d } },
         { provide: MfaChallengeService, useValue: { challengeIfRequired: jest.fn().mockResolvedValue(null) } },
+        // Require SSO off: nothing here is enforced.
+        {
+          provide: SsoPolicyService,
+          useValue: {
+            assertNotEnforced: jest.fn().mockResolvedValue(undefined),
+            isEnforcedFor: jest.fn().mockResolvedValue(false),
+          },
+        },
+        PasswordRecoveryService,
         { provide: REDIS_CLIENT, useValue: redis },
       ],
     }).compile();
     service = moduleRef.get(AuthService);
+    recovery = moduleRef.get(PasswordRecoveryService);
   });
 
   function emailedOtp(): string {
@@ -529,17 +838,17 @@ describe('AuthService — OTP / email-normalization flows', () => {
   }
 
   it('mobile forgot-password: verify-otp THEN reset-password with the same code succeeds (E2E)', async () => {
-    await service.forgotPassword('bob@qc.test');
+    await recovery.forgotPassword('bob@qc.test');
     const otp = emailedOtp();
     expect(user.otpCode).toBe(sha(otp));
 
-    await expect(service.verifyOtp('bob@qc.test', otp)).resolves.toMatchObject({
+    await expect(recovery.verifyOtp('bob@qc.test', otp)).resolves.toMatchObject({
       code: 'OTP_VALID',
     });
     // verify-otp must not consume the code…
     expect(user.otpCode).toBe(sha(otp));
 
-    await expect(service.resetPassword('bob@qc.test', otp, 'new-password')).resolves.toMatchObject(
+    await expect(recovery.resetPassword('bob@qc.test', otp, 'new-password')).resolves.toMatchObject(
       { code: 'PASSWORD_UPDATED' },
     );
     expect(users.updatePassword).toHaveBeenCalledWith('u1', 'new-hash');
@@ -547,29 +856,29 @@ describe('AuthService — OTP / email-normalization flows', () => {
   });
 
   it('a replayed reset after a successful reset still fails (the reset consumed the code)', async () => {
-    await service.forgotPassword('bob@qc.test');
+    await recovery.forgotPassword('bob@qc.test');
     const otp = emailedOtp();
-    await service.resetPassword('bob@qc.test', otp, 'new-password');
+    await recovery.resetPassword('bob@qc.test', otp, 'new-password');
 
-    await expect(service.resetPassword('bob@qc.test', otp, 'evil-password')).rejects.toMatchObject(
+    await expect(recovery.resetPassword('bob@qc.test', otp, 'evil-password')).rejects.toMatchObject(
       { status: 400, response: { code: 'OTP_INVALID' } },
     );
     expect(users.updatePassword).toHaveBeenCalledTimes(1);
   });
 
   it('normalizes the email (trim + lower-case) for the lookup and every Redis key', async () => {
-    await service.forgotPassword('  Bob@QC.test ');
+    await recovery.forgotPassword('  Bob@QC.test ');
     expect(users.findByEmail).toHaveBeenLastCalledWith('bob@qc.test');
     expect(store.get('forgot_otp_rate:bob@qc.test')).toBe('1');
     // The code is mailed to the address on file, not the typed variant.
     expect(mail.sendOtpEmail.mock.calls[0][0]).toBe('bob@qc.test');
 
     const otp = emailedOtp();
-    await service.verifyOtp('BOB@qc.TEST', '000000' === otp ? '111111' : '000000').catch(() => {});
+    await recovery.verifyOtp('BOB@qc.TEST', '000000' === otp ? '111111' : '000000').catch(() => {});
     expect(store.get('otp_attempts:bob@qc.test')).toBe('1');
-    await service.verifyOtp('Bob@Qc.Test', otp);
+    await recovery.verifyOtp('Bob@Qc.Test', otp);
 
-    await service.resendOtp('BOB@QC.TEST').catch(() => {});
+    await recovery.resendOtp('BOB@QC.TEST').catch(() => {});
     expect(store.has('otp_resend_cooldown:bob@qc.test')).toBe(true);
   });
 
@@ -588,21 +897,21 @@ describe('AuthService — OTP / email-normalization flows', () => {
   });
 
   it('resend-otp keeps the wrong-guess counter (no fresh batch of guesses per resend)', async () => {
-    await service.forgotPassword('bob@qc.test');
+    await recovery.forgotPassword('bob@qc.test');
     const otp = emailedOtp();
     const wrong = otp === '123456' ? '654321' : '123456';
     for (let i = 0; i < 3; i++) {
-      await service.verifyOtp('bob@qc.test', wrong).catch(() => {});
+      await recovery.verifyOtp('bob@qc.test', wrong).catch(() => {});
     }
     expect(store.get('otp_attempts:bob@qc.test')).toBe('3');
 
-    await service.resendOtp('bob@qc.test');
+    await recovery.resendOtp('bob@qc.test');
     expect(store.get('otp_attempts:bob@qc.test')).toBe('3');
 
-    await service.verifyOtp('bob@qc.test', wrong).catch(() => {});
-    await service.verifyOtp('bob@qc.test', wrong).catch(() => {});
+    await recovery.verifyOtp('bob@qc.test', wrong).catch(() => {});
+    await recovery.verifyOtp('bob@qc.test', wrong).catch(() => {});
     // 6th guess overall → exceeded even though a new code was sent.
-    await expect(service.verifyOtp('bob@qc.test', emailedOtp())).rejects.toMatchObject({
+    await expect(recovery.verifyOtp('bob@qc.test', emailedOtp())).rejects.toMatchObject({
       response: { code: 'OTP_ATTEMPTS_EXCEEDED' },
     });
   });

@@ -3,6 +3,53 @@
 All notable changes to PON. One version per promotion to `main`; web, mobile and the
 NestJS services share the product version (`apps/client/pubspec.yaml`, `apps/*/package.json`).
 
+## 1.4.0 — 2026-10-10
+
+One feature branch, `feat/new-login-on-main`: Hoàng Dũng's sign-in work (PR #168), rebased onto
+1.3.0 and tested on `dev`.
+
+### Upgrade note — the Manager preset role is gone
+
+- **On first boot, everyone holding the preset "Manager" role becomes a Member.** Their sessions
+  are revoked (they sign in again) and each move is audited. Members do not see internal AI
+  context, so give former managers Admin or a custom role if they need it. A custom role you
+  named "Manager" is left alone, and the name can be used again for a new custom role.
+
+### Require SSO
+
+- **Admin → SSO has a "Require SSO for these domains" switch.** When it is on, people whose email
+  is in the allowed domains can only sign in through the company identity provider: password
+  sign-in, Google, forgot / reset / change password, invitation accept and refreshing a
+  non-SSO session all answer "sign in with SSO". The check runs before any password is compared,
+  so nothing about the password leaks. Owners are exempt so one can always get in.
+- Turning it on signs out every session that was not opened through SSO (sessions now record how
+  they were opened). Passwords are disabled, never deleted, so turning it off restores them.
+- The switch refuses to turn on while SSO is off, no domain is listed or OIDC is not configured,
+  and the confirm dialog lists what will happen.
+- The sign-in screen explains the "SSO required" and "SSO unavailable" cases and highlights the
+  SSO button; a forced sign-out says it was because of SSO. Web and mobile.
+
+### Two-factor sign-in
+
+- **Members can turn 2FA on or off themselves** in Settings → Security (QR code, code, backup
+  codes; turning off takes a current or backup code). Once on, they are asked for a code at every
+  sign-in. Owners and Admins still must use 2FA and see it as required.
+- Accepting an invitation: Members sign straight in; Owners and Admins set up 2FA first.
+- Resetting someone's 2FA follows their role: Admins can reset Members, Owners anyone, nobody
+  themselves. Web and mobile.
+
+### SSO fixes
+
+- A group mapping never grants or removes Owner.
+- A role or department change from SSO only marks sign-in claims as stale when something really
+  changed, instead of signing the person out.
+- A failed OIDC discovery is no longer cached and shows "SSO unavailable" instead of a generic
+  error.
+
+### Web
+
+- Admin → Roles no longer loops while roles load, and the AI-context capabilities have labels.
+
 ## 1.3.0 — 2026-10-10
 
 Batches five branches that were tested together on `dev`: `feat/flutter-flavors-firebase-split`,

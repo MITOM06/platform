@@ -732,10 +732,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SsoInfoResponseDto"
+                }
+              }
+            }
           }
         },
-        "summary": "Public: whether the SSO button should show",
+        "summary": "Public: whether the SSO button shows and whether SSO is required",
         "tags": [
           "auth"
         ]
@@ -757,7 +764,7 @@
         },
         "responses": {
           "201": {
-            "description": "Tokens issued, or MFA_REQUIRED (privileged user, Google sign-in)",
+            "description": "MFA_REQUIRED (Google sign-in of an Owner / Admin-like role, or of a member who turned 2FA on), else tokens (incl. OIDC SSO). 403 SSO_REQUIRED when the workspace requires SSO for this member",
             "content": {
               "application/json": {
                 "schema": {
@@ -833,7 +840,7 @@
         },
         "responses": {
           "201": {
-            "description": "LOGIN_SUCCESS + tokens, or MFA_REQUIRED (privileged user)",
+            "description": "MFA_REQUIRED (2FA step: always for Owner / Admin-like roles, for other members once they turned 2FA on), else LOGIN_SUCCESS + tokens",
             "content": {
               "application/json": {
                 "schema": {
@@ -851,6 +858,9 @@
           },
           "401": {
             "description": "Invalid credentials"
+          },
+          "403": {
+            "description": "SSO_REQUIRED: the workspace requires SSO for this email domain"
           }
         },
         "summary": "Authenticate with email + password",
@@ -1053,17 +1063,27 @@
         },
         "responses": {
           "201": {
-            "description": "",
+            "description": "LOGIN_SUCCESS + tokens (Member / non-admin role), or MFA_REQUIRED with enrollmentRequired: true (Owner / Admin-like role)",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoginTokensResponseDto"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/LoginTokensResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MfaRequiredResponseDto"
+                    }
+                  ]
                 }
               }
             }
+          },
+          "403": {
+            "description": "SSO_REQUIRED: the workspace requires SSO for this email domain"
           }
         },
-        "summary": "Accept an invitation by choosing a display name + password",
+        "summary": "Accept an invitation by choosing a display name + password; Owner / Admin-like roles continue with 2FA enrollment",
         "tags": [
           "auth"
         ]
@@ -1447,6 +1467,125 @@
         ]
       }
     },
+    "/api/users/me/mfa/enroll/start": {
+      "post": {
+        "operationId": "MfaSelfController_enrollStart",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaEnrollStartResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MFA_ALREADY_ENROLLED"
+          },
+          "403": {
+            "description": "SSO_REQUIRED: the workspace requires SSO for this member (no PON 2FA)"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Turn 2FA on from Settings: QR + manual key of a pending secret (10 minutes, the same one on every call)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/users/me/mfa/enroll/confirm": {
+      "post": {
+        "operationId": "MfaSelfController_enrollConfirm",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaSelfEnrollConfirmDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaSelfEnrollConfirmResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MFA_CODE_INVALID (params.remaining) / MFA_TOO_MANY_ATTEMPTS / MFA_NOT_ENROLLED (no pending secret: start again) / MFA_ALREADY_ENROLLED"
+          },
+          "403": {
+            "description": "SSO_REQUIRED: the workspace requires SSO for this member (no PON 2FA)"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Confirm the Settings enrollment with one code; returns the backup codes once (session unchanged)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/users/me/mfa/disable": {
+      "post": {
+        "operationId": "MfaSelfController_disable",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaDisableDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "MFA_REQUIRED_BY_ROLE (Owner / Admin-like) / MFA_NOT_ENROLLED / MFA_CODE_INVALID (params.remaining) / MFA_TOO_MANY_ATTEMPTS"
+          },
+          "403": {
+            "description": "SSO_REQUIRED: the workspace requires SSO for this member (no PON 2FA)"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Turn optional 2FA off (a current authenticator code or an unused backup code)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/admin/members/{id}/mfa/reset": {
       "post": {
         "operationId": "MfaAdminController_reset",
@@ -1477,7 +1616,7 @@
             "bearer": []
           }
         ],
-        "summary": "Owner only: reset a member's 2FA and revoke their sessions",
+        "summary": "Reset a member's 2FA and revoke their sessions (Owner: anyone else; MANAGE_MEMBERS: non-admin members)",
         "tags": [
           "admin"
         ]
@@ -2329,7 +2468,7 @@
           "code": {
             "type": "string",
             "example": "LOGIN_SUCCESS",
-            "description": "LOGIN_SUCCESS (login) or INVITATION_ACCEPTED (accept-password)"
+            "description": "LOGIN_SUCCESS (login, MFA verify / enroll-complete, accept-password); INVITATION_ACCEPTED is no longer emitted"
           },
           "accessToken": {
             "type": "string"
@@ -2387,7 +2526,7 @@
           },
           "enrollmentRequired": {
             "type": "boolean",
-            "description": "true = first sign-in since becoming privileged: enroll an authenticator first"
+            "description": "true = 2FA is mandatory for the role (Owner / Admin-like) and the account never enrolled: set up an authenticator first. false = enter a code (enrolled; for a Member, 2FA they turned on)"
           },
           "user": {
             "$ref": "#/components/schemas/MfaUserDto"
@@ -2398,6 +2537,34 @@
           "mfaToken",
           "enrollmentRequired",
           "user"
+        ]
+      },
+      "SsoInfoResponseDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Show the \"Sign in with SSO\" button"
+          },
+          "enforced": {
+            "type": "boolean",
+            "description": "The workspace requires SSO for its domains (password / Google sign-in are refused there, Owners excepted)"
+          },
+          "loginUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "/auth/oidc/login"
+          },
+          "buttonLabel": {
+            "type": "string",
+            "example": "Sign in with SSO"
+          }
+        },
+        "required": [
+          "enabled",
+          "enforced",
+          "loginUrl",
+          "buttonLabel"
         ]
       },
       "ExchangeDto": {
@@ -2733,7 +2900,7 @@
           "code": {
             "type": "string",
             "example": "LOGIN_SUCCESS",
-            "description": "LOGIN_SUCCESS (login) or INVITATION_ACCEPTED (accept-password)"
+            "description": "LOGIN_SUCCESS (login, MFA verify / enroll-complete, accept-password); INVITATION_ACCEPTED is no longer emitted"
           },
           "accessToken": {
             "type": "string"
@@ -2792,7 +2959,7 @@
           "code": {
             "type": "string",
             "example": "LOGIN_SUCCESS",
-            "description": "LOGIN_SUCCESS (login) or INVITATION_ACCEPTED (accept-password)"
+            "description": "LOGIN_SUCCESS (login, MFA verify / enroll-complete, accept-password); INVITATION_ACCEPTED is no longer emitted"
           },
           "accessToken": {
             "type": "string"
@@ -3013,6 +3180,60 @@
           "backupCodes"
         ]
       },
+      "MfaSelfEnrollConfirmDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "123456",
+            "description": "6-digit code from the authenticator app just set up"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "MfaSelfEnrollConfirmResponseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "MFA_BACKUP_CODES_ISSUED"
+            ],
+            "example": "MFA_BACKUP_CODES_ISSUED"
+          },
+          "backupCodes": {
+            "example": [
+              "ABCDE-FGH23"
+            ],
+            "description": "10 single-use backup codes (stored hashed). Shown once: they cannot be read again.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "backupCodes"
+        ]
+      },
+      "MfaDisableDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "123456",
+            "description": "Current authenticator code (send exactly one of code / backupCode)"
+          },
+          "backupCode": {
+            "type": "string",
+            "example": "ABCDE-FGH23",
+            "description": "An unused backup code (send exactly one of code / backupCode)"
+          }
+        }
+      },
       "CreateDepartmentDto": {
         "type": "object",
         "properties": {
@@ -3155,7 +3376,43 @@
       },
       "WorkspaceSsoDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Show / allow \"Sign in with SSO\""
+          },
+          "enforced": {
+            "type": "boolean",
+            "description": "Require SSO for members whose email domain is in allowedDomains (Owners exempt). Needs enabled + a non-empty allowedDomains + OIDC configured on the server, else 400 SSO_ENFORCE_NOT_READY. Omitted = keep the stored value."
+          },
+          "allowedDomains": {
+            "example": [
+              "acme.com"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "groupRoleMap": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "IdP group → PON role name"
+          },
+          "groupDeptMap": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "IdP group → department id"
+          },
+          "defaultRole": {
+            "type": "string",
+            "description": "Role name when no group matches"
+          }
+        }
       },
       "WorkspaceAiSettingsDto": {
         "type": "object",

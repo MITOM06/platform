@@ -66,6 +66,7 @@
       "orContinueWith": "または次で続行",
       "googleLogin": "Googleでサインイン",
       "ssoButton": "SSO でログイン",
+      "orSignInWithPassword": "またはパスワードでサインイン",
       "inviteOnlyHint": "PON は招待制です。管理者に招待を依頼してください。"
     },
     "password": {
@@ -98,6 +99,7 @@
       "emailLabel": "招待されたメールアドレス",
       "continueWithGoogle": "Google で続行",
       "googleHint": "{email} の Google アカウントを使用してください",
+      "ssoRequired": "{workspace} では、このメールアドレスにシングルサインオンが必須です。「SSO でログイン」から参加してください。",
       "orSetPassword": "またはパスワードを設定",
       "submit": "アカウントを作成",
       "submitting": "アカウントを作成中...",
@@ -237,6 +239,9 @@
     "errLastOwnerCannotBeBlocked": "最後のオーナーはブロックできません。",
     "errSsoDisabled": "シングルサインオンは無効になっています。",
     "errSsoDomainNotAllowed": "お使いのメールドメインは SSO で許可されていません。",
+    "errSsoRequired": "組織でシングルサインオンが必須になっています。「SSO でログイン」を使用してください。",
+    "errSsoUnavailable": "組織のサインインサービスに現在接続できません。しばらくしてからもう一度お試しください。",
+    "errSsoEnforceNotReady": "まだ SSO を必須にできません。SSO を有効にし、許可するメールドメインを 1 つ以上追加して、このデプロイでシングルサインオンが設定されていることを確認してください。",
     "errRoleGrantExceedsOwnPermissions": "自分が持っていない権限は付与できません: {capabilities}。",
     "errRoleGrantExceedsOwnPermissionsGeneric": "自分が持っていない権限は付与できません。",
     "errCannotEditOwnRole": "自分のロールは編集できません。",
@@ -302,7 +307,10 @@
       "continue": "続行",
       "codesLoading": "バックアップコードを読み込んでいます...",
       "fileHeader": "{email} の PON バックアップコード",
-      "fileNote": "認証アプリを使用できないとき、各コードで1回サインインできます。"
+      "fileNote": "認証アプリを使用できないとき、各コードで1回サインインできます。",
+      "stateChanged": "二要素認証の設定が別の場所で変更されました。このページには現在の状態が表示されています。",
+      "ssoManaged": "組織のシングルサインオンがアカウントを保護しているため、二要素認証はそちらで管理されます。",
+      "setupExpired": "この設定は期限切れになりました。もう一度2FAをオンにして、新しいQRコードを取得してください。"
     },
     "msgMfaRequired": "サインインを完了するには、認証アプリのコードを入力してください。",
     "errMfaTokenInvalid": "サインインの有効期限が切れました。もう一度サインインしてください。",
@@ -311,8 +319,9 @@
     "errMfaTooManyAttempts": "コードの入力ミスが多すぎます。もう一度サインインしてください。",
     "errMfaNotEnrolled": "このアカウントでは二要素認証がまだ設定されていません。もう一度サインインしてください。",
     "errMfaAlreadyEnrolled": "このアカウントでは二要素認証がすでに設定されています。もう一度サインインしてください。",
-    "errMfaResetForbidden": "二要素認証をリセットできるのはオーナーのみです。",
-    "errMfaResetSelfForbidden": "自分の二要素認証はリセットできません。"
+    "errMfaResetForbidden": "このメンバーの二要素認証をリセットする権限がありません。",
+    "errMfaResetSelfForbidden": "自分の二要素認証はリセットできません。",
+    "errMfaRequiredByRole": "あなたのロールでは二要素認証が必須のため、オフにできません。"
   },
   "settings": {
     "title": "設定",
@@ -397,6 +406,7 @@
       "setSuccess": "パスワードを設定しました",
       "mismatch": "パスワードが一致しません",
       "genericError": "パスワードの更新に失敗しました",
+      "ssoPasswordDisabled": "組織でシングルサインオンが必須のため、このアカウントではパスワードでのサインインが無効になっています。",
       "twoFaTitle": "二要素認証",
       "twoFaSubtitle": "アカウントにさらなるセキュリティを追加します。",
       "tooShort": "パスワードは {min} 文字以上にしてください。",
@@ -410,7 +420,17 @@
       "regenerateTitle": "バックアップコードを再生成",
       "regenerateBody": "認証アプリの現在のコードを入力してください。以前のバックアップコードは使用できなくなります。",
       "regenerateSubmit": "新しいコードを生成",
-      "regenerateDone": "完了"
+      "regenerateDone": "完了",
+      "twoFaOptionalBody": "サインインに2つ目のステップを追加します。あなたのロールでは任意です。",
+      "twoFaOptionalOnBody": "アカウントは認証アプリで保護されています。サインインのたびにコードを入力します。この設定はいつでもオフにできます。",
+      "turnOnButton": "2FAをオンにする",
+      "turnOnDone": "完了",
+      "turnOnSuccess": "二要素認証をオンにしました",
+      "turnOffButton": "2FAをオフにする",
+      "turnOffTitle": "二要素認証をオフにしますか？",
+      "turnOffBody": "認証アプリに表示されている現在のコード、またはバックアップコードのいずれかを入力してください。サインイン時にコードを求められなくなり、バックアップコードは使えなくなります。",
+      "turnOffSubmit": "オフにする",
+      "turnOffSuccess": "二要素認証をオフにしました"
     },
     "adminConsole": "管理コンソール",
     "adminConsoleSubtitle": "ワークスペース、メンバー、ロール、AI 設定"
@@ -1043,7 +1063,7 @@
     "roleUnknown": "未割り当て",
     "noDepartment": "部門なし",
     "notSet": "未設定",
-    "identityManagedBySuperior": "これらは上司または管理者が設定します。",
+    "identityManagedBySuperior": "これらはワークスペースの管理者が設定します。",
     "labelRole": "ロール",
     "labelDepartment": "部門",
     "labelJobTitle": "役職",
@@ -1497,9 +1517,9 @@
       "USE_GROUP_BOT": "グループボットを使用",
       "RUN_SENSITIVE_SKILL": "機密スキルを実行",
       "VIEW_AUDIT_LOG": "監査ログを表示",
-      "MANAGE_AI_CONTEXT": "AI コンテキストの管理",
-      "VIEW_INTERNAL_CONTEXT": "社内コンテキストの閲覧",
-      "VIEW_CONFIDENTIAL_CONTEXT": "機密コンテキストの閲覧",
+      "MANAGE_AI_CONTEXT": "AI コンテキストを管理",
+      "VIEW_INTERNAL_CONTEXT": "AI の回答で社内コンテキストを参照",
+      "VIEW_CONFIDENTIAL_CONTEXT": "AI の回答で機密コンテキストを参照",
       "HOST_MEETING": "会議を主催"
     },
     "auditEmpty": "監査記録はまだありません。",
@@ -1511,6 +1531,16 @@
     "ssoEnabled": "SSO を有効化",
     "ssoAllowedDomains": "許可するメールドメイン",
     "ssoAllowedDomainsHint": "カンマ区切り。空欄の場合、確認済みのすべてのメールを許可します。",
+    "ssoEnforced": "これらのドメインで SSO を必須にする",
+    "ssoEnforcedHint": "許可ドメインのメールアドレスを持つメンバーは SSO でのみサインインできます。オーナーは引き続きパスワードでサインインできます。",
+    "ssoEnforceSaveHint": "まだ適用されていません — 保存をクリックしてください。",
+    "ssoEnforceConfirmTitle": "これらのドメインで SSO を必須にしますか？",
+    "ssoEnforceConfirmIntro": "許可ドメインのメールアドレスを持つメンバーについて：",
+    "ssoEnforceConfirmPasswords": "パスワードでのサインイン、Google でのサインイン、「パスワードをお忘れですか？」が使えなくなります。",
+    "ssoEnforceConfirmOwners": "オーナーは緊急用アカウントとして、パスワードと二要素認証で引き続きサインインできます。",
+    "ssoEnforceConfirmSessions": "SSO 以外でサインイン中のユーザーはサインアウトされます。",
+    "ssoEnforceConfirmRestore": "パスワードは削除されずに保持されます。この設定をオフにすると、パスワードでのサインインが復元されます。",
+    "ssoEnforceConfirm": "SSO を必須にする",
     "ssoDefaultRole": "デフォルトのロール",
     "ssoNone": "なし",
     "ssoGroupRoleMap": "グループ → ロール",
@@ -1656,7 +1686,8 @@
     "memberMfaReset": "2FA をリセット",
     "memberMfaResetTitle": "二要素認証をリセットしますか？",
     "memberMfaResetConfirm": "{name} はすべてのデバイスからサインアウトされ、次回のサインイン時に二要素認証を再設定する必要があります。",
-    "memberMfaResetDone": "二要素認証をリセットしました"
+    "memberMfaResetDone": "二要素認証をリセットしました",
+    "memberMfaResetConfirmOptional": "{name} はすべてのデバイスからサインアウトされ、二要素認証はオフになります。本人は設定から再びオンにできます。"
   },
   "call": {
     "peerFallback": "ユーザー",
