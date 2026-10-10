@@ -64,6 +64,19 @@ class IncomingCallNotifier extends Notifier<IncomingCall?> {
     if (state != null && state!.senderId == senderId) clear();
   }
 
+  /// We answered [senderId]'s peer-to-peer call in [conversationId] on another
+  /// device: stop ringing here. (The answering device cleared its own prompt
+  /// before opening the call screen, so this is a no-op there.)
+  void clearAnsweredElsewhere(String? senderId, String? conversationId) {
+    final call = state;
+    if (call != null &&
+        call.callId == null &&
+        call.senderId == senderId &&
+        call.conversationId == conversationId) {
+      clear();
+    }
+  }
+
   /// Clears the prompt only if it is the LiveKit ring [callId].
   void clearCall(String? callId) {
     if (state != null && callId != null && state!.callId == callId) clear();

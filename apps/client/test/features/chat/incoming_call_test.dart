@@ -83,4 +83,37 @@ void main() {
     await tester.pump();
     expect(player.stops, 1);
   });
+
+  test('a call answered on our other device stops ringing here', () async {
+    final player = _SilentPlayer();
+    final container = _container(player);
+    addTearDown(container.dispose);
+    final notifier = container.read(incomingCallProvider.notifier);
+
+    notifier.set(_call);
+    await pumpEventQueue(); // the ringtone is playing
+    notifier.clearAnsweredElsewhere('someone-else', 'conv');
+    notifier.clearAnsweredElsewhere('caller', 'other-conv');
+    expect(container.read(incomingCallProvider), isNotNull);
+
+    notifier.clearAnsweredElsewhere('caller', 'conv');
+    expect(container.read(incomingCallProvider), isNull);
+    await pumpEventQueue();
+    expect(player.stops, greaterThan(0)); // the ringtone stops too
+  });
+
+  test('a LiveKit ring is not cleared by a peer-to-peer answered-elsewhere',
+      () {
+    final container = _container(_SilentPlayer());
+    addTearDown(container.dispose);
+    final notifier = container.read(incomingCallProvider.notifier);
+
+    notifier.set(const IncomingCall(
+        senderId: 'caller',
+        conversationId: 'conv',
+        isVideo: false,
+        callId: 'c1'));
+    notifier.clearAnsweredElsewhere('caller', 'conv');
+    expect(container.read(incomingCallProvider), isNotNull);
+  });
 }
