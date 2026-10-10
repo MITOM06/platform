@@ -119,6 +119,12 @@ void handleWebRtcSignal(
         );
       } else if (type == 'state') {
         webrtc.handleState(signal);
+      } else if (type == 'answered-elsewhere') {
+        // We answered this caller on our other device (web + phone).
+        ref.read(incomingCallProvider.notifier).clearAnsweredElsewhere(
+              signal['senderId'] as String?,
+              signal['conversationId'] as String?,
+            );
       } else if (type == 'end') {
         // Peer hung up: tear down locally only. Do NOT re-publish /app/call.end
         // or send a system call-log message — the hang-up initiator already

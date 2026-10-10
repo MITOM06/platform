@@ -390,4 +390,45 @@ class ChatControllerTest {
 
     verify(clusterBroker, never()).convertAndSendToUser(anyString(), anyString(), any());
   }
+
+  /**
+   * A 1-on-1 answer also tells the callee's other sessions (web + phone): they stop ringing for a
+   * call answered elsewhere. The answer itself still goes to the caller.
+   */
+  @Test
+  void callAnswer_TellsTheCalleesOtherSessionsItWasAnswered() {
+    com.platform.chatservice.dto.WebRTCSignalDto dto =
+        new com.platform.chatservice.dto.WebRTCSignalDto();
+    dto.setTargetId("caller-1");
+    dto.setConversationId("conv-1");
+    dto.setSdp("v=0");
+
+    chatController.callAnswer(dto, principal);
+
+    verify(clusterBroker).convertAndSendToUser(eq("caller-1"), eq("/queue/webrtc"), eq(dto));
+    org.mockito.ArgumentCaptor<com.platform.chatservice.dto.WebRTCSignalDto> own =
+        org.mockito.ArgumentCaptor.forClass(com.platform.chatservice.dto.WebRTCSignalDto.class);
+    verify(clusterBroker).convertAndSendToUser(eq(SENDER_ID), eq("/queue/webrtc"), own.capture());
+    org.assertj.core.api.Assertions.assertThat(own.getValue().getType())
+        .isEqualTo("answered-elsewhere");
+    org.assertj.core.api.Assertions.assertThat(own.getValue().getSenderId())
+        .isEqualTo("caller-1"); // whose ring to stop
+    org.assertj.core.api.Assertions.assertThat(own.getValue().getConversationId())
+        .isEqualTo("conv-1");
+    org.assertj.core.api.Assertions.assertThat(own.getValue().getSdp()).isNull();
+  }
+
+  /** Offers and ICE candidates are never echoed to the sender's own sessions. */
+  @Test
+  void callOfferAndIce_AreNotEchoedToTheSender() {
+    com.platform.chatservice.dto.WebRTCSignalDto dto =
+        new com.platform.chatservice.dto.WebRTCSignalDto();
+    dto.setTargetId("callee-1");
+    dto.setConversationId("conv-1");
+
+    chatController.callOffer(dto, principal);
+    chatController.callIceCandidate(dto, principal);
+
+    verify(clusterBroker, never()).convertAndSendToUser(eq(SENDER_ID), anyString(), any());
+  }
 }
