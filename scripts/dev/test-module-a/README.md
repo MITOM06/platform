@@ -51,11 +51,19 @@ Mật khẩu chung: **`Devpass123!`**.
 | `dev@pon.local` | Owner (Tech Lead) | Kỹ thuật, Ban GĐ | A1, A2, A4, A5.3–A5.4, A6.1 — tài khoản chính |
 | `alice@pon.local` | Member | Kỹ thuật | Thành viên nhóm test, A3.4 |
 | `quan.nguyen@novatech.local` | Owner (CEO) | Ban GĐ | A3.1, A3.5 (cấu hình AI workspace), A6.2 (dashboard admin) |
-| `nam.le@novatech.local` | Manager | Kỹ thuật | A3.1 (thấy mục nội bộ, không thấy mục mật) |
+| `nam.le@novatech.local` | Member (trưởng nhóm) | Kỹ thuật | A3.1 (không thấy mục nội bộ/mật, thấy mục phòng Kỹ thuật) |
 | `son.ho@novatech.local` | Member | Kinh doanh | A3.1, A3.6, A3.7, A5.7, A6.3 |
 | `lan.vo@novatech.local` | Member | Kỹ thuật | A5.5, A5.6 (không được đọc KB của phòng Kinh doanh) |
 | `minh.phan@novatech.local` | Member | Marketing | A5.1 (rate limit) |
 | `thu.ta@novatech.local` | Member | Tài chính | A5.2 (quota tháng) |
+
+### 2FA của Owner / Admin
+
+Từ v1.4.0 Owner và Admin bắt buộc dùng 2FA. Lần đầu harness đăng nhập một tài khoản như vậy, nó tự
+bật 2FA và lưu secret vào `.dev-logs/mfa-secrets.json` (gitignore). Muốn đăng nhập UI bằng chính tài
+khoản đó: thêm secret (hoặc link `otpauth://` in ra lúc bật) vào ứng dụng authenticator. Nếu tài
+khoản đã bật 2FA ở nơi khác mà file không có secret, đặt lại 2FA của tài khoản (Admin → Thành viên)
+rồi chạy lại.
 
 ## Danh sách case
 

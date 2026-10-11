@@ -15,6 +15,11 @@ set -uo pipefail
 
 AUTH=http://localhost:3001
 CONN=http://localhost:3003
+# Container names of the default dev stack; override for another compose project
+# (e.g. MONGO_CONTAINER=ponqc-mongo-1 CONNECTOR_CONTAINER=ponqc-connector-service-1).
+MONGO_CONTAINER=${MONGO_CONTAINER:-chat-mongo}
+CONNECTOR_CONTAINER=${CONNECTOR_CONTAINER:-connector-service}
+ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 PASS=0; FAIL=0
 # C4 checks that a stored token never reaches an API response. We plant this
 # sentinel as the "encrypted" blob, then assert it is absent from /connections.
@@ -26,9 +31,10 @@ SENTINEL='SECRET_LEAK_CHECK' # gitleaks:allow
 ok(){ echo "  ✅ PASS: $1"; PASS=$((PASS+1)); }
 no(){ echo "  ❌ FAIL: $1"; FAIL=$((FAIL+1)); }
 
-jwt(){ curl -s -X POST "$AUTH/auth/login" -H 'Content-Type: application/json' \
-  -d "{\"email\":\"$1\",\"password\":\"Devpass123!\"}" \
-  | python3 -c "import sys,json;print(json.load(sys.stdin).get('accessToken',''))"; }
+# Owner / Admin sign in with 2FA (v1.4.0): reuse the Module A login, which enrols
+# on first use and keeps the TOTP secret in .dev-logs/mfa-secrets.json.
+jwt(){ AUTH_URL="$AUTH" node -e "require('$ROOT/scripts/dev/test-module-a/lib.js').login(process.argv[1])
+  .then((u) => console.log(u.token)).catch((e) => { console.error(e.message); console.log(''); })" "$1"; }
 sub(){ echo "$1" | cut -d. -f2 \
   | python3 -c "import sys,base64,json;s=sys.stdin.read().strip();s+='='*(-len(s)%4);print(json.loads(base64.urlsafe_b64decode(s))['sub'])"; }
 code(){ curl -s -o /dev/null -w '%{http_code}' "$@"; }
@@ -38,8 +44,8 @@ echo "== logging in (dev=Owner, alice=Member) =="
 DEV=$(jwt dev@pon.local); ALICE=$(jwt alice@pon.local)
 [ -n "$DEV" ] && [ -n "$ALICE" ] || { echo "login failed — is the stack up & seeded? (./scripts/dev/up.sh --seed)"; exit 1; }
 DEV_ID=$(sub "$DEV"); ALICE_ID=$(sub "$ALICE")
-IKEY=$(docker exec connector-service printenv INTERNAL_API_KEY 2>/dev/null)
-[ -n "$IKEY" ] || { echo "could not read INTERNAL_API_KEY from container"; exit 1; }
+IKEY=$(docker exec "$CONNECTOR_CONTAINER" printenv INTERNAL_API_KEY 2>/dev/null)
+[ -n "$IKEY" ] || { echo "could not read INTERNAL_API_KEY from $CONNECTOR_CONTAINER (set CONNECTOR_CONTAINER)"; exit 1; }
 
 echo; echo "########## C1 — Connector OAuth ##########"
 CAT=$(body "$CONN/catalog" -H "Authorization: Bearer $DEV")
@@ -53,7 +59,7 @@ for p in notion gmail calendar; do
 done
 # connect + disconnect, exercised via a simulated stored connection (real OAuth
 # needs NOTION/GOOGLE client creds, unavailable locally):
-docker exec chat-mongo mongosh platform --quiet --eval \
+docker exec "$MONGO_CONTAINER" mongosh platform --quiet --eval \
  "db.user_connections.deleteMany({userId:'$DEV_ID',provider:'notion'});
   db.user_connections.insertOne({userId:'$DEV_ID',provider:'notion',status:'active',
    scope:'personal',scopes:['read_content'],actionGroups:['view'],accountLabel:'Test WS',
@@ -81,13 +87,18 @@ echo; echo "########## C3 — Agentic tools & Sensitive gating ##########"
   && ok "internal tools API rejects a missing internal key" || no "internal API is OPEN without a key!"
 [ "$(code "$CONN/internal/tools?userId=$DEV_ID" -H "x-internal-key: $IKEY")" = "200" ] \
   && ok "internal tools API accepts the valid internal key" || no "valid internal key rejected"
-# execution gate: alice (Member, no RUN_SENSITIVE_SKILL) calling a sensitive tool
+# execution gate: alice (Member, no RUN_SENSITIVE_SKILL) calling a sensitive tool.
+# connector-service classifies a tool from the provider's live tool list, so
+# without a real Gmail connection it refuses with NO_CONNECTION before that
+# point; the "sensitive skill" refusal itself is covered by internal.service.spec
+# ("callTool BLOCKS a sensitive tool without RUN_SENSITIVE_SKILL"). What must
+# hold here: the call is refused and nothing runs.
 R=$(body -X POST "$CONN/internal/tools/call" -H "x-internal-key: $IKEY" \
      -H 'Content-Type: application/json' \
      -d "{\"userId\":\"$ALICE_ID\",\"name\":\"mcp__gmail__send_email\",\"input\":{}}")
-echo "$R" | grep -qi "sensitive" \
-  && ok "sensitive tool blocked at execution for Member ($R)" \
-  || no "sensitive tool NOT blocked for Member ($R)"
+echo "$R" | grep -qE "NOT_PERMITTED|NO_CONNECTION" \
+  && ok "sensitive tool refused for Member, nothing executed ($R)" \
+  || no "sensitive tool NOT refused for Member ($R)"
 
 echo; echo "########## C4 — Skills & Token vault ##########"
 body -X PUT "$CONN/skills" -H "Authorization: Bearer $DEV" -H 'Content-Type: application/json' \

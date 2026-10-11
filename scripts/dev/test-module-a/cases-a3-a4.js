@@ -13,14 +13,17 @@ async function a3(ctx) {
   await test('A3.1', 'AI Context theo vai trò (Identity / Company Context)', {
     account: acct(quan, nam, son),
     steps: ['Mỗi tài khoản mở Cài đặt → AI Context (API GET /ai-context/me)', 'So sánh các mục "Company Context" hiển thị'],
-    expected: 'Owner (quan) thấy "Khung lương (mật)" + "Lộ trình 2026 (nội bộ)"; Manager (nam) thấy "Lộ trình" nhưng KHÔNG thấy "Khung lương"; Member Sales (son) không thấy cả hai, thấy "Chính sách chiết khấu" của phòng Kinh doanh, KHÔNG thấy "SLA hỗ trợ" (phòng CSKH)',
+    // The Manager preset is gone (v1.4.0): the Engineering lead (nam) is a Member,
+    // so only Owner / Admin see internal and confidential company entries.
+    expected: 'Owner (quan) thấy "Khung lương (mật)" + "Lộ trình 2026 (nội bộ)"; Member Kỹ thuật (nam) KHÔNG thấy cả hai nhưng thấy "Quy chuẩn kỹ thuật" của phòng mình, KHÔNG thấy "Chính sách chiết khấu" (Kinh doanh); Member Sales (son) không thấy cả hai, thấy "Chính sách chiết khấu", KHÔNG thấy "Giá vốn (mật)" lẫn "SLA hỗ trợ" (phòng CSKH)',
     hint: 'Lộ mục mật → getVisibleEntriesForUser (auth-service ai-context.service.ts) không lọc requiredCapability/department. Thiếu mục → chưa chạy seed-company hoặc JWT cũ (đăng nhập lại).',
   }, async () => {
     const labels = async (u) => ((await L.api(u.token, 'GET', `${CFG.AUTH}/ai-context/me`)).json?.entries || []).map((e) => e.label);
     const [q, n, s] = [await labels(quan), await labels(nam), await labels(son)];
     const inc = (arr, l) => arr.some((x) => x.startsWith(l));
-    const ok = inc(q, 'Khung lương') && inc(q, 'Lộ trình') && inc(n, 'Lộ trình') && !inc(n, 'Khung lương')
-      && !inc(s, 'Lộ trình') && !inc(s, 'Khung lương') && inc(s, 'Chính sách chiết khấu') && !inc(s, 'SLA');
+    const ok = inc(q, 'Khung lương') && inc(q, 'Lộ trình')
+      && !inc(n, 'Lộ trình') && !inc(n, 'Khung lương') && inc(n, 'Quy chuẩn kỹ thuật') && !inc(n, 'Chính sách chiết khấu')
+      && !inc(s, 'Lộ trình') && !inc(s, 'Khung lương') && inc(s, 'Chính sách chiết khấu') && !inc(s, 'Giá vốn') && !inc(s, 'SLA');
     return { pass: ok, actual: `quan=${q.length} mục, nam=[${n.join(' | ')}], son=[${s.join(' | ')}]` };
   });
 

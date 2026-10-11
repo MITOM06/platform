@@ -107,18 +107,74 @@ async function api(token, method, url, body) {
 }
 
 const tokens = {};
-/** Login (cached). Retries through the auth-service login throttle (429). */
+
+// ------------------------------------------------------------------ 2FA
+// Owner / Admin must use 2FA (v1.4.0), so a seeded Owner signs in with a TOTP
+// code. The first login enrols the account and keeps its secret in
+// .dev-logs/mfa-secrets.json (gitignored) — add it to an authenticator app
+// from the printed otpauth:// link to sign in on the UI with the same account.
+const { authenticator } = require(path.join(ROOT, 'node_modules/otplib'));
+const totp = authenticator.clone({ step: 30, digits: 6, window: 1 });
+const MFA_FILE = path.join(ROOT, '.dev-logs/mfa-secrets.json');
+// email → last TOTP step used, shared by every harness process (Module A, the
+// Module C script): the server refuses a code used twice within its step.
+const STEP_FILE = path.join(ROOT, '.dev-logs/mfa-steps.json');
+const readJson = (f) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return {}; } };
+
+function saveSecret(email, secret) {
+  fs.mkdirSync(path.dirname(MFA_FILE), { recursive: true });
+  fs.writeFileSync(MFA_FILE, JSON.stringify({ ...readJson(MFA_FILE), [email]: secret }, null, 2));
+}
+
+async function freshCode(email, secret) {
+  let step = Math.floor(Date.now() / 30000);
+  const used = readJson(STEP_FILE)[email];
+  if (used !== undefined && used >= step) {
+    process.stderr.write(`${C.d}   (chờ mã 2FA mới cho ${email}…)${C.x}\n`);
+    await sleep((step + 1) * 30000 - Date.now() + 300);
+    step = Math.floor(Date.now() / 30000);
+  }
+  fs.mkdirSync(path.dirname(STEP_FILE), { recursive: true });
+  fs.writeFileSync(STEP_FILE, JSON.stringify({ ...readJson(STEP_FILE), [email]: step }));
+  return totp.generate(secret);
+}
+
+/** Finish a `MFA_REQUIRED` login: enrol on first use, else verify with the stored secret. */
+async function completeMfa(email, challenge) {
+  const { mfaToken } = challenge;
+  if (challenge.enrollmentRequired) {
+    const st = await api(null, 'POST', `${CFG.AUTH}/auth/mfa/enroll/start`, { mfaToken });
+    const url = st.json?.otpauthUrl;
+    const secret = st.json?.secret || st.json?.manualKey || st.json?.manualEntryKey
+      || (url && new URL(url).searchParams.get('secret'));
+    if (!secret) throw new Error(`2FA enroll ${email} → HTTP ${st.status} ${short(st.text, 120)}`);
+    saveSecret(email, secret);
+    const cf = await api(null, 'POST', `${CFG.AUTH}/auth/mfa/enroll/confirm`, { mfaToken, code: await freshCode(email, secret) });
+    if (cf.status >= 300) throw new Error(`2FA confirm ${email} → HTTP ${cf.status} ${short(cf.text, 120)}`);
+    const done = await api(null, 'POST', `${CFG.AUTH}/auth/mfa/enroll/complete`, { mfaToken });
+    process.stderr.write(`${C.d}   (đã bật 2FA cho ${email}; secret lưu ở .dev-logs/mfa-secrets.json${url ? `, ${url}` : ''})${C.x}\n`);
+    return done;
+  }
+  const secret = readJson(MFA_FILE)[email];
+  if (!secret) {
+    throw new Error(`${email} đã bật 2FA nhưng không có secret trong .dev-logs/mfa-secrets.json — tắt 2FA của tài khoản (Admin → Thành viên → Đặt lại 2FA) rồi chạy lại`);
+  }
+  return api(null, 'POST', `${CFG.AUTH}/auth/mfa/verify`, { mfaToken, code: await freshCode(email, secret) });
+}
+
+/** Login (cached), with 2FA when the role requires it. Retries through the login throttle (429). */
 async function login(email) {
   if (tokens[email]) return tokens[email];
   for (let i = 0; i < 12; i++) {
-    const r = await api(null, 'POST', `${CFG.AUTH}/auth/login`, { email, password: CFG.PASSWORD });
+    let r = await api(null, 'POST', `${CFG.AUTH}/auth/login`, { email, password: CFG.PASSWORD });
+    if (r.json?.code === 'MFA_REQUIRED') r = await completeMfa(email, r.json);
     if (r.json?.accessToken) {
       const payload = JSON.parse(Buffer.from(r.json.accessToken.split('.')[1], 'base64url').toString());
       tokens[email] = { token: r.json.accessToken, id: payload.sub, perms: payload.perms || [], email };
       return tokens[email];
     }
     if (r.status !== 429) throw new Error(`login ${email} → HTTP ${r.status} ${short(r.text, 120)}`);
-    process.stdout.write(`${C.d}   (login bị giới hạn tần suất, chờ 10s…)${C.x}\n`);
+    process.stderr.write(`${C.d}   (login bị giới hạn tần suất, chờ 10s…)${C.x}\n`);
     await sleep(10000);
   }
   throw new Error(`login ${email}: still rate-limited`);
