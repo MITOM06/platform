@@ -4,3 +4,12 @@
 
 "meeting_push_invited" = "Vous êtes invité à une réunion";
 "meeting_push_starting" = "Votre réunion commence dans 10 minutes";
+
+/* Message pushes: same words as the in-app previews (MessageNotificationService). */
+"push_title_new_message" = "Nouveau message";
+"push_body_new_message" = "Nouveau message";
+"push_body_photo" = "[Photo]";
+"push_body_video" = "[Vidéo]";
+"push_body_file" = "[Fichier]";
+"push_body_voice" = "[Message vocal]";
+"push_body_sticker" = "[Sticker]";

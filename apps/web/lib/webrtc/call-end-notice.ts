@@ -13,6 +13,20 @@ export type CallEndReason =
   /** sfu: picked up on another of the user's devices — nothing to explain. */
   | 'answered_elsewhere'
 
+/** Why a call could not be set up — a specific failure instead of a generic one (see call-errors.ts). */
+export type CallFailureKey =
+  | 'errUnavailable'
+  | 'errNotFound'
+  | 'errEnded'
+  | 'errNotSfu'
+  | 'errForbidden'
+  | 'errNetwork'
+  | 'errFailed'
+  /** sfu caller: `call.start` never got its `call.started` back. */
+  | 'errStartTimeout'
+  /** sfu: the call was answered but the other person never reached the room. Takes `{name}`. */
+  | 'errPeerNeverJoined'
+
 /** Keys in the `call` i18n namespace used to explain an ended call. */
 export type CallNoticeKey =
   | 'declined'
@@ -22,6 +36,12 @@ export type CallNoticeKey =
   | 'connectionLost'
   | 'noAnswer'
   | 'mediaError'
+  | CallFailureKey
+
+/** Shown as an error toast (something went wrong), not a plain one (someone chose to end it). */
+export function isErrorNotice(key: CallNoticeKey): boolean {
+  return key === 'connectionLost' || key === 'mediaError' || key.startsWith('err')
+}
 
 /**
  * Which message (if any) to show when a call ends. `byPeer` = the other side

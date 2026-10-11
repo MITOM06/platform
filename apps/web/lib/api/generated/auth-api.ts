@@ -1232,6 +1232,8 @@ export interface components {
             loginUrl: string | null;
             /** @example Sign in with SSO */
             buttonLabel: string;
+            /** @description Google sign-in is configured on this server (GOOGLE_CLIENT_ID). False on a self-host install without it: hide the Google button. */
+            googleEnabled: boolean;
         };
         ExchangeDto: {
             /** @description One-time login code returned by the OAuth/login flow */

@@ -220,6 +220,185 @@ describe('OpenRouterClient.stream', () => {
   });
 });
 
+/**
+ * A fetch that honours the abort signal like the real one: the body yields one
+ * line every `gapMs`, and after the lines it hangs (unless `close`) until aborted.
+ */
+function pacedFetch(lines: string[], gapMs: number, close = true) {
+  return jest.fn(async (_url: string, init: { signal?: AbortSignal }) => {
+    const encoder = new TextEncoder();
+    let i = 0;
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        init.signal?.addEventListener('abort', () =>
+          controller.error(new DOMException('The operation was aborted.', 'AbortError')),
+        );
+      },
+      async pull(controller) {
+        if (i >= lines.length) {
+          if (close) controller.close();
+          else await new Promise(() => undefined);
+          return;
+        }
+        await new Promise((r) => setTimeout(r, gapMs));
+        controller.enqueue(encoder.encode(lines[i++] + '\n'));
+      },
+    });
+    return new Response(body, { status: 200 });
+  });
+}
+
+describe('OpenRouterClient — QC 2026-10-11', () => {
+  const ask = { model: 'm/x', max_tokens: 50, messages: [{ role: 'user' as const, content: 'hi' }] };
+
+  it('tool-call ids Claude would reject are normalized, and stay unique across rounds', async () => {
+    // Kimi-style ids repeat every round and contain `.` and `:`, which Claude refuses
+    // when a later turn (or the fallback) replays the history.
+    const round = () =>
+      sseResponse([
+        data({
+          choices: [
+            {
+              delta: {
+                tool_calls: [
+                  { index: 0, id: 'functions.remind:0', function: { name: 'remind', arguments: '{}' } },
+                ],
+              },
+              finish_reason: 'tool_calls',
+            },
+          ],
+        }),
+        'data: [DONE]',
+      ]);
+    const fetchImpl = jest.fn().mockImplementation(async () => round());
+    const first = await client(fetchImpl).messages.stream(ask).finalMessage();
+    const second = await client(fetchImpl).messages.stream(ask).finalMessage();
+
+    const id1 = (first.content[0] as Anthropic.ToolUseBlock).id;
+    const id2 = (second.content[0] as Anthropic.ToolUseBlock).id;
+    expect(id1).toMatch(/^[a-zA-Z0-9_-]+$/);
+    expect(id1.startsWith('functions_remind_0')).toBe(true);
+    expect(id1).not.toBe(id2);
+  });
+
+  it('a tool call cut off by the token limit is not run with empty arguments', async () => {
+    const fetchImpl = jest.fn().mockResolvedValue(
+      sseResponse([
+        data({
+          choices: [
+            {
+              delta: {
+                tool_calls: [
+                  {
+                    index: 0,
+                    id: 'call_1',
+                    function: { name: 'send_email', arguments: '{"to":"a@b.c","subj' },
+                  },
+                ],
+              },
+              finish_reason: 'length',
+            },
+          ],
+        }),
+        'data: [DONE]',
+      ]),
+    );
+    const message = await client(fetchImpl).messages.stream(ask).finalMessage();
+
+    expect(message.content).toEqual([]);
+    expect(message.stop_reason).toBe('max_tokens');
+  });
+
+  it('a tool call with malformed arguments is dropped; one without arguments is kept', async () => {
+    const fetchImpl = jest.fn().mockResolvedValue(
+      sseResponse([
+        data({
+          choices: [
+            {
+              delta: {
+                tool_calls: [
+                  { index: 0, id: 'call_1', function: { name: 'send_email', arguments: 'not json' } },
+                  { index: 1, id: 'call_2', function: { name: 'list_reminders', arguments: '' } },
+                ],
+              },
+              finish_reason: 'tool_calls',
+            },
+          ],
+        }),
+        'data: [DONE]',
+      ]),
+    );
+    const message = await client(fetchImpl).messages.stream(ask).finalMessage();
+
+    expect(message.content).toEqual([
+      { type: 'tool_use', id: 'call_2', name: 'list_reminders', input: {} },
+    ]);
+    expect(message.stop_reason).toBe('tool_use');
+  });
+
+  it('a 502/503 or a 429 inside a non-streaming body starts the cooldown', async () => {
+    for (const res of [
+      () => new Response('upstream down', { status: 503 }),
+      () => new Response('bad gateway', { status: 502 }),
+      () =>
+        new Response(JSON.stringify({ error: { code: 429, message: 'rate limited' } }), {
+          status: 200,
+        }),
+    ]) {
+      const onUnavailable = jest.fn();
+      const c = new OpenRouterClient({
+        apiKey: 'k',
+        baseUrl: 'https://or.test/api/v1',
+        fetchImpl: jest.fn().mockResolvedValue(res()),
+        onUnavailable,
+      });
+      await expect(c.messages.create(ask)).rejects.toBeInstanceOf(OpenRouterError);
+      expect(onUnavailable).toHaveBeenCalled();
+    }
+  });
+
+  it('a model that never starts answering gives up after the first-token timeout', async () => {
+    const fetchImpl = pacedFetch([': OPENROUTER PROCESSING', ': OPENROUTER PROCESSING'], 5, false);
+    const c = new OpenRouterClient({
+      apiKey: 'k',
+      baseUrl: 'https://or.test/api/v1',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      firstTokenTimeoutMs: 80,
+    });
+    const started = Date.now();
+    await expect(c.messages.stream(ask).finalMessage()).rejects.toThrow(/no answer/);
+    expect(Date.now() - started).toBeLessThan(2_000);
+  });
+
+  it('a long answer that keeps streaming is not cut by a total timeout', async () => {
+    const lines = Array.from({ length: 8 }, (_, i) =>
+      data({ choices: [{ delta: { content: `w${i} ` } }] }),
+    );
+    const fetchImpl = pacedFetch([...lines, 'data: [DONE]'], 30);
+    const c = new OpenRouterClient({
+      apiKey: 'k',
+      baseUrl: 'https://or.test/api/v1',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      timeoutMs: 100,
+      firstTokenTimeoutMs: 1_000,
+      idleTimeoutMs: 1_000,
+    });
+    const message = await c.messages.stream(ask).finalMessage();
+    expect((message.content[0] as Anthropic.TextBlock).text).toContain('w7');
+  });
+
+  it('a stream that stalls mid-answer gives up after the idle timeout', async () => {
+    const fetchImpl = pacedFetch([data({ choices: [{ delta: { content: 'Hi' } }] })], 5, false);
+    const c = new OpenRouterClient({
+      apiKey: 'k',
+      baseUrl: 'https://or.test/api/v1',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      idleTimeoutMs: 80,
+    });
+    await expect(c.messages.stream(ask).finalMessage()).rejects.toThrow(/stalled/);
+  });
+});
+
 describe('OpenRouterClient.create', () => {
   it('maps a non-streaming completion', async () => {
     const fetchImpl = jest.fn().mockResolvedValue(
@@ -296,6 +475,32 @@ describe('LlmClientsService', () => {
     expect(claudeCreate).toHaveBeenCalledWith(
       expect.objectContaining({ model: 'claude-haiku-4-5' }),
     );
+  });
+
+  it('an empty OpenRouter answer is retried on the Claude light model', async () => {
+    const svc = new LlmClientsService(
+      config({
+        'config.openRouter.apiKey': 'k',
+        'config.openRouter.model': 'google/gemini-2.5-flash-lite',
+        'config.anthropic.fallbackModel': 'claude-haiku-4-5',
+      }),
+    );
+    // Reasoning-only free models spend the whole budget thinking and return no text.
+    jest
+      .spyOn(svc.clientFor('google/gemini-2.5-flash-lite').messages, 'create')
+      .mockResolvedValue({
+        content: [{ type: 'text', text: '  ' }],
+        stop_reason: 'max_tokens',
+      } as unknown as Anthropic.Message);
+    const claudeReply = { content: [{ type: 'text', text: 'from claude' }] } as Anthropic.Message;
+    jest.spyOn(svc.claude.messages, 'create').mockResolvedValue(claudeReply);
+
+    const result = await svc.createLight({
+      max_tokens: 10,
+      messages: [{ role: 'user', content: 'x' }],
+    });
+
+    expect(result).toEqual({ message: claudeReply, model: 'claude-haiku-4-5' });
   });
 
   it('cools down after a 429 so the next turns go straight to Claude', async () => {

@@ -1,6 +1,6 @@
 import { providerOf } from '../tools/tool-names';
 import { normalizedToolName } from './pending-action-policy';
-import { PendingActionSummary } from './pending-action.types';
+import { PendingActionField, PendingActionSummary } from './pending-action.types';
 
 /** Per-field caps (characters) — a summary is a card line, not a document. */
 const MAX_RECIPIENTS = 200;
@@ -8,6 +8,12 @@ const MAX_SUBJECT = 150;
 const MAX_TITLE = 150;
 const MAX_TIME = 64;
 const MAX_TOOL = 60;
+const MAX_FIELD_VALUE = 120;
+const MAX_FIELDS = 6;
+
+/** Argument keys that hold ids (never shown raw) or secrets (never shown at all). */
+const ID_KEY = /(^id$|_id$|[a-z]Id$|^ids$|_ids$|[a-z]Ids$)/;
+const SECRET_KEY = /(token|secret|passw|api[_-]?key|authori[sz]ation|credential|cookie)/i;
 
 /** Email sends under any provider; `send_message`/`reply`/`forward` only mean email on Gmail. */
 const EMAIL_SEND = new Set(['send_email', 'send_mail']);
@@ -104,8 +110,9 @@ function compact<T extends object>(value: T): T {
 
 /**
  * Build the humanized, non-secret summary of a pending action from its tool
- * name + input. Picks only display fields (recipients, subject, title, times);
- * never the body, attendees, ids or links.
+ * name + input. Picks display fields (recipients incl. cc/bcc, subject, title,
+ * times, attendees; a generic tool's scalar arguments); never an email body,
+ * ids or secrets.
  */
 export function buildActionSummary(
   toolName: string,
@@ -119,9 +126,12 @@ export function buildActionSummary(
   // A "draft" elsewhere may be a document draft — only mail-shaped ones are emails.
   const isEmailDraft = EMAIL_DRAFT.has(name) && (provider === 'gmail' || 'to' in args);
   if (isEmailSend || isEmailDraft) {
+    // cc / bcc are shown: an injected `bcc: attacker@…` must be visible before confirm.
     return compact({
       kind: isEmailSend ? ('send_email' as const) : ('draft_email' as const),
       to: cleanRecipients(args['to']),
+      cc: cleanRecipients(args['cc']),
+      bcc: cleanRecipients(args['bcc']),
       subject: clean(args['subject'], MAX_SUBJECT),
     });
   }
@@ -131,6 +141,7 @@ export function buildActionSummary(
       title: findTitle(args),
       start: cleanTime(args['start'] ?? args['startTime']),
       end: cleanTime(args['end'] ?? args['endTime']),
+      attendees: cleanRecipients(args['attendees']),
     });
   }
   if (PAGE_CREATE.has(name) || PAGE_UPDATE.has(name)) {
@@ -139,7 +150,46 @@ export function buildActionSummary(
       title: findTitle(args),
     });
   }
-  return { kind: 'generic', tool: humanizeToolName(toolName) };
+  const fields = genericFields(args);
+  return fields.length > 0
+    ? { kind: 'generic', tool: humanizeToolName(toolName), fields }
+    : { kind: 'generic', tool: humanizeToolName(toolName) };
+}
+
+/** `assigneeName` / `due_date` / `send-at` → "Assignee name" / "Due date" / "Send at". */
+function humanizeKey(key: string): string {
+  const words = key
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_\-.]+/g, ' ')
+    .trim()
+    .toLowerCase();
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : key;
+}
+
+/** A display value for a scalar or a list of scalars; anything nested ⇒ undefined. */
+function displayValue(value: unknown): string | undefined {
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (typeof value === 'string') return clean(value, MAX_FIELD_VALUE);
+  if (Array.isArray(value) && value.every((v) => ['string', 'number', 'boolean'].includes(typeof v))) {
+    return clean(value.map(String).join(', '), MAX_FIELD_VALUE);
+  }
+  return undefined;
+}
+
+/**
+ * What a generic tool will be called with, so the card shows more than a tool
+ * name: top-level scalar arguments in order, up to {@link MAX_FIELDS}. Ids are
+ * left out (never raw ids on screen), secrets entirely, nested objects too.
+ */
+function genericFields(args: Record<string, unknown>): PendingActionField[] {
+  const fields: PendingActionField[] = [];
+  for (const [key, raw] of Object.entries(args)) {
+    if (fields.length >= MAX_FIELDS) break;
+    if (ID_KEY.test(key) || SECRET_KEY.test(key)) continue;
+    const value = displayValue(raw);
+    if (value) fields.push({ label: humanizeKey(key), value });
+  }
+  return fields;
 }
 
 /** An English one-liner of the summary for the follow-up prompt (model-facing only). */

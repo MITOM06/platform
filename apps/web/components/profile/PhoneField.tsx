@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button'
 import { OtpInput } from '@/components/auth/OtpInput'
 import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { authService } from '@/lib/api/auth'
-import { firebaseAuth } from '@/lib/firebase'
+import { getFirebaseAuth } from '@/lib/firebase'
 import { cn } from '@/lib/utils'
 
 export interface PhoneFieldLabels {
@@ -120,6 +120,13 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
       toast.error(labels.errorInvalid)
       return
     }
+    // No Firebase project on this deployment (common on self-host): phone
+    // verification cannot send a code — say so instead of failing deeper.
+    const firebaseAuth = getFirebaseAuth()
+    if (!firebaseAuth) {
+      toast.error(labels.errorSend)
+      return
+    }
     setSending(true)
     try {
       // Create invisible reCAPTCHA verifier once
@@ -168,7 +175,7 @@ export function PhoneField({ value, verified, onChange, disabled, labels }: Phon
       // Backend saves phone to our DB and marks verified
       await authService.verifyFirebasePhoneToken(idToken)
       // Sign out from Firebase Auth (we use our own auth system)
-      await firebaseAuth.signOut()
+      await getFirebaseAuth()?.signOut()
       toast.success(labels.successToast)
       setModalOpen(false)
       onChange(draft, true)

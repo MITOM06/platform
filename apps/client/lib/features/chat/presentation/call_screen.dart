@@ -16,6 +16,7 @@ import '../domain/webrtc_service.dart';
 import '../domain/call_network.dart';
 import '../ui/widgets/call_controls.dart';
 import '../ui/widgets/call_network_overlay.dart';
+import '../ui/widgets/call_stage_parts.dart';
 
 class CallScreen extends ConsumerStatefulWidget {
   final String targetId;
@@ -50,7 +51,14 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   Timer? _ringTimer;
   int _durationSeconds = 0;
   bool _isConnected = false;
+
+  /// The callee picked up (LiveKit `call-accepted`): connecting, not ringing.
+  bool _answered = false;
   late final CallSounds _sounds;
+
+  /// This screen's [DirectCallEngine.onCallEnded] — how [dispose] tells
+  /// whether the engine still runs this screen's call.
+  late final void Function() _onEnded;
 
   /// Captured in didChangeDependencies: the end notice may fire after this
   /// screen is gone, and l10n cannot be read from context in initState.
@@ -87,7 +95,10 @@ class _CallScreenState extends ConsumerState<CallScreen> {
     final peerName = widget.targetName;
     webrtc.onEndNotice = (reason, byPeer) {
       unawaited(_sounds.stop());
-      final msg = callEndNotice(_l10n, reason, byPeer: byPeer, peerName: peerName);
+      // A refused room or a peer who never joined says so specifically.
+      final failure = webrtc is SfuCallService ? webrtc.failure : null;
+      final msg = callEndNotice(_l10n, reason,
+          byPeer: byPeer, peerName: peerName, failure: failure);
       if (msg == null) return;
       if (reason == CallEndReason.failed || reason == CallEndReason.mediaError) {
         showErrorSnackBar(msg);
@@ -119,11 +130,10 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       });
     };
 
-    webrtc.onCallEnded = () {
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
+    _onEnded = () {
+      if (mounted) Navigator.of(context).pop();
     };
+    webrtc.onCallEnded = _onEnded;
 
     // Persist a call-log system message on hang-up (initiator only). Captured
     // now: a LiveKit engine may log after this screen is gone (e.g. a busy
@@ -145,6 +155,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
     if (webrtc is SfuCallService) {
       if (widget.isCaller) {
+        webrtc.onAnswered = _onAnswered;
         await webrtc.startOutgoing(
           targetId: widget.targetId,
           conversationId: widget.conversationId,
@@ -201,8 +212,19 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   /// Nobody picked up within [WebRTCService.ringTimeout]: give up (which tells
   /// the callee, logs a missed call and shows "No answer" via onEndNotice).
   void _onRingTimeout() {
-    if (!mounted || _isConnected) return;
+    if (!mounted || _isConnected || _answered) return;
     _engine.endCall(reason: CallEndReason.noAnswer);
+  }
+
+  /// The callee picked up (LiveKit): no ringback and no ring timeout any
+  /// more — an answer in the last seconds was cancelled while connecting.
+  void _onAnswered() {
+    _ringTimer?.cancel();
+    _ringTimer = null;
+    if (!mounted) return;
+    final engine = _engine;
+    unawaited(_sounds.stop().then((_) => engine.setSpeakerOn(engine.speakerOn)));
+    setState(() => _answered = true);
   }
 
   void _startTimer() {
@@ -231,6 +253,14 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
   @override
   void dispose() {
+    final engine = _engine;
+    if (engine is SfuCallService && engine.onAnswered == _onAnswered) {
+      engine.onAnswered = null;
+    }
+    // Left without hanging up — go() from a notification tap or deep link
+    // replaced this screen: end the call, or the mic stays open with no UI
+    // and every later call is answered "busy". Never twice after a hang-up.
+    releaseCallScreen(engine, _onEnded, duration: _durationSeconds);
     _callTimer?.cancel();
     _ringTimer?.cancel();
     unawaited(_sounds.stop());
@@ -283,42 +313,17 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                           size: 96,
                         ),
                       ))
-                : Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const CircularProgressIndicator(color: Colors.white),
-                        const SizedBox(height: 16),
-                        Text(
-                          widget.isCaller
-                              ? context.l10n.callCalling(widget.targetName)
-                              : context.l10n.callConnecting,
-                          style: const TextStyle(color: Colors.white, fontSize: 18),
-                        ),
-                      ],
-                    ),
+                : CallWaitingLabel(
+                    // The callee answered (LiveKit): connecting, not ringing.
+                    text: widget.isCaller && !_answered
+                        ? context.l10n.callCalling(widget.targetName)
+                        : context.l10n.callConnecting,
                   ),
           ),
-          
+
           // Local Video (PIP) — while our camera is on.
           if (video && _engine.cameraOn)
-          Positioned(
-            right: 16,
-            bottom: 120,
-            width: 100,
-            height: 150,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey.shade900,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white24),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: RTCVideoView(_localRenderer, mirror: true, objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover),
-              ),
-            ),
-          ),
+            CallLocalPreview(renderer: _localRenderer),
 
           // Top Info
           Positioned(

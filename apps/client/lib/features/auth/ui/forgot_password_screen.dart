@@ -49,7 +49,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         context.go('/login');
         return;
       }
-      final msg = authErrorToString(context, e);
+      final msg = authErrorMessage(context, e);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (_) {
       if (mounted) {

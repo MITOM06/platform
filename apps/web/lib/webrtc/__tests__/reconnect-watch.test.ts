@@ -49,6 +49,32 @@ describe('ReconnectWatch', () => {
     expect(tick).toHaveBeenCalledTimes(3)
   })
 
+  it('stopRetrying keeps waiting (and the deadline) but stops the recovery beat', () => {
+    const watch = new ReconnectWatch()
+    const tick = vi.fn()
+    const expire = vi.fn()
+    watch.begin('self', expire, tick, 4_000)
+    expect(tick).toHaveBeenCalledTimes(1)
+    watch.stopRetrying()
+    watch.begin('peer', expire) // back in the room: now only waiting for them
+    vi.advanceTimersByTime(12_000)
+    expect(tick).toHaveBeenCalledTimes(1)
+    expect(useCallStore.getState().reconnectWait).toBe('peer')
+    vi.advanceTimersByTime(RECONNECT_GRACE_MS)
+    expect(expire).toHaveBeenCalledOnce()
+  })
+
+  it('a later drop starts the recovery beat again', () => {
+    const watch = new ReconnectWatch()
+    const tick = vi.fn()
+    watch.begin('self', vi.fn(), tick, 4_000)
+    watch.stopRetrying()
+    watch.begin('self', vi.fn(), tick, 4_000)
+    expect(tick).toHaveBeenCalledTimes(2)
+    vi.advanceTimersByTime(4_000)
+    expect(tick).toHaveBeenCalledTimes(3)
+  })
+
   it('a second drop keeps the deadline but updates whose connection it is', () => {
     const watch = new ReconnectWatch()
     watch.begin('peer', vi.fn())

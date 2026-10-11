@@ -1,3 +1,4 @@
+import { MfaPendingStore } from '../mfa/mfa-pending.store';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthService } from './auth.service';
@@ -77,6 +78,8 @@ import { PasswordRecoveryService } from './password-recovery.service';
     OAuthRedirectService,
     LoginAttemptsService,
     PasswordRecoveryService,
+    // Stateless over the global REDIS_CLIENT: burns pending 2FA steps on password change.
+    MfaPendingStore,
     JwtStrategy,
     ...(process.env.GOOGLE_CLIENT_ID ? [GoogleStrategy] : []),
   ],

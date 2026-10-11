@@ -18,15 +18,18 @@ export function handleWebRtcFrame(body: string, tChat: Translate): void {
     return
   }
 
-  // Caller is blocked by the callee — show error toast and abort. Reset call
-  // state without sending a signal (there is no peer session to clean up).
+  // Caller is blocked by the callee — show error toast and abort. The call
+  // engine drops the attempt (ring timer, pending start, topic) without
+  // sending a signal (there is no peer session to clean up).
   if (signal.type === 'call-blocked') {
     toast.error(tChat('callBlocked'))
-    useCallStore.getState().reset()
+    void import('@/lib/webrtc/call-manager').then((m) => m.callManager.handleSignal(signal))
     return
   }
 
-  // LiveKit (sfu) call control: a 1-on-1 ring, ring cancels, declines.
+  // LiveKit (sfu) call control: a 1-on-1 ring, ring cancels, declines, the
+  // callee's answer, a merge into their call. These carry a callId, so they
+  // must be routed before the mesh (callId) branch below.
   if (signal.type === 'call-ring' && signal.transport === 'sfu' && signal.kind === 'direct') {
     void import('@/lib/webrtc/call-manager').then((m) => m.callManager.handleSignal(signal))
     return
@@ -37,7 +40,7 @@ export function handleWebRtcFrame(body: string, tChat: Translate): void {
     else void import('@/lib/webrtc/call-manager').then((m) => m.callManager.handleSignal(signal))
     return
   }
-  if (signal.type === 'call-declined') {
+  if (signal.type === 'call-declined' || signal.type === 'call-merged' || signal.type === 'call-accepted') {
     void import('@/lib/webrtc/call-manager').then((m) => m.callManager.handleSignal(signal))
     return
   }

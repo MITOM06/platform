@@ -116,4 +116,35 @@ describe('MfaPendingStore (mfa:pending:<sha256>)', () => {
     expect(await store.setSecretIfAbsent(key, 'enc')).toBeNull();
     expect(redis.keys('mfa:pending:')).toEqual([]);
   });
+
+  // A phished password gets an enroll-stage token; the victim resets the
+  // password. That token must die with it, or the attacker still finishes
+  // enrollment (with their own authenticator) and gets a session.
+  it('burnAllForUser kills every pending sign-in step of that user only', async () => {
+    const a = await store.create(ctx);
+    const b = await store.create({ ...ctx, stage: 'enroll' });
+    const other = await store.create({ ...ctx, userId: 'u2' });
+
+    await store.burnAllForUser('u1');
+
+    expect(await store.get(a)).toBeNull();
+    expect(await store.get(b)).toBeNull();
+    expect(await store.get(other)).not.toBeNull();
+  });
+
+  it('a codes_pending record reopened under the same token is burned too', async () => {
+    const t = await store.create({ ...ctx, stage: 'enroll' });
+    const p = (await store.get(t))!;
+    await store.openCodesPending(p.key, {
+      userId: 'u1',
+      backupCodesEnc: 'enc',
+      enrolledAt: Date.now(),
+      deviceId: 'd1',
+      platform: 'web',
+    });
+
+    await store.burnAllForUser('u1');
+
+    expect(await store.get(t)).toBeNull();
+  });
 });

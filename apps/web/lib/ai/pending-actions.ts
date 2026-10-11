@@ -1,5 +1,6 @@
 import axios from 'axios'
 import type { AiPendingAction, Message } from '@/lib/api/types'
+import { looksLikeRawId } from '@/lib/chat/names'
 
 /**
  * Confirmation cards for sensitive AI actions (CONTRACTS-ROUND2 §F2).
@@ -102,11 +103,11 @@ export function withActionStatus(message: Message, actionId: string, status: Act
 
 // ── Summary ──────────────────────────────────────────────────────────────────
 
-export interface ActionSummaryLine {
-  /** `chat.*` label key ("To", "Subject", "Title", "When"). */
-  labelKey: string
-  value: string
-}
+export type ActionSummaryLine =
+  /** A localized label: a `chat.*` key ("To", "Cc", "Subject", "Title", "When"…). */
+  | { labelKey: string; value: string }
+  /** A label the server already humanized: a generic action's parameter name ("Title"). */
+  | { label: string; value: string }
 
 export interface ActionSummaryView {
   /** `chat.*` key of the headline. */
@@ -129,6 +130,35 @@ function text(value: unknown, max = 200): string | undefined {
   const v = value.replace(/\s+/g, ' ').trim()
   if (!v) return undefined
   return v.length > max ? `${v.slice(0, max - 1)}…` : v
+}
+
+/**
+ * Server contract for a generic action's `fields`: at most 6 `{label, value}`
+ * strings; labels humanized from the arg key ("Channel", "Due date"); values a
+ * scalar or a ", "-joined list, capped at 120 characters; id-like and
+ * secret-like args already stripped. Enforced here too, defensively.
+ */
+const MAX_GENERIC_FIELDS = 6
+const MAX_FIELD_VALUE = 120
+/** UUIDs (with or without dashes): connector-side ids, never a value worth reading. */
+const UUID_RE = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i
+
+/**
+ * `fields` of a generic action → "label: value" rows. Anything malformed, empty
+ * or that looks like a raw id is dropped (.claude/rules/no-raw-system-data-in-ui.md).
+ */
+function genericFieldLines(fields: unknown): ActionSummaryLine[] {
+  if (!Array.isArray(fields)) return []
+  const lines: ActionSummaryLine[] = []
+  for (const field of fields) {
+    const row = field as { label?: unknown; value?: unknown } | null
+    const label = text(row?.label, 60)
+    const value = text(row?.value, MAX_FIELD_VALUE)
+    if (!label || !value || looksLikeRawId(value) || UUID_RE.test(value)) continue
+    lines.push({ label, value })
+    if (lines.length === MAX_GENERIC_FIELDS) break
+  }
+  return lines
 }
 
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
@@ -163,8 +193,12 @@ export function actionSummaryView(
     const v = text(value)
     if (v) lines.push({ labelKey, value: v })
   }
+  // cc / bcc / attendees / fields are optional: older servers send none. An email's
+  // body is never on the card (the card is seen by the whole group).
   if (kind === 'send_email' || kind === 'draft_email') {
     push('aiActionFieldTo', summary?.to)
+    push('aiActionFieldCc', summary?.cc)
+    push('aiActionFieldBcc', summary?.bcc)
     push('aiActionFieldSubject', summary?.subject)
   } else if (kind === 'create_event' || kind === 'update_event') {
     push('aiActionFieldTitle', summary?.title)
@@ -175,8 +209,11 @@ export function actionSummaryView(
       const value = end ? `${from} – ${formatActionTime(end, locale, timeZone)}` : from
       lines.push({ labelKey: 'aiActionFieldWhen', value })
     }
+    push('aiActionFieldAttendees', summary?.attendees)
   } else if (kind === 'create_page' || kind === 'update_page') {
     push('aiActionFieldTitle', summary?.title)
+  } else {
+    lines.push(...genericFieldLines(summary?.fields))
   }
   const titleKey = TITLE_KEYS[kind]
   if (titleKey) return { titleKey, lines }

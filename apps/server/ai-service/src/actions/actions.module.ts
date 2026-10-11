@@ -9,6 +9,7 @@ import { ActionsController } from './actions.controller';
 import { PendingActionStore } from './pending-action.store';
 import { PendingActionService } from './pending-action.service';
 import { ActionFollowUpService } from './action-follow-up.service';
+import { ReplySettledTracker } from './reply-settled.tracker';
 
 /**
  * Pending AI actions — sensitive connector writes held for the requester's
@@ -18,7 +19,7 @@ import { ActionFollowUpService } from './action-follow-up.service';
 @Module({
   imports: [RedisModule, ToolsModule, PersonaModule, UsageModule, SettingsModule, SessionModule],
   controllers: [ActionsController],
-  providers: [PendingActionStore, PendingActionService, ActionFollowUpService],
-  exports: [PendingActionStore],
+  providers: [PendingActionStore, PendingActionService, ActionFollowUpService, ReplySettledTracker],
+  exports: [PendingActionStore, ReplySettledTracker],
 })
 export class ActionsModule {}

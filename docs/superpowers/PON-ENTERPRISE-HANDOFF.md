@@ -212,7 +212,7 @@ These are HARD STOPs — code is done/ready, but live execution needs secrets/in
 5. **Anthropic key** for ai-service (`ANTHROPIC_API_KEY`) if not already set — needed for the AI to
    actually run tools.
 6. **OIDC app** (for P8 SSO): create an app in your IdP (Google Workspace / Entra / Okta / Keycloak),
-   register redirect URI `https://<DOMAIN>/api/auth/oidc/callback`, set `OIDC_ENABLED=true` +
+   register redirect URI `https://<DOMAIN>/api/auth/auth/oidc/callback`, set `OIDC_ENABLED=true` +
    `OIDC_ISSUER` / `OIDC_CLIENT_ID` / `OIDC_CLIENT_SECRET` in `.env` (adjust `OIDC_GROUPS_CLAIM` per IdP),
    then enable SSO + map a group → role in `/admin` → SSO. E2E: log in via SSO on web + mobile →
    user JIT-provisioned with the mapped role.

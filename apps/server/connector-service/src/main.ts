@@ -1,5 +1,6 @@
 import './tracing'; // first: OpenTelemetry patches modules before they load
 import * as Sentry from '@sentry/node';
+import { sentryOptions } from './sentry-options';
 import helmet from 'helmet';
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
@@ -8,12 +9,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { findEnvProblems, findEnvWarnings, resolveAllowedOrigins } from './config/env-guard';
 
-Sentry.init({
-  dsn: process.env.SENTRY_DSN ?? '',
-  environment: process.env.NODE_ENV ?? 'development',
-  tracesSampleRate: 0.1,
-  enabled: !!process.env.SENTRY_DSN,
-});
+Sentry.init(sentryOptions(process.env));
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');

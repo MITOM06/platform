@@ -73,6 +73,76 @@ class MessageNotificationServiceTest {
   }
 
   @Test
+  void attachmentAndUnknownTypes_pushALocalizationKey_neverEnglishText() {
+    java.util.Map<String, String> expected =
+        java.util.Map.of(
+            "video", "push_body_video",
+            "voice", "push_body_voice",
+            "file", "push_body_file",
+            "sticker", "push_body_sticker",
+            "meeting_summary", "push_body_new_message");
+    MessageNotificationService svc = service();
+    expected.forEach(
+        (type, key) -> {
+          svc.notifyNewMessage(SENDER, message("{\"url\":\"/api/uploads/x\"}", type, List.of()));
+          verify(fcmService, timeout(1000))
+              .sendPushNotification(
+                  eq(RECIPIENT), eq(PushText.of("Alice")), eq(PushText.localized(key)), eq(CONV));
+        });
+  }
+
+  /**
+   * System notices (members added, group renamed…) used to send only {type, conversationId,
+   * senderName:"system"}: the conversation list could not update its preview or order in place.
+   */
+  @Test
+  @SuppressWarnings("unchecked")
+  void systemNotice_carriesTheFullMessagePayload_withoutAPush() {
+    MessageNotificationService svc = service();
+    MessageResponse notice = message("system", "system.members.added:user-9", "system", List.of());
+
+    svc.notifySystemNotice(SENDER, notice);
+
+    verify(clusterBroker, timeout(1000))
+        .convertAndSendToUser(
+            eq(RECIPIENT),
+            eq("/queue/notifications"),
+            argThat(
+                payload -> {
+                  Map<String, String> p = (Map<String, String>) payload;
+                  return "NEW_MESSAGE".equals(p.get("type"))
+                      && CONV.equals(p.get("conversationId"))
+                      && "system".equals(p.get("senderId"))
+                      && "system".equals(p.get("senderName"))
+                      && "system.members.added:user-9".equals(p.get("content"))
+                      && "system".equals(p.get("messageType"))
+                      && "msg-1".equals(p.get("messageId"))
+                      && !p.get("createdAt").isEmpty();
+                }));
+    // The actor already knows what they did.
+    verify(clusterBroker, after(200).never()).convertAndSendToUser(eq(SENDER), anyString(), any());
+    verify(fcmService, never()).sendPushNotification(any(), any(), any(), any());
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void systemNotice_attributedToTheActor_namesThem() {
+    MessageNotificationService svc = service();
+
+    svc.notifySystemNotice(
+        SENDER, message(SENDER, "system.admin.promoted:user-2", "system", List.of()));
+
+    verify(clusterBroker, timeout(1000))
+        .convertAndSendToUser(
+            eq(RECIPIENT),
+            eq("/queue/notifications"),
+            argThat(
+                payload ->
+                    SENDER.equals(((Map<String, String>) payload).get("senderId"))
+                        && "Alice".equals(((Map<String, String>) payload).get("senderName"))));
+  }
+
+  @Test
   @SuppressWarnings("unchecked")
   void textMessage_notifiesEveryOtherParticipant_andPushes() {
     service().notifyNewMessage(SENDER, message("Hello", "text", List.of()));
@@ -90,7 +160,8 @@ class MessageNotificationServiceTest {
                         && "msg-1".equals(((Map<String, String>) payload).get("messageId"))
                         && !((Map<String, String>) payload).get("createdAt").isEmpty()));
     verify(fcmService, timeout(1000))
-        .sendPushNotification(eq(RECIPIENT), eq("Alice"), eq("Hello"), eq(CONV));
+        .sendPushNotification(
+            eq(RECIPIENT), eq(PushText.of("Alice")), eq(PushText.of("Hello")), eq(CONV));
     // The sender must never be self-notified.
     verify(clusterBroker, after(300).never())
         .convertAndSendToUser(eq(SENDER), eq("/queue/notifications"), any());
@@ -127,7 +198,12 @@ class MessageNotificationServiceTest {
             SENDER, message("{\"url\":\"/api/uploads/abc\",\"name\":\"cat.png\"}", "image", null));
 
     verify(fcmService, timeout(1000))
-        .sendPushNotification(eq(RECIPIENT), eq("Alice"), eq("[Photo]"), eq(CONV));
+        .sendPushNotification(
+            eq(RECIPIENT),
+            eq(PushText.of("Alice")),
+            // Localized on the device (strings.xml / Localizable.strings), not English "[Photo]".
+            eq(PushText.localized("push_body_photo")),
+            eq(CONV));
   }
 
   @Test
@@ -150,7 +226,8 @@ class MessageNotificationServiceTest {
                     "Mimi".equals(((Map<String, String>) payload).get("senderName"))
                         && "Here you go".equals(((Map<String, String>) payload).get("content"))));
     verify(fcmService, timeout(1000))
-        .sendPushNotification(eq(RECIPIENT), eq("Mimi"), eq("Here you go"), eq(CONV));
+        .sendPushNotification(
+            eq(RECIPIENT), eq(PushText.of("Mimi")), eq(PushText.of("Here you go")), eq(CONV));
   }
 
   @Test
@@ -184,7 +261,8 @@ class MessageNotificationServiceTest {
             eq("/queue/notifications"),
             argThat(payload -> "Jarvis".equals(((Map<String, String>) payload).get("senderName"))));
     verify(fcmService, timeout(1000))
-        .sendPushNotification(eq(RECIPIENT), eq("Jarvis"), eq("Done"), eq(CONV));
+        .sendPushNotification(
+            eq(RECIPIENT), eq(PushText.of("Jarvis")), eq(PushText.of("Done")), eq(CONV));
   }
 
   @Test
@@ -208,7 +286,10 @@ class MessageNotificationServiceTest {
                 }));
     verify(fcmService, timeout(1000))
         .sendPushNotification(
-            eq(RECIPIENT), eq("PON AI"), argThat(body -> body.length() <= 201), eq(CONV));
+            eq(RECIPIENT),
+            eq(PushText.of("PON AI")),
+            argThat(body -> body.text().length() <= 201),
+            eq(CONV));
   }
 
   @Test
@@ -227,6 +308,10 @@ class MessageNotificationServiceTest {
     svc.notifyNewMessage(SENDER, message("Hello", "text", List.of()));
 
     verify(fcmService, timeout(1000))
-        .sendPushNotification(eq(RECIPIENT), eq("New message"), eq("Hello"), eq(CONV));
+        .sendPushNotification(
+            eq(RECIPIENT),
+            eq(PushText.localized("push_title_new_message")),
+            eq(PushText.of("Hello")),
+            eq(CONV));
   }
 }

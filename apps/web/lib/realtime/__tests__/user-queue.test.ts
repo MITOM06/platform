@@ -13,6 +13,7 @@ import {
   type UserQueueContext,
 } from '@/lib/realtime/user-queue'
 import { CONVERSATIONS_KEY } from '@/lib/realtime/conversation-cache'
+import { humanizeLastMessage } from '@/lib/system-messages'
 import type { Conversation, ConversationsResponse } from '@/lib/api/types'
 
 const t = (key: string, values?: Record<string, string | number>) =>
@@ -148,5 +149,103 @@ describe('user queue events', () => {
       t,
     )
     expect(file.body).toBe('notificationAttachment')
+  })
+})
+
+/**
+ * chat-service system notices (group created, members added/left/joined,
+ * auto-delete, admin changes) arrive with the full message payload; the content
+ * is the system code and senderId is the actor or "system".
+ */
+describe('system-notice NEW_MESSAGE payload', () => {
+  const ANN = '64b7f0c2a1b2c3d4e5f60718'
+  const BOB = '64b7f0c2a1b2c3d4e5f60719'
+  const frame = (over: Record<string, string> = {}) =>
+    JSON.stringify({
+      type: 'NEW_MESSAGE',
+      conversationId: 'g1',
+      senderId: ANN,
+      senderName: 'Ann',
+      content: `system.admin.promoted:${BOB}`,
+      messageType: 'system',
+      messageId: 'm-9',
+      createdAt: '2026-10-11T08:00:00Z',
+      ...over,
+    })
+  const leaks = (text: string) => [ANN, BOB, 'system.', 'g1'].filter((raw) => text.includes(raw))
+
+  let qc: QueryClient
+  beforeEach(() => {
+    qc = new QueryClient()
+    qc.setQueryData<ConversationsResponse>(CONVERSATIONS_KEY, {
+      content: [
+        {
+          id: 'g1', type: 'group', name: 'Team', participants: ['me', ANN, BOB], isMuted: false,
+          lastMessageAt: '2026-10-11T07:00:00Z', unreadCount: 0,
+        } as Conversation,
+      ],
+      page: 0,
+      size: 1,
+      totalElements: 1,
+    })
+  })
+
+  const deliver = (over: Record<string, string> = {}) => {
+    const event = parseUserQueueEvent(frame(over))
+    expect(event).not.toBeNull()
+    const c = ctx(qc)
+    handleUserQueueEvent(event!, c)
+    return c
+  }
+  const row = () => qc.getQueryData<ConversationsResponse>(CONVERSATIONS_KEY)!.content[0]!
+  const banner = (c: UserQueueContext) =>
+    (c.showNotification as ReturnType<typeof vi.fn>).mock.calls[0]![0] as { title: string; body: string }
+
+  it('updates the list row in place with the code, its actor and its type', () => {
+    deliver()
+    expect(row().lastMessage).toMatchObject({
+      content: `system.admin.promoted:${BOB}`,
+      senderId: ANN,
+      type: 'system',
+      messageId: 'm-9',
+    })
+    expect(row().lastMessageAt).toBe('2026-10-11T08:00:00Z')
+  })
+
+  it('the list preview is humanized with name resolution — never the code or an id', () => {
+    deliver()
+    const names: Record<string, string> = { [BOB]: 'Bob' }
+    const resolved = humanizeLastMessage(row().lastMessage, t, {
+      resolveName: (id) => names[id],
+      currentUserId: 'me',
+    })
+    expect(resolved).toBe('systemAdminPromoted(Bob)')
+
+    const unresolved = humanizeLastMessage(row().lastMessage, t, { resolveName: () => undefined, currentUserId: 'me' })
+    expect(unresolved).toBe('systemAdminChanged')
+    expect(leaks(`${resolved} ${unresolved}`)).toEqual([])
+  })
+
+  it('the banner resolves names too: the viewer as "you"…', () => {
+    const c = deliver({ content: 'system.admin.promoted:me' })
+    expect(banner(c)).toEqual({ conversationId: 'g1', title: 'notificationSystemTitle', body: 'systemAdminPromotedYou' })
+  })
+
+  it('…and others from what this tab already knows, never their id', () => {
+    qc.setQueryData(['user', BOB], { displayName: 'Bob' })
+    const known = deliver()
+    expect(banner(known).body).toBe('systemAdminPromoted(Bob)')
+
+    qc.removeQueries({ queryKey: ['user', BOB] })
+    const unknown = deliver({ messageId: 'm-10', createdAt: '2026-10-11T08:01:00Z' })
+    expect(banner(unknown).body).toBe('systemAdminChanged')
+    expect(leaks(`${banner(known).title} ${banner(known).body} ${banner(unknown).body}`)).toEqual([])
+  })
+
+  it('a notice from the server itself (senderId "system")', () => {
+    const c = deliver({ senderId: 'system', senderName: 'system', content: 'system.group.created' })
+    expect(banner(c)).toEqual({ conversationId: 'g1', title: 'notificationSystemTitle', body: 'systemGroupCreated' })
+    expect(row().lastMessage).toMatchObject({ senderId: 'system', type: 'system' })
+    expect(humanizeLastMessage(row().lastMessage, t, { currentUserId: 'me' })).toBe('systemGroupCreated')
   })
 })

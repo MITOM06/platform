@@ -1,14 +1,13 @@
 import { stompService } from '@/lib/stomp/client'
-import { callsApi } from '@/lib/api/calls'
 import type { CallEvent, CallTransport } from '@/lib/api/types'
-import { LiveKitSession, MediaAccessError } from '@/lib/rtc/livekit-session'
 import { useCallStore } from '@/lib/store/call.store'
-import type { CallEndReason } from './call-end-notice'
-import { RING_TIMEOUT_MS, type WebRTCSignal } from './call-config'
-import { ReconnectWatch } from './reconnect-watch'
+import type { CallEndReason, CallNoticeKey } from './call-end-notice'
+import { CONNECT_TIMEOUT_MS, RING_TIMEOUT_MS, START_TIMEOUT_MS, type WebRTCSignal } from './call-config'
 import { canOpenMedia, sendCallLog, subscribeCallEvents } from './call-topic'
 import type { CallHooks } from './call-hooks'
 import { refreshCallTransport } from './call-transport'
+import { OneShotTimer } from './one-shot-timer'
+import { SfuCallRoom } from './sfu-call-room'
 
 const DECLINE_REASONS: ReadonlySet<CallEndReason> = new Set(['declined', 'busy', 'media_error'])
 
@@ -19,11 +18,16 @@ const store = () => useCallStore.getState()
  * mesh engine — ring, ringback, end reasons, call log — but the server rings
  * and LiveKit carries the media, so calls work across 4G / corporate NAT.
  * Contract: docs/superpowers/plans/2026-10-05-calls-on-livekit.md.
+ * This class runs the call over STOMP; its room lives in SfuCallRoom.
  */
 export class SfuDirectCall {
-  private session: LiveKitSession | null = null
   private callId: string | null = null
-  private ringTimer: ReturnType<typeof setTimeout> | null = null
+  /** Caller: how long the callee rings before the call is given up as unanswered. */
+  private readonly ringTimer = new OneShotTimer(RING_TIMEOUT_MS)
+  /** Answered (`connecting`): how long the other person has to reach the room. */
+  private readonly connectTimer = new OneShotTimer(CONNECT_TIMEOUT_MS)
+  /** Caller: call.start waiting for its call.started — then, after a hang-up, the wait to cancel it. */
+  private readonly startTimer = new OneShotTimer(START_TIMEOUT_MS)
   /** Our call.accept has gone out: our own answered-elsewhere echo must not end it. */
   private accepting = false
   /** Caller: call.start sent, call.started (with the id) not back yet. */
@@ -32,36 +36,52 @@ export class SfuDirectCall {
   private cancelledBeforeStart: CallEndReason | null = null
   /** Callee: the mic/camera probe is open — a second Answer must not run. */
   private probing = false
+  /** This device was rung for the call (it did not place it). */
+  private incoming = false
   /** Our own subscription to the call's conversation topic (the thread may be closed). */
   private topicSub: { unsubscribe: () => void } | null = null
-  /** The stream last handed to the UI — re-handing the same one restarts playback. */
-  private lastRemote: MediaStream | null = null
-  /** Someone dropped: the one-minute "waiting to reconnect" window; a rejoin in flight. */
-  private readonly watch = new ReconnectWatch()
-  private rejoining = false
+  private readonly room: SfuCallRoom
 
-  constructor(private readonly hooks: CallHooks) {}
+  constructor(private readonly hooks: CallHooks) {
+    this.room = new SfuCallRoom({
+      hooks,
+      currentCallId: () => this.callId,
+      fail: (reason, notice) => this.endCall(reason, notice),
+      roomClosed: (callId) => this.onEnded(callId, 'hangup'),
+      peerPresent: () => {
+        this.ringTimer.clear()
+        this.connectTimer.clear()
+        store().setConnected()
+      },
+    })
+  }
 
   getLocalStream(): MediaStream | null {
-    return this.session?.localStream() ?? null
+    return this.room.localStream()
   }
 
   getRemoteStream(): MediaStream | null {
-    const peerId = store().peerId
-    return (peerId && this.session?.peer(peerId)?.stream) || null
+    return this.room.remoteStream()
   }
 
   async startCall(targetId: string, targetName: string, conversationId: string, video = true): Promise<void> {
+    this.connectTimer.clear() // an earlier attempt never torn down must not end this one
     store().setOutgoing({ peerId: targetId, peerName: targetName, conversationId, video, transport: 'sfu' })
+    this.incoming = false
     this.pendingStart = { conversationId }
     this.cancelledBeforeStart = null
     this.subscribeTopic(conversationId)
     // `merge`: we can join a call-merged call when they call us at the same time.
     stompService.publish('/app/call.start', { conversationId, media: video ? 'video' : 'audio', merge: true })
-    this.ringTimer = setTimeout(() => {
-      this.ringTimer = null
+    this.ringTimer.arm(() => {
       if (store().status === 'outgoing') this.endCall('no_answer')
-    }, RING_TIMEOUT_MS)
+    })
+    // A call.start lost on a dropping socket never gets its call.started: say so, don't ring on.
+    this.startTimer.arm(() => {
+      if (this.pendingStart?.conversationId === conversationId && store().status === 'outgoing') {
+        this.endCall('failed', 'errStartTimeout')
+      }
+    })
   }
 
   /** `call.started` / `call.ended` from the conversation topic (kind direct, sfu). */
@@ -87,6 +107,12 @@ export class SfuDirectCall {
       case 'call-merged':
         this.onMerged(signal)
         break
+      case 'call-accepted':
+        this.onAccepted(signal)
+        break
+      case 'call-blocked':
+        this.onBlocked(signal)
+        break
     }
   }
 
@@ -106,11 +132,15 @@ export class SfuDirectCall {
     if (this.callId !== callId) return // the caller gave up while the prompt was open
     this.accepting = true
     stompService.publish('/app/call.accept', { callId })
-    await this.join(video)
+    this.enterConnecting() // answered: no more prompt, no prompt timeout
+    await this.room.join(callId)
   }
 
-  /** Hang up / decline / give up — tells the server, logs the call, explains it locally. */
-  endCall(reason: CallEndReason = 'hangup'): void {
+  /**
+   * Hang up / decline / give up — tells the server, logs the call, explains it
+   * locally (`notice`: a precise message instead of the one `reason` implies).
+   */
+  endCall(reason: CallEndReason = 'hangup', notice?: CallNoticeKey): void {
     const st = store()
     if (st.status === 'idle') return
     const callId = this.callId
@@ -145,35 +175,42 @@ export class SfuDirectCall {
     }
     const peerName = st.peerName
     this.teardown(keepPendingStart)
-    this.hooks.onEndNotice?.(reason, false, peerName)
+    // Waiting to cancel a call.started that may never come (lost call.start): not forever.
+    if (keepPendingStart) this.startTimer.arm(() => this.dropPendingStart())
+    this.notifyEnd(reason, false, peerName, notice)
   }
 
-  /** The incoming prompt timed out locally. */
+  /** The incoming prompt timed out locally — or the user gave up on a call it answered. */
   dismissIncoming(): void {
-    if (store().status === 'incoming') this.teardown(false)
+    const { status } = store()
+    if (!this.incoming || (status !== 'incoming' && status !== 'connecting')) return
+    // Already answered: the server counts us in, and only a leave takes us out.
+    if (this.accepting && this.callId) stompService.publish('/app/call.leave', { callId: this.callId })
+    this.teardown(false)
   }
 
   toggleMic(on: boolean): void {
-    void this.session?.setMic(on)
     store().setMic(on)
+    this.room.setMic(on)
   }
 
   /** Our camera on/off — in a voice call this publishes it and makes it a video call. */
   toggleCamera(on: boolean): void {
-    void this.session?.setCamera(on)
     store().setCamera(on)
     if (on) useCallStore.setState({ video: true })
+    this.room.setCamera(on)
   }
 
   private onStarted(callId: string, conversationId: string, transport: CallTransport | undefined): void {
     if (!this.pendingStart || this.pendingStart.conversationId !== conversationId) return
     this.pendingStart = null
+    this.startTimer.clear()
     if (this.cancelledBeforeStart) {
       const reason = this.cancelledBeforeStart === 'no_answer' ? 'no_answer' : 'hangup'
       this.cancelledBeforeStart = null
       stompService.publish('/app/call.cancel', { callId, reason })
       stompService.publish('/app/call.leave', { callId })
-      this.unsubscribeTopic()
+      if (store().status === 'idle') this.unsubscribeTopic() // a call ringing us now keeps it
       return
     }
     if (transport !== 'sfu') {
@@ -187,7 +224,7 @@ export class SfuDirectCall {
     if (store().status !== 'outgoing') return
     this.callId = callId
     store().setCallId(callId)
-    void this.join(store().video)
+    void this.room.join(callId)
   }
 
   private onEnded(callId: string, reason: CallEndReason): void {
@@ -196,7 +233,7 @@ export class SfuDirectCall {
     const wasIncoming = st.status === 'incoming' && !this.accepting
     const peerName = st.peerName
     this.teardown(false)
-    if (!wasIncoming) this.hooks.onEndNotice?.(reason, true, peerName)
+    if (!wasIncoming) this.notifyEnd(reason, true, peerName)
   }
 
   private onRing(signal: WebRTCSignal): void {
@@ -211,6 +248,7 @@ export class SfuDirectCall {
     }
     this.callId = callId
     this.accepting = false
+    this.incoming = true
     this.subscribeTopic(conversationId)
     st.setIncoming({
       peerId: senderId,
@@ -228,22 +266,51 @@ export class SfuDirectCall {
     if (!callId || !conversationId || !senderId) return
     if (this.cancelledBeforeStart && this.pendingStart?.conversationId === conversationId) {
       // We hung up before the server answered: leave the call it put us in.
-      this.pendingStart = null
-      this.cancelledBeforeStart = null
+      this.dropPendingStart()
       stompService.publish('/app/call.leave', { callId })
-      this.unsubscribeTopic()
       return
     }
     const st = store()
     if (st.status !== 'outgoing' || st.peerId !== senderId || st.conversationId !== conversationId) return
     if (this.callId === callId) return // a repeated merge: already joining
     this.pendingStart = null // our own call.start was folded into theirs: no call.started comes
+    this.startTimer.clear()
+    this.ringTimer.clear()
     this.callId = callId
     this.accepting = true // already accepted by the server: its answered-elsewhere echo is ours
-    const video = signal.media === 'video'
     st.setCallId(callId)
-    if (st.video !== video) useCallStore.setState({ video })
-    void this.join(video)
+    // The call's media wins, cameras included: a voice call merged into a video one shows video.
+    const video = signal.media === 'video'
+    if (st.video !== video) useCallStore.setState({ video, cameraEnabled: video, peerCamera: video })
+    this.enterConnecting()
+    void this.room.join(callId)
+  }
+
+  /** The callee answered our call: stop the ring timer and ringback, it is connecting. */
+  private onAccepted(signal: WebRTCSignal): void {
+    if (!signal.callId || signal.callId !== this.callId || store().status !== 'outgoing') return
+    this.ringTimer.clear()
+    this.enterConnecting()
+  }
+
+  /**
+   * Answered, joining the room: no ring timer applies any more, so bound the wait
+   * for the other person instead — their app may have died or their join failed.
+   */
+  private enterConnecting(): void {
+    store().setConnecting()
+    const callId = this.callId
+    this.connectTimer.arm(() => {
+      if (this.callId === callId && store().status === 'connecting') this.endCall('failed', 'errPeerNeverJoined')
+    })
+  }
+
+  /** The server refused our call.start (one of us blocked the other): drop the attempt. */
+  private onBlocked(signal: WebRTCSignal): void {
+    const pending = this.pendingStart
+    if (!pending || (signal.conversationId && signal.conversationId !== pending.conversationId)) return
+    if (store().status === 'outgoing' && !this.callId) this.teardown(false)
+    else this.dropPendingStart()
   }
 
   private onRingCancel(signal: WebRTCSignal): void {
@@ -264,100 +331,12 @@ export class SfuDirectCall {
     }
     const peerName = st.peerName
     this.teardown(false)
-    this.hooks.onEndNotice?.(reason, true, peerName)
+    this.notifyEnd(reason, true, peerName)
   }
 
-  /** Join (or, `rejoin`, re-join after losing) the call's room. A failed rejoin is retried. */
-  private async join(video: boolean, rejoin = false): Promise<void> {
-    const callId = this.callId
-    if (!callId) return
-    let token: { url: string; token: string }
-    try {
-      token = await callsApi.getToken(callId)
-    } catch {
-      if (!rejoin && this.callId === callId) this.endCall('failed')
-      return
-    }
-    if (this.callId !== callId) return // ended while fetching the token
-    // Never two room sessions per identity; detach first so its onDisconnected is moot.
-    const previous = this.session
-    this.session = null
-    previous?.disconnect()
-    const session = new LiveKitSession()
-    this.session = session
-    session.onLocalStream = (s) => this.hooks.onLocalStream?.(s)
-    session.onPeersChanged = () => this.onPeers()
-    session.onReconnecting = (on) => {
-      store().setReconnecting(on)
-      if (on) this.watch.beginAfterBlip('self', () => this.endCall('failed'))
-      else this.onPeers() // resumed: ends the wait, or waits for them if they left meanwhile
-    }
-    session.onLocalPoorConnection = (poor) => store().setPoorConnection(poor)
-    session.onDisconnected = (reason) => {
-      if (this.session !== session) return
-      // The server closing the room means the call is over (the other side
-      // hung up) — the same as call.ended, which we may not have received.
-      if (reason === 'ended') this.onEnded(callId, 'hangup')
-      else this.lostRoom(callId)
-    }
-    try {
-      await session.connect(token.url, token.token, { video })
-      if (rejoin && this.session === session) this.rejoined(session)
-    } catch (err) {
-      if (rejoin || this.session !== session) return
-      this.endCall(err instanceof MediaAccessError ? 'media_error' : 'failed')
-    }
-  }
-
-  /** LiveKit could not resume: keep the call screen and re-join for up to a minute. */
-  private lostRoom(callId: string): void {
-    this.watch.begin('self', () => this.endCall('failed'), () => void this.rejoin(callId))
-  }
-
-  private async rejoin(callId: string): Promise<void> {
-    if (this.rejoining || this.callId !== callId) return
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) return // wait for a network
-    this.rejoining = true
-    try {
-      await this.join(store().cameraEnabled, true)
-    } finally {
-      this.rejoining = false
-    }
-  }
-
-  /** Back in the room: restore what connect() reset, and see whether they are here. */
-  private rejoined(session: LiveKitSession): void {
-    if (!store().micEnabled) void session.setMic(false) // connect() always opens the mic
-    store().setReconnecting(false)
-    this.onPeers()
-  }
-
-  private onPeers(): void {
-    const peerId = store().peerId
-    const peer = peerId ? this.session?.peer(peerId) : undefined
-    if (!peer) {
-      // They left without the call ending (crash, lost network): wait a minute, as the server
-      // does. LiveKit only reports them gone once their own reconnect gives up (~15-20 s), so
-      // this minute starts later than theirs; the server's, which ends the call, starts with ours.
-      if (store().status === 'connected') this.watch.begin('peer', () => this.endCall('failed'))
-      else this.watch.end()
-      return
-    }
-    if (!store().reconnecting) this.watch.end()
-    store().setPeerPoor(peer.poorConnection)
-    // Their camera: known once they publish video; until then the call kind stands.
-    if (peer.stream.getVideoTracks().length > 0) {
-      store().setPeerCamera(!peer.camMuted)
-      if (!peer.camMuted) useCallStore.setState({ video: true })
-    }
-    if (peer.stream !== this.lastRemote) {
-      this.lastRemote = peer.stream
-      this.hooks.onRemoteStream?.(peer.stream)
-    }
-    if (store().status !== 'connected') {
-      this.clearRingTimer()
-      store().setConnected()
-    }
+  private notifyEnd(reason: CallEndReason, byPeer: boolean, peerName: string, notice?: CallNoticeKey): void {
+    if (notice) this.hooks.onEndNotice?.(reason, byPeer, peerName, notice)
+    else this.hooks.onEndNotice?.(reason, byPeer, peerName)
   }
 
   private subscribeTopic(conversationId: string): void {
@@ -370,22 +349,23 @@ export class SfuDirectCall {
     this.topicSub = null
   }
 
-  private clearRingTimer(): void {
-    if (this.ringTimer) clearTimeout(this.ringTimer)
-    this.ringTimer = null
+  /** Stop waiting for our call.started (cancelled, refused, or it never came). */
+  private dropPendingStart(): void {
+    this.startTimer.clear()
+    this.pendingStart = null
+    this.cancelledBeforeStart = null
+    if (store().status === 'idle') this.unsubscribeTopic() // a call ringing us now keeps it
   }
 
   private teardown(keepPendingStart: boolean): void {
-    this.clearRingTimer()
-    this.watch.end()
-    this.rejoining = false
-    this.lastRemote = null
+    this.ringTimer.clear()
+    this.connectTimer.clear()
+    this.startTimer.clear()
     this.probing = false
-    const session = this.session
-    this.session = null
-    session?.disconnect()
+    this.room.close()
     this.callId = null
     this.accepting = false
+    this.incoming = false
     if (!keepPendingStart) {
       this.pendingStart = null
       this.cancelledBeforeStart = null

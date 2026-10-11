@@ -85,23 +85,33 @@ export class PresetRoleMigrationService {
       .select('_id')
       .lean()
       .exec();
-    if (holders.length > 0) {
-      await this.userModel
-        .updateMany({ roleId }, { $set: { roleId: memberId } })
+    // One user at a time, sessions revoked BEFORE the role moves: a crash in
+    // between leaves that user on the old role, so the next boot does both
+    // again (moving everyone first left moved users whose sessions were never
+    // revoked). The conditional move lets two instances booting together share
+    // the work without moving anyone twice.
+    let usersMoved = 0;
+    for (const u of holders) {
+      await this.session.revokeAllSessions(String(u._id), 'role_changed');
+      const moved = await this.userModel
+        .findOneAndUpdate(
+          { _id: u._id, roleId },
+          { $set: { roleId: memberId } },
+        )
         .exec();
-      for (const u of holders) {
-        await this.session.revokeAllSessions(String(u._id), 'role_changed');
-      }
+      if (moved) usersMoved += 1;
     }
     const invitations = await this.invitationModel
       .updateMany({ roleId, status: 'pending' }, { $set: { roleId: memberId } })
       .exec();
     await this.remapSsoRoleName(name);
-    await this.roleModel.deleteOne({ _id: roleId }).exec();
+    const deleted = await this.roleModel.deleteOne({ _id: roleId }).exec();
+    // Another instance finished it first: it logs and audits, not us.
+    if (deleted.deletedCount !== 1) return null;
 
     const result: PresetRoleRemoval = {
       name,
-      usersMoved: holders.length,
+      usersMoved,
       invitationsMoved: invitations.modifiedCount ?? 0,
     };
     this.logger.log(

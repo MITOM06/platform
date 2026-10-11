@@ -7,7 +7,7 @@ import com.platform.chatservice.dto.ChatMessageDto;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.model.ExternalBot;
 import com.platform.chatservice.service.AiRedisPublisher;
-import com.platform.chatservice.service.CallService;
+import com.platform.chatservice.service.CallSignalRelay;
 import com.platform.chatservice.service.ClusterMessageBroker;
 import com.platform.chatservice.service.ConversationMembershipCache;
 import com.platform.chatservice.service.ConversationService;
@@ -35,7 +35,7 @@ class ChatControllerExternalBotTest {
   @Mock private MessageNotificationService messageNotificationService;
   @Mock private RateLimiterService rateLimiterService;
   @Mock private AiRedisPublisher aiRedisPublisher;
-  @Mock private CallService callService;
+  @Mock private CallSignalRelay callSignalRelay;
   @Mock private ExternalBotService externalBotService;
   @Mock private ConversationService conversationService;
   @Mock private ConversationMembershipCache membershipCache;
@@ -51,7 +51,7 @@ class ChatControllerExternalBotTest {
             messageNotificationService,
             rateLimiterService,
             aiRedisPublisher,
-            callService,
+            callSignalRelay,
             externalBotService,
             conversationService,
             membershipCache);
@@ -87,7 +87,7 @@ class ChatControllerExternalBotTest {
             messageNotificationService,
             rateLimiterService,
             aiRedisPublisher,
-            callService,
+            callSignalRelay,
             externalBotService,
             conversationService,
             membershipCache);
@@ -118,7 +118,7 @@ class ChatControllerExternalBotTest {
             messageNotificationService,
             rateLimiterService,
             aiRedisPublisher,
-            callService,
+            callSignalRelay,
             externalBotService,
             conversationService,
             membershipCache);

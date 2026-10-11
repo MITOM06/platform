@@ -164,9 +164,20 @@ export class MemoryService {
     // Rebuild canonical fact list from the vector store for client REST/STOMP.
     const keyFacts = await this.canonicalKeyFacts(userId);
 
+    // A blank summary means the model answered nothing usable — keep the last
+    // one (a new document still gets '' so clients never read a null summary).
+    const hasSummary = safeSummary.trim() !== '';
     await this.memoryModel.findOneAndUpdate(
       { conversationId, userId },
-      { $set: { summary: safeSummary, keyFacts, messageCount, updatedAt: new Date() } },
+      {
+        $set: {
+          ...(hasSummary ? { summary: safeSummary } : {}),
+          keyFacts,
+          messageCount,
+          updatedAt: new Date(),
+        },
+        ...(hasSummary ? {} : { $setOnInsert: { summary: '' } }),
+      },
       { upsert: true, new: true },
     );
     return stored;

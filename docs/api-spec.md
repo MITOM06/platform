@@ -832,8 +832,19 @@ only via `/app/meet.host`, the notes switch via `PATCH`). Differences:
   Events: Message objects (new, edited, recalled, reactions, AI streaming chunks)
 - **Typing Indicator Stream:** `/topic/conversation/{conversationId}/typing`  
   Payload: `{ "userId": "string", "typing": boolean }`
+- **Message push (FCM, offline only):** `data: {type: "chat_message", conversationId}`, Android
+  channel `pon_messages`. Title = the sender's name, or loc key `push_title_new_message` when it
+  cannot be resolved; body = the text / AI preview (≤ 200 chars), else a loc key resolved on the
+  device (`body_loc_key` / APNs `loc-key`): `push_body_photo|video|file|voice|sticker`,
+  `push_body_new_message` for any other type. Native strings: `apps/client` `strings.xml` /
+  `Localizable.strings`, kept equal to the ARB by `native_push_strings_test.dart`.
 - **User Notifications Queue:** `/user/queue/notifications`  
-  Payload: `{ "type": "NEW_MESSAGE", "conversationId": "string", "senderName": "string" }`
+  Payload: `{ "type": "NEW_MESSAGE" | "MENTIONED_YOU", "conversationId", "senderId", "senderName",
+  "content", "messageType", "messageId", "createdAt" }` (all strings). System notices (group
+  created, members added/left, settings changed…) use the same shape with `messageType: "system"`
+  and the system code as `content` — humanize it, never show it raw; their `senderId` /
+  `senderName` are `"system"` unless the notice is attributed to the actor. Also
+  `{ "type": "CLAIMS_CHANGED" }`.
 - **Meeting room topic:** `/topic/meeting/{meetingId}` — only for people allowed straight into
   the room (see 📅 Meetings); silent for people removed from the meeting. Events: `meet.roster`,
   `meet.settings`, `meet.ended`, `meet.hands`, `meet.chat`, `meet.notes.updated`
@@ -888,5 +899,18 @@ for the whole call; `mesh` (default) keeps the routes above unchanged.
   session of the callee also gets `answered-elsewhere { senderId: <caller>, conversationId }`. A
   session still ringing for that caller in that conversation stops ringing (no end, no call log);
   the session that answered is no longer ringing and ignores it. Older apps ignore the type.
+
+- `/user/queue/webrtc` `call-accepted { callId, conversationId, senderId: <callee> }` to the caller when
+  the callee answers (sfu): the caller stops its own ring timer then, not when the callee reaches the
+  room. `call-merged { callId, conversationId, senderId, media, transport, kind }` to someone whose
+  `call.start` (with `merge: true`) found the other person already calling them: join that call.
+
+**Who may signal (all transports).** `/app/call.start` and `/app/call.join` only work for a member of
+the conversation; `/app/call.transcript` only for a member of a running call's conversation.
+`/app/call.offer|answer|ice|end|state` without a `callId` must name the `conversationId` both ends
+belong to, and are dropped when the target has blocked the sender; with a `callId` (group mesh) both
+ends must belong to that running call's conversation. A 1-on-1 `call.start` blocked in either
+direction answers `call-blocked`. Anything that does not qualify is dropped silently.
+`kind` comes from the conversation type (`direct` / `group`), so a two-member group is a group call.
 
 **LiveKit webhook:** `POST /api/rtc/livekit/webhook` (no user JWT; signed by the LiveKit API secret).

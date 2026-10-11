@@ -68,7 +68,16 @@ export class SsoEnforcementService {
     if (enforced && !isEnforcementActive(after)) {
       throw new BadRequestException({ code: AuthCode.SSO_ENFORCE_NOT_READY });
     }
-    return { sso: { ...patch, enforced }, before, after };
+    // Stored normalized: "@Acme.COM " and "acme.com" are the same domain to every
+    // check that reads them (enforcement and the OIDC domain gate alike).
+    const sso = patch.allowedDomains
+      ? {
+          ...patch,
+          enforced,
+          allowedDomains: normalizeDomains(patch.allowedDomains),
+        }
+      : { ...patch, enforced };
+    return { sso, before, after };
   }
 
   /**

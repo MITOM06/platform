@@ -13,6 +13,9 @@
 #      defaulted to '/' once made the assistant silently stop answering).
 #   3. The web app reads a NEXT_PUBLIC_* variable nobody documented, so it is
 #      simply absent in production and the feature is dead there only.
+#   4. A deployment hands a service an EMPTY value or leaves out a variable the
+#      service refuses to boot without — the self-host stack once crashed on boot
+#      in three services at once (2026-10-11) while every check here was green.
 
 set -uo pipefail
 
@@ -49,8 +52,9 @@ check_required_documented infra/livekit/compose.livekit.yml infra/livekit/.env.l
 for f in .github/workflows/deploy.yml infra/docker-compose/compose.mini.yml infra/docker-compose/compose.prod.yml; do
   [ -f "$f" ] || continue
   # `|| 'value'` (Actions) and `:-value` (compose) are the two fallback forms.
+  # grep -n prefixes "NN:", so the comment filter has to skip past it.
   hits="$(grep -nE "(\|\| *'[^']*(localhost|127\.0\.0\.1|platform)[^']*')|(:-[^}]*(localhost|127\.0\.0\.1)[^}]*\})" "$f" \
-          | grep -v '^\s*#' || true)"
+          | grep -vE '^[0-9]+:[[:space:]]*#' || true)"
   if [ -n "$hits" ]; then
     problem "$f has a development fallback in a production deployment:" "$hits"
   fi
@@ -67,6 +71,36 @@ if [ -d apps/web ]; then
     problem "apps/web reads NEXT_PUBLIC_* variables that .env.example does not list:" "${undocumented[@]}"
   fi
 fi
+
+# ── 4. Boot-critical variables are present and never handed over empty ───────
+# Spring resolves `${X:default}` to "" when X is set but empty, so an empty
+# compose default (`${SPRING_..._URL:-}`) overrides application.yml's fallback.
+# Node services treat "" as unset; Spring does not. Addresses only: an empty
+# SPRING_MAIL_HOST just means "no mail", which is a valid choice.
+for f in infra/docker-compose/compose.mini.yml infra/docker-compose/compose.prod.yml; do
+  [ -f "$f" ] || continue
+  hits="$(grep -nE 'SPRING_[A-Z0-9_]+_(URL|URI): *\$\{[A-Z0-9_]+:-\}' "$f" | grep -vE '^[0-9]+:[[:space:]]*#' || true)"
+  if [ -n "$hits" ]; then
+    problem "$f hands Spring an empty value (it overrides application.yml's default):" "$hits"
+  fi
+done
+
+# The variables each service's production boot guard refuses to start without
+# (auth main.ts; the rest have container-name defaults in these files).
+service_block() { # service_block <compose> <service> → that service's lines
+  awk -v svc="  $2:" '$0 == svc {on=1; next} on && /^  [a-z0-9-]+:$/ {exit} on {print}' "$1"
+}
+for f in infra/docker-compose/compose.mini.yml infra/docker-compose/compose.prod.yml; do
+  [ -f "$f" ] || continue
+  block="$(service_block "$f" auth-service)"
+  missing=()
+  for var in WEB_REDIRECT_URL CORS_ORIGINS SESSION_SECRET JWT_ACCESS_SECRET; do
+    printf '%s\n' "$block" | grep -qE "^ +${var}:" || missing+=("$var")
+  done
+  if [ "${#missing[@]}" -gt 0 ]; then
+    problem "$f: auth-service refuses to boot in production without:" "${missing[@]}"
+  fi
+done
 
 if [ "$fail" -eq 0 ]; then
   printf '\033[32m✓\033[0m dev and production configuration are in parity\n'

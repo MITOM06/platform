@@ -1100,7 +1100,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get pinnedMessagesTitle => '고정된 메시지';
 
   @override
-  String get pinLimitReached => '메시지는 최대 5개까지 고정할 수 있습니다';
+  String pinLimitReached(int max) {
+    return '메시지는 최대 $max개까지 고정할 수 있습니다';
+  }
 
   @override
   String get cannotPinCall => '통화는 고정할 수 없습니다';
@@ -1416,6 +1418,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiErrRateLimited => 'AI 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String get aiErrForbidden => '이 대화에 대한 접근 권한이 없어 AI가 여기서 답할 수 없습니다.';
 
   @override
   String get feedbackHelpful => '도움이 됨';
@@ -3556,6 +3561,32 @@ class AppLocalizationsKo extends AppLocalizations {
   String get callConnectionLost => '연결이 끊겨 통화가 종료되었습니다';
 
   @override
+  String get callErrUnavailable => '지금은 통화를 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String get callErrNotFound => '이 통화는 더 이상 존재하지 않습니다.';
+
+  @override
+  String get callErrEnded => '이 통화는 이미 종료되었습니다.';
+
+  @override
+  String get callErrNotSfu => '여기서는 이 통화에 참여할 수 없습니다. 다시 전화해 주세요.';
+
+  @override
+  String get callErrForbidden => '이 통화에 참여할 수 없습니다.';
+
+  @override
+  String callErrPeerNeverJoined(String name) {
+    return '$name님과 연결하지 못했습니다. 다시 시도해 주세요.';
+  }
+
+  @override
+  String get callErrStartTimeout => '통화를 시작하지 못했습니다. 서버가 응답하지 않습니다. 다시 시도하세요.';
+
+  @override
+  String get groupCallJoinFailed => '통화에 참여하지 못했습니다. 다시 시도해 주세요.';
+
+  @override
   String get callSpeaker => '스피커';
 
   @override
@@ -3713,7 +3744,20 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authErrSsoEmailUnverified => '로그인 제공업체에서 이 이메일 주소를 인증하지 않았습니다';
 
   @override
+  String get authErrSsoStateInvalid => '로그인 링크가 만료되었거나 유효하지 않습니다. 다시 시도해 주세요.';
+
+  @override
+  String get authErrSsoExchangeFailed => 'SSO 로그인을 완료하지 못했습니다. 다시 시도해 주세요.';
+
+  @override
   String get authErrSocialAccountConflict => '이 이메일은 이미 다른 로그인 계정에 연결되어 있습니다';
+
+  @override
+  String get authErrTooManyOtpRequests =>
+      'OTP 코드를 너무 많이 요청했습니다. 10분 후에 다시 시도해 주세요.';
+
+  @override
+  String get authErrSocialProviderUnsupported => '이 로그인 방식은 지원되지 않습니다.';
 
   @override
   String get aiActionConfirm => '확인';
@@ -3768,6 +3812,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiActionFieldWhen => '일시';
+
+  @override
+  String get aiActionFieldCc => '참조';
+
+  @override
+  String get aiActionFieldBcc => '숨은 참조';
+
+  @override
+  String get aiActionFieldAttendees => '참석자';
 
   @override
   String get aiActionStatusConfirmed => '완료됨';
@@ -4157,6 +4210,27 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get adminAuditActionSensitiveSkillRun => '민감한 스킬 실행';
+
+  @override
+  String get adminAuditActionSsoEnforcementChanged => '“SSO 필수” 설정 변경';
+
+  @override
+  String get adminAuditActionMfaEnrolled => '2단계 인증 설정';
+
+  @override
+  String get adminAuditActionMfaDisabled => '2단계 인증 끄기';
+
+  @override
+  String get adminAuditActionMfaReset => '멤버의 2단계 인증 재설정';
+
+  @override
+  String get adminAuditActionMfaBackupCodesRegenerated => '백업 코드 재발급';
+
+  @override
+  String get adminAuditActionMfaVerifiedBackupCode => '백업 코드로 로그인';
+
+  @override
+  String get adminAuditActionRolePresetRemoved => '기본 제공 역할 폐지';
 
   @override
   String get adminAuditTargetWorkspace => '워크스페이스';

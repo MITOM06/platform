@@ -16,4 +16,10 @@ export class SsoInfoResponseDto {
 
   @ApiProperty({ example: 'Sign in with SSO' })
   buttonLabel: string;
+
+  @ApiProperty({
+    description:
+      'Google sign-in is configured on this server (GOOGLE_CLIENT_ID). False on a self-host install without it: hide the Google button.',
+  })
+  googleEnabled: boolean;
 }

@@ -176,6 +176,7 @@ describe('MfaLoginController + MfaService: enrollment sequence', () => {
       new MfaCodeService(redis as never),
       crypto,
       { record: jest.fn() } as never,
+      { isEnforcedFor: async () => false } as never,
     );
     const auth = {
       issueTokensForUser: jest.fn().mockResolvedValue({ sid: 's1' }),

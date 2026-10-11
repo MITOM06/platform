@@ -291,8 +291,6 @@ class ConversationsNotifier extends _$ConversationsNotifier {
       case 'NEW_MESSAGE':
       case 'MENTIONED_YOU':
         _onIncomingMessage(notif, isMention: type == 'MENTIONED_YOU');
-      case 'new_conversation':
-        unawaited(_silentRefetch());
       case 'CLAIMS_CHANGED':
         if (!_claimsRefreshRunning) {
           _claimsRefreshRunning = true;
@@ -309,14 +307,14 @@ class ConversationsNotifier extends _$ConversationsNotifier {
   void _onIncomingMessage(Map<String, dynamic> notif, {required bool isMention}) {
     final current = state.valueOrNull;
     if (current == null) return;
-    // Chat-service sends a flat payload:
-    // {type, conversationId, senderName, senderId, content, messageType}.
-    final convId = notif['conversationId'] as String?;
-    if (convId == null) return;
-    final senderId =
-        (notif['senderId'] ?? notif['senderName'])?.toString() ?? '';
-    final content = notif['content'] as String?;
-    final messageType = notif['messageType'] as String?;
+    // Chat-service sends a flat payload — system notices included (see
+    // IncomingMessageNotice).
+    final notice = IncomingMessageNotice.fromJson(notif);
+    if (notice == null) return;
+    final convId = notice.conversationId;
+    final senderId = notice.senderId;
+    final content = notice.content;
+    final messageType = notice.messageType;
     final viewing = _isViewing(convId);
 
     // Gate ONLY the visible banner on the notification preference AND the
@@ -331,13 +329,12 @@ class ConversationsNotifier extends _$ConversationsNotifier {
         convId: convId,
         senderId: senderId,
         isMention: isMention,
-        senderName: notif['senderName'] as String?,
+        senderName: notice.senderName,
         content: content,
         messageType: messageType,
       ));
     }
 
-    final createdAt = notif['createdAt'];
     final updated = ConversationListOps.applyIncomingMessage(
       current,
       conversationId: convId,
@@ -345,8 +342,8 @@ class ConversationsNotifier extends _$ConversationsNotifier {
       viewing: viewing,
       content: content,
       messageType: messageType,
-      messageId: notif['messageId'] as String?,
-      createdAt: createdAt is String ? DateTime.tryParse(createdAt) : null,
+      messageId: notice.messageId,
+      createdAt: notice.createdAt,
     );
     if (updated == null) {
       unawaited(ensureLoaded(convId));

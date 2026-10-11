@@ -5,8 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/app_error.dart';
+import '../../../../core/utils/global_messenger.dart';
 import '../../domain/call_name_resolver.dart';
 import '../../domain/group_call_controller.dart';
+import '../../domain/group_call_join_error.dart';
 import '../../domain/group_call_signaling.dart';
 import '../../domain/group_call_state.dart';
 import '../../data/calls_repository.dart';
@@ -35,8 +38,10 @@ class IncomingGroupCallPrompt extends ConsumerWidget {
             transport: call.transport,
           );
       ref.read(appRouterProvider).push('/group-call');
-    } catch (_) {
-      // Media error already surfaces on the call screen; ignore here.
+    } catch (e) {
+      // No call screen opens: say why here (mic / camera refused, calls
+      // unavailable, …) — localized, never the raw error.
+      showErrorSnackBar(groupCallJoinErrorText(appL10n(), e));
     }
   }
 

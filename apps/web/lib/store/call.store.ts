@@ -1,7 +1,11 @@
 import { create } from 'zustand'
 import type { CallMedia, CallParticipant, CallTransport } from '@/lib/api/types'
 
-export type CallStatus = 'idle' | 'incoming' | 'outgoing' | 'connected'
+/**
+ * `connecting` (sfu): the call was answered — by us, by the callee, or merged
+ * with theirs — and the room is being joined. No ring, no ring timeout.
+ */
+export type CallStatus = 'idle' | 'incoming' | 'outgoing' | 'connecting' | 'connected'
 
 /** Incoming group-call ring (Track A §3, `type:'call-ring'`). */
 export interface IncomingGroupCall {
@@ -94,6 +98,8 @@ interface CallState {
   setVideoUnavailable: (on: boolean) => void
   setReconnectWait: (who: 'self' | 'peer' | null, deadline: number | null) => void
   setPeerName: (name: string) => void
+  /** Answered, room still joining: only from a ringing state (never back from connected). */
+  setConnecting: () => void
   setConnected: () => void
   setDuration: (s: number) => void
   setMic: (on: boolean) => void
@@ -151,6 +157,14 @@ const initialGroup = {
   speakingIds: [] as string[],
 }
 
+/**
+ * This device is busy with a call: placing one, joining one it (or the other
+ * side) answered, in one, or in a group call. A ring not yet answered is not.
+ */
+export function selectInCall(s: { status: CallStatus; groupCallId: string | null }): boolean {
+  return s.status === 'outgoing' || s.status === 'connecting' || s.status === 'connected' || s.groupCallId !== null
+}
+
 /** A new 1-on-1: cameras follow the call kind, nothing is poor or waiting yet. */
 function callMedia(video: boolean) {
   return {
@@ -201,6 +215,8 @@ export const useCallStore = create<CallState>((set) => ({
   setVideoUnavailable: (videoUnavailable) => set({ videoUnavailable }),
   setReconnectWait: (reconnectWait, reconnectDeadline) => set({ reconnectWait, reconnectDeadline }),
   setPeerName: (peerName) => set({ peerName }),
+  setConnecting: () =>
+    set((s) => (s.status === 'incoming' || s.status === 'outgoing' ? { status: 'connecting' } : s)),
   // A mid-call renegotiation or reconnect must not restart the call timer.
   setConnected: () => set((s) => (s.status === 'connected' ? s : { status: 'connected', durationSeconds: 0 })),
   setDuration: (s) => set({ durationSeconds: s }),

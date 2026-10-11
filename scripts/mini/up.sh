@@ -144,7 +144,9 @@ fi
 
 # ── 2. health ───────────────────────────────────────────────────────────────
 ylw "→ waiting for health…"
-for _ in $(seq 1 60); do
+# chat-service's healthcheck allows a 60 s start period plus 15 × 20 s retries,
+# so 3 minutes could give up on a JVM that was still starting. Wait it out.
+for _ in $(seq 1 120); do
   unhealthy="$("${COMPOSE[@]}" ps --format '{{.Service}} {{.Health}}' 2>/dev/null \
               | awk '$2 != "healthy" && $2 != "" {print $1}')"
   [ -z "$unhealthy" ] && break
@@ -153,6 +155,8 @@ done
 if [ -n "${unhealthy:-}" ]; then
   red "✗ not healthy: $unhealthy"
   echo "  ${COMPOSE[*]} logs --tail=40 $unhealthy"
+  # Non-zero, so redeploy.sh treats it as a failed deploy and rolls back.
+  exit 1
 else
   grn "✓ all services healthy"
 fi
@@ -190,7 +194,8 @@ if [ "$MODE" = named ]; then
 
   2) FLUTTER — build against this host once:
 
-       flutter build apk --flavor prod --dart-define=PON_DOMAIN=$HOST
+       flutter build apk --flavor prod --dart-define=PON_DOMAIN=$HOST \\
+         --dart-define=PON_WEB_URL=$WEB_ORIGIN
 
   3) OAUTH CONSOLES — register these once and never again:
 
@@ -237,7 +242,8 @@ else
 
   2) FLUTTER — rebuild against this host:
 
-       flutter build apk --flavor prod --dart-define=PON_DOMAIN=$HOST
+       flutter build apk --flavor prod --dart-define=PON_DOMAIN=$HOST \\
+         --dart-define=PON_WEB_URL=$WEB_ORIGIN
 
   3) OAUTH CONSOLES — re-register the redirect URIs. Google rejects wildcards,
      so this is manual every time the hostname changes:

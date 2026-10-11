@@ -15,6 +15,7 @@ import com.platform.chatservice.service.ConversationQueryService;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.ConversationUserStateService;
 import com.platform.chatservice.service.GroupAdminService;
+import com.platform.chatservice.service.MessageNotificationService;
 import com.platform.chatservice.service.MessageQueryService;
 import com.platform.chatservice.service.MessageService;
 import java.time.Instant;
@@ -45,6 +46,7 @@ class ConversationControllerAdminTest {
   @Mock private AttachmentService attachmentService;
   @Mock private ClusterMessageBroker clusterBroker;
   @Mock private ConversationEventPublisher events;
+  @Mock private MessageNotificationService notificationService;
 
   @InjectMocks private ConversationController controller;
 
@@ -95,10 +97,9 @@ class ConversationControllerAdminTest {
     ConversationResponse after = view(List.of(ACTOR, TARGET));
     when(groupAdminService.promote(ACTOR, CONV, TARGET))
         .thenReturn(new GroupAdminService.AdminChange(after, true));
+    MessageResponse notice = notice("system.admin.promoted:" + TARGET);
     when(messageService.createSystemMessage(CONV, "system.admin.promoted:" + TARGET, ACTOR))
-        .thenReturn(notice("system.admin.promoted:" + TARGET));
-    when(conversationQueryService.getParticipants(CONV))
-        .thenReturn(List.of(ACTOR, TARGET, "other"));
+        .thenReturn(notice);
 
     ConversationResponse result = controller.promoteAdmin(CONV, TARGET);
 
@@ -106,10 +107,8 @@ class ConversationControllerAdminTest {
     verify(events).publishShared(after);
     verify(clusterBroker)
         .convertAndSend(eq("/topic/conversation/" + CONV), any(MessageResponse.class));
-    // Every participant but the actor is notified.
-    verify(clusterBroker).convertAndSendToUser(eq(TARGET), eq("/queue/notifications"), any());
-    verify(clusterBroker).convertAndSendToUser(eq("other"), eq("/queue/notifications"), any());
-    verify(clusterBroker, never()).convertAndSendToUser(eq(ACTOR), anyString(), any());
+    // Every participant but the actor is notified (MessageNotificationServiceTest).
+    verify(notificationService).notifySystemNotice(ACTOR, notice);
   }
 
   @Test
@@ -119,7 +118,6 @@ class ConversationControllerAdminTest {
         .thenReturn(new GroupAdminService.AdminChange(after, true));
     when(messageService.createSystemMessage(CONV, "system.admin.demoted:" + TARGET, ACTOR))
         .thenReturn(notice("system.admin.demoted:" + TARGET));
-    when(conversationQueryService.getParticipants(CONV)).thenReturn(List.of(ACTOR));
 
     assertThat(controller.demoteAdmin(CONV, TARGET)).isSameAs(after);
     verify(events).publishShared(after);
@@ -132,7 +130,7 @@ class ConversationControllerAdminTest {
         .thenReturn(new GroupAdminService.AdminChange(same, false));
 
     assertThat(controller.promoteAdmin(CONV, TARGET)).isSameAs(same);
-    verifyNoInteractions(events, clusterBroker, messageService);
+    verifyNoInteractions(events, clusterBroker, messageService, notificationService);
   }
 
   @Test

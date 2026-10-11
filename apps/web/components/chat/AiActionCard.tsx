@@ -95,9 +95,10 @@ export function AiActionCard({ action, conversationId }: Props) {
           </p>
           {summary.lines.length > 0 && (
             <dl className="mt-1.5 grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-xs">
-              {summary.lines.map((line) => (
-                <div key={line.labelKey} className="contents">
-                  <dt className="text-muted-foreground">{t(line.labelKey)}</dt>
+              {summary.lines.map((line, i) => (
+                <div key={i} className="contents">
+                  {/* A generic action's label arrives humanized from the server. */}
+                  <dt className="text-muted-foreground">{'labelKey' in line ? t(line.labelKey) : line.label}</dt>
                   <dd className="min-w-0 break-words">{line.value}</dd>
                 </div>
               ))}

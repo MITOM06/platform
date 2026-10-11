@@ -53,6 +53,10 @@ class ChatControllerTest {
 
   @Mock private ConversationMembershipCache membershipCache;
 
+  @Mock private com.platform.chatservice.repository.UserBlockRepository blocks;
+
+  @Mock private com.platform.chatservice.repository.CallSessionRepository callSessions;
+
   @InjectMocks private ChatController chatController;
 
   private ChatMessageDto chatDto;
@@ -62,6 +66,21 @@ class ChatControllerTest {
   void setUp() {
     chatDto = new ChatMessageDto("conv-456", "Hello", "text", false, null, null);
     when(principal.getName()).thenReturn(SENDER_ID);
+    // The real relay over the same mocks, so these tests still see what reaches the broker.
+    org.springframework.test.util.ReflectionTestUtils.setField(
+        chatController,
+        "callSignalRelay",
+        new com.platform.chatservice.service.CallSignalRelay(
+            clusterBroker, membershipCache, blocks, callSessions));
+  }
+
+  /** Everyone named is a member of {@code conversationId}. */
+  private void members(String conversationId, String... userIds) {
+    for (String u : userIds) {
+      org.mockito.Mockito.lenient()
+          .when(membershipCache.isMember(conversationId, u))
+          .thenReturn(true);
+    }
   }
 
   @Test
@@ -113,7 +132,9 @@ class ChatControllerTest {
     com.platform.chatservice.dto.WebRTCSignalDto dto =
         new com.platform.chatservice.dto.WebRTCSignalDto();
     dto.setTargetId("user-789");
+    dto.setConversationId("conv-999");
     dto.setType("offer");
+    members("conv-999", SENDER_ID, "user-789");
 
     chatController.callOffer(dto, principal);
 
@@ -226,6 +247,7 @@ class ChatControllerTest {
     dto.setConversationId("conv-999");
     dto.setType("end");
     dto.setDuration(125); // 02:05
+    members("conv-999", SENDER_ID, "user-789");
 
     chatController.callEnd(dto, principal);
 
@@ -246,6 +268,7 @@ class ChatControllerTest {
     dto.setTargetId("user-789");
     dto.setConversationId("conv-999");
     dto.setType("end");
+    members("conv-999", SENDER_ID, "user-789");
 
     chatController.callEnd(dto, principal);
 
@@ -263,6 +286,7 @@ class ChatControllerTest {
     dto.setConversationId("conv-999");
     dto.setType("end");
     dto.setReason("declined");
+    members("conv-999", SENDER_ID, "user-789");
 
     chatController.callEnd(dto, principal);
 
@@ -402,6 +426,7 @@ class ChatControllerTest {
     dto.setTargetId("caller-1");
     dto.setConversationId("conv-1");
     dto.setSdp("v=0");
+    members("conv-1", SENDER_ID, "caller-1");
 
     chatController.callAnswer(dto, principal);
 
@@ -425,6 +450,7 @@ class ChatControllerTest {
         new com.platform.chatservice.dto.WebRTCSignalDto();
     dto.setTargetId("callee-1");
     dto.setConversationId("conv-1");
+    members("conv-1", SENDER_ID, "callee-1");
 
     chatController.callOffer(dto, principal);
     chatController.callIceCandidate(dto, principal);

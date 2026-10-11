@@ -321,7 +321,9 @@
     "errMfaAlreadyEnrolled": "Tài khoản này đã thiết lập xác thực hai yếu tố. Vui lòng đăng nhập lại.",
     "errMfaResetForbidden": "Bạn không có quyền đặt lại xác thực hai yếu tố của thành viên này.",
     "errMfaResetSelfForbidden": "Bạn không thể tự đặt lại xác thực hai yếu tố của chính mình.",
-    "errMfaRequiredByRole": "Vai trò của bạn bắt buộc xác thực hai yếu tố nên không thể tắt."
+    "errMfaRequiredByRole": "Vai trò của bạn bắt buộc xác thực hai yếu tố nên không thể tắt.",
+    "errTooManyRequests": "Bạn gửi quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại.",
+    "errNetwork": "Không kết nối được tới máy chủ. Kiểm tra mạng rồi thử lại."
   },
   "settings": {
     "title": "Cài đặt",
@@ -1008,7 +1010,11 @@
     "aiTraceToolSkipped": "Không khả dụng",
     "aiToolConnector": "Ứng dụng đã kết nối",
     "aiToolGeneric": "Công cụ",
-    "publicChannelDepartmentHint": "Nhóm phòng ban không thể là kênh công khai."
+    "publicChannelDepartmentHint": "Nhóm phòng ban không thể là kênh công khai.",
+    "aiActionFieldCc": "Cc",
+    "aiActionFieldBcc": "Bcc",
+    "aiActionFieldAttendees": "Khách mời",
+    "aiForbidden": "Trợ lý không thể trả lời ở đây: bạn không có quyền truy cập cuộc trò chuyện này."
   },
   "aiHub": {
     "title": "Trung tâm AI",
@@ -1687,7 +1693,14 @@
     "memberMfaResetTitle": "Đặt lại xác thực hai yếu tố?",
     "memberMfaResetConfirm": "{name} sẽ bị đăng xuất khỏi mọi thiết bị và phải thiết lập lại xác thực hai yếu tố ở lần đăng nhập tiếp theo.",
     "memberMfaResetDone": "Đã đặt lại xác thực hai yếu tố",
-    "memberMfaResetConfirmOptional": "{name} sẽ bị đăng xuất trên mọi thiết bị và xác thực hai yếu tố sẽ bị tắt. Họ có thể bật lại trong Cài đặt."
+    "memberMfaResetConfirmOptional": "{name} sẽ bị đăng xuất trên mọi thiết bị và xác thực hai yếu tố sẽ bị tắt. Họ có thể bật lại trong Cài đặt.",
+    "auditAction_role_preset_removed": "Xoá vai trò mẫu đã ngừng dùng",
+    "auditAction_sso_enforcement_changed": "Đổi cài đặt bắt buộc SSO",
+    "auditAction_mfa_enrolled": "Bật xác thực hai yếu tố",
+    "auditAction_mfa_disabled": "Tắt xác thực hai yếu tố",
+    "auditAction_mfa_reset": "Đặt lại xác thực hai yếu tố của thành viên",
+    "auditAction_mfa_backup_codes_regenerated": "Tạo lại mã dự phòng xác thực hai yếu tố",
+    "auditAction_mfa_verified_backup_code": "Đăng nhập bằng mã dự phòng"
   },
   "call": {
     "peerFallback": "Người dùng",
@@ -1738,7 +1751,16 @@
     "summaryOverview": "Tổng quan",
     "summaryKeyPoints": "Điểm chính",
     "summaryActionItems": "Việc cần làm",
-    "summaryUnavailable": "Không có bản tóm tắt"
+    "summaryUnavailable": "Không có bản tóm tắt",
+    "errUnavailable": "Hiện không thể thực hiện cuộc gọi. Vui lòng thử lại sau.",
+    "errNotFound": "Cuộc gọi này không còn tồn tại.",
+    "errEnded": "Cuộc gọi này đã kết thúc.",
+    "errNotSfu": "Không thể tham gia cuộc gọi này từ đây. Vui lòng gọi lại.",
+    "errForbidden": "Bạn không thể tham gia cuộc gọi này.",
+    "errNetwork": "Không kết nối được tới máy chủ. Kiểm tra mạng rồi thử lại.",
+    "errFailed": "Không thể kết nối cuộc gọi. Vui lòng thử lại.",
+    "errStartTimeout": "Không thể bắt đầu cuộc gọi — máy chủ không phản hồi. Vui lòng thử lại.",
+    "errPeerNeverJoined": "Không thể kết nối với {name}. Vui lòng thử lại."
   },
   "notFound": {
     "title": "Trang không tồn tại",

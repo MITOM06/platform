@@ -44,7 +44,7 @@ import { publicMountPrefix } from '../../common/public-mount-prefix';
 import { AuthCode } from '../../common/auth-code.enum';
 import { InvitationAcceptService } from '../invitations/invitation-accept.service';
 import { OAuthRedirectService } from './oauth-redirect.service';
-import { SENSITIVE_THROTTLE } from './throttle';
+import { REFRESH_THROTTLE, SENSITIVE_THROTTLE } from './throttle';
 import { MfaRequiredResponseDto } from '../mfa/dto/mfa.dto';
 import { SsoPolicyService } from '../sso/sso-policy.service';
 import { SsoInfoResponseDto } from '../sso/dto/sso-info.dto';
@@ -67,7 +67,11 @@ const signInResponse = (tokens: Type<unknown>, description: string) => ({
 const SUPPORTED_SOCIAL_PROVIDERS = ['google'];
 
 @ApiTags('auth')
-@ApiExtraModels(ExchangeResponseDto, LoginTokensResponseDto, MfaRequiredResponseDto)
+@ApiExtraModels(
+  ExchangeResponseDto,
+  LoginTokensResponseDto,
+  MfaRequiredResponseDto,
+)
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -101,17 +105,32 @@ export class AuthController {
     // ✅ Platform travels in the OAuth `state` param (echoed back by Google) as
     // "<platform>" (login) or "<platform>.<flowId>" (invite accept). Fall back
     // to the cookie for backwards compatibility / older links.
-    const [statePlatform, flowId] = String(req.query?.state ?? '').split('.', 2);
+    const [statePlatform, flowId] = String(req.query?.state ?? '').split(
+      '.',
+      2,
+    );
     const platform =
       statePlatform || req.cookies?.['oauth_platform'] || 'mobile';
     res.clearCookie('oauth_platform');
     // Browser navigation: failures must redirect with ?error=CODE, never JSON.
     try {
       if (flowId) {
-        const userId = await this.invitations.acceptWithGoogle(flowId, req.user);
-        return await this.oauthRedirect.redirectWithLoginCode(userId, res, platform);
+        const userId = await this.invitations.acceptWithGoogle(
+          flowId,
+          req.user,
+        );
+        return await this.oauthRedirect.redirectWithLoginCode(
+          userId,
+          res,
+          platform,
+        );
       }
-      return await this.auth.handleSocialLogin(req.user, res, 'google', platform);
+      return await this.auth.handleSocialLogin(
+        req.user,
+        res,
+        'google',
+        platform,
+      );
     } catch (err) {
       return this.oauthRedirect.redirectWithError(res, platform, err);
     }
@@ -146,6 +165,17 @@ export class AuthController {
     // Only 'web' is special-cased downstream; anything else is the mobile bridge.
     // Normalising keeps '.' (the state separator) out of the platform value.
     const resolvedPlatform = platform === 'web' ? 'web' : 'mobile';
+
+    // AuthModule registers the Google strategy only when GOOGLE_CLIENT_ID is set
+    // (a self-host install may not have one). Going on to /auth/google would answer
+    // 500 "Unknown authentication strategy"; send the user back with a code instead.
+    if (provider === 'google' && !process.env.GOOGLE_CLIENT_ID) {
+      return this.oauthRedirect.redirectWithError(
+        res,
+        resolvedPlatform,
+        new BadRequestException({ code: AuthCode.SOCIAL_PROVIDER_UNSUPPORTED }),
+      );
+    }
 
     // Invite accept: validate now (error → redirect, not JSON) and carry only a
     // short-lived single-use flow id through OAuth — never the raw invite token.
@@ -191,7 +221,12 @@ export class AuthController {
   @ApiOperation({ summary: 'Begin OIDC SSO (redirects to the IdP)' })
   async oidcLogin(@Query('platform') platform: string, @Res() res: Response) {
     if (!this.oidc.isEnabledByEnv()) {
-      return res.status(404).send('SSO not configured');
+      // A browser navigation: answer with a typed ?error=, never raw text.
+      return this.oauthRedirect.redirectWithError(
+        res,
+        platform || 'web',
+        new BadRequestException({ code: AuthCode.SSO_DISABLED }),
+      );
     }
     // IdP unreachable (discovery failed) → ?error=SSO_UNAVAILABLE, not a raw 500.
     try {
@@ -242,7 +277,7 @@ export class AuthController {
   }
 
   @Post('refresh')
-  @Throttle(SENSITIVE_THROTTLE)
+  @Throttle(REFRESH_THROTTLE)
   @ApiOperation({ summary: 'Rotate the access token using a refresh token' })
   @ApiResponse({ status: 201, description: 'New access token issued' })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
@@ -262,7 +297,8 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   @ApiResponse({
     status: 403,
-    description: 'SSO_REQUIRED: the workspace requires SSO for this email domain',
+    description:
+      'SSO_REQUIRED: the workspace requires SSO for this email domain',
   })
   async login(
     @Body() dto: LoginDto,

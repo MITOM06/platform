@@ -95,6 +95,8 @@ export class SsoPolicyService {
       enforced: isEnforcementActive(settings),
       loginUrl: enabled ? '/auth/oidc/login' : null,
       buttonLabel: 'Sign in with SSO',
+      // Same switch AuthModule uses to register the Google strategy.
+      googleEnabled: !!this.config.get<string>('GOOGLE_CLIENT_ID'),
     };
   }
 

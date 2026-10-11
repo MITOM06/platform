@@ -70,7 +70,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
       }
     } on DioException catch (e) {
       if (mounted) {
-        final msg = authErrorToString(context, e);
+        final msg = authErrorMessage(context, e);
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(msg)));
       }
@@ -111,7 +111,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
       context.go('/login');
     } on DioException catch (e) {
       if (mounted) {
-        final msg = authErrorToString(context, e);
+        final msg = authErrorMessage(context, e);
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(msg)));
       }

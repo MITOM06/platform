@@ -321,7 +321,9 @@
     "errMfaAlreadyEnrolled": "Two-factor authentication is already set up for this account. Please sign in again.",
     "errMfaResetForbidden": "You don't have permission to reset this member's two-factor authentication.",
     "errMfaResetSelfForbidden": "You can't reset your own two-factor authentication.",
-    "errMfaRequiredByRole": "Your role requires two-factor authentication, so it can't be turned off."
+    "errMfaRequiredByRole": "Your role requires two-factor authentication, so it can't be turned off.",
+    "errTooManyRequests": "Too many requests. Please wait a moment and try again.",
+    "errNetwork": "Can't reach the server. Check your connection and try again."
   },
   "settings": {
     "title": "Settings",
@@ -1008,7 +1010,11 @@
     "aiTraceToolSkipped": "Not available",
     "aiToolConnector": "Connected app",
     "aiToolGeneric": "Tool",
-    "publicChannelDepartmentHint": "Department groups can't be public channels."
+    "publicChannelDepartmentHint": "Department groups can't be public channels.",
+    "aiActionFieldCc": "Cc",
+    "aiActionFieldBcc": "Bcc",
+    "aiActionFieldAttendees": "Guests",
+    "aiForbidden": "The assistant can't reply here: you don't have access to this conversation."
   },
   "aiHub": {
     "title": "AI Hub",
@@ -1687,7 +1693,14 @@
     "memberMfaResetTitle": "Reset two-factor authentication?",
     "memberMfaResetConfirm": "{name} will be signed out on every device and must set up two-factor authentication again at the next sign-in.",
     "memberMfaResetDone": "Two-factor authentication has been reset",
-    "memberMfaResetConfirmOptional": "{name} will be signed out on every device and two-factor authentication will be turned off. They can turn it on again in Settings."
+    "memberMfaResetConfirmOptional": "{name} will be signed out on every device and two-factor authentication will be turned off. They can turn it on again in Settings.",
+    "auditAction_role_preset_removed": "Retired preset role removed",
+    "auditAction_sso_enforcement_changed": "Require-SSO setting changed",
+    "auditAction_mfa_enrolled": "Two-factor authentication turned on",
+    "auditAction_mfa_disabled": "Two-factor authentication turned off",
+    "auditAction_mfa_reset": "Member's two-factor authentication reset",
+    "auditAction_mfa_backup_codes_regenerated": "Two-factor backup codes regenerated",
+    "auditAction_mfa_verified_backup_code": "Signed in with a backup code"
   },
   "call": {
     "peerFallback": "User",
@@ -1738,7 +1751,16 @@
     "summaryOverview": "Overview",
     "summaryKeyPoints": "Key points",
     "summaryActionItems": "Action items",
-    "summaryUnavailable": "Summary unavailable"
+    "summaryUnavailable": "Summary unavailable",
+    "errUnavailable": "Calls aren't available right now. Please try again later.",
+    "errNotFound": "This call no longer exists.",
+    "errEnded": "This call has already ended.",
+    "errNotSfu": "This call can't be joined from here. Please call again.",
+    "errForbidden": "You can't join this call.",
+    "errNetwork": "Couldn't reach the server. Check your connection and try again.",
+    "errFailed": "Couldn't connect the call. Please try again.",
+    "errStartTimeout": "Couldn't start the call — the server didn't respond. Please try again.",
+    "errPeerNeverJoined": "Couldn't connect to {name}. Please try again."
   },
   "notFound": {
     "title": "Page not found",

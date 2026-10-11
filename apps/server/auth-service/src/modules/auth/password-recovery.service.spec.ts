@@ -17,6 +17,7 @@ describe('PasswordRecoveryService', () => {
   let mail: { sendOtpEmail: jest.Mock };
   let redis: Record<string, jest.Mock>;
   let sso: { assertNotEnforced: jest.Mock };
+  let mfaPending: { burnAllForUser: jest.Mock };
   let service: PasswordRecoveryService;
 
   const activeUser = {
@@ -49,6 +50,7 @@ describe('PasswordRecoveryService', () => {
       ttl: jest.fn(),
     };
     sso = { assertNotEnforced: jest.fn().mockResolvedValue(undefined) };
+    mfaPending = { burnAllForUser: jest.fn().mockResolvedValue(undefined) };
     service = new PasswordRecoveryService(
       // The real OtpService over the mocked users / mail: codes are issued and checked as in production.
       new OtpService(users as never, mail as never),
@@ -57,6 +59,7 @@ describe('PasswordRecoveryService', () => {
       { get: (_k: string, d?: unknown) => d } as unknown as ConfigService,
       sso as never,
       redis as never,
+      mfaPending as never,
     );
   });
 
@@ -86,6 +89,8 @@ describe('PasswordRecoveryService', () => {
         'u1',
         'password_reset',
       );
+      // A 2FA step won with the old (maybe phished) password dies with it.
+      expect(mfaPending.burnAllForUser).toHaveBeenCalledWith('u1');
     });
   });
 

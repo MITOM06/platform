@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import Anthropic from '@anthropic-ai/sdk';
 
 /**
@@ -193,17 +194,31 @@ export function stopReason(
   return 'end_turn';
 }
 
-/** Parse tool-call arguments; a model that sends malformed JSON gets `{}` (the tool validates). */
-export function parseArguments(args: string): Record<string, unknown> {
+/**
+ * Parse tool-call arguments: none → `{}`; malformed JSON (often a call cut off by
+ * the token limit) → null, and the call is dropped rather than run with `{}`.
+ */
+export function parseArguments(args: string): Record<string, unknown> | null {
   if (!args.trim()) return {};
   try {
     const parsed: unknown = JSON.parse(args);
     return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
       ? (parsed as Record<string, unknown>)
-      : {};
+      : null;
   } catch {
-    return {};
+    return null;
   }
+}
+
+/**
+ * A tool-call id Claude accepts (`[a-zA-Z0-9_-]+`). Some models send ids such as
+ * `functions.send_email:0` that repeat every round; those get a random suffix so
+ * a replayed history (later turns, the Claude fallback) has unique ids.
+ */
+export function toolUseId(raw: string | undefined, index: number): string {
+  const clean = (raw ?? '').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 48);
+  if (clean && clean === raw) return clean;
+  return `${clean || `call_${index}`}_${randomUUID().slice(0, 8)}`;
 }
 
 export function toAnthropicUsage(usage: OpenAiUsage | undefined): Anthropic.Usage {
@@ -231,12 +246,16 @@ export function buildMessage(
       text,
       citations: null,
     } as Anthropic.TextBlock);
+  let toolUses = 0;
   for (const tc of toolCalls) {
+    const input = parseArguments(tc.arguments);
+    if (!input) continue;
+    toolUses++;
     content.push({
       type: 'tool_use',
       id: tc.id,
       name: tc.name,
-      input: parseArguments(tc.arguments),
+      input,
     } as Anthropic.ToolUseBlock);
   }
   return {
@@ -245,7 +264,7 @@ export function buildMessage(
     role: 'assistant',
     model,
     content,
-    stop_reason: stopReason(finish, toolCalls.length > 0),
+    stop_reason: stopReason(finish, toolUses > 0),
     stop_sequence: null,
     usage: toAnthropicUsage(usage),
   } as Anthropic.Message;

@@ -16,6 +16,14 @@ export {
   type WebRTCSignal,
 } from './call-config'
 
+/** LiveKit call control that may arrive without a `transport` field. */
+const SFU_CONTROL: ReadonlySet<WebRTCSignal['type']> = new Set<WebRTCSignal['type']>([
+  'call-ring-cancel',
+  'call-declined',
+  'call-merged',
+  'call-accepted',
+])
+
 /**
  * The one entry point for 1-on-1 calls. Components set the UI callbacks here
  * and call the methods below; each call is run by the engine matching the
@@ -25,7 +33,7 @@ class CallManager implements CallHooks {
   onLocalStream: ((s: MediaStream) => void) | null = null
   onRemoteStream: ((s: MediaStream) => void) | null = null
   onEnded: (() => void) | null = null
-  onEndNotice: ((reason: CallEndReason, byPeer: boolean, peerName: string) => void) | null = null
+  onEndNotice: CallHooks['onEndNotice'] = null
 
   private readonly mesh = new MeshCallManager(this)
   private readonly sfu = new SfuDirectCall(this)
@@ -60,12 +68,14 @@ class CallManager implements CallHooks {
 
   /** Inbound `/user/queue/webrtc` signal for a 1-on-1 call. */
   handleSignal(signal: WebRTCSignal): void {
-    const sfu =
-      signal.transport === 'sfu' ||
-      signal.type === 'call-ring-cancel' ||
-      signal.type === 'call-declined' ||
-      signal.type === 'call-merged'
-    if (sfu) {
+    if (signal.type === 'call-blocked') {
+      this.sfu.handleSignal(signal) // our call.start was refused: drop that attempt
+      // Not an sfu attempt (an older server refusing a peer-to-peer call): just close its screen.
+      const st = useCallStore.getState()
+      if (st.transport !== 'sfu' && st.status === 'outgoing') st.reset()
+      return
+    }
+    if (signal.transport === 'sfu' || SFU_CONTROL.has(signal.type)) {
       this.sfu.handleSignal(signal)
       return
     }

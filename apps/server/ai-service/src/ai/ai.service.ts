@@ -8,6 +8,7 @@ import { UsageService } from '../usage/usage.service';
 import { RateLimiterService } from '../usage/rate-limiter.service';
 import { PersonaService } from '../persona/persona.service';
 import { selectModel, RouteSignals, RouterConfig, modelSupportsEffort } from './model-router';
+import { ReplySettledTracker } from '../actions/reply-settled.tracker';
 import { LlmClientsService } from '../llm/llm-clients.service';
 import { LlmClient } from '../llm/openrouter-client';
 import { AiStreamErrorCode } from './ai-stream-error';
@@ -82,6 +83,8 @@ export class AiService {
     private readonly agenticLoop: AgenticLoopService,
     // Optional: without it (unit tests) every turn stays on Claude, as before.
     @Optional() private readonly llm?: LlmClientsService,
+    // Optional for unit tests; lets an early-confirmed action's follow-up wait for this reply.
+    @Optional() private readonly replySettled?: ReplySettledTracker,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -140,6 +143,10 @@ export class AiService {
       }
       // Rethrow so the RabbitMQ message is dead-lettered (consumer nacks).
       throw err;
+    } finally {
+      await this.replySettled
+        ?.markSettled(stream.replyId)
+        .catch((e) => this.logger.warn(`Could not mark reply ${stream.replyId} settled: ${(e as Error).message}`));
     }
   }
 

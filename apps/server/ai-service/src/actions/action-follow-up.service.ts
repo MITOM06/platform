@@ -11,8 +11,11 @@ import { AiTrace } from '../ai/ai.types';
 import { countTokens, TokenCounts, zeroTokens } from '../usage/token-counts';
 import { buildFollowUpPrompt, followUpNotice } from './action-follow-up.prompt';
 import { ActionOutcome, PendingActionRecord } from './pending-action.types';
+import { ReplySettledTracker } from './reply-settled.tracker';
 
 const MAX_FOLLOW_UP_TOKENS = 300;
+/** A reply still running this long after it staged the card has failed; do not wait for it. */
+const MAX_REPLY_RUN_MS = 5 * 60_000;
 
 /**
  * Posts the short AI reply that reports a confirmed action's outcome: a NEW
@@ -36,6 +39,7 @@ export class ActionFollowUpService {
     private readonly settingsService: SettingsService,
     private readonly usageService: UsageService,
     private readonly aiSessionService: AiSessionService,
+    private readonly replySettled: ReplySettledTracker,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -47,6 +51,7 @@ export class ActionFollowUpService {
   }
 
   async post(record: PendingActionRecord, outcome: ActionOutcome): Promise<void> {
+    await this.afterReplySettled(record);
     const startMs = Date.now();
     const stream = new AiReplyStream(this.publisher, record.conversationId, record.userId);
     const generated = await this.generate(record, outcome);
@@ -79,6 +84,21 @@ export class ActionFollowUpService {
       return;
     }
     await this.rememberInSession(record, text);
+  }
+
+  /**
+   * An early confirm (the reply holding the card is still streaming) waits for
+   * that reply, so the follow-up comes after it in the chat and in the session.
+   */
+  private async afterReplySettled(record: PendingActionRecord): Promise<void> {
+    const age = Date.now() - Date.parse(record.createdAt);
+    if (!(age < MAX_REPLY_RUN_MS)) return;
+    const settled = await this.replySettled.waitUntilSettled(record.replyId, {
+      timeoutMs: MAX_REPLY_RUN_MS - age,
+    });
+    if (!settled) {
+      this.logger.warn(`Reply ${record.replyId} did not settle; posting the follow-up of ${record.id} anyway`);
+    }
   }
 
   /** One persona-aware model call; '' when skipped (quota) or failed. */

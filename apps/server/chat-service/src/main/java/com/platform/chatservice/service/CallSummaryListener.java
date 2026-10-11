@@ -4,10 +4,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.platform.chatservice.model.CallSession;
 import com.platform.chatservice.repository.CallSessionRepository;
+import java.time.Duration;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.MessageListener;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 /**
@@ -31,9 +33,15 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class CallSummaryListener implements MessageListener {
 
+  /** One summary per call cluster-wide: every instance receives the same pub/sub message. */
+  static final String CLAIM_KEY_PREFIX = "call:summary:claim:";
+
+  private static final Duration CLAIM_TTL = Duration.ofHours(1);
+
   private final AiMessageService aiMessageService;
   private final CallSessionRepository callSessionRepository;
   private final ObjectMapper objectMapper;
+  private final StringRedisTemplate redisTemplate;
 
   @Override
   public void onMessage(org.springframework.data.redis.connection.Message message, byte[] pattern) {
@@ -45,6 +53,14 @@ public class CallSummaryListener implements MessageListener {
       Object payload = envelope.get("payload");
       if (conversationId == null || payload == null) {
         log.warn("call:summary:result missing conversationId or payload");
+        return;
+      }
+
+      // Pub/sub fans this out to every instance; only the one that claims the call saves and
+      // broadcasts it (as AiResponseListener does for AI replies).
+      if (callId != null
+          && !Boolean.TRUE.equals(
+              redisTemplate.opsForValue().setIfAbsent(CLAIM_KEY_PREFIX + callId, "1", CLAIM_TTL))) {
         return;
       }
 

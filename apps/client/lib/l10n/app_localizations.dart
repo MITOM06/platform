@@ -2175,8 +2175,8 @@ abstract class AppLocalizations {
   /// No description provided for @pinLimitReached.
   ///
   /// In en, this message translates to:
-  /// **'You can pin up to 5 messages'**
-  String get pinLimitReached;
+  /// **'You can pin up to {max} messages'**
+  String pinLimitReached(int max);
 
   /// No description provided for @cannotPinCall.
   ///
@@ -2795,6 +2795,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Too many AI requests. Please slow down and try again shortly.'**
   String get aiErrRateLimited;
+
+  /// No description provided for @aiErrForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have access to this conversation, so the AI can\'t reply here.'**
+  String get aiErrForbidden;
 
   /// No description provided for @feedbackHelpful.
   ///
@@ -6757,6 +6763,54 @@ abstract class AppLocalizations {
   /// **'Call dropped — connection lost'**
   String get callConnectionLost;
 
+  /// No description provided for @callErrUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls aren\'t available right now. Please try again later.'**
+  String get callErrUnavailable;
+
+  /// No description provided for @callErrNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This call no longer exists.'**
+  String get callErrNotFound;
+
+  /// No description provided for @callErrEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'This call has already ended.'**
+  String get callErrEnded;
+
+  /// No description provided for @callErrNotSfu.
+  ///
+  /// In en, this message translates to:
+  /// **'This call can\'t be joined from here. Please call again.'**
+  String get callErrNotSfu;
+
+  /// No description provided for @callErrForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t join this call.'**
+  String get callErrForbidden;
+
+  /// No description provided for @callErrPeerNeverJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect to {name}. Please try again.'**
+  String callErrPeerNeverJoined(String name);
+
+  /// No description provided for @callErrStartTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start the call — the server didn\'t respond. Please try again.'**
+  String get callErrStartTimeout;
+
+  /// No description provided for @groupCallJoinFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t join the call. Please try again.'**
+  String get groupCallJoinFailed;
+
   /// No description provided for @callSpeaker.
   ///
   /// In en, this message translates to:
@@ -7015,11 +7069,35 @@ abstract class AppLocalizations {
   /// **'Your sign-in provider hasn\'t verified this email address'**
   String get authErrSsoEmailUnverified;
 
+  /// No description provided for @authErrSsoStateInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The sign-in link expired or is invalid. Please try again.'**
+  String get authErrSsoStateInvalid;
+
+  /// No description provided for @authErrSsoExchangeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Single sign-on couldn\'t be completed. Please try again.'**
+  String get authErrSsoExchangeFailed;
+
   /// No description provided for @authErrSocialAccountConflict.
   ///
   /// In en, this message translates to:
   /// **'This email is already linked to a different sign-in account'**
   String get authErrSocialAccountConflict;
+
+  /// No description provided for @authErrTooManyOtpRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve requested too many OTP codes. Please try again in 10 minutes.'**
+  String get authErrTooManyOtpRequests;
+
+  /// No description provided for @authErrSocialProviderUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This sign-in method isn\'t supported.'**
+  String get authErrSocialProviderUnsupported;
 
   /// No description provided for @aiActionConfirm.
   ///
@@ -7116,6 +7194,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'When'**
   String get aiActionFieldWhen;
+
+  /// No description provided for @aiActionFieldCc.
+  ///
+  /// In en, this message translates to:
+  /// **'Cc'**
+  String get aiActionFieldCc;
+
+  /// No description provided for @aiActionFieldBcc.
+  ///
+  /// In en, this message translates to:
+  /// **'Bcc'**
+  String get aiActionFieldBcc;
+
+  /// No description provided for @aiActionFieldAttendees.
+  ///
+  /// In en, this message translates to:
+  /// **'Guests'**
+  String get aiActionFieldAttendees;
 
   /// No description provided for @aiActionStatusConfirmed.
   ///
@@ -7824,6 +7920,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sensitive skill run'**
   String get adminAuditActionSensitiveSkillRun;
+
+  /// No description provided for @adminAuditActionSsoEnforcementChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'“Require SSO” changed'**
+  String get adminAuditActionSsoEnforcementChanged;
+
+  /// No description provided for @adminAuditActionMfaEnrolled.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication set up'**
+  String get adminAuditActionMfaEnrolled;
+
+  /// No description provided for @adminAuditActionMfaDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication turned off'**
+  String get adminAuditActionMfaDisabled;
+
+  /// No description provided for @adminAuditActionMfaReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Member\'s two-factor authentication reset'**
+  String get adminAuditActionMfaReset;
+
+  /// No description provided for @adminAuditActionMfaBackupCodesRegenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup codes regenerated'**
+  String get adminAuditActionMfaBackupCodesRegenerated;
+
+  /// No description provided for @adminAuditActionMfaVerifiedBackupCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in with a backup code'**
+  String get adminAuditActionMfaVerifiedBackupCode;
+
+  /// No description provided for @adminAuditActionRolePresetRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset role retired'**
+  String get adminAuditActionRolePresetRemoved;
 
   /// No description provided for @adminAuditTargetWorkspace.
   ///

@@ -326,7 +326,7 @@ member manager for non-admin members — see "2FA for every member" below) →
 | `MFA_TOO_MANY_ATTEMPTS` | 401 (`/auth/mfa/*`, token burned) · **400** on the JWT endpoints `/api/users/me/mfa/*` | Too many incorrect codes. Please sign in again. (JWT endpoints: try again later) | — |
 | `MFA_NOT_ENROLLED` | 400 | Two-factor authentication is not set up for this step. | — |
 | `MFA_ALREADY_ENROLLED` | 400 | Two-factor authentication is already set up. Please sign in again. | — |
-| `MFA_REQUIRED_BY_ROLE` | 400 (`POST /api/users/me/mfa/disable`) | Two-factor authentication is required for your role and can't be turned off. | — |
+| `MFA_REQUIRED_BY_ROLE` | 400 (`POST /api/users/me/mfa/disable`) · 401 (`POST /auth/refresh`) | Two-factor authentication is required for your role and can't be turned off. | — |
 | `MFA_RESET_FORBIDDEN` | 403 | You can't reset two-factor authentication for this member. | — |
 | `MFA_RESET_SELF_FORBIDDEN` | 400 | You cannot reset your own two-factor authentication. | — |
 | `MEMBER_NOT_FOUND` | 404 (reset: bot / unknown / malformed id) | Member not found. | — |
@@ -428,6 +428,17 @@ request retries; it answers `?error=SSO_UNAVAILABLE`.
 | `SSO_REQUIRED` | 403 · OAuth redirect `?error=` | Your organization requires single sign-on. Use "Sign in with SSO". | — |
 | `SSO_ENFORCE_NOT_READY` | 400 (`PATCH /admin/workspace`) | To require SSO, enable SSO and add at least one allowed domain (and configure OIDC on the server). | — |
 | `SSO_UNAVAILABLE` | 503 · OAuth redirect `?error=` | Single sign-on is unavailable right now. Please try again later. | — |
+| `OIDC_NO_STATE` | OAuth redirect `?error=` | The sign-in link is incomplete. Start single sign-on again. | — |
+| `OIDC_BAD_STATE` | OAuth redirect `?error=` | This sign-in link has expired or was already used. Start single sign-on again. | — |
+| `OIDC_EXCHANGE_FAILED` | OAuth redirect `?error=` | Your identity provider refused the sign-in. Try again. | — |
+| `OIDC_EMAIL_UNVERIFIED` | OAuth redirect `?error=` | Your identity provider did not confirm your email address. | — |
+
+`/auth/refresh` answers 401 `MFA_REQUIRED_BY_ROLE` (and revokes that session) when the member's
+role now requires 2FA — Owner / Admin-like — but they never enrolled and the session was not opened
+through SSO: sign in again, which asks for enrollment. `/auth/oidc/login` on a server without OIDC
+redirects with `?error=SSO_DISABLED` (it used to answer plain text). `GET /auth/sso/info` also returns
+`googleEnabled` (false: no `GOOGLE_CLIENT_ID`, hide the Google button); `/auth/social/google/init`
+then redirects with `?error=SOCIAL_PROVIDER_UNSUPPORTED`.
 
 ### 2FA optional for Members (2026-10-07)
 

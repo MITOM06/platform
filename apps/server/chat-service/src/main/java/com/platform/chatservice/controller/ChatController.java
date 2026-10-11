@@ -11,7 +11,7 @@ import com.platform.chatservice.exception.ForbiddenException;
 import com.platform.chatservice.exception.RateLimitExceededException;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.AiRedisPublisher;
-import com.platform.chatservice.service.CallService;
+import com.platform.chatservice.service.CallSignalRelay;
 import com.platform.chatservice.service.ClusterMessageBroker;
 import com.platform.chatservice.service.ConversationMembershipCache;
 import com.platform.chatservice.service.ConversationService;
@@ -45,7 +45,7 @@ public class ChatController {
   private final MessageNotificationService messageNotificationService;
   private final RateLimiterService rateLimiterService;
   private final AiRedisPublisher aiRedisPublisher;
-  private final CallService callService;
+  private final CallSignalRelay callSignalRelay;
   private final ExternalBotService externalBotService;
   private final ConversationService conversationService;
   private final ConversationMembershipCache membershipCache;
@@ -189,92 +189,46 @@ public class ChatController {
     clusterBroker.convertAndSend("/topic/conversation/" + actualConversationId, event);
   }
 
-  // WebRTC Signaling Endpoints.
-  // Shared by the legacy 1-on-1 flow and the group mesh: when the payload carries a callId the
-  // signal is a group-mesh relay (delegated to CallService, which stamps fromId), otherwise it
-  // keeps the original 1-on-1 relay behavior.
+  // WebRTC signaling (peer-to-peer). CallSignalRelay checks that both ends belong to the
+  // conversation the signal names (group mesh: the callId's) and drops a 1-on-1 signal from
+  // someone the target blocked — the relay used to forward to any targetId.
   @MessageMapping("/call.offer")
   public void callOffer(
       @Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
-    relayCallSignal("offer", dto, principal);
+    callSignalRelay.relay(principal.getName(), "offer", dto);
   }
 
   @MessageMapping("/call.answer")
   public void callAnswer(
       @Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
-    relayCallSignal("answer", dto, principal);
+    callSignalRelay.relay(principal.getName(), "answer", dto);
   }
 
   @MessageMapping("/call.ice")
   public void callIceCandidate(
       @Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
-    relayCallSignal("ice", dto, principal);
-  }
-
-  private void relayCallSignal(
-      String type, com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
-    if (dto.getCallId() != null && !dto.getCallId().isBlank()) {
-      // Group mesh signaling.
-      callService.relaySignal(principal.getName(), type, dto);
-      return;
-    }
-    // Legacy 1-on-1 relay.
-    dto.setSenderId(principal.getName());
-    clusterBroker.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
-    if ("answer".equals(type)) {
-      // The callee may be signed in elsewhere (web + phone), all of them ringing: the ones that
-      // did not answer stop. The answering session ignores it (it is no longer ringing).
-      com.platform.chatservice.dto.WebRTCSignalDto answered =
-          new com.platform.chatservice.dto.WebRTCSignalDto();
-      answered.setType("answered-elsewhere");
-      answered.setSenderId(dto.getTargetId());
-      answered.setTargetId(principal.getName());
-      answered.setConversationId(dto.getConversationId());
-      clusterBroker.convertAndSendToUser(principal.getName(), "/queue/webrtc", answered);
-    }
+    callSignalRelay.relay(principal.getName(), "ice", dto);
   }
 
   /**
    * In-call state for the other person of a 1-on-1 (camera on/off, receive quality, reconnect
-   * request) on either media path. Relayed as {@code type:"state"}, only between two members of the
-   * conversation it names; older apps ignore it.
+   * request) on either media path. Relayed as {@code type:"state"}; older apps ignore it.
    */
   @MessageMapping("/call.state")
   public void callState(
       @Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
-    String conversationId = dto.getConversationId();
-    String targetId = dto.getTargetId();
-    if (conversationId == null
-        || targetId == null
-        || !membershipCache.isMember(conversationId, principal.getName())
-        || !membershipCache.isMember(conversationId, targetId)) {
-      return;
-    }
-    dto.setSenderId(principal.getName());
-    dto.setType("state");
-    clusterBroker.convertAndSendToUser(targetId, "/queue/webrtc", dto);
+    callSignalRelay.relayState(principal.getName(), dto);
   }
 
   /**
-   * Relays a hang-up to the other peer. Deliberately does NOT write a call-log message.
-   *
-   * <p>It used to save one, as type {@code call_log} with the content hardcoded in English ("Call
-   * ended - 02:05" / "Missed call"). That predates the coded system-message path: the hang-up
-   * initiator on both clients now sends {@code system.call.ended:{kind}:{secs}} / {@code
-   * system.call.missed:{kind}} itself (web {@code lib/webrtc/call-manager.ts}, Flutter {@code
-   * features/chat/domain/webrtc_service.dart}), which both clients humanize into a localized
-   * sentence. Keeping this write meant every ended 1-1 call appended TWO entries to the history —
-   * the localized system message plus an English-only {@code call_log} that no locale could
-   * translate, violating `.claude/rules/no-raw-system-data-in-ui.md`.
-   *
-   * <p>Historical {@code call_log} messages already in Mongo still render as before; only new ones
-   * stop being created.
+   * Relays a hang-up to the other peer. Deliberately does NOT write a call-log message: the hang-up
+   * initiator on both clients sends {@code system.call.ended:{kind}:{secs}} / {@code
+   * system.call.missed:{kind}} itself, which both clients humanize (an English-only {@code
+   * call_log} used to be written here too, which no locale could translate).
    */
   @MessageMapping("/call.end")
   public void callEnd(
       @Payload com.platform.chatservice.dto.WebRTCSignalDto dto, Principal principal) {
-    dto.setSenderId(principal.getName());
-    // Notify the other peer
-    clusterBroker.convertAndSendToUser(dto.getTargetId(), "/queue/webrtc", dto);
+    callSignalRelay.relayEnd(principal.getName(), dto);
   }
 }

@@ -62,6 +62,13 @@ public class CallSession {
   /** Id of the persisted {@code meeting_summary} Message, once produced. Null otherwise. */
   private String summaryMessageId;
 
+  /**
+   * Bumped on every write through {@code CallSessionWriter}, which only saves over the version it
+   * read (optimistic concurrency). Not {@code @Version}: inserts and the post-call summary backfill
+   * use plain saves.
+   */
+  private Long version;
+
   @Data
   @Builder
   @NoArgsConstructor

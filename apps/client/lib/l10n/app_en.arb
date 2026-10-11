@@ -541,7 +541,14 @@
   "pinMessage": "Pin",
   "unpinMessage": "Unpin",
   "pinnedMessagesTitle": "Pinned Messages",
-  "pinLimitReached": "You can pin up to 5 messages",
+  "pinLimitReached": "You can pin up to {max} messages",
+  "@pinLimitReached": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "cannotPinCall": "Calls can't be pinned",
   "forwardMessage": "Forward",
   "messageForwarded": "Message forwarded",
@@ -669,6 +676,7 @@
   "aiErrStreamInterrupted": "AI stream was interrupted. Please try again.",
   "aiErrUnavailable": "AI is temporarily unavailable.",
   "aiErrRateLimited": "Too many AI requests. Please slow down and try again shortly.",
+  "aiErrForbidden": "You don't have access to this conversation, so the AI can't reply here.",
   "feedbackHelpful": "Helpful",
   "feedbackNotHelpful": "Not helpful",
   "feedbackCommentHint": "Tell us what went wrong (optional)",
@@ -1729,6 +1737,21 @@
   },
   "callEnded": "Call ended",
   "callConnectionLost": "Call dropped — connection lost",
+  "callErrUnavailable": "Calls aren't available right now. Please try again later.",
+  "callErrNotFound": "This call no longer exists.",
+  "callErrEnded": "This call has already ended.",
+  "callErrNotSfu": "This call can't be joined from here. Please call again.",
+  "callErrForbidden": "You can't join this call.",
+  "callErrPeerNeverJoined": "Couldn't connect to {name}. Please try again.",
+  "@callErrPeerNeverJoined": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callErrStartTimeout": "Couldn't start the call — the server didn't respond. Please try again.",
+  "groupCallJoinFailed": "Couldn't join the call. Please try again.",
   "callSpeaker": "Speaker",
   "callSwitchCamera": "Switch camera",
   "callHangUp": "End call",
@@ -1882,7 +1905,11 @@
   "authErrUserBlocked": "Not available — one of you has blocked the other",
   "authErrCurrentPasswordRequired": "Enter your current password",
   "authErrSsoEmailUnverified": "Your sign-in provider hasn't verified this email address",
+  "authErrSsoStateInvalid": "The sign-in link expired or is invalid. Please try again.",
+  "authErrSsoExchangeFailed": "Single sign-on couldn't be completed. Please try again.",
   "authErrSocialAccountConflict": "This email is already linked to a different sign-in account",
+  "authErrTooManyOtpRequests": "You've requested too many OTP codes. Please try again in 10 minutes.",
+  "authErrSocialProviderUnsupported": "This sign-in method isn't supported.",
   "aiActionConfirm": "Confirm",
   "aiActionCancel": "Cancel",
   "aiActionSendEmail": "Send email",
@@ -1920,6 +1947,9 @@
   "aiActionFieldSubject": "Subject",
   "aiActionFieldTitle": "Title",
   "aiActionFieldWhen": "When",
+  "aiActionFieldCc": "Cc",
+  "aiActionFieldBcc": "Bcc",
+  "aiActionFieldAttendees": "Guests",
   "aiActionStatusConfirmed": "Done",
   "aiActionStatusCancelled": "Cancelled",
   "aiActionStatusFailed": "Failed",
@@ -2152,6 +2182,13 @@
   "adminAuditActionDirectoryUpdate": "Directory entry updated",
   "adminAuditActionDirectoryDelete": "Directory entry removed",
   "adminAuditActionSensitiveSkillRun": "Sensitive skill run",
+  "adminAuditActionSsoEnforcementChanged": "“Require SSO” changed",
+  "adminAuditActionMfaEnrolled": "Two-factor authentication set up",
+  "adminAuditActionMfaDisabled": "Two-factor authentication turned off",
+  "adminAuditActionMfaReset": "Member's two-factor authentication reset",
+  "adminAuditActionMfaBackupCodesRegenerated": "Backup codes regenerated",
+  "adminAuditActionMfaVerifiedBackupCode": "Signed in with a backup code",
+  "adminAuditActionRolePresetRemoved": "Preset role retired",
   "adminAuditTargetWorkspace": "Workspace",
   "adminAuditTargetMember": "A member",
   "adminAuditTargetRole": "A role",

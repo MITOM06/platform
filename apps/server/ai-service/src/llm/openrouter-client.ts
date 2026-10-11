@@ -6,10 +6,22 @@ import {
   OpenAiChatRequest,
   OpenAiUsage,
   toOpenAiRequest,
+  toolUseId,
 } from './openrouter-translate';
 
-/** Statuses that mean "skip OpenRouter for a while", not "retry the next turn". */
-const UNAVAILABLE_STATUSES = new Set([402, 404, 429]);
+/**
+ * Statuses that mean "skip OpenRouter for a while", not "retry the next turn":
+ * limits (429), no credits (402), model gone (404), provider down (502 / 503).
+ */
+const UNAVAILABLE_STATUSES = new Set([402, 404, 429, 502, 503]);
+
+/**
+ * Below the clients' 30 s "AI is not answering" watchdogs (web
+ * AI_STREAM_WATCHDOG_MS, Flutter responseTimeout), so a silent model falls back
+ * to Claude before the client gives up on the bubble.
+ */
+const DEFAULT_FIRST_TOKEN_TIMEOUT_MS = 20_000;
+const DEFAULT_IDLE_TIMEOUT_MS = 60_000;
 
 /**
  * Light-tier models may reason before answering and count those tokens as output,
@@ -40,7 +52,12 @@ export interface OpenRouterOptions {
   /** Sent as HTTP-Referer / X-Title so the OpenRouter dashboard names the app. */
   appUrl?: string;
   appTitle?: string;
+  /** Whole-request limit of a non-streaming call. */
   timeoutMs?: number;
+  /** Streaming: give up when no answer data arrives this long after the request (keep-alives do not count). */
+  firstTokenTimeoutMs?: number;
+  /** Streaming: give up when an answer stops for this long. */
+  idleTimeoutMs?: number;
   fetchImpl?: typeof fetch;
   /**
    * Called when OpenRouter cannot serve the light tier for a while: 429 (free-model
@@ -93,7 +110,15 @@ export class OpenRouterClient implements LlmClient {
   readonly messages: LlmClient['messages'] = {
     create: (params) => this.create(params),
     stream: (params) =>
-      new OpenRouterStream((body) => this.post(body), params, this.opts.onUnavailable),
+      new OpenRouterStream(
+        (body, signal) => this.post(body, signal),
+        params,
+        this.opts.onUnavailable,
+        {
+          firstTokenMs: this.opts.firstTokenTimeoutMs ?? DEFAULT_FIRST_TOKEN_TIMEOUT_MS,
+          idleMs: this.opts.idleTimeoutMs ?? DEFAULT_IDLE_TIMEOUT_MS,
+        },
+      ),
   };
 
   constructor(private readonly opts: OpenRouterOptions) {}
@@ -101,16 +126,18 @@ export class OpenRouterClient implements LlmClient {
   private async create(
     params: Anthropic.MessageCreateParamsNonStreaming,
   ): Promise<Anthropic.Message> {
-    const res = await this.post({
-      ...withOutputFloor(toOpenAiRequest(params as AnthropicRequest)),
-      stream: false,
-    });
+    const res = await this.post(
+      { ...withOutputFloor(toOpenAiRequest(params as AnthropicRequest)), stream: false },
+      AbortSignal.timeout(this.opts.timeoutMs ?? 120_000),
+    );
     const json = (await res.json()) as OpenAiChunk;
-    if (json.error)
+    if (json.error) {
+      if (UNAVAILABLE_STATUSES.has(json.error.code ?? 0)) this.opts.onUnavailable?.();
       throw new OpenRouterError(json.error.code ?? 502, json.error.message ?? 'error');
+    }
     const choice = json.choices?.[0];
     const toolCalls = (choice?.message?.tool_calls ?? []).map((tc, i) => ({
-      id: tc.id || `call_${i}_${randomUUID().slice(0, 8)}`,
+      id: toolUseId(tc.id, i),
       name: tc.function?.name ?? '',
       arguments: tc.function?.arguments ?? '',
     }));
@@ -124,7 +151,7 @@ export class OpenRouterClient implements LlmClient {
     );
   }
 
-  private async post(body: Record<string, unknown>): Promise<Response> {
+  private async post(body: Record<string, unknown>, signal: AbortSignal): Promise<Response> {
     const fetchImpl = this.opts.fetchImpl ?? fetch;
     const res = await fetchImpl(`${this.opts.baseUrl.replace(/\/+$/, '')}/chat/completions`, {
       method: 'POST',
@@ -135,7 +162,7 @@ export class OpenRouterClient implements LlmClient {
         ...(this.opts.appTitle ? { 'X-Title': this.opts.appTitle } : {}),
       },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(this.opts.timeoutMs ?? 120_000),
+      signal,
     });
     if (UNAVAILABLE_STATUSES.has(res.status)) this.opts.onUnavailable?.();
     if (!res.ok) throw new OpenRouterError(res.status, await res.text().catch(() => ''));
@@ -159,9 +186,13 @@ export class OpenRouterStream implements LlmMessageStream {
   private readonly buffered: Anthropic.RawMessageStreamEvent[] = [];
 
   constructor(
-    private readonly post: (body: Record<string, unknown>) => Promise<Response>,
+    private readonly post: (body: Record<string, unknown>, signal: AbortSignal) => Promise<Response>,
     private readonly params: Anthropic.MessageStreamParams,
     private readonly onUnavailable?: () => void,
+    private readonly timeouts: StreamTimeouts = {
+      firstTokenMs: DEFAULT_FIRST_TOKEN_TIMEOUT_MS,
+      idleMs: DEFAULT_IDLE_TIMEOUT_MS,
+    },
   ) {}
 
   async *[Symbol.asyncIterator](): AsyncIterator<Anthropic.RawMessageStreamEvent> {
@@ -173,13 +204,21 @@ export class OpenRouterStream implements LlmMessageStream {
       rejectDone = rej;
     });
     this.consumed.catch(() => undefined);
+    // No total limit: a long answer may stream for minutes. What is limited is
+    // the wait for the first answer data and any stall after it.
+    const watchdog = new StreamWatchdog(this.timeouts);
     try {
-      const res = await this.post({
-        ...withOutputFloor(toOpenAiRequest(this.params as AnthropicRequest)),
-        stream: true,
-        stream_options: { include_usage: true },
-      });
-      for await (const chunk of sseChunks(res)) {
+      const res = await watchdog.guard(
+        this.post(
+          {
+            ...withOutputFloor(toOpenAiRequest(this.params as AnthropicRequest)),
+            stream: true,
+            stream_options: { include_usage: true },
+          },
+          watchdog.signal,
+        ),
+      );
+      for await (const chunk of sseChunks(res, watchdog)) {
         for (const event of this.apply(chunk)) yield event;
       }
       if (this.textOpen)
@@ -191,6 +230,8 @@ export class OpenRouterStream implements LlmMessageStream {
     } catch (err) {
       rejectDone(err);
       throw err;
+    } finally {
+      watchdog.stop();
     }
   }
 
@@ -236,10 +277,10 @@ export class OpenRouterStream implements LlmMessageStream {
           name: '',
           arguments: '',
         };
-        if (tc.id) current.id = tc.id;
+        if (tc.id && !current.id) current.id = toolUseId(tc.id, index);
         if (tc.function?.name) current.name += tc.function.name;
         if (tc.function?.arguments) current.arguments += tc.function.arguments;
-        if (!current.id) current.id = `call_${index}_${randomUUID().slice(0, 8)}`;
+        if (!current.id) current.id = toolUseId(undefined, index);
         this.toolCalls.set(index, current);
       }
       if (choice.finish_reason) this.finish = choice.finish_reason;
@@ -248,22 +289,82 @@ export class OpenRouterStream implements LlmMessageStream {
   }
 }
 
+interface StreamTimeouts {
+  firstTokenMs: number;
+  idleMs: number;
+}
+
+/**
+ * Aborts a streamed request when no answer data arrives within `firstTokenMs`
+ * (SSE keep-alive comments do not count) or the answer stalls for `idleMs`.
+ */
+class StreamWatchdog {
+  private readonly controller = new AbortController();
+  private timer: ReturnType<typeof setTimeout> | undefined;
+  private readonly expiredPromise: Promise<never>;
+  private rejectExpired!: (err: OpenRouterError) => void;
+
+  constructor(private readonly timeouts: StreamTimeouts) {
+    this.expiredPromise = new Promise<never>((_, reject) => {
+      this.rejectExpired = reject;
+    });
+    this.expiredPromise.catch(() => undefined);
+    this.arm(timeouts.firstTokenMs, `no answer within ${timeouts.firstTokenMs} ms`);
+  }
+
+  get signal(): AbortSignal {
+    return this.controller.signal;
+  }
+
+  /** Answer data arrived: from now on only a stall counts. */
+  progress(): void {
+    this.arm(this.timeouts.idleMs, `stream stalled for ${this.timeouts.idleMs} ms`);
+  }
+
+  /** Resolve `work`, or fail as soon as the watchdog fires. */
+  guard<T>(work: Promise<T>): Promise<T> {
+    return Promise.race([work, this.expiredPromise]);
+  }
+
+  stop(): void {
+    clearTimeout(this.timer);
+  }
+
+  private arm(ms: number, reason: string): void {
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+      const err = new OpenRouterError(504, reason);
+      this.rejectExpired(err);
+      this.controller.abort(err);
+    }, ms);
+    this.timer.unref?.();
+  }
+}
+
 /** Parse an SSE body into JSON chunks; skips `: comment` keep-alives and stops at [DONE]. */
-async function* sseChunks(res: Response): AsyncGenerator<OpenAiChunk> {
+async function* sseChunks(res: Response, watchdog: StreamWatchdog): AsyncGenerator<OpenAiChunk> {
   if (!res.body) return;
+  const reader = (res.body as ReadableStream<Uint8Array>).getReader();
   const decoder = new TextDecoder();
   let buffer = '';
-  for await (const part of res.body as unknown as AsyncIterable<Uint8Array>) {
-    buffer += decoder.decode(part, { stream: true });
-    let newline: number;
-    while ((newline = buffer.indexOf('\n')) >= 0) {
-      const line = buffer.slice(0, newline).trim();
-      buffer = buffer.slice(newline + 1);
-      if (!line.startsWith('data:')) continue;
-      const data = line.slice(5).trim();
-      if (data === '[DONE]') return;
-      if (!data) continue;
-      yield JSON.parse(data) as OpenAiChunk;
+  try {
+    for (;;) {
+      const { done, value } = await watchdog.guard(reader.read());
+      if (done) return;
+      buffer += decoder.decode(value, { stream: true });
+      let newline: number;
+      while ((newline = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, newline).trim();
+        buffer = buffer.slice(newline + 1);
+        if (!line.startsWith('data:')) continue;
+        const data = line.slice(5).trim();
+        if (data === '[DONE]') return;
+        if (!data) continue;
+        watchdog.progress();
+        yield JSON.parse(data) as OpenAiChunk;
+      }
     }
+  } finally {
+    reader.cancel().catch(() => undefined);
   }
 }

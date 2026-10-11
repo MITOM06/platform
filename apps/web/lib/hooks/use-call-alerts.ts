@@ -7,7 +7,8 @@ import { useCallStore } from '@/lib/store/call.store'
 import { useUser } from '@/lib/hooks/use-user'
 import { useNickname } from '@/lib/nicknames'
 import { callManager } from '@/lib/webrtc/call-manager'
-import { endNoticeKey } from '@/lib/webrtc/call-end-notice'
+import { groupCallManager } from '@/lib/webrtc/group-call-manager'
+import { endNoticeKey, isErrorNotice } from '@/lib/webrtc/call-end-notice'
 import { showCallNotification } from '@/lib/webrtc/call-notification'
 import { playTone, stopTone, toneFor } from '@/lib/webrtc/call-sounds'
 
@@ -55,17 +56,21 @@ export function useCallAlerts(): void {
     return () => close?.()
   }, [status, video, resolvedName, t])
 
-  // Explain why a call closed (declined, busy, no answer, connection lost…).
+  // Explain why a call closed (declined, busy, no answer, connection lost,
+  // calls unavailable…) — the engine's precise `notice` wins over the reason's.
   useEffect(() => {
-    callManager.onEndNotice = (reason, byPeer, name) => {
-      const key = endNoticeKey(reason, byPeer)
+    callManager.onEndNotice = (reason, byPeer, name, notice) => {
+      const key = notice ?? endNoticeKey(reason, byPeer)
       if (!key) return
       const message = t(key, { name: name || t('peerFallback') })
-      if (key === 'connectionLost' || key === 'mediaError') toast.error(message)
+      if (isErrorNotice(key)) toast.error(message)
       else toast(message)
     }
+    // A group call whose room could not be joined (mic refused, calls unavailable…).
+    groupCallManager.onJoinError = (key) => toast.error(t(key))
     return () => {
       callManager.onEndNotice = null
+      groupCallManager.onJoinError = null
     }
   }, [t])
 }

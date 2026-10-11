@@ -36,8 +36,11 @@ class AssistantProvisioningServiceTest {
   @Mock private BotFactoryClient botFactoryClient;
   @Mock private ConnectorServiceClient connectorClient;
   @Mock private ExternalBotAdminService externalBotAdminService;
+  @Mock private AssistantTokenStore tokenStore;
 
   @InjectMocks private AssistantProvisioningService service;
+
+  private static final java.time.Instant EXPIRY = java.time.Instant.parse("2027-01-09T00:00:00Z");
 
   private static AssistantSetupRequest req() {
     return new AssistantSetupRequest("Aria", "You are my smart assistant", "prov-1");
@@ -67,7 +70,7 @@ class AssistantProvisioningServiceTest {
   void provision_freshSetup_createsBotWiresMcpAndRegisters() {
     when(botFactoryClient.createBot("Aria", "You are my smart assistant")).thenReturn("bf-1");
     when(connectorClient.issueToken("user-1", "extbot:bf-1"))
-        .thenReturn(new BotSessionResponse("tok-123", "https://connector/mcp"));
+        .thenReturn(new BotSessionResponse("tok-123", "https://connector/mcp", EXPIRY));
 
     AssistantSetupResponse res = service.provision("user-1", req());
 
@@ -78,6 +81,8 @@ class AssistantProvisioningServiceTest {
         .addMcpServer("bf-1", BotFactoryClient.PON_MCP_NAME, "https://connector/mcp", "tok-123");
     verify(externalBotAdminService)
         .registerAssistant("user-1", "bf-1", "Aria", null, "You are my smart assistant", "prov-1");
+    // Recorded so the renewal sweep re-issues the token before it expires.
+    verify(tokenStore).recordIssued("extbot:bf-1", EXPIRY);
   }
 
   /** Unset CONNECTOR_SERVICE_BASE_URL / key used to fail AFTER creating a Bot Factory bot. */
@@ -116,7 +121,7 @@ class AssistantProvisioningServiceTest {
   void provision_whenMcpWiringFails_revokesTokenAndDeletesBot() {
     when(botFactoryClient.createBot(any(), any())).thenReturn("bf-1");
     when(connectorClient.issueToken("user-1", "extbot:bf-1"))
-        .thenReturn(new BotSessionResponse("tok", "https://connector/mcp"));
+        .thenReturn(new BotSessionResponse("tok", "https://connector/mcp", EXPIRY));
     doThrow(new IllegalStateException("bf down"))
         .when(botFactoryClient)
         .addMcpServer(any(), any(), any(), any());
