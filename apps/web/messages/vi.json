@@ -1738,7 +1738,15 @@
     "summaryOverview": "Tổng quan",
     "summaryKeyPoints": "Điểm chính",
     "summaryActionItems": "Việc cần làm",
-    "summaryUnavailable": "Không có bản tóm tắt"
+    "summaryUnavailable": "Không có bản tóm tắt",
+    "errUnavailable": "Hiện không thể thực hiện cuộc gọi. Vui lòng thử lại sau.",
+    "errNotFound": "Cuộc gọi này không còn tồn tại.",
+    "errEnded": "Cuộc gọi này đã kết thúc.",
+    "errNotSfu": "Không thể tham gia cuộc gọi này từ đây. Vui lòng gọi lại.",
+    "errForbidden": "Bạn không thể tham gia cuộc gọi này.",
+    "errNetwork": "Không kết nối được tới máy chủ. Kiểm tra mạng rồi thử lại.",
+    "errFailed": "Không thể kết nối cuộc gọi. Vui lòng thử lại.",
+    "errStartTimeout": "Không thể bắt đầu cuộc gọi — máy chủ không phản hồi. Vui lòng thử lại."
   },
   "notFound": {
     "title": "Trang không tồn tại",

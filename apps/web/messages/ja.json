@@ -1738,7 +1738,15 @@
     "summaryOverview": "概要",
     "summaryKeyPoints": "要点",
     "summaryActionItems": "アクション項目",
-    "summaryUnavailable": "要約は利用できません"
+    "summaryUnavailable": "要約は利用できません",
+    "errUnavailable": "現在、通話を利用できません。しばらくしてからもう一度お試しください。",
+    "errNotFound": "この通話はもう存在しません。",
+    "errEnded": "この通話はすでに終了しています。",
+    "errNotSfu": "ここからはこの通話に参加できません。もう一度発信してください。",
+    "errForbidden": "この通話には参加できません。",
+    "errNetwork": "サーバーに接続できません。ネットワークを確認してもう一度お試しください。",
+    "errFailed": "通話を接続できませんでした。もう一度お試しください。",
+    "errStartTimeout": "通話を開始できませんでした。サーバーから応答がありません。もう一度お試しください。"
   },
   "notFound": {
     "title": "ページが見つかりません",

@@ -1,8 +1,10 @@
 import { stompService } from '@/lib/stomp/client'
 import { callsApi } from '@/lib/api/calls'
 import type { CallMedia, CallParticipant } from '@/lib/api/types'
-import { LiveKitSession } from '@/lib/rtc/livekit-session'
+import { LiveKitSession, MediaAccessError } from '@/lib/rtc/livekit-session'
 import { useCallStore } from '@/lib/store/call.store'
+import type { CallNoticeKey } from './call-end-notice'
+import { callErrorNotice } from './call-errors'
 import type { GroupCallHooks } from './call-hooks'
 
 const store = () => useCallStore.getState()
@@ -15,6 +17,8 @@ const store = () => useCallStore.getState()
  */
 export class SfuGroupCall {
   private session: LiveKitSession | null = null
+  /** The session whose connect() finished: mic / camera changes before that wait in the store. */
+  private joined: LiveKitSession | null = null
   private callId: string | null = null
   private pendingStart = false
 
@@ -67,14 +71,15 @@ export class SfuGroupCall {
     if (this.callId) store().setRoster(participants)
   }
 
+  /** Sent to the room once joined; until then the join applies the store's value. */
   toggleMic(on: boolean): void {
-    void this.session?.setMic(on)
     store().setMic(on)
+    if (this.joined) this.joined.setMic(on).catch(() => undefined)
   }
 
   toggleCamera(on: boolean): void {
-    void this.session?.setCamera(on)
     store().setCamera(on)
+    if (this.joined) this.joined.setCamera(on).catch(() => undefined)
   }
 
   leave(): void {
@@ -93,8 +98,8 @@ export class SfuGroupCall {
     let token: { url: string; token: string }
     try {
       token = await callsApi.getToken(callId)
-    } catch {
-      if (this.callId === callId) this.leave()
+    } catch (err) {
+      if (this.callId === callId) this.failJoin(callErrorNotice(err))
       return
     }
     if (this.callId !== callId) return
@@ -113,16 +118,31 @@ export class SfuGroupCall {
       if (reason === 'ended') this.teardown() // the server closed the room: nothing to tell it
       else this.leave()
     }
+    // Join with the user's choice so far; one changed while connecting is applied after.
+    const asked = { mic: store().micEnabled, camera: store().cameraEnabled }
     try {
-      await session.connect(token.url, token.token, { video: media === 'video' })
-    } catch {
-      if (this.session === session) this.leave()
+      await session.connect(token.url, token.token, { video: asked.camera, audio: asked.mic })
+    } catch (err) {
+      if (this.session === session) this.failJoin(err instanceof MediaAccessError ? 'mediaError' : 'errFailed')
+      return
     }
+    if (this.session !== session) return
+    this.joined = session
+    const { micEnabled, cameraEnabled } = store()
+    if (micEnabled !== asked.mic) session.setMic(micEnabled).catch(() => undefined)
+    if (cameraEnabled !== asked.camera) session.setCamera(cameraEnabled).catch(() => undefined)
+  }
+
+  /** The room could not be joined: say why (localized), then leave the call. */
+  private failJoin(notice: CallNoticeKey): void {
+    this.hooks.onJoinError?.(notice)
+    this.leave()
   }
 
   private teardown(): void {
     const session = this.session
     this.session = null
+    this.joined = null
     session?.disconnect()
     this.callId = null
     this.pendingStart = false

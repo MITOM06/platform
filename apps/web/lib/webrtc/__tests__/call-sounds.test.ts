@@ -73,4 +73,9 @@ describe('toneFor', () => {
     expect(toneFor('idle', true)).toBe('ringtone') // group-call ring
     expect(toneFor('connected', true)).toBeNull() // never over an active call
   })
+
+  it('is silent once the call was answered and is still connecting', () => {
+    expect(toneFor('connecting', false)).toBeNull()
+    expect(toneFor('connecting', true)).toBeNull()
+  })
 })

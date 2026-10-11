@@ -1738,7 +1738,15 @@
     "summaryOverview": "概览",
     "summaryKeyPoints": "要点",
     "summaryActionItems": "行动项",
-    "summaryUnavailable": "摘要不可用"
+    "summaryUnavailable": "摘要不可用",
+    "errUnavailable": "通话功能暂时不可用，请稍后再试。",
+    "errNotFound": "该通话已不存在。",
+    "errEnded": "该通话已结束。",
+    "errNotSfu": "无法从此处加入该通话，请重新拨打。",
+    "errForbidden": "你无法加入该通话。",
+    "errNetwork": "无法连接到服务器，请检查网络后重试。",
+    "errFailed": "无法接通通话，请重试。",
+    "errStartTimeout": "无法发起通话——服务器没有响应，请重试。"
   },
   "notFound": {
     "title": "页面不存在",

@@ -51,6 +51,16 @@ export class ReconnectWatch {
     this.blip = null
   }
 
+  /**
+   * Our side recovered (e.g. the room was re-joined) while the window stays
+   * open for the other person: stop the recovery beat, keep the deadline.
+   * A later `begin` with a tick starts it again.
+   */
+  stopRetrying(): void {
+    if (this.ticker) clearInterval(this.ticker)
+    this.ticker = null
+  }
+
   private startTicker(tick: () => void, tickMs: number): void {
     tick()
     this.ticker = setInterval(tick, tickMs)

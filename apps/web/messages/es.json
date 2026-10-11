@@ -1738,7 +1738,15 @@
     "summaryOverview": "Resumen",
     "summaryKeyPoints": "Puntos clave",
     "summaryActionItems": "Tareas",
-    "summaryUnavailable": "Resumen no disponible"
+    "summaryUnavailable": "Resumen no disponible",
+    "errUnavailable": "Las llamadas no están disponibles en este momento. Inténtalo de nuevo más tarde.",
+    "errNotFound": "Esta llamada ya no existe.",
+    "errEnded": "Esta llamada ya ha terminado.",
+    "errNotSfu": "No puedes unirte a esta llamada desde aquí. Vuelve a llamar.",
+    "errForbidden": "No puedes unirte a esta llamada.",
+    "errNetwork": "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
+    "errFailed": "No se pudo conectar la llamada. Inténtalo de nuevo.",
+    "errStartTimeout": "No se pudo iniciar la llamada: el servidor no respondió. Inténtalo de nuevo."
   },
   "notFound": {
     "title": "Página no encontrada",

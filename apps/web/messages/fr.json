@@ -1738,7 +1738,15 @@
     "summaryOverview": "Aperçu",
     "summaryKeyPoints": "Points clés",
     "summaryActionItems": "Actions à mener",
-    "summaryUnavailable": "Résumé indisponible"
+    "summaryUnavailable": "Résumé indisponible",
+    "errUnavailable": "Les appels ne sont pas disponibles pour le moment. Réessayez plus tard.",
+    "errNotFound": "Cet appel n'existe plus.",
+    "errEnded": "Cet appel est déjà terminé.",
+    "errNotSfu": "Impossible de rejoindre cet appel depuis ici. Rappelez votre contact.",
+    "errForbidden": "Vous ne pouvez pas rejoindre cet appel.",
+    "errNetwork": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
+    "errFailed": "Impossible de connecter l'appel. Réessayez.",
+    "errStartTimeout": "Impossible de lancer l'appel : le serveur n'a pas répondu. Réessayez."
   },
   "notFound": {
     "title": "Page introuvable",

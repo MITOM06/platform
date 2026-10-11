@@ -64,7 +64,7 @@ export function VideoCallModal() {
               {(peerName || '?')[0]?.toUpperCase()}
             </div>
             <p className="text-xl font-medium">{peerName || t('peerFallback')}</p>
-            <p className="text-sm text-white/70">{t('calling')}</p>
+            <p className="text-sm text-white/70">{t(status === 'connecting' ? 'connecting' : 'calling')}</p>
           </div>
         )}
 
