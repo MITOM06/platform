@@ -1010,7 +1010,12 @@
     "aiTraceToolSkipped": "Không khả dụng",
     "aiToolConnector": "Ứng dụng đã kết nối",
     "aiToolGeneric": "Công cụ",
-    "publicChannelDepartmentHint": "Nhóm phòng ban không thể là kênh công khai."
+    "publicChannelDepartmentHint": "Nhóm phòng ban không thể là kênh công khai.",
+    "aiActionFieldCc": "Cc",
+    "aiActionFieldBcc": "Bcc",
+    "aiActionFieldBody": "Nội dung",
+    "aiActionFieldAttendees": "Khách mời",
+    "aiForbidden": "Trợ lý không thể trả lời ở đây: bạn không có quyền truy cập cuộc trò chuyện này."
   },
   "aiHub": {
     "title": "Trung tâm AI",
@@ -1689,7 +1694,14 @@
     "memberMfaResetTitle": "Đặt lại xác thực hai yếu tố?",
     "memberMfaResetConfirm": "{name} sẽ bị đăng xuất khỏi mọi thiết bị và phải thiết lập lại xác thực hai yếu tố ở lần đăng nhập tiếp theo.",
     "memberMfaResetDone": "Đã đặt lại xác thực hai yếu tố",
-    "memberMfaResetConfirmOptional": "{name} sẽ bị đăng xuất trên mọi thiết bị và xác thực hai yếu tố sẽ bị tắt. Họ có thể bật lại trong Cài đặt."
+    "memberMfaResetConfirmOptional": "{name} sẽ bị đăng xuất trên mọi thiết bị và xác thực hai yếu tố sẽ bị tắt. Họ có thể bật lại trong Cài đặt.",
+    "auditAction_role_preset_removed": "Xoá vai trò mẫu đã ngừng dùng",
+    "auditAction_sso_enforcement_changed": "Đổi cài đặt bắt buộc SSO",
+    "auditAction_mfa_enrolled": "Bật xác thực hai yếu tố",
+    "auditAction_mfa_disabled": "Tắt xác thực hai yếu tố",
+    "auditAction_mfa_reset": "Đặt lại xác thực hai yếu tố của thành viên",
+    "auditAction_mfa_backup_codes_regenerated": "Tạo lại mã dự phòng xác thực hai yếu tố",
+    "auditAction_mfa_verified_backup_code": "Đăng nhập bằng mã dự phòng"
   },
   "call": {
     "peerFallback": "Người dùng",

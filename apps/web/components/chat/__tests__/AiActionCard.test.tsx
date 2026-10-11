@@ -87,4 +87,29 @@ describe('AiActionCard', () => {
     )
     expect(setStatus).toHaveBeenCalledWith('a-3', 'confirmed')
   })
+
+  it('lists Cc / Bcc / the message preview under the headline, with localized labels', () => {
+    renderCard({
+      id: 'a-4', status: 'pending', expiresAt: future, requesterId: 'me', provider: 'gmail',
+      summary: { kind: 'send_email', to: 'x@y.io', cc: 'c@y.io', bcc: 'b@y.io', bodyPreview: 'See you at 3' },
+    })
+    expect(screen.getByText('aiActionFieldCc')).toBeInTheDocument()
+    expect(screen.getByText('c@y.io')).toBeInTheDocument()
+    expect(screen.getByText('aiActionFieldBcc')).toBeInTheDocument()
+    expect(screen.getByText('aiActionFieldBody')).toBeInTheDocument()
+    expect(screen.getByText('See you at 3')).toBeInTheDocument()
+  })
+
+  it('shows a generic action\'s fields as "label: value" rows — the labels come humanized from the server', () => {
+    renderCard({
+      id: 'a-5', status: 'pending', expiresAt: future, requesterId: 'me',
+      summary: {
+        kind: 'generic', tool: 'Create issue',
+        fields: [{ label: 'Title', value: 'Fix login' }, { label: 'Owner', value: '64b7f0c2a1b2c3d4e5f60718' }],
+      },
+    })
+    expect(screen.getByText('Title')).toBeInTheDocument()
+    expect(screen.getByText('Fix login')).toBeInTheDocument()
+    expect(document.body.textContent).not.toContain('64b7f0c2a1b2c3d4e5f60718')
+  })
 })

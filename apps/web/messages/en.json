@@ -1010,7 +1010,12 @@
     "aiTraceToolSkipped": "Not available",
     "aiToolConnector": "Connected app",
     "aiToolGeneric": "Tool",
-    "publicChannelDepartmentHint": "Department groups can't be public channels."
+    "publicChannelDepartmentHint": "Department groups can't be public channels.",
+    "aiActionFieldCc": "Cc",
+    "aiActionFieldBcc": "Bcc",
+    "aiActionFieldBody": "Message",
+    "aiActionFieldAttendees": "Guests",
+    "aiForbidden": "The assistant can't reply here: you don't have access to this conversation."
   },
   "aiHub": {
     "title": "AI Hub",
@@ -1689,7 +1694,14 @@
     "memberMfaResetTitle": "Reset two-factor authentication?",
     "memberMfaResetConfirm": "{name} will be signed out on every device and must set up two-factor authentication again at the next sign-in.",
     "memberMfaResetDone": "Two-factor authentication has been reset",
-    "memberMfaResetConfirmOptional": "{name} will be signed out on every device and two-factor authentication will be turned off. They can turn it on again in Settings."
+    "memberMfaResetConfirmOptional": "{name} will be signed out on every device and two-factor authentication will be turned off. They can turn it on again in Settings.",
+    "auditAction_role_preset_removed": "Retired preset role removed",
+    "auditAction_sso_enforcement_changed": "Require-SSO setting changed",
+    "auditAction_mfa_enrolled": "Two-factor authentication turned on",
+    "auditAction_mfa_disabled": "Two-factor authentication turned off",
+    "auditAction_mfa_reset": "Member's two-factor authentication reset",
+    "auditAction_mfa_backup_codes_regenerated": "Two-factor backup codes regenerated",
+    "auditAction_mfa_verified_backup_code": "Signed in with a backup code"
   },
   "call": {
     "peerFallback": "User",

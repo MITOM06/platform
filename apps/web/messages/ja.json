@@ -1010,7 +1010,12 @@
     "aiTraceToolSkipped": "利用不可",
     "aiToolConnector": "連携アプリ",
     "aiToolGeneric": "ツール",
-    "publicChannelDepartmentHint": "部門グループは公開チャンネルにできません。"
+    "publicChannelDepartmentHint": "部門グループは公開チャンネルにできません。",
+    "aiActionFieldCc": "Cc",
+    "aiActionFieldBcc": "Bcc",
+    "aiActionFieldBody": "本文",
+    "aiActionFieldAttendees": "参加者",
+    "aiForbidden": "アシスタントはここでは返信できません。この会話へのアクセス権がありません。"
   },
   "aiHub": {
     "title": "AI ハブ",
@@ -1689,7 +1694,14 @@
     "memberMfaResetTitle": "二要素認証をリセットしますか？",
     "memberMfaResetConfirm": "{name} はすべてのデバイスからサインアウトされ、次回のサインイン時に二要素認証を再設定する必要があります。",
     "memberMfaResetDone": "二要素認証をリセットしました",
-    "memberMfaResetConfirmOptional": "{name} はすべてのデバイスからサインアウトされ、二要素認証はオフになります。本人は設定から再びオンにできます。"
+    "memberMfaResetConfirmOptional": "{name} はすべてのデバイスからサインアウトされ、二要素認証はオフになります。本人は設定から再びオンにできます。",
+    "auditAction_role_preset_removed": "廃止されたプリセットロールを削除",
+    "auditAction_sso_enforcement_changed": "SSO 必須の設定を変更",
+    "auditAction_mfa_enrolled": "二要素認証を有効化",
+    "auditAction_mfa_disabled": "二要素認証を無効化",
+    "auditAction_mfa_reset": "メンバーの二要素認証をリセット",
+    "auditAction_mfa_backup_codes_regenerated": "二要素認証のバックアップコードを再生成",
+    "auditAction_mfa_verified_backup_code": "バックアップコードでサインイン"
   },
   "call": {
     "peerFallback": "ユーザー",

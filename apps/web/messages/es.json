@@ -1010,7 +1010,12 @@
     "aiTraceToolSkipped": "No disponible",
     "aiToolConnector": "App conectada",
     "aiToolGeneric": "Herramienta",
-    "publicChannelDepartmentHint": "Los grupos de departamento no pueden ser canales públicos."
+    "publicChannelDepartmentHint": "Los grupos de departamento no pueden ser canales públicos.",
+    "aiActionFieldCc": "CC",
+    "aiActionFieldBcc": "CCO",
+    "aiActionFieldBody": "Mensaje",
+    "aiActionFieldAttendees": "Invitados",
+    "aiForbidden": "El asistente no puede responder aquí: no tienes acceso a esta conversación."
   },
   "aiHub": {
     "title": "Centro de IA",
@@ -1689,7 +1694,14 @@
     "memberMfaResetTitle": "¿Restablecer la autenticación de dos factores?",
     "memberMfaResetConfirm": "{name} cerrará sesión en todos sus dispositivos y deberá configurar de nuevo la autenticación de dos factores en su próximo inicio de sesión.",
     "memberMfaResetDone": "Se ha restablecido la autenticación de dos factores",
-    "memberMfaResetConfirmOptional": "{name} cerrará sesión en todos los dispositivos y se desactivará la autenticación de dos factores. Podrá volver a activarla en Ajustes."
+    "memberMfaResetConfirmOptional": "{name} cerrará sesión en todos los dispositivos y se desactivará la autenticación de dos factores. Podrá volver a activarla en Ajustes.",
+    "auditAction_role_preset_removed": "Rol predefinido en desuso eliminado",
+    "auditAction_sso_enforcement_changed": "Ajuste de SSO obligatorio cambiado",
+    "auditAction_mfa_enrolled": "Autenticación de dos factores activada",
+    "auditAction_mfa_disabled": "Autenticación de dos factores desactivada",
+    "auditAction_mfa_reset": "Autenticación de dos factores del miembro restablecida",
+    "auditAction_mfa_backup_codes_regenerated": "Códigos de respaldo de dos factores regenerados",
+    "auditAction_mfa_verified_backup_code": "Inicio de sesión con un código de respaldo"
   },
   "call": {
     "peerFallback": "Usuario",

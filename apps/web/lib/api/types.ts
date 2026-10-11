@@ -181,6 +181,13 @@ export interface AiPendingAction {
   id: string
   toolName?: string
   provider?: string
+  /**
+   * What the card shows, by `kind` — parsed defensively by `actionSummaryView`:
+   * send_email / draft_email `{to, cc?, bcc?, subject, bodyPreview?}`,
+   * create_event / update_event `{title, start, end, attendees?}`,
+   * create_page / update_page `{title}`, generic `{tool, fields?: {label, value}[]}`.
+   * The `?` fields are newer; older servers omit them.
+   */
   summary?: Record<string, unknown>
   status?: 'pending' | 'confirmed' | 'cancelled' | 'failed' | 'expired' | string
   expiresAt?: string

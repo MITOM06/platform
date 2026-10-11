@@ -1010,7 +1010,12 @@
     "aiTraceToolSkipped": "不可用",
     "aiToolConnector": "已连接的应用",
     "aiToolGeneric": "工具",
-    "publicChannelDepartmentHint": "部门群组不能设为公开频道。"
+    "publicChannelDepartmentHint": "部门群组不能设为公开频道。",
+    "aiActionFieldCc": "抄送",
+    "aiActionFieldBcc": "密送",
+    "aiActionFieldBody": "正文",
+    "aiActionFieldAttendees": "参与者",
+    "aiForbidden": "助手无法在此回复：你无权访问此对话。"
   },
   "aiHub": {
     "title": "AI 中心",
@@ -1689,7 +1694,14 @@
     "memberMfaResetTitle": "重置双重身份验证？",
     "memberMfaResetConfirm": "{name} 将在所有设备上退出登录，并需在下次登录时重新设置双重身份验证。",
     "memberMfaResetDone": "双重身份验证已重置",
-    "memberMfaResetConfirmOptional": "{name} 将在所有设备上退出登录，双重身份验证将被关闭。对方可以在设置中重新开启。"
+    "memberMfaResetConfirmOptional": "{name} 将在所有设备上退出登录，双重身份验证将被关闭。对方可以在设置中重新开启。",
+    "auditAction_role_preset_removed": "移除了已停用的预设角色",
+    "auditAction_sso_enforcement_changed": "更改了强制 SSO 设置",
+    "auditAction_mfa_enrolled": "开启了双重身份验证",
+    "auditAction_mfa_disabled": "关闭了双重身份验证",
+    "auditAction_mfa_reset": "重置了成员的双重身份验证",
+    "auditAction_mfa_backup_codes_regenerated": "重新生成了双重身份验证备用码",
+    "auditAction_mfa_verified_backup_code": "使用备用码登录"
   },
   "call": {
     "peerFallback": "用户",

@@ -1010,7 +1010,12 @@
     "aiTraceToolSkipped": "사용 불가",
     "aiToolConnector": "연결된 앱",
     "aiToolGeneric": "도구",
-    "publicChannelDepartmentHint": "부서 그룹은 공개 채널로 만들 수 없습니다."
+    "publicChannelDepartmentHint": "부서 그룹은 공개 채널로 만들 수 없습니다.",
+    "aiActionFieldCc": "참조",
+    "aiActionFieldBcc": "숨은 참조",
+    "aiActionFieldBody": "본문",
+    "aiActionFieldAttendees": "참석자",
+    "aiForbidden": "어시스턴트가 여기에서 답할 수 없습니다. 이 대화에 대한 접근 권한이 없습니다."
   },
   "aiHub": {
     "title": "AI 허브",
@@ -1689,7 +1694,14 @@
     "memberMfaResetTitle": "2단계 인증을 재설정할까요?",
     "memberMfaResetConfirm": "{name}님은 모든 기기에서 로그아웃되며 다음 로그인 시 2단계 인증을 다시 설정해야 합니다.",
     "memberMfaResetDone": "2단계 인증을 재설정했습니다",
-    "memberMfaResetConfirmOptional": "{name}님은 모든 기기에서 로그아웃되고 2단계 인증이 꺼집니다. 설정에서 다시 켤 수 있습니다."
+    "memberMfaResetConfirmOptional": "{name}님은 모든 기기에서 로그아웃되고 2단계 인증이 꺼집니다. 설정에서 다시 켤 수 있습니다.",
+    "auditAction_role_preset_removed": "사용 중지된 기본 역할 삭제",
+    "auditAction_sso_enforcement_changed": "SSO 필수 설정 변경",
+    "auditAction_mfa_enrolled": "2단계 인증 사용",
+    "auditAction_mfa_disabled": "2단계 인증 사용 중지",
+    "auditAction_mfa_reset": "멤버의 2단계 인증 재설정",
+    "auditAction_mfa_backup_codes_regenerated": "2단계 인증 백업 코드 재생성",
+    "auditAction_mfa_verified_backup_code": "백업 코드로 로그인"
   },
   "call": {
     "peerFallback": "사용자",
