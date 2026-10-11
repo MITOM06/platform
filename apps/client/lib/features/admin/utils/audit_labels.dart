@@ -61,6 +61,23 @@ String auditActionLabel(AppLocalizations l, String action) {
       return l.adminAuditActionDirectoryDelete;
     case 'sensitive_skill.run':
       return l.adminAuditActionSensitiveSkillRun;
+    // "Require SSO" switched on/off (contract 13 §C).
+    case 'sso.enforcement_changed':
+      return l.adminAuditActionSsoEnforcementChanged;
+    // Two-factor authentication (contracts 09 / 15).
+    case 'mfa.enrolled':
+      return l.adminAuditActionMfaEnrolled;
+    case 'mfa.disabled':
+      return l.adminAuditActionMfaDisabled;
+    case 'mfa.reset':
+      return l.adminAuditActionMfaReset;
+    case 'mfa.backup_codes_regenerated':
+      return l.adminAuditActionMfaBackupCodesRegenerated;
+    case 'mfa.verified_backup_code':
+      return l.adminAuditActionMfaVerifiedBackupCode;
+    // A retired preset (the Manager role), its members moved to Member.
+    case 'role.preset_removed':
+      return l.adminAuditActionRolePresetRemoved;
     default:
       return l.adminAuditActionOther;
   }

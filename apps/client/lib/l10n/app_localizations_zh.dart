@@ -4142,6 +4142,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminAuditActionSensitiveSkillRun => '运行了敏感技能';
 
   @override
+  String get adminAuditActionSsoEnforcementChanged => '更改了“要求 SSO”';
+
+  @override
+  String get adminAuditActionMfaEnrolled => '设置了双重验证';
+
+  @override
+  String get adminAuditActionMfaDisabled => '关闭了双重验证';
+
+  @override
+  String get adminAuditActionMfaReset => '重置了成员的双重验证';
+
+  @override
+  String get adminAuditActionMfaBackupCodesRegenerated => '重新生成了备用码';
+
+  @override
+  String get adminAuditActionMfaVerifiedBackupCode => '使用备用码登录';
+
+  @override
+  String get adminAuditActionRolePresetRemoved => '移除了预设角色';
+
+  @override
   String get adminAuditTargetWorkspace => '工作区';
 
   @override

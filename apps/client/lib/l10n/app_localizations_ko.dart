@@ -4189,6 +4189,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get adminAuditActionSensitiveSkillRun => '민감한 스킬 실행';
 
   @override
+  String get adminAuditActionSsoEnforcementChanged => '“SSO 필수” 설정 변경';
+
+  @override
+  String get adminAuditActionMfaEnrolled => '2단계 인증 설정';
+
+  @override
+  String get adminAuditActionMfaDisabled => '2단계 인증 끄기';
+
+  @override
+  String get adminAuditActionMfaReset => '멤버의 2단계 인증 재설정';
+
+  @override
+  String get adminAuditActionMfaBackupCodesRegenerated => '백업 코드 재발급';
+
+  @override
+  String get adminAuditActionMfaVerifiedBackupCode => '백업 코드로 로그인';
+
+  @override
+  String get adminAuditActionRolePresetRemoved => '기본 제공 역할 폐지';
+
+  @override
   String get adminAuditTargetWorkspace => '워크스페이스';
 
   @override

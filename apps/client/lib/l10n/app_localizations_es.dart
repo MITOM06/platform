@@ -4361,6 +4361,32 @@ class AppLocalizationsEs extends AppLocalizations {
       'Habilidad sensible ejecutada';
 
   @override
+  String get adminAuditActionSsoEnforcementChanged => '«Exigir SSO» cambiado';
+
+  @override
+  String get adminAuditActionMfaEnrolled =>
+      'Verificación en dos pasos configurada';
+
+  @override
+  String get adminAuditActionMfaDisabled =>
+      'Verificación en dos pasos desactivada';
+
+  @override
+  String get adminAuditActionMfaReset =>
+      'Verificación en dos pasos del miembro restablecida';
+
+  @override
+  String get adminAuditActionMfaBackupCodesRegenerated =>
+      'Códigos de respaldo regenerados';
+
+  @override
+  String get adminAuditActionMfaVerifiedBackupCode =>
+      'Inicio de sesión con un código de respaldo';
+
+  @override
+  String get adminAuditActionRolePresetRemoved => 'Rol predefinido retirado';
+
+  @override
   String get adminAuditTargetWorkspace => 'Espacio de trabajo';
 
   @override

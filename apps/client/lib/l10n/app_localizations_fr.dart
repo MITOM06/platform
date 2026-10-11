@@ -4387,6 +4387,33 @@ class AppLocalizationsFr extends AppLocalizations {
       'Compétence sensible exécutée';
 
   @override
+  String get adminAuditActionSsoEnforcementChanged =>
+      '« Exiger le SSO » modifié';
+
+  @override
+  String get adminAuditActionMfaEnrolled =>
+      'Double authentification configurée';
+
+  @override
+  String get adminAuditActionMfaDisabled =>
+      'Double authentification désactivée';
+
+  @override
+  String get adminAuditActionMfaReset =>
+      'Double authentification du membre réinitialisée';
+
+  @override
+  String get adminAuditActionMfaBackupCodesRegenerated =>
+      'Codes de secours régénérés';
+
+  @override
+  String get adminAuditActionMfaVerifiedBackupCode =>
+      'Connexion avec un code de secours';
+
+  @override
+  String get adminAuditActionRolePresetRemoved => 'Rôle prédéfini retiré';
+
+  @override
   String get adminAuditTargetWorkspace => 'Espace de travail';
 
   @override

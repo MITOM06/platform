@@ -4188,6 +4188,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get adminAuditActionSensitiveSkillRun => '機密スキルを実行';
 
   @override
+  String get adminAuditActionSsoEnforcementChanged => '「SSO を必須にする」を変更';
+
+  @override
+  String get adminAuditActionMfaEnrolled => '2 段階認証を設定';
+
+  @override
+  String get adminAuditActionMfaDisabled => '2 段階認証をオフ';
+
+  @override
+  String get adminAuditActionMfaReset => 'メンバーの 2 段階認証をリセット';
+
+  @override
+  String get adminAuditActionMfaBackupCodesRegenerated => 'バックアップコードを再生成';
+
+  @override
+  String get adminAuditActionMfaVerifiedBackupCode => 'バックアップコードでサインイン';
+
+  @override
+  String get adminAuditActionRolePresetRemoved => 'プリセットロールを廃止';
+
+  @override
   String get adminAuditTargetWorkspace => 'ワークスペース';
 
   @override

@@ -4298,6 +4298,29 @@ class AppLocalizationsVi extends AppLocalizations {
   String get adminAuditActionSensitiveSkillRun => 'Chạy kỹ năng nhạy cảm';
 
   @override
+  String get adminAuditActionSsoEnforcementChanged => 'Thay đổi “Bắt buộc SSO”';
+
+  @override
+  String get adminAuditActionMfaEnrolled => 'Thiết lập xác thực hai lớp';
+
+  @override
+  String get adminAuditActionMfaDisabled => 'Tắt xác thực hai lớp';
+
+  @override
+  String get adminAuditActionMfaReset =>
+      'Đặt lại xác thực hai lớp của thành viên';
+
+  @override
+  String get adminAuditActionMfaBackupCodesRegenerated => 'Tạo lại mã dự phòng';
+
+  @override
+  String get adminAuditActionMfaVerifiedBackupCode =>
+      'Đăng nhập bằng mã dự phòng';
+
+  @override
+  String get adminAuditActionRolePresetRemoved => 'Gỡ bỏ vai trò mặc định';
+
+  @override
   String get adminAuditTargetWorkspace => 'Workspace';
 
   @override

@@ -7879,6 +7879,48 @@ abstract class AppLocalizations {
   /// **'Sensitive skill run'**
   String get adminAuditActionSensitiveSkillRun;
 
+  /// No description provided for @adminAuditActionSsoEnforcementChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'“Require SSO” changed'**
+  String get adminAuditActionSsoEnforcementChanged;
+
+  /// No description provided for @adminAuditActionMfaEnrolled.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication set up'**
+  String get adminAuditActionMfaEnrolled;
+
+  /// No description provided for @adminAuditActionMfaDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication turned off'**
+  String get adminAuditActionMfaDisabled;
+
+  /// No description provided for @adminAuditActionMfaReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Member\'s two-factor authentication reset'**
+  String get adminAuditActionMfaReset;
+
+  /// No description provided for @adminAuditActionMfaBackupCodesRegenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup codes regenerated'**
+  String get adminAuditActionMfaBackupCodesRegenerated;
+
+  /// No description provided for @adminAuditActionMfaVerifiedBackupCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in with a backup code'**
+  String get adminAuditActionMfaVerifiedBackupCode;
+
+  /// No description provided for @adminAuditActionRolePresetRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset role retired'**
+  String get adminAuditActionRolePresetRemoved;
+
   /// No description provided for @adminAuditTargetWorkspace.
   ///
   /// In en, this message translates to:

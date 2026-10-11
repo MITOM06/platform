@@ -4323,6 +4323,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminAuditActionSensitiveSkillRun => 'Sensitive skill run';
 
   @override
+  String get adminAuditActionSsoEnforcementChanged => '“Require SSO” changed';
+
+  @override
+  String get adminAuditActionMfaEnrolled => 'Two-factor authentication set up';
+
+  @override
+  String get adminAuditActionMfaDisabled =>
+      'Two-factor authentication turned off';
+
+  @override
+  String get adminAuditActionMfaReset =>
+      'Member\'s two-factor authentication reset';
+
+  @override
+  String get adminAuditActionMfaBackupCodesRegenerated =>
+      'Backup codes regenerated';
+
+  @override
+  String get adminAuditActionMfaVerifiedBackupCode =>
+      'Signed in with a backup code';
+
+  @override
+  String get adminAuditActionRolePresetRemoved => 'Preset role retired';
+
+  @override
   String get adminAuditTargetWorkspace => 'Workspace';
 
   @override
