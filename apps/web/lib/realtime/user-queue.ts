@@ -1,8 +1,9 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { UserQueueEvent } from '@/lib/api/types'
 import { chatCodeMessage } from '@/lib/api/chat-errors'
-import { humanizeMessagePreview } from '@/lib/system-messages'
+import { humanizeMessagePreview, type HumanizeOptions } from '@/lib/system-messages'
 import { safeDisplayName } from '@/lib/chat/names'
+import { getNickname } from '@/lib/nicknames'
 import {
   CONVERSATIONS_KEY,
   applyIncomingPreview,
@@ -58,15 +59,41 @@ export interface UserQueueContext {
   onClaimsChanged: () => void
 }
 
+type MessageEvent = Extract<UserQueueEvent, { type: 'NEW_MESSAGE' | 'MENTIONED_YOU' }>
+
+/**
+ * user id → display name for a banner, from what this tab already knows: the
+ * viewer ("You"), a conversation nickname, the event's own sender name, a cached
+ * profile. Unknown → undefined, and the humanizer words it generically — never
+ * the id. (The list row resolves the same way through `useNameResolver`.)
+ */
+export function bannerNameResolver(
+  event: MessageEvent,
+  ctx: Pick<UserQueueContext, 'queryClient' | 'currentUserId' | 'tChat'>,
+): (userId: string) => string | undefined {
+  return (userId) => {
+    if (!userId) return undefined
+    if (userId === ctx.currentUserId) return ctx.tChat('you')
+    const nickname = getNickname(event.conversationId, userId)
+    if (nickname) return nickname
+    const sender = userId === event.senderId ? safeDisplayName(event.senderName, event.senderId) : undefined
+    if (sender) return sender
+    const cached = ctx.queryClient.getQueryData<{ displayName?: string }>(['user', userId])
+    return safeDisplayName(cached?.displayName, userId)
+  }
+}
+
 /**
  * Title + body of a message banner. Never raw: an unresolved sender (the server
- * falls back to the user id) becomes "Someone", `system.*` codes are humanized,
- * AI markdown is flattened and attachments become a localized label.
+ * falls back to the user id) becomes "Someone", `system.*` codes are humanized
+ * (with `humanize` — actor, viewer and name resolution — when given), AI
+ * markdown is flattened and attachments become a localized label.
  */
 export function buildMessageNotification(
-  event: Extract<UserQueueEvent, { type: 'NEW_MESSAGE' | 'MENTIONED_YOU' }>,
+  event: MessageEvent,
   t: Translate,
   tChat: Translate,
+  humanize?: HumanizeOptions,
 ): IncomingNotification {
   const content = event.content ?? ''
   const isSystemEvent = event.senderName === 'system' || content.startsWith('system.')
@@ -75,7 +102,7 @@ export function buildMessageNotification(
       conversationId: event.conversationId,
       title: t('notificationSystemTitle'),
       body: content
-        ? humanizeMessagePreview(content, event.messageType, tChat, { short: true })
+        ? humanizeMessagePreview(content, event.messageType, tChat, { ...humanize, short: true })
         : t('notificationFallback'),
     }
   }
@@ -126,7 +153,13 @@ export function handleUserQueueEvent(event: UserQueueEvent, ctx: UserQueueContex
       if (ctx.isViewingConversation(event.conversationId)) return
       // Muted chats stay silent (mirrors the server, which skips their push).
       if (isConversationMuted(findCachedConversation(ctx.queryClient, event.conversationId))) return
-      ctx.showNotification(buildMessageNotification(event, ctx.t, ctx.tChat))
+      ctx.showNotification(
+        buildMessageNotification(event, ctx.t, ctx.tChat, {
+          resolveName: bannerNameResolver(event, ctx),
+          senderId: event.senderId,
+          currentUserId: ctx.currentUserId,
+        }),
+      )
       return
     }
   }

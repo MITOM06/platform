@@ -1759,7 +1759,8 @@
     "errForbidden": "No puedes unirte a esta llamada.",
     "errNetwork": "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
     "errFailed": "No se pudo conectar la llamada. Inténtalo de nuevo.",
-    "errStartTimeout": "No se pudo iniciar la llamada: el servidor no respondió. Inténtalo de nuevo."
+    "errStartTimeout": "No se pudo iniciar la llamada: el servidor no respondió. Inténtalo de nuevo.",
+    "errPeerNeverJoined": "No se pudo conectar con {name}. Inténtalo de nuevo."
   },
   "notFound": {
     "title": "Página no encontrada",

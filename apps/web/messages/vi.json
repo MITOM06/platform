@@ -1759,7 +1759,8 @@
     "errForbidden": "Bạn không thể tham gia cuộc gọi này.",
     "errNetwork": "Không kết nối được tới máy chủ. Kiểm tra mạng rồi thử lại.",
     "errFailed": "Không thể kết nối cuộc gọi. Vui lòng thử lại.",
-    "errStartTimeout": "Không thể bắt đầu cuộc gọi — máy chủ không phản hồi. Vui lòng thử lại."
+    "errStartTimeout": "Không thể bắt đầu cuộc gọi — máy chủ không phản hồi. Vui lòng thử lại.",
+    "errPeerNeverJoined": "Không thể kết nối với {name}. Vui lòng thử lại."
   },
   "notFound": {
     "title": "Trang không tồn tại",

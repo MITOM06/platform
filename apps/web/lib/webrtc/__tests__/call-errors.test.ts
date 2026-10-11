@@ -41,6 +41,7 @@ describe('isErrorNotice', () => {
   it('shows failures as error toasts and the rest as plain ones', () => {
     expect(isErrorNotice('errUnavailable')).toBe(true)
     expect(isErrorNotice('errStartTimeout')).toBe(true)
+    expect(isErrorNotice('errPeerNeverJoined')).toBe(true)
     expect(isErrorNotice('connectionLost')).toBe(true)
     expect(isErrorNotice('mediaError')).toBe(true)
     expect(isErrorNotice('declined')).toBe(false)

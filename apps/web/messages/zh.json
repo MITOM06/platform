@@ -1759,7 +1759,8 @@
     "errForbidden": "你无法加入该通话。",
     "errNetwork": "无法连接到服务器，请检查网络后重试。",
     "errFailed": "无法接通通话，请重试。",
-    "errStartTimeout": "无法发起通话——服务器没有响应，请重试。"
+    "errStartTimeout": "无法发起通话——服务器没有响应，请重试。",
+    "errPeerNeverJoined": "无法连接到 {name}，请重试。"
   },
   "notFound": {
     "title": "页面不存在",
