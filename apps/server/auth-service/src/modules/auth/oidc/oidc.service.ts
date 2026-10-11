@@ -35,7 +35,9 @@ export class OidcService {
     const explicit = this.config.get<string>('OIDC_REDIRECT_URI');
     if (explicit) return explicit;
     const domain = this.config.get<string>('DOMAIN');
-    return `https://${domain}/api/auth/oidc/callback`;
+    // Caddy strips /api/auth before proxying and the route is /auth/oidc/callback,
+    // so the public URL repeats the segment (like GOOGLE_CALLBACK_URL does).
+    return `https://${domain}/api/auth/auth/oidc/callback`;
   }
 
   /**

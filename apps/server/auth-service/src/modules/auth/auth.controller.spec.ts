@@ -20,6 +20,9 @@ import { AuthCode } from '../../common/auth-code.enum';
 import type { Response } from 'express';
 
 const WEB = 'https://pon.example/oauth-callback';
+// AuthModule registers the Google strategy only when this is set; the tests
+// below exercise a configured deployment unless they say otherwise.
+process.env.GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'test-google-client';
 
 async function buildController(overrides: {
   auth?: Record<string, unknown>;
@@ -191,6 +194,24 @@ describe('AuthController — social login init (Google only)', () => {
     );
     expect(redirect).toHaveBeenCalledWith('/auth/google?platform=web');
     expect(startGoogleFlow).not.toHaveBeenCalled();
+  });
+
+  // Self-host without GOOGLE_CLIENT_ID never registers the Google strategy, so
+  // continuing to /auth/google answered 500 "Unknown authentication strategy".
+  it('redirects back with SOCIAL_PROVIDER_UNSUPPORTED when Google is not configured', async () => {
+    const saved = process.env.GOOGLE_CLIENT_ID;
+    delete process.env.GOOGLE_CLIENT_ID;
+    try {
+      const req = { params: { provider: 'google' } };
+      const { res, cookie, redirect } = makeRes();
+      await controller.initSocialLogin(req, res, 'web');
+      expect(redirect).toHaveBeenCalledWith(
+        `${WEB}?error=${AuthCode.SOCIAL_PROVIDER_UNSUPPORTED}`,
+      );
+      expect(cookie).not.toHaveBeenCalled();
+    } finally {
+      process.env.GOOGLE_CLIENT_ID = saved;
+    }
   });
 
   it('defaults platform to mobile when none is given', async () => {

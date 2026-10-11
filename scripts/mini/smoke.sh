@@ -42,9 +42,32 @@ check_status() {
 echo "smoke: $BASE"
 
 check_status "_up"                        "200"     "tunnel reachable"
+check_status "api/auth/health"            "200"     "auth-service"
 check_status "api/ai/health"              "200"     "ai-service"
 check_status "api/connector/catalog"      "200"     "connector-service"
 check_status "api/chat/actuator/health"   "200 401" "chat-service answering"
+
+# LiveKit reports joins/leaves (call rosters, meeting attendance) to this route
+# with a signed JWT. Unsigned, chat-service must refuse it (401); a 404 means the
+# proxy no longer routes it and calls/meetings silently lose every webhook.
+got="$("${CURL[@]}" -o /dev/null -w '%{http_code}' -X POST \
+        -H 'Content-Type: application/webhook+json' --data '{}' \
+        "$BASE/api/chat/api/rtc/livekit/webhook" 2>/dev/null)"
+case "$got" in
+  401|403) pass "LiveKit webhook route answering ($got)" ;;
+  *)       fail "LiveKit webhook route: expected 401, got $got  [$BASE/api/chat/api/rtc/livekit/webhook]" ;;
+esac
+
+# STOMP rides on /ws. Without it REST still works (messages send) and nothing is
+# ever received, which no other check here would notice. Without an Origin the
+# handshake is refused (403) — that still proves the route reaches chat-service.
+got="$("${CURL[@]}" --max-time 5 -o /dev/null -w '%{http_code}' \
+        -H 'Connection: Upgrade' -H 'Upgrade: websocket' -H 'Sec-WebSocket-Version: 13' \
+        -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' "$BASE/ws" 2>/dev/null)" # gitleaks:allow
+case "$got" in
+  101|400|403) pass "WebSocket /ws reaching chat-service ($got)" ;;
+  *)           fail "WebSocket /ws: expected 101/403, got $got — realtime would be dead  [$BASE/ws]" ;;
+esac
 
 # --- the social-login redirect ----------------------------------------------
 # The regression this exists for: Caddy mounts auth-service at /api/auth with
@@ -62,6 +85,10 @@ location="$(printf '%s' "$headers" \
 
 if [ "$status" != "302" ]; then
   fail "social-login init: expected 302, got ${status:-no response}"
+elif [ "${location#*error=SOCIAL_PROVIDER_UNSUPPORTED}" != "$location" ]; then
+  # A host without GOOGLE_CLIENT_ID (a self-host install that skipped Google)
+  # answers with a typed error instead of the OAuth hop — expected, not broken.
+  pass "social-login init → Google sign-in not configured on this host"
 elif [ "${location#/api/auth/auth/google}" = "$location" ]; then
   fail "social-login init redirects to '$location' — expected it to start with
       /api/auth/auth/google. The mount prefix is being dropped: either Caddy is

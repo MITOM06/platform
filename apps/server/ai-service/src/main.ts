@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { JsonLogger } from './logger';
 import { setupSwagger } from './swagger';
+import { findDegradedInfra, findFatalInfraProblems } from './prod-env-guard';
 import helmet from 'helmet';
 
 Sentry.init({
@@ -23,27 +24,19 @@ async function bootstrap() {
   // embeddings, so no RAG and no long-term memory), and its secret is in fact
   // unset in production today, so it warns loudly instead of blocking a deploy.
   if (isProd) {
-    const loopback = /localhost|127\.0\.0\.1|::1/i;
-    const fatal = [
-      ['MONGODB_URI', process.env.MONGODB_URI],
-      ['REDIS_URL / REDIS_HOST', process.env.REDIS_URL ?? process.env.REDIS_HOST],
-      ['RABBITMQ_URL', process.env.RABBITMQ_URL],
-    ].filter(([, v]) => !v || loopback.test(v));
+    const fatal = findFatalInfraProblems(process.env);
     if (fatal.length) {
       throw new Error(
-        `Refusing to start in production with development infrastructure addresses: ${fatal
-          .map(([k]) => k)
-          .join(', ')}. Set them to the real backing services.`,
+        `Refusing to start in production with development infrastructure addresses: ${fatal.join(
+          ', ',
+        )}. Set them to the real backing services.`,
       );
     }
-    for (const key of ['QDRANT_URL', 'VOYAGE_API_KEY'] as const) {
-      const value = process.env[key];
-      if (!value || loopback.test(value)) {
-        logger.warn(
-          `${key} is unset in production — embeddings are disabled, so RAG and ` +
-            'long-term memory silently return nothing.',
-        );
-      }
+    for (const key of findDegradedInfra(process.env)) {
+      logger.warn(
+        `${key} is unset in production — embeddings are disabled, so RAG and ` +
+          'long-term memory silently return nothing.',
+      );
     }
   }
   const app = await NestFactory.create(AppModule, { logger: new JsonLogger() });

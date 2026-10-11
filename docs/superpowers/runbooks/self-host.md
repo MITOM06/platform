@@ -56,7 +56,7 @@ Without `PON_DOMAIN` the app targets the default Cloud Run hosting.
 
 ## 7. Enterprise SSO (optional, OIDC)
 1. Create an OIDC app in your IdP (Google Workspace / Entra / Okta / Keycloak).
-   Register the redirect URI: `https://<DOMAIN>/api/auth/oidc/callback`.
+   Register the redirect URI: `https://<DOMAIN>/api/auth/auth/oidc/callback`.
 2. In `.env` set `OIDC_ENABLED=true`, `OIDC_ISSUER` (the IdP discovery/issuer URL),
    `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`. Adjust `OIDC_GROUPS_CLAIM` if your IdP
    names the groups claim differently (Azure may require a manifest/Graph mapping;

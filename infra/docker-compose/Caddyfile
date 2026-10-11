@@ -50,6 +50,11 @@
 		reverse_proxy chat-service:8080
 	}
 
+	# Liveness of the edge itself, for scripts/mini/smoke.sh (same route as on the mini).
+	handle /_up {
+		respond "ok" 200
+	}
+
 	# Everything else → Next.js web app.
 	handle {
 		reverse_proxy web:3000

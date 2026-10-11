@@ -147,6 +147,17 @@ export class AuthController {
     // Normalising keeps '.' (the state separator) out of the platform value.
     const resolvedPlatform = platform === 'web' ? 'web' : 'mobile';
 
+    // AuthModule registers the Google strategy only when GOOGLE_CLIENT_ID is set
+    // (a self-host install may not have one). Going on to /auth/google would answer
+    // 500 "Unknown authentication strategy"; send the user back with a code instead.
+    if (provider === 'google' && !process.env.GOOGLE_CLIENT_ID) {
+      return this.oauthRedirect.redirectWithError(
+        res,
+        resolvedPlatform,
+        new BadRequestException({ code: AuthCode.SOCIAL_PROVIDER_UNSUPPORTED }),
+      );
+    }
+
     // Invite accept: validate now (error → redirect, not JSON) and carry only a
     // short-lived single-use flow id through OAuth — never the raw invite token.
     let flowQuery = '';
