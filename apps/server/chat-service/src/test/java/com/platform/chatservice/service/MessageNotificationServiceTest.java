@@ -41,13 +41,16 @@ class MessageNotificationServiceTest {
   private MessageNotificationService service(String sender) {
     when(conversationQueryService.getParticipants(CONV)).thenReturn(List.of(sender, RECIPIENT));
     when(messageQueryService.resolveDisplayName(SENDER)).thenReturn("Alice");
-    return new MessageNotificationService(
-        conversationQueryService,
-        messageQueryService,
-        clusterBroker,
-        fcmService,
-        externalBotRepository,
-        aiPersonaRepository);
+    MessageNotificationService svc =
+        new MessageNotificationService(
+            conversationQueryService,
+            messageQueryService,
+            clusterBroker,
+            fcmService,
+            externalBotRepository,
+            aiPersonaRepository);
+    org.springframework.test.util.ReflectionTestUtils.setField(svc, "localizedPush", true);
+    return svc;
   }
 
   private MessageResponse message(String content, String type, List<String> mentions) {
@@ -70,6 +73,23 @@ class MessageNotificationServiceTest {
         false,
         null,
         mentions);
+  }
+
+  /**
+   * Mobile builds before 1.4.0 have no push strings: iOS would show the key itself. Until every
+   * installed app is updated (PUSH_LOCALIZED=false, the default) pushes keep their text.
+   */
+  @Test
+  void withLocalizedPushOff_pushesKeepTheirText_forOlderAppBuilds() {
+    MessageNotificationService svc = service();
+    org.springframework.test.util.ReflectionTestUtils.setField(svc, "localizedPush", false);
+    when(messageQueryService.resolveDisplayName(SENDER)).thenReturn(SENDER); // unresolved name
+
+    svc.notifyNewMessage(SENDER, message("{\"url\":\"/api/uploads/x\"}", "image", List.of()));
+
+    verify(fcmService, timeout(1000))
+        .sendPushNotification(
+            eq(RECIPIENT), eq(PushText.of("New message")), eq(PushText.of("[Photo]")), eq(CONV));
   }
 
   @Test
@@ -303,6 +323,7 @@ class MessageNotificationServiceTest {
             fcmService,
             externalBotRepository,
             aiPersonaRepository);
+    org.springframework.test.util.ReflectionTestUtils.setField(svc, "localizedPush", true);
     when(conversationQueryService.getParticipants(CONV)).thenReturn(List.of(SENDER, RECIPIENT));
 
     svc.notifyNewMessage(SENDER, message("Hello", "text", List.of()));

@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -37,6 +38,14 @@ public class MessageNotificationService {
   private final ExternalBotRepository externalBotRepository;
   private final AiPersonaRepository aiPersonaRepository;
 
+  /**
+   * Fixed push wording as device-localized keys (true) or English text (false, the default). Keys
+   * need the strings shipped in mobile 1.4.0: an older iOS build shows the key itself, so turn this
+   * on (PUSH_LOCALIZED=true) only once every installed app is updated.
+   */
+  @Value("${app.push.localized:false}")
+  private boolean localizedPush;
+
   /** Longest assistant reply we put in a banner or push; the full text is in the chat. */
   private static final int PREVIEW_MAX_CHARS = 200;
 
@@ -46,8 +55,10 @@ public class MessageNotificationService {
   /** Sender id (and name) of an anonymous system notice. */
   private static final String SYSTEM_SENDER = "system";
 
-  /** Push title (localization key) for a sender whose name cannot be resolved — never their id. */
+  /** Push title for a sender whose name cannot be resolved — never their id. */
   private static final String UNKNOWN_SENDER_TITLE_KEY = "push_title_new_message";
+
+  private static final String UNKNOWN_SENDER_TITLE = "New message";
 
   /**
    * Notify all participants except the sender. Runs asynchronously — callers on the hot send path
@@ -124,7 +135,7 @@ public class MessageNotificationService {
     String senderDisplayName = resolveSenderName(senderId, conversationId);
     PushText pushTitle =
         senderDisplayName.equals(senderId)
-            ? PushText.localized(UNKNOWN_SENDER_TITLE_KEY)
+            ? fixedText(UNKNOWN_SENDER_TITLE_KEY, UNKNOWN_SENDER_TITLE)
             : PushText.of(senderDisplayName);
     String type = response.type() != null ? response.type() : "text";
     String content = response.content() != null ? response.content() : "";
@@ -205,12 +216,17 @@ public class MessageNotificationService {
         // FCM rejects payloads over 4 KB — and sendAsync swallows that — so a long text message
         // (up to 10,000 chars) silently produced no push at all. Always send a preview.
       case "text", "ai" -> PushText.of(preview(content));
-      case "image" -> PushText.localized("push_body_photo");
-      case "video" -> PushText.localized("push_body_video");
-      case "voice" -> PushText.localized("push_body_voice");
-      case "file" -> PushText.localized("push_body_file");
-      case "sticker" -> PushText.localized("push_body_sticker");
-      default -> PushText.localized("push_body_new_message");
+      case "image" -> fixedText("push_body_photo", "[Photo]");
+      case "video" -> fixedText("push_body_video", "[Video]");
+      case "voice" -> fixedText("push_body_voice", "[Voice message]");
+      case "file" -> fixedText("push_body_file", "[File]");
+      case "sticker" -> fixedText("push_body_sticker", "[Sticker]");
+      default -> fixedText("push_body_new_message", "New message");
     };
+  }
+
+  /** A fixed wording: its localization key, or the English text for pre-1.4.0 app builds. */
+  private PushText fixedText(String key, String english) {
+    return localizedPush ? PushText.localized(key) : PushText.of(english);
   }
 }

@@ -189,6 +189,7 @@ services:
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:?run bootstrap.sh}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:?run bootstrap.sh}
       CALL_TRANSPORT: ${CALL_TRANSPORT:-mesh}
+      PUSH_LOCALIZED: ${PUSH_LOCALIZED:-false}
     depends_on:
       mongo:
         condition: service_healthy
