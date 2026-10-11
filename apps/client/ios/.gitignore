@@ -32,3 +32,6 @@ Runner/GeneratedPluginRegistrant.*
 !default.mode2v3
 !default.pbxuser
 !default.perspectivev3
+
+# Package.resolved Xcode regenerates on open; untracked, it dirties the mini checkout and stalls redeploy
+Runner.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
