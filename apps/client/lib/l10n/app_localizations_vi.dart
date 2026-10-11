@@ -1113,7 +1113,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pinnedMessagesTitle => 'Tin nhắn đã ghim';
 
   @override
-  String get pinLimitReached => 'Bạn chỉ có thể ghim tối đa 5 tin nhắn';
+  String pinLimitReached(int max) {
+    return 'Bạn chỉ có thể ghim tối đa $max tin nhắn';
+  }
 
   @override
   String get cannotPinCall => 'Không thể ghim cuộc gọi';
@@ -1433,6 +1435,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get aiErrRateLimited =>
       'Quá nhiều yêu cầu AI. Vui lòng chậm lại và thử lại sau giây lát.';
+
+  @override
+  String get aiErrForbidden =>
+      'Bạn không có quyền truy cập cuộc trò chuyện này nên AI không thể trả lời tại đây.';
 
   @override
   String get feedbackHelpful => 'Hữu ích';
@@ -3637,6 +3643,31 @@ class AppLocalizationsVi extends AppLocalizations {
   String get callConnectionLost => 'Cuộc gọi bị ngắt do mất kết nối';
 
   @override
+  String get callErrUnavailable => 'Hiện không thể gọi. Vui lòng thử lại sau.';
+
+  @override
+  String get callErrNotFound => 'Cuộc gọi này không còn tồn tại.';
+
+  @override
+  String get callErrEnded => 'Cuộc gọi này đã kết thúc.';
+
+  @override
+  String get callErrNotSfu =>
+      'Không thể tham gia cuộc gọi này từ đây. Vui lòng gọi lại.';
+
+  @override
+  String get callErrForbidden => 'Bạn không thể tham gia cuộc gọi này.';
+
+  @override
+  String callErrPeerNeverJoined(String name) {
+    return 'Không thể kết nối với $name. Vui lòng thử lại.';
+  }
+
+  @override
+  String get groupCallJoinFailed =>
+      'Không thể tham gia cuộc gọi. Vui lòng thử lại.';
+
+  @override
   String get callSpeaker => 'Loa ngoài';
 
   @override
@@ -3810,6 +3841,14 @@ class AppLocalizationsVi extends AppLocalizations {
       'Email này đã được liên kết với một tài khoản đăng nhập khác';
 
   @override
+  String get authErrTooManyOtpRequests =>
+      'Bạn đã yêu cầu quá nhiều mã OTP. Vui lòng thử lại sau 10 phút.';
+
+  @override
+  String get authErrSocialProviderUnsupported =>
+      'Phương thức đăng nhập này không được hỗ trợ.';
+
+  @override
   String get aiActionConfirm => 'Xác nhận';
 
   @override
@@ -3862,6 +3901,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get aiActionFieldWhen => 'Thời gian';
+
+  @override
+  String get aiActionFieldCc => 'CC';
+
+  @override
+  String get aiActionFieldBcc => 'BCC';
+
+  @override
+  String get aiActionFieldAttendees => 'Khách mời';
 
   @override
   String get aiActionStatusConfirmed => 'Đã thực hiện';
@@ -4263,6 +4311,29 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get adminAuditActionSensitiveSkillRun => 'Chạy kỹ năng nhạy cảm';
+
+  @override
+  String get adminAuditActionSsoEnforcementChanged => 'Thay đổi “Bắt buộc SSO”';
+
+  @override
+  String get adminAuditActionMfaEnrolled => 'Thiết lập xác thực hai lớp';
+
+  @override
+  String get adminAuditActionMfaDisabled => 'Tắt xác thực hai lớp';
+
+  @override
+  String get adminAuditActionMfaReset =>
+      'Đặt lại xác thực hai lớp của thành viên';
+
+  @override
+  String get adminAuditActionMfaBackupCodesRegenerated => 'Tạo lại mã dự phòng';
+
+  @override
+  String get adminAuditActionMfaVerifiedBackupCode =>
+      'Đăng nhập bằng mã dự phòng';
+
+  @override
+  String get adminAuditActionRolePresetRemoved => 'Gỡ bỏ vai trò mặc định';
 
   @override
   String get adminAuditTargetWorkspace => 'Workspace';

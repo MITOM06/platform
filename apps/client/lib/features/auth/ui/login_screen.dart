@@ -33,6 +33,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _ssoEnabled = false;
   bool _ssoEnforced = false;
 
+  /// Google sign-in is configured on this deployment (`/auth/sso/info`
+  /// `googleEnabled`; absent or unknown ⇒ shown).
+  bool _googleEnabled = true;
+
   @override
   void initState() {
     super.initState();
@@ -44,6 +48,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         setState(() {
           _ssoEnabled = info.enabled;
           _ssoEnforced = info.enforced;
+          _googleEnabled = info.googleEnabled;
         });
       }
     });
@@ -77,9 +82,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   String _friendlyError(BuildContext context, Object error) {
-    if (error is DioException) {
-      return authErrorToString(context, error);
-    }
+    // A code maps to its own message; none (a 429 from the throttler, no
+    // response at all) to the right category — never "action failed".
+    if (error is DioException) return authErrorMessage(context, error);
     final msg = error.toString();
     if (msg.contains('network') || msg.contains('connect')) {
       return context.l10n.errNetwork;
@@ -125,6 +130,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         auth is AuthUnauthenticated && auth.reason == kSsoRequired;
     final showSso = _ssoEnabled || ssoRequired;
     final emphasiseSso = showSso && (ssoRequired || _ssoEnforced);
+    final showGoogle = _googleEnabled;
 
     return Scaffold(
       // No decorative accent orbs: the accent means "primary action" only
@@ -248,48 +254,55 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // OAuth divider
-                  StaggeredEntrance(
-                    index: 2,
-                    child: Row(
-                      children: [
-                        Expanded(
-                            child: Divider(color: AppTheme.hairline(context))),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            context.l10n.orContinueWith,
-                            style: TextStyle(
-                                color: AppTheme.mutedText(context),
-                                fontSize: 12),
+                  // OAuth divider — only when there is something to continue
+                  // with (Google can be switched off on the server).
+                  if (showGoogle || showSso) ...[
+                    StaggeredEntrance(
+                      index: 2,
+                      child: Row(
+                        children: [
+                          Expanded(
+                              child:
+                                  Divider(color: AppTheme.hairline(context))),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              context.l10n.orContinueWith,
+                              style: TextStyle(
+                                  color: AppTheme.mutedText(context),
+                                  fontSize: 12),
+                            ),
                           ),
-                        ),
-                        Expanded(
-                            child: Divider(color: AppTheme.hairline(context))),
-                      ],
+                          Expanded(
+                              child:
+                                  Divider(color: AppTheme.hairline(context))),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
+                  ],
                   if (emphasiseSso) ...[
                     const SsoSignInButton(emphasised: true),
                     const SizedBox(height: 12),
                   ],
-                  StaggeredEntrance(
-                    index: 3,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _launchOAuth('google'),
-                      icon: const GoogleLogoIcon(size: 18),
-                      label: Text(context.l10n.loginWithGoogle),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor:
-                            Theme.of(context).colorScheme.onSurface,
-                        side: BorderSide(color: AppTheme.hairline(context)),
+                  if (showGoogle)
+                    StaggeredEntrance(
+                      index: 3,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _launchOAuth('google'),
+                        icon: const GoogleLogoIcon(size: 18),
+                        label: Text(context.l10n.loginWithGoogle),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onSurface,
+                          side: BorderSide(color: AppTheme.hairline(context)),
+                        ),
                       ),
                     ),
-                  ),
 
                   if (showSso && !emphasiseSso) ...[
-                    const SizedBox(height: 12),
+                    if (showGoogle) const SizedBox(height: 12),
                     const SsoSignInButton(),
                   ],
 

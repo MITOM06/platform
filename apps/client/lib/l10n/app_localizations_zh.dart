@@ -1097,7 +1097,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinnedMessagesTitle => '置顶消息';
 
   @override
-  String get pinLimitReached => '最多只能置顶 5 条消息';
+  String pinLimitReached(int max) {
+    return '最多只能置顶 $max 条消息';
+  }
 
   @override
   String get cannotPinCall => '通话无法置顶';
@@ -1413,6 +1415,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiErrRateLimited => 'AI 请求过于频繁。请稍后再试。';
+
+  @override
+  String get aiErrForbidden => '你无权访问此对话，因此 AI 无法在此回复。';
 
   @override
   String get feedbackHelpful => '有帮助';
@@ -3513,6 +3518,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get callConnectionLost => '连接中断，通话已结束';
 
   @override
+  String get callErrUnavailable => '通话暂时不可用，请稍后再试。';
+
+  @override
+  String get callErrNotFound => '此通话已不存在。';
+
+  @override
+  String get callErrEnded => '此通话已结束。';
+
+  @override
+  String get callErrNotSfu => '无法从这里加入此通话，请重新拨打。';
+
+  @override
+  String get callErrForbidden => '你无法加入此通话。';
+
+  @override
+  String callErrPeerNeverJoined(String name) {
+    return '无法连接到 $name，请重试。';
+  }
+
+  @override
+  String get groupCallJoinFailed => '无法加入通话，请重试。';
+
+  @override
   String get callSpeaker => '扬声器';
 
   @override
@@ -3673,6 +3701,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authErrSocialAccountConflict => '此邮箱已关联到其他登录账号';
 
   @override
+  String get authErrTooManyOtpRequests => '你请求的验证码次数过多。请在 10 分钟后重试。';
+
+  @override
+  String get authErrSocialProviderUnsupported => '不支持此登录方式。';
+
+  @override
   String get aiActionConfirm => '确认';
 
   @override
@@ -3725,6 +3759,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiActionFieldWhen => '时间';
+
+  @override
+  String get aiActionFieldCc => '抄送';
+
+  @override
+  String get aiActionFieldBcc => '密送';
+
+  @override
+  String get aiActionFieldAttendees => '参与者';
 
   @override
   String get aiActionStatusConfirmed => '已完成';
@@ -4111,6 +4154,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminAuditActionSensitiveSkillRun => '运行了敏感技能';
+
+  @override
+  String get adminAuditActionSsoEnforcementChanged => '更改了“要求 SSO”';
+
+  @override
+  String get adminAuditActionMfaEnrolled => '设置了双重验证';
+
+  @override
+  String get adminAuditActionMfaDisabled => '关闭了双重验证';
+
+  @override
+  String get adminAuditActionMfaReset => '重置了成员的双重验证';
+
+  @override
+  String get adminAuditActionMfaBackupCodesRegenerated => '重新生成了备用码';
+
+  @override
+  String get adminAuditActionMfaVerifiedBackupCode => '使用备用码登录';
+
+  @override
+  String get adminAuditActionRolePresetRemoved => '移除了预设角色';
 
   @override
   String get adminAuditTargetWorkspace => '工作区';

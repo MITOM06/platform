@@ -119,6 +119,9 @@ String _codeToString(
       return l10n.authErrOtpResendCooldown(ttl);
     case 'OTP_SEND_FAILED':
       return l10n.authErrOtpSendFailed;
+    // Forgot-password asked for too many codes (10-minute window).
+    case 'TOO_MANY_OTP_REQUESTS':
+      return l10n.authErrTooManyOtpRequests;
 
     // ── Email / validation errors ────────────────────────────────────────────
     case 'EMAIL_NOT_FOUND':
@@ -274,6 +277,9 @@ String _codeToString(
     // ── Social / misc errors ─────────────────────────────────────────────────
     case 'SOCIAL_EMAIL_UNAVAILABLE':
       return l10n.authErrSocialEmailUnavailable;
+    // `/auth/social/<provider>/init` for a provider this server does not offer.
+    case 'SOCIAL_PROVIDER_UNSUPPORTED':
+      return l10n.authErrSocialProviderUnsupported;
     case 'LOGIN_CODE_INVALID':
       return l10n.authErrLoginCodeInvalid;
     case 'USER_NOT_FOUND':

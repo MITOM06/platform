@@ -156,10 +156,13 @@ class AuthNotifier extends _$AuthNotifier {
     if (_lastProcessedOAuthCode == code) return;
     _lastProcessedOAuthCode = code;
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final next = await AsyncValue.guard(() async {
       final result = await ref.read(authRepositoryProvider).exchangeCode(code);
       return _afterFirstFactor(result);
     });
+    // Google refused for an SSO-enforced domain: the same login notice as a
+    // refused password sign-in (web: /login?reason=SSO_REQUIRED).
+    state = _ssoNoticeOr(next);
 
     // Fallback: if the router's refreshListenable didn't fire (race between
     // deep-link handling and GoRouter init), navigate explicitly so the user

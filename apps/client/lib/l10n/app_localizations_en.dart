@@ -1112,7 +1112,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinnedMessagesTitle => 'Pinned Messages';
 
   @override
-  String get pinLimitReached => 'You can pin up to 5 messages';
+  String pinLimitReached(int max) {
+    return 'You can pin up to $max messages';
+  }
 
   @override
   String get cannotPinCall => 'Calls can\'t be pinned';
@@ -1432,6 +1434,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get aiErrRateLimited =>
       'Too many AI requests. Please slow down and try again shortly.';
+
+  @override
+  String get aiErrForbidden =>
+      'You don\'t have access to this conversation, so the AI can\'t reply here.';
 
   @override
   String get feedbackHelpful => 'Helpful';
@@ -3634,6 +3640,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callConnectionLost => 'Call dropped — connection lost';
 
   @override
+  String get callErrUnavailable =>
+      'Calls aren\'t available right now. Please try again later.';
+
+  @override
+  String get callErrNotFound => 'This call no longer exists.';
+
+  @override
+  String get callErrEnded => 'This call has already ended.';
+
+  @override
+  String get callErrNotSfu =>
+      'This call can\'t be joined from here. Please call again.';
+
+  @override
+  String get callErrForbidden => 'You can\'t join this call.';
+
+  @override
+  String callErrPeerNeverJoined(String name) {
+    return 'Couldn\'t connect to $name. Please try again.';
+  }
+
+  @override
+  String get groupCallJoinFailed =>
+      'Couldn\'t join the call. Please try again.';
+
+  @override
   String get callSpeaker => 'Speaker';
 
   @override
@@ -3829,6 +3861,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'This email is already linked to a different sign-in account';
 
   @override
+  String get authErrTooManyOtpRequests =>
+      'You\'ve requested too many OTP codes. Please try again in 10 minutes.';
+
+  @override
+  String get authErrSocialProviderUnsupported =>
+      'This sign-in method isn\'t supported.';
+
+  @override
   String get aiActionConfirm => 'Confirm';
 
   @override
@@ -3881,6 +3921,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiActionFieldWhen => 'When';
+
+  @override
+  String get aiActionFieldCc => 'Cc';
+
+  @override
+  String get aiActionFieldBcc => 'Bcc';
+
+  @override
+  String get aiActionFieldAttendees => 'Guests';
 
   @override
   String get aiActionStatusConfirmed => 'Done';
@@ -4287,6 +4336,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminAuditActionSensitiveSkillRun => 'Sensitive skill run';
+
+  @override
+  String get adminAuditActionSsoEnforcementChanged => '“Require SSO” changed';
+
+  @override
+  String get adminAuditActionMfaEnrolled => 'Two-factor authentication set up';
+
+  @override
+  String get adminAuditActionMfaDisabled =>
+      'Two-factor authentication turned off';
+
+  @override
+  String get adminAuditActionMfaReset =>
+      'Member\'s two-factor authentication reset';
+
+  @override
+  String get adminAuditActionMfaBackupCodesRegenerated =>
+      'Backup codes regenerated';
+
+  @override
+  String get adminAuditActionMfaVerifiedBackupCode =>
+      'Signed in with a backup code';
+
+  @override
+  String get adminAuditActionRolePresetRemoved => 'Preset role retired';
 
   @override
   String get adminAuditTargetWorkspace => 'Workspace';

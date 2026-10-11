@@ -1100,7 +1100,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pinnedMessagesTitle => 'ピン留めしたメッセージ';
 
   @override
-  String get pinLimitReached => 'ピン留めできるメッセージは5件までです';
+  String pinLimitReached(int max) {
+    return 'ピン留めできるメッセージは$max件までです';
+  }
 
   @override
   String get cannotPinCall => '通話はピン留めできません';
@@ -1416,6 +1418,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get aiErrRateLimited => 'AI へのリクエストが多すぎます。少し時間をおいて再試行してください。';
+
+  @override
+  String get aiErrForbidden => 'この会話へのアクセス権がないため、AI はここで返信できません。';
 
   @override
   String get feedbackHelpful => '役に立った';
@@ -3556,6 +3561,29 @@ class AppLocalizationsJa extends AppLocalizations {
   String get callConnectionLost => '接続が切れたため通話が終了しました';
 
   @override
+  String get callErrUnavailable => '現在通話を利用できません。しばらくしてからもう一度お試しください。';
+
+  @override
+  String get callErrNotFound => 'この通話は存在しません。';
+
+  @override
+  String get callErrEnded => 'この通話はすでに終了しています。';
+
+  @override
+  String get callErrNotSfu => 'ここからこの通話に参加できません。もう一度発信してください。';
+
+  @override
+  String get callErrForbidden => 'この通話に参加できません。';
+
+  @override
+  String callErrPeerNeverJoined(String name) {
+    return '$name に接続できませんでした。もう一度お試しください。';
+  }
+
+  @override
+  String get groupCallJoinFailed => '通話に参加できませんでした。もう一度お試しください。';
+
+  @override
   String get callSpeaker => 'スピーカー';
 
   @override
@@ -3716,6 +3744,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get authErrSocialAccountConflict => 'このメールは別のサインインアカウントに既にリンクされています';
 
   @override
+  String get authErrTooManyOtpRequests =>
+      'OTP コードのリクエストが多すぎます。10 分後にもう一度お試しください。';
+
+  @override
+  String get authErrSocialProviderUnsupported => 'このサインイン方法はサポートされていません。';
+
+  @override
   String get aiActionConfirm => '確認';
 
   @override
@@ -3768,6 +3803,15 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get aiActionFieldWhen => '日時';
+
+  @override
+  String get aiActionFieldCc => 'CC';
+
+  @override
+  String get aiActionFieldBcc => 'BCC';
+
+  @override
+  String get aiActionFieldAttendees => '参加者';
 
   @override
   String get aiActionStatusConfirmed => '完了';
@@ -4156,6 +4200,27 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get adminAuditActionSensitiveSkillRun => '機密スキルを実行';
+
+  @override
+  String get adminAuditActionSsoEnforcementChanged => '「SSO を必須にする」を変更';
+
+  @override
+  String get adminAuditActionMfaEnrolled => '2 段階認証を設定';
+
+  @override
+  String get adminAuditActionMfaDisabled => '2 段階認証をオフ';
+
+  @override
+  String get adminAuditActionMfaReset => 'メンバーの 2 段階認証をリセット';
+
+  @override
+  String get adminAuditActionMfaBackupCodesRegenerated => 'バックアップコードを再生成';
+
+  @override
+  String get adminAuditActionMfaVerifiedBackupCode => 'バックアップコードでサインイン';
+
+  @override
+  String get adminAuditActionRolePresetRemoved => 'プリセットロールを廃止';
 
   @override
   String get adminAuditTargetWorkspace => 'ワークスペース';

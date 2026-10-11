@@ -1121,7 +1121,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pinnedMessagesTitle => 'Mensajes fijados';
 
   @override
-  String get pinLimitReached => 'Puedes fijar hasta 5 mensajes';
+  String pinLimitReached(int max) {
+    return 'Puedes fijar hasta $max mensajes';
+  }
 
   @override
   String get cannotPinCall => 'Las llamadas no se pueden fijar';
@@ -1445,6 +1447,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get aiErrRateLimited =>
       'Demasiadas solicitudes de IA. Reduce la velocidad e inténtalo de nuevo en breve.';
+
+  @override
+  String get aiErrForbidden =>
+      'No tienes acceso a esta conversación, así que la IA no puede responder aquí.';
 
   @override
   String get feedbackHelpful => 'Útil';
@@ -3663,6 +3669,32 @@ class AppLocalizationsEs extends AppLocalizations {
       'La llamada se cortó por pérdida de conexión';
 
   @override
+  String get callErrUnavailable =>
+      'Las llamadas no están disponibles en este momento. Inténtalo de nuevo más tarde.';
+
+  @override
+  String get callErrNotFound => 'Esta llamada ya no existe.';
+
+  @override
+  String get callErrEnded => 'Esta llamada ya ha terminado.';
+
+  @override
+  String get callErrNotSfu =>
+      'No puedes unirte a esta llamada desde aquí. Vuelve a llamar.';
+
+  @override
+  String get callErrForbidden => 'No puedes unirte a esta llamada.';
+
+  @override
+  String callErrPeerNeverJoined(String name) {
+    return 'No se pudo conectar con $name. Inténtalo de nuevo.';
+  }
+
+  @override
+  String get groupCallJoinFailed =>
+      'No se pudo unir a la llamada. Inténtalo de nuevo.';
+
+  @override
   String get callSpeaker => 'Altavoz';
 
   @override
@@ -3860,6 +3892,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Este correo ya está vinculado a otra cuenta de inicio de sesión';
 
   @override
+  String get authErrTooManyOtpRequests =>
+      'Has solicitado demasiados códigos OTP. Inténtalo de nuevo en 10 minutos.';
+
+  @override
+  String get authErrSocialProviderUnsupported =>
+      'Este método de inicio de sesión no es compatible.';
+
+  @override
   String get aiActionConfirm => 'Confirmar';
 
   @override
@@ -3912,6 +3952,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get aiActionFieldWhen => 'Cuándo';
+
+  @override
+  String get aiActionFieldCc => 'CC';
+
+  @override
+  String get aiActionFieldBcc => 'CCO';
+
+  @override
+  String get aiActionFieldAttendees => 'Invitados';
 
   @override
   String get aiActionStatusConfirmed => 'Hecho';
@@ -4325,6 +4374,32 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get adminAuditActionSensitiveSkillRun =>
       'Habilidad sensible ejecutada';
+
+  @override
+  String get adminAuditActionSsoEnforcementChanged => '«Exigir SSO» cambiado';
+
+  @override
+  String get adminAuditActionMfaEnrolled =>
+      'Verificación en dos pasos configurada';
+
+  @override
+  String get adminAuditActionMfaDisabled =>
+      'Verificación en dos pasos desactivada';
+
+  @override
+  String get adminAuditActionMfaReset =>
+      'Verificación en dos pasos del miembro restablecida';
+
+  @override
+  String get adminAuditActionMfaBackupCodesRegenerated =>
+      'Códigos de respaldo regenerados';
+
+  @override
+  String get adminAuditActionMfaVerifiedBackupCode =>
+      'Inicio de sesión con un código de respaldo';
+
+  @override
+  String get adminAuditActionRolePresetRemoved => 'Rol predefinido retirado';
 
   @override
   String get adminAuditTargetWorkspace => 'Espacio de trabajo';

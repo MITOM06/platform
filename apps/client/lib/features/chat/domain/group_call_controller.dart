@@ -136,7 +136,8 @@ class GroupCallController extends _$GroupCallController {
     } catch (e) {
       debugPrint('Group call media error: $e');
       _releaseConversation();
-      rethrow;
+      // The mic / camera could not be opened — what the caller tells the user.
+      throw const MediaAccessException();
     }
 
     state = state.copyWith(

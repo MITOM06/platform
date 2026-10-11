@@ -11,12 +11,22 @@ import 'system_message_text.dart';
 /// `system.*` code, an embedded user id, an internal upload URL, or a
 /// serialized JSON payload (file / meeting-summary messages). Shared by
 /// [ReplyQuote] and [ConversationTile] so both surfaces stay in sync.
-String messagePreviewFromContent(BuildContext context, String content) {
+///
+/// [resolveName] (with the message's [senderId]) names the people of a system
+/// message; without it they are generic.
+String messagePreviewFromContent(
+  BuildContext context,
+  String content, {
+  String senderId = kSystemSenderId,
+  SystemNameResolver? resolveName,
+}) {
   final l10n = context.l10n;
 
   // System control messages are stored as machine codes (never display text).
   if (content.startsWith('system.')) {
-    return _systemPreviewLabel(context, content);
+    return systemPreviewText(l10n, content,
+        senderId: resolveName == null ? kSystemSenderId : senderId,
+        resolveName: resolveName);
   }
 
   // Structured JSON payloads: file messages ({url,name,size}) and meeting
@@ -59,17 +69,19 @@ String _attachmentLabelForUrl(BuildContext context, String content) {
   return l10n.attachmentLabel;
 }
 
-/// Localized label for a `system.*` control message. Previews have no
-/// participant context, so names are generic; unknown codes fall back to a
-/// generic localized label rather than leaking the raw code + user ids.
-String _systemPreviewLabel(BuildContext context, String content) =>
-    systemPreviewText(context.l10n, content);
-
 /// Sanitized preview of a conversation's last message: recalled → the
 /// localized "message recalled" label; typed media/system/AI previews by
 /// `type` when the server sent one; else the content-sniffing preview.
-String lastMessagePreview(BuildContext context, LastMessageModel last) {
+/// [resolveName] names the people of a system message (see
+/// `systemNameResolver`), as the bubble does.
+String lastMessagePreview(
+  BuildContext context,
+  LastMessageModel last, {
+  SystemNameResolver? resolveName,
+}) {
   final l10n = context.l10n;
+  // A system message's actor is its sender — only meaningful with names.
+  final sender = resolveName == null ? kSystemSenderId : last.senderId;
   if (last.recalled) return l10n.messageRecalled;
   switch (last.type) {
     case 'image':
@@ -85,7 +97,9 @@ String lastMessagePreview(BuildContext context, LastMessageModel last) {
     case 'meeting_summary':
       return '[${l10n.meetingSummaryTitle}]';
     case 'system':
-      return systemPreviewText(l10n, last.content);
+      return systemPreviewText(l10n, last.content,
+          senderId: sender, resolveName: resolveName);
   }
-  return messagePreviewFromContent(context, last.content);
+  return messagePreviewFromContent(context, last.content,
+      senderId: sender, resolveName: resolveName);
 }

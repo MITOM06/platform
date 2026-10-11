@@ -12,6 +12,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/otp_6box_input.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../../auth/domain/auth_provider.dart';
+import '../../utils/phone_verify_error.dart';
+import 'phone_sheet_action.dart';
 
 enum _VerifyStep { phone, otp }
 
@@ -105,7 +107,20 @@ class _PhoneVerificationBottomSheetState
       forceResendingToken: _resendToken,
       verificationCompleted: (PhoneAuthCredential credential) async {
         // Android auto-verification (SMS auto-read) — complete immediately.
-        await _signInWithCredential(credential);
+        try {
+          await _signInWithCredential(credential);
+        } catch (e) {
+          if (!mounted) return;
+          final message = phoneVerifyErrorText(context.l10n, e);
+          setState(() {
+            _sending = false;
+            if (_step == _VerifyStep.otp) {
+              _otpError = message;
+            } else {
+              _phoneError = message;
+            }
+          });
+        }
       },
       verificationFailed: (FirebaseAuthException e) {
         if (!mounted) return;
@@ -161,19 +176,13 @@ class _PhoneVerificationBottomSheetState
         smsCode: code,
       );
       await _signInWithCredential(credential);
-    } on FirebaseAuthException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _verifying = false;
-        _otpError = e.code == 'invalid-verification-code'
-            ? context.l10n.phoneOtpInvalid
-            : context.l10n.phoneOtpExpired;
-      });
     } catch (e) {
       if (!mounted) return;
+      // Wrong / expired code, a number already taken, no network — each
+      // says so (never the raw error).
       setState(() {
         _verifying = false;
-        _otpError = context.l10n.phoneOtpInvalid;
+        _otpError = phoneVerifyErrorText(context.l10n, e);
       });
     }
   }
@@ -298,22 +307,10 @@ class _PhoneVerificationBottomSheetState
           ),
         ],
         const SizedBox(height: 16),
-        FilledButton(
-          style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.accent(context),
-            foregroundColor: Colors.white,
-          ),
+        PhoneSheetAction(
+          label: l10n.phoneSendOtp,
+          busy: _sending,
           onPressed: (_sending || !_hasValidNumber) ? null : _sendOtp,
-          child: _sending
-              ? const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation(Colors.white),
-                  ),
-                )
-              : Text(l10n.phoneSendOtp),
         ),
       ],
     );
@@ -343,22 +340,10 @@ class _PhoneVerificationBottomSheetState
           ),
         ],
         const SizedBox(height: 16),
-        FilledButton(
-          style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.accent(context),
-            foregroundColor: Colors.white,
-          ),
+        PhoneSheetAction(
+          label: l10n.phoneConfirm,
+          busy: _verifying,
           onPressed: _verifying ? null : _verify,
-          child: _verifying
-              ? const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation(Colors.white),
-                  ),
-                )
-              : Text(l10n.phoneConfirm),
         ),
         const SizedBox(height: 12),
         Center(

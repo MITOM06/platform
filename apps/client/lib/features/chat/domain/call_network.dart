@@ -188,6 +188,13 @@ class ReconnectWatch {
     });
   }
 
+  /// Our side is back: stop the recovery beat, keep the window (and its
+  /// countdown) for the other side.
+  void stopRetrying() {
+    _ticker?.cancel();
+    _ticker = null;
+  }
+
   void _startTicker(void Function() tick, Duration every) {
     tick();
     _ticker = Timer.periodic(every, (_) => tick());

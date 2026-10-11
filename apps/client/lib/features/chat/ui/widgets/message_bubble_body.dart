@@ -119,7 +119,7 @@ class MessageBubbleBody extends StatelessWidget {
               ),
             ],
           )
-        else if (message.isAiUnavailable)
+        else if (message.isAiUnavailable || message.isAiForbidden)
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -128,7 +128,11 @@ class MessageBubbleBody extends StatelessWidget {
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
-                  context.l10n.aiErrUnavailable,
+                  // No access to the conversation (AI_FORBIDDEN) is not an
+                  // outage: say which.
+                  message.isAiForbidden
+                      ? context.l10n.aiErrForbidden
+                      : context.l10n.aiErrUnavailable,
                   style: TextStyle(
                       color: Theme.of(context).colorScheme.error, fontSize: 14),
                 ),

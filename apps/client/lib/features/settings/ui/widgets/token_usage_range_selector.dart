@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 
 /// Row of preset chips (7d / 30d / 90d) plus a chip showing the active custom
@@ -21,6 +22,9 @@ class TokenUsageRangeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    // Locale-aware short dates (14/10 · 10/14 · 10/14 …), never a fixed pattern.
+    final shortDate = DateFormat.Md(l10n.localeName);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Row(
@@ -30,7 +34,7 @@ class TokenUsageRangeSelector extends StatelessWidget {
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
-                label: Text('${days}d'),
+                label: Text(l10n.durationShortDays(days)), // "7d", "7 j", "7日"
                 selected: selected,
                 onSelected: (_) => onPreset(days),
                 selectedColor: AppTheme.accent(context).withValues(alpha: 0.2),
@@ -48,8 +52,8 @@ class TokenUsageRangeSelector extends StatelessWidget {
               avatar: Icon(Icons.calendar_today_rounded,
                   size: 14, color: AppTheme.accent(context)),
               label: Text(
-                '${DateFormat('dd/MM').format(customRange!.start)} – '
-                '${DateFormat('dd/MM').format(customRange!.end)}',
+                '${shortDate.format(customRange!.start)} – '
+                '${shortDate.format(customRange!.end)}',
                 style: TextStyle(fontSize: 11, color: AppTheme.accent(context)),
               ),
               backgroundColor: AppTheme.accent(context).withValues(alpha: 0.1),

@@ -382,6 +382,8 @@ String aiErrorSentinelFor(String? code, String error) {
       return kAiUnavailableSentinel;
     case kAiErrCodeEmptyResponse:
       return kAiEmptyResponseSentinel;
+    case kAiErrCodeForbidden:
+      return kAiForbiddenSentinel;
     case null:
       // Pre-code payloads: heuristic on the text.
       return error.toLowerCase().contains('quota')

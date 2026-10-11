@@ -12,7 +12,7 @@ mixin _ChatActionsMixin on _$ChatNotifier {
   Future<void> sendMessage(String content, {String type = 'text'});
 
   /// Most messages a conversation can pin (chat-service MAX_PINNED_MESSAGES).
-  static const int maxPinnedMessages = 5;
+  static const int maxPinnedMessages = kMaxPinnedMessages;
 
   /// Message ids with a reaction request in flight. Guards against rapid
   /// repeated double-taps spamming the server with add/remove churn before the
@@ -216,7 +216,7 @@ mixin _ChatActionsMixin on _$ChatNotifier {
     if (current == null) return false;
     if (current.pinnedMessages.any((p) => p.id == message.id)) return true;
     if (current.pinnedMessages.length >= maxPinnedMessages) {
-      _showError(_l10n.pinLimitReached);
+      _showError(_l10n.pinLimitReached(maxPinnedMessages));
       return false;
     }
     final pinned = [
