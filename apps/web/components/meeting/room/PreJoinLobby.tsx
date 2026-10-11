@@ -11,7 +11,7 @@ import { loadDevicePrefs, pickDeviceId, safeLocalStorage, saveDevicePrefs } from
 import type { MeetingRoomController } from '@/lib/meetings/meeting-room-controller'
 import { isManager, prejoinIntent } from '@/lib/meetings/permissions'
 import { formatMeetingRange } from '@/lib/meetings/schedule'
-import { useCallStore } from '@/lib/store/call.store'
+import { selectInCall, useCallStore } from '@/lib/store/call.store'
 import { useMeetingRoomStore } from '@/lib/store/meeting.store'
 import { DeviceSelects } from './DeviceSelects'
 import { PrejoinPreview } from './PrejoinPreview'
@@ -47,9 +47,7 @@ export function PreJoinLobby({ meeting, controller, busy, myName, myAvatarUrl }:
     return muteOnEntry ? { ...stored, micOn: false } : stored
   })
   const preview = useMediaPreview(prefs, !busy)
-  const inCall = useCallStore(
-    (s) => s.status === 'outgoing' || s.status === 'connected' || s.groupCallId !== null,
-  )
+  const inCall = useCallStore(selectInCall)
   const intent = prejoinIntent(meeting)
   const startsLater =
     meeting.scheduledStart && Date.parse(meeting.scheduledStart) > now.getTime()

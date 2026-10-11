@@ -157,6 +157,14 @@ const initialGroup = {
   speakingIds: [] as string[],
 }
 
+/**
+ * This device is busy with a call: placing one, joining one it (or the other
+ * side) answered, in one, or in a group call. A ring not yet answered is not.
+ */
+export function selectInCall(s: { status: CallStatus; groupCallId: string | null }): boolean {
+  return s.status === 'outgoing' || s.status === 'connecting' || s.status === 'connected' || s.groupCallId !== null
+}
+
 /** A new 1-on-1: cameras follow the call kind, nothing is poor or waiting yet. */
 function callMedia(video: boolean) {
   return {
