@@ -132,15 +132,20 @@ function text(value: unknown, max = 200): string | undefined {
   return v.length > max ? `${v.slice(0, max - 1)}…` : v
 }
 
-/** A generic action's parameter rows shown at most (the card stays a card). */
-const MAX_GENERIC_FIELDS = 8
+/**
+ * Server contract for a generic action's `fields`: at most 6 `{label, value}`
+ * strings; labels humanized from the arg key ("Channel", "Due date"); values a
+ * scalar or a ", "-joined list, capped at 120 characters; id-like and
+ * secret-like args already stripped. Enforced here too, defensively.
+ */
+const MAX_GENERIC_FIELDS = 6
+const MAX_FIELD_VALUE = 120
 /** UUIDs (with or without dashes): connector-side ids, never a value worth reading. */
 const UUID_RE = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i
 
 /**
- * `fields` of a generic action → "label: value" rows. Labels arrive humanized
- * from the server (English parameter names); anything malformed, empty or that
- * looks like a raw id is dropped (.claude/rules/no-raw-system-data-in-ui.md).
+ * `fields` of a generic action → "label: value" rows. Anything malformed, empty
+ * or that looks like a raw id is dropped (.claude/rules/no-raw-system-data-in-ui.md).
  */
 function genericFieldLines(fields: unknown): ActionSummaryLine[] {
   if (!Array.isArray(fields)) return []
@@ -148,7 +153,7 @@ function genericFieldLines(fields: unknown): ActionSummaryLine[] {
   for (const field of fields) {
     const row = field as { label?: unknown; value?: unknown } | null
     const label = text(row?.label, 60)
-    const value = text(row?.value)
+    const value = text(row?.value, MAX_FIELD_VALUE)
     if (!label || !value || looksLikeRawId(value) || UUID_RE.test(value)) continue
     lines.push({ label, value })
     if (lines.length === MAX_GENERIC_FIELDS) break
@@ -188,13 +193,13 @@ export function actionSummaryView(
     const v = text(value)
     if (v) lines.push({ labelKey, value: v })
   }
-  // cc / bcc / bodyPreview / attendees / fields are optional: older servers send none.
+  // cc / bcc / attendees / fields are optional: older servers send none. An email's
+  // body is never on the card (the card is seen by the whole group).
   if (kind === 'send_email' || kind === 'draft_email') {
     push('aiActionFieldTo', summary?.to)
     push('aiActionFieldCc', summary?.cc)
     push('aiActionFieldBcc', summary?.bcc)
     push('aiActionFieldSubject', summary?.subject)
-    push('aiActionFieldBody', summary?.bodyPreview)
   } else if (kind === 'create_event' || kind === 'update_event') {
     push('aiActionFieldTitle', summary?.title)
     const start = text(summary?.start, 64)

@@ -88,7 +88,7 @@ describe('AiActionCard', () => {
     expect(setStatus).toHaveBeenCalledWith('a-3', 'confirmed')
   })
 
-  it('lists Cc / Bcc / the message preview under the headline, with localized labels', () => {
+  it('lists Cc / Bcc under the headline with localized labels — never the message body', () => {
     renderCard({
       id: 'a-4', status: 'pending', expiresAt: future, requesterId: 'me', provider: 'gmail',
       summary: { kind: 'send_email', to: 'x@y.io', cc: 'c@y.io', bcc: 'b@y.io', bodyPreview: 'See you at 3' },
@@ -96,8 +96,8 @@ describe('AiActionCard', () => {
     expect(screen.getByText('aiActionFieldCc')).toBeInTheDocument()
     expect(screen.getByText('c@y.io')).toBeInTheDocument()
     expect(screen.getByText('aiActionFieldBcc')).toBeInTheDocument()
-    expect(screen.getByText('aiActionFieldBody')).toBeInTheDocument()
-    expect(screen.getByText('See you at 3')).toBeInTheDocument()
+    expect(screen.getByText('b@y.io')).toBeInTheDocument()
+    expect(document.body.textContent).not.toContain('See you at 3')
   })
 
   it('shows a generic action\'s fields as "label: value" rows — the labels come humanized from the server', () => {

@@ -1013,7 +1013,6 @@
     "publicChannelDepartmentHint": "Les groupes de département ne peuvent pas être des canaux publics.",
     "aiActionFieldCc": "Cc",
     "aiActionFieldBcc": "Cci",
-    "aiActionFieldBody": "Message",
     "aiActionFieldAttendees": "Invités",
     "aiForbidden": "L'assistant ne peut pas répondre ici : vous n'avez pas accès à cette conversation."
   },

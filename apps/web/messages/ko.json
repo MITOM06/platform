@@ -1013,7 +1013,6 @@
     "publicChannelDepartmentHint": "부서 그룹은 공개 채널로 만들 수 없습니다.",
     "aiActionFieldCc": "참조",
     "aiActionFieldBcc": "숨은 참조",
-    "aiActionFieldBody": "본문",
     "aiActionFieldAttendees": "참석자",
     "aiForbidden": "어시스턴트가 여기에서 답할 수 없습니다. 이 대화에 대한 접근 권한이 없습니다."
   },

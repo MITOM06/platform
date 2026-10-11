@@ -1013,7 +1013,6 @@
     "publicChannelDepartmentHint": "Nhóm phòng ban không thể là kênh công khai.",
     "aiActionFieldCc": "Cc",
     "aiActionFieldBcc": "Bcc",
-    "aiActionFieldBody": "Nội dung",
     "aiActionFieldAttendees": "Khách mời",
     "aiForbidden": "Trợ lý không thể trả lời ở đây: bạn không có quyền truy cập cuộc trò chuyện này."
   },

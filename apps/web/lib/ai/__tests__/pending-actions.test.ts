@@ -108,11 +108,11 @@ describe('action summary', () => {
     expect(actionSummaryView(undefined, 'en').titleKey).toBe('aiActionGeneric')
   })
 
-  it('email: Cc, Bcc and a preview of the message when the server sends them', () => {
+  it('email: Cc and Bcc when the server sends them — never the message body (group privacy)', () => {
     const v = actionSummaryView(
       {
         kind: 'draft_email', to: 'a@x.io', cc: 'b@x.io, c@x.io', bcc: 'd@x.io', subject: 'Q3',
-        bodyPreview: 'Hi team,\n\nthe numbers   are in.',
+        body: 'Hi team, the numbers are in.', bodyPreview: 'Hi team, the numbers are in.',
       },
       'en',
     )
@@ -121,7 +121,6 @@ describe('action summary', () => {
       { labelKey: 'aiActionFieldCc', value: 'b@x.io, c@x.io' },
       { labelKey: 'aiActionFieldBcc', value: 'd@x.io' },
       { labelKey: 'aiActionFieldSubject', value: 'Q3' },
-      { labelKey: 'aiActionFieldBody', value: 'Hi team, the numbers are in.' },
     ])
   })
 
@@ -184,6 +183,36 @@ describe('action summary', () => {
 
   it('generic: a fields value that is not a list is ignored', () => {
     expect(actionSummaryView({ kind: 'generic', fields: 'Title: x' }, 'en').lines).toEqual([])
+  })
+
+  it('generic: follows the server contract — at most 6 rows, values up to 120 characters', () => {
+    const fields = Array.from({ length: 8 }, (_, i) => ({ label: `Field ${i + 1}`, value: `v${i + 1}` }))
+    const six = actionSummaryView({ kind: 'generic', fields }, 'en').lines
+    expect(six.map((l) => ('label' in l ? l.label : l.labelKey))).toEqual([
+      'Field 1', 'Field 2', 'Field 3', 'Field 4', 'Field 5', 'Field 6',
+    ])
+
+    const joined = 'alpha, beta, gamma' // an array arg, joined by the server
+    const exact = 'x'.repeat(120)
+    const longer = 'y'.repeat(130)
+    const v = actionSummaryView(
+      {
+        kind: 'generic',
+        fields: [
+          { label: 'Due date', value: '2026-10-20' },
+          { label: 'Channel', value: joined },
+          { label: 'Notes', value: exact },
+          { label: 'Other', value: longer },
+        ],
+      },
+      'en',
+    )
+    expect(v.lines).toEqual([
+      { label: 'Due date', value: '2026-10-20' },
+      { label: 'Channel', value: joined },
+      { label: 'Notes', value: exact },
+      { label: 'Other', value: `${'y'.repeat(119)}…` },
+    ])
   })
 })
 

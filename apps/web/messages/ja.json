@@ -1013,7 +1013,6 @@
     "publicChannelDepartmentHint": "部門グループは公開チャンネルにできません。",
     "aiActionFieldCc": "Cc",
     "aiActionFieldBcc": "Bcc",
-    "aiActionFieldBody": "本文",
     "aiActionFieldAttendees": "参加者",
     "aiForbidden": "アシスタントはここでは返信できません。この会話へのアクセス権がありません。"
   },

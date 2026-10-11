@@ -1013,7 +1013,6 @@
     "publicChannelDepartmentHint": "部门群组不能设为公开频道。",
     "aiActionFieldCc": "抄送",
     "aiActionFieldBcc": "密送",
-    "aiActionFieldBody": "正文",
     "aiActionFieldAttendees": "参与者",
     "aiForbidden": "助手无法在此回复：你无权访问此对话。"
   },
