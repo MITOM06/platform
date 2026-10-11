@@ -1,4 +1,4 @@
-import type { CallEndReason } from './call-end-notice'
+import type { CallEndReason, CallNoticeKey } from './call-end-notice'
 
 /**
  * UI callbacks for a 1-on-1 call, set by the call components on the
@@ -11,9 +11,10 @@ export interface CallHooks {
   /**
    * Fired after a call ended, so the UI can explain why (see `endNoticeKey`).
    * `byPeer` = the other side ended it. `peerName` is captured before the
-   * store is reset.
+   * store is reset. `notice`, when given, is the precise message to show
+   * instead of the one `reason` implies (e.g. calls are unavailable).
    */
-  onEndNotice: ((reason: CallEndReason, byPeer: boolean, peerName: string) => void) | null
+  onEndNotice: ((reason: CallEndReason, byPeer: boolean, peerName: string, notice?: CallNoticeKey) => void) | null
 }
 
 /** UI callbacks for a group call, set on the `groupCallManager` façade. */
@@ -22,4 +23,6 @@ export interface GroupCallHooks {
   onLocalStream: ((s: MediaStream) => void) | null
   /** Fired when teardown completes so the overlay can unmount. */
   onEnded: (() => void) | null
+  /** Joining the call's room failed: the `call.*` message saying why. */
+  onJoinError: ((notice: CallNoticeKey) => void) | null
 }

@@ -43,6 +43,11 @@ function appInviteHref(token: string, ua: string): string {
 interface Props {
   token: string
   preview: InvitationPreview
+  /**
+   * "Continue with Google" is configured (`/auth/sso/info` `googleEnabled`).
+   * Default true: an older server does not say, and offered it before.
+   */
+  googleEnabled?: boolean
 }
 
 /** Invitation title + "X invited you to join Y (as Z)". */
@@ -87,7 +92,7 @@ function InvitedEmail({ email }: { email: string }) {
  * (`SSO_REQUIRED`), the card switches to "Sign in with SSO", which consumes the
  * pending invitation.
  */
-export function InviteAcceptForm({ token, preview }: Props) {
+export function InviteAcceptForm({ token, preview, googleEnabled = true }: Props) {
   const t = useTranslations('auth')
   const router = useRouter()
   const [ssoRequired, setSsoRequired] = useState(false)
@@ -224,15 +229,17 @@ export function InviteAcceptForm({ token, preview }: Props) {
           </div>
         </div>
 
-        <div className="space-y-1">
-          <Button type="button" variant="outline" className="w-full h-11 gap-2" onClick={onGoogle}>
-            <GoogleIcon className="h-4 w-4" />
-            {t('invite.continueWithGoogle')}
-          </Button>
-          <p className="text-xs text-muted-foreground text-center">
-            {t('invite.googleHint', { email: preview.email })}
-          </p>
-        </div>
+        {googleEnabled && (
+          <div className="space-y-1">
+            <Button type="button" variant="outline" className="w-full h-11 gap-2" onClick={onGoogle}>
+              <GoogleIcon className="h-4 w-4" />
+              {t('invite.continueWithGoogle')}
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              {t('invite.googleHint', { email: preview.email })}
+            </p>
+          </div>
+        )}
 
         {isMobile && (
           <Button asChild variant="outline" className="w-full h-11 gap-2">
@@ -243,11 +250,14 @@ export function InviteAcceptForm({ token, preview }: Props) {
           </Button>
         )}
 
-        <div className="flex items-center gap-3">
-          <Separator className="flex-1" />
-          <span className="text-xs text-muted-foreground">{t('invite.orSetPassword')}</span>
-          <Separator className="flex-1" />
-        </div>
+        {/* "Or set a password" only separates it from another way in above. */}
+        {(googleEnabled || isMobile) && (
+          <div className="flex items-center gap-3">
+            <Separator className="flex-1" />
+            <span className="text-xs text-muted-foreground">{t('invite.orSetPassword')}</span>
+            <Separator className="flex-1" />
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1">

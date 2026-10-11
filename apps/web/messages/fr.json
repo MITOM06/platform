@@ -321,7 +321,9 @@
     "errMfaAlreadyEnrolled": "L'authentification à deux facteurs est déjà configurée pour ce compte. Veuillez vous reconnecter.",
     "errMfaResetForbidden": "Vous n’avez pas l’autorisation de réinitialiser l’authentification à deux facteurs de ce membre.",
     "errMfaResetSelfForbidden": "Vous ne pouvez pas réinitialiser votre propre authentification à deux facteurs.",
-    "errMfaRequiredByRole": "Votre rôle exige l'authentification à deux facteurs : elle ne peut pas être désactivée."
+    "errMfaRequiredByRole": "Votre rôle exige l'authentification à deux facteurs : elle ne peut pas être désactivée.",
+    "errTooManyRequests": "Trop de requêtes. Patientez un instant puis réessayez.",
+    "errNetwork": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez."
   },
   "settings": {
     "title": "Paramètres",
@@ -1008,7 +1010,11 @@
     "aiTraceToolSkipped": "Indisponible",
     "aiToolConnector": "Application connectée",
     "aiToolGeneric": "Outil",
-    "publicChannelDepartmentHint": "Les groupes de département ne peuvent pas être des canaux publics."
+    "publicChannelDepartmentHint": "Les groupes de département ne peuvent pas être des canaux publics.",
+    "aiActionFieldCc": "Cc",
+    "aiActionFieldBcc": "Cci",
+    "aiActionFieldAttendees": "Invités",
+    "aiForbidden": "L'assistant ne peut pas répondre ici : vous n'avez pas accès à cette conversation."
   },
   "aiHub": {
     "title": "Hub IA",
@@ -1687,7 +1693,14 @@
     "memberMfaResetTitle": "Réinitialiser l'authentification à deux facteurs ?",
     "memberMfaResetConfirm": "{name} sera déconnecté(e) de tous ses appareils et devra reconfigurer l'authentification à deux facteurs à sa prochaine connexion.",
     "memberMfaResetDone": "L'authentification à deux facteurs a été réinitialisée",
-    "memberMfaResetConfirmOptional": "{name} sera déconnecté(e) sur tous les appareils et l'authentification à deux facteurs sera désactivée. Cette personne pourra la réactiver dans les Paramètres."
+    "memberMfaResetConfirmOptional": "{name} sera déconnecté(e) sur tous les appareils et l'authentification à deux facteurs sera désactivée. Cette personne pourra la réactiver dans les Paramètres.",
+    "auditAction_role_preset_removed": "Rôle prédéfini obsolète supprimé",
+    "auditAction_sso_enforcement_changed": "Paramètre « SSO obligatoire » modifié",
+    "auditAction_mfa_enrolled": "Authentification à deux facteurs activée",
+    "auditAction_mfa_disabled": "Authentification à deux facteurs désactivée",
+    "auditAction_mfa_reset": "Authentification à deux facteurs du membre réinitialisée",
+    "auditAction_mfa_backup_codes_regenerated": "Codes de secours régénérés",
+    "auditAction_mfa_verified_backup_code": "Connexion avec un code de secours"
   },
   "call": {
     "peerFallback": "Utilisateur",
@@ -1738,7 +1751,15 @@
     "summaryOverview": "Aperçu",
     "summaryKeyPoints": "Points clés",
     "summaryActionItems": "Actions à mener",
-    "summaryUnavailable": "Résumé indisponible"
+    "summaryUnavailable": "Résumé indisponible",
+    "errUnavailable": "Les appels ne sont pas disponibles pour le moment. Réessayez plus tard.",
+    "errNotFound": "Cet appel n'existe plus.",
+    "errEnded": "Cet appel est déjà terminé.",
+    "errNotSfu": "Impossible de rejoindre cet appel depuis ici. Rappelez votre contact.",
+    "errForbidden": "Vous ne pouvez pas rejoindre cet appel.",
+    "errNetwork": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
+    "errFailed": "Impossible de connecter l'appel. Réessayez.",
+    "errStartTimeout": "Impossible de lancer l'appel : le serveur n'a pas répondu. Réessayez."
   },
   "notFound": {
     "title": "Page introuvable",

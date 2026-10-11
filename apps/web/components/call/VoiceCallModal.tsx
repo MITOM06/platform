@@ -53,7 +53,7 @@ export function VoiceCallModal() {
         </div>
         <p className="text-2xl font-semibold text-white">{peerName || t('peerFallback')}</p>
         <p className="text-sm text-white/60">
-          {connected ? formatDuration(duration) : t('calling')}
+          {connected ? formatDuration(duration) : t(status === 'connecting' ? 'connecting' : 'calling')}
         </p>
         <CallConnectionNotice />
 

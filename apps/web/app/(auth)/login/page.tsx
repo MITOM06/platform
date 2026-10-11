@@ -77,6 +77,8 @@ export default function LoginPage() {
   // and becomes the primary way in when the workspace requires SSO.
   const showSso = ssoNotice || sso?.enabled === true
   const emphasiseSso = showSso && (ssoNotice || sso?.enforced === true)
+  // Google sign-in unless the server says it is off (older servers omit the flag).
+  const showGoogle = sso?.googleEnabled !== false
   useEffect(() => {
     if (searchParams?.get('cleared') !== '1') return
     const timer = setTimeout(() => {
@@ -230,7 +232,8 @@ export default function LoginPage() {
 
         {showSso && !emphasiseSso && <SsoButton className="mt-3" />}
 
-        <>
+        {showGoogle && (
+          <>
             <div className="flex items-center gap-3 my-4">
               <Separator className="flex-1" />
               <span className="text-xs text-muted-foreground">{t('login.orContinueWith')}</span>
@@ -244,9 +247,9 @@ export default function LoginPage() {
                 <GoogleIcon className="h-4 w-4" />
                 {t('login.googleLogin')}
               </a>
-
             </div>
-        </>
+          </>
+        )}
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
           {t('login.inviteOnlyHint')}

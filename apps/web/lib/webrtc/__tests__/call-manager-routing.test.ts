@@ -5,13 +5,14 @@ const m = vi.hoisted(() => ({
   transport: { value: 'mesh' as 'mesh' | 'sfu' },
 }))
 vi.mock('@/lib/stomp/client', () => ({
-  stompService: { publish: m.publish, subscribe: vi.fn(() => undefined) },
+  stompService: { publish: m.publish, subscribe: vi.fn(() => undefined), subscribeDurable: vi.fn(() => () => {}) },
 }))
 vi.mock('@/lib/api/chat', () => ({ chatService: { sendMessage: vi.fn(() => Promise.resolve()) } }))
 vi.mock('@/lib/api/calls', () => ({ callsApi: { getToken: vi.fn() } }))
 vi.mock('../call-transport', () => ({ getCallTransport: () => m.transport.value }))
 
 import { callManager } from '../call-manager'
+import { SfuDirectCall } from '../sfu-call'
 import { useCallStore } from '@/lib/store/call.store'
 
 beforeEach(() => {
@@ -62,6 +63,25 @@ describe('callManager routing', () => {
     expect(useCallStore.getState().callId).toBe('c1')
     callManager.endCall('declined')
     expect(m.publish).toHaveBeenCalledWith('/app/call.decline', { callId: 'c1', reason: 'declined' })
+  })
+
+  it('call-accepted and call-merged go to the sfu engine although they carry no transport', () => {
+    const spy = vi.spyOn(SfuDirectCall.prototype, 'handleSignal')
+    const acceptedSignal = { type: 'call-accepted' as const, callId: 'c1', conversationId: 'conv', senderId: 'bob' }
+    const mergedSignal = { type: 'call-merged' as const, callId: 'c2', conversationId: 'conv', senderId: 'bob' }
+    callManager.handleSignal(acceptedSignal)
+    callManager.handleSignal(mergedSignal)
+    expect(spy).toHaveBeenCalledWith(acceptedSignal)
+    expect(spy).toHaveBeenCalledWith(mergedSignal)
+    spy.mockRestore()
+  })
+
+  it('call-blocked ends the sfu attempt it refused', async () => {
+    m.transport.value = 'sfu'
+    await callManager.startCall('bob', 'Bob', 'conv', false)
+    expect(useCallStore.getState().status).toBe('outgoing')
+    callManager.handleSignal({ type: 'call-blocked', conversationId: 'conv', senderId: 'me' })
+    expect(useCallStore.getState().status).toBe('idle')
   })
 
   it('a mesh offer during an sfu call is answered busy and leaves the sfu call alone', () => {

@@ -25,6 +25,12 @@ export default function InvitePage() {
     retry: false,
     staleTime: Infinity,
   })
+  // Same source as the login page: is "Continue with Google" configured?
+  const { data: sso } = useQuery({
+    queryKey: ['sso-info'],
+    queryFn: () => authService.getSsoInfo(),
+    staleTime: 5 * 60 * 1000,
+  })
 
   if (isPending) {
     return (
@@ -41,5 +47,6 @@ export default function InvitePage() {
     return <InviteStatusCard code={error ? parseAuthError(error).code : 'INVITATION_INVALID'} />
   }
 
-  return <InviteAcceptForm token={token} preview={data} />
+  // Hidden only when the server says Google is off (older servers omit the flag).
+  return <InviteAcceptForm token={token} preview={data} googleEnabled={sso?.googleEnabled !== false} />
 }

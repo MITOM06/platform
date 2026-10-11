@@ -216,6 +216,8 @@ export function aiStreamErrorKey(code: string | undefined): string {
       return 'aiQuotaExceeded'
     case 'AI_RATE_LIMITED':
       return 'aiRateLimited'
+    case 'AI_FORBIDDEN':
+      return 'aiForbidden'
     case 'AI_STREAM_INTERRUPTED':
       return 'aiStreamInterrupted'
     case 'AI_UNAVAILABLE':

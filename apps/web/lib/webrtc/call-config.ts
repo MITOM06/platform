@@ -17,6 +17,8 @@ export interface WebRTCSignal {
     | 'call-declined'
     /** sfu: we both tapped Call — the server answered their call for us; join it. */
     | 'call-merged'
+    /** sfu, to the caller: the callee answered (`senderId`) — stop ringing, it is connecting. */
+    | 'call-accepted'
     /** 1-on-1 in-call state from the other person (`/app/call.state`). */
     | 'state'
     /** mesh: we answered `senderId`'s call on another device — stop ringing here. */
@@ -55,6 +57,13 @@ export interface WebRTCSignal {
 export const RING_TIMEOUT_MS = 45_000
 /** Callee-side safety net, slightly longer than the caller's ring. */
 export const INCOMING_RING_TIMEOUT_MS = RING_TIMEOUT_MS + 5_000
+/**
+ * sfu caller: how long `call.start` may wait for its `call.started` (a frame
+ * lost on a dropping socket never gets one). Past it the attempt fails — and a
+ * hang-up that was waiting to cancel it stops waiting. Mirrors Flutter
+ * `SfuCallService.pendingStartDeadline`.
+ */
+export const START_TIMEOUT_MS = 15_000
 /**
  * How long a dropped 1-on-1 may try to recover (Wi-Fi ↔ 4G hand-off, a tunnel,
  * a lost network) before the call is ended; the call screen shows "waiting to

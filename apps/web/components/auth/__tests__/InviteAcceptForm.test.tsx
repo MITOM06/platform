@@ -148,3 +148,24 @@ describe('InviteAcceptForm: accept with a password (contracts 13 C, 15)', () => 
     expect(screen.getByRole('button', { name: 'auth.invite.submit' })).toBeInTheDocument()
   })
 })
+
+describe('InviteAcceptForm: Continue with Google', () => {
+  const googleButton = () => screen.queryByRole('button', { name: /auth\.invite\.continueWithGoogle/ })
+
+  beforeEach(() => vi.clearAllMocks())
+
+  it('is offered by default (an older server does not say whether Google is on)', () => {
+    render(<InviteAcceptForm token="tok-1" preview={preview} />)
+    expect(googleButton()).not.toBeNull()
+    expect(screen.getByText('auth.invite.orSetPassword')).toBeInTheDocument()
+  })
+
+  it('is hidden, with its hint and its divider, when Google sign-in is off', () => {
+    render(<InviteAcceptForm token="tok-1" preview={preview} googleEnabled={false} />)
+    expect(googleButton()).toBeNull()
+    expect(screen.queryByText(/auth\.invite\.googleHint/)).toBeNull()
+    expect(screen.queryByText('auth.invite.orSetPassword')).toBeNull()
+    // Setting a password is still there.
+    expect(screen.getByRole('button', { name: 'auth.invite.submit' })).toBeInTheDocument()
+  })
+})

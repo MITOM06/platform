@@ -2,6 +2,7 @@ import { stompService } from '@/lib/stomp/client'
 import type { CallMedia, CallParticipant, CallTransport } from '@/lib/api/types'
 import { useCallStore, type IncomingGroupCall } from '@/lib/store/call.store'
 import type { WebRTCSignal } from './call-config'
+import type { CallNoticeKey } from './call-end-notice'
 import type { GroupCallHooks } from './call-hooks'
 import { getCallTransport } from './call-transport'
 import { MeshGroupCallManager } from './mesh-group-call-manager'
@@ -17,6 +18,7 @@ type Engine = MeshGroupCallManager | SfuGroupCall
 class GroupCallManager implements GroupCallHooks {
   onLocalStream: ((s: MediaStream) => void) | null = null
   onEnded: (() => void) | null = null
+  onJoinError: ((notice: CallNoticeKey) => void) | null = null
 
   private readonly mesh = new MeshGroupCallManager(this)
   private readonly sfu = new SfuGroupCall(this)

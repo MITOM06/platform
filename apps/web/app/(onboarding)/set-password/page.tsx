@@ -12,6 +12,7 @@ import { authService } from '@/lib/api/auth'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { parseAuthError, authCodeToI18nKey } from '@/lib/auth/auth-error'
 import { APP_HOME_PATH } from '@/lib/auth/set-password-gate'
+import { performLogout } from '@/lib/auth/logout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -34,7 +35,6 @@ export default function SetPasswordPage() {
   const router = useRouter()
   const user = useAuthStore((s) => s.user)
   const updateUser = useAuthStore((s) => s.updateUser)
-  const clearAuth = useAuthStore((s) => s.clearAuth)
   const [serverError, setServerError] = useState<string | null>(null)
   const [signingOut, setSigningOut] = useState(false)
 
@@ -107,10 +107,9 @@ export default function SetPasswordPage() {
   const onSignOut = async () => {
     setSigningOut(true)
     try {
-      await fetch('/api/auth/clear-cookie', { method: 'POST' })
-      clearAuth()
-      // `?cleared=1` makes the login page wipe autofilled credentials.
-      router.push('/login?cleared=1')
+      // Same sign-out as everywhere else: revokes the server session, disconnects
+      // realtime, clears cookies + query cache, hard-navigates to /login?cleared=1.
+      await performLogout()
     } catch {
       toast.error(tLayout('logoutError'))
       setSigningOut(false)

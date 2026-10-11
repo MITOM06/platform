@@ -321,7 +321,9 @@
     "errMfaAlreadyEnrolled": "이 계정은 이미 2단계 인증이 설정되어 있습니다. 다시 로그인하세요.",
     "errMfaResetForbidden": "이 멤버의 2단계 인증을 재설정할 권한이 없습니다.",
     "errMfaResetSelfForbidden": "자신의 2단계 인증은 재설정할 수 없습니다.",
-    "errMfaRequiredByRole": "회원님의 역할은 2단계 인증이 필수이므로 끌 수 없습니다."
+    "errMfaRequiredByRole": "회원님의 역할은 2단계 인증이 필수이므로 끌 수 없습니다.",
+    "errTooManyRequests": "요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
+    "errNetwork": "서버에 연결할 수 없습니다. 네트워크를 확인하고 다시 시도하세요."
   },
   "settings": {
     "title": "설정",
@@ -1008,7 +1010,11 @@
     "aiTraceToolSkipped": "사용 불가",
     "aiToolConnector": "연결된 앱",
     "aiToolGeneric": "도구",
-    "publicChannelDepartmentHint": "부서 그룹은 공개 채널로 만들 수 없습니다."
+    "publicChannelDepartmentHint": "부서 그룹은 공개 채널로 만들 수 없습니다.",
+    "aiActionFieldCc": "참조",
+    "aiActionFieldBcc": "숨은 참조",
+    "aiActionFieldAttendees": "참석자",
+    "aiForbidden": "어시스턴트가 여기에서 답할 수 없습니다. 이 대화에 대한 접근 권한이 없습니다."
   },
   "aiHub": {
     "title": "AI 허브",
@@ -1687,7 +1693,14 @@
     "memberMfaResetTitle": "2단계 인증을 재설정할까요?",
     "memberMfaResetConfirm": "{name}님은 모든 기기에서 로그아웃되며 다음 로그인 시 2단계 인증을 다시 설정해야 합니다.",
     "memberMfaResetDone": "2단계 인증을 재설정했습니다",
-    "memberMfaResetConfirmOptional": "{name}님은 모든 기기에서 로그아웃되고 2단계 인증이 꺼집니다. 설정에서 다시 켤 수 있습니다."
+    "memberMfaResetConfirmOptional": "{name}님은 모든 기기에서 로그아웃되고 2단계 인증이 꺼집니다. 설정에서 다시 켤 수 있습니다.",
+    "auditAction_role_preset_removed": "사용 중지된 기본 역할 삭제",
+    "auditAction_sso_enforcement_changed": "SSO 필수 설정 변경",
+    "auditAction_mfa_enrolled": "2단계 인증 사용",
+    "auditAction_mfa_disabled": "2단계 인증 사용 중지",
+    "auditAction_mfa_reset": "멤버의 2단계 인증 재설정",
+    "auditAction_mfa_backup_codes_regenerated": "2단계 인증 백업 코드 재생성",
+    "auditAction_mfa_verified_backup_code": "백업 코드로 로그인"
   },
   "call": {
     "peerFallback": "사용자",
@@ -1738,7 +1751,15 @@
     "summaryOverview": "개요",
     "summaryKeyPoints": "핵심 사항",
     "summaryActionItems": "실행 항목",
-    "summaryUnavailable": "요약을 사용할 수 없습니다"
+    "summaryUnavailable": "요약을 사용할 수 없습니다",
+    "errUnavailable": "지금은 통화를 이용할 수 없습니다. 잠시 후 다시 시도하세요.",
+    "errNotFound": "이 통화는 더 이상 존재하지 않습니다.",
+    "errEnded": "이미 종료된 통화입니다.",
+    "errNotSfu": "여기에서는 이 통화에 참여할 수 없습니다. 다시 전화해 주세요.",
+    "errForbidden": "이 통화에 참여할 수 없습니다.",
+    "errNetwork": "서버에 연결할 수 없습니다. 네트워크를 확인하고 다시 시도하세요.",
+    "errFailed": "통화를 연결하지 못했습니다. 다시 시도하세요.",
+    "errStartTimeout": "통화를 시작하지 못했습니다. 서버가 응답하지 않습니다. 다시 시도하세요."
   },
   "notFound": {
     "title": "페이지를 찾을 수 없습니다",

@@ -321,7 +321,9 @@
     "errMfaAlreadyEnrolled": "La autenticación de dos factores ya está configurada en esta cuenta. Vuelve a iniciar sesión.",
     "errMfaResetForbidden": "No tienes permiso para restablecer la autenticación de dos factores de este miembro.",
     "errMfaResetSelfForbidden": "No puedes restablecer tu propia autenticación de dos factores.",
-    "errMfaRequiredByRole": "Tu rol exige la autenticación de dos factores, así que no se puede desactivar."
+    "errMfaRequiredByRole": "Tu rol exige la autenticación de dos factores, así que no se puede desactivar.",
+    "errTooManyRequests": "Demasiadas solicitudes. Espera un momento y vuelve a intentarlo.",
+    "errNetwork": "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo."
   },
   "settings": {
     "title": "Ajustes",
@@ -1008,7 +1010,11 @@
     "aiTraceToolSkipped": "No disponible",
     "aiToolConnector": "App conectada",
     "aiToolGeneric": "Herramienta",
-    "publicChannelDepartmentHint": "Los grupos de departamento no pueden ser canales públicos."
+    "publicChannelDepartmentHint": "Los grupos de departamento no pueden ser canales públicos.",
+    "aiActionFieldCc": "CC",
+    "aiActionFieldBcc": "CCO",
+    "aiActionFieldAttendees": "Invitados",
+    "aiForbidden": "El asistente no puede responder aquí: no tienes acceso a esta conversación."
   },
   "aiHub": {
     "title": "Centro de IA",
@@ -1687,7 +1693,14 @@
     "memberMfaResetTitle": "¿Restablecer la autenticación de dos factores?",
     "memberMfaResetConfirm": "{name} cerrará sesión en todos sus dispositivos y deberá configurar de nuevo la autenticación de dos factores en su próximo inicio de sesión.",
     "memberMfaResetDone": "Se ha restablecido la autenticación de dos factores",
-    "memberMfaResetConfirmOptional": "{name} cerrará sesión en todos los dispositivos y se desactivará la autenticación de dos factores. Podrá volver a activarla en Ajustes."
+    "memberMfaResetConfirmOptional": "{name} cerrará sesión en todos los dispositivos y se desactivará la autenticación de dos factores. Podrá volver a activarla en Ajustes.",
+    "auditAction_role_preset_removed": "Rol predefinido en desuso eliminado",
+    "auditAction_sso_enforcement_changed": "Ajuste de SSO obligatorio cambiado",
+    "auditAction_mfa_enrolled": "Autenticación de dos factores activada",
+    "auditAction_mfa_disabled": "Autenticación de dos factores desactivada",
+    "auditAction_mfa_reset": "Autenticación de dos factores del miembro restablecida",
+    "auditAction_mfa_backup_codes_regenerated": "Códigos de respaldo de dos factores regenerados",
+    "auditAction_mfa_verified_backup_code": "Inicio de sesión con un código de respaldo"
   },
   "call": {
     "peerFallback": "Usuario",
@@ -1738,7 +1751,15 @@
     "summaryOverview": "Resumen",
     "summaryKeyPoints": "Puntos clave",
     "summaryActionItems": "Tareas",
-    "summaryUnavailable": "Resumen no disponible"
+    "summaryUnavailable": "Resumen no disponible",
+    "errUnavailable": "Las llamadas no están disponibles en este momento. Inténtalo de nuevo más tarde.",
+    "errNotFound": "Esta llamada ya no existe.",
+    "errEnded": "Esta llamada ya ha terminado.",
+    "errNotSfu": "No puedes unirte a esta llamada desde aquí. Vuelve a llamar.",
+    "errForbidden": "No puedes unirte a esta llamada.",
+    "errNetwork": "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
+    "errFailed": "No se pudo conectar la llamada. Inténtalo de nuevo.",
+    "errStartTimeout": "No se pudo iniciar la llamada: el servidor no respondió. Inténtalo de nuevo."
   },
   "notFound": {
     "title": "Página no encontrada",

@@ -12,6 +12,7 @@ const changePassword = vi.fn()
 const getMe = vi.fn()
 const toastSuccess = vi.fn()
 const toastError = vi.fn()
+const performLogout = vi.fn<() => Promise<void>>()
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace, push }),
@@ -28,6 +29,7 @@ vi.mock('@/lib/api/auth', () => ({
     getMe: () => getMe(),
   },
 }))
+vi.mock('@/lib/auth/logout', () => ({ performLogout: () => performLogout() }))
 
 const STRONG = 'Str0ng!pass'
 const user: AuthUser = { id: 'u1', email: 'jane@acme.com', displayName: 'Jane', hasPassword: false, mustSetPassword: true }
@@ -134,13 +136,25 @@ describe('/set-password page', () => {
     expect(alert).not.toHaveTextContent(/Mongo/)
   })
 
-  it('signs out to the login screen', async () => {
+  it('signs out through the shared logout: server session revoked, realtime and cache cleared', async () => {
+    performLogout.mockResolvedValue(undefined)
     render(<SetPasswordPage />)
     fireEvent.click(screen.getByRole('button', { name: 'layout.menuLogout' }))
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/login?cleared=1'))
-    expect(fetchMock).toHaveBeenCalledWith('/api/auth/clear-cookie', { method: 'POST' })
-    expect(useAuthStore.getState().user).toBeNull()
+    await waitFor(() => expect(performLogout).toHaveBeenCalledTimes(1))
+    // performLogout itself hard-navigates to /login?cleared=1 — no cookie-only shortcut.
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(push).not.toHaveBeenCalled()
     expect(changePassword).not.toHaveBeenCalled()
+  })
+
+  it('a failed sign-out says so and lets the user try again', async () => {
+    performLogout.mockRejectedValue(new Error('boom'))
+    render(<SetPasswordPage />)
+    const button = screen.getByRole('button', { name: 'layout.menuLogout' })
+    fireEvent.click(button)
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith('layout.logoutError'))
+    expect(button).not.toBeDisabled()
   })
 })
