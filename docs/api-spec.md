@@ -837,7 +837,10 @@ only via `/app/meet.host`, the notes switch via `PATCH`). Differences:
   cannot be resolved; body = the text / AI preview (≤ 200 chars), else a loc key resolved on the
   device (`body_loc_key` / APNs `loc-key`): `push_body_photo|video|file|voice|sticker`,
   `push_body_new_message` for any other type. Native strings: `apps/client` `strings.xml` /
-  `Localizable.strings`, kept equal to the ARB by `native_push_strings_test.dart`.
+  `Localizable.strings`, kept equal to the ARB by `native_push_strings_test.dart`. The keys are
+  sent only with `PUSH_LOCALIZED=true` (chat-service); the default sends the English text
+  (`New message`, `[Photo]`…) because mobile builds before 1.4.0 lack the strings and iOS would
+  show the key itself.
 - **User Notifications Queue:** `/user/queue/notifications`  
   Payload: `{ "type": "NEW_MESSAGE" | "MENTIONED_YOU", "conversationId", "senderId", "senderName",
   "content", "messageType", "messageId", "createdAt" }` (all strings). System notices (group

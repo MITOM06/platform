@@ -2,7 +2,7 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
-import { DatabaseRedisModule, SharedJwtStrategy } from '@platform/database';
+import { DatabaseRedisModule, SharedJwtStrategy, mongoConnectionOptions } from '@platform/database';
 import configuration from './config/configuration';
 import { HealthModule } from './health/health.module';
 import { ConnectionsModule } from './connections/connections.module';
@@ -13,9 +13,9 @@ import { InternalModule } from './internal/internal.module';
 import { BotModule } from './bot/bot.module';
 
 const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
-  useFactory: (configService: ConfigService) => ({
-    uri: configService.get<string>('mongoUri'),
-  }),
+  // IPv4-only lookup: see mongoConnectionOptions (Atlas AAAA SERVFAIL under Docker Desktop).
+  useFactory: (configService: ConfigService) =>
+    mongoConnectionOptions(configService.get<string>('mongoUri')),
   inject: [ConfigService],
 }) as unknown as DynamicModule;
 
