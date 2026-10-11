@@ -118,3 +118,25 @@ class MfaErrorText extends StatelessWidget {
     );
   }
 }
+
+/// One numbered instruction line of an enrollment ("1. Install …"). Shared by
+/// `/mfa` enroll mode and "Turn on 2FA" in Settings → Security.
+class MfaStepText extends StatelessWidget {
+  final String text;
+  const MfaStepText(this.text, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontSize: 14,
+          height: 1.4,
+        ),
+      ),
+    );
+  }
+}

@@ -28,6 +28,14 @@ optionally `LIVEKIT_API_URL`; all blank means calls stay peer-to-peer and
 meetings report themselves unavailable. Runbooks:
 `docs/superpowers/runbooks/livekit.md`, `docs/superpowers/runbooks/self-host.md`.
 
+## Push notifications — localized wording
+
+`PUSH_LOCALIZED=true` (chat-service) sends the fixed wording of message pushes
+(`New message`, `[Photo]`, `[Voice message]`…) as keys each phone shows in its own
+language. Leave it `false` (the default, English text) until every installed mobile
+app is 1.4.0 or newer: older builds do not have the strings, and iOS would show the
+key itself.
+
 ## The one variable
 
 Both clients resolve every backend URL from a single value, because the reverse

@@ -12,8 +12,10 @@ import 'mfa_code_field.dart';
 import 'mfa_frame.dart';
 import 'mfa_secret_card.dart';
 
-/// Enroll mode of `/mfa` (`enrollmentRequired == true`) — first sign-in since
-/// the member's role became privileged: install an authenticator app, add the
+/// Enroll mode of `/mfa` (`enrollmentRequired == true`) — the first sign-in
+/// of an Owner / Admin-like member, whose role requires 2FA (incl. right after
+/// a password invitation accept, a promotion, or an admin reset; contract 15):
+/// install an authenticator app, add the
 /// account (QR / open in app / manual key), then confirm one 6-digit code.
 /// Success moves on to the one-time backup codes (`AuthMfaBackupCodes`) —
 /// still without a session (contract 11).
@@ -91,11 +93,11 @@ class _MfaEnrollViewState extends ConsumerState<MfaEnrollView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _Step(l10n.mfaEnrollStepInstall),
-          _Step(l10n.mfaEnrollStepScan),
+          MfaStepText(l10n.mfaEnrollStepInstall),
+          MfaStepText(l10n.mfaEnrollStepScan),
           MfaSecretCard(enrollment: data),
           const SizedBox(height: 20),
-          _Step(l10n.mfaEnrollStepCode),
+          MfaStepText(l10n.mfaEnrollStepCode),
           MfaErrorText(_errorText),
           MfaCodeField(
             key: const ValueKey('mfa-enroll-code'),
@@ -111,27 +113,6 @@ class _MfaEnrollViewState extends ConsumerState<MfaEnrollView> {
             child: Text(l10n.mfaEnrollConfirm),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// One numbered instruction line.
-class _Step extends StatelessWidget {
-  final String text;
-  const _Step(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface,
-          fontSize: 14,
-          height: 1.4,
-        ),
       ),
     );
   }

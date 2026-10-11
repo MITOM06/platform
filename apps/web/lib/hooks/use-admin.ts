@@ -59,6 +59,7 @@ export function useUpdateWorkspace() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-workspace'] })
       qc.invalidateQueries({ queryKey: ['me-capabilities'] })
+      qc.invalidateQueries({ queryKey: ['sso-info'] })
       toast.success(t('toastSaved'))
     },
     onError,
@@ -159,7 +160,8 @@ export function useSetMemberStatus() {
 }
 
 /**
- * Owner only: reset a member's 2FA (`POST /admin/members/:id/mfa/reset`).
+ * Reset a member's 2FA (`POST /admin/members/:id/mfa/reset`): an Owner on anyone
+ * else, a member manager on non-admin members (see `canResetMemberMfa`).
  * MFA_RESET_FORBIDDEN / MFA_RESET_SELF_FORBIDDEN / MEMBER_NOT_FOUND → localized toast.
  */
 export function useResetMemberMfa() {

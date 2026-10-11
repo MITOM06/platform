@@ -119,6 +119,9 @@ String _codeToString(
       return l10n.authErrOtpResendCooldown(ttl);
     case 'OTP_SEND_FAILED':
       return l10n.authErrOtpSendFailed;
+    // Forgot-password asked for too many codes (10-minute window).
+    case 'TOO_MANY_OTP_REQUESTS':
+      return l10n.authErrTooManyOtpRequests;
 
     // ── Email / validation errors ────────────────────────────────────────────
     case 'EMAIL_NOT_FOUND':
@@ -246,6 +249,9 @@ String _codeToString(
       return l10n.authErrMfaResetForbidden;
     case 'MFA_RESET_SELF_FORBIDDEN':
       return l10n.authErrMfaResetSelfForbidden;
+    // Turning 2FA off (contract 15) while the role makes it mandatory.
+    case 'MFA_REQUIRED_BY_ROLE':
+      return l10n.authErrMfaRequiredByRole;
 
     // ── Token / session errors ───────────────────────────────────────────────
     case 'TOKEN_INVALID':
@@ -271,6 +277,9 @@ String _codeToString(
     // ── Social / misc errors ─────────────────────────────────────────────────
     case 'SOCIAL_EMAIL_UNAVAILABLE':
       return l10n.authErrSocialEmailUnavailable;
+    // `/auth/social/<provider>/init` for a provider this server does not offer.
+    case 'SOCIAL_PROVIDER_UNSUPPORTED':
+      return l10n.authErrSocialProviderUnsupported;
     case 'LOGIN_CODE_INVALID':
       return l10n.authErrLoginCodeInvalid;
     case 'USER_NOT_FOUND':
@@ -279,8 +288,27 @@ String _codeToString(
       return l10n.authErrSsoDisabled;
     case 'SSO_DOMAIN_NOT_ALLOWED':
       return l10n.authErrSsoDomainNotAllowed;
+    // "Require SSO" (contract 13 §C): password / Google / forgot-password /
+    // invitation accept refused for an SSO-enforced email domain.
+    case 'SSO_REQUIRED':
+      return l10n.authErrSsoRequired;
+    // The company IdP could not be reached (OIDC discovery failed); retryable.
+    case 'SSO_UNAVAILABLE':
+      return l10n.authErrSsoUnavailable;
+    // Admin → SSO: enforcement needs SSO on, allowed domains and OIDC env.
+    case 'SSO_ENFORCE_NOT_READY':
+      return l10n.authErrSsoEnforceNotReady;
     case 'SSO_EMAIL_UNVERIFIED':
+    // Typed OIDC codes of the SSO error deep link / error bodies (web
+    // `auth-error.ts`): unverified email, a lost / forged state, a failed
+    // code exchange with the IdP.
+    case 'OIDC_EMAIL_UNVERIFIED':
       return l10n.authErrSsoEmailUnverified;
+    case 'OIDC_NO_STATE':
+    case 'OIDC_BAD_STATE':
+      return l10n.authErrSsoStateInvalid;
+    case 'OIDC_EXCHANGE_FAILED':
+      return l10n.authErrSsoExchangeFailed;
     case 'SOCIAL_ACCOUNT_CONFLICT':
       return l10n.authErrSocialAccountConflict;
 

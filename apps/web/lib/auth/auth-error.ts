@@ -1,13 +1,21 @@
-import { AxiosError } from 'axios'
+import { isAxiosError, type AxiosError } from 'axios'
 
 interface AuthErrorBody {
   code: string
   params?: Record<string, string | number>
 }
 
-/** Extract { code, params } from an AxiosError thrown by auth-service. */
+/**
+ * Extract { code, params } from an AxiosError thrown by auth-service.
+ *
+ * Failures without a business code get a client-side one so every auth form can
+ * say what happened instead of "an error occurred": `TOO_MANY_REQUESTS` for a
+ * throttled request (the rate limiter answers 429 with no code), `NETWORK_ERROR`
+ * when no response arrived at all (offline, DNS, server down).
+ */
 export function parseAuthError(err: unknown): { code: string; params?: Record<string, string | number> } {
   const e = err as AxiosError<{ code?: string; params?: Record<string, string | number>; message?: unknown }>
+  if (isAxiosError(err) && !err.response) return { code: 'NETWORK_ERROR' }
   const data = e?.response?.data
   // Business errors: NestJS replies with the thrown object verbatim, so the
   // body is `{ code, params }` at the top level (no `message` wrapper).
@@ -24,6 +32,7 @@ export function parseAuthError(err: unknown): { code: string; params?: Record<st
   if (Array.isArray(msg) && msg.length > 0) {
     return { code: String(msg[0]) }
   }
+  if (e?.response?.status === 429) return { code: 'TOO_MANY_REQUESTS' }
   return { code: 'GENERIC_ERROR' }
 }
 
@@ -111,9 +120,17 @@ export function authCodeToI18nKey(code: string): string {
     MFA_ALREADY_ENROLLED: 'errMfaAlreadyEnrolled',
     MFA_RESET_FORBIDDEN: 'errMfaResetForbidden',
     MFA_RESET_SELF_FORBIDDEN: 'errMfaResetSelfForbidden',
+    // Turning 2FA off is refused: the role (Owner/Admin-like) requires it (contract 15).
+    MFA_REQUIRED_BY_ROLE: 'errMfaRequiredByRole',
     // SSO
     SSO_DISABLED: 'errSsoDisabled',
     SSO_DOMAIN_NOT_ALLOWED: 'errSsoDomainNotAllowed',
+    // Require-SSO switch (contract 13 C): password / Google / reset are off for
+    // this email domain; the admin tried to require SSO before it was set up.
+    SSO_REQUIRED: 'errSsoRequired',
+    // The company IdP could not be reached (OIDC discovery failed); retryable.
+    SSO_UNAVAILABLE: 'errSsoUnavailable',
+    SSO_ENFORCE_NOT_READY: 'errSsoEnforceNotReady',
     SSO_EMAIL_UNVERIFIED: 'errSsoEmailUnverified',
     OIDC_EMAIL_UNVERIFIED: 'errSsoEmailUnverified',
     SOCIAL_ACCOUNT_CONFLICT: 'errSocialAccountConflict',
@@ -127,6 +144,9 @@ export function authCodeToI18nKey(code: string): string {
     VAL_DISPLAYNAME_REQUIRED: 'errValDisplayNameRequired',
     VAL_DISPLAYNAME_TOO_SHORT: 'errValDisplayNameTooShort',
     VAL_PASSWORD_TOO_SHORT: 'errValPasswordTooShort',
+    // Client-side codes for failures without a business code (see parseAuthError)
+    TOO_MANY_REQUESTS: 'errTooManyRequests',
+    NETWORK_ERROR: 'errNetwork',
     // Fallback
     GENERIC_ERROR: 'errGeneric',
   }

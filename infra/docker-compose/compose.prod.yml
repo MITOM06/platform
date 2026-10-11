@@ -112,6 +112,15 @@ services:
       # Everything is served from the single Caddy domain. main.ts refuses to
       # boot in production without this (no fallback to localhost origins).
       CORS_ORIGINS: ${CORS_ORIGINS:-https://${DOMAIN}}
+      # Where Google / SSO sign-ins land (the web app's callback page). main.ts
+      # refuses to boot in production without it.
+      WEB_REDIRECT_URL: ${WEB_REDIRECT_URL:-https://${DOMAIN}/oauth-callback}
+      # Google sign-in is optional. Blank = the strategy is not registered and the
+      # button answers SOCIAL_PROVIDER_UNSUPPORTED instead of a 500. Caddy strips
+      # /api/auth and the route is /auth/google/callback, hence the doubled segment.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-https://${DOMAIN}/api/auth/auth/google/callback}
       # Client IP for rate limiting. Caddy is the public edge here and rewrites
       # X-Forwarded-For with the real peer, so trusting exactly one hop makes
       # req.ip the client instead of Caddy (otherwise every user shares one
@@ -156,7 +165,10 @@ services:
       # guard passes; point one of them back at localhost and it refuses to boot.
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATA_MONGODB_URI: ${SPRING_DATA_MONGODB_URI:-mongodb://mongo:27017/platform}
-      SPRING_DATA_REDIS_URL: ${SPRING_DATA_REDIS_URL:-}
+      # Spring treats an EMPTY variable as set: `${SPRING_DATA_REDIS_URL:-}` made
+      # spring.data.redis.url "" and chat-service died with "Invalid Redis URL ''".
+      # Always hand it a real URL — the managed one when given, else the container.
+      SPRING_DATA_REDIS_URL: ${SPRING_DATA_REDIS_URL:-redis://${SPRING_DATA_REDIS_HOST:-redis}:6379}
       SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST:-redis}
       SPRING_RABBITMQ_HOST: ${SPRING_RABBITMQ_HOST:-rabbitmq}
       # A managed broker listens on 5671 with TLS and gives you a *named* vhost;
@@ -177,6 +189,7 @@ services:
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:?run bootstrap.sh}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:?run bootstrap.sh}
       CALL_TRANSPORT: ${CALL_TRANSPORT:-mesh}
+      PUSH_LOCALIZED: ${PUSH_LOCALIZED:-false}
     depends_on:
       mongo:
         condition: service_healthy

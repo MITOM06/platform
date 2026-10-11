@@ -22,8 +22,10 @@ const leanExec = (value: any) => ({
 });
 
 const ADMIN_PRESET = PRESET_ROLES.find((r) => r.name === 'Admin')!.permissions;
+// The former Manager preset was removed; this fixture is a stored role named
+// 'Manager' (now a plain custom role) with the Member preset's matrix.
 const MANAGER_PRESET = PRESET_ROLES.find(
-  (r) => r.name === 'Manager',
+  (r) => r.name === 'Member',
 )!.permissions;
 const ADMIN_PERMS = ALL_CAPABILITIES.filter((c) => ADMIN_PRESET[c] === true);
 

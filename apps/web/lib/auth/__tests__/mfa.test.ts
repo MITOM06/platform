@@ -12,6 +12,7 @@ import {
   markMfaCodesPending,
   mfaAccountErrorMessage,
   mfaErrorMessage,
+  mfaSelfErrorMessage,
   pendingMfaExpired,
   readPendingMfa,
   savePendingMfa,
@@ -162,6 +163,36 @@ describe('mfa helpers', () => {
       key: 'errMfaCodeInvalidWithRemaining',
       values: { remaining: 2 },
     })
+  })
+
+  it('maps the signed-in turn on / turn off errors without sign-in wording (contract 15)', () => {
+    expect(authCodeToI18nKey('MFA_REQUIRED_BY_ROLE')).toBe('errMfaRequiredByRole')
+    expect(mfaSelfErrorMessage(errWith(400, { code: 'MFA_REQUIRED_BY_ROLE' }))).toEqual({
+      code: 'MFA_REQUIRED_BY_ROLE',
+      key: 'errMfaRequiredByRole',
+      values: undefined,
+      stale: true,
+    })
+    // Already on / already off: changed in another tab — never "sign in again".
+    for (const code of ['MFA_ALREADY_ENROLLED', 'MFA_NOT_ENROLLED']) {
+      expect(mfaSelfErrorMessage(errWith(400, { code }))).toEqual({ code, key: 'mfa.stateChanged', stale: true })
+    }
+    expect(mfaSelfErrorMessage(errWith(403, { code: 'SSO_REQUIRED' }))).toEqual({
+      code: 'SSO_REQUIRED',
+      key: 'mfa.ssoManaged',
+      stale: true,
+    })
+    expect(mfaSelfErrorMessage(errWith(400, { code: 'MFA_CODE_INVALID', params: { remaining: 4 } }))).toEqual({
+      code: 'MFA_CODE_INVALID',
+      key: 'errMfaCodeInvalidWithRemaining',
+      values: { remaining: 4 },
+      stale: false,
+    })
+    expect(mfaSelfErrorMessage(errWith(400, { code: 'MFA_TOO_MANY_ATTEMPTS' }))).toMatchObject({
+      key: 'mfa.rateLimited',
+      stale: false,
+    })
+    expect(mfaSelfErrorMessage(new Error('Network Error'))).toMatchObject({ key: 'errGeneric', stale: false })
   })
 
   it('sends burned challenges back to /login with an explained reason', () => {

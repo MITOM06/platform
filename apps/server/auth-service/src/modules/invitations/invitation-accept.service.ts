@@ -27,6 +27,7 @@ import { AuthCode } from '../../common/auth-code.enum';
 import { AuditService } from '../audit/audit.service';
 import { WelcomeVariant } from '../Email/welcome-i18n';
 import { UsersService } from '../users/users.service';
+import { SsoPolicyService } from '../sso/sso-policy.service';
 import { AcceptInvitationPasswordDto } from './dto/accept-invitation.dto';
 import { InvitationPreviewDto } from './dto/invitation-view.dto';
 import { InvitationMailerService } from './invitation-mailer.service';
@@ -64,6 +65,7 @@ export class InvitationAcceptService {
     private readonly usersService: UsersService,
     private readonly audit: AuditService,
     private readonly mailer: InvitationMailerService,
+    private readonly ssoPolicy: SsoPolicyService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
@@ -104,6 +106,7 @@ export class InvitationAcceptService {
   ): Promise<UserDocument> {
     const inv = await this.findByToken(token);
     this.assertAcceptable(inv);
+    await this.assertSsoNotRequired(inv);
     const password = await bcrypt.hash(dto.password, await bcrypt.genSalt(10));
     const user = await this.claimAndCreateUser(inv, 'password', {
       displayName: dto.displayName.trim(),
@@ -117,6 +120,7 @@ export class InvitationAcceptService {
   async startGoogleFlow(token: string): Promise<string> {
     const inv = await this.findByToken(token);
     this.assertAcceptable(inv);
+    await this.assertSsoNotRequired(inv);
     const flowId = generateFlowId();
     await this.redis.set(
       inviteOauthKey(flowId),
@@ -143,6 +147,7 @@ export class InvitationAcceptService {
     if (!inv)
       throw new NotFoundException({ code: AuthCode.INVITATION_INVALID });
     this.assertAcceptable(inv);
+    await this.assertSsoNotRequired(inv);
 
     if (!profile?.email) {
       throw new UnauthorizedException({
@@ -197,6 +202,18 @@ export class InvitationAcceptService {
   }
 
   // ===================== INTERNALS =====================
+  /**
+   * Require SSO: an invitation for an enforced email domain is accepted only
+   * by signing in with SSO (which consumes it). An Owner invitation is exempt,
+   * like Owners themselves (break-glass).
+   */
+  private assertSsoNotRequired(inv: InvitationDocument): Promise<void> {
+    return this.ssoPolicy.assertNotEnforced({
+      email: inv.email,
+      roleId: inv.roleId,
+    });
+  }
+
   /** Fire-and-forget: the welcome email never fails or delays an accept. */
   private sendWelcome(
     inv: InvitationDocument,

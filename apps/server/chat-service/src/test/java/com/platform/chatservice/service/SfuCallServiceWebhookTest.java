@@ -42,7 +42,19 @@ class SfuCallServiceWebhookTest {
             .participants(new ArrayList<>())
             .build();
     when(calls.activeSession("c1")).thenReturn(Optional.of(session));
-    when(calls.saveIfActive(session)).thenReturn(true);
+    writable(session);
+  }
+
+  /** {@code calls.updateActive} runs the change on {@code s}, as CallSessionWriter would. */
+  @SuppressWarnings("unchecked")
+  private void writable(CallSession s) {
+    when(calls.updateActive(
+            org.mockito.ArgumentMatchers.eq(s.getCallId()), org.mockito.ArgumentMatchers.any()))
+        .thenAnswer(
+            inv -> {
+              java.util.function.Predicate<CallSession> change = inv.getArgument(1);
+              return change.test(s) ? Optional.of(s) : Optional.empty();
+            });
   }
 
   /** Runs whatever the service scheduled (the disconnect grace check). */
@@ -77,7 +89,8 @@ class SfuCallServiceWebhookTest {
     assertThat(p("bob").getSid()).isEqualTo("PA_1");
     assertThat(p("bob").getJoinedAt()).isNotNull();
     assertThat(p("bob").getLeftAt()).isNull();
-    verify(calls).saveIfActive(session);
+    verify(calls)
+        .updateActive(org.mockito.ArgumentMatchers.eq("c1"), org.mockito.ArgumentMatchers.any());
     verify(calls).broadcastRoster(session);
     verify(busy).markBusy("bob", "c1");
   }
@@ -145,7 +158,7 @@ class SfuCallServiceWebhookTest {
     service.onParticipantLeft(ev("bob", "PA_B"));
 
     assertThat(session.getParticipants()).isEmpty();
-    verify(calls, never()).saveIfActive(session);
+    verify(calls, never()).updateActive(anyString(), org.mockito.ArgumentMatchers.any());
     verify(calls, never()).endCall(anyString(), anyString());
   }
 
@@ -166,7 +179,9 @@ class SfuCallServiceWebhookTest {
 
   @Test
   void aWebhookForAnEndedSessionChangesNothingVisible() {
-    when(calls.saveIfActive(session)).thenReturn(false); // ended between read and write
+    when(calls.updateActive(
+            org.mockito.ArgumentMatchers.eq("c1"), org.mockito.ArgumentMatchers.any()))
+        .thenReturn(Optional.empty()); // ended between read and write
 
     service.onParticipantJoined(ev("bob", "PA_B"));
 

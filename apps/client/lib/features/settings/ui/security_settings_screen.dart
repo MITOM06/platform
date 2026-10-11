@@ -17,8 +17,9 @@ import 'widgets/two_factor_section.dart';
 /// - Amber warning card when the account has no local password (OAuth-only).
 /// - Password form: 2 fields (new + confirm) when no password exists yet,
 ///   3 fields (current + new + confirm) when changing an existing one.
-/// - Two-factor authentication status + "Regenerate backup codes", only for
-///   members whose role requires 2FA ([TwoFactorSection]).
+/// - Two-factor authentication ([TwoFactorSection], contract 15): status +
+///   "Regenerate backup codes" when the role requires it; "Turn on 2FA" /
+///   "Turn off 2FA" when it is optional for the member's role.
 class SecuritySettingsScreen extends ConsumerWidget {
   const SecuritySettingsScreen({super.key});
 
@@ -48,7 +49,7 @@ class SecuritySettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
                 ],
                 _PasswordForm(hasPassword: user.hasPassword, isDark: isDark),
-                // Renders nothing unless the member's role requires 2FA.
+                // Renders nothing for an SSO-enforced member (no 2FA here).
                 const TwoFactorSection(),
               ],
             ),

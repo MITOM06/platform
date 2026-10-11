@@ -1,10 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import axios, { type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 
 const m = vi.hoisted(() => {
   class MediaAccessError extends Error {}
   class FakeSession {
     static last: FakeSession | null = null
     static connectError: Error | null = null
+    /** When set, the next connect() waits for it (a join still in flight). */
+    static gate: Promise<void> | null = null
+    /** What this device publishes: connect() opens what it is asked to, set*() changes it. */
+    mic = false
+    camera = false
     onLocalStream: ((s: MediaStream) => void) | null = null
     onPeersChanged: (() => void) | null = null
     onReconnecting: ((on: boolean) => void) | null = null
@@ -19,14 +25,25 @@ const m = vi.hoisted(() => {
         camMuted: boolean
       }
     >()
-    connect = vi.fn<(url: string, token: string, opts: { video: boolean }) => Promise<unknown>>(async () => {
-      const e = FakeSession.connectError
-      FakeSession.connectError = null
-      if (e) throw e
-    })
+    connect = vi.fn<(url: string, token: string, opts: { video: boolean; audio?: boolean }) => Promise<unknown>>(
+      async (_url, _token, opts) => {
+        const gate = FakeSession.gate
+        FakeSession.gate = null
+        if (gate) await gate
+        const e = FakeSession.connectError
+        FakeSession.connectError = null
+        if (e) throw e
+        this.mic = opts.audio !== false
+        this.camera = opts.video
+      },
+    )
     disconnect = vi.fn()
-    setMic = vi.fn<(on: boolean) => Promise<unknown>>(async () => {})
-    setCamera = vi.fn<(on: boolean) => Promise<unknown>>(async () => {})
+    setMic = vi.fn<(on: boolean) => Promise<unknown>>(async (on) => {
+      this.mic = on
+    })
+    setCamera = vi.fn<(on: boolean) => Promise<unknown>>(async (on) => {
+      this.camera = on
+    })
     localStream = () => null
     peer = (id: string) => this.peersById.get(id)
     constructor() {
@@ -63,12 +80,18 @@ const m = vi.hoisted(() => {
       subs.set(dest, cb)
       return { unsubscribe: vi.fn(() => subs.delete(dest)) }
     }),
+    subscribeDurable: vi.fn((dest: string, cb: (frame: { body: string }) => void) => {
+      subs.set(dest, cb)
+      return vi.fn(() => subs.delete(dest))
+    }),
     publish: vi.fn(),
     sendMessage: vi.fn(() => Promise.resolve()),
     getToken: vi.fn<(callId: string) => Promise<unknown>>(async () => ({ url: 'wss://rtc', token: 'tok' })),
   }
 })
-vi.mock('@/lib/stomp/client', () => ({ stompService: { publish: m.publish, subscribe: m.subscribe } }))
+vi.mock('@/lib/stomp/client', () => ({
+  stompService: { publish: m.publish, subscribe: m.subscribe, subscribeDurable: m.subscribeDurable },
+}))
 vi.mock('@/lib/api/chat', () => ({ chatService: { sendMessage: m.sendMessage } }))
 vi.mock('@/lib/api/calls', () => ({ callsApi: { getToken: m.getToken } }))
 vi.mock('@/lib/rtc/livekit-session', () => ({
@@ -77,7 +100,7 @@ vi.mock('@/lib/rtc/livekit-session', () => ({
 }))
 
 import { SfuDirectCall } from '../sfu-call'
-import { RECONNECT_BLIP_MS, RING_TIMEOUT_MS } from '../call-config'
+import { CONNECT_TIMEOUT_MS, RECONNECT_BLIP_MS, RING_TIMEOUT_MS, START_TIMEOUT_MS } from '../call-config'
 import { useCallStore } from '@/lib/store/call.store'
 
 const hooks = {
@@ -122,7 +145,10 @@ beforeEach(() => {
   m.publish.mockClear()
   m.sendMessage.mockClear()
   m.getToken.mockClear()
+  m.subscribeDurable.mockClear()
   m.FakeSession.last = null
+  m.FakeSession.gate = null
+  m.FakeSession.connectError = null
   m.subs.clear()
   Object.values(hooks).forEach((h) => h.mockClear())
   getUserMedia.mockReset().mockResolvedValue({ getTracks: () => [{ stop: vi.fn() }] })
@@ -144,7 +170,7 @@ describe('outgoing', () => {
     started()
     await flush()
     expect(m.getToken).toHaveBeenCalledWith('c1')
-    expect(m.FakeSession.last!.connect).toHaveBeenCalledWith('wss://rtc', 'tok', { video: false })
+    expect(m.FakeSession.last!.connect).toHaveBeenCalledWith('wss://rtc', 'tok', { video: false, audio: true })
   })
 
   it('is connected when the other person enters the room', async () => {
@@ -201,7 +227,7 @@ describe('outgoing', () => {
     await call.startCall('bob', 'Bob', 'conv', false)
     started()
     await flush()
-    expect(hooks.onEndNotice).toHaveBeenCalledWith('failed', false, 'Bob')
+    expect(hooks.onEndNotice).toHaveBeenCalledWith('failed', false, 'Bob', 'errFailed')
     expect(store().status).toBe('idle')
   })
 })
@@ -418,7 +444,7 @@ describe('both call each other at the same time', () => {
     expect(store().callId).toBe('c-a')
     expect(store().video).toBe(true) // the call's media wins
     expect(m.getToken).toHaveBeenCalledWith('c-a')
-    expect(m.FakeSession.last!.connect).toHaveBeenCalledWith('wss://rtc', 'tok', { video: true })
+    expect(m.FakeSession.last!.connect).toHaveBeenCalledWith('wss://rtc', 'tok', { video: true, audio: true })
 
     // Our other devices stop ringing for their call: that echo must not end ours.
     call.handleSignal({ type: 'call-ring-cancel', callId: 'c-a', reason: 'answered_elsewhere' })
@@ -548,7 +574,7 @@ describe('weak network, reconnecting and switching to video', () => {
     await flush()
     const second = m.FakeSession.last!
     expect(second).not.toBe(first)
-    expect(second.setMic).toHaveBeenCalledWith(false)
+    expect(second.mic).toBe(false)
     second.join('bob')
     expect(store().reconnectWait).toBeNull()
     await vi.advanceTimersByTimeAsync(8_000)
@@ -590,5 +616,330 @@ describe('weak network, reconnecting and switching to video', () => {
     expect(store().peerCamera).toBe(true)
     m.FakeSession.last!.join('bob', { video: true, camMuted: true })
     expect(store().peerCamera).toBe(false)
+  })
+})
+
+// ── QC 2026-10-11 ────────────────────────────────────────────────────────────
+
+function httpErr(status: number, data: unknown) {
+  const config = { headers: new axios.AxiosHeaders() } as InternalAxiosRequestConfig
+  return new axios.AxiosError('x', 'ERR_BAD_REQUEST', config, null, {
+    status, statusText: '', headers: {}, config, data,
+  } as AxiosResponse)
+}
+const accepted = (callId = 'c1') =>
+  call.handleSignal({ type: 'call-accepted', callId, conversationId: 'conv', senderId: 'bob' })
+const blocked = () => call.handleSignal({ type: 'call-blocked', conversationId: 'conv', senderId: 'me' })
+function deferred() {
+  let release!: () => void
+  const promise = new Promise<void>((r) => (release = r))
+  return { promise, release }
+}
+
+describe('call-blocked tears the attempt down', () => {
+  it('no ring timer, no pending start, no topic subscription is left', async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    blocked()
+    expect(store().status).toBe('idle')
+    expect(m.subs.has('/topic/conversation/conv')).toBe(false)
+    vi.advanceTimersByTime(RING_TIMEOUT_MS)
+    expect(hooks.onEndNotice).not.toHaveBeenCalled()
+    started() // a late call.started for the refused start is not ours
+    await flush()
+    expect(m.getToken).not.toHaveBeenCalled()
+  })
+
+  it("the refused call's ring timer can no longer end the next call as unanswered", async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    blocked()
+    vi.advanceTimersByTime(10_000)
+    await call.startCall('carol', 'Carol', 'conv-2', false)
+    started('c2', 'conv-2')
+    await flush()
+    vi.advanceTimersByTime(RING_TIMEOUT_MS - 5_000)
+    expect(store().status).toBe('outgoing')
+    expect(sent('/app/call.cancel')).toEqual([])
+  })
+
+  it('a new start drops a ring timer an earlier attempt left behind', async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    store().reset() // the screen was reset without the engine
+    vi.advanceTimersByTime(10_000)
+    await call.startCall('carol', 'Carol', 'conv-2', false)
+    started('c2', 'conv-2')
+    await flush()
+    vi.advanceTimersByTime(RING_TIMEOUT_MS - 5_000)
+    expect(store().status).toBe('outgoing')
+  })
+})
+
+describe('merged into the other call: the cameras follow its media', () => {
+  const merged = (media: 'audio' | 'video') =>
+    call.handleSignal({
+      type: 'call-merged', callId: 'c-a', conversationId: 'conv', senderId: 'alice',
+      media, transport: 'sfu', kind: 'direct',
+    })
+
+  it('a voice call merged into a video call turns both cameras on', async () => {
+    await call.startCall('alice', 'Alice', 'conv', false)
+    merged('video')
+    await flush()
+    expect(store().video).toBe(true)
+    expect(store().cameraEnabled).toBe(true)
+    expect(store().peerCamera).toBe(true)
+    expect(m.FakeSession.last!.camera).toBe(true)
+  })
+
+  it('a video call merged into a voice call turns the cameras off', async () => {
+    await call.startCall('alice', 'Alice', 'conv', true)
+    merged('audio')
+    await flush()
+    expect(store().video).toBe(false)
+    expect(store().cameraEnabled).toBe(false)
+    expect(store().peerCamera).toBe(false)
+    expect(m.FakeSession.last!.camera).toBe(false)
+  })
+
+  it('stops ringing back: the merged call is already answered', async () => {
+    await call.startCall('alice', 'Alice', 'conv', false)
+    merged('audio')
+    expect(store().status).toBe('connecting')
+  })
+})
+
+describe('answered calls never fall to a ring timer', () => {
+  it('the caller stops ringing when the callee answers, even in the last seconds', async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    started()
+    await flush()
+    vi.advanceTimersByTime(RING_TIMEOUT_MS - 2_000)
+    accepted()
+    expect(store().status).toBe('connecting')
+    vi.advanceTimersByTime(5_000)
+    expect(sent('/app/call.cancel')).toEqual([])
+    expect(hooks.onEndNotice).not.toHaveBeenCalled()
+    m.FakeSession.last!.join('bob')
+    expect(store().status).toBe('connected')
+  })
+
+  it('ignores an answer to another call', async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    started()
+    await flush()
+    accepted('other')
+    expect(store().status).toBe('outgoing')
+  })
+
+  it('the callee leaves the ringing prompt as soon as it answers', async () => {
+    ring()
+    await call.acceptIncoming()
+    expect(store().status).toBe('connecting')
+  })
+
+  it('dismissing a call the user already answered leaves it on the server', async () => {
+    ring()
+    await call.acceptIncoming()
+    call.dismissIncoming()
+    expect(sent('/app/call.leave')).toEqual([{ callId: 'c1' }])
+    expect(store().status).toBe('idle')
+  })
+
+  it('dismissing an unanswered ring stays silent', () => {
+    ring()
+    call.dismissIncoming()
+    expect(sent('/app/call.leave')).toEqual([])
+    expect(sent('/app/call.decline')).toEqual([])
+    expect(store().status).toBe('idle')
+  })
+})
+
+describe('mute / camera chosen before the room is joined', () => {
+  it('a choice made while the call rings is applied when the room is joined', async () => {
+    await call.startCall('bob', 'Bob', 'conv', true)
+    call.toggleMic(false)
+    call.toggleCamera(false)
+    started()
+    await flush()
+    const session = m.FakeSession.last!
+    expect(session.mic).toBe(false)
+    expect(session.camera).toBe(false)
+  })
+
+  it('a choice made while the join is in flight is not undone by it', async () => {
+    const gate = deferred()
+    m.FakeSession.gate = gate.promise
+    await call.startCall('bob', 'Bob', 'conv', true)
+    started()
+    await flush() // the token is in; connect() is still waiting
+    call.toggleMic(false)
+    call.toggleCamera(false)
+    gate.release()
+    await flush()
+    const session = m.FakeSession.last!
+    expect(session.mic).toBe(false)
+    expect(session.camera).toBe(false)
+  })
+
+  it('a callee muting while its answer connects stays muted', async () => {
+    const gate = deferred()
+    m.FakeSession.gate = gate.promise
+    ring()
+    const answering = call.acceptIncoming()
+    await flush()
+    call.toggleMic(false)
+    gate.release()
+    await answering
+    expect(m.FakeSession.last!.mic).toBe(false)
+  })
+})
+
+describe('rejoined while they are still away', () => {
+  it('keeps the room it rejoined instead of re-joining every few seconds', async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    started()
+    await flush()
+    m.FakeSession.last!.join('bob')
+    const first = m.FakeSession.last!
+    first.onDisconnected?.('failed')
+    await flush()
+    const second = m.FakeSession.last!
+    expect(second).not.toBe(first)
+    expect(store().reconnectWait).toBe('peer')
+    await vi.advanceTimersByTimeAsync(12_000)
+    expect(m.FakeSession.last).toBe(second)
+    expect(second.disconnect).not.toHaveBeenCalled()
+    expect(m.getToken).toHaveBeenCalledTimes(2)
+    second.join('bob')
+    expect(store().reconnectWait).toBeNull()
+  })
+})
+
+describe('a call.start the server never answers', () => {
+  it('ends with a localized failure when call.started never comes back', async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    vi.advanceTimersByTime(START_TIMEOUT_MS - 1)
+    expect(store().status).toBe('outgoing')
+    vi.advanceTimersByTime(1)
+    expect(store().status).toBe('idle')
+    expect(hooks.onEndNotice).toHaveBeenCalledWith('failed', false, 'Bob', 'errStartTimeout')
+    expect(m.sendMessage).not.toHaveBeenCalled() // the callee never rang
+  })
+
+  it('a call.started arriving after that is cancelled, not joined', async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    vi.advanceTimersByTime(START_TIMEOUT_MS)
+    started()
+    await flush()
+    expect(sent('/app/call.cancel')).toEqual([{ callId: 'c1', reason: 'hangup' }])
+    expect(m.getToken).not.toHaveBeenCalled()
+  })
+
+  it('a hang-up before call.started stops waiting for it after a while', async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    call.endCall('hangup')
+    expect(m.subs.has('/topic/conversation/conv')).toBe(true) // still there to cancel it
+    vi.advanceTimersByTime(START_TIMEOUT_MS)
+    expect(m.subs.has('/topic/conversation/conv')).toBe(false)
+  })
+
+  it("the call's own topic subscription survives STOMP reconnects", async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    expect(m.subscribeDurable).toHaveBeenCalledWith('/topic/conversation/conv', expect.any(Function))
+  })
+})
+
+describe('typed call errors', () => {
+  const cases: Array<[number, string, string]> = [
+    [503, 'CALLS_UNAVAILABLE', 'errUnavailable'],
+    [404, 'CALL_NOT_FOUND', 'errNotFound'],
+    [409, 'CALL_ENDED', 'errEnded'],
+    [409, 'CALL_NOT_SFU', 'errNotSfu'],
+    [403, 'CALL_FORBIDDEN', 'errForbidden'],
+  ]
+  it.each(cases)('a %i %s token refusal explains itself', async (status, code, key) => {
+    m.getToken.mockRejectedValueOnce(httpErr(status, { error: 'x', code, statusCode: status }))
+    await call.startCall('bob', 'Bob', 'conv', false)
+    started()
+    await flush()
+    expect(hooks.onEndNotice).toHaveBeenCalledWith('failed', false, 'Bob', key)
+    expect(store().status).toBe('idle')
+  })
+})
+
+describe('an answered call whose other side never reaches the room', () => {
+  const merged = () =>
+    call.handleSignal({
+      type: 'call-merged', callId: 'c-a', conversationId: 'conv', senderId: 'alice',
+      media: 'audio', transport: 'sfu', kind: 'direct',
+    })
+
+  it('caller: gives up 30 s after call-accepted — leaves, logs, says why', async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    started()
+    await flush()
+    accepted()
+    expect(CONNECT_TIMEOUT_MS).toBe(30_000)
+    vi.advanceTimersByTime(CONNECT_TIMEOUT_MS - 1)
+    expect(store().status).toBe('connecting')
+    vi.advanceTimersByTime(1)
+    expect(store().status).toBe('idle')
+    expect(sent('/app/call.leave')).toEqual([{ callId: 'c1' }])
+    expect(m.sendMessage).toHaveBeenCalledWith('conv', 'system.call.missed:voice', 'system')
+    expect(hooks.onEndNotice).toHaveBeenCalledWith('failed', false, 'Bob', 'errPeerNeverJoined')
+    expect(m.FakeSession.last!.disconnect).toHaveBeenCalled()
+  })
+
+  it('callee: gives up 30 s after answering when the caller never shows up', async () => {
+    ring()
+    store().setPeerName('Alice')
+    await call.acceptIncoming()
+    expect(store().status).toBe('connecting')
+    vi.advanceTimersByTime(CONNECT_TIMEOUT_MS)
+    expect(store().status).toBe('idle')
+    expect(sent('/app/call.leave')).toEqual([{ callId: 'c1' }])
+    expect(sent('/app/call.decline')).toEqual([])
+    expect(m.sendMessage).toHaveBeenCalledWith('conv', 'system.call.missed:voice', 'system')
+    expect(hooks.onEndNotice).toHaveBeenCalledWith('failed', false, 'Alice', 'errPeerNeverJoined')
+  })
+
+  it('after a merge too', async () => {
+    await call.startCall('alice', 'Alice', 'conv', false)
+    merged()
+    await flush()
+    vi.advanceTimersByTime(CONNECT_TIMEOUT_MS)
+    expect(store().status).toBe('idle')
+    expect(sent('/app/call.leave')).toEqual([{ callId: 'c-a' }])
+    expect(hooks.onEndNotice).toHaveBeenCalledWith('failed', false, 'Alice', 'errPeerNeverJoined')
+  })
+
+  it('is cleared once they reach the room', async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    started()
+    await flush()
+    accepted()
+    vi.advanceTimersByTime(CONNECT_TIMEOUT_MS - 1_000)
+    m.FakeSession.last!.join('bob')
+    expect(store().status).toBe('connected')
+    vi.advanceTimersByTime(CONNECT_TIMEOUT_MS)
+    expect(store().status).toBe('connected')
+    expect(sent('/app/call.leave')).toEqual([])
+    expect(hooks.onEndNotice).not.toHaveBeenCalled()
+  })
+
+  it('is cleared by any teardown, so it never ends a later call', async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    started()
+    await flush()
+    accepted()
+    call.endCall('hangup')
+    hooks.onEndNotice.mockClear()
+    m.publish.mockClear()
+    await call.startCall('carol', 'Carol', 'conv-2', false)
+    started('c2', 'conv-2')
+    await flush()
+    vi.advanceTimersByTime(CONNECT_TIMEOUT_MS)
+    expect(store().status).toBe('outgoing') // still ringing Carol: the old deadline is gone
+    expect(sent('/app/call.leave')).toEqual([])
+    expect(hooks.onEndNotice).not.toHaveBeenCalled()
   })
 })

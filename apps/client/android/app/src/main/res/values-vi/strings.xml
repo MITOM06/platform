@@ -5,4 +5,13 @@
 <resources>
     <string name="meeting_push_invited">Bạn được mời tham gia một cuộc họp</string>
     <string name="meeting_push_starting">Cuộc họp của bạn bắt đầu sau 10 phút</string>
+
+    <!-- Message pushes: same words as the in-app previews (MessageNotificationService). -->
+    <string name="push_title_new_message">Tin nhắn mới</string>
+    <string name="push_body_new_message">Tin nhắn mới</string>
+    <string name="push_body_photo">[Ảnh]</string>
+    <string name="push_body_video">[Video]</string>
+    <string name="push_body_file">[Tệp]</string>
+    <string name="push_body_voice">[Tin nhắn thoại]</string>
+    <string name="push_body_sticker">[Nhãn dán]</string>
 </resources>

@@ -3,7 +3,8 @@ import axios, { type AxiosResponse, type InternalAxiosRequestConfig } from 'axio
 import { adminErrorDescriptor, adminErrorMessage } from '@/lib/admin/admin-errors'
 import { isEmptyMemberUpdate, memberUpdateDiff } from '@/lib/admin/member-diff'
 import { grantBlockers, roleEditLock } from '@/lib/admin/role-guard'
-import { auditActionKey, auditActorLabel, auditTargetLabel } from '@/lib/admin/audit-labels'
+import { AUDIT_ACTIONS, auditActionKey, auditActorLabel, auditTargetLabel } from '@/lib/admin/audit-labels'
+import en from '@/messages/en.json'
 import {
   aiConnectorScope,
   allowedConnectorsToSave,
@@ -115,6 +116,28 @@ describe('audit labels', () => {
     expect(
       auditTargetLabel({ targetType: 'tool', targetId: 'mcp__custom_ab__x', targetName: null }, t),
     ).toBe('auditTarget_tool')
+  })
+
+  it('names the Require-SSO, two-factor and preset-retirement actions instead of "Other action"', () => {
+    const actions = [
+      'sso.enforcement_changed',
+      'mfa.enrolled',
+      'mfa.disabled',
+      'mfa.reset',
+      'mfa.backup_codes_regenerated',
+      'mfa.verified_backup_code',
+      'role.preset_removed',
+    ]
+    for (const action of actions) {
+      expect(auditActionKey(action)).toBe(`auditAction_${action.replace(/\./g, '_')}`)
+    }
+  })
+
+  it('every known action has an English label', () => {
+    const admin = (en as { admin: Record<string, unknown> }).admin
+    for (const action of AUDIT_ACTIONS) {
+      expect(typeof admin[auditActionKey(action)], action).toBe('string')
+    }
   })
 })
 

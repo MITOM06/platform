@@ -133,4 +133,8 @@ describe('AI stream routing by replyId', () => {
     expect(aiStreamErrorKey('SOMETHING_NEW')).toBe('aiError')
     expect(aiStreamErrorKey(undefined)).toBe('aiError')
   })
+
+  it('a refused conversation (AI_FORBIDDEN) gets its own message, not the generic one', () => {
+    expect(aiStreamErrorKey('AI_FORBIDDEN')).toBe('aiForbidden')
+  })
 })

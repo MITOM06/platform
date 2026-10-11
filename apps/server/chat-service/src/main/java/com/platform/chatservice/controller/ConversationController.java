@@ -20,12 +20,12 @@ import com.platform.chatservice.service.ConversationQueryService;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.ConversationUserStateService;
 import com.platform.chatservice.service.GroupAdminService;
+import com.platform.chatservice.service.MessageNotificationService;
 import com.platform.chatservice.service.MessageQueryService;
 import com.platform.chatservice.service.MessageService;
 import com.platform.chatservice.service.PageLimits;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -60,6 +60,7 @@ public class ConversationController {
   private final AttachmentService attachmentService;
   private final ClusterMessageBroker clusterBroker;
   private final ConversationEventPublisher events;
+  private final MessageNotificationService notificationService;
 
   /**
    * The caller's conversations. {@code archived=true} → only archived ones (default: archived ones
@@ -348,15 +349,7 @@ public class ConversationController {
             ? messageService.createSystemMessage(conversationId, contentKey, actorId)
             : messageService.createSystemMessage(conversationId, contentKey);
     clusterBroker.convertAndSend("/topic/conversation/" + conversationId, system);
-    for (String participantId : conversationQueryService.getParticipants(conversationId)) {
-      if (participantId.equals(actorId)) {
-        continue;
-      }
-      clusterBroker.convertAndSendToUser(
-          participantId,
-          "/queue/notifications",
-          Map.of("type", "NEW_MESSAGE", "conversationId", conversationId, "senderName", "system"));
-    }
+    notificationService.notifySystemNotice(actorId, system);
   }
 
   private static Instant parseInstant(String value) {

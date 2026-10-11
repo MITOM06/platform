@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 import Anthropic from '@anthropic-ai/sdk';
-import { LlmClientsService } from '../llm/llm-clients.service';
+import { LlmClientsService, hasText } from '../llm/llm-clients.service';
 import { RedisPublisherService } from '../redis/redis-publisher.service';
 import { ResolvedAiSettings } from '../settings/resolved-ai-settings';
 import { UsageService } from '../usage/usage.service';
@@ -156,6 +156,36 @@ export class DigestGeneratorService {
     return this.configService.get<string>('config.anthropic.router.simpleModel') ?? 'claude-haiku-4-5';
   }
 
+  /**
+   * One non-streaming call on `model`. A tier mapped to an OpenRouter id (the
+   * Mac mini's mid tier is `nvidia/…:free`) goes to OpenRouter — never to the
+   * Anthropic client, which 404s on it — and falls back to the Claude light
+   * model when OpenRouter is off or fails, so the digest still goes out.
+   */
+  private async callModel(
+    params: Omit<Anthropic.MessageCreateParamsNonStreaming, 'model'>,
+    model: string,
+  ): Promise<Anthropic.Message> {
+    // The fast tier of this batch job runs on the light model when one is wired.
+    if (this.llm && model === this.fastTierModel()) {
+      return (await this.llm.createLight(params)).message;
+    }
+    if (!LlmClientsService.isOpenRouterModel(model)) {
+      return this.anthropic.messages.create({ ...params, model });
+    }
+    if (this.llm?.openRouterEnabled) {
+      try {
+        const res = await this.llm.clientFor(model).messages.create({ ...params, model });
+        if (hasText(res)) return res;
+        this.logger.warn(`Digest on ${model} came back empty; retrying on Claude`);
+      } catch (err) {
+        this.logger.warn(`Digest on ${model} failed (${(err as Error).message}); retrying on Claude`);
+      }
+    }
+    const fallback = this.llm?.claudeFallbackModel ?? 'claude-haiku-4-5';
+    return this.anthropic.messages.create({ ...params, model: fallback });
+  }
+
   /** Non-streaming summary call mirroring CallSummaryService.generateSummary(). */
   private async summarize(transcript: string, settings: ResolvedAiSettings): Promise<string> {
     const system =
@@ -171,12 +201,7 @@ export class DigestGeneratorService {
         system,
         messages: [{ role: 'user' as const, content: `Transcript:\n\n${transcript}` }],
       };
-      const model = this.resolveModel(settings);
-      // The fast tier of this batch job runs on the light model when one is wired.
-      const res =
-        this.llm && model === this.fastTierModel()
-          ? (await this.llm.createLight(params)).message
-          : await this.anthropic.messages.create({ ...params, model });
+      const res = await this.callModel(params, this.resolveModel(settings));
       // Workspace-level job: attributed to the bot user (dashboard totals, no member's quota).
       this.usageService?.recordModelCall(this.botUserId, res.usage, 'daily-digest');
       return res.content

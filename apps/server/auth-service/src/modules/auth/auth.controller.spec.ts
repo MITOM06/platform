@@ -12,18 +12,25 @@ import { REDIS_CLIENT } from '@platform/database';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { OidcService } from './oidc/oidc.service';
-import { SsoMappingService } from './oidc/sso-mapping.service';
+import { SsoPolicyService } from '../sso/sso-policy.service';
+import { PasswordRecoveryService } from './password-recovery.service';
 import { OAuthRedirectService } from './oauth-redirect.service';
 import { InvitationAcceptService } from '../invitations/invitation-accept.service';
 import { AuthCode } from '../../common/auth-code.enum';
 import type { Response } from 'express';
 
 const WEB = 'https://pon.example/oauth-callback';
+// AuthModule registers the Google strategy only when this is set; the tests
+// below exercise a configured deployment unless they say otherwise.
+process.env.GOOGLE_CLIENT_ID =
+  process.env.GOOGLE_CLIENT_ID || 'test-google-client';
 
 async function buildController(overrides: {
   auth?: Record<string, unknown>;
   invitations?: Record<string, unknown>;
   oidc?: Record<string, unknown>;
+  ssoPolicy?: Record<string, unknown>;
+  recovery?: Record<string, unknown>;
 }) {
   const redis = { set: jest.fn().mockResolvedValue('OK') };
   const module: TestingModule = await Test.createTestingModule({
@@ -37,7 +44,8 @@ async function buildController(overrides: {
         },
       },
       { provide: OidcService, useValue: overrides.oidc ?? {} },
-      { provide: SsoMappingService, useValue: {} },
+      { provide: SsoPolicyService, useValue: overrides.ssoPolicy ?? {} },
+      { provide: PasswordRecoveryService, useValue: overrides.recovery ?? {} },
       {
         provide: InvitationAcceptService,
         useValue: overrides.invitations ?? {},
@@ -125,11 +133,16 @@ describe('AuthController — social init redirect honours the public mount prefi
     // strips that before the request arrives, so a bare `/auth/google` bounces
     // the browser to a path the proxy does not route (404) instead of Google.
     const res = mockRes();
-    const req = { params: { provider: 'google' }, headers: { 'x-forwarded-prefix': '/api/auth' } };
+    const req = {
+      params: { provider: 'google' },
+      headers: { 'x-forwarded-prefix': '/api/auth' },
+    };
 
     await controller.initSocialLogin(req, res, 'web');
 
-    expect(res.redirect).toHaveBeenCalledWith('/api/auth/auth/google?platform=web');
+    expect(res.redirect).toHaveBeenCalledWith(
+      '/api/auth/auth/google?platform=web',
+    );
   });
 
   it('stays relative when the service is mounted at the host root', async () => {
@@ -187,6 +200,24 @@ describe('AuthController — social login init (Google only)', () => {
     );
     expect(redirect).toHaveBeenCalledWith('/auth/google?platform=web');
     expect(startGoogleFlow).not.toHaveBeenCalled();
+  });
+
+  // Self-host without GOOGLE_CLIENT_ID never registers the Google strategy, so
+  // continuing to /auth/google answered 500 "Unknown authentication strategy".
+  it('redirects back with SOCIAL_PROVIDER_UNSUPPORTED when Google is not configured', async () => {
+    const saved = process.env.GOOGLE_CLIENT_ID;
+    delete process.env.GOOGLE_CLIENT_ID;
+    try {
+      const req = { params: { provider: 'google' } };
+      const { res, cookie, redirect } = makeRes();
+      await controller.initSocialLogin(req, res, 'web');
+      expect(redirect).toHaveBeenCalledWith(
+        `${WEB}?error=${AuthCode.SOCIAL_PROVIDER_UNSUPPORTED}`,
+      );
+      expect(cookie).not.toHaveBeenCalled();
+    } finally {
+      process.env.GOOGLE_CLIENT_ID = saved;
+    }
   });
 
   it('defaults platform to mobile when none is given', async () => {
@@ -375,9 +406,12 @@ describe('AuthController — Google callback (invite accept + error redirects)',
   });
 
   it('OIDC callback failure (non-AuthCode literal) → GENERIC_ERROR redirect', async () => {
+    // OIDC_BAD_STATE used to be the example here; it is a known code now.
     const handleCallback = jest
       .fn()
-      .mockRejectedValue(new UnauthorizedException({ code: 'OIDC_BAD_STATE' }));
+      .mockRejectedValue(
+        new UnauthorizedException({ code: 'NOT_A_KNOWN_CODE' }),
+      );
     const { controller } = await buildController({ oidc: { handleCallback } });
     const { res, redirect } = makeRes();
 
@@ -415,7 +449,9 @@ describe('AuthController — Google callback (invite accept + error redirects)',
 
 describe('AuthController — logout revokes only the caller session', () => {
   it("uses the access token's sid and ignores a sid in the body (E2E: eve revoked carol's session)", async () => {
-    const logout = jest.fn().mockResolvedValue({ success: true, code: 'LOGOUT_SUCCESS' });
+    const logout = jest
+      .fn()
+      .mockResolvedValue({ success: true, code: 'LOGOUT_SUCCESS' });
     const { controller } = await buildController({ auth: { logout } });
 
     await controller.logout({
@@ -447,11 +483,109 @@ describe('AuthController — SSO email verification errors redirect with a typed
         auth: { handleOidcLogin },
       });
       const redirect = jest.fn();
-      const res = { redirect, send: jest.fn(), clearCookie: jest.fn() } as unknown as Response;
+      const res = {
+        redirect,
+        send: jest.fn(),
+        clearCookie: jest.fn(),
+      } as unknown as Response;
 
       await controller.oidcCallback({ query: {} }, res);
 
       expect(redirect).toHaveBeenCalledWith(`${WEB}?error=${code}`);
     },
   );
+});
+
+describe('AuthController — SSO info, IdP down, password recovery routing', () => {
+  it('GET /auth/sso/info returns the policy view incl. enforced', async () => {
+    const info = {
+      enabled: true,
+      enforced: true,
+      loginUrl: '/auth/oidc/login',
+      buttonLabel: 'Sign in with SSO',
+    };
+    const { controller } = await buildController({
+      ssoPolicy: { publicInfo: jest.fn().mockResolvedValue(info) },
+    });
+    await expect(controller.ssoInfo()).resolves.toEqual(info);
+  });
+
+  it('/auth/oidc/login with the IdP unreachable → ?error=SSO_UNAVAILABLE, not a raw 500', async () => {
+    const { ServiceUnavailableException } = await import('@nestjs/common');
+    const { controller } = await buildController({
+      oidc: {
+        isEnabledByEnv: () => true,
+        buildAuthorizeUrl: jest
+          .fn()
+          .mockRejectedValue(
+            new ServiceUnavailableException({ code: AuthCode.SSO_UNAVAILABLE }),
+          ),
+      },
+    });
+    const redirect = jest.fn();
+    await controller.oidcLogin('web', { redirect } as unknown as Response);
+    expect(redirect).toHaveBeenCalledWith(`${WEB}?error=SSO_UNAVAILABLE`);
+  });
+
+  it('/auth/oidc/login on a server without OIDC → ?error=SSO_DISABLED, not raw text', async () => {
+    const { controller } = await buildController({
+      oidc: { isEnabledByEnv: () => false },
+    });
+    const redirect = jest.fn();
+    await controller.oidcLogin('web', { redirect } as unknown as Response);
+    expect(redirect).toHaveBeenCalledWith(`${WEB}?error=SSO_DISABLED`);
+  });
+
+  // These came out as GENERIC_ERROR: the redirect only passes codes it knows,
+  // and they were never in AuthCode — so "the sign-in link expired" and "your
+  // IdP did not verify this email" both read as an unknown failure.
+  it.each([
+    'OIDC_NO_STATE',
+    'OIDC_BAD_STATE',
+    'OIDC_EXCHANGE_FAILED',
+    'OIDC_EMAIL_UNVERIFIED',
+  ])('the OIDC callback error %s reaches the client by name', async (code) => {
+    const { controller } = await buildController({
+      oidc: {
+        handleCallback: jest
+          .fn()
+          .mockRejectedValue(new UnauthorizedException({ code })),
+      },
+    });
+    const redirect = jest.fn();
+    await controller.oidcCallback({ query: {} }, {
+      redirect,
+    } as unknown as Response);
+    expect(redirect).toHaveBeenCalledWith(`${WEB}?error=${code}`);
+  });
+
+  it('an unknown 5xx in the OIDC flow still becomes GENERIC_ERROR', async () => {
+    const { controller } = await buildController({
+      oidc: {
+        isEnabledByEnv: () => true,
+        buildAuthorizeUrl: jest.fn().mockRejectedValue(new Error('boom')),
+      },
+    });
+    const redirect = jest.fn();
+    await controller.oidcLogin('web', { redirect } as unknown as Response);
+    expect(redirect).toHaveBeenCalledWith(`${WEB}?error=GENERIC_ERROR`);
+  });
+
+  it('forgot / verify / resend / reset go to PasswordRecoveryService', async () => {
+    const recovery = {
+      forgotPassword: jest.fn().mockResolvedValue({ code: 'OTP_SENT' }),
+      verifyOtp: jest.fn().mockResolvedValue({ code: 'OTP_VALID' }),
+      resendOtp: jest.fn().mockResolvedValue({ code: 'OTP_RESENT' }),
+      resetPassword: jest.fn().mockResolvedValue({ code: 'PASSWORD_UPDATED' }),
+    };
+    const { controller } = await buildController({ recovery });
+    await controller.forgot({ email: 'a@b.co' } as any, 'vi');
+    await controller.verify({ email: 'a@b.co', otp: '1' } as any);
+    await controller.resend({ email: 'a@b.co' } as any, undefined);
+    await controller.reset({ email: 'a@b.co', otp: '1', password: 'p' } as any);
+    expect(recovery.forgotPassword).toHaveBeenCalledWith('a@b.co', 'vi');
+    expect(recovery.verifyOtp).toHaveBeenCalledWith('a@b.co', '1');
+    expect(recovery.resendOtp).toHaveBeenCalledWith('a@b.co', 'en');
+    expect(recovery.resetPassword).toHaveBeenCalledWith('a@b.co', '1', 'p');
+  });
 });

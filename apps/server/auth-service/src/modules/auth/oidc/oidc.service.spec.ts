@@ -1,3 +1,4 @@
+const mockClientMeta: unknown[] = [];
 const mockClient = {
   authorizationUrl: jest.fn(() => 'https://idp.example.com/authorize?x=1'),
   callback: jest.fn(async () => ({
@@ -14,7 +15,8 @@ const mockClient = {
 jest.mock('openid-client', () => ({
   Issuer: {
     discover: jest.fn(async () => ({
-      Client: function () {
+      Client: function (meta: unknown) {
+        mockClientMeta.push(meta);
         return mockClient;
       },
     })),
@@ -27,9 +29,13 @@ jest.mock('openid-client', () => ({
   },
 }));
 
+import { Issuer } from 'openid-client';
 import { OidcService } from './oidc.service';
 
-function makeService(redisStore: Record<string, string>) {
+function makeService(
+  redisStore: Record<string, string>,
+  env: Record<string, string | undefined> = {},
+) {
   const redis = {
     set: jest.fn(async (k: string, v: string) => {
       redisStore[k] = v;
@@ -46,15 +52,28 @@ function makeService(redisStore: Record<string, string>) {
         OIDC_ISSUER: 'https://idp.example.com',
         OIDC_CLIENT_ID: 'cid',
         OIDC_CLIENT_SECRET: 'secret',
-        OIDC_REDIRECT_URI: 'https://pon.acme.com/api/auth/oidc/callback',
+        OIDC_REDIRECT_URI: 'https://pon.acme.com/api/auth/auth/oidc/callback',
         OIDC_SCOPES: 'openid email profile groups',
         OIDC_GROUPS_CLAIM: 'groups',
+        ...env,
       })[k],
   };
   return new OidcService(config as any, redis as any);
 }
 
 describe('OidcService', () => {
+  // Caddy mounts auth-service with `handle_path /api/auth/*`, which strips the
+  // prefix, and the controller route is /auth/oidc/callback — so the public URL
+  // is /api/auth/auth/oidc/callback (same doubled segment as Google's callback).
+  it('defaults the redirect URI to the route Caddy actually reaches', async () => {
+    mockClientMeta.length = 0;
+    const svc = makeService({}, { OIDC_REDIRECT_URI: undefined, DOMAIN: 'pon.acme.com' });
+    await svc.buildAuthorizeUrl('web');
+    expect(mockClientMeta[0]).toMatchObject({
+      redirect_uris: ['https://pon.acme.com/api/auth/auth/oidc/callback'],
+    });
+  });
+
   it('isEnabledByEnv true when env present', () => {
     expect(makeService({}).isEnabledByEnv()).toBe(true);
   });
@@ -129,5 +148,46 @@ describe('OidcService', () => {
     await expect(
       makeService(store).handleCallback({ code: 'c', state: 'state-abc' }),
     ).rejects.toThrow();
+  });
+
+  describe('discovery failures (IdP down)', () => {
+    const discover = Issuer.discover as unknown as jest.Mock;
+
+    it('answers 503 SSO_UNAVAILABLE and retries on the next request (failure not cached)', async () => {
+      const svc = makeService({});
+      discover.mockRejectedValueOnce(new Error('connect ECONNREFUSED'));
+      await expect(svc.buildAuthorizeUrl('web')).rejects.toMatchObject({
+        status: 503,
+        response: { code: 'SSO_UNAVAILABLE' },
+      });
+      const calls = discover.mock.calls.length;
+      // IdP back: the very next request discovers again and succeeds.
+      await expect(svc.buildAuthorizeUrl('web')).resolves.toContain(
+        'https://idp.example.com/authorize',
+      );
+      expect(discover.mock.calls.length).toBe(calls + 1);
+    });
+
+    it('a successful discovery is cached', async () => {
+      const svc = makeService({});
+      await svc.buildAuthorizeUrl('web');
+      const calls = discover.mock.calls.length;
+      await svc.buildAuthorizeUrl('mobile');
+      expect(discover.mock.calls.length).toBe(calls);
+    });
+
+    it('the callback also maps a failed discovery to SSO_UNAVAILABLE', async () => {
+      const store: Record<string, string> = {
+        'oidc:flow:state-abc': JSON.stringify({
+          codeVerifier: 'v',
+          nonce: 'n',
+          platform: 'web',
+        }),
+      };
+      discover.mockRejectedValueOnce(new Error('timeout'));
+      await expect(
+        makeService(store).handleCallback({ code: 'c', state: 'state-abc' }),
+      ).rejects.toMatchObject({ response: { code: 'SSO_UNAVAILABLE' } });
+    });
   });
 });

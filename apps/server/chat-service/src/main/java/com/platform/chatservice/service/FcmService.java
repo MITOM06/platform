@@ -46,7 +46,7 @@ public class FcmService {
    * (assistants are not users, so a {@code users} lookup here could not name them).
    */
   public void sendPushNotification(
-      String targetUserId, String title, String messageContent, String conversationId) {
+      String targetUserId, PushText title, PushText body, String conversationId) {
     // FCM disabled (no Firebase app configured) → silent no-op.
     // NOTE: FirebaseMessaging.getInstance() THROWS when no app exists, so we must
     // check FirebaseApp.getApps() instead — otherwise chat.send would break.
@@ -96,22 +96,40 @@ public class FcmService {
 
       for (String token : tokens) {
         try {
-          Message message =
+          Message.Builder message =
               Message.builder()
                   .setToken(token)
-                  .setNotification(
-                      Notification.builder().setTitle(title).setBody(messageContent).build())
                   .setAndroidConfig(
                       AndroidConfig.builder()
                           .setPriority(AndroidConfig.Priority.HIGH)
                           .setNotification(
-                              AndroidNotification.builder().setChannelId("pon_messages").build())
+                              AndroidNotification.builder()
+                                  .setChannelId("pon_messages")
+                                  .setTitleLocalizationKey(title.key())
+                                  .setBodyLocalizationKey(body.key())
+                                  .build())
+                          .build())
+                  .setApnsConfig(
+                      ApnsConfig.builder()
+                          .setAps(
+                              Aps.builder()
+                                  .setAlert(
+                                      ApsAlert.builder()
+                                          .setTitle(title.text())
+                                          .setTitleLocalizationKey(title.key())
+                                          .setBody(body.text())
+                                          .setLocalizationKey(body.key())
+                                          .build())
+                                  .build())
                           .build())
                   .putData("conversationId", conversationId)
-                  .putData("type", "chat_message")
-                  .build();
-
-          dispatch(message, token);
+                  .putData("type", "chat_message");
+          // Only ready text in the shared block: Android prefers a plain body over its loc key.
+          if (title.text() != null || body.text() != null) {
+            message.setNotification(
+                Notification.builder().setTitle(title.text()).setBody(body.text()).build());
+          }
+          dispatch(message.build(), token);
         } catch (Exception e) {
           // Skip this recipient token only; never abort the whole loop.
           log.warn("Failed to send FCM to token (skipping): {}", e.getMessage());

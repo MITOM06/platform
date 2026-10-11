@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -37,13 +38,26 @@ public class MessageNotificationService {
   private final ExternalBotRepository externalBotRepository;
   private final AiPersonaRepository aiPersonaRepository;
 
+  /**
+   * Fixed push wording as device-localized keys (true) or English text (false, the default). Keys
+   * need the strings shipped in mobile 1.4.0: an older iOS build shows the key itself, so turn this
+   * on (PUSH_LOCALIZED=true) only once every installed app is updated.
+   */
+  @Value("${app.push.localized:false}")
+  private boolean localizedPush;
+
   /** Longest assistant reply we put in a banner or push; the full text is in the chat. */
   private static final int PREVIEW_MAX_CHARS = 200;
 
   /** Name of the built-in AI when the conversation has no persona of its own. */
   private static final String DEFAULT_AI_NAME = "PON AI";
 
+  /** Sender id (and name) of an anonymous system notice. */
+  private static final String SYSTEM_SENDER = "system";
+
   /** Push title for a sender whose name cannot be resolved — never their id. */
+  private static final String UNKNOWN_SENDER_TITLE_KEY = "push_title_new_message";
+
   private static final String UNKNOWN_SENDER_TITLE = "New message";
 
   /**
@@ -65,6 +79,53 @@ public class MessageNotificationService {
         });
   }
 
+  /**
+   * Notify every participant except {@code actorId} of a system notice (group created, members
+   * added/left, settings changed…) with the same payload as a normal message, so clients update the
+   * list row in place. The content is the system code — clients humanize it. No push: these are
+   * housekeeping, not messages.
+   */
+  public void notifySystemNotice(String actorId, MessageResponse notice) {
+    CompletableFuture.runAsync(
+        () -> {
+          try {
+            String conversationId = notice.conversationId();
+            String senderId = notice.senderId() != null ? notice.senderId() : SYSTEM_SENDER;
+            String senderName =
+                SYSTEM_SENDER.equals(senderId)
+                    ? SYSTEM_SENDER
+                    : resolveSenderName(senderId, conversationId);
+            Map<String, String> notification =
+                Map.of(
+                    "type",
+                    "NEW_MESSAGE",
+                    "conversationId",
+                    conversationId,
+                    "senderId",
+                    senderId,
+                    "senderName",
+                    senderName,
+                    "content",
+                    notice.content() != null ? notice.content() : "",
+                    "messageType",
+                    "system",
+                    "messageId",
+                    notice.id() != null ? notice.id() : "",
+                    "createdAt",
+                    notice.createdAt() != null ? notice.createdAt().toString() : "");
+            for (String participantId : conversationQueryService.getParticipants(conversationId)) {
+              if (!participantId.equals(actorId)) {
+                clusterBroker.convertAndSendToUser(
+                    participantId, "/queue/notifications", notification);
+              }
+            }
+          } catch (Exception e) {
+            log.error(
+                "System-notice fan-out failed for conversation {}", notice.conversationId(), e);
+          }
+        });
+  }
+
   private void fanOut(String senderId, MessageResponse response) {
     String conversationId = response.conversationId();
     List<String> mentions = response.mentions() == null ? List.of() : response.mentions();
@@ -72,14 +133,16 @@ public class MessageNotificationService {
     // Resolve the sender's human-readable name once (same for every recipient).
     // Clients display senderName directly, so it must never be a bare userId.
     String senderDisplayName = resolveSenderName(senderId, conversationId);
-    String pushTitle =
-        senderDisplayName.equals(senderId) ? UNKNOWN_SENDER_TITLE : senderDisplayName;
+    PushText pushTitle =
+        senderDisplayName.equals(senderId)
+            ? fixedText(UNKNOWN_SENDER_TITLE_KEY, UNKNOWN_SENDER_TITLE)
+            : PushText.of(senderDisplayName);
     String type = response.type() != null ? response.type() : "text";
     String content = response.content() != null ? response.content() : "";
     if ("ai".equals(type)) {
       content = preview(content);
     }
-    String pushBody = pushBody(content, type);
+    PushText pushBody = pushBody(content, type);
 
     for (String participantId : participants) {
       if (participantId.equals(senderId)) {
@@ -145,21 +208,25 @@ public class MessageNotificationService {
 
   /**
    * Body shown on the OS notification (lock screen). Attachment messages store a JSON payload as
-   * content — that must never reach a user-visible surface, so map non-text types to a generic
-   * English label (localization is client-side; FCM notification messages are rendered by the OS
-   * as-is).
+   * content — that must never reach a user-visible surface — so every non-text type is a
+   * localization key the app resolves in the device's language (the OS renders the push as-is).
    */
-  private String pushBody(String content, String type) {
+  private PushText pushBody(String content, String type) {
     return switch (type) {
         // FCM rejects payloads over 4 KB — and sendAsync swallows that — so a long text message
         // (up to 10,000 chars) silently produced no push at all. Always send a preview.
-      case "text", "ai" -> preview(content);
-      case "image" -> "[Photo]";
-      case "video" -> "[Video]";
-      case "voice" -> "[Voice message]";
-      case "file" -> "[File]";
-      case "sticker" -> "[Sticker]";
-      default -> "New message";
+      case "text", "ai" -> PushText.of(preview(content));
+      case "image" -> fixedText("push_body_photo", "[Photo]");
+      case "video" -> fixedText("push_body_video", "[Video]");
+      case "voice" -> fixedText("push_body_voice", "[Voice message]");
+      case "file" -> fixedText("push_body_file", "[File]");
+      case "sticker" -> fixedText("push_body_sticker", "[Sticker]");
+      default -> fixedText("push_body_new_message", "New message");
     };
+  }
+
+  /** A fixed wording: its localization key, or the English text for pre-1.4.0 app builds. */
+  private PushText fixedText(String key, String english) {
+    return localizedPush ? PushText.localized(key) : PushText.of(english);
   }
 }

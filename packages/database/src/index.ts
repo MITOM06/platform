@@ -1,4 +1,5 @@
 export * from './mongo/mongo.module';
+export * from './mongo/mongo-options';
 export * from './redis/redis.module';
 export { Redis } from 'ioredis'; 
 export * from './mongo/user.schema';

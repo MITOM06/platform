@@ -12,7 +12,8 @@ import 'sfu_call_service.dart';
 import 'webrtc_service.dart';
 
 /// LiveKit (sfu) call control on `/user/queue/webrtc`: a 1-on-1 ring, ring
-/// cancels and declines. Returns true when [signal] was one of them.
+/// cancels, declines, merges and answers (`call-accepted`, to the caller).
+/// Returns true when [signal] was one of them.
 /// Contract: docs/superpowers/plans/2026-10-05-calls-on-livekit.md.
 bool handleSfuCallSignal(Ref ref, Map<String, dynamic> signal) {
   final type = signal['type'] as String?;
@@ -31,7 +32,9 @@ bool handleSfuCallSignal(Ref ref, Map<String, dynamic> signal) {
     ref.read(sfuCallServiceProvider).handleSignal(signal);
     return true;
   }
-  if (type == 'call-declined' || type == 'call-merged') {
+  if (type == 'call-declined' ||
+      type == 'call-merged' ||
+      type == 'call-accepted') {
     ref.read(sfuCallServiceProvider).handleSignal(signal);
     return true;
   }

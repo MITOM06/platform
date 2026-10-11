@@ -5,4 +5,13 @@
 <resources>
     <string name="meeting_push_invited">회의에 초대되었습니다</string>
     <string name="meeting_push_starting">회의가 10분 후에 시작됩니다</string>
+
+    <!-- Message pushes: same words as the in-app previews (MessageNotificationService). -->
+    <string name="push_title_new_message">새 메시지</string>
+    <string name="push_body_new_message">새 메시지</string>
+    <string name="push_body_photo">[사진]</string>
+    <string name="push_body_video">[동영상]</string>
+    <string name="push_body_file">[파일]</string>
+    <string name="push_body_voice">[음성 메시지]</string>
+    <string name="push_body_sticker">[스티커]</string>
 </resources>

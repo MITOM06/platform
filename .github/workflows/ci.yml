@@ -48,6 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: bash scripts/mini/smoke.test.sh
+      - run: bash scripts/mini/redeploy.test.sh
 
   # ── NestJS Auth Service ────────────────────────────────────────────────────
   auth-service:

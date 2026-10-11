@@ -1,7 +1,15 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { REDIS_CLIENT, Redis } from '@platform/database';
 import { Issuer, generators, Client } from 'openid-client';
+import { AuthCode } from '../../../common/auth-code.enum';
+import { isOidcConfiguredByEnv } from './oidc-env';
 
 interface OidcFlow {
   codeVerifier: string;
@@ -11,6 +19,7 @@ interface OidcFlow {
 
 @Injectable()
 export class OidcService {
+  private readonly logger = new Logger(OidcService.name);
   private clientPromise?: Promise<Client>;
 
   constructor(
@@ -19,24 +28,27 @@ export class OidcService {
   ) {}
 
   isEnabledByEnv(): boolean {
-    const enabled = (this.config.get<string>('OIDC_ENABLED') || '').toLowerCase();
-    return (
-      (enabled === 'true' || enabled === '1') &&
-      !!this.config.get<string>('OIDC_ISSUER') &&
-      !!this.config.get<string>('OIDC_CLIENT_ID')
-    );
+    return isOidcConfiguredByEnv(this.config);
   }
 
   private redirectUri(): string {
     const explicit = this.config.get<string>('OIDC_REDIRECT_URI');
     if (explicit) return explicit;
     const domain = this.config.get<string>('DOMAIN');
-    return `https://${domain}/api/auth/oidc/callback`;
+    // Caddy strips /api/auth before proxying and the route is /auth/oidc/callback,
+    // so the public URL repeats the segment (like GOOGLE_CALLBACK_URL does).
+    return `https://${domain}/api/auth/auth/oidc/callback`;
   }
 
+  /**
+   * The discovered OIDC client. A successful discovery is cached for the
+   * process lifetime; a failed one (IdP down / unreachable) is NOT, so the
+   * next request retries instead of failing until a restart. The failure
+   * surfaces as 503 SSO_UNAVAILABLE (an `?error=` redirect at the endpoints).
+   */
   private getClient(): Promise<Client> {
     if (!this.clientPromise) {
-      this.clientPromise = (async () => {
+      const attempt = (async () => {
         const issuer = await Issuer.discover(
           this.config.get<string>('OIDC_ISSUER')!,
         );
@@ -46,7 +58,16 @@ export class OidcService {
           redirect_uris: [this.redirectUri()],
           response_types: ['code'],
         });
-      })();
+      })().catch((err: unknown) => {
+        if (this.clientPromise === attempt) this.clientPromise = undefined;
+        this.logger.warn(
+          `OIDC discovery failed (retried on the next request): ${err instanceof Error ? err.message : typeof err}`,
+        );
+        throw new ServiceUnavailableException({
+          code: AuthCode.SSO_UNAVAILABLE,
+        });
+      });
+      this.clientPromise = attempt;
     }
     return this.clientPromise;
   }
@@ -78,10 +99,12 @@ export class OidcService {
     platform: string;
   }> {
     const state = query?.state;
-    if (!state) throw new UnauthorizedException({ code: 'OIDC_NO_STATE' });
+    if (!state)
+      throw new UnauthorizedException({ code: AuthCode.OIDC_NO_STATE });
     const key = `oidc:flow:${state}`;
     const raw = await this.redis.get(key);
-    if (!raw) throw new UnauthorizedException({ code: 'OIDC_BAD_STATE' });
+    if (!raw)
+      throw new UnauthorizedException({ code: AuthCode.OIDC_BAD_STATE });
     await this.redis.del(key); // one-time use
 
     const flow: OidcFlow = JSON.parse(raw);
@@ -94,7 +117,7 @@ export class OidcService {
         code_verifier: flow.codeVerifier,
       });
     } catch {
-      throw new UnauthorizedException({ code: 'OIDC_EXCHANGE_FAILED' });
+      throw new UnauthorizedException({ code: AuthCode.OIDC_EXCHANGE_FAILED });
     }
 
     const claims: any = tokenSet.claims();
@@ -103,9 +126,10 @@ export class OidcService {
     // address can still JIT-create an account on an allowed domain yet can never
     // take over an EXISTING account by email (SSO_EMAIL_UNVERIFIED there).
     if (!claims.email || claims.email_verified === false) {
-      throw new UnauthorizedException({ code: 'OIDC_EMAIL_UNVERIFIED' });
+      throw new UnauthorizedException({ code: AuthCode.OIDC_EMAIL_UNVERIFIED });
     }
-    const groupsClaim = this.config.get<string>('OIDC_GROUPS_CLAIM') || 'groups';
+    const groupsClaim =
+      this.config.get<string>('OIDC_GROUPS_CLAIM') || 'groups';
     const groups: string[] = Array.isArray(claims[groupsClaim])
       ? claims[groupsClaim]
       : [];

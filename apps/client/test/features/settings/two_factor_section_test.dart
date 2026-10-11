@@ -11,11 +11,14 @@ import 'package:platform_client/features/settings/ui/widgets/regenerate_backup_c
 import 'package:platform_client/features/settings/ui/widgets/two_factor_section.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
 
+/// An Owner / Admin-like member: 2FA required by the role (contract 15).
 const _enrolled = UserModel(
   id: 'u1',
   email: 'o@acme.com',
   displayName: 'Olga',
+  roleName: 'Admin',
   mfaRequired: true,
+  mfaAvailable: true,
   mfaEnabled: true,
 );
 
@@ -80,22 +83,51 @@ AppLocalizations _l10n(WidgetTester tester) =>
     AppLocalizations.of(tester.element(find.byType(Scaffold)));
 
 void main() {
-  testWidgets('not offered to members whose role does not require 2FA',
+  testWidgets('hidden when /me says 2FA is not available (SSO-enforced member)',
       (tester) async {
-    const plain = UserModel(id: 'u2', email: 'm@acme.com', displayName: 'Mia');
-    await _pump(tester, plain);
+    const sso = UserModel(id: 'u2', email: 'm@acme.com', displayName: 'Mia');
+    await _pump(tester, sso);
     expect(find.text(_l10n(tester).securityTwoFaTitle), findsNothing);
   });
 
-  testWidgets('required but not enrolled: status only, no regenerate',
+  testWidgets('required by the role and on: status + regenerate, no turn off',
+      (tester) async {
+    await _pump(tester, _enrolled);
+    final l10n = _l10n(tester);
+    expect(find.text(l10n.securityTwoFaTitle), findsOneWidget);
+    expect(find.text(l10n.securityMfaOn), findsOneWidget);
+    expect(find.text(l10n.securityMfaStatusOn), findsOneWidget);
+    expect(find.byKey(const ValueKey('security-mfa-regenerate')), findsOneWidget);
+    expect(find.byKey(const ValueKey('security-mfa-turn-off')), findsNothing);
+    expect(find.byKey(const ValueKey('security-mfa-turn-on')), findsNothing);
+  });
+
+  testWidgets('the required copy is role-based again (contract 15)',
+      (tester) async {
+    await _pump(tester,
+        const UserModel(id: 'u4', email: 'x@acme.com', displayName: 'X'));
+    final l10n = _l10n(tester);
+    expect(l10n.securityMfaPending.toLowerCase(), contains('role'));
+    expect(l10n.mfaEnrollSubtitle.toLowerCase(), contains('role'));
+    expect(l10n.securityMfaPending.toLowerCase(), isNot(contains('organization')));
+  });
+
+  testWidgets('required but not enrolled: status only, no regenerate / turn on',
       (tester) async {
     const pending = UserModel(
-        id: 'u1', email: 'o@acme.com', displayName: 'Olga', mfaRequired: true);
+      id: 'u1',
+      email: 'o@acme.com',
+      displayName: 'Olga',
+      mfaRequired: true,
+      mfaAvailable: true,
+    );
     await _pump(tester, pending);
     final l10n = _l10n(tester);
     expect(find.text(l10n.securityMfaPending), findsOneWidget);
     expect(find.text(l10n.securityMfaStatusOff), findsOneWidget);
     expect(find.byKey(const ValueKey('security-mfa-regenerate')), findsNothing);
+    expect(find.byKey(const ValueKey('security-mfa-turn-on')), findsNothing);
+    expect(find.byKey(const ValueKey('security-mfa-turn-off')), findsNothing);
   });
 
   testWidgets('the /me re-sync reveals the section for a stale cache',

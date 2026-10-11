@@ -1,3 +1,4 @@
+import { MfaPendingStore } from '../mfa/mfa-pending.store';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthService } from './auth.service';
@@ -34,6 +35,8 @@ import { OAuthRedirectService } from './oauth-redirect.service';
 import { LoginAttemptsService } from './login-attempts.service';
 import { MfaModule } from '../mfa/mfa.module';
 import { MfaLoginController } from './mfa-login.controller';
+import { SsoModule } from '../sso/sso.module';
+import { PasswordRecoveryService } from './password-recovery.service';
 
 @Module({
   imports: [
@@ -52,6 +55,7 @@ import { MfaLoginController } from './mfa-login.controller';
     // SsoMappingService audits SSO-driven role/department changes.
     AuditModule,
     MfaModule,
+    SsoModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       imports: [ConfigModule],
@@ -73,6 +77,9 @@ import { MfaLoginController } from './mfa-login.controller';
     SocialProvisioningService,
     OAuthRedirectService,
     LoginAttemptsService,
+    PasswordRecoveryService,
+    // Stateless over the global REDIS_CLIENT: burns pending 2FA steps on password change.
+    MfaPendingStore,
     JwtStrategy,
     ...(process.env.GOOGLE_CLIENT_ID ? [GoogleStrategy] : []),
   ],

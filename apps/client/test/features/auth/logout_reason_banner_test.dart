@@ -42,7 +42,16 @@ void main() {
   });
 
   test('only allow-listed codes are logout reasons', () {
-    expect(kLogoutReasons, {'ACCOUNT_BLOCKED'});
+    expect(kLogoutReasons, {'ACCOUNT_BLOCKED', 'SSO_REQUIRED'});
+  });
+
+  testWidgets('SSO required: the localized SSO notice, never the raw code',
+      (tester) async {
+    final l10n = await _pump(
+        tester, const AuthUnauthenticated(reason: 'SSO_REQUIRED'));
+    expect(find.text(l10n.authErrSsoRequired), findsOneWidget);
+    expect(find.byIcon(Icons.vpn_key_rounded), findsOneWidget);
+    expect(find.textContaining('SSO_REQUIRED'), findsNothing);
   });
 
   testWidgets('a failed Google sign-in shows its notice, not the raw code',
@@ -58,6 +67,8 @@ void main() {
     expect(kLoginNotices, containsAll(kLogoutReasons));
     expect(kLoginNotices,
         containsAll({'ACCOUNT_NOT_PROVISIONED', 'INVITATION_PENDING'}));
+    // Google redirect `?error=SSO_REQUIRED` (contract 13 §C).
+    expect(kLoginNotices, contains('SSO_REQUIRED'));
     expect(kLoginNotices.contains('SESSION_REVOKED'), isFalse);
   });
 }

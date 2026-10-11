@@ -11,6 +11,7 @@
 #
 #   ./scripts/mini/redeploy.sh           # deploy if anything changed, else nothing
 #   ./scripts/mini/redeploy.sh --force   # redeploy even when nothing changed
+#                                          (also retries a commit rolled back before)
 #
 # Silent when there is nothing to do, so launchd can run it on a short interval
 # without filling the log. Exits non-zero only when the deployment is actually
@@ -23,6 +24,10 @@ DIR="$ROOT/infra/docker-compose"
 ENV_FILE="$DIR/.env.mini"
 STATE_DIR="${PON_STATE_DIR:-$HOME/.local/state/pon-mini}"
 LOCK="$STATE_DIR/redeploy.lock"
+# The commit last rolled back. Without it every 5-minute run fast-forwarded to
+# the same broken main again, redeployed, failed smoke and rolled back — the mini
+# was down for part of every cycle until main was fixed.
+BAD="$STATE_DIR/rolled-back-sha"
 
 COMPOSE=(docker compose -p pon-mini -f "$DIR/compose.mini.yml" --env-file "$ENV_FILE")
 
@@ -71,7 +76,9 @@ trap 'rm -rf "$LOCK" "$CLEAN_CFG"' EXIT
 # compose.mini.yml does not silently go unpulled. Only registries we can reach
 # anonymously are pulled — Docker Hub still demands the credential helper, and
 # caddy/cloudflared are pinned to stable tags that are already on disk.
-images="$("${COMPOSE[@]}" config --images 2>/dev/null | grep '^ghcr\.io/' | sort -u)"
+cfg="$("${COMPOSE[@]}" config --images 2>&1)" \
+  || die "compose.mini.yml does not resolve (a variable missing from .env.mini?): $(printf '%s' "$cfg" | tail -3)"
+images="$(printf '%s\n' "$cfg" | grep '^ghcr\.io/' | sort -u)"
 [ -n "$images" ] || die "no ghcr.io images found in compose.mini.yml"
 
 image_id() { docker image inspect --format '{{.Id}}' "$1" 2>/dev/null || true; }
@@ -93,6 +100,13 @@ elif [ -n "$(git status --porcelain)" ]; then
   log "working tree is dirty — leaving the checkout alone"
 else
   git fetch origin --quiet main 2>/dev/null || log "warning: git fetch failed, using local checkout"
+  # Rolled back from this very commit already: wait for main to move on (a fix)
+  # instead of redeploying the same broken build every few minutes.
+  if [ "$FORCE" = 0 ] && [ -f "$BAD" ] \
+     && [ "$(git rev-parse origin/main 2>/dev/null)" = "$(cat "$BAD")" ]; then
+    date '+%Y-%m-%dT%H:%M:%S' > "$STATE_DIR/last-check"
+    exit 0
+  fi
   git merge --ff-only origin/main --quiet 2>/dev/null || true
 fi
 NEW_SHA="$(git rev-parse HEAD)"
@@ -124,8 +138,40 @@ if [ -z "$changed" ] && [ "$FORCE" = 0 ]; then
 fi
 log "deploying — ${changed:-forced}"
 
+# Put back the images and commit that were serving before, then check again.
+rollback() {
+  # Retagging the previous image id back onto the moving tag is enough: the old
+  # image is still on disk, nothing was pruned. Anything that had no local image
+  # before is left alone — there is nothing to go back to.
+  while IFS="$(printf '\t')" read -r img id; do
+    [ -n "$id" ] && docker tag "$id" "$img" >/dev/null 2>&1
+  done < "$BEFORE"
+  printf '%s' "$NEW_SHA" > "$BAD"
+  [ "$OLD_SHA" != "$NEW_SHA" ] && git reset --hard "$OLD_SHA" --quiet 2>/dev/null
+
+  "$ROOT/scripts/mini/up.sh" --no-pull >/dev/null 2>&1
+  "${COMPOSE[@]}" up -d --force-recreate --no-deps caddy >/dev/null 2>&1
+  sleep 5
+
+  if "$ROOT/scripts/mini/smoke.sh" "$BASE" >/dev/null 2>&1; then
+    die "rolled back to $(git rev-parse --short "$OLD_SHA") — that build is serving again, but main is broken"
+  fi
+  die "rolled back to $(git rev-parse --short "$OLD_SHA") and smoke STILL fails — the mini needs a human"
+}
+
+BASE="$(grep -E '^PON_API_BASE=' "$ENV_FILE" | head -1 | cut -d= -f2-)"
+BASE="${BASE%/}"
+
 # ── 4. deploy ───────────────────────────────────────────────────────────────
-"$ROOT/scripts/mini/up.sh" --no-pull >/dev/null 2>&1 || log "warning: up.sh reported a problem"
+# up.sh exits non-zero when compose refuses to start (e.g. a new required
+# variable is not in .env.mini yet) or a service never turns healthy. That is a
+# failed deploy: carrying on would smoke-test the OLD containers, pass, and log
+# "✓ deployed" for a build that never started.
+if ! "$ROOT/scripts/mini/up.sh" --no-pull >"$STATE_DIR/last-up.log" 2>&1; then
+  log "✗ up.sh failed — rolling back"
+  tail -20 "$STATE_DIR/last-up.log" | sed 's/^/    /'
+  rollback
+fi
 
 # Caddy reads a single bind-mounted file. On Docker Desktop for macOS a git
 # checkout replaces that file with a new inode while the running container keeps
@@ -142,32 +188,16 @@ if ! docker exec pon-mini-caddy-1 test -f /etc/caddy/Caddyfile 2>/dev/null \
 fi
 
 # ── 5. verify, and undo if it is broken ─────────────────────────────────────
-BASE="$(grep -E '^PON_API_BASE=' "$ENV_FILE" | head -1 | cut -d= -f2-)"
-BASE="${BASE%/}"
 sleep 5   # containers are healthy before the tunnel has re-established routes
 
 if "$ROOT/scripts/mini/smoke.sh" "$BASE" >"$STATE_DIR/last-smoke.log" 2>&1; then
   log "✓ deployed $(git rev-parse --short "$NEW_SHA") — smoke passed"
   date '+%Y-%m-%dT%H:%M:%S' | tee "$STATE_DIR/last-check" > "$STATE_DIR/last-deploy"
+  rm -f "$BAD"
   exit 0
 fi
 
 log "✗ smoke failed after deploy — rolling back"
 sed 's/^/    /' "$STATE_DIR/last-smoke.log"
+rollback
 
-# Retagging the previous image id back onto the moving tag is enough: the old
-# image is still on disk, nothing was pruned. Anything that had no local image
-# before is left alone — there is nothing to go back to.
-while IFS="$(printf '\t')" read -r img id; do
-  [ -n "$id" ] && docker tag "$id" "$img" >/dev/null 2>&1
-done < "$BEFORE"
-[ "$OLD_SHA" != "$NEW_SHA" ] && git reset --hard "$OLD_SHA" --quiet 2>/dev/null
-
-"$ROOT/scripts/mini/up.sh" --no-pull >/dev/null 2>&1
-"${COMPOSE[@]}" up -d --force-recreate --no-deps caddy >/dev/null 2>&1
-sleep 5
-
-if "$ROOT/scripts/mini/smoke.sh" "$BASE" >/dev/null 2>&1; then
-  die "rolled back to $(git rev-parse --short "$OLD_SHA") — that build is serving again, but main is broken"
-fi
-die "rolled back to $(git rev-parse --short "$OLD_SHA") and smoke STILL fails — the mini needs a human"

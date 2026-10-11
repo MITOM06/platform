@@ -5,8 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import * as QRCode from 'qrcode';
 import { User, UserDocument } from '@platform/database';
+import { SsoPolicyService, ssoRequired } from '../sso/sso-policy.service';
 import { AuthCode } from '../../common/auth-code.enum';
 import { AuditService } from '../audit/audit.service';
 import { assertCanSignIn } from '../auth/account-status';
@@ -19,7 +19,8 @@ import {
   MfaSignInContext,
   MfaStage,
 } from './mfa-pending.store';
-import { generateTotpSecret, totpKeyUri } from './totp';
+import { enrollmentView } from './mfa-enroll-view';
+import { generateTotpSecret } from './totp';
 
 /** Client-supplied session fields of confirm / complete / verify. */
 export interface MfaDeviceInput {
@@ -35,7 +36,7 @@ export interface MfaSignInResult extends MfaSignInContext {
 const SECRET_FIELDS = '+mfa.secretEnc +mfa.backupCodeHashes';
 
 /**
- * Second step of a privileged sign-in (public endpoints, authenticated by the
+ * Second step of a password / Google sign-in (public endpoints, authenticated by the
  * mfaToken only): enroll an authenticator (start → confirm → codes → complete),
  * or verify a TOTP / backup code. Never issues tokens itself; the auth-side
  * controller does once enroll/complete or verify passes.
@@ -48,7 +49,18 @@ export class MfaService {
     private readonly codes: MfaCodeService,
     private readonly crypto: MfaCryptoService,
     private readonly audit: AuditService,
+    private readonly ssoPolicy: SsoPolicyService,
   ) {}
+
+  /**
+   * "Require SSO" switched on during this 2FA step: refuse BEFORE anything is
+   * spent. The session would be refused anyway (issueTokensForUser), but only
+   * after the token and a backup code were already used up.
+   */
+  private async assertSsoNotRequired(p: MfaPending, user: UserDocument) {
+    if (p.method === 'oidc') return;
+    if (await this.ssoPolicy.isEnforcedFor(user)) throw ssoRequired();
+  }
 
   /** Same pending secret for every call with one token. */
   async enrollStart(mfaToken: unknown) {
@@ -62,14 +74,7 @@ export class MfaService {
       ));
     if (!secretEnc) throw tokenInvalid();
 
-    const secret = this.crypto.decrypt(secretEnc, p.userId);
-    const otpauthUrl = totpKeyUri(user.email, secret);
-    const qrDataUrl = await QRCode.toDataURL(otpauthUrl, {
-      errorCorrectionLevel: 'M',
-      margin: 1,
-      width: 256,
-    });
-    return { otpauthUrl, secret, qrDataUrl };
+    return enrollmentView(user.email, this.crypto.decrypt(secretEnc, p.userId));
   }
 
   /**
@@ -151,6 +156,7 @@ export class MfaService {
     dto: { mfaToken?: unknown } & MfaDeviceInput,
   ): Promise<MfaSignInResult> {
     const { p, user } = await this.requireCodesPending(dto.mfaToken);
+    await this.assertSsoNotRequired(p, user);
     if (!(await this.pending.consume(p.key))) throw tokenInvalid();
     return { user, ...signInContext(p, dto) };
   }
@@ -165,6 +171,7 @@ export class MfaService {
   ): Promise<MfaSignInResult & { backupCodesRemaining: number }> {
     const p = await this.requirePending(dto.mfaToken, 'verify');
     const user = await this.loadUser(p, SECRET_FIELDS);
+    await this.assertSsoNotRequired(p, user);
     const mfa = user.mfa;
     if (mfa?.enabled !== true || !mfa.secretEnc) {
       // Reset by an Owner after the password step: restart → enrollment.
@@ -310,7 +317,10 @@ function isPresent(value: unknown): boolean {
   return value !== undefined && value !== null && value !== '';
 }
 
-/** Session fields: the client's own (if usable), else those of the sign-in. */
+/**
+ * Session fields: device / platform are the client's own (if usable), else
+ * those of the sign-in; the method always comes from the sign-in.
+ */
 function signInContext(
   p: MfaSignInContext,
   dto: MfaDeviceInput,
@@ -318,6 +328,7 @@ function signInContext(
   return {
     deviceId: deviceField(dto.deviceId) ?? p.deviceId,
     platform: deviceField(dto.platform) ?? p.platform,
+    ...(p.method ? { method: p.method } : {}),
   };
 }
 

@@ -6,9 +6,19 @@ describe('Workspace.sso schema', () => {
     const Model = model('WorkspaceSsoTest', WorkspaceSchema);
     const doc = new Model({ name: 'Acme' });
     expect(doc.sso.enabled).toBe(false);
+    expect(doc.sso.enforced).toBe(false);
     expect(doc.sso.allowedDomains).toEqual([]);
     expect(doc.sso.groupRoleMap).toBeDefined();
     expect(doc.sso.groupDeptMap).toBeDefined();
+  });
+
+  it('a stored config without `enforced` reads as not enforced', () => {
+    const Model = model('WorkspaceSsoTest3', WorkspaceSchema);
+    const doc = new Model({
+      name: 'Acme',
+      sso: { enabled: true, allowedDomains: ['acme.com'] },
+    });
+    expect(doc.sso.enforced).toBe(false);
   });
 
   it('accepts a populated sso config', () => {

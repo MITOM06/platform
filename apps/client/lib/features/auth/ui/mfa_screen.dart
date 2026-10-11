@@ -6,9 +6,10 @@ import 'widgets/mfa_backup_codes_step.dart';
 import 'widgets/mfa_enroll_view.dart';
 import 'widgets/mfa_verify_view.dart';
 
-/// `/mfa` — second sign-in step of a privileged member (Owner / Admin —
-/// contract 09), after a password login or a Google login-code exchange
-/// answered `MFA_REQUIRED`. Mirror of web `/mfa`.
+/// `/mfa` — second sign-in step (contract 15: Owner / Admin-like roles, and
+/// Members who turned 2FA on), after a password login, a Google login-code
+/// exchange or a privileged password invitation accept answered
+/// `MFA_REQUIRED`. Mirror of web `/mfa`.
 ///
 /// The router (`route_guard.dart`) makes this the only reachable route while
 /// a challenge is pending and redirects away once the auth state moves on:

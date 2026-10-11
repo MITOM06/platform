@@ -19,6 +19,16 @@ export const PENDING_CONFIRMATION_RESULT =
   'again for this request and do not say it was done. End your turn by briefly telling the user ' +
   'what will happen once they confirm.';
 
+/**
+ * Tool result when an earlier round of this reply already holds an action of
+ * this tool: a weak model that retries with a tweak would otherwise leave two
+ * cards, and confirming both would run the action twice.
+ */
+export const ALREADY_PENDING_RESULT =
+  'Tool error: an action of this kind is already waiting for the user to confirm it in this ' +
+  'reply, so it was NOT prepared again. Do not call this tool again. End your turn: tell the user ' +
+  'to confirm the card below, or to cancel it and ask again if the details must change.';
+
 /** Tool result when the pending action could not be stored (fails closed — nothing ran). */
 export const PENDING_STAGE_FAILED_RESULT =
   'Tool error: this action could not be prepared for confirmation and was NOT performed. ' +
@@ -139,6 +149,16 @@ export class ToolRoundRunner {
     stream: AiReplyStream,
   ): Promise<Anthropic.ToolResultBlockParam> {
     const fingerprint = `${block.name}:${canonicalJson(input)}`;
+    const heldInRound = state.heldToolRounds.get(block.name);
+    if (
+      !state.pendingActions.has(fingerprint) &&
+      heldInRound !== undefined &&
+      heldInRound < state.iteration
+    ) {
+      this.logger.warn(`Refusing a second ${block.name} card in one reply`);
+      state.toolCalls.push({ toolName: block.name, inputSummary, resultSummary: 'Already awaiting confirmation' });
+      return errorResult(block, ALREADY_PENDING_RESULT);
+    }
     if (!state.pendingActions.has(fingerprint)) {
       try {
         const record = await this.pendingActionStore.create({
@@ -153,6 +173,7 @@ export class ToolRoundRunner {
         });
         const view = toPendingActionView(record);
         state.pendingActions.set(fingerprint, view);
+        if (heldInRound === undefined) state.heldToolRounds.set(block.name, state.iteration);
         this.logger.log(`Holding ${block.name} for confirmation as action ${view.id}`);
         await stream
           .actionPending(view)

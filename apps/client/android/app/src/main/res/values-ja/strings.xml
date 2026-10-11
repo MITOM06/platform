@@ -5,4 +5,13 @@
 <resources>
     <string name="meeting_push_invited">会議に招待されました</string>
     <string name="meeting_push_starting">会議が10分後に始まります</string>
+
+    <!-- Message pushes: same words as the in-app previews (MessageNotificationService). -->
+    <string name="push_title_new_message">新しいメッセージ</string>
+    <string name="push_body_new_message">新しいメッセージ</string>
+    <string name="push_body_photo">[写真]</string>
+    <string name="push_body_video">[動画]</string>
+    <string name="push_body_file">[ファイル]</string>
+    <string name="push_body_voice">[音声メッセージ]</string>
+    <string name="push_body_sticker">[スタンプ]</string>
 </resources>

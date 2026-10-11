@@ -11,6 +11,7 @@ import { InvitationMailerService } from './invitation-mailer.service';
 import { UsersService } from '../users/users.service';
 import { AuditService } from '../audit/audit.service';
 import { hashInviteToken } from './invitation-token.util';
+import { SsoPolicyService, ssoRequired } from '../sso/sso-policy.service';
 
 const ex = (v: any) => ({ exec: jest.fn().mockResolvedValue(v) });
 const oid = (s: string) => ({ toString: () => s });
@@ -39,6 +40,7 @@ describe('InvitationAcceptService', () => {
   let users: { findByEmailInsensitive: jest.Mock; create: jest.Mock };
   let audit: { record: jest.Mock };
   let redis: { set: jest.Mock; getdel: jest.Mock };
+  let sso: { assertNotEnforced: jest.Mock };
   let mailer: {
     workspaceName: jest.Mock;
     inviterName: jest.Mock;
@@ -70,6 +72,7 @@ describe('InvitationAcceptService', () => {
     };
     audit = { record: jest.fn().mockResolvedValue(undefined) };
     redis = { set: jest.fn().mockResolvedValue('OK'), getdel: jest.fn() };
+    sso = { assertNotEnforced: jest.fn().mockResolvedValue(undefined) };
     mailer = {
       workspaceName: jest.fn().mockResolvedValue('Acme'),
       inviterName: jest.fn().mockResolvedValue('Khang'),
@@ -86,6 +89,7 @@ describe('InvitationAcceptService', () => {
         { provide: AuditService, useValue: audit },
         { provide: InvitationMailerService, useValue: mailer },
         { provide: REDIS_CLIENT, useValue: redis },
+        { provide: SsoPolicyService, useValue: sso },
       ],
     }).compile();
     service = moduleRef.get(InvitationAcceptService);
@@ -350,6 +354,49 @@ describe('InvitationAcceptService', () => {
         service.acceptWithPassword(TOKEN, PASSWORD_DTO),
       ).rejects.toMatchObject({ response: { code: 'MEMBER_ALREADY_EXISTS' } });
       expect(mailer.sendWelcome).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Require SSO (invitation for an enforced domain)', () => {
+    const GOOGLE = { id: 'g1', email: 'jane@acme.com', displayName: 'Jane' };
+    beforeEach(() => sso.assertNotEnforced.mockRejectedValue(ssoRequired()));
+
+    it('accept with password → 403 SSO_REQUIRED; invitation untouched, no user', async () => {
+      await expect(
+        service.acceptWithPassword(TOKEN, {
+          displayName: 'Jane',
+          password: 'Str0ngPassw0rd',
+        } as any),
+      ).rejects.toMatchObject({
+        status: 403,
+        response: { code: 'SSO_REQUIRED' },
+      });
+      expect(sso.assertNotEnforced).toHaveBeenCalledWith({
+        email: 'jane@acme.com',
+        roleId: expect.anything(),
+      });
+      expect(invitationModel.findOneAndUpdate).not.toHaveBeenCalled();
+      expect(users.create).not.toHaveBeenCalled();
+    });
+
+    it('Google accept is refused at init (no flow id) and at the callback', async () => {
+      await expect(service.startGoogleFlow(TOKEN)).rejects.toMatchObject({
+        response: { code: 'SSO_REQUIRED' },
+      });
+      expect(redis.set).not.toHaveBeenCalled();
+
+      redis.getdel.mockResolvedValue(INV_ID);
+      await expect(
+        service.acceptWithGoogle('flow_abcdefghijklmnop', GOOGLE),
+      ).rejects.toMatchObject({ response: { code: 'SSO_REQUIRED' } });
+      expect(users.create).not.toHaveBeenCalled();
+    });
+
+    it('the SSO sign-in still consumes the invitation (acceptWithSso is not checked)', async () => {
+      await expect(
+        service.acceptWithSso(invDoc() as any, { displayName: 'Jane' }),
+      ).resolves.toBeDefined();
+      expect(users.create).toHaveBeenCalled();
     });
   });
 });

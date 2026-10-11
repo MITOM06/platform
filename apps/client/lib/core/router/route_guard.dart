@@ -11,8 +11,9 @@ const kSetPasswordPath = '/set-password';
 /// Post-login theme picker shown once per device.
 const kThemeOnboardingPath = '/theme-onboarding';
 
-/// Second sign-in step of a privileged member (2FA — contract 09). A guest
-/// route reachable ONLY while an MFA challenge is pending.
+/// Second sign-in step (2FA) of a member whose role requires it or who turned
+/// it on (contract 15). A guest route reachable ONLY while an MFA challenge is
+/// pending.
 const kMfaPath = '/mfa';
 
 /// Routes only meant for guests — an authenticated user landing on one of these

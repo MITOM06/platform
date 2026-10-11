@@ -230,7 +230,8 @@ class MessageBubble extends ConsumerWidget {
                           // (#3D1515 / #3D2800 / #3A2A2C) looked broken.
                           color: message.isAiError ||
                                   message.isAiStreamInterrupted ||
-                                  message.isAiUnavailable
+                                  message.isAiUnavailable ||
+                                  message.isAiForbidden
                               ? Theme.of(context)
                                   .colorScheme
                                   .error

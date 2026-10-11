@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -26,6 +27,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 
 /**
@@ -44,8 +47,15 @@ public class CallService {
   /** Redis string key holding the active callId for a conversation. */
   public static final String ACTIVE_KEY_PREFIX = "call:active:";
 
-  /** Redis list key buffering transcript segments for a call. */
-  public static final String TRANSCRIPT_KEY_PREFIX = "call:transcript:";
+  /** Safety net for that key, like the busy registry's: a call that never ends must not pin it. */
+  public static final Duration ACTIVE_TTL = Duration.ofHours(6);
+
+  /** Drops the conversation's active-call key only while it still names this call. */
+  private static final RedisScript<Long> RELEASE_ACTIVE =
+      new DefaultRedisScript<>(
+          "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) end "
+              + "return 0",
+          Long.class);
 
   /** Redis pub/sub channel: chat-service → ai-service to request a summary. */
   public static final String SUMMARIZE_CHANNEL = "call:summarize";
@@ -59,9 +69,6 @@ public class CallService {
    */
   static final Duration RING_REAPER_DELAY = Duration.ofSeconds(60);
 
-  /** Transcript buffer lives ~2h. */
-  private static final Duration TRANSCRIPT_TTL = Duration.ofHours(2);
-
   private final CallSessionRepository callSessionRepository;
   private final ConversationRepository conversationRepository;
   private final UserBlockRepository userBlockRepository;
@@ -74,6 +81,8 @@ public class CallService {
   private final MongoTemplate mongoTemplate;
   private final CallTimers timers;
   private final DirectCallGlare glare;
+  private final CallSessionWriter sessionWriter;
+  private final CallRoomProvisioner roomProvisioner;
 
   // ----------------------------------------------------------------------------------------------
   // call.start
@@ -91,12 +100,22 @@ public class CallService {
       return;
     }
 
-    // Block guard: for DM conversations, reject call if any other participant has blocked the
-    // caller
+    // Only a member may ring a conversation: otherwise anyone who knows (or can list, for public
+    // channels) a conversation id could ring every member in it under their own name.
     Conversation conv = conversationRepository.findById(conversationId).orElse(null);
-    if (conv != null && conv.getParticipants() != null && conv.getParticipants().size() == 2) {
+    if (conv == null
+        || conv.getParticipants() == null
+        || !conv.getParticipants().contains(userId)) {
+      return;
+    }
+    boolean direct = CallSessions.isDirect(conv);
+    // Block guard: a 1-on-1 blocked in either direction does not ring (issueToken refuses both
+    // directions too, so the call could never connect)
+    if (direct) {
       for (String p : conv.getParticipants()) {
-        if (!p.equals(userId) && userBlockRepository.existsByBlockerIdAndBlockedId(p, userId)) {
+        if (!p.equals(userId)
+            && (userBlockRepository.existsByBlockerIdAndBlockedId(p, userId)
+                || userBlockRepository.existsByBlockerIdAndBlockedId(userId, p))) {
           WebRTCSignalDto blocked =
               WebRTCSignalDto.builder()
                   .type("call-blocked")
@@ -110,11 +129,17 @@ public class CallService {
     }
 
     boolean sfu = liveKitProperties.callsUseSfu();
-    List<String> members = membersOf(conversationId);
-    String kind = members.size() == 2 ? "direct" : "group";
+    List<String> members = conv.getParticipants();
+    // From the conversation's type, not its size: a group that happens to have two members is
+    // still a group (both clients drop a "direct" ring that is not a 1-on-1 chat).
+    String kind = direct ? "direct" : "group";
     if (sfu && "direct".equals(kind)) {
       String callee = members.stream().filter(m -> !m.equals(userId)).findFirst().orElse(null);
       String calleeCall = busyRegistry.busyCallOf(callee);
+      if (calleeCall != null && isGhostRing(calleeCall)) {
+        expireUnanswered(calleeCall);
+        calleeCall = null;
+      }
       // Both tapped Call: they are ringing us right now — answer their call instead of "busy".
       if (canMerge
           && calleeCall != null
@@ -148,7 +173,7 @@ public class CallService {
             .aiNotetaker(aiNotetaker)
             .transport(sfu ? "sfu" : "mesh")
             .kind(kind)
-            .participants(new ArrayList<>(List.of(participant(userId, now))))
+            .participants(new ArrayList<>(List.of(CallSessions.participant(userId, now))))
             .build();
     callSessionRepository.save(session);
     boolean sfuDirect = sfu && "direct".equals(kind);
@@ -160,9 +185,10 @@ public class CallService {
     }
     if (sfu) {
       timers.after(RING_REAPER_DELAY, () -> expireUnanswered(callId));
+      roomProvisioner.createFor(callId);
     }
     if (!sfuDirect) {
-      redisTemplate.opsForValue().set(ACTIVE_KEY_PREFIX + conversationId, callId);
+      redisTemplate.opsForValue().set(ACTIVE_KEY_PREFIX + conversationId, callId, ACTIVE_TTL);
     }
 
     broadcastStarted(session);
@@ -179,10 +205,10 @@ public class CallService {
             .aiNotetaker(session.isAiNotetaker())
             .startedBy(session.getStartedBy())
             .startedByName(session.getStartedByName())
-            .participants(toParticipantDtos(session))
+            .participants(CallSessions.toParticipantDtos(session))
             .transport(session.getTransport())
             .kind(session.getKind())
-            .livekitUrl(isSfu(session) ? liveKitProperties.getUrl() : null)
+            .livekitUrl(CallSessions.isSfu(session) ? liveKitProperties.getUrl() : null)
             .build();
     broadcastToConversation(session.getConversationId(), event);
   }
@@ -194,7 +220,7 @@ public class CallService {
         continue;
       }
       // On sfu a member already in another call is not rung (a 1-on-1 to them never got here).
-      if (isSfu(session) && busyRegistry.busyCallOf(memberId) != null) {
+      if (CallSessions.isSfu(session) && busyRegistry.busyCallOf(memberId) != null) {
         continue;
       }
       WebRTCSignalDto ring =
@@ -223,42 +249,67 @@ public class CallService {
     if (session == null || session.getEndedAt() != null) {
       return;
     }
+    if (!membersOf(session.getConversationId()).contains(userId)) {
+      return; // a callId is not a ticket: only the conversation's members may join
+    }
     Instant now = Instant.now();
-    CallSession.Participant existing = findParticipant(session, userId);
-    if (existing == null) {
-      session.getParticipants().add(participant(userId, now));
-    } else {
-      // Rejoin: clear the previous leftAt so the roster shows them active again.
-      existing.setLeftAt(null);
-      if (existing.getJoinedAt() == null) {
-        existing.setJoinedAt(now);
-      }
-    }
-    if (saveIfActive(session)) {
-      broadcastRoster(session);
-    }
+    updateActive(
+            callId,
+            s -> {
+              CallSession.Participant existing = CallSessions.findParticipant(s, userId);
+              if (existing == null) {
+                s.getParticipants().add(CallSessions.participant(userId, now));
+              } else {
+                // Rejoin: clear the previous leftAt so the roster shows them active again.
+                existing.setLeftAt(null);
+                if (existing.getJoinedAt() == null) {
+                  existing.setJoinedAt(now);
+                }
+              }
+              return true;
+            })
+        .ifPresent(this::broadcastRoster);
   }
 
   /** Mark the caller as left; broadcast roster; end the call if no one remains. */
   public void leaveCall(String userId, String callId) {
-    CallSession session = callSessionRepository.findByCallId(callId).orElse(null);
-    if (session == null || session.getEndedAt() != null) {
-      return;
-    }
-    CallSession.Participant existing = findParticipant(session, userId);
-    if (isSfu(session) && existing == null) {
-      return; // not in this call — cannot hang it up for the people who are
-    }
-    if (existing != null && existing.getLeftAt() == null) {
-      existing.setLeftAt(Instant.now());
-    }
-    if (!saveIfActive(session)) {
+    Instant now = Instant.now();
+    CallSession session =
+        updateActive(
+                callId,
+                s -> {
+                  CallSession.Participant existing = CallSessions.findParticipant(s, userId);
+                  if (CallSessions.isSfu(s) && existing == null) {
+                    return false; // not in this call — cannot hang it up for the people who are
+                  }
+                  if (existing != null && existing.getLeftAt() == null) {
+                    existing.setLeftAt(now);
+                  }
+                  return true;
+                })
+            .orElse(null);
+    if (session == null) {
       return;
     }
     broadcastRoster(session);
-    if (isSfu(session)) {
+    if (CallSessions.isSfu(session)) {
       busyRegistry.clear(userId, callId);
       if ("direct".equals(session.getKind())) {
+        // The caller giving up before anyone answered is a cancel, whichever of the app's
+        // call.cancel / call.leave the server handles first: the callee's devices stop ringing.
+        if (userId.equals(session.getStartedBy()) && !CallSessions.answeredByOthers(session)) {
+          membersOf(session.getConversationId()).stream()
+              .filter(m -> !m.equals(userId))
+              .forEach(
+                  m ->
+                      sendToUser(
+                          m,
+                          WebRTCSignalDto.builder()
+                              .type("call-ring-cancel")
+                              .callId(callId)
+                              .reason("hangup")
+                              .build()));
+        }
         // A 1-on-1 cannot go on with one person: hanging up ends it for both.
         endCall(callId, "hangup");
         return;
@@ -300,9 +351,11 @@ public class CallService {
         CallEventDto.builder().event("call.ended").callId(callId).reason(reason).build();
     broadcastToConversation(session.getConversationId(), event);
 
-    redisTemplate.delete(ACTIVE_KEY_PREFIX + session.getConversationId());
+    // Not a plain DEL: a newer call in the same conversation may hold the key by now.
+    redisTemplate.execute(
+        RELEASE_ACTIVE, List.of(ACTIVE_KEY_PREFIX + session.getConversationId()), callId);
 
-    if (isSfu(session)) {
+    if (CallSessions.isSfu(session)) {
       // Every member, not just those LiveKit saw join: someone who answered but never connected
       // was marked busy too. clear() only drops a key that still points at this call.
       busyRegistry.clear(session.getStartedBy(), callId);
@@ -333,53 +386,8 @@ public class CallService {
   }
 
   // ----------------------------------------------------------------------------------------------
-  // Mesh signaling relay (offer / answer / ice)
-  // ----------------------------------------------------------------------------------------------
-
-  /**
-   * Relay a mesh signal to the target participant's private queue, stamping {@code fromId} (and
-   * {@code senderId}) with the originator so the recipient knows the source.
-   */
-  public void relaySignal(String fromUserId, String type, WebRTCSignalDto dto) {
-    if (dto == null || dto.getTargetId() == null) {
-      return;
-    }
-    dto.setType(type);
-    dto.setFromId(fromUserId);
-    dto.setSenderId(fromUserId);
-    clusterBroker.convertAndSendToUser(dto.getTargetId(), WEBRTC_QUEUE, dto);
-  }
-
-  // ----------------------------------------------------------------------------------------------
-  // call.transcript
-  // ----------------------------------------------------------------------------------------------
-
-  /** Buffer a transcript segment in Redis (RPUSH + TTL). Server fills userId/displayName. */
-  public void appendTranscript(String userId, String callId, String text, Long ts) {
-    if (callId == null || text == null || text.isBlank()) {
-      return;
-    }
-    try {
-      String segment =
-          objectMapper.writeValueAsString(
-              orderedSegment(userId, userId, text, ts == null ? Instant.now().toEpochMilli() : ts));
-      String key = TRANSCRIPT_KEY_PREFIX + callId;
-      redisTemplate.opsForList().rightPush(key, segment);
-      redisTemplate.expire(key, TRANSCRIPT_TTL);
-    } catch (Exception e) {
-      log.error("Failed to append transcript for call {}", callId, e);
-    }
-  }
-
-  // ----------------------------------------------------------------------------------------------
   // Helpers
   // ----------------------------------------------------------------------------------------------
-
-  private Map<String, Object> orderedSegment(
-      String userId, String displayName, String text, long ts) {
-    // LinkedHashMap-style ordering is not required on the wire; ai-service reads by key.
-    return Map.of("userId", userId, "displayName", displayName, "text", text, "ts", ts);
-  }
 
   /** The session, ended or not. */
   Optional<CallSession> findSession(String callId) {
@@ -392,21 +400,18 @@ public class CallService {
   }
 
   /**
-   * Write {@code session} back only while it is still running — never resurrect a call another path
-   * ended between our read and this write. False when it had already ended.
+   * Change the running session {@code callId} without losing a concurrent write (see {@link
+   * CallSessionWriter}). Empty when it has ended or {@code change} declined.
    */
-  boolean saveIfActive(CallSession session) {
-    return mongoTemplate.findAndReplace(
-            new Query(Criteria.where("callId").is(session.getCallId()).and("endedAt").is(null)),
-            session)
-        != null;
+  Optional<CallSession> updateActive(String callId, Predicate<CallSession> change) {
+    return sessionWriter.updateActive(callId, change);
   }
 
   /** Server-side ring timeout for sfu calls (see {@link #RING_REAPER_DELAY}). */
   void expireUnanswered(String callId) {
     activeSession(callId)
-        .filter(CallService::isSfu)
-        .filter(s -> !answeredByOthers(s))
+        .filter(CallSessions::isSfu)
+        .filter(s -> !CallSessions.answeredByOthers(s))
         .ifPresent(
             s -> {
               membersOf(s.getConversationId()).stream()
@@ -424,21 +429,13 @@ public class CallService {
             });
   }
 
-  /** Someone other than the caller answered or reached the room. */
-  static boolean answeredByOthers(CallSession s) {
-    return s.getParticipants().stream()
-        .anyMatch(
-            p ->
-                !p.getUserId().equals(s.getStartedBy())
-                    && (p.getJoinedAt() != null || p.getAcceptedAt() != null));
+  /** An sfu ring nobody answered that is older than {@link CallSessions#GHOST_RING_AGE}. */
+  boolean isGhostRing(String callId) {
+    return CallSessions.isGhostRing(activeSession(callId).orElse(null));
   }
 
   void sendToUser(String userId, WebRTCSignalDto dto) {
     clusterBroker.convertAndSendToUser(userId, WEBRTC_QUEUE, dto);
-  }
-
-  static boolean isSfu(CallSession session) {
-    return "sfu".equals(session.getTransport());
   }
 
   void broadcastRoster(CallSession session) {
@@ -446,7 +443,7 @@ public class CallService {
         CallEventDto.builder()
             .event("call.roster")
             .callId(session.getCallId())
-            .participants(toParticipantDtos(session))
+            .participants(CallSessions.toParticipantDtos(session))
             .build();
     broadcastToConversation(session.getConversationId(), event);
   }
@@ -460,39 +457,5 @@ public class CallService {
         .findById(conversationId)
         .map(c -> c.getParticipants() == null ? List.<String>of() : c.getParticipants())
         .orElse(List.of());
-  }
-
-  private CallSession.Participant findParticipant(CallSession session, String userId) {
-    if (session.getParticipants() == null) {
-      return null;
-    }
-    return session.getParticipants().stream()
-        .filter(p -> userId.equals(p.getUserId()))
-        .findFirst()
-        .orElse(null);
-  }
-
-  private CallSession.Participant participant(String userId, Instant joinedAt) {
-    return CallSession.Participant.builder()
-        .userId(userId)
-        .displayName(userId)
-        .joinedAt(joinedAt)
-        .build();
-  }
-
-  private List<CallEventDto.ParticipantDto> toParticipantDtos(CallSession session) {
-    if (session.getParticipants() == null) {
-      return List.of();
-    }
-    return session.getParticipants().stream()
-        .map(
-            p ->
-                CallEventDto.ParticipantDto.builder()
-                    .userId(p.getUserId())
-                    .displayName(p.getDisplayName())
-                    .joinedAt(p.getJoinedAt())
-                    .leftAt(p.getLeftAt())
-                    .build())
-        .toList();
   }
 }

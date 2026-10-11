@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 import 'call_network.dart';
@@ -11,6 +13,9 @@ abstract class DirectCallEngine {
   Function()? onCallEnded;
   void Function(CallEndReason reason, bool byPeer)? onEndNotice;
   Function(String content)? onSendCallLog;
+
+  /// A call is starting, ringing or running on this engine.
+  bool get isActive;
 
   /// Whether this call carries video. Can change once: when both tapped Call,
   /// the call that survives brings its own media.
@@ -29,4 +34,20 @@ abstract class DirectCallEngine {
   Future<void> setSpeakerOn(bool on);
   Future<void> switchCamera();
   void dispose();
+}
+
+/// The call screen that installed [onEnded] as [DirectCallEngine.onCallEnded]
+/// is going away. A call it leaves running — the screen replaced by a
+/// notification tap or a deep link (`go()`) — is hung up, or the mic stays
+/// open with no UI and every later call is answered "busy". A call that
+/// already ended is not ended twice, and one another call screen has taken
+/// over (it installed its own callback) is left alone.
+void releaseCallScreen(
+  DirectCallEngine engine,
+  Function() onEnded, {
+  int? duration,
+}) {
+  if (!identical(engine.onCallEnded, onEnded)) return;
+  engine.onCallEnded = null; // nothing left to close
+  if (engine.isActive) unawaited(engine.endCall(duration: duration));
 }

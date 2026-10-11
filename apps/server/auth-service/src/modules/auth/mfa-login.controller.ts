@@ -24,8 +24,9 @@ import { AuthService } from './auth.service';
 import { SENSITIVE_THROTTLE } from './throttle';
 
 /**
- * Public (no JWT) second step of a privileged sign-in. The mfaToken from the
- * MFA_REQUIRED answer of /auth/login or /auth/exchange is the only credential.
+ * Public (no JWT) second step of a password / Google sign-in (and of an
+ * invitation accepted with a password). The mfaToken from the MFA_REQUIRED
+ * answer of /auth/login, /auth/exchange or accept-password is the only credential.
  * A session is issued only by verify, or by enroll/complete once the backup
  * codes from enroll/confirm were acknowledged (so they cannot be skipped).
  */
@@ -83,8 +84,14 @@ export class MfaLoginController {
   @ApiResponse({ status: 400, description: 'MFA_NOT_ENROLLED (wrong step)' })
   @ApiResponse({ status: 401, description: 'MFA_TOKEN_INVALID' })
   async enrollComplete(@Body() dto: MfaEnrollCompleteDto) {
-    const { user, deviceId, platform } = await this.mfa.enrollComplete(dto);
-    const tokens = await this.auth.issueTokensForUser(user, deviceId, platform);
+    const { user, deviceId, platform, method } =
+      await this.mfa.enrollComplete(dto);
+    const tokens = await this.auth.issueTokensForUser(
+      user,
+      deviceId,
+      platform,
+      method ?? 'password',
+    );
     return { code: AuthCode.LOGIN_SUCCESS, ...tokens };
   }
 
@@ -97,9 +104,14 @@ export class MfaLoginController {
     description: 'MFA_TOKEN_INVALID / MFA_CODE_INVALID / MFA_TOO_MANY_ATTEMPTS',
   })
   async verify(@Body() dto: MfaVerifyDto) {
-    const { user, deviceId, platform, backupCodesRemaining } =
+    const { user, deviceId, platform, method, backupCodesRemaining } =
       await this.mfa.verify(dto);
-    const tokens = await this.auth.issueTokensForUser(user, deviceId, platform);
+    const tokens = await this.auth.issueTokensForUser(
+      user,
+      deviceId,
+      platform,
+      method ?? 'password',
+    );
     return { code: AuthCode.LOGIN_SUCCESS, ...tokens, backupCodesRemaining };
   }
 }

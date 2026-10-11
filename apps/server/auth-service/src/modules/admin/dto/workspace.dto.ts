@@ -17,24 +17,51 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 const VALID_TONES = ['friendly', 'professional', 'concise', 'creative'] as const;
 const VALID_MODEL_TIERS = ['auto', 'simple', 'mid', 'complex'] as const;
 
+/**
+ * The workspace SSO object. It replaces the stored one on save, except
+ * `enforced`, which keeps its stored value when omitted.
+ */
 export class WorkspaceSsoDto {
+  @ApiPropertyOptional({ description: 'Show / allow "Sign in with SSO"' })
   @IsOptional()
   @IsBoolean()
   enabled?: boolean;
 
+  @ApiPropertyOptional({
+    description:
+      'Require SSO for members whose email domain is in allowedDomains (Owners exempt). ' +
+      'Needs enabled + a non-empty allowedDomains + OIDC configured on the server, ' +
+      'else 400 SSO_ENFORCE_NOT_READY. Omitted = keep the stored value.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  enforced?: boolean;
+
+  @ApiPropertyOptional({ type: [String], example: ['acme.com'] })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   allowedDomains?: string[];
 
+  @ApiPropertyOptional({
+    type: 'object',
+    additionalProperties: { type: 'string' },
+    description: 'IdP group → PON role name',
+  })
   @IsOptional()
   @IsObject()
   groupRoleMap?: Record<string, string>;
 
+  @ApiPropertyOptional({
+    type: 'object',
+    additionalProperties: { type: 'string' },
+    description: 'IdP group → department id',
+  })
   @IsOptional()
   @IsObject()
   groupDeptMap?: Record<string, string>;
 
+  @ApiPropertyOptional({ description: 'Role name when no group matches' })
   @IsOptional()
   @IsString()
   defaultRole?: string;

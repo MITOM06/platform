@@ -17,7 +17,7 @@ interface Props {
   /** The signed-in admin's own row — the block action is hidden. */
   isSelf: boolean
   canManageMembers: boolean
-  /** Owner viewing another privileged member — "Reset 2FA" is offered (see `canResetMemberMfa`). */
+  /** The caller may reset this member's 2FA — "Reset 2FA" is offered (see `canResetMemberMfa`). */
   canResetMfa: boolean
   onEdit: (m: Member) => void
   onAiContext: (m: Member) => void

@@ -86,7 +86,13 @@ describe('MfaLoginController (/auth/mfa/*)', () => {
       ...tokens,
     });
     expect(mfa.enrollComplete).toHaveBeenCalledWith(dto);
-    expect(auth.issueTokensForUser).toHaveBeenCalledWith(user, 'd', 'mobile');
+    // A record without a method (pre-deploy) → a password session.
+    expect(auth.issueTokensForUser).toHaveBeenCalledWith(
+      user,
+      'd',
+      'mobile',
+      'password',
+    );
   });
 
   it('verify: login-success shape plus backupCodesRemaining', async () => {
@@ -101,6 +107,37 @@ describe('MfaLoginController (/auth/mfa/*)', () => {
       user,
       'web-login',
       'web',
+      'password',
+    );
+  });
+
+  it('the sign-in method of the pending step becomes the session method', async () => {
+    mfa.verify.mockResolvedValueOnce({
+      user,
+      deviceId: 'd',
+      platform: 'web',
+      method: 'google',
+      backupCodesRemaining: 7,
+    });
+    await controller.verify({ mfaToken: 't', code: '123456' });
+    expect(auth.issueTokensForUser).toHaveBeenLastCalledWith(
+      user,
+      'd',
+      'web',
+      'google',
+    );
+    mfa.enrollComplete.mockResolvedValueOnce({
+      user,
+      deviceId: 'd',
+      platform: 'web',
+      method: 'invite',
+    });
+    await controller.enrollComplete({ mfaToken: 't' });
+    expect(auth.issueTokensForUser).toHaveBeenLastCalledWith(
+      user,
+      'd',
+      'web',
+      'invite',
     );
   });
 
@@ -139,6 +176,7 @@ describe('MfaLoginController + MfaService: enrollment sequence', () => {
       new MfaCodeService(redis as never),
       crypto,
       { record: jest.fn() } as never,
+      { isEnforcedFor: async () => false } as never,
     );
     const auth = {
       issueTokensForUser: jest.fn().mockResolvedValue({ sid: 's1' }),

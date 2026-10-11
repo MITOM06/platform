@@ -8,7 +8,7 @@ import '../../data/models/admin_models.dart';
 /// is hidden on the caller's own row ([isSelf]) — the server rejects
 /// self-block anyway. "Reset 2FA" sits next to the badges (the subtitle wraps,
 /// so the trailing actions never overflow) and only when [canResetMfa]
-/// (Owner, not own row — see `canResetMemberMfa`).
+/// (enrolled row the caller may reset — see `canResetMemberMfa`).
 class MemberTile extends StatelessWidget {
   final Member member;
   final String? roleName;

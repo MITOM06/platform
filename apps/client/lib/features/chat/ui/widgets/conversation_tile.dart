@@ -13,6 +13,8 @@ import '../../domain/chat_state.dart';
 import 'conversation_avatar.dart';
 import 'conversation_tile_menu.dart';
 import 'message_preview_text.dart';
+import 'system_message_text.dart';
+import 'system_name_resolver.dart';
 
 class ConversationTile extends ConsumerWidget {
   final ConversationModel conv;
@@ -197,6 +199,9 @@ class ConversationTile extends ConsumerWidget {
                     _subtitleWithPrefix(
                       context,
                       conv.lastMessage!,
+                      resolveName: systemNameResolver(ref, context.l10n,
+                          conversationId: conv.id,
+                          currentUserId: currentUserId),
                       isGroup: isGroup,
                       sentByMe: !isGroup &&
                           currentUserId.isNotEmpty &&
@@ -270,10 +275,12 @@ class ConversationTile extends ConsumerWidget {
   String _subtitleWithPrefix(
     BuildContext context,
     LastMessageModel last, {
+    required SystemNameResolver resolveName,
     required bool isGroup,
     required bool sentByMe,
   }) {
-    final body = lastMessagePreview(context, last);
+    // System messages name people like the bubble does ("Bob left the group").
+    final body = lastMessagePreview(context, last, resolveName: resolveName);
     final isSystem =
         last.type == 'system' || last.content.startsWith('system.');
     if (!isGroup && sentByMe && !isSystem) {

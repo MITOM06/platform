@@ -15,6 +15,7 @@ import '../domain/auth_state.dart';
 import '../utils/auth_error.dart';
 import 'widgets/invite_link_dialog.dart';
 import 'widgets/logout_reason_banner.dart';
+import 'widgets/sso_sign_in_button.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -30,14 +31,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _ssoEnabled = false;
+  bool _ssoEnforced = false;
+
+  /// Google sign-in is configured on this deployment (`/auth/sso/info`
+  /// `googleEnabled`; absent or unknown ⇒ shown).
+  bool _googleEnabled = true;
 
   @override
   void initState() {
     super.initState();
-    // Discover whether this deployment offers OIDC SSO (shows the SSO button).
+    // Discover whether this deployment offers OIDC SSO (shows the SSO button)
+    // and whether it is required for some domains (emphasises it).
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final info = await ref.read(authRepositoryProvider).getSsoInfo();
-      if (mounted) setState(() => _ssoEnabled = info.enabled);
+      if (mounted) {
+        setState(() {
+          _ssoEnabled = info.enabled;
+          _ssoEnforced = info.enforced;
+          _googleEnabled = info.googleEnabled;
+        });
+      }
     });
     // Listen for login errors
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -69,9 +82,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   String _friendlyError(BuildContext context, Object error) {
-    if (error is DioException) {
-      return authErrorToString(context, error);
-    }
+    // A code maps to its own message; none (a 429 from the throttler, no
+    // response at all) to the right category — never "action failed".
+    if (error is DioException) return authErrorMessage(context, error);
     final msg = error.toString();
     if (msg.contains('network') || msg.contains('connect')) {
       return context.l10n.errNetwork;
@@ -96,22 +109,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  // OIDC SSO uses the PON_DOMAIN-aware base; the IdP redirect deep-links back
-  // via the existing platform://auth?code=… handler (provider-agnostic).
-  Future<void> _launchSso() async {
-    final uri =
-        Uri.parse('${AppConfig.authBaseUrl}/auth/oidc/login?platform=mobile');
-    try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.errCannotOpenLink)),
-        );
-      }
-    }
-  }
-
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
@@ -124,6 +121,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // `SSO_REQUIRED` (refused password sign-in, Google redirect or forced
+    // logout — contract 13 §C): the banner says to use SSO, so the SSO button
+    // is shown even if `/auth/sso/info` failed, and emphasised. A deployment
+    // enforcing SSO for some domains emphasises it for everyone.
+    final auth = ref.watch(authNotifierProvider).valueOrNull;
+    final ssoRequired =
+        auth is AuthUnauthenticated && auth.reason == kSsoRequired;
+    final showSso = _ssoEnabled || ssoRequired;
+    final emphasiseSso = showSso && (ssoRequired || _ssoEnforced);
+    final showGoogle = _googleEnabled;
+
     return Scaffold(
       // No decorative accent orbs: the accent means "primary action" only
       // (docs/design-system.md §1).
@@ -169,7 +177,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 28),
-                              // Forced logout (e.g. account blocked) → why.
+                              // Forced logout / refused sign-in → why (e.g.
+                              // account blocked, SSO required).
                               const LogoutReasonBanner(),
 
                               // Email
@@ -245,54 +254,56 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // OAuth divider
-                  StaggeredEntrance(
-                    index: 2,
-                    child: Row(
-                      children: [
-                        Expanded(
-                            child: Divider(color: AppTheme.hairline(context))),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            context.l10n.orContinueWith,
-                            style: TextStyle(
-                                color: AppTheme.mutedText(context),
-                                fontSize: 12),
+                  // OAuth divider — only when there is something to continue
+                  // with (Google can be switched off on the server).
+                  if (showGoogle || showSso) ...[
+                    StaggeredEntrance(
+                      index: 2,
+                      child: Row(
+                        children: [
+                          Expanded(
+                              child:
+                                  Divider(color: AppTheme.hairline(context))),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              context.l10n.orContinueWith,
+                              style: TextStyle(
+                                  color: AppTheme.mutedText(context),
+                                  fontSize: 12),
+                            ),
                           ),
-                        ),
-                        Expanded(
-                            child: Divider(color: AppTheme.hairline(context))),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  StaggeredEntrance(
-                    index: 3,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _launchOAuth('google'),
-                      icon: const GoogleLogoIcon(size: 18),
-                      label: Text(context.l10n.loginWithGoogle),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor:
-                            Theme.of(context).colorScheme.onSurface,
-                        side: BorderSide(color: AppTheme.hairline(context)),
+                          Expanded(
+                              child:
+                                  Divider(color: AppTheme.hairline(context))),
+                        ],
                       ),
                     ),
-                  ),
-
-                  if (_ssoEnabled) ...[
                     const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: _launchSso,
-                      icon: const Icon(Icons.vpn_key_rounded, size: 18),
-                      label: Text(context.l10n.loginWithSso),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor:
-                            Theme.of(context).colorScheme.onSurface,
-                        side: BorderSide(color: AppTheme.hairline(context)),
+                  ],
+                  if (emphasiseSso) ...[
+                    const SsoSignInButton(emphasised: true),
+                    const SizedBox(height: 12),
+                  ],
+                  if (showGoogle)
+                    StaggeredEntrance(
+                      index: 3,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _launchOAuth('google'),
+                        icon: const GoogleLogoIcon(size: 18),
+                        label: Text(context.l10n.loginWithGoogle),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onSurface,
+                          side: BorderSide(color: AppTheme.hairline(context)),
+                        ),
                       ),
                     ),
+
+                  if (showSso && !emphasiseSso) ...[
+                    if (showGoogle) const SizedBox(height: 12),
+                    const SsoSignInButton(),
                   ],
 
                   // Invite-only: no self sign-up. Invitees open the link

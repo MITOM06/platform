@@ -39,6 +39,7 @@ public class AssistantProvisioningService {
   private final BotFactoryClient botFactoryClient;
   private final ConnectorServiceClient connectorClient;
   private final ExternalBotAdminService externalBotAdminService;
+  private final AssistantTokenStore tokenStore;
 
   /**
    * Full setup flow for a member. Idempotent: if the member already has an assistant we update its
@@ -79,6 +80,7 @@ public class AssistantProvisioningService {
           factoryBotId, BotFactoryClient.PON_MCP_NAME, session.mcpUrl(), session.token());
       externalBotAdminService.registerAssistant(
           userId, factoryBotId, name, null, systemPrompt, providerId);
+      recordTokenExpiry(botUserId, session);
     } catch (RuntimeException e) {
       compensate(userId, factoryBotId, botUserId, tokenIssued);
       throw upstreamFailed("wire the assistant", e);
@@ -116,6 +118,21 @@ public class AssistantProvisioningService {
         systemPrompt,
         providerId);
     return name;
+  }
+
+  /**
+   * Best effort: without a recorded expiry the renewal sweep still picks the assistant up (persona
+   * and model are mirrored), so a failure here must not undo a working setup.
+   */
+  private void recordTokenExpiry(String botUserId, BotSessionResponse session) {
+    if (session.expiresAt() == null) {
+      return;
+    }
+    try {
+      tokenStore.recordIssued(botUserId, session.expiresAt());
+    } catch (RuntimeException e) {
+      log.warn("Could not record the MCP token expiry of {}: {}", botUserId, e.toString());
+    }
   }
 
   /** Undo a half-finished setup so a retry does not leave an orphan Bot Factory bot behind. */

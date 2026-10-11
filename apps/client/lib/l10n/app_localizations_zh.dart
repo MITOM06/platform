@@ -1097,7 +1097,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinnedMessagesTitle => '置顶消息';
 
   @override
-  String get pinLimitReached => '最多只能置顶 5 条消息';
+  String pinLimitReached(int max) {
+    return '最多只能置顶 $max 条消息';
+  }
 
   @override
   String get cannotPinCall => '通话无法置顶';
@@ -1413,6 +1415,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiErrRateLimited => 'AI 请求过于频繁。请稍后再试。';
+
+  @override
+  String get aiErrForbidden => '你无权访问此对话，因此 AI 无法在此回复。';
 
   @override
   String get feedbackHelpful => '有帮助';
@@ -2529,6 +2534,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminSsoAddMapping => '添加映射';
 
   @override
+  String get adminSsoEnforce => '要求这些域名使用 SSO';
+
+  @override
+  String get adminSsoEnforceHint => '使用这些邮箱域名的成员必须通过 SSO 登录。所有者仍可使用密码加双重验证登录。';
+
+  @override
+  String get adminSsoEnforceNotReady => '请先启用 SSO 并添加至少一个允许的域名。';
+
+  @override
+  String get adminSsoEnforceConfirmTitle => '要求这些域名使用 SSO？';
+
+  @override
+  String get adminSsoEnforceConfirmPasswords => '这些域名将无法使用密码登录、Google 登录和重置密码。';
+
+  @override
+  String get adminSsoEnforceConfirmOwners => '所有者保留密码 + 双重验证登录，作为紧急备用账号。';
+
+  @override
+  String get adminSsoEnforceConfirmSessions => '保存后，这些域名中未通过 SSO 登录的用户将被登出。';
+
+  @override
+  String get adminSsoEnforceConfirm => '要求 SSO';
+
+  @override
   String get sectionDirectoryTitle => 'MCP 目录';
 
   @override
@@ -3259,6 +3288,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get inviteSubmit => '创建账号';
 
   @override
+  String get inviteSsoRequired => '你的组织要求此邮箱使用单点登录。请使用 SSO 登录以接受邀请。';
+
+  @override
   String get inviteInvalidTitle => '邀请无效';
 
   @override
@@ -3365,6 +3397,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get authErrSsoDomainNotAllowed => '您的邮箱域名不允许使用 SSO。';
+
+  @override
+  String get authErrSsoRequired => '你的组织要求使用单点登录。请使用“使用 SSO 登录”。';
+
+  @override
+  String get authErrSsoUnavailable => '你所在组织的登录服务暂时不可用。请稍后再试。';
+
+  @override
+  String get authErrSsoEnforceNotReady =>
+      '暂时无法强制使用 SSO。请先启用 SSO、添加至少一个允许的域名，并确认已配置身份提供商。';
 
   @override
   String get adminInviteMember => '邀请成员';
@@ -3474,6 +3516,32 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get callConnectionLost => '连接中断，通话已结束';
+
+  @override
+  String get callErrUnavailable => '通话暂时不可用，请稍后再试。';
+
+  @override
+  String get callErrNotFound => '此通话已不存在。';
+
+  @override
+  String get callErrEnded => '此通话已结束。';
+
+  @override
+  String get callErrNotSfu => '无法从这里加入此通话，请重新拨打。';
+
+  @override
+  String get callErrForbidden => '你无法加入此通话。';
+
+  @override
+  String callErrPeerNeverJoined(String name) {
+    return '无法连接到 $name，请重试。';
+  }
+
+  @override
+  String get callErrStartTimeout => '无法发起通话——服务器没有响应，请重试。';
+
+  @override
+  String get groupCallJoinFailed => '无法加入通话，请重试。';
 
   @override
   String get callSpeaker => '扬声器';
@@ -3633,7 +3701,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authErrSsoEmailUnverified => '你的登录提供方尚未验证此邮箱地址';
 
   @override
+  String get authErrSsoStateInvalid => '登录链接已过期或无效，请重试。';
+
+  @override
+  String get authErrSsoExchangeFailed => '无法完成单点登录，请重试。';
+
+  @override
   String get authErrSocialAccountConflict => '此邮箱已关联到其他登录账号';
+
+  @override
+  String get authErrTooManyOtpRequests => '你请求的验证码次数过多。请在 10 分钟后重试。';
+
+  @override
+  String get authErrSocialProviderUnsupported => '不支持此登录方式。';
 
   @override
   String get aiActionConfirm => '确认';
@@ -3688,6 +3768,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiActionFieldWhen => '时间';
+
+  @override
+  String get aiActionFieldCc => '抄送';
+
+  @override
+  String get aiActionFieldBcc => '密送';
+
+  @override
+  String get aiActionFieldAttendees => '参与者';
 
   @override
   String get aiActionStatusConfirmed => '已完成';
@@ -4076,6 +4165,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminAuditActionSensitiveSkillRun => '运行了敏感技能';
 
   @override
+  String get adminAuditActionSsoEnforcementChanged => '更改了“要求 SSO”';
+
+  @override
+  String get adminAuditActionMfaEnrolled => '设置了双重验证';
+
+  @override
+  String get adminAuditActionMfaDisabled => '关闭了双重验证';
+
+  @override
+  String get adminAuditActionMfaReset => '重置了成员的双重验证';
+
+  @override
+  String get adminAuditActionMfaBackupCodesRegenerated => '重新生成了备用码';
+
+  @override
+  String get adminAuditActionMfaVerifiedBackupCode => '使用备用码登录';
+
+  @override
+  String get adminAuditActionRolePresetRemoved => '移除了预设角色';
+
+  @override
   String get adminAuditTargetWorkspace => '工作区';
 
   @override
@@ -4254,6 +4364,42 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityMfaDone => '完成';
 
   @override
+  String get securityMfaOptionalHint => '为登录添加第二步验证。对你的角色而言为可选项。';
+
+  @override
+  String get securityMfaStatusDisabled => '未开启';
+
+  @override
+  String get securityMfaTurnOn => '开启双重验证';
+
+  @override
+  String get securityMfaTurnedOn => '双重验证已开启。';
+
+  @override
+  String get securityMfaSetupExpired => '设置已超时，请重新开始。';
+
+  @override
+  String get securityMfaTooManyAttempts => '错误验证码次数过多。请等待几分钟后再试。';
+
+  @override
+  String get securityMfaTurnOff => '关闭双重验证';
+
+  @override
+  String get securityMfaTurnOffTitle => '要关闭双重验证吗？';
+
+  @override
+  String get securityMfaTurnOffHint => '输入身份验证器应用中的当前验证码以确认。之后登录时将不再要求输入验证码。';
+
+  @override
+  String get securityMfaTurnOffSubmit => '关闭';
+
+  @override
+  String get securityMfaTurnedOff => '双重验证已关闭。';
+
+  @override
+  String get authErrMfaRequiredByRole => '你的角色要求启用双重验证，因此无法关闭。';
+
+  @override
   String get adminMfaBadge => '已开启双重验证';
 
   @override
@@ -4266,6 +4412,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminMfaResetDone => '已重置双重验证。对方将在下次登录时重新设置。';
+
+  @override
+  String adminMfaResetConfirmOptional(String name) {
+    return '要重置 $name 的双重验证吗？对方将在所有设备上被登出，双重验证将被关闭。对方可以在“设置 → 密码与安全”中重新开启。';
+  }
+
+  @override
+  String get adminMfaResetDoneOptional => '已重置双重验证。对方的双重验证现已关闭，可在设置中重新开启。';
 
   @override
   String get authMsgMfaRequired => '请输入身份验证器应用中的验证码以完成登录。';
@@ -4291,7 +4445,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authErrMfaAlreadyEnrolled => '此账号已设置双重验证。';
 
   @override
-  String get authErrMfaResetForbidden => '只有所有者才能重置双重验证。';
+  String get authErrMfaResetForbidden => '你无法重置该成员的双重验证。';
 
   @override
   String get authErrMfaResetSelfForbidden => '你不能重置自己的双重验证。';

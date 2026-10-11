@@ -22,6 +22,21 @@ void main() {
         expect(androidString(xml, native), expected, reason: 'android $loc $native');
         expect(iosString(ios, native), expected, reason: 'ios $loc $native');
       }
+      // Message pushes (chat-service MessageNotificationService): the same words
+      // the in-app previews use, so the lock screen is in the user's language.
+      String bracket(String key) => '[${arb[key]}]';
+      for (final (native, expected) in [
+        ('push_title_new_message', arb['newNotificationTitle'] as String),
+        ('push_body_new_message', arb['newNotificationTitle'] as String),
+        ('push_body_photo', bracket('attachPhoto')),
+        ('push_body_video', bracket('attachVideo')),
+        ('push_body_file', bracket('attachFile')),
+        ('push_body_voice', bracket('attachVoice')),
+        ('push_body_sticker', bracket('attachSticker')),
+      ]) {
+        expect(androidString(xml, native), expected, reason: 'android $loc $native');
+        expect(iosString(ios, native), expected, reason: 'ios $loc $native');
+      }
     });
   });
 

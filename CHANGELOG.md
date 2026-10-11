@@ -3,6 +3,139 @@
 All notable changes to PON. One version per promotion to `main`; web, mobile and the
 NestJS services share the product version (`apps/client/pubspec.yaml`, `apps/*/package.json`).
 
+## 1.4.0 — 2026-10-11
+
+Two branches tested together on `dev`: `feat/new-login-on-main` — Hoàng Dũng's sign-in work
+(PR #168), rebased onto 1.3.0 — and `fix/qc-2026-10-11`, which fixes every finding of the
+2026-10-11 QC of `dev` (3 critical, 10 high, about 24 medium and 30 low) plus the database outage
+production has had since 2026-10-10. Verified on an isolated stack with the real services: calls,
+2FA, Require SSO through Keycloak, AI action cards over a real MCP server, Module A with the live
+model, and a fresh boot of the self-host package.
+
+### Upgrade notes
+
+- **Production fix — sign-in was down.** Since 2026-10-10 auth-, ai- and connector-service could
+  not reach MongoDB on the Mac mini (502 behind the tunnel): the Atlas hosts became a CNAME chain
+  whose AAAA lookup Docker Desktop answers with SERVFAIL, which fails the whole lookup in the
+  Alpine Node images. They now resolve the database host over IPv4. Nothing to configure.
+- **OIDC redirect URI.** The default is now `https://<DOMAIN>/api/auth/auth/oidc/callback`, the
+  path the reverse proxy really serves (the documented `/api/auth/oidc/callback` answered 404).
+  Register that URI at the identity provider, or keep setting `OIDC_REDIRECT_URI` explicitly.
+- **Push wording.** Mobile 1.4.0 ships the strings to show "New message", "[Photo]"… in the
+  phone's language. Keep `PUSH_LOCALIZED=false` (the default, English text as before) until every
+  installed app is 1.4.0 or newer, then turn it on (chat-service).
+- **Bot Factory assistants.** A few minutes after boot, assistants set up before this release get
+  a fresh MCP token once; from then on tokens are renewed 14 days before they expire.
+- **Mac mini.** `redeploy.sh` no longer redeploys and rolls back the same broken build every five
+  minutes. It only updates itself when the mini's checkout is clean.
+
+### Upgrade note — the Manager preset role is gone
+
+- **On first boot, everyone holding the preset "Manager" role becomes a Member.** Their sessions
+  are revoked (they sign in again) and each move is audited. Members do not see internal AI
+  context, so give former managers Admin or a custom role if they need it. A custom role you
+  named "Manager" is left alone, and the name can be used again for a new custom role.
+
+### Require SSO
+
+- **Admin → SSO has a "Require SSO for these domains" switch.** When it is on, people whose email
+  is in the allowed domains can only sign in through the company identity provider: password
+  sign-in, Google, forgot / reset / change password, invitation accept and refreshing a
+  non-SSO session all answer "sign in with SSO". The check runs before any password is compared,
+  so nothing about the password leaks. Owners are exempt so one can always get in.
+- Turning it on signs out every session that was not opened through SSO (sessions now record how
+  they were opened). Passwords are disabled, never deleted, so turning it off restores them.
+- The switch refuses to turn on while SSO is off, no domain is listed or OIDC is not configured,
+  and the confirm dialog lists what will happen.
+- The sign-in screen explains the "SSO required" and "SSO unavailable" cases and highlights the
+  SSO button; a forced sign-out says it was because of SSO. Web and mobile.
+
+### Two-factor sign-in
+
+- **Members can turn 2FA on or off themselves** in Settings → Security (QR code, code, backup
+  codes; turning off takes a current or backup code). Once on, they are asked for a code at every
+  sign-in. Owners and Admins still must use 2FA and see it as required.
+- Accepting an invitation: Members sign straight in; Owners and Admins set up 2FA first.
+- Resetting someone's 2FA follows their role: Admins can reset Members, Owners anyone, nobody
+  themselves. Web and mobile.
+
+### SSO fixes
+
+- A group mapping never grants or removes Owner.
+- A role or department change from SSO only marks sign-in claims as stale when something really
+  changed, instead of signing the person out.
+- A failed OIDC discovery is no longer cached and shows "SSO unavailable" instead of a generic
+  error.
+
+### Web
+
+- Admin → Roles no longer loops while roles load, and the AI-context capabilities have labels.
+
+### Security and access (QC fixes)
+
+- **Only members can ring, join or signal a call.** Starting a call in someone else's
+  conversation, joining it, posting transcript lines or relaying peer-to-peer offers / ICE / end
+  now needs membership, and a block in either direction stops the relay too.
+- **A Member promoted to Owner or Admin must set up 2FA**: their password-only session cannot
+  refresh into the new role.
+- Require SSO with a domain typed as `@example.com` no longer locks the whole domain out (domains
+  are normalized when saved and when compared), and an SSO account must belong to an allowed
+  domain. Changing or resetting a password cancels a 2FA sign-in in progress; 2FA setup is refused
+  while SSO is required.
+- Token refresh is rate-limited per session instead of per address: the web refreshes from the
+  server, so every web user used to share one 5-per-minute bucket and active users were signed out.
+- The Manager-to-Member migration is safe when several instances boot at once.
+- Typed OIDC errors (`OIDC_BAD_STATE`, `OIDC_EXCHANGE_FAILED`, …) instead of a generic one, on web
+  and mobile.
+
+### Self-host package
+
+- **`compose.prod.yml` boots**: auth-service gets `WEB_REDIRECT_URL` and the Google variables,
+  ai- and chat-service no longer start with an empty Redis URL, connector-service accepts a
+  `DOMAIN=localhost` trial, the web image builds again and the profile page no longer crashes on a
+  host without Firebase. Google sign-in without credentials says it is not configured instead of
+  answering 500.
+- `smoke.sh` also checks auth-service, the LiveKit webhook route and the `/ws` socket.
+
+### Calls
+
+- One consistent call state: concurrent updates (an answer while LiveKit reports a join) no longer
+  drop a participant, busy marks and the active-call key expire, a 2-member group call is a group
+  call, LiveKit rooms outlive the reconnect grace, and a call gets one summary across instances.
+- Web and mobile: a call merged into the other side's shows the right media; mute and camera-off
+  chosen before the room connects are kept; the caller sees "Connecting…" once the callee answers
+  (no more "no answer" in the last seconds); an answered call the other side never joins ends after
+  30 s; a call that never starts ends after 15 s; failures say why (`CALL_*` codes, media refused,
+  could not connect).
+- Mobile: calls survive the app going to the background, leaving the call screen ends the call,
+  and the group call screen closes once.
+
+### AI
+
+- **Confirmation cards show what will happen**: cc / bcc for email, attendees for events, and up
+  to six labelled fields for any other tool (ids and secrets left out; the email body is never
+  shown). A weak model asking again in a later round gets no second card, so a confirm cannot run
+  an action twice, and the follow-up of an early confirm is posted after the reply it belongs to.
+- **OpenRouter light tier falls back to Claude** when it answers nothing (reasoning-only free
+  models), in chat, titles, memory and the daily digest; the digest no longer sends an OpenRouter
+  model to Anthropic; an empty summary no longer erases the stored one. Tool-call ids Claude
+  rejects are normalized, a tool call cut off by the token limit is dropped instead of run with
+  `{}`, 502 / 503 start the cooldown, and streams time out on silence (20 s before the first token,
+  60 s stalled) instead of after 120 s in total.
+- An "AI not allowed here" error has its own message on web and mobile.
+
+### Notifications
+
+- System notices (group created, members added or removed, settings changed) reach
+  `/user/queue/notifications` with the full message payload, so the conversation list updates in
+  place and banners name the people involved.
+
+### Operations
+
+- auth-, ai- and connector-service no longer log "Attempted duplicate registration of API" three
+  times at boot (Sentry now leaves OpenTelemetry to `tracing.ts`).
+- `check-env-parity.sh` catches the configuration gaps that broke the self-host package.
+
 ## 1.3.0 — 2026-10-10
 
 Batches five branches that were tested together on `dev`: `feat/flutter-flavors-firebase-split`,

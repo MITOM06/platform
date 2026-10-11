@@ -30,15 +30,18 @@ export type Env = Record<string, string | undefined>;
 export function findEnvProblems(env: Env): string[] {
   const problems: string[] = [];
 
-  const addresses: Array<[string, string | undefined]> = [
-    ['MONGO_URI', env.MONGO_URI],
-    ['OAUTH_REDIRECT_BASE', env.OAUTH_REDIRECT_BASE],
-    ['CLIENT_REDIRECT_URL', env.CLIENT_REDIRECT_URL],
+  // [key, value, browserFacing]. A browser-facing https URL on localhost is a
+  // real origin (a self-host trial with DOMAIN=localhost behind Caddy), unlike the
+  // plain-http dev defaults this check exists to catch.
+  const addresses: Array<[string, string | undefined, boolean]> = [
+    ['MONGO_URI', env.MONGO_URI, false],
+    ['OAUTH_REDIRECT_BASE', env.OAUTH_REDIRECT_BASE, true],
+    ['CLIENT_REDIRECT_URL', env.CLIENT_REDIRECT_URL, true],
   ];
-  for (const [key, value] of addresses) {
+  for (const [key, value, browserFacing] of addresses) {
     if (!value) {
       problems.push(`${key} is unset`);
-    } else if (LOOPBACK.test(value)) {
+    } else if (LOOPBACK.test(value) && !(browserFacing && /^https:\/\//i.test(value))) {
       problems.push(`${key} = ${value} — that is this container, not a real address`);
     }
   }
@@ -53,13 +56,18 @@ export function findEnvProblems(env: Env): string[] {
   // it (see findEnvWarnings) unless the deployment says it relies on it; a SET
   // value must be the real public https endpoint Bot Factory can reach.
   const mcpServerUrl = env.MCP_SERVER_URL;
+  const bridgeRequired = env.BOT_BRIDGE_ENABLED === 'true';
   if (mcpServerUrl) {
     if (LOOPBACK.test(mcpServerUrl)) {
-      problems.push(`MCP_SERVER_URL = ${mcpServerUrl} — that is this container, Bot Factory cannot reach it`);
+      // A localhost self-host trial derives it from DOMAIN=localhost: the bridge
+      // cannot work there (see findEnvWarnings), but the service itself can.
+      if (bridgeRequired) {
+        problems.push(`MCP_SERVER_URL = ${mcpServerUrl} — that is this container, Bot Factory cannot reach it`);
+      }
     } else if (!/^https:\/\//i.test(mcpServerUrl)) {
       problems.push('MCP_SERVER_URL must be an https URL');
     }
-  } else if (env.BOT_BRIDGE_ENABLED === 'true') {
+  } else if (bridgeRequired) {
     problems.push('MCP_SERVER_URL is unset but BOT_BRIDGE_ENABLED=true');
   }
 
@@ -73,6 +81,12 @@ export function findEnvProblems(env: Env): string[] {
  */
 export function findEnvWarnings(env: Env): string[] {
   const warnings: string[] = [];
+  if (env.MCP_SERVER_URL && LOOPBACK.test(env.MCP_SERVER_URL)) {
+    warnings.push(
+      `MCP_SERVER_URL = ${env.MCP_SERVER_URL} is not reachable from Bot Factory — the bridge ` +
+        'cannot work on this host. Fine for a local trial; set the public https URL otherwise.',
+    );
+  }
   if (!env.MCP_SERVER_URL) {
     warnings.push(
       'MCP_SERVER_URL is unset — the Bot Factory bridge is disabled; bot session issue ' +

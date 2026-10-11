@@ -21,9 +21,9 @@ MemberRoleLock? memberRoleLock({
 List<Role> assignableRoles(List<Role> roles, {required bool callerIsOwner}) =>
     callerIsOwner ? roles : roles.where((r) => !r.isOwner).toList();
 
-/// Whether [role] makes its holder "privileged" for 2FA (contract 09): Owner,
-/// Admin, or any role granting workspace / member / role management — so a
-/// cloned admin-like role can't skip it. Mirror of the server rule.
+/// Whether [role] is Owner / Admin-like: Owner, Admin, or any role granting
+/// workspace / member / role management (so a cloned admin-like role counts
+/// too). Mirror of the server rule used for the 2FA reset authority.
 bool isPrivilegedRole(Role? role) {
   if (role == null) return false;
   if (role.isOwner || role.name == 'Admin') return true;
@@ -32,13 +32,29 @@ bool isPrivilegedRole(Role? role) {
       role.permissions[Cap.manageRoles] == true;
 }
 
-/// "Reset 2FA" is offered only to an Owner, never on their own row (the server
-/// answers `MFA_RESET_FORBIDDEN` / `MFA_RESET_SELF_FORBIDDEN`), and only on a
-/// member it means something for: enrolled, or privileged.
+/// Whether the target's role counts as Owner / Admin-like for the reset rule
+/// when the caller is not an Owner. A member without a role is a Member. A
+/// role the caller can't resolve (roles list not loaded / not visible) is
+/// treated as privileged, so "Reset 2FA" is never offered where the server
+/// would answer `MFA_RESET_FORBIDDEN`.
+bool isPrivilegedTarget({required String? roleId, required Role? role}) =>
+    roleId != null && (role == null || isPrivilegedRole(role));
+
+/// Who sees "Reset 2FA" on a member row (contract 13 §B, mirror of the
+/// server rule):
+/// - nobody on their own row (`MFA_RESET_SELF_FORBIDDEN`);
+/// - an Owner on anyone else;
+/// - a non-Owner with MANAGE_MEMBERS (an Admin) only on a member whose role
+///   is not Owner / Admin-like (`MFA_RESET_FORBIDDEN` otherwise);
+/// - and only on an enrolled row — there is nothing to reset otherwise.
 bool canResetMemberMfa({
   required bool isSelf,
   required bool callerIsOwner,
+  required bool callerCanManageMembers,
   required bool targetMfaEnabled,
   required bool targetPrivileged,
-}) =>
-    callerIsOwner && !isSelf && (targetMfaEnabled || targetPrivileged);
+}) {
+  if (isSelf || !targetMfaEnabled) return false;
+  if (callerIsOwner) return true;
+  return callerCanManageMembers && !targetPrivileged;
+}

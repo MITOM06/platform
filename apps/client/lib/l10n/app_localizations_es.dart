@@ -1121,7 +1121,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pinnedMessagesTitle => 'Mensajes fijados';
 
   @override
-  String get pinLimitReached => 'Puedes fijar hasta 5 mensajes';
+  String pinLimitReached(int max) {
+    return 'Puedes fijar hasta $max mensajes';
+  }
 
   @override
   String get cannotPinCall => 'Las llamadas no se pueden fijar';
@@ -1445,6 +1447,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get aiErrRateLimited =>
       'Demasiadas solicitudes de IA. Reduce la velocidad e inténtalo de nuevo en breve.';
+
+  @override
+  String get aiErrForbidden =>
+      'No tienes acceso a esta conversación, así que la IA no puede responder aquí.';
 
   @override
   String get feedbackHelpful => 'Útil';
@@ -2624,6 +2630,35 @@ class AppLocalizationsEs extends AppLocalizations {
   String get adminSsoAddMapping => 'Añadir asignación';
 
   @override
+  String get adminSsoEnforce => 'Exigir SSO para estos dominios';
+
+  @override
+  String get adminSsoEnforceHint =>
+      'Los miembros con estos dominios de correo deben iniciar sesión con SSO. Los Propietarios pueden seguir usando contraseña con 2FA.';
+
+  @override
+  String get adminSsoEnforceNotReady =>
+      'Primero activa SSO y añade al menos un dominio permitido.';
+
+  @override
+  String get adminSsoEnforceConfirmTitle => '¿Exigir SSO para estos dominios?';
+
+  @override
+  String get adminSsoEnforceConfirmPasswords =>
+      'Se desactivan el inicio de sesión con contraseña, el inicio de sesión con Google y el restablecimiento de contraseña para estos dominios.';
+
+  @override
+  String get adminSsoEnforceConfirmOwners =>
+      'Los Propietarios conservan el inicio de sesión con contraseña + 2FA como cuenta de emergencia.';
+
+  @override
+  String get adminSsoEnforceConfirmSessions =>
+      'Al guardar, se cerrará la sesión de quienes en estos dominios hayan iniciado sesión sin SSO.';
+
+  @override
+  String get adminSsoEnforceConfirm => 'Exigir SSO';
+
+  @override
   String get sectionDirectoryTitle => 'Directorio MCP';
 
   @override
@@ -3380,6 +3415,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get inviteSubmit => 'Crear cuenta';
 
   @override
+  String get inviteSsoRequired =>
+      'Tu organización requiere inicio de sesión único para este correo. Inicia sesión con SSO para aceptar la invitación.';
+
+  @override
   String get inviteInvalidTitle => 'Invitación no válida';
 
   @override
@@ -3506,6 +3545,18 @@ class AppLocalizationsEs extends AppLocalizations {
       'Tu dominio de correo no está permitido para SSO.';
 
   @override
+  String get authErrSsoRequired =>
+      'Tu organización requiere inicio de sesión único. Usa \"Iniciar sesión con SSO\".';
+
+  @override
+  String get authErrSsoUnavailable =>
+      'El servicio de inicio de sesión de tu organización no está disponible en este momento. Inténtalo de nuevo en unos minutos.';
+
+  @override
+  String get authErrSsoEnforceNotReady =>
+      'Aún no se puede exigir SSO. Activa SSO, añade al menos un dominio permitido y asegúrate de que el proveedor de identidad esté configurado.';
+
+  @override
   String get adminInviteMember => 'Invitar miembro';
 
   @override
@@ -3616,6 +3667,36 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get callConnectionLost =>
       'La llamada se cortó por pérdida de conexión';
+
+  @override
+  String get callErrUnavailable =>
+      'Las llamadas no están disponibles en este momento. Inténtalo de nuevo más tarde.';
+
+  @override
+  String get callErrNotFound => 'Esta llamada ya no existe.';
+
+  @override
+  String get callErrEnded => 'Esta llamada ya ha terminado.';
+
+  @override
+  String get callErrNotSfu =>
+      'No puedes unirte a esta llamada desde aquí. Vuelve a llamar.';
+
+  @override
+  String get callErrForbidden => 'No puedes unirte a esta llamada.';
+
+  @override
+  String callErrPeerNeverJoined(String name) {
+    return 'No se pudo conectar con $name. Inténtalo de nuevo.';
+  }
+
+  @override
+  String get callErrStartTimeout =>
+      'No se pudo iniciar la llamada: el servidor no respondió. Inténtalo de nuevo.';
+
+  @override
+  String get groupCallJoinFailed =>
+      'No se pudo unir a la llamada. Inténtalo de nuevo.';
 
   @override
   String get callSpeaker => 'Altavoz';
@@ -3811,8 +3892,24 @@ class AppLocalizationsEs extends AppLocalizations {
       'Tu proveedor de inicio de sesión no ha verificado este correo';
 
   @override
+  String get authErrSsoStateInvalid =>
+      'El enlace de inicio de sesión caducó o no es válido. Inténtalo de nuevo.';
+
+  @override
+  String get authErrSsoExchangeFailed =>
+      'No se pudo completar el inicio de sesión único. Inténtalo de nuevo.';
+
+  @override
   String get authErrSocialAccountConflict =>
       'Este correo ya está vinculado a otra cuenta de inicio de sesión';
+
+  @override
+  String get authErrTooManyOtpRequests =>
+      'Has solicitado demasiados códigos OTP. Inténtalo de nuevo en 10 minutos.';
+
+  @override
+  String get authErrSocialProviderUnsupported =>
+      'Este método de inicio de sesión no es compatible.';
 
   @override
   String get aiActionConfirm => 'Confirmar';
@@ -3867,6 +3964,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get aiActionFieldWhen => 'Cuándo';
+
+  @override
+  String get aiActionFieldCc => 'CC';
+
+  @override
+  String get aiActionFieldBcc => 'CCO';
+
+  @override
+  String get aiActionFieldAttendees => 'Invitados';
 
   @override
   String get aiActionStatusConfirmed => 'Hecho';
@@ -4282,6 +4388,32 @@ class AppLocalizationsEs extends AppLocalizations {
       'Habilidad sensible ejecutada';
 
   @override
+  String get adminAuditActionSsoEnforcementChanged => '«Exigir SSO» cambiado';
+
+  @override
+  String get adminAuditActionMfaEnrolled =>
+      'Verificación en dos pasos configurada';
+
+  @override
+  String get adminAuditActionMfaDisabled =>
+      'Verificación en dos pasos desactivada';
+
+  @override
+  String get adminAuditActionMfaReset =>
+      'Verificación en dos pasos del miembro restablecida';
+
+  @override
+  String get adminAuditActionMfaBackupCodesRegenerated =>
+      'Códigos de respaldo regenerados';
+
+  @override
+  String get adminAuditActionMfaVerifiedBackupCode =>
+      'Inicio de sesión con un código de respaldo';
+
+  @override
+  String get adminAuditActionRolePresetRemoved => 'Rol predefinido retirado';
+
+  @override
   String get adminAuditTargetWorkspace => 'Espacio de trabajo';
 
   @override
@@ -4477,6 +4609,50 @@ class AppLocalizationsEs extends AppLocalizations {
   String get securityMfaDone => 'Listo';
 
   @override
+  String get securityMfaOptionalHint =>
+      'Añade un segundo paso a tu inicio de sesión. Es opcional para tu rol.';
+
+  @override
+  String get securityMfaStatusDisabled => 'Desactivada';
+
+  @override
+  String get securityMfaTurnOn => 'Activar 2FA';
+
+  @override
+  String get securityMfaTurnedOn =>
+      'La autenticación de dos factores está activada.';
+
+  @override
+  String get securityMfaSetupExpired =>
+      'La configuración ha caducado. Vuelve a empezar.';
+
+  @override
+  String get securityMfaTooManyAttempts =>
+      'Demasiados códigos incorrectos. Espera unos minutos y vuelve a intentarlo.';
+
+  @override
+  String get securityMfaTurnOff => 'Desactivar 2FA';
+
+  @override
+  String get securityMfaTurnOffTitle =>
+      '¿Desactivar la autenticación de dos factores?';
+
+  @override
+  String get securityMfaTurnOffHint =>
+      'Introduce un código actual de tu app de autenticación para confirmar. Ya no se te pedirá un código al iniciar sesión.';
+
+  @override
+  String get securityMfaTurnOffSubmit => 'Desactivar';
+
+  @override
+  String get securityMfaTurnedOff =>
+      'La autenticación de dos factores está desactivada.';
+
+  @override
+  String get authErrMfaRequiredByRole =>
+      'Tu rol requiere la autenticación de dos factores, así que no se puede desactivar.';
+
+  @override
   String get adminMfaBadge => '2FA activada';
 
   @override
@@ -4490,6 +4666,15 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get adminMfaResetDone =>
       '2FA restablecida. La configurará de nuevo en su próximo inicio de sesión.';
+
+  @override
+  String adminMfaResetConfirmOptional(String name) {
+    return '¿Restablecer la autenticación de dos factores de $name? Se cerrará su sesión en todos los dispositivos y la autenticación de dos factores se desactivará. Podrá activarla de nuevo en Ajustes → Contraseña y seguridad.';
+  }
+
+  @override
+  String get adminMfaResetDoneOptional =>
+      '2FA restablecida. Ahora está desactivada; podrá activarla de nuevo en Ajustes.';
 
   @override
   String get authMsgMfaRequired =>
@@ -4521,7 +4706,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get authErrMfaResetForbidden =>
-      'Solo un Propietario puede restablecer la autenticación de dos factores.';
+      'No puedes restablecer la autenticación de dos factores de este miembro.';
 
   @override
   String get authErrMfaResetSelfForbidden =>

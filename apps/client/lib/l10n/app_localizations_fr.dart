@@ -1127,7 +1127,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pinnedMessagesTitle => 'Messages épinglés';
 
   @override
-  String get pinLimitReached => 'Vous pouvez épingler jusqu\'à 5 messages';
+  String pinLimitReached(int max) {
+    return 'Vous pouvez épingler jusqu\'à $max messages';
+  }
 
   @override
   String get cannotPinCall => 'Les appels ne peuvent pas être épinglés';
@@ -1452,6 +1454,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get aiErrRateLimited =>
       'Trop de requêtes IA. Veuillez ralentir et réessayer dans un instant.';
+
+  @override
+  String get aiErrForbidden =>
+      'Vous n\'avez pas accès à cette conversation, l\'IA ne peut donc pas répondre ici.';
 
   @override
   String get feedbackHelpful => 'Utile';
@@ -2640,6 +2646,35 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminSsoAddMapping => 'Ajouter un mappage';
 
   @override
+  String get adminSsoEnforce => 'Exiger le SSO pour ces domaines';
+
+  @override
+  String get adminSsoEnforceHint =>
+      'Les membres de ces domaines e-mail doivent se connecter avec SSO. Les Propriétaires peuvent toujours utiliser un mot de passe avec 2FA.';
+
+  @override
+  String get adminSsoEnforceNotReady =>
+      'Activez d\'abord le SSO et ajoutez au moins un domaine autorisé.';
+
+  @override
+  String get adminSsoEnforceConfirmTitle => 'Exiger le SSO pour ces domaines ?';
+
+  @override
+  String get adminSsoEnforceConfirmPasswords =>
+      'La connexion par mot de passe, la connexion Google et la réinitialisation du mot de passe sont désactivées pour ces domaines.';
+
+  @override
+  String get adminSsoEnforceConfirmOwners =>
+      'Les Propriétaires conservent la connexion par mot de passe + 2FA comme compte de secours.';
+
+  @override
+  String get adminSsoEnforceConfirmSessions =>
+      'Les personnes de ces domaines connectées sans SSO seront déconnectées lors de l\'enregistrement.';
+
+  @override
+  String get adminSsoEnforceConfirm => 'Exiger le SSO';
+
+  @override
   String get sectionDirectoryTitle => 'Annuaire MCP';
 
   @override
@@ -3402,6 +3437,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get inviteSubmit => 'Créer le compte';
 
   @override
+  String get inviteSsoRequired =>
+      'Votre organisation exige l\'authentification unique (SSO) pour cette adresse. Connectez-vous avec SSO pour accepter l\'invitation.';
+
+  @override
   String get inviteInvalidTitle => 'Invitation non valide';
 
   @override
@@ -3530,6 +3569,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre domaine e-mail n\'est pas autorisé pour le SSO.';
 
   @override
+  String get authErrSsoRequired =>
+      'Votre organisation exige l\'authentification unique (SSO). Utilisez « Se connecter avec SSO ».';
+
+  @override
+  String get authErrSsoUnavailable =>
+      'Le service de connexion de votre organisation est momentanément indisponible. Réessayez dans quelques instants.';
+
+  @override
+  String get authErrSsoEnforceNotReady =>
+      'Impossible d\'exiger le SSO pour l\'instant. Activez le SSO, ajoutez au moins un domaine autorisé et vérifiez que le fournisseur d\'identité est configuré.';
+
+  @override
   String get adminInviteMember => 'Inviter un membre';
 
   @override
@@ -3639,6 +3690,36 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get callConnectionLost => 'Appel interrompu : connexion perdue';
+
+  @override
+  String get callErrUnavailable =>
+      'Les appels ne sont pas disponibles pour le moment. Réessayez plus tard.';
+
+  @override
+  String get callErrNotFound => 'Cet appel n\'existe plus.';
+
+  @override
+  String get callErrEnded => 'Cet appel est déjà terminé.';
+
+  @override
+  String get callErrNotSfu =>
+      'Impossible de rejoindre cet appel depuis ici. Veuillez rappeler.';
+
+  @override
+  String get callErrForbidden => 'Vous ne pouvez pas rejoindre cet appel.';
+
+  @override
+  String callErrPeerNeverJoined(String name) {
+    return 'Impossible de se connecter à $name. Veuillez réessayer.';
+  }
+
+  @override
+  String get callErrStartTimeout =>
+      'Impossible de lancer l\'appel : le serveur n\'a pas répondu. Réessayez.';
+
+  @override
+  String get groupCallJoinFailed =>
+      'Impossible de rejoindre l\'appel. Veuillez réessayer.';
 
   @override
   String get callSpeaker => 'Haut-parleur';
@@ -3836,8 +3917,24 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre fournisseur de connexion n\'a pas vérifié cette adresse e-mail';
 
   @override
+  String get authErrSsoStateInvalid =>
+      'Le lien de connexion a expiré ou n\'est pas valide. Veuillez réessayer.';
+
+  @override
+  String get authErrSsoExchangeFailed =>
+      'L\'authentification unique n\'a pas pu aboutir. Veuillez réessayer.';
+
+  @override
   String get authErrSocialAccountConflict =>
       'Cet e-mail est déjà lié à un autre compte de connexion';
+
+  @override
+  String get authErrTooManyOtpRequests =>
+      'Vous avez demandé trop de codes OTP. Veuillez réessayer dans 10 minutes.';
+
+  @override
+  String get authErrSocialProviderUnsupported =>
+      'Ce mode de connexion n\'est pas pris en charge.';
 
   @override
   String get aiActionConfirm => 'Confirmer';
@@ -3892,6 +3989,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get aiActionFieldWhen => 'Quand';
+
+  @override
+  String get aiActionFieldCc => 'Cc';
+
+  @override
+  String get aiActionFieldBcc => 'Cci';
+
+  @override
+  String get aiActionFieldAttendees => 'Invités';
 
   @override
   String get aiActionStatusConfirmed => 'Effectué';
@@ -4308,6 +4414,33 @@ class AppLocalizationsFr extends AppLocalizations {
       'Compétence sensible exécutée';
 
   @override
+  String get adminAuditActionSsoEnforcementChanged =>
+      '« Exiger le SSO » modifié';
+
+  @override
+  String get adminAuditActionMfaEnrolled =>
+      'Double authentification configurée';
+
+  @override
+  String get adminAuditActionMfaDisabled =>
+      'Double authentification désactivée';
+
+  @override
+  String get adminAuditActionMfaReset =>
+      'Double authentification du membre réinitialisée';
+
+  @override
+  String get adminAuditActionMfaBackupCodesRegenerated =>
+      'Codes de secours régénérés';
+
+  @override
+  String get adminAuditActionMfaVerifiedBackupCode =>
+      'Connexion avec un code de secours';
+
+  @override
+  String get adminAuditActionRolePresetRemoved => 'Rôle prédéfini retiré';
+
+  @override
   String get adminAuditTargetWorkspace => 'Espace de travail';
 
   @override
@@ -4506,6 +4639,50 @@ class AppLocalizationsFr extends AppLocalizations {
   String get securityMfaDone => 'Terminé';
 
   @override
+  String get securityMfaOptionalHint =>
+      'Ajoutez une deuxième étape à votre connexion. Facultatif pour votre rôle.';
+
+  @override
+  String get securityMfaStatusDisabled => 'Désactivée';
+
+  @override
+  String get securityMfaTurnOn => 'Activer la 2FA';
+
+  @override
+  String get securityMfaTurnedOn =>
+      'L\'authentification à deux facteurs est activée.';
+
+  @override
+  String get securityMfaSetupExpired =>
+      'La configuration a expiré. Veuillez recommencer.';
+
+  @override
+  String get securityMfaTooManyAttempts =>
+      'Trop de codes incorrects. Patientez quelques minutes puis réessayez.';
+
+  @override
+  String get securityMfaTurnOff => 'Désactiver la 2FA';
+
+  @override
+  String get securityMfaTurnOffTitle =>
+      'Désactiver l\'authentification à deux facteurs ?';
+
+  @override
+  String get securityMfaTurnOffHint =>
+      'Saisissez un code actuel de votre application d\'authentification pour confirmer. Aucun code ne vous sera plus demandé à la connexion.';
+
+  @override
+  String get securityMfaTurnOffSubmit => 'Désactiver';
+
+  @override
+  String get securityMfaTurnedOff =>
+      'L\'authentification à deux facteurs est désactivée.';
+
+  @override
+  String get authErrMfaRequiredByRole =>
+      'Votre rôle exige l\'authentification à deux facteurs : elle ne peut pas être désactivée.';
+
+  @override
   String get adminMfaBadge => '2FA activée';
 
   @override
@@ -4519,6 +4696,15 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get adminMfaResetDone =>
       '2FA réinitialisée. Cette personne la reconfigurera à sa prochaine connexion.';
+
+  @override
+  String adminMfaResetConfirmOptional(String name) {
+    return 'Réinitialiser l\'authentification à deux facteurs de $name ? Cette personne sera déconnectée partout et l\'authentification à deux facteurs sera désactivée. Elle pourra la réactiver dans Paramètres → Mot de passe et sécurité.';
+  }
+
+  @override
+  String get adminMfaResetDoneOptional =>
+      '2FA réinitialisée. Elle est désactivée pour cette personne, qui pourra la réactiver dans les paramètres.';
 
   @override
   String get authMsgMfaRequired =>
@@ -4550,7 +4736,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authErrMfaResetForbidden =>
-      'Seul un Propriétaire peut réinitialiser l\'authentification à deux facteurs.';
+      'Vous ne pouvez pas réinitialiser l\'authentification à deux facteurs de ce membre.';
 
   @override
   String get authErrMfaResetSelfForbidden =>

@@ -1443,6 +1443,36 @@ describe('AiService', () => {
     );
   });
   // ─── OpenRouter light tier (cost split) ───────────────────────────────────
+  describe('reply settled marker (early confirm ordering)', () => {
+    it('marks the reply settled after its turn pair is in the session', async () => {
+      const markSettled = jest.fn().mockResolvedValue(undefined);
+      (service as any).replySettled = { markSettled };
+      mockStream.mockReturnValue(makeStream(['Hello']));
+
+      await service.handleRequest(basePayload);
+
+      expect(markSettled).toHaveBeenCalledTimes(1);
+      const replyId = publish.mock.calls.find((c: any[]) => c[1].type === 'AI_STREAM_DONE')[1].replyId;
+      expect(markSettled).toHaveBeenCalledWith(replyId);
+      const append = (service as any).aiSessionService.appendMessage as jest.Mock;
+      expect(append).toHaveBeenCalled();
+      const appendOrder = Math.max(...append.mock.invocationCallOrder);
+      expect(markSettled.mock.invocationCallOrder[0]).toBeGreaterThan(appendOrder);
+    });
+
+    it('marks a failed reply settled too, so a waiting follow-up is not held', async () => {
+      const markSettled = jest.fn().mockResolvedValue(undefined);
+      (service as any).replySettled = { markSettled };
+      mockStream.mockImplementation(() => {
+        throw new Error('boom');
+      });
+
+      await service.handleRequest(basePayload).catch(() => undefined);
+
+      expect(markSettled).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('OpenRouter light tier', () => {
     let orStream: jest.Mock;
 
@@ -1482,6 +1512,26 @@ describe('AiService', () => {
       expect(publish).toHaveBeenCalledWith(
         'conv-test',
         expect.objectContaining({ type: 'AI_STREAM_DONE', fullContent: 'From Claude' }),
+      );
+    });
+
+    // QC 2026-10-11: free models that reason before answering (or stop on
+    // length / content_filter) can end with no text. That counted as a success,
+    // so Claude was never tried and the user got AI_EMPTY_RESPONSE.
+    it('an empty OpenRouter answer is retried on Claude instead of AI_EMPTY_RESPONSE', async () => {
+      orStream.mockReturnValue(makeStream([], { stop_reason: 'end_turn', content: [] }));
+      mockStream.mockReturnValue(makeStream(['From Claude']));
+
+      await service.handleRequest(basePayload);
+
+      expect(mockStream).toHaveBeenCalledWith(expect.objectContaining({ model: 'test-fallback' }));
+      expect(publish).toHaveBeenCalledWith(
+        'conv-test',
+        expect.objectContaining({ type: 'AI_STREAM_DONE', fullContent: 'From Claude' }),
+      );
+      expect(publish).not.toHaveBeenCalledWith(
+        'conv-test',
+        expect.objectContaining({ code: 'AI_EMPTY_RESPONSE' }),
       );
     });
 

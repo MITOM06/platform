@@ -5,4 +5,13 @@
 <resources>
     <string name="meeting_push_invited">你受邀参加一个会议</string>
     <string name="meeting_push_starting">你的会议将在 10 分钟后开始</string>
+
+    <!-- Message pushes: same words as the in-app previews (MessageNotificationService). -->
+    <string name="push_title_new_message">新消息</string>
+    <string name="push_body_new_message">新消息</string>
+    <string name="push_body_photo">[照片]</string>
+    <string name="push_body_video">[视频]</string>
+    <string name="push_body_file">[文件]</string>
+    <string name="push_body_voice">[语音消息]</string>
+    <string name="push_body_sticker">[贴纸]</string>
 </resources>

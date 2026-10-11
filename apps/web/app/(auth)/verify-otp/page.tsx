@@ -61,8 +61,10 @@ function VerifyOtpForm() {
       await authService.resendOtp(email)
       toast.success(t('resendSuccess'))
       setResendTimer(RESEND_COOLDOWN)
-    } catch {
-      toast.error(t('resendError'))
+    } catch (err: unknown) {
+      // The specific reason (OTP rate limit, throttled, offline) when there is one.
+      const { code, params } = parseAuthError(err)
+      toast.error(code === 'GENERIC_ERROR' ? t('resendError') : tAuth(authCodeToI18nKey(code), params))
     }
   }
 

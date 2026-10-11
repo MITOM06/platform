@@ -60,6 +60,7 @@ class CallServiceSfuTest {
     props.setApiSecret("0123456789abcdef0123456789abcdef");
     props.setCallTransport("sfu");
     when(redis.opsForValue()).thenReturn(values);
+    CallSessionWriter writer = new CallSessionWriter(sessions, mongo);
     service =
         new CallService(
             sessions,
@@ -73,12 +74,19 @@ class CallServiceSfuTest {
             busy,
             mongo,
             timers,
-            new DirectCallGlare(sessions, busy, redis, mongo, broker));
+            new DirectCallGlare(sessions, busy, redis, writer, broker),
+            writer,
+            new CallRoomProvisioner(roomClient));
   }
 
   private void conversation(String id, String... members) {
+    typedConversation(id, members.length == 2 ? "direct" : "group", members);
+  }
+
+  private void typedConversation(String id, String type, String... members) {
     Conversation c = new Conversation();
     c.setId(id);
+    c.setType(type);
     c.setParticipants(new ArrayList<>(List.of(members)));
     when(conversations.findById(id)).thenReturn(Optional.of(c));
   }
@@ -282,7 +290,8 @@ class CallServiceSfuTest {
     // Both passed the busy check before either was marked: the conversation claim decides.
     conversation("conv", "alice", "bob");
     ringingFrom("alice", "call-a");
-    when(values.setIfAbsent(eq(CallService.ACTIVE_KEY_PREFIX + "conv"), anyString()))
+    when(values.setIfAbsent(
+            eq(CallService.ACTIVE_KEY_PREFIX + "conv"), anyString(), any(java.time.Duration.class)))
         .thenReturn(false);
     when(values.get(CallService.ACTIVE_KEY_PREFIX + "conv")).thenReturn("call-a");
 
@@ -321,7 +330,8 @@ class CallServiceSfuTest {
   void anOlderAppLosingASimultaneousStartHearsBusyAndLeavesNoCallBehind() {
     conversation("conv", "alice", "bob");
     ringingFrom("alice", "call-a");
-    when(values.setIfAbsent(eq(CallService.ACTIVE_KEY_PREFIX + "conv"), anyString()))
+    when(values.setIfAbsent(
+            eq(CallService.ACTIVE_KEY_PREFIX + "conv"), anyString(), any(java.time.Duration.class)))
         .thenReturn(false);
     when(values.get(CallService.ACTIVE_KEY_PREFIX + "conv")).thenReturn("call-a");
 
@@ -345,14 +355,16 @@ class CallServiceSfuTest {
   @Test
   void aStaleConversationClaimIsTakenOver() {
     conversation("conv", "alice", "bob");
-    when(values.setIfAbsent(eq(CallService.ACTIVE_KEY_PREFIX + "conv"), anyString()))
+    when(values.setIfAbsent(
+            eq(CallService.ACTIVE_KEY_PREFIX + "conv"), anyString(), any(java.time.Duration.class)))
         .thenReturn(false);
     when(values.get(CallService.ACTIVE_KEY_PREFIX + "conv")).thenReturn("long-gone");
 
     service.startCall("alice", "conv", "audio", false);
 
     CallSession s = saved();
-    verify(values).set(CallService.ACTIVE_KEY_PREFIX + "conv", s.getCallId());
+    verify(values)
+        .set(CallService.ACTIVE_KEY_PREFIX + "conv", s.getCallId(), CallService.ACTIVE_TTL);
     assertThat(sentTo("bob")).extracting(WebRTCSignalDto::getType).containsExactly("call-ring");
   }
 
@@ -521,5 +533,228 @@ class CallServiceSfuTest {
 
     assertThat(sentTo("bob").get(0).getKind()).isEqualTo("direct");
     assertThat(broadcast("conv").get(0).getKind()).isEqualTo("direct");
+  }
+
+  // ---- Who may start / join / talk in a call (QC 2026-10-11) ----
+
+  @Test
+  void aNonMemberCannotStartACallInSomeoneElsesConversation() {
+    conversation("conv", "alice", "bob");
+
+    service.startCall("mallory", "conv", "video", false);
+
+    verify(sessions, never()).save(any());
+    assertThat(sentTo("alice")).isEmpty();
+    assertThat(sentTo("bob")).isEmpty();
+    assertThat(broadcast("conv")).isEmpty();
+  }
+
+  @Test
+  void aNonMemberCannotStartAMeshCallEither() {
+    props.setCallTransport("mesh");
+    conversation("grp", "alice", "bob", "carol");
+
+    service.startCall("mallory", "grp", "audio", false);
+
+    verify(sessions, never()).save(any());
+    assertThat(sentTo("bob")).isEmpty();
+  }
+
+  @Test
+  void aGroupWithTwoMembersStillGetsAGroupCall() {
+    typedConversation("grp2", "group", "alice", "bob");
+
+    service.startCall("alice", "grp2", "audio", false);
+
+    assertThat(saved().getKind()).isEqualTo("group");
+    assertThat(sentTo("bob").get(0).getKind()).isEqualTo("group");
+  }
+
+  @Test
+  void anOldDirectConversationWithoutATypeIsStillADirectCall() {
+    typedConversation("legacy", null, "alice", "bob");
+
+    service.startCall("alice", "legacy", "audio", false);
+
+    assertThat(saved().getKind()).isEqualTo("direct");
+  }
+
+  @Test
+  void aNonMemberCannotJoinACallByItsId() {
+    props.setCallTransport("mesh");
+    conversation("grp", "alice", "bob", "carol");
+    CallSession s =
+        CallSession.builder()
+            .callId("c1")
+            .conversationId("grp")
+            .startedBy("alice")
+            .transport("mesh")
+            .kind("group")
+            .participants(new ArrayList<>())
+            .build();
+    when(sessions.findByCallId("c1")).thenReturn(Optional.of(s));
+
+    service.joinCall("mallory", "c1");
+
+    verify(mongo, never())
+        .findAndReplace(
+            any(org.springframework.data.mongodb.core.query.Query.class), any(CallSession.class));
+    assertThat(s.getParticipants()).isEmpty();
+  }
+
+  /**
+   * LiveKit closes an auto-created room ~20 s after its last participant drops, which ended a call
+   * (as a plain "hangup") before the 60 s reconnect grace could bring the person back.
+   */
+  @Test
+  void anSfuCallRoomOutlivesTheReconnectGrace() {
+    conversation("conv", "alice", "bob");
+
+    service.startCall("alice", "conv", "audio", false);
+
+    String room = "call_" + saved().getCallId();
+    ArgumentCaptor<Integer> departure = ArgumentCaptor.forClass(Integer.class);
+    ArgumentCaptor<Integer> empty = ArgumentCaptor.forClass(Integer.class);
+    verify(roomClient).createRoom(eq(room), empty.capture(), departure.capture(), eq(25));
+    assertThat(departure.getValue())
+        .isGreaterThan((int) SfuCallService.RECONNECT_GRACE.toSeconds());
+    assertThat(empty.getValue()).isGreaterThan((int) CallService.RING_REAPER_DELAY.toSeconds());
+  }
+
+  @Test
+  void aCallStillStartsWhenTheRoomCannotBeCreatedAhead() {
+    conversation("conv", "alice", "bob");
+    doThrow(new LiveKitApiException("CreateRoom", 503, null))
+        .when(roomClient)
+        .createRoom(
+            anyString(),
+            org.mockito.ArgumentMatchers.anyInt(),
+            org.mockito.ArgumentMatchers.anyInt(),
+            org.mockito.ArgumentMatchers.anyInt());
+
+    service.startCall("alice", "conv", "audio", false);
+
+    assertThat(sentTo("bob")).hasSize(1);
+  }
+
+  @Test
+  void aMeshCallCreatesNoRoom() {
+    props.setCallTransport("mesh");
+    conversation("conv", "alice", "bob");
+
+    service.startCall("alice", "conv", "audio", false);
+
+    verify(roomClient, never())
+        .createRoom(
+            anyString(),
+            org.mockito.ArgumentMatchers.anyInt(),
+            org.mockito.ArgumentMatchers.anyInt(),
+            org.mockito.ArgumentMatchers.anyInt());
+  }
+
+  // ---- call:active claim and ghost rings (QC 2026-10-11) ----
+
+  /**
+   * A ring whose server-side timer was lost (instance restart) and whose caller's app died never
+   * ended: calling that person back merged you into a dead call, or answered "busy" for 6 hours.
+   */
+  @Test
+  void aGhostRingIsEndedAndTheCallBackRingsNormally() {
+    conversation("conv", "alice", "bob");
+    CallSession ghost = ringingFrom("alice", "call-ghost");
+    ghost.setStartedAt(Instant.now().minusSeconds(600));
+    // Ending the ghost clears Alice's busy key, so the next look finds her free.
+    when(busy.busyCallOf("alice")).thenReturn("call-ghost", (String) null);
+    when(mongo.findAndModify(
+            any(org.springframework.data.mongodb.core.query.Query.class),
+            any(org.springframework.data.mongodb.core.query.Update.class),
+            any(org.springframework.data.mongodb.core.FindAndModifyOptions.class),
+            eq(CallSession.class)))
+        .thenReturn(ghost);
+
+    service.startCall("bob", "conv", "audio", false, true);
+
+    verify(mongo)
+        .findAndModify(
+            any(org.springframework.data.mongodb.core.query.Query.class),
+            any(org.springframework.data.mongodb.core.query.Update.class),
+            any(org.springframework.data.mongodb.core.FindAndModifyOptions.class),
+            eq(CallSession.class)); // the ghost is ended
+    assertThat(ghost.getParticipants()).noneMatch(p -> "bob".equals(p.getUserId()));
+    assertThat(sentTo("bob")).noneMatch(d -> "call-merged".equals(d.getType()));
+    assertThat(sentTo("alice")).anyMatch(d -> "call-ring".equals(d.getType()));
+  }
+
+  @Test
+  void theConversationClaimExpiresOnItsOwn() {
+    conversation("conv", "alice", "bob");
+    when(values.setIfAbsent(anyString(), anyString(), any(java.time.Duration.class)))
+        .thenReturn(true);
+
+    service.startCall("alice", "conv", "audio", false);
+
+    String callId = saved().getCallId();
+    verify(values).setIfAbsent(eq("call:active:conv"), eq(callId), any(java.time.Duration.class));
+  }
+
+  @Test
+  void endingACallOnlyDropsAClaimThatStillPointsAtIt() {
+    CallSession s = ringingFrom("alice", "call-a");
+    when(mongo.findAndModify(
+            any(org.springframework.data.mongodb.core.query.Query.class),
+            any(org.springframework.data.mongodb.core.query.Update.class),
+            any(org.springframework.data.mongodb.core.FindAndModifyOptions.class),
+            eq(CallSession.class)))
+        .thenReturn(s);
+
+    service.endCall("call-a", "hangup");
+
+    verify(redis, never()).delete("call:active:conv");
+    verify(redis)
+        .execute(
+            any(org.springframework.data.redis.core.script.RedisScript.class),
+            eq(List.of("call:active:conv")),
+            eq("call-a"));
+  }
+
+  /** issueToken refuses a 1-on-1 blocked in EITHER direction; ringing must not promise more. */
+  @Test
+  void callingSomeoneYouBlockedDoesNotRingThem() {
+    conversation("conv", "alice", "bob");
+    when(blocks.existsByBlockerIdAndBlockedId("alice", "bob")).thenReturn(true);
+
+    service.startCall("alice", "conv", "audio", false);
+
+    verify(sessions, never()).save(any());
+    assertThat(sentTo("bob")).isEmpty();
+    assertThat(sentTo("alice"))
+        .singleElement()
+        .satisfies(d -> assertThat(d.getType()).isEqualTo("call-blocked"));
+  }
+
+  /**
+   * Both apps send call.cancel then call.leave when the caller gives up; the inbound channel may
+   * run leave first. Leaving an unanswered 1-on-1 as its caller is then a cancel too: the callee's
+   * devices must stop ringing, not only see call.ended on a topic they may not be subscribed to.
+   */
+  @Test
+  void theCallerLeavingAnUnansweredCallStopsTheRingLikeACancel() {
+    conversation("conv", "alice", "bob");
+    CallSession s = ringingFrom("alice", "call-a");
+    when(mongo.findAndModify(
+            any(org.springframework.data.mongodb.core.query.Query.class),
+            any(org.springframework.data.mongodb.core.query.Update.class),
+            any(org.springframework.data.mongodb.core.FindAndModifyOptions.class),
+            eq(CallSession.class)))
+        .thenReturn(s);
+
+    service.leaveCall("alice", "call-a");
+
+    assertThat(sentTo("bob"))
+        .anySatisfy(
+            d -> {
+              assertThat(d.getType()).isEqualTo("call-ring-cancel");
+              assertThat(d.getCallId()).isEqualTo("call-a");
+            });
   }
 }

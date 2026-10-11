@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { createHash, randomBytes } from 'node:crypto';
 import { REDIS_CLIENT, Redis } from '@platform/database';
+import { SESSION_METHODS, SessionMethod } from '../auth/session-method';
 
 export const MFA_TOKEN_TTL_SECONDS = 5 * 60;
 /** Lifetime of a `codes_pending` record, counted from enroll/confirm. */
@@ -18,6 +19,11 @@ const STAGES: readonly string[] = ['enroll', 'verify', 'codes_pending'];
 export interface MfaSignInContext {
   deviceId: string;
   platform: string;
+  /**
+   * How the first factor was passed; becomes the session's `method`. Absent on
+   * records created before it existed (the session is then `password`).
+   */
+  method?: SessionMethod;
 }
 
 export interface MfaPending extends MfaSignInContext {
@@ -69,11 +75,25 @@ export class MfaPendingStore {
         stage: record.stage,
         deviceId: record.deviceId,
         platform: record.platform,
+        method: record.method ?? '',
         attempts: '0',
       })
       .expire(key, MFA_TOKEN_TTL_SECONDS)
+      .sadd(userIndexKey(record.userId), key)
+      .expire(userIndexKey(record.userId), MFA_CODES_PENDING_TTL_SECONDS)
       .exec();
     return token;
+  }
+
+  /**
+   * Burns every pending sign-in step of `userId` (enroll / verify /
+   * codes_pending). Called when their password changes or is reset: a token
+   * won with the old password must not finish into a session afterwards.
+   */
+  async burnAllForUser(userId: string): Promise<void> {
+    const index = userIndexKey(userId);
+    const keys = await this.redis.smembers(index);
+    await this.redis.del(index, ...keys);
   }
 
   async get(token: unknown): Promise<MfaPending | null> {
@@ -92,6 +112,9 @@ export class MfaPendingStore {
       attempts: Number(h.attempts ?? 0),
       secretEnc: h.secretEnc || undefined,
     };
+    if ((SESSION_METHODS as readonly string[]).includes(h.method)) {
+      p.method = h.method as SessionMethod;
+    }
     if (p.stage === 'codes_pending') {
       const enrolledAt = Number(h.enrolledAt);
       p.backupCodesEnc = h.backupCodesEnc || undefined;
@@ -117,11 +140,14 @@ export class MfaPendingStore {
         stage: 'codes_pending',
         deviceId: record.deviceId,
         platform: record.platform,
+        method: record.method ?? '',
         attempts: '0',
         backupCodesEnc: record.backupCodesEnc,
         enrolledAt: String(record.enrolledAt),
       })
       .expire(key, MFA_CODES_PENDING_TTL_SECONDS)
+      .sadd(userIndexKey(record.userId), key)
+      .expire(userIndexKey(record.userId), MFA_CODES_PENDING_TTL_SECONDS)
       .exec();
   }
 
@@ -165,4 +191,9 @@ export class MfaPendingStore {
 
 function pendingKey(token: string): string {
   return `mfa:pending:${createHash('sha256').update(token).digest('hex')}`;
+}
+
+/** Set of a user's pending-record keys, so they can all be burned at once. */
+function userIndexKey(userId: string): string {
+  return `mfa:user-pending:${userId}`;
 }

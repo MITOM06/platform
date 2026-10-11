@@ -95,7 +95,7 @@ describe('action summary', () => {
     )
     expect(v.titleKey).toBe('aiActionCreateEvent')
     expect(v.lines[0]).toEqual({ labelKey: 'aiActionFieldTitle', value: 'Sync' })
-    expect(v.lines[1]!.labelKey).toBe('aiActionFieldWhen')
+    expect(v.lines[1]).toMatchObject({ labelKey: 'aiActionFieldWhen' })
     expect(v.lines[1]!.value).toContain('2026')
   })
 
@@ -106,6 +106,113 @@ describe('action summary', () => {
       lines: [],
     })
     expect(actionSummaryView(undefined, 'en').titleKey).toBe('aiActionGeneric')
+  })
+
+  it('email: Cc and Bcc when the server sends them — never the message body (group privacy)', () => {
+    const v = actionSummaryView(
+      {
+        kind: 'draft_email', to: 'a@x.io', cc: 'b@x.io, c@x.io', bcc: 'd@x.io', subject: 'Q3',
+        body: 'Hi team, the numbers are in.', bodyPreview: 'Hi team, the numbers are in.',
+      },
+      'en',
+    )
+    expect(v.lines).toEqual([
+      { labelKey: 'aiActionFieldTo', value: 'a@x.io' },
+      { labelKey: 'aiActionFieldCc', value: 'b@x.io, c@x.io' },
+      { labelKey: 'aiActionFieldBcc', value: 'd@x.io' },
+      { labelKey: 'aiActionFieldSubject', value: 'Q3' },
+    ])
+  })
+
+  it('event: the attendees after the time', () => {
+    const v = actionSummaryView(
+      { kind: 'update_event', title: 'Sync', start: '2026-10-06', attendees: 'Ann, Bob' },
+      'en',
+    )
+    expect(v.lines.map((l) => ('labelKey' in l ? l.labelKey : l.label))).toEqual([
+      'aiActionFieldTitle',
+      'aiActionFieldWhen',
+      'aiActionFieldAttendees',
+    ])
+    expect(v.lines[2]!.value).toBe('Ann, Bob')
+  })
+
+  it('older servers (no new fields) show exactly what they did before', () => {
+    expect(actionSummaryView({ kind: 'send_email', to: 'a@x.io' }, 'en').lines).toEqual([
+      { labelKey: 'aiActionFieldTo', value: 'a@x.io' },
+    ])
+  })
+
+  it('generic: "label: value" rows from the server-humanized fields', () => {
+    const v = actionSummaryView(
+      {
+        kind: 'generic',
+        tool: 'Create issue',
+        fields: [
+          { label: 'Title', value: 'Fix login' },
+          { label: '  Priority ', value: 'High' },
+        ],
+      },
+      'en',
+    )
+    expect(v.lines).toEqual([
+      { label: 'Title', value: 'Fix login' },
+      { label: 'Priority', value: 'High' },
+    ])
+  })
+
+  it('generic: never shows raw ids or malformed rows', () => {
+    const v = actionSummaryView(
+      {
+        kind: 'generic',
+        fields: [
+          { label: 'Owner', value: '64b7f0c2a1b2c3d4e5f60718' },
+          { label: 'Page', value: '3f2504e0-4f89-11d3-9a0c-0305e82c3301' },
+          { label: 'Database', value: '3f2504e04f8911d39a0c0305e82c3301' },
+          { label: '', value: 'no label' },
+          { label: 'Empty', value: '   ' },
+          { label: 'Count', value: 3 },
+          'not a row',
+          { label: 'Status', value: 'Open' },
+        ],
+      },
+      'en',
+    )
+    expect(v.lines).toEqual([{ label: 'Status', value: 'Open' }])
+  })
+
+  it('generic: a fields value that is not a list is ignored', () => {
+    expect(actionSummaryView({ kind: 'generic', fields: 'Title: x' }, 'en').lines).toEqual([])
+  })
+
+  it('generic: follows the server contract — at most 6 rows, values up to 120 characters', () => {
+    const fields = Array.from({ length: 8 }, (_, i) => ({ label: `Field ${i + 1}`, value: `v${i + 1}` }))
+    const six = actionSummaryView({ kind: 'generic', fields }, 'en').lines
+    expect(six.map((l) => ('label' in l ? l.label : l.labelKey))).toEqual([
+      'Field 1', 'Field 2', 'Field 3', 'Field 4', 'Field 5', 'Field 6',
+    ])
+
+    const joined = 'alpha, beta, gamma' // an array arg, joined by the server
+    const exact = 'x'.repeat(120)
+    const longer = 'y'.repeat(130)
+    const v = actionSummaryView(
+      {
+        kind: 'generic',
+        fields: [
+          { label: 'Due date', value: '2026-10-20' },
+          { label: 'Channel', value: joined },
+          { label: 'Notes', value: exact },
+          { label: 'Other', value: longer },
+        ],
+      },
+      'en',
+    )
+    expect(v.lines).toEqual([
+      { label: 'Due date', value: '2026-10-20' },
+      { label: 'Channel', value: joined },
+      { label: 'Notes', value: exact },
+      { label: 'Other', value: `${'y'.repeat(119)}…` },
+    ])
   })
 })
 

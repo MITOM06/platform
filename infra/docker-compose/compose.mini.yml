@@ -114,6 +114,8 @@ services:
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-}
       CALL_TRANSPORT: ${CALL_TRANSPORT:-mesh}
+      # true once every installed mobile app is 1.4.0+ (localized push wording).
+      PUSH_LOCALIZED: ${PUSH_LOCALIZED:-false}
       # Personal-assistant setup issues the bot's MCP token through
       # connector-service's internal API. Unset, every setup answered 503.
       CONNECTOR_SERVICE_BASE_URL: http://connector-service:3003

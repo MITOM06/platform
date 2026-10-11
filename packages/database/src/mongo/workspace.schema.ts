@@ -13,6 +13,16 @@ export class WorkspaceSso {
   @Prop({ type: [String], default: [] })
   allowedDomains: string[];
 
+  /**
+   * "Require SSO": members whose email domain is in `allowedDomains` must sign
+   * in with SSO (password, Google and password recovery are refused for them;
+   * Owners are exempt as break-glass accounts). Only effective together with
+   * `enabled` and a non-empty `allowedDomains`. Passwords are kept, so turning
+   * it off restores password sign-in.
+   */
+  @Prop({ default: false })
+  enforced: boolean;
+
   /** IdP group name → PON role NAME (e.g. { "pon-admins": "Admin" }). */
   @Prop({ type: Schema.Types.Mixed, default: {} })
   groupRoleMap: Record<string, string>;

@@ -36,6 +36,26 @@ void main() {
     test('unknown actions never show the raw code', () {
       expect(auditActionLabel(l, 'something.new'), l.adminAuditActionOther);
     });
+
+    test('SSO enforcement, 2FA and preset-role actions have their own labels',
+        () {
+      final expected = {
+        'sso.enforcement_changed': l.adminAuditActionSsoEnforcementChanged,
+        'mfa.enrolled': l.adminAuditActionMfaEnrolled,
+        'mfa.disabled': l.adminAuditActionMfaDisabled,
+        'mfa.reset': l.adminAuditActionMfaReset,
+        'mfa.backup_codes_regenerated':
+            l.adminAuditActionMfaBackupCodesRegenerated,
+        'mfa.verified_backup_code': l.adminAuditActionMfaVerifiedBackupCode,
+        'role.preset_removed': l.adminAuditActionRolePresetRemoved,
+      };
+      for (final e in expected.entries) {
+        expect(auditActionLabel(l, e.key), e.value, reason: e.key);
+        expect(auditActionLabel(l, e.key), isNot(l.adminAuditActionOther),
+            reason: e.key);
+      }
+      expect(expected.values.toSet(), hasLength(expected.length));
+    });
   });
 
   group('auditActorLabel', () {

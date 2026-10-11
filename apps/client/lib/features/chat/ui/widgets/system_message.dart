@@ -4,9 +4,9 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/domain/auth_state.dart';
-import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 import 'system_message_text.dart';
+import 'system_name_resolver.dart';
 
 class SystemMessage extends ConsumerWidget {
   final MessageModel message;
@@ -19,29 +19,16 @@ class SystemMessage extends ConsumerWidget {
     }
     final authState = ref.watch(authNotifierProvider).valueOrNull;
     final currentUserId = authState is AuthAuthenticated ? authState.user.id : '';
-    final nicknames = ref.watch(nicknamesProvider(message.conversationId));
     final l10n = context.l10n;
-
-    // "You" / nickname / display name — never the raw id. Ids that are not
-    // users (the "system" sender, assistants) are never looked up.
-    String resolveName(String userId) {
-      if (userId.isEmpty || isSystemSender(userId)) return l10n.someone;
-      if (userId == currentUserId) return l10n.you;
-      if (userId == kAiBotUserId || userId.startsWith('extbot:')) {
-        return l10n.aiAssistant;
-      }
-      final nickname = nicknames[userId];
-      if (nickname != null && nickname.isNotEmpty) return nickname;
-      final profile = ref.watch(userProfileProvider(userId)).valueOrNull;
-      return profile?.displayName ?? l10n.someone;
-    }
 
     // Unknown system code → render nothing rather than a raw key string.
     final text = systemMessageText(
       l10n,
       message.content,
       senderId: message.senderId,
-      resolveName: resolveName,
+      resolveName: systemNameResolver(ref, l10n,
+          conversationId: message.conversationId,
+          currentUserId: currentUserId),
     );
     if (text == null || text.isEmpty) return const SizedBox.shrink();
 

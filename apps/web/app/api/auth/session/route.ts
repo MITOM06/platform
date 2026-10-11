@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import axios from 'axios'
 import type { AuthUser } from '@/lib/store/auth.store'
 import { serverAuthUrl } from '@/lib/config/env'
+import { logoutReasonFromBody } from '@/lib/auth/logout-reason'
 
 // Cookie lifetimes — keep in sync with /api/auth/set-cookie and /api/auth/refresh.
 const ACCESS_TOKEN_MAX_AGE = 900 // 15 minutes
@@ -77,10 +78,11 @@ export async function GET(request: NextRequest) {
   }
 
   // Session is genuinely dead (auth-service rejected it) → destroy the cookies.
-  // Forward ACCOUNT_BLOCKED (the only code the login screen explains) so the
-  // client can tell the user why they were signed out.
+  // Forward an allow-listed logout reason (ACCOUNT_BLOCKED, SSO_REQUIRED — the
+  // only codes the login screen explains) so the client can tell the user why
+  // they were signed out.
   const clearSession = (err?: unknown) => {
-    const code = upstreamCode(err) === 'ACCOUNT_BLOCKED' ? 'ACCOUNT_BLOCKED' : undefined
+    const code = axios.isAxiosError(err) ? logoutReasonFromBody(err.response?.data) : undefined
     const res = NextResponse.json({ error: 'unauthorized', code }, { status: 401 })
     res.cookies.delete('accessToken')
     res.cookies.delete('refreshToken')

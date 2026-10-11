@@ -2,17 +2,19 @@ import 'package:flutter/foundation.dart';
 
 import 'auth_state.dart';
 
-/// Second sign-in step for a privileged member (Owner / Admin / admin-like
-/// role — contract 09): the password or Google credentials were accepted but
-/// NO session exists yet. Lives only in memory (never persisted): a cold start
+/// Second sign-in step of a password / Google sign-in (Owner / Admin-like
+/// roles, or a Member who turned 2FA on) and of a privileged password
+/// invitation accept (contract 15): the credentials were accepted but NO
+/// session exists yet. Lives only in memory (never persisted): a cold start
 /// simply restarts the sign-in, and the server token expires after 5 minutes.
 @immutable
 class MfaChallenge {
   /// Opaque single-use token for `/auth/mfa/*` (never shown to the user).
   final String mfaToken;
 
-  /// `true` → first sign-in since becoming privileged: set up the
-  /// authenticator app (enroll mode). `false` → enter a code (verify mode).
+  /// `true` → not enrolled yet (first sign-in with 2FA, new invitee, or after
+  /// an admin reset): set up the authenticator app (enroll mode). `false` →
+  /// enter a code (verify mode).
   final bool enrollmentRequired;
 
   final String userId;

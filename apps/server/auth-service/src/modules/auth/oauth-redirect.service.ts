@@ -9,6 +9,8 @@ import { AuthCode } from '../../common/auth-code.enum';
 export const GENERIC_ERROR_CODE = 'GENERIC_ERROR';
 
 const KNOWN_CODES = new Set<string>(Object.values(AuthCode));
+/** 5xx codes that are still worth telling the user (anything else 5xx → GENERIC_ERROR). */
+const REDIRECTABLE_5XX = new Set<string>([AuthCode.SSO_UNAVAILABLE]);
 const LOGIN_CODE_TTL_S = 300;
 
 /** Redis key holding the grant of a one-time login code (read by AuthService.exchangeLoginCode). */
@@ -90,6 +92,14 @@ export class OAuthRedirectService {
   }
 
   toErrorCode(err: unknown): string {
+    if (err instanceof HttpException) {
+      const body = err.getResponse();
+      const code =
+        body && typeof body === 'object'
+          ? (body as { code?: unknown }).code
+          : undefined;
+      if (typeof code === 'string' && REDIRECTABLE_5XX.has(code)) return code;
+    }
     if (err instanceof HttpException && err.getStatus() < 500) {
       const body = err.getResponse();
       const code =

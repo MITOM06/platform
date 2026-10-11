@@ -10,6 +10,7 @@ import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
 import { parseAuthError, authCodeToI18nKey } from '@/lib/auth/auth-error'
+import { loginPath } from '@/lib/auth/force-logout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -29,6 +30,14 @@ export default function ForgotPasswordPage() {
 
   const [step, setStep] = useState<Step>('request')
   const [email, setEmail] = useState('')
+
+  // The email's domain must use single sign-on (SSO_REQUIRED): passwords are
+  // off, so the login screen explains it and offers "Sign in with SSO".
+  const redirectIfSsoRequired = (code: string): boolean => {
+    if (code !== 'SSO_REQUIRED') return false
+    router.replace(loginPath('SSO_REQUIRED'))
+    return true
+  }
   // Collected on the OTP step; submitted together with the new password.
   const [collectedOtp, setCollectedOtp] = useState('')
 
@@ -54,6 +63,7 @@ export default function ForgotPasswordPage() {
       toast.success(t('codeSent'))
     } catch (err: unknown) {
       const { code, params } = parseAuthError(err)
+      if (redirectIfSsoRequired(code)) return
       toast.error(tAuth(authCodeToI18nKey(code), params))
     }
   }
@@ -83,6 +93,7 @@ export default function ForgotPasswordPage() {
       // Surface the specific backend code (e.g. per-email OTP rate limit)
       // instead of a generic resend error.
       const { code, params } = parseAuthError(err)
+      if (redirectIfSsoRequired(code)) return
       toast.error(code === 'GENERIC_ERROR' ? t('resendError') : tAuth(authCodeToI18nKey(code), params))
     }
   }
@@ -163,6 +174,7 @@ export default function ForgotPasswordPage() {
       router.push('/login')
     } catch (err: unknown) {
       const { code, params } = parseAuthError(err)
+      if (redirectIfSsoRequired(code)) return
       const key = authCodeToI18nKey(code)
       toast.error(tAuth(key, params))
       // If OTP is wrong/expired the backend will reject here — send user back to OTP step.

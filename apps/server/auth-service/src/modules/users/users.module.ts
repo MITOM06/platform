@@ -1,3 +1,4 @@
+import { MfaPendingStore } from '../mfa/mfa-pending.store';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersService } from './users.service';
@@ -8,6 +9,7 @@ import { PasswordChangeService } from './password-change.service';
 import { SessionService } from '../auth/session.service';
 import { FriendsModule } from '../friends/friends.module';
 import { FirebaseAdminModule } from '../firebase/firebase.module';
+import { SsoModule } from '../sso/sso.module';
 import {
   Department,
   DepartmentSchema,
@@ -34,12 +36,16 @@ import {
     FriendsModule,
     // FirebaseAdminService xác thực Firebase Phone Auth ID token
     FirebaseAdminModule,
+    // Require SSO: /me flags + change-password refusal.
+    SsoModule,
   ],
   controllers: [UsersController, MyDepartmentsController],
   // SessionService is stateless over the global REDIS_CLIENT (AdminModule does
   // the same); change-password signs the user's other sessions out.
   providers: [
     UsersService,
+    // Stateless over the global REDIS_CLIENT: burns pending 2FA steps on password change.
+    MfaPendingStore,
     PasswordChangeService,
     SessionService,
     MyDepartmentsService,

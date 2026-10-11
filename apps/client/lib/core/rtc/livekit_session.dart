@@ -46,6 +46,12 @@ class LiveKitSession implements MeetingRtcSession {
   bool _leaving = false;
   final Map<String, RtcPeer> _peers = {};
 
+  /// Mic / camera chosen while [connectMeeting] runs: they replace its
+  /// options, so a mute tapped while joining is never overridden by it.
+  bool _connecting = false;
+  bool? _micWhileConnecting;
+  bool? _cameraWhileConnecting;
+
   /// Peers whose camera we do not want (hidden tiles) — re-applied to every
   /// new camera publication.
   final Set<String> _videoOff = {};
@@ -78,26 +84,27 @@ class LiveKitSession implements MeetingRtcSession {
     _room = room;
     _leaving = false;
     _wireRoom(this, room);
+    _connecting = true;
+    _micWhileConnecting = null;
+    _cameraWhileConnecting = null;
     try {
-      await room.connect(url, token);
-    } catch (_) {
-      await _close();
-      throw const RoomConnectException();
-    }
-    try {
-      final lp = room.localParticipant;
-      if (options.audio) await lp?.setMicrophoneEnabled(true);
-      if (options.video) {
-        await lp?.setCameraEnabled(true,
-            cameraCaptureOptions: options.frontCamera
-                ? null // the room default (front) — the call behaviour
-                : const CameraCaptureOptions(
-                    cameraPosition: CameraPosition.back));
+      try {
+        await room.connect(url, token);
+      } catch (_) {
+        await _close();
+        throw const RoomConnectException();
       }
-    } catch (e) {
-      await _close();
-      if (_isPermissionError(e)) throw const MediaAccessException();
-      throw const RoomConnectException();
+      try {
+        await _publishInitialMedia(room, options);
+      } catch (e) {
+        await _close();
+        if (_isPermissionError(e)) throw const MediaAccessException();
+        throw const RoomConnectException();
+      }
+    } finally {
+      _connecting = false;
+      _micWhileConnecting = null;
+      _cameraWhileConnecting = null;
     }
     for (final p in room.remoteParticipants.values) {
       _ensure(p);
@@ -142,12 +149,42 @@ class LiveKitSession implements MeetingRtcSession {
   @override
   bool get supportsScreenShare => _capture.supported;
 
+  /// The mic and camera of a fresh connection: the options, unless the user
+  /// toggled either meanwhile — including during these very awaits.
+  Future<void> _publishInitialMedia(
+      Room room, MeetingConnectOptions options) async {
+    final lp = room.localParticipant;
+    final audio = _micWhileConnecting ?? options.audio;
+    if (audio) await lp?.setMicrophoneEnabled(true);
+    final video = _cameraWhileConnecting ?? options.video;
+    if (video) {
+      await lp?.setCameraEnabled(true,
+          cameraCaptureOptions: options.frontCamera
+              ? null // the room default (front) — the call behaviour
+              : const CameraCaptureOptions(
+                  cameraPosition: CameraPosition.back));
+    }
+    final mic = _micWhileConnecting;
+    if (mic != null && mic != audio) await lp?.setMicrophoneEnabled(mic);
+    final camera = _cameraWhileConnecting;
+    if (camera != null && camera != video) await lp?.setCameraEnabled(camera);
+  }
+
   @override
-  Future<void> setMic(bool on) async =>
-      _room?.localParticipant?.setMicrophoneEnabled(on);
+  Future<void> setMic(bool on) async {
+    if (_connecting) {
+      _micWhileConnecting = on; // applied once the room is joined
+      return;
+    }
+    await _room?.localParticipant?.setMicrophoneEnabled(on);
+  }
 
   @override
   Future<void> setCamera(bool on) async {
+    if (_connecting) {
+      _cameraWhileConnecting = on; // applied once the room is joined
+      return;
+    }
     await _room?.localParticipant?.setCameraEnabled(on);
     _refreshLocal();
   }

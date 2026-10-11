@@ -120,12 +120,18 @@ class WorkspaceSso {
   final Map<String, String> groupDeptMap;
   final String? defaultRole;
 
+  /// "Require SSO for these domains" (contract 13 §C): members whose email
+  /// domain is in [allowedDomains] (Owners excepted) must sign in with SSO.
+  /// Missing → `false`.
+  final bool enforced;
+
   const WorkspaceSso({
     this.enabled = false,
     this.allowedDomains = const [],
     this.groupRoleMap = const {},
     this.groupDeptMap = const {},
     this.defaultRole,
+    this.enforced = false,
   });
 
   factory WorkspaceSso.fromJson(Map<String, dynamic>? json) {
@@ -136,11 +142,13 @@ class WorkspaceSso {
       groupRoleMap: _stringMap(j['groupRoleMap']),
       groupDeptMap: _stringMap(j['groupDeptMap']),
       defaultRole: j['defaultRole'] as String?,
+      enforced: j['enforced'] == true,
     );
   }
 
   Map<String, dynamic> toJson() => {
         'enabled': enabled,
+        'enforced': enforced,
         'allowedDomains': allowedDomains,
         'groupRoleMap': groupRoleMap,
         'groupDeptMap': groupDeptMap,

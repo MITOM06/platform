@@ -6,9 +6,6 @@ import com.platform.chatservice.repository.CallSessionRepository;
 import java.time.Instant;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -30,7 +27,7 @@ public class DirectCallGlare {
   private final CallSessionRepository sessions;
   private final CallBusyRegistry busy;
   private final StringRedisTemplate redis;
-  private final MongoTemplate mongo;
+  private final CallSessionWriter writer;
   private final ClusterMessageBroker broker;
 
   /**
@@ -52,7 +49,8 @@ public class DirectCallGlare {
    */
   public boolean claimOrMerge(String userId, CallSession own, boolean canMerge) {
     String key = CallService.ACTIVE_KEY_PREFIX + own.getConversationId();
-    if (Boolean.TRUE.equals(redis.opsForValue().setIfAbsent(key, own.getCallId()))) {
+    if (Boolean.TRUE.equals(
+        redis.opsForValue().setIfAbsent(key, own.getCallId(), CallService.ACTIVE_TTL))) {
       return true;
     }
     Optional<CallSession> theirs =
@@ -78,7 +76,7 @@ public class DirectCallGlare {
       }
       busy.markBusy(userId, own.getCallId()); // theirs ended meanwhile: go on with ours
     }
-    redis.opsForValue().set(key, own.getCallId());
+    redis.opsForValue().set(key, own.getCallId(), CallService.ACTIVE_TTL);
     return true;
   }
 
@@ -90,34 +88,43 @@ public class DirectCallGlare {
     return sessions
         .findByCallId(callId)
         .filter(s -> s.getEndedAt() == null)
-        .filter(CallService::isSfu)
+        .filter(CallSessions::isSfu)
         .filter(s -> "direct".equals(s.getKind()))
         .filter(s -> conversationId.equals(s.getConversationId()))
         .filter(s -> !userId.equals(s.getStartedBy()))
-        .filter(s -> !CallService.answeredByOthers(s));
+        .filter(s -> !CallSessions.answeredByOthers(s))
+        .filter(s -> !CallSessions.isGhostRing(s)); // a dead ring is not something to join
   }
 
   /** Accept {@code userId} into {@code theirs} (as {@code call.accept} would) and say so. */
   private boolean merge(String userId, CallSession theirs) {
-    CallSession.Participant p =
-        theirs.getParticipants().stream()
-            .filter(x -> userId.equals(x.getUserId()))
-            .findFirst()
-            .orElse(null);
-    if (p == null) {
-      p = CallSession.Participant.builder().userId(userId).build();
-      theirs.getParticipants().add(p);
-    }
-    p.setAcceptedAt(Instant.now());
+    Instant now = Instant.now();
     boolean live =
-        mongo.findAndReplace(
-                new Query(Criteria.where("callId").is(theirs.getCallId()).and("endedAt").is(null)),
-                theirs)
-            != null;
+        writer
+            .updateActive(
+                theirs.getCallId(),
+                s -> {
+                  CallSession.Participant p =
+                      s.getParticipants().stream()
+                          .filter(x -> userId.equals(x.getUserId()))
+                          .findFirst()
+                          .orElse(null);
+                  if (p == null) {
+                    p = CallSession.Participant.builder().userId(userId).build();
+                    s.getParticipants().add(p);
+                  }
+                  p.setAcceptedAt(now);
+                  return true;
+                })
+            .isPresent();
     if (!live) {
       return false;
     }
     busy.markBusy(userId, theirs.getCallId());
+    if (sessions.findByCallId(theirs.getCallId()).map(x -> x.getEndedAt() != null).orElse(true)) {
+      busy.clear(userId, theirs.getCallId()); // ended right after the merge: do not stay busy
+      return false;
+    }
     // The user's other devices were ringing for this call.
     send(
         userId,

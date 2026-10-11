@@ -83,7 +83,7 @@ describe('sign-in screens → 2FA step', () => {
     expect(useAuthStore.getState().accessToken).toBeNull()
   })
 
-  it('login: a non-privileged user still signs in directly', async () => {
+  it('login: an account the server exempts from 2FA still signs in directly', async () => {
     login.mockResolvedValue({ data: tokens })
     renderWithQuery(<LoginPage />)
     submitLogin()

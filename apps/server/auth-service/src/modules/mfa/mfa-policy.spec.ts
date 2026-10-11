@@ -3,55 +3,60 @@ import {
   PRESET_ROLES,
   enabledCapabilities,
 } from '@platform/database';
-import { isMfaPrivileged } from './mfa-policy';
+import { isAdminLike } from './mfa-policy';
 
 const preset = (name: string) => {
   const role = PRESET_ROLES.find((r) => r.name === name)!;
   return { role: role.name, perms: enabledCapabilities(role.permissions) };
 };
 
-describe('isMfaPrivileged', () => {
-  it('Owner and Admin presets are privileged', () => {
-    expect(isMfaPrivileged(preset('Owner'))).toBe(true);
-    expect(isMfaPrivileged(preset('Admin'))).toBe(true);
+describe('isAdminLike (who an Admin may not reset 2FA for)', () => {
+  it('Owner and Admin presets are admin-like', () => {
+    expect(isAdminLike(preset('Owner'))).toBe(true);
+    expect(isAdminLike(preset('Admin'))).toBe(true);
   });
 
   it('the role name alone is enough (Owner / Admin)', () => {
-    expect(isMfaPrivileged({ role: 'Owner', perms: [] })).toBe(true);
-    expect(isMfaPrivileged({ role: 'Admin' })).toBe(true);
+    expect(isAdminLike({ role: 'Owner', perms: [] })).toBe(true);
+    expect(isAdminLike({ role: 'Admin' })).toBe(true);
   });
 
   it.each([
     Capability.MANAGE_MEMBERS,
     Capability.MANAGE_WORKSPACE,
     Capability.MANAGE_ROLES,
-  ])('a custom role granting %s is privileged', (cap) => {
+  ])('a custom role granting %s is admin-like', (cap) => {
     expect(
-      isMfaPrivileged({
+      isAdminLike({
         role: 'Ops lead',
         perms: [Capability.USE_GROUP_BOT, cap],
       }),
     ).toBe(true);
   });
 
-  it('Member and Manager presets are not privileged', () => {
-    expect(isMfaPrivileged(preset('Member'))).toBe(false);
-    expect(isMfaPrivileged(preset('Manager'))).toBe(false);
+  it('the Member preset is not admin-like', () => {
+    expect(isAdminLike(preset('Member'))).toBe(false);
   });
 
-  it('other admin-ish capabilities alone do not require 2FA', () => {
+  it('a custom role named "Manager" without admin capabilities is not admin-like', () => {
     expect(
-      isMfaPrivileged({
+      isAdminLike({ role: 'Manager', perms: [Capability.RUN_SENSITIVE_SKILL] }),
+    ).toBe(false);
+  });
+
+  it('other admin-ish capabilities alone are not admin-like', () => {
+    expect(
+      isAdminLike({
         role: 'Auditor',
         perms: [Capability.VIEW_AUDIT_LOG, Capability.MANAGE_DEPARTMENTS],
       }),
     ).toBe(false);
   });
 
-  it('missing claims (legacy token / no role) → not privileged', () => {
-    expect(isMfaPrivileged(undefined)).toBe(false);
-    expect(isMfaPrivileged(null)).toBe(false);
-    expect(isMfaPrivileged({})).toBe(false);
-    expect(isMfaPrivileged({ role: null, perms: null })).toBe(false);
+  it('missing claims (legacy token / no role) → not admin-like', () => {
+    expect(isAdminLike(undefined)).toBe(false);
+    expect(isAdminLike(null)).toBe(false);
+    expect(isAdminLike({})).toBe(false);
+    expect(isAdminLike({ role: null, perms: null })).toBe(false);
   });
 });

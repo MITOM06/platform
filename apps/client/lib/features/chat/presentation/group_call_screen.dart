@@ -21,10 +21,10 @@ class GroupCallScreen extends ConsumerStatefulWidget {
 }
 
 class _GroupCallScreenState extends ConsumerState<GroupCallScreen> {
-  Future<void> _leave() async {
-    await ref.read(groupCallControllerProvider.notifier).leave();
-    if (mounted) context.pop();
-  }
+  /// Leaving empties the call state, and the listener in [build] closes this
+  /// screen — popping here too closed the chat underneath as well.
+  Future<void> _leave() =>
+      ref.read(groupCallControllerProvider.notifier).leave();
 
   @override
   Widget build(BuildContext context) {

@@ -17,6 +17,7 @@ import { ToolRoundRunner } from './tool-round.runner';
 import { ACTION_PENDING_FALLBACK_TEXT } from './system-notices';
 import { addTokens, countTokens, zeroTokens } from '../usage/token-counts';
 import { LlmClient } from '../llm/openrouter-client';
+import { LlmClientsService } from '../llm/llm-clients.service';
 
 const MAX_ITER = 5;
 const MAX_ITER_NOTICE = 'I had trouble completing that action. Please try again.';
@@ -117,6 +118,7 @@ export class AgenticLoopService {
       carriedText: '',
       toolsExecuted: 0,
       pendingActions: new Map(),
+      heldToolRounds: new Map(),
       thinkingMode: null,
     };
   }
@@ -202,6 +204,20 @@ export class AgenticLoopService {
       finalText = text;
       stopReason = message.stop_reason ?? null;
       break;
+    }
+
+    // An OpenRouter model that ended with nothing to show (reasoning-only free
+    // models, `length` / `content_filter` stops) has not answered: fail the turn
+    // so runWithFallback continues on Claude. Nothing was streamed, so the
+    // fallback cannot double a bubble; Claude's own empty answer still ends in
+    // AI_EMPTY_RESPONSE below.
+    if (
+      LlmClientsService.isOpenRouterModel(model) &&
+      !finalText.trim() &&
+      !state.carriedText.trim() &&
+      state.pendingActions.size === 0
+    ) {
+      throw new Error(`Empty reply from ${model} (stop_reason=${stopReason})`);
     }
 
     return this.finish(p, finalText, stopReason);

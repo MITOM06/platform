@@ -1,9 +1,10 @@
 /**
- * Minimal in-memory Redis for MFA unit tests: the string / hash / TTL / MULTI
- * subset the MFA services use, with expiry driven by Date.now() (so Jest fake
- * timers can expire keys). Test-only: excluded from the build.
+ * Minimal in-memory Redis for MFA / session unit tests: the string / hash /
+ * set / TTL / MULTI / pipeline subset those services use, with expiry driven by
+ * Date.now() (so Jest fake timers can expire keys). PUBLISH is recorded in
+ * `published`. Test-only: excluded from the build.
  */
-type Value = string | Map<string, string>;
+type Value = string | Map<string, string> | Set<string>;
 
 export class FakeRedis {
   private readonly data = new Map<
@@ -25,6 +26,18 @@ export class FakeRedis {
     if (e) return e.value as Map<string, string>;
     if (!create) return undefined;
     const value = new Map<string, string>();
+    this.data.set(key, { value });
+    return value;
+  }
+
+  /** Every PUBLISH, in order. */
+  readonly published: Array<{ channel: string; message: string }> = [];
+
+  private set_(key: string, create: boolean): Set<string> | undefined {
+    const e = this.entry(key);
+    if (e) return e.value as Set<string>;
+    if (!create) return undefined;
+    const value = new Set<string>();
     this.data.set(key, { value });
     return value;
   }
@@ -104,6 +117,35 @@ export class FakeRedis {
     return Object.fromEntries(this.hash(key, false) ?? new Map());
   }
 
+  async hmget(key: string, ...fields: string[]) {
+    const h = this.hash(key, false);
+    return fields.map((f) => h?.get(f) ?? null);
+  }
+
+  async sadd(key: string, ...members: string[]) {
+    const s = this.set_(key, true)!;
+    const before = s.size;
+    for (const m of members) s.add(m);
+    return s.size - before;
+  }
+
+  async srem(key: string, ...members: string[]) {
+    const s = this.set_(key, false);
+    if (!s) return 0;
+    let n = 0;
+    for (const m of members) if (s.delete(m)) n++;
+    return n;
+  }
+
+  async smembers(key: string) {
+    return [...(this.set_(key, false) ?? [])];
+  }
+
+  async publish(channel: string, message: string) {
+    this.published.push({ channel, message });
+    return 1;
+  }
+
   async hincrby(key: string, field: string, by: number) {
     const h = this.hash(key, true)!;
     const next = Number(h.get(field) ?? 0) + by;
@@ -130,6 +172,10 @@ export class FakeRedis {
       'del',
       'set',
       'get',
+      'hmget',
+      'hgetall',
+      'sadd',
+      'srem',
     ]) {
       chain[name] = (...args: unknown[]) => {
         queue.push(() => (this as any)[name](...args));
@@ -137,5 +183,10 @@ export class FakeRedis {
       };
     }
     return chain;
+  }
+
+  /** Same queued semantics as MULTI (no atomicity needed in tests). */
+  pipeline() {
+    return this.multi();
   }
 }

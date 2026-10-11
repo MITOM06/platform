@@ -248,6 +248,12 @@ public class AiPendingActionService {
     for (Map.Entry<?, ?> e : map.entrySet()) {
       if (out.size() >= MAX_SUMMARY_ENTRIES) break;
       if (!(e.getKey() instanceof String key) || key.isBlank() || key.startsWith("$")) continue;
+      if ("fields".equals(key)) {
+        // A generic tool's arguments: [{label, value}] string pairs, nothing else.
+        List<Map<String, Object>> fields = labelValuePairs(e.getValue());
+        if (!fields.isEmpty()) out.put(key, fields);
+        continue;
+      }
       Object value = scalar(e.getValue());
       if (value == null && e.getValue() instanceof List<?> list) {
         List<Object> items = new ArrayList<>();
@@ -259,6 +265,25 @@ public class AiPendingActionService {
         value = items;
       }
       if (value != null) out.put(key.replace('.', '_'), value);
+    }
+    return out;
+  }
+
+  private static List<Map<String, Object>> labelValuePairs(Object raw) {
+    List<Map<String, Object>> out = new ArrayList<>();
+    if (!(raw instanceof List<?> list)) {
+      return out;
+    }
+    for (Object item : list) {
+      if (out.size() >= MAX_SUMMARY_ENTRIES) break;
+      if (item instanceof Map<?, ?> m
+          && scalar(m.get("label")) instanceof String label
+          && scalar(m.get("value")) instanceof String value) {
+        Map<String, Object> pair = new LinkedHashMap<>();
+        pair.put("label", label);
+        pair.put("value", value);
+        out.add(pair);
+      }
     }
     return out;
   }

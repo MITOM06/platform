@@ -25,14 +25,36 @@ class H(BaseHTTPRequestHandler):
             # 'broken' reproduces the pre-fix behaviour: a root-relative target
             # that resolves against the host root and 404s before reaching Google.
             loc = '/auth/google?platform=web' if mode == 'broken' \
+                  else 'https://web.example/oauth-callback?error=SOCIAL_PROVIDER_UNSUPPORTED' \
+                  if mode == 'google-off' \
                   else '/api/auth/auth/google?platform=web'
             self.send_response(302)
             self.send_header('Location', loc)
             self.end_headers()
             return
+        if self.path == '/ws':
+            # chat-service refuses a handshake from an origin it does not know:
+            # reaching it at all is what matters (a missing route is a 404).
+            self.send_response(404 if mode == 'no-ws' else 403)
+            self.end_headers()
+            return
+        if self.path.startswith('/api/auth/health') and mode == 'auth-down':
+            self.send_response(502)
+            self.end_headers()
+            return
         self.send_response(401 if 'actuator' in self.path else 200)
         self.end_headers()
         self.wfile.write(b'ok')
+
+    def do_POST(self):
+        mode = open(MODE_FILE).read().strip()
+        if self.path == '/api/chat/api/rtc/livekit/webhook':
+            # An unsigned webhook is refused (401) — unless the route is gone.
+            self.send_response(404 if mode == 'no-webhook' else 401)
+            self.end_headers()
+            return
+        self.send_response(404)
+        self.end_headers()
 
     def log_message(self, *a): pass
 
@@ -66,6 +88,19 @@ expect 0 "passes when the redirect carries the /api/auth prefix"
 printf 'broken'  > "$STUB/mode"
 expect 1 "fails when the redirect loses the prefix (the #143 regression)"
 
+printf 'google-off' > "$STUB/mode"
+expect 0 "passes on a host without Google sign-in (self-host): the init answers with a typed error"
+
+printf 'no-webhook' > "$STUB/mode"
+expect 1 "fails when the LiveKit webhook route is not reachable (calls/meetings would never see a join)"
+
+printf 'auth-down' > "$STUB/mode"
+expect 1 "fails when auth-service is down behind the proxy"
+
+printf 'no-ws' > "$STUB/mode"
+expect 1 "fails when the /ws WebSocket route is missing (realtime dead, REST still fine)"
+
+printf 'broken'  > "$STUB/mode"
 # The failure has to name the culprit, not just say 'failed' — that message is
 # the whole value when this fires at 3am.
 ./smoke.sh "http://127.0.0.1:$PORT" >"$STUB/out" 2>&1

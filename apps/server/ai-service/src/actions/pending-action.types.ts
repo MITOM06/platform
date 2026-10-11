@@ -37,11 +37,23 @@ export type ResolvedActionStatus = Exclude<PendingActionStatus, 'pending'>;
  * input (never the body, ids, tokens or links). Clients localize by `kind`;
  * every string is single-line and length-capped.
  */
+/** One argument of a generic tool, for the card: humanized English label + display value. */
+export interface PendingActionField {
+  label: string;
+  value: string;
+}
+
 export type PendingActionSummary =
-  | { kind: 'send_email' | 'draft_email'; to?: string; subject?: string }
-  | { kind: 'create_event' | 'update_event'; title?: string; start?: string; end?: string }
+  | { kind: 'send_email' | 'draft_email'; to?: string; cc?: string; bcc?: string; subject?: string }
+  | {
+      kind: 'create_event' | 'update_event';
+      title?: string;
+      start?: string;
+      end?: string;
+      attendees?: string;
+    }
   | { kind: 'create_page' | 'update_page'; title?: string }
-  | { kind: 'generic'; tool: string };
+  | { kind: 'generic'; tool: string; fields?: PendingActionField[] };
 
 /** What the clients see — `AI_ACTION_PENDING.action` and `AI_STREAM_DONE.pendingActions[]`. */
 export interface PendingActionView {

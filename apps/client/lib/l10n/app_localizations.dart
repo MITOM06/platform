@@ -2175,8 +2175,8 @@ abstract class AppLocalizations {
   /// No description provided for @pinLimitReached.
   ///
   /// In en, this message translates to:
-  /// **'You can pin up to 5 messages'**
-  String get pinLimitReached;
+  /// **'You can pin up to {max} messages'**
+  String pinLimitReached(int max);
 
   /// No description provided for @cannotPinCall.
   ///
@@ -2795,6 +2795,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Too many AI requests. Please slow down and try again shortly.'**
   String get aiErrRateLimited;
+
+  /// No description provided for @aiErrForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have access to this conversation, so the AI can\'t reply here.'**
+  String get aiErrForbidden;
 
   /// No description provided for @feedbackHelpful.
   ///
@@ -4897,6 +4903,54 @@ abstract class AppLocalizations {
   /// **'Add mapping'**
   String get adminSsoAddMapping;
 
+  /// No description provided for @adminSsoEnforce.
+  ///
+  /// In en, this message translates to:
+  /// **'Require SSO for these domains'**
+  String get adminSsoEnforce;
+
+  /// No description provided for @adminSsoEnforceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Members with these email domains must sign in with SSO. Owners can still use a password with 2FA.'**
+  String get adminSsoEnforceHint;
+
+  /// No description provided for @adminSsoEnforceNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on SSO and add at least one allowed domain first.'**
+  String get adminSsoEnforceNotReady;
+
+  /// No description provided for @adminSsoEnforceConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Require SSO for these domains?'**
+  String get adminSsoEnforceConfirmTitle;
+
+  /// No description provided for @adminSsoEnforceConfirmPasswords.
+  ///
+  /// In en, this message translates to:
+  /// **'Password sign-in, Google sign-in and password reset are turned off for these domains.'**
+  String get adminSsoEnforceConfirmPasswords;
+
+  /// No description provided for @adminSsoEnforceConfirmOwners.
+  ///
+  /// In en, this message translates to:
+  /// **'Owners keep password + 2FA sign-in as a break-glass account.'**
+  String get adminSsoEnforceConfirmOwners;
+
+  /// No description provided for @adminSsoEnforceConfirmSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone in these domains who is signed in without SSO is signed out when you save.'**
+  String get adminSsoEnforceConfirmSessions;
+
+  /// No description provided for @adminSsoEnforceConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Require SSO'**
+  String get adminSsoEnforceConfirm;
+
   /// No description provided for @sectionDirectoryTitle.
   ///
   /// In en, this message translates to:
@@ -6289,6 +6343,12 @@ abstract class AppLocalizations {
   /// **'Create account'**
   String get inviteSubmit;
 
+  /// No description provided for @inviteSsoRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your organization requires single sign-on for this email. Sign in with SSO to accept the invitation.'**
+  String get inviteSsoRequired;
+
   /// No description provided for @inviteInvalidTitle.
   ///
   /// In en, this message translates to:
@@ -6499,6 +6559,24 @@ abstract class AppLocalizations {
   /// **'Your email domain is not allowed for SSO.'**
   String get authErrSsoDomainNotAllowed;
 
+  /// No description provided for @authErrSsoRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your organization requires single sign-on. Use \"Sign in with SSO\".'**
+  String get authErrSsoRequired;
+
+  /// No description provided for @authErrSsoUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your organization\'s sign-in service is unavailable right now. Please try again in a moment.'**
+  String get authErrSsoUnavailable;
+
+  /// No description provided for @authErrSsoEnforceNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'SSO can\'t be required yet. Turn on SSO, add at least one allowed domain, and make sure the identity provider is configured.'**
+  String get authErrSsoEnforceNotReady;
+
   /// No description provided for @adminInviteMember.
   ///
   /// In en, this message translates to:
@@ -6684,6 +6762,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Call dropped — connection lost'**
   String get callConnectionLost;
+
+  /// No description provided for @callErrUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls aren\'t available right now. Please try again later.'**
+  String get callErrUnavailable;
+
+  /// No description provided for @callErrNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This call no longer exists.'**
+  String get callErrNotFound;
+
+  /// No description provided for @callErrEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'This call has already ended.'**
+  String get callErrEnded;
+
+  /// No description provided for @callErrNotSfu.
+  ///
+  /// In en, this message translates to:
+  /// **'This call can\'t be joined from here. Please call again.'**
+  String get callErrNotSfu;
+
+  /// No description provided for @callErrForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t join this call.'**
+  String get callErrForbidden;
+
+  /// No description provided for @callErrPeerNeverJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect to {name}. Please try again.'**
+  String callErrPeerNeverJoined(String name);
+
+  /// No description provided for @callErrStartTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start the call — the server didn\'t respond. Please try again.'**
+  String get callErrStartTimeout;
+
+  /// No description provided for @groupCallJoinFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t join the call. Please try again.'**
+  String get groupCallJoinFailed;
 
   /// No description provided for @callSpeaker.
   ///
@@ -6943,11 +7069,35 @@ abstract class AppLocalizations {
   /// **'Your sign-in provider hasn\'t verified this email address'**
   String get authErrSsoEmailUnverified;
 
+  /// No description provided for @authErrSsoStateInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The sign-in link expired or is invalid. Please try again.'**
+  String get authErrSsoStateInvalid;
+
+  /// No description provided for @authErrSsoExchangeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Single sign-on couldn\'t be completed. Please try again.'**
+  String get authErrSsoExchangeFailed;
+
   /// No description provided for @authErrSocialAccountConflict.
   ///
   /// In en, this message translates to:
   /// **'This email is already linked to a different sign-in account'**
   String get authErrSocialAccountConflict;
+
+  /// No description provided for @authErrTooManyOtpRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve requested too many OTP codes. Please try again in 10 minutes.'**
+  String get authErrTooManyOtpRequests;
+
+  /// No description provided for @authErrSocialProviderUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This sign-in method isn\'t supported.'**
+  String get authErrSocialProviderUnsupported;
 
   /// No description provided for @aiActionConfirm.
   ///
@@ -7044,6 +7194,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'When'**
   String get aiActionFieldWhen;
+
+  /// No description provided for @aiActionFieldCc.
+  ///
+  /// In en, this message translates to:
+  /// **'Cc'**
+  String get aiActionFieldCc;
+
+  /// No description provided for @aiActionFieldBcc.
+  ///
+  /// In en, this message translates to:
+  /// **'Bcc'**
+  String get aiActionFieldBcc;
+
+  /// No description provided for @aiActionFieldAttendees.
+  ///
+  /// In en, this message translates to:
+  /// **'Guests'**
+  String get aiActionFieldAttendees;
 
   /// No description provided for @aiActionStatusConfirmed.
   ///
@@ -7753,6 +7921,48 @@ abstract class AppLocalizations {
   /// **'Sensitive skill run'**
   String get adminAuditActionSensitiveSkillRun;
 
+  /// No description provided for @adminAuditActionSsoEnforcementChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'“Require SSO” changed'**
+  String get adminAuditActionSsoEnforcementChanged;
+
+  /// No description provided for @adminAuditActionMfaEnrolled.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication set up'**
+  String get adminAuditActionMfaEnrolled;
+
+  /// No description provided for @adminAuditActionMfaDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication turned off'**
+  String get adminAuditActionMfaDisabled;
+
+  /// No description provided for @adminAuditActionMfaReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Member\'s two-factor authentication reset'**
+  String get adminAuditActionMfaReset;
+
+  /// No description provided for @adminAuditActionMfaBackupCodesRegenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup codes regenerated'**
+  String get adminAuditActionMfaBackupCodesRegenerated;
+
+  /// No description provided for @adminAuditActionMfaVerifiedBackupCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in with a backup code'**
+  String get adminAuditActionMfaVerifiedBackupCode;
+
+  /// No description provided for @adminAuditActionRolePresetRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset role retired'**
+  String get adminAuditActionRolePresetRemoved;
+
   /// No description provided for @adminAuditTargetWorkspace.
   ///
   /// In en, this message translates to:
@@ -8095,6 +8305,78 @@ abstract class AppLocalizations {
   /// **'Done'**
   String get securityMfaDone;
 
+  /// No description provided for @securityMfaOptionalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a second step to your sign-in. Optional for your role.'**
+  String get securityMfaOptionalHint;
+
+  /// No description provided for @securityMfaStatusDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get securityMfaStatusDisabled;
+
+  /// No description provided for @securityMfaTurnOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on 2FA'**
+  String get securityMfaTurnOn;
+
+  /// No description provided for @securityMfaTurnedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication is on.'**
+  String get securityMfaTurnedOn;
+
+  /// No description provided for @securityMfaSetupExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'The setup timed out. Please start again.'**
+  String get securityMfaSetupExpired;
+
+  /// No description provided for @securityMfaTooManyAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many incorrect codes. Please wait a few minutes and try again.'**
+  String get securityMfaTooManyAttempts;
+
+  /// No description provided for @securityMfaTurnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off 2FA'**
+  String get securityMfaTurnOff;
+
+  /// No description provided for @securityMfaTurnOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off two-factor authentication?'**
+  String get securityMfaTurnOffTitle;
+
+  /// No description provided for @securityMfaTurnOffHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a current code from your authenticator app to confirm. You won\'t be asked for a code when you sign in anymore.'**
+  String get securityMfaTurnOffHint;
+
+  /// No description provided for @securityMfaTurnOffSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off'**
+  String get securityMfaTurnOffSubmit;
+
+  /// No description provided for @securityMfaTurnedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication is off.'**
+  String get securityMfaTurnedOff;
+
+  /// No description provided for @authErrMfaRequiredByRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Your role requires two-factor authentication, so it can\'t be turned off.'**
+  String get authErrMfaRequiredByRole;
+
   /// No description provided for @adminMfaBadge.
   ///
   /// In en, this message translates to:
@@ -8118,6 +8400,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'2FA reset. They\'ll set it up again at their next sign-in.'**
   String get adminMfaResetDone;
+
+  /// No description provided for @adminMfaResetConfirmOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset two-factor authentication for {name}? They will be signed out everywhere and two-factor authentication will be turned off. They can turn it on again in Settings → Password & Security.'**
+  String adminMfaResetConfirmOptional(String name);
+
+  /// No description provided for @adminMfaResetDoneOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'2FA reset. It\'s off for them now; they can turn it on again in Settings.'**
+  String get adminMfaResetDoneOptional;
 
   /// No description provided for @authMsgMfaRequired.
   ///
@@ -8164,7 +8458,7 @@ abstract class AppLocalizations {
   /// No description provided for @authErrMfaResetForbidden.
   ///
   /// In en, this message translates to:
-  /// **'Only an Owner can reset two-factor authentication.'**
+  /// **'You can\'t reset two-factor authentication for this member.'**
   String get authErrMfaResetForbidden;
 
   /// No description provided for @authErrMfaResetSelfForbidden.

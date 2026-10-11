@@ -12,6 +12,12 @@ import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
+/**
+ * ai-service → chat-service KB indexing results ({@code kb:status:*}). Redis pub/sub delivers each
+ * result to EVERY chat-service instance, so the local {@link SimpMessagingTemplate} is the right
+ * sender: each instance reaches its own sockets once. Routing this through {@code
+ * ClusterMessageBroker} would deliver the event once per instance.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j

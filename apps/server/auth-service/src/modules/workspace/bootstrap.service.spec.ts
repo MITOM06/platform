@@ -1,3 +1,5 @@
+jest.mock('nanoid', () => ({ nanoid: () => 'test-id' }));
+
 import { Test } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
@@ -11,6 +13,7 @@ import {
 } from '@platform/database';
 import { BootstrapService } from './bootstrap.service';
 import { InvitationsService } from '../invitations/invitations.service';
+import { PresetRoleMigrationService } from './preset-role-migration.service';
 
 /**
  * Evaluates the tiny subset of aggregation expressions the preset-role update
@@ -98,6 +101,7 @@ describe('BootstrapService', () => {
   let userModel: any;
   let config: Record<string, string>;
   let invitations: { createBootstrapOwnerInvite: jest.Mock };
+  let presetMigration: { removeRetiredPresets: jest.Mock };
 
   async function build() {
     const moduleRef = await Test.createTestingModule({
@@ -107,6 +111,7 @@ describe('BootstrapService', () => {
         { provide: getModelToken(Role.name), useValue: roleModel },
         { provide: getModelToken(User.name), useValue: userModel },
         { provide: InvitationsService, useValue: invitations },
+        { provide: PresetRoleMigrationService, useValue: presetMigration },
         {
           provide: ConfigService,
           useValue: { get: (k: string, d?: any) => config[k] ?? d },
@@ -122,9 +127,10 @@ describe('BootstrapService', () => {
     userModel = makeCollectionModel();
     config = { WORKSPACE_NAME: 'Acme Inc' };
     invitations = { createBootstrapOwnerInvite: jest.fn().mockResolvedValue(undefined) };
+    presetMigration = { removeRetiredPresets: jest.fn().mockResolvedValue([]) };
   });
 
-  it('seeds exactly 1 workspace and 4 roles, idempotently (run twice)', async () => {
+  it('seeds exactly 1 workspace and 3 roles (no Manager), idempotently (run twice)', async () => {
     const service = await build();
 
     await service.onApplicationBootstrap();
@@ -135,7 +141,6 @@ describe('BootstrapService', () => {
     expect(roleModel.docs).toHaveLength(PRESET_ROLES.length);
     expect(roleModel.docs.map((r: any) => r.name).sort()).toEqual([
       'Admin',
-      'Manager',
       'Member',
       'Owner',
     ]);
@@ -150,7 +155,7 @@ describe('BootstrapService', () => {
     }
   });
 
-  it('keeps admin edits to Admin/Manager/Member and only adds missing capability keys', async () => {
+  it('keeps admin edits to Admin/Member and only adds missing capability keys', async () => {
     const adminPreset = PRESET_ROLES.find((r) => r.name === 'Admin')!;
     const edited: Record<string, boolean> = { ...adminPreset.permissions } as any;
     edited[Capability.MANAGE_DEPARTMENTS] = false; // preset default: true
@@ -179,7 +184,7 @@ describe('BootstrapService', () => {
   });
 
   it('gives stored preset roles that predate HOST_MEETING the new capability, keeping admin edits', async () => {
-    for (const name of ['Admin', 'Manager', 'Member'] as const) {
+    for (const name of ['Admin', 'Member'] as const) {
       const preset = PRESET_ROLES.find((r) => r.name === name)!;
       const stored: Record<string, boolean> = { ...preset.permissions } as any;
       delete stored[Capability.HOST_MEETING]; // saved by a release before meetings existed
@@ -190,7 +195,7 @@ describe('BootstrapService', () => {
     const service = await build();
     await service.onApplicationBootstrap();
 
-    for (const name of ['Admin', 'Manager', 'Member']) {
+    for (const name of ['Admin', 'Member']) {
       const role = roleModel.docs.find((r: any) => r.name === name);
       expect(role.permissions[Capability.HOST_MEETING]).toBe(true);
       expect(role.permissions[Capability.USE_GROUP_BOT]).toBe(false);
@@ -224,6 +229,27 @@ describe('BootstrapService', () => {
     await service.onApplicationBootstrap();
     const owner = roleModel.docs.find((r: any) => r.name === 'Owner');
     expect(owner.permissions).toEqual(buildFullMatrix(true));
+  });
+
+  it('removes retired presets after the current ones exist, on every boot', async () => {
+    presetMigration.removeRetiredPresets.mockImplementation(async () => {
+      // Member must already be seeded when the migration runs.
+      expect(roleModel.docs.map((r: any) => r.name)).toContain('Member');
+      return [];
+    });
+    const service = await build();
+    await service.onApplicationBootstrap();
+    await service.onApplicationBootstrap();
+    expect(presetMigration.removeRetiredPresets).toHaveBeenCalledTimes(2);
+  });
+
+  it('a failing preset removal never blocks boot (retried next boot)', async () => {
+    config = { BOOTSTRAP_OWNER_EMAIL: 'boss@acme.com' };
+    presetMigration.removeRetiredPresets.mockRejectedValue(new Error('redis down'));
+    const service = await build();
+    await expect(service.onApplicationBootstrap()).resolves.toBeUndefined();
+    // Later steps still ran.
+    expect(invitations.createBootstrapOwnerInvite).toHaveBeenCalled();
   });
 
   it('uses the default workspace name when WORKSPACE_NAME is unset', async () => {

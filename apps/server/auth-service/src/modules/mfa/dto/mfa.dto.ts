@@ -82,6 +82,35 @@ export class RegenerateBackupCodesDto {
   code: string;
 }
 
+/** POST /api/users/me/mfa/enroll/confirm (turn 2FA on from Settings). */
+export class MfaSelfEnrollConfirmDto {
+  @ApiProperty({
+    example: '123456',
+    description: '6-digit code from the authenticator app just set up',
+  })
+  @Allow()
+  code: string;
+}
+
+/** POST /api/users/me/mfa/disable (turn optional 2FA off). */
+export class MfaDisableDto {
+  @ApiPropertyOptional({
+    example: '123456',
+    description:
+      'Current authenticator code (send exactly one of code / backupCode)',
+  })
+  @Allow()
+  code?: string;
+
+  @ApiPropertyOptional({
+    example: 'ABCDE-FGH23',
+    description:
+      'An unused backup code (send exactly one of code / backupCode)',
+  })
+  @Allow()
+  backupCode?: string;
+}
+
 export class MfaUserDto {
   @ApiProperty()
   id: string;
@@ -93,7 +122,11 @@ export class MfaUserDto {
   displayName: string;
 }
 
-/** 201 body of POST /auth/login and POST /auth/exchange for a privileged user. */
+/**
+ * 201 body of POST /auth/login, POST /auth/exchange (Google) and invitation
+ * accept-password when a 2FA step is due: always for Owner / Admin-like
+ * roles, for other members only once they turned 2FA on.
+ */
 export class MfaRequiredResponseDto {
   @ApiProperty({ enum: ['MFA_REQUIRED'], example: 'MFA_REQUIRED' })
   code: 'MFA_REQUIRED';
@@ -103,7 +136,7 @@ export class MfaRequiredResponseDto {
 
   @ApiProperty({
     description:
-      'true = first sign-in since becoming privileged: enroll an authenticator first',
+      'true = 2FA is mandatory for the role (Owner / Admin-like) and the account never enrolled: set up an authenticator first. false = enter a code (enrolled; for a Member, 2FA they turned on)',
   })
   enrollmentRequired: boolean;
 
@@ -139,6 +172,23 @@ export class MfaEnrollConfirmResponseDto {
     example: ['ABCDE-FGH23'],
     description:
       '10 single-use backup codes (stored hashed). Re-readable via enroll/codes until enroll/complete, at most 10 minutes.',
+  })
+  backupCodes: string[];
+}
+
+/** 201 body of the Settings enroll/confirm: enrolled; the session is unchanged. */
+export class MfaSelfEnrollConfirmResponseDto {
+  @ApiProperty({
+    enum: ['MFA_BACKUP_CODES_ISSUED'],
+    example: 'MFA_BACKUP_CODES_ISSUED',
+  })
+  code: 'MFA_BACKUP_CODES_ISSUED';
+
+  @ApiProperty({
+    type: [String],
+    example: ['ABCDE-FGH23'],
+    description:
+      '10 single-use backup codes (stored hashed). Shown once: they cannot be read again.',
   })
   backupCodes: string[];
 }
