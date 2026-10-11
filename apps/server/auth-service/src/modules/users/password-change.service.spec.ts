@@ -19,12 +19,14 @@ function make(user: any) {
     revokeOtherSessions: jest.fn().mockResolvedValue(2),
     revokeAllSessions: jest.fn().mockResolvedValue(undefined),
   };
+  const mfaPending = { burnAllForUser: jest.fn().mockResolvedValue(undefined) };
   const service = new PasswordChangeService(
     userModel as any,
     users as any,
     session as any,
+    mfaPending as any,
   );
-  return { service, users, session };
+  return { service, users, session, mfaPending };
 }
 
 describe('PasswordChangeService.changePassword', () => {
@@ -49,6 +51,13 @@ describe('PasswordChangeService.changePassword', () => {
       'sid-current',
     );
     expect(session.revokeAllSessions).not.toHaveBeenCalled();
+  });
+
+  it('burns pending 2FA sign-in steps won with the old password', async () => {
+    (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+    const { service, mfaPending } = make({ _id: 'u1', password: 'old' });
+    await service.changePassword('u1', 'sid', 'old-password', 'new-password-1');
+    expect(mfaPending.burnAllForUser).toHaveBeenCalledWith('u1');
   });
 
   it('sets a first password for a Google-only account without asking for a current one', async () => {

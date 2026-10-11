@@ -7,6 +7,7 @@ import { AuthCode } from '../../common/auth-code.enum';
 import { MIN_PASSWORD_LENGTH } from '../../common/password-policy';
 import { SessionService } from '../auth/session.service';
 import { UsersService } from './users.service';
+import { MfaPendingStore } from '../mfa/mfa-pending.store';
 
 // Same floor as invitation accept, reset and both clients (re-exported for
 // existing importers).
@@ -43,6 +44,7 @@ export class PasswordChangeService {
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly users: UsersService,
     private readonly session: SessionService,
+    private readonly mfaPending: MfaPendingStore,
   ) {}
 
   async changePassword(
@@ -86,6 +88,8 @@ export class PasswordChangeService {
 
     const hash = await bcrypt.hash(newPassword, await bcrypt.genSalt(10));
     await this.users.updatePassword(userId, hash);
+    // A pending 2FA sign-in step won with the old password must not finish.
+    await this.mfaPending.burnAllForUser(userId);
 
     if (currentSid) {
       await this.session.revokeOtherSessions(userId, currentSid);

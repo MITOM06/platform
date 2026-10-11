@@ -40,6 +40,7 @@ describe('MfaService (2FA sign-in step)', () => {
         backupCodeHashes: BACKUP.map((c) => hashBackupCode(c.replace('-', ''))),
       },
     });
+  let ssoEnforced = false;
   const setup = (user: FakeUser) => {
     users = createFakeUserModel(user);
     service = new MfaService(
@@ -48,6 +49,7 @@ describe('MfaService (2FA sign-in step)', () => {
       new MfaCodeService(redis as never),
       crypto,
       audit as never,
+      { isEnforcedFor: jest.fn(async () => ssoEnforced) } as never,
     );
   };
   const token = (stage: MfaStage) =>
@@ -342,6 +344,34 @@ describe('MfaService (2FA sign-in step)', () => {
       ).rejects.toMatchObject({
         response: { code: 'MFA_TOKEN_INVALID' },
       });
+    });
+  });
+
+  // "Require SSO" switched on while someone sat on the 2FA step: the answer is
+  // SSO_REQUIRED either way, but a backup code must not be spent on it (it was,
+  // because the check ran only after the code was consumed).
+  describe('Require SSO switched on during the 2FA step', () => {
+    afterEach(() => (ssoEnforced = false));
+
+    it('answers SSO_REQUIRED and leaves the backup code unused', async () => {
+      setup(enrolledOwner());
+      const t = await token('verify');
+      ssoEnforced = true;
+
+      await expect(
+        service.verify({
+          mfaToken: t,
+          backupCode: BACKUP[0],
+          deviceId: 'd',
+          platform: 'web',
+        }),
+      ).rejects.toMatchObject({ response: { code: 'SSO_REQUIRED' } });
+
+      const stored = (await users
+        .findById(UID)
+        .select('+mfa.backupCodeHashes')
+        .exec())!.mfa!;
+      expect(stored.backupCodeHashes).toHaveLength(BACKUP.length);
     });
   });
 });

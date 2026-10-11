@@ -135,8 +135,22 @@ describe('SsoPolicyService (who is SSO-enforced)', () => {
         enforced: true,
         loginUrl: '/auth/oidc/login',
         buttonLabel: 'Sign in with SSO',
+        googleEnabled: false,
       });
       expect(JSON.stringify(info)).not.toContain('acme');
+    });
+
+    // A self-host install without GOOGLE_CLIENT_ID has no Google strategy: the
+    // clients hide the button instead of sending people to an error.
+    it('googleEnabled follows GOOGLE_CLIENT_ID', async () => {
+      env.GOOGLE_CLIENT_ID = 'cid.apps.googleusercontent.com';
+      await expect(service.publicInfo()).resolves.toMatchObject({
+        googleEnabled: true,
+      });
+      env.GOOGLE_CLIENT_ID = '';
+      await expect(service.publicInfo()).resolves.toMatchObject({
+        googleEnabled: false,
+      });
     });
 
     it('enforced is false when the switch is not in effect', async () => {

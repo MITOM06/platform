@@ -10,6 +10,7 @@ import * as bcrypt from 'bcrypt';
 import { REDIS_CLIENT, Redis } from '@platform/database';
 import { AuthCode } from '../../common/auth-code.enum';
 import { normalizeEmail } from '../../common/email';
+import { MfaPendingStore } from '../mfa/mfa-pending.store';
 import { SsoPolicyService } from '../sso/sso-policy.service';
 import { UsersService } from '../users/users.service';
 import { assertCanSignIn } from './account-status';
@@ -31,6 +32,7 @@ export class PasswordRecoveryService {
     private readonly configService: ConfigService,
     private readonly ssoPolicy: SsoPolicyService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    private readonly mfaPending: MfaPendingStore,
   ) {}
 
   /**
@@ -127,6 +129,8 @@ export class PasswordRecoveryService {
     // and the Google-invite `mustSetPassword` flag.
     await this.usersService.updatePassword(user._id.toString(), hashedPass);
     await this.session.revokeAllSessions(user._id.toString(), 'password_reset');
+    // A 2FA step started with the old (possibly phished) password dies with it.
+    await this.mfaPending.burnAllForUser(user._id.toString());
 
     return {
       success: true,

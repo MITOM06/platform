@@ -99,10 +99,12 @@ export class OidcService {
     platform: string;
   }> {
     const state = query?.state;
-    if (!state) throw new UnauthorizedException({ code: 'OIDC_NO_STATE' });
+    if (!state)
+      throw new UnauthorizedException({ code: AuthCode.OIDC_NO_STATE });
     const key = `oidc:flow:${state}`;
     const raw = await this.redis.get(key);
-    if (!raw) throw new UnauthorizedException({ code: 'OIDC_BAD_STATE' });
+    if (!raw)
+      throw new UnauthorizedException({ code: AuthCode.OIDC_BAD_STATE });
     await this.redis.del(key); // one-time use
 
     const flow: OidcFlow = JSON.parse(raw);
@@ -115,7 +117,7 @@ export class OidcService {
         code_verifier: flow.codeVerifier,
       });
     } catch {
-      throw new UnauthorizedException({ code: 'OIDC_EXCHANGE_FAILED' });
+      throw new UnauthorizedException({ code: AuthCode.OIDC_EXCHANGE_FAILED });
     }
 
     const claims: any = tokenSet.claims();
@@ -124,9 +126,10 @@ export class OidcService {
     // address can still JIT-create an account on an allowed domain yet can never
     // take over an EXISTING account by email (SSO_EMAIL_UNVERIFIED there).
     if (!claims.email || claims.email_verified === false) {
-      throw new UnauthorizedException({ code: 'OIDC_EMAIL_UNVERIFIED' });
+      throw new UnauthorizedException({ code: AuthCode.OIDC_EMAIL_UNVERIFIED });
     }
-    const groupsClaim = this.config.get<string>('OIDC_GROUPS_CLAIM') || 'groups';
+    const groupsClaim =
+      this.config.get<string>('OIDC_GROUPS_CLAIM') || 'groups';
     const groups: string[] = Array.isArray(claims[groupsClaim])
       ? claims[groupsClaim]
       : [];

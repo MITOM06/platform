@@ -211,7 +211,12 @@ describe('F1 — claims-stale access tokens', () => {
         {
           provide: UsersService,
           useValue: {
-            findById: jest.fn().mockResolvedValue({ status: 'active' }),
+            // Enrolled in 2FA: these tests promote Jane to Admin, a role whose
+            // sessions must have passed 2FA (an unenrolled one is refused at
+            // refresh — auth.service.spec covers that).
+            findById: jest
+              .fn()
+              .mockResolvedValue({ status: 'active', mfa: { enabled: true } }),
             getHasPassword: jest.fn().mockResolvedValue(true),
           },
         },

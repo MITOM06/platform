@@ -2558,13 +2558,18 @@
           "buttonLabel": {
             "type": "string",
             "example": "Sign in with SSO"
+          },
+          "googleEnabled": {
+            "type": "boolean",
+            "description": "Google sign-in is configured on this server (GOOGLE_CLIENT_ID). False on a self-host install without it: hide the Google button."
           }
         },
         "required": [
           "enabled",
           "enforced",
           "loginUrl",
-          "buttonLabel"
+          "buttonLabel",
+          "googleEnabled"
         ]
       },
       "ExchangeDto": {

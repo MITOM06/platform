@@ -29,6 +29,8 @@ import {
   SocialProvisioningService,
 } from './social-provisioning.service';
 import { SsoPolicyService, ssoRequired } from '../sso/sso-policy.service';
+import { emailInDomains, normalizeDomains } from '../sso/sso-policy';
+import { isAdminLike } from '../mfa/mfa-policy';
 import { PasswordRecoveryService } from './password-recovery.service';
 
 /** A user as needed to mint a session (any UserDocument satisfies it). */
@@ -119,10 +121,10 @@ export class AuthService {
       throw new UnauthorizedException({ code: AuthCode.SSO_DISABLED });
 
     // Enforce allowed email domains if configured (empty list = any domain).
-    if (gate.allowedDomains.length > 0) {
-      const domain = profile.email.split('@')[1]?.toLowerCase();
-      const ok = gate.allowedDomains.some((d) => d.toLowerCase() === domain);
-      if (!ok) {
+    // Same normalization as "Require SSO" ("@Acme.com " = "acme.com"): comparing
+    // the stored strings raw locked the whole domain out once SSO was required.
+    if (normalizeDomains(gate.allowedDomains).length > 0) {
+      if (!emailInDomains(profile.email, gate.allowedDomains)) {
         throw new UnauthorizedException({
           code: AuthCode.SSO_DOMAIN_NOT_ALLOWED,
         });
@@ -394,9 +396,23 @@ export class AuthService {
       !inactive &&
       peek.method !== 'oidc' &&
       (await this.ssoPolicy.isEnforcedFor(user));
-    if (!inactive && !ssoOnly) return;
+    // 2FA is asked at sign-in only. A Member who signed in with a password and
+    // was then made Admin-like would otherwise refresh admin claims forever on
+    // a session that never passed the 2FA the role requires. SSO sessions are
+    // the IdP's business.
+    const needsEnrollment =
+      !inactive &&
+      !ssoOnly &&
+      peek.method !== 'oidc' &&
+      user.mfa?.enabled !== true &&
+      isAdminLike(await this.claims.resolve(peek.userId));
+    if (!inactive && !ssoOnly && !needsEnrollment) return;
     if (!(await this.session.refreshTokenBelongsToSession(sid, refreshToken))) {
       return;
+    }
+    if (needsEnrollment) {
+      await this.session.revokeSession(peek.userId, sid);
+      throw new UnauthorizedException({ code: AuthCode.MFA_REQUIRED_BY_ROLE });
     }
     if (ssoOnly) {
       await this.session.revokeSessionsNotCreatedBy(

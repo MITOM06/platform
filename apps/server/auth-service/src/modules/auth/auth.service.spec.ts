@@ -24,9 +24,9 @@ import { SocialProvisioningService } from './social-provisioning.service';
 import { OAuthRedirectService } from './oauth-redirect.service';
 import { LoginAttemptsService } from './login-attempts.service';
 import { MfaChallengeService } from '../mfa/mfa-challenge.service';
-import { MfaPendingStore } from '../mfa/mfa-pending.store';
 import { FakeRedis } from '../mfa/fake-redis.spec-helper';
 import { SsoPolicyService, ssoRequired } from '../sso/sso-policy.service';
+import { MfaPendingStore } from '../mfa/mfa-pending.store';
 import { PasswordRecoveryService } from './password-recovery.service';
 
 describe('AuthService — sign-in, sessions, Require SSO', () => {
@@ -69,6 +69,7 @@ describe('AuthService — sign-in, sessions, Require SSO', () => {
         .mockResolvedValue({ userId: 'u1', method: 'password' }),
       refreshTokenBelongsToSession: jest.fn().mockResolvedValue(true),
       revokeSessionsNotCreatedBy: jest.fn().mockResolvedValue(1),
+      revokeSession: jest.fn().mockResolvedValue(true),
     };
     attempts = {
       checkBruteForce: jest.fn().mockResolvedValue(undefined),
@@ -363,7 +364,10 @@ describe('AuthService — sign-in, sessions, Require SSO', () => {
         status: 403,
         response: { code: 'ACCOUNT_BLOCKED' },
       });
-      expect(session.refreshTokenBelongsToSession).toHaveBeenCalledWith('s1', 'r1');
+      expect(session.refreshTokenBelongsToSession).toHaveBeenCalledWith(
+        's1',
+        'r1',
+      );
       expect(session.revokeAllSessions).toHaveBeenCalledWith('u1', 'blocked');
       expect(session.rotateRefreshToken).not.toHaveBeenCalled();
     });
@@ -389,6 +393,83 @@ describe('AuthService — sign-in, sessions, Require SSO', () => {
         response: { code: 'SESSION_INVALID' },
       });
       expect(users.findById).not.toHaveBeenCalled();
+    });
+
+    // QC 2026-10-11: a Member signed in with only a password, then made Admin
+    // (or given MANAGE_MEMBERS), kept refreshing that session with admin claims
+    // forever — 2FA is mandatory for admin-like roles but was only asked at sign-in.
+    describe('a session that never passed the 2FA its role now requires', () => {
+      const promote = () =>
+        (service as any).claims.resolve.mockResolvedValue({
+          role: 'Admin',
+          perms: ['MANAGE_MEMBERS'],
+          depts: [],
+        });
+
+      it('is revoked at refresh with 401 MFA_REQUIRED_BY_ROLE (sign in again → enroll)', async () => {
+        promote();
+        users.findById.mockResolvedValue({
+          ...activeUser,
+          mfa: { enabled: false },
+        });
+        session.peekSession.mockResolvedValue({
+          userId: 'u1',
+          method: 'password',
+        });
+        await expect(service.refresh('s1', 'r1')).rejects.toMatchObject({
+          status: 401,
+          response: { code: 'MFA_REQUIRED_BY_ROLE' },
+        });
+        expect(session.revokeSession).toHaveBeenCalledWith('u1', 's1');
+        expect(session.rotateRefreshToken).not.toHaveBeenCalled();
+      });
+
+      it('an enrolled admin refreshes normally', async () => {
+        promote();
+        users.findById.mockResolvedValue({
+          ...activeUser,
+          mfa: { enabled: true },
+        });
+        session.peekSession.mockResolvedValue({
+          userId: 'u1',
+          method: 'password',
+        });
+        await expect(service.refresh('s1', 'r1')).resolves.toMatchObject({
+          accessToken: 'jwt',
+        });
+      });
+
+      it('an SSO session is not asked for PON 2FA', async () => {
+        promote();
+        users.findById.mockResolvedValue({
+          ...activeUser,
+          mfa: { enabled: false },
+        });
+        session.peekSession.mockResolvedValue({ userId: 'u1', method: 'oidc' });
+        await expect(service.refresh('s1', 'r1')).resolves.toMatchObject({
+          accessToken: 'jwt',
+        });
+      });
+
+      it('a foreign refresh token learns nothing', async () => {
+        promote();
+        users.findById.mockResolvedValue({
+          ...activeUser,
+          mfa: { enabled: false },
+        });
+        session.peekSession.mockResolvedValue({
+          userId: 'u1',
+          method: 'password',
+        });
+        session.refreshTokenBelongsToSession.mockResolvedValue(false);
+        session.rotateRefreshToken.mockRejectedValue(
+          new UnauthorizedException({ code: 'REFRESH_TOKEN_INVALID' }),
+        );
+        await expect(service.refresh('s1', 'bogus')).rejects.toMatchObject({
+          response: { code: 'REFRESH_TOKEN_INVALID' },
+        });
+        expect(session.revokeSession).not.toHaveBeenCalled();
+      });
     });
 
     it('active user → new tokens', async () => {
@@ -691,6 +772,52 @@ describe('AuthService — sign-in, sessions, Require SSO', () => {
     });
   });
 
+  describe('OIDC sign-in: allowed domains', () => {
+    // An admin typing "@acme.com" (or "ACME.com ") used to lock the whole domain
+    // out once Require SSO was on: password sign-in → SSO_REQUIRED (that check
+    // normalizes) and SSO sign-in → SSO_DOMAIN_NOT_ALLOWED (this one did not).
+    it.each([['@acme.com'], ['ACME.com '], ['@@Acme.com']])(
+      'a stored "%s" still lets jane@acme.com sign in through SSO',
+      async (stored) => {
+        ssoMapping.getGate.mockResolvedValue({
+          enabled: true,
+          allowedDomains: [stored],
+        });
+        ssoMapping.apply.mockResolvedValue({ changed: false });
+        const resolveUserId = jest.fn().mockResolvedValue('u1');
+        Object.assign(service['socialProvisioning'], { resolveUserId });
+        Object.assign(service['oauthRedirect'], {
+          redirectWithLoginCode: jest.fn().mockResolvedValue(undefined),
+        });
+        await service.handleOidcLogin(
+          {
+            email: 'jane@acme.com',
+            displayName: 'Jane',
+            id: 'sub',
+            groups: [],
+          },
+          {} as any,
+          'web',
+        );
+        expect(resolveUserId).toHaveBeenCalled();
+      },
+    );
+
+    it('another domain is still refused', async () => {
+      ssoMapping.getGate.mockResolvedValue({
+        enabled: true,
+        allowedDomains: ['@acme.com'],
+      });
+      await expect(
+        service.handleOidcLogin(
+          { email: 'eve@evil.com', displayName: 'Eve', id: 'sub', groups: [] },
+          {} as any,
+          'web',
+        ),
+      ).rejects.toMatchObject({ response: { code: 'SSO_DOMAIN_NOT_ALLOWED' } });
+    });
+  });
+
   describe('OIDC sign-in: other sessions are touched only when the mapping changed something', () => {
     const profile = { email: 'jane@acme.com', displayName: 'Jane', id: 'sub', groups: ['g'] };
     beforeEach(() => {
@@ -825,6 +952,8 @@ describe('AuthService — OTP / email-normalization flows', () => {
           },
         },
         PasswordRecoveryService,
+        // Resets burn pending 2FA steps (MfaPendingStore has its own spec).
+        { provide: MfaPendingStore, useValue: { burnAllForUser: jest.fn() } },
         { provide: REDIS_CLIENT, useValue: redis },
       ],
     }).compile();

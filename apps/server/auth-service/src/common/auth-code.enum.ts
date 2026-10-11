@@ -210,6 +210,18 @@ export enum AuthCode {
    */
   SSO_UNAVAILABLE = 'SSO_UNAVAILABLE',
 
+  /** OIDC callback without a `state` (link opened outside the sign-in flow). `?error=`. */
+  OIDC_NO_STATE = 'OIDC_NO_STATE',
+
+  /** OIDC callback whose `state` is unknown or expired (10 min) / already used. `?error=`. */
+  OIDC_BAD_STATE = 'OIDC_BAD_STATE',
+
+  /** The IdP refused the authorization code (exchange failed). `?error=`. */
+  OIDC_EXCHANGE_FAILED = 'OIDC_EXCHANGE_FAILED',
+
+  /** The IdP returned no email, or `email_verified: false`. `?error=`. */
+  OIDC_EMAIL_UNVERIFIED = 'OIDC_EMAIL_UNVERIFIED',
+
   // ── Validation (class-validator, used as message string in decorators) ──
   VAL_EMAIL_INVALID = 'VAL_EMAIL_INVALID',
   VAL_EMAIL_REQUIRED = 'VAL_EMAIL_REQUIRED',

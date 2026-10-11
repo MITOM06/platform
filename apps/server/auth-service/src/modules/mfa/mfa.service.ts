@@ -6,6 +6,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from '@platform/database';
+import { SsoPolicyService, ssoRequired } from '../sso/sso-policy.service';
 import { AuthCode } from '../../common/auth-code.enum';
 import { AuditService } from '../audit/audit.service';
 import { assertCanSignIn } from '../auth/account-status';
@@ -48,7 +49,18 @@ export class MfaService {
     private readonly codes: MfaCodeService,
     private readonly crypto: MfaCryptoService,
     private readonly audit: AuditService,
+    private readonly ssoPolicy: SsoPolicyService,
   ) {}
+
+  /**
+   * "Require SSO" switched on during this 2FA step: refuse BEFORE anything is
+   * spent. The session would be refused anyway (issueTokensForUser), but only
+   * after the token and a backup code were already used up.
+   */
+  private async assertSsoNotRequired(p: MfaPending, user: UserDocument) {
+    if (p.method === 'oidc') return;
+    if (await this.ssoPolicy.isEnforcedFor(user)) throw ssoRequired();
+  }
 
   /** Same pending secret for every call with one token. */
   async enrollStart(mfaToken: unknown) {
@@ -144,6 +156,7 @@ export class MfaService {
     dto: { mfaToken?: unknown } & MfaDeviceInput,
   ): Promise<MfaSignInResult> {
     const { p, user } = await this.requireCodesPending(dto.mfaToken);
+    await this.assertSsoNotRequired(p, user);
     if (!(await this.pending.consume(p.key))) throw tokenInvalid();
     return { user, ...signInContext(p, dto) };
   }
@@ -158,6 +171,7 @@ export class MfaService {
   ): Promise<MfaSignInResult & { backupCodesRemaining: number }> {
     const p = await this.requirePending(dto.mfaToken, 'verify');
     const user = await this.loadUser(p, SECRET_FIELDS);
+    await this.assertSsoNotRequired(p, user);
     const mfa = user.mfa;
     if (mfa?.enabled !== true || !mfa.secretEnc) {
       // Reset by an Owner after the password step: restart → enrollment.

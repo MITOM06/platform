@@ -44,6 +44,7 @@ describe('MfaService enroll/confirm → codes → complete', () => {
       new MfaCodeService(redis as never),
       crypto,
       audit as never,
+      { isEnforcedFor: async () => false } as never,
     );
   };
   const token = (stage: MfaStage) =>

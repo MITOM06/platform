@@ -98,6 +98,15 @@ describe('SsoEnforcementService ("Require SSO" switch)', () => {
       expect(plan.after.enforced).toBe(true);
     });
 
+    it('stores the domains normalized ("@Acme.COM " → "acme.com", blanks and duplicates dropped)', async () => {
+      const plan = await service.plan({
+        enabled: true,
+        enforced: true,
+        allowedDomains: ['@Acme.COM ', 'acme.com', ' ', 'Beta.io'],
+      });
+      expect(plan.sso.allowedDomains).toEqual(['acme.com', 'beta.io']);
+    });
+
     it.each([
       ['SSO disabled', { enabled: false, allowedDomains: ['acme.com'] }, true],
       ['no allowed domain', { enabled: true, allowedDomains: [] }, true],

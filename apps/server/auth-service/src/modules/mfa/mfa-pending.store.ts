@@ -79,8 +79,21 @@ export class MfaPendingStore {
         attempts: '0',
       })
       .expire(key, MFA_TOKEN_TTL_SECONDS)
+      .sadd(userIndexKey(record.userId), key)
+      .expire(userIndexKey(record.userId), MFA_CODES_PENDING_TTL_SECONDS)
       .exec();
     return token;
+  }
+
+  /**
+   * Burns every pending sign-in step of `userId` (enroll / verify /
+   * codes_pending). Called when their password changes or is reset: a token
+   * won with the old password must not finish into a session afterwards.
+   */
+  async burnAllForUser(userId: string): Promise<void> {
+    const index = userIndexKey(userId);
+    const keys = await this.redis.smembers(index);
+    await this.redis.del(index, ...keys);
   }
 
   async get(token: unknown): Promise<MfaPending | null> {
@@ -133,6 +146,8 @@ export class MfaPendingStore {
         enrolledAt: String(record.enrolledAt),
       })
       .expire(key, MFA_CODES_PENDING_TTL_SECONDS)
+      .sadd(userIndexKey(record.userId), key)
+      .expire(userIndexKey(record.userId), MFA_CODES_PENDING_TTL_SECONDS)
       .exec();
   }
 
@@ -176,4 +191,9 @@ export class MfaPendingStore {
 
 function pendingKey(token: string): string {
   return `mfa:pending:${createHash('sha256').update(token).digest('hex')}`;
+}
+
+/** Set of a user's pending-record keys, so they can all be burned at once. */
+function userIndexKey(userId: string): string {
+  return `mfa:user-pending:${userId}`;
 }

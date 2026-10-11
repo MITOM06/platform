@@ -1,3 +1,4 @@
+import { MfaPendingStore } from '../mfa/mfa-pending.store';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersService } from './users.service';
@@ -43,6 +44,8 @@ import {
   // the same); change-password signs the user's other sessions out.
   providers: [
     UsersService,
+    // Stateless over the global REDIS_CLIENT: burns pending 2FA steps on password change.
+    MfaPendingStore,
     PasswordChangeService,
     SessionService,
     MyDepartmentsService,

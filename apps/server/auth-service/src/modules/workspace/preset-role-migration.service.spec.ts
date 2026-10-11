@@ -40,6 +40,11 @@ function fakeModel(docs: Doc[]) {
       }
       return exec({ modifiedCount: hit ? 1 : 0 });
     }),
+    findOneAndUpdate: jest.fn((filter: Doc, update: Doc) => {
+      const hit = docs.find((d) => matches(d, filter));
+      if (hit) Object.assign(hit, update.$set);
+      return exec(hit ?? null);
+    }),
     deleteOne: jest.fn((filter: Doc) => {
       const i = docs.findIndex((d) => matches(d, filter));
       if (i >= 0) docs.splice(i, 1);
@@ -145,10 +150,47 @@ describe('PresetRoleMigrationService (remove the Manager preset)', () => {
     session.revokeAllSessions.mockClear();
     audit.record.mockClear();
     users.updateMany.mockClear();
+    users.findOneAndUpdate.mockClear();
     await expect(service.removeRetiredPresets()).resolves.toEqual([]);
     expect(users.updateMany).not.toHaveBeenCalled();
+    expect(users.findOneAndUpdate).not.toHaveBeenCalled();
     expect(session.revokeAllSessions).not.toHaveBeenCalled();
     expect(audit.record).not.toHaveBeenCalled();
+  });
+
+  // QC 2026-10-11: with updateMany-then-revoke, a crash between the two left
+  // moved users whose old sessions were never revoked (the next boot found no
+  // holders), and two instances booting together both revoked and audited.
+  it('a crash after revoking but before moving is finished on the next boot', async () => {
+    session.revokeAllSessions.mockImplementationOnce(async () => {
+      throw new Error('process killed');
+    });
+    await expect(service.removeRetiredPresets()).rejects.toThrow(
+      'process killed',
+    );
+
+    session.revokeAllSessions.mockReset().mockResolvedValue(undefined);
+    await service.removeRetiredPresets();
+
+    expect(users.docs.filter((u) => u.roleId === 'r-manager')).toEqual([]);
+    expect(session.revokeAllSessions).toHaveBeenCalledWith(
+      'u1',
+      'role_changed',
+    );
+    expect(session.revokeAllSessions).toHaveBeenCalledWith(
+      'u2',
+      'role_changed',
+    );
+  });
+
+  it('two instances booting together audit the removal once', async () => {
+    await Promise.all([
+      service.removeRetiredPresets(),
+      service.removeRetiredPresets(),
+    ]);
+
+    expect(audit.record).toHaveBeenCalledTimes(1);
+    expect(users.docs.filter((u) => u.roleId === 'r-manager')).toEqual([]);
   });
 
   it('a custom (non-preset) role named "Manager" is left alone', async () => {
