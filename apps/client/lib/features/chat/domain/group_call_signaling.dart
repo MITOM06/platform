@@ -2,10 +2,13 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/utils/app_error.dart';
+import '../../../core/utils/global_messenger.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../data/stomp_service.dart';
 import 'group_call_controller.dart';
+import 'group_call_join_error.dart';
 import 'group_call_state.dart';
 import '../data/calls_repository.dart';
 import 'call_transport.dart';
@@ -126,6 +129,8 @@ class GroupCallSignaling extends _$GroupCallSignaling {
       ref.read(appRouterProvider).push('/group-call');
     } catch (e) {
       debugPrint('Starter auto-join failed: $e');
+      // No call screen opens: say why (localized, never the raw error).
+      showErrorSnackBar(groupCallJoinErrorText(appL10n(), e));
     }
   }
 
