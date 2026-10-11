@@ -5,4 +5,13 @@
 <resources>
     <string name="meeting_push_invited">Vous êtes invité à une réunion</string>
     <string name="meeting_push_starting">Votre réunion commence dans 10 minutes</string>
+
+    <!-- Message pushes: same words as the in-app previews (MessageNotificationService). -->
+    <string name="push_title_new_message">Nouveau message</string>
+    <string name="push_body_new_message">Nouveau message</string>
+    <string name="push_body_photo">[Photo]</string>
+    <string name="push_body_video">[Vidéo]</string>
+    <string name="push_body_file">[Fichier]</string>
+    <string name="push_body_voice">[Message vocal]</string>
+    <string name="push_body_sticker">[Sticker]</string>
 </resources>

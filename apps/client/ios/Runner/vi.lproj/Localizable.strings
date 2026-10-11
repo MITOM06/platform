@@ -4,3 +4,12 @@
 
 "meeting_push_invited" = "Bạn được mời tham gia một cuộc họp";
 "meeting_push_starting" = "Cuộc họp của bạn bắt đầu sau 10 phút";
+
+/* Message pushes: same words as the in-app previews (MessageNotificationService). */
+"push_title_new_message" = "Tin nhắn mới";
+"push_body_new_message" = "Tin nhắn mới";
+"push_body_photo" = "[Ảnh]";
+"push_body_video" = "[Video]";
+"push_body_file" = "[Tệp]";
+"push_body_voice" = "[Tin nhắn thoại]";
+"push_body_sticker" = "[Nhãn dán]";

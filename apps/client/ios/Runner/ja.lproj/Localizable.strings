@@ -4,3 +4,12 @@
 
 "meeting_push_invited" = "会議に招待されました";
 "meeting_push_starting" = "会議が10分後に始まります";
+
+/* Message pushes: same words as the in-app previews (MessageNotificationService). */
+"push_title_new_message" = "新しいメッセージ";
+"push_body_new_message" = "新しいメッセージ";
+"push_body_photo" = "[写真]";
+"push_body_video" = "[動画]";
+"push_body_file" = "[ファイル]";
+"push_body_voice" = "[音声メッセージ]";
+"push_body_sticker" = "[スタンプ]";

@@ -46,8 +46,8 @@ public class MessageNotificationService {
   /** Sender id (and name) of an anonymous system notice. */
   private static final String SYSTEM_SENDER = "system";
 
-  /** Push title for a sender whose name cannot be resolved — never their id. */
-  private static final String UNKNOWN_SENDER_TITLE = "New message";
+  /** Push title (localization key) for a sender whose name cannot be resolved — never their id. */
+  private static final String UNKNOWN_SENDER_TITLE_KEY = "push_title_new_message";
 
   /**
    * Notify all participants except the sender. Runs asynchronously — callers on the hot send path
@@ -122,14 +122,16 @@ public class MessageNotificationService {
     // Resolve the sender's human-readable name once (same for every recipient).
     // Clients display senderName directly, so it must never be a bare userId.
     String senderDisplayName = resolveSenderName(senderId, conversationId);
-    String pushTitle =
-        senderDisplayName.equals(senderId) ? UNKNOWN_SENDER_TITLE : senderDisplayName;
+    PushText pushTitle =
+        senderDisplayName.equals(senderId)
+            ? PushText.localized(UNKNOWN_SENDER_TITLE_KEY)
+            : PushText.of(senderDisplayName);
     String type = response.type() != null ? response.type() : "text";
     String content = response.content() != null ? response.content() : "";
     if ("ai".equals(type)) {
       content = preview(content);
     }
-    String pushBody = pushBody(content, type);
+    PushText pushBody = pushBody(content, type);
 
     for (String participantId : participants) {
       if (participantId.equals(senderId)) {
@@ -195,21 +197,20 @@ public class MessageNotificationService {
 
   /**
    * Body shown on the OS notification (lock screen). Attachment messages store a JSON payload as
-   * content — that must never reach a user-visible surface, so map non-text types to a generic
-   * English label (localization is client-side; FCM notification messages are rendered by the OS
-   * as-is).
+   * content — that must never reach a user-visible surface — so every non-text type is a
+   * localization key the app resolves in the device's language (the OS renders the push as-is).
    */
-  private String pushBody(String content, String type) {
+  private PushText pushBody(String content, String type) {
     return switch (type) {
         // FCM rejects payloads over 4 KB — and sendAsync swallows that — so a long text message
         // (up to 10,000 chars) silently produced no push at all. Always send a preview.
-      case "text", "ai" -> preview(content);
-      case "image" -> "[Photo]";
-      case "video" -> "[Video]";
-      case "voice" -> "[Voice message]";
-      case "file" -> "[File]";
-      case "sticker" -> "[Sticker]";
-      default -> "New message";
+      case "text", "ai" -> PushText.of(preview(content));
+      case "image" -> PushText.localized("push_body_photo");
+      case "video" -> PushText.localized("push_body_video");
+      case "voice" -> PushText.localized("push_body_voice");
+      case "file" -> PushText.localized("push_body_file");
+      case "sticker" -> PushText.localized("push_body_sticker");
+      default -> PushText.localized("push_body_new_message");
     };
   }
 }

@@ -72,6 +72,25 @@ class MessageNotificationServiceTest {
         mentions);
   }
 
+  @Test
+  void attachmentAndUnknownTypes_pushALocalizationKey_neverEnglishText() {
+    java.util.Map<String, String> expected =
+        java.util.Map.of(
+            "video", "push_body_video",
+            "voice", "push_body_voice",
+            "file", "push_body_file",
+            "sticker", "push_body_sticker",
+            "meeting_summary", "push_body_new_message");
+    MessageNotificationService svc = service();
+    expected.forEach(
+        (type, key) -> {
+          svc.notifyNewMessage(SENDER, message("{\"url\":\"/api/uploads/x\"}", type, List.of()));
+          verify(fcmService, timeout(1000))
+              .sendPushNotification(
+                  eq(RECIPIENT), eq(PushText.of("Alice")), eq(PushText.localized(key)), eq(CONV));
+        });
+  }
+
   /**
    * System notices (members added, group renamed…) used to send only {type, conversationId,
    * senderName:"system"}: the conversation list could not update its preview or order in place.
@@ -141,7 +160,8 @@ class MessageNotificationServiceTest {
                         && "msg-1".equals(((Map<String, String>) payload).get("messageId"))
                         && !((Map<String, String>) payload).get("createdAt").isEmpty()));
     verify(fcmService, timeout(1000))
-        .sendPushNotification(eq(RECIPIENT), eq("Alice"), eq("Hello"), eq(CONV));
+        .sendPushNotification(
+            eq(RECIPIENT), eq(PushText.of("Alice")), eq(PushText.of("Hello")), eq(CONV));
     // The sender must never be self-notified.
     verify(clusterBroker, after(300).never())
         .convertAndSendToUser(eq(SENDER), eq("/queue/notifications"), any());
@@ -178,7 +198,12 @@ class MessageNotificationServiceTest {
             SENDER, message("{\"url\":\"/api/uploads/abc\",\"name\":\"cat.png\"}", "image", null));
 
     verify(fcmService, timeout(1000))
-        .sendPushNotification(eq(RECIPIENT), eq("Alice"), eq("[Photo]"), eq(CONV));
+        .sendPushNotification(
+            eq(RECIPIENT),
+            eq(PushText.of("Alice")),
+            // Localized on the device (strings.xml / Localizable.strings), not English "[Photo]".
+            eq(PushText.localized("push_body_photo")),
+            eq(CONV));
   }
 
   @Test
@@ -201,7 +226,8 @@ class MessageNotificationServiceTest {
                     "Mimi".equals(((Map<String, String>) payload).get("senderName"))
                         && "Here you go".equals(((Map<String, String>) payload).get("content"))));
     verify(fcmService, timeout(1000))
-        .sendPushNotification(eq(RECIPIENT), eq("Mimi"), eq("Here you go"), eq(CONV));
+        .sendPushNotification(
+            eq(RECIPIENT), eq(PushText.of("Mimi")), eq(PushText.of("Here you go")), eq(CONV));
   }
 
   @Test
@@ -235,7 +261,8 @@ class MessageNotificationServiceTest {
             eq("/queue/notifications"),
             argThat(payload -> "Jarvis".equals(((Map<String, String>) payload).get("senderName"))));
     verify(fcmService, timeout(1000))
-        .sendPushNotification(eq(RECIPIENT), eq("Jarvis"), eq("Done"), eq(CONV));
+        .sendPushNotification(
+            eq(RECIPIENT), eq(PushText.of("Jarvis")), eq(PushText.of("Done")), eq(CONV));
   }
 
   @Test
@@ -259,7 +286,10 @@ class MessageNotificationServiceTest {
                 }));
     verify(fcmService, timeout(1000))
         .sendPushNotification(
-            eq(RECIPIENT), eq("PON AI"), argThat(body -> body.length() <= 201), eq(CONV));
+            eq(RECIPIENT),
+            eq(PushText.of("PON AI")),
+            argThat(body -> body.text().length() <= 201),
+            eq(CONV));
   }
 
   @Test
@@ -278,6 +308,10 @@ class MessageNotificationServiceTest {
     svc.notifyNewMessage(SENDER, message("Hello", "text", List.of()));
 
     verify(fcmService, timeout(1000))
-        .sendPushNotification(eq(RECIPIENT), eq("New message"), eq("Hello"), eq(CONV));
+        .sendPushNotification(
+            eq(RECIPIENT),
+            eq(PushText.localized("push_title_new_message")),
+            eq(PushText.of("Hello")),
+            eq(CONV));
   }
 }

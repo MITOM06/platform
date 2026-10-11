@@ -15,6 +15,7 @@ import 'core/router/return_path.dart';
 import 'core/services/background_realtime.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/push_routes.dart';
+import 'core/services/push_text.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/app_error.dart';
 import 'core/utils/global_messenger.dart';
@@ -232,9 +233,12 @@ class _PlatformAppState extends ConsumerState<PlatformApp>
         return;
       }
       final title = _nonEmpty(notification?.title) ??
+          pushTextForKey(l10n, notification?.titleLocKey) ??
           displayableSenderName(data['senderName'], data['senderId']) ??
           l10n.newNotificationTitle;
-      final body = notification?.body ?? safePushBody(l10n, data['content']);
+      final body = notification?.body ??
+          pushTextForKey(l10n, notification?.bodyLocKey) ??
+          safePushBody(l10n, data['content']);
       final conversationId = data['conversationId'] ?? '';
       if (conversationId.isNotEmpty) {
         showMessageNotification(

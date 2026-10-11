@@ -832,6 +832,12 @@ only via `/app/meet.host`, the notes switch via `PATCH`). Differences:
   Events: Message objects (new, edited, recalled, reactions, AI streaming chunks)
 - **Typing Indicator Stream:** `/topic/conversation/{conversationId}/typing`  
   Payload: `{ "userId": "string", "typing": boolean }`
+- **Message push (FCM, offline only):** `data: {type: "chat_message", conversationId}`, Android
+  channel `pon_messages`. Title = the sender's name, or loc key `push_title_new_message` when it
+  cannot be resolved; body = the text / AI preview (≤ 200 chars), else a loc key resolved on the
+  device (`body_loc_key` / APNs `loc-key`): `push_body_photo|video|file|voice|sticker`,
+  `push_body_new_message` for any other type. Native strings: `apps/client` `strings.xml` /
+  `Localizable.strings`, kept equal to the ARB by `native_push_strings_test.dart`.
 - **User Notifications Queue:** `/user/queue/notifications`  
   Payload: `{ "type": "NEW_MESSAGE" | "MENTIONED_YOU", "conversationId", "senderId", "senderName",
   "content", "messageType", "messageId", "createdAt" }` (all strings). System notices (group
