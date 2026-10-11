@@ -3714,6 +3714,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get callErrStartTimeout =>
+      'Impossible de lancer l\'appel : le serveur n\'a pas répondu. Réessayez.';
+
+  @override
   String get groupCallJoinFailed =>
       'Impossible de rejoindre l\'appel. Veuillez réessayer.';
 

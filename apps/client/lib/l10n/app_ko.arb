@@ -1271,6 +1271,7 @@
   "callErrNotSfu": "여기서는 이 통화에 참여할 수 없습니다. 다시 전화해 주세요.",
   "callErrForbidden": "이 통화에 참여할 수 없습니다.",
   "callErrPeerNeverJoined": "{name}님과 연결하지 못했습니다. 다시 시도해 주세요.",
+  "callErrStartTimeout": "통화를 시작하지 못했습니다. 서버가 응답하지 않습니다. 다시 시도하세요.",
   "groupCallJoinFailed": "통화에 참여하지 못했습니다. 다시 시도해 주세요.",
   "callSpeaker": "스피커",
   "callSwitchCamera": "카메라 전환",

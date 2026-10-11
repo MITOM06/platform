@@ -3691,6 +3691,10 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get callErrStartTimeout =>
+      'No se pudo iniciar la llamada: el servidor no respondió. Inténtalo de nuevo.';
+
+  @override
   String get groupCallJoinFailed =>
       'No se pudo unir a la llamada. Inténtalo de nuevo.';
 

@@ -3664,6 +3664,10 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get callErrStartTimeout =>
+      'Không thể bắt đầu cuộc gọi — máy chủ không phản hồi. Vui lòng thử lại.';
+
+  @override
   String get groupCallJoinFailed =>
       'Không thể tham gia cuộc gọi. Vui lòng thử lại.';
 

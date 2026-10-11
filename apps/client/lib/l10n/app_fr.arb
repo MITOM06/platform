@@ -1271,6 +1271,7 @@
   "callErrNotSfu": "Impossible de rejoindre cet appel depuis ici. Veuillez rappeler.",
   "callErrForbidden": "Vous ne pouvez pas rejoindre cet appel.",
   "callErrPeerNeverJoined": "Impossible de se connecter à {name}. Veuillez réessayer.",
+  "callErrStartTimeout": "Impossible de lancer l'appel : le serveur n'a pas répondu. Réessayez.",
   "groupCallJoinFailed": "Impossible de rejoindre l'appel. Veuillez réessayer.",
   "callSpeaker": "Haut-parleur",
   "callSwitchCamera": "Changer de caméra",

@@ -1271,6 +1271,7 @@
   "callErrNotSfu": "Không thể tham gia cuộc gọi này từ đây. Vui lòng gọi lại.",
   "callErrForbidden": "Bạn không thể tham gia cuộc gọi này.",
   "callErrPeerNeverJoined": "Không thể kết nối với {name}. Vui lòng thử lại.",
+  "callErrStartTimeout": "Không thể bắt đầu cuộc gọi — máy chủ không phản hồi. Vui lòng thử lại.",
   "groupCallJoinFailed": "Không thể tham gia cuộc gọi. Vui lòng thử lại.",
   "callSpeaker": "Loa ngoài",
   "callSwitchCamera": "Đổi camera",

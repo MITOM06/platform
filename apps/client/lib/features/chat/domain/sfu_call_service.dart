@@ -48,6 +48,10 @@ class SfuCallService implements DirectCallEngine {
   /// The beat of re-joining a room we lost.
   final Duration _rejoinEvery;
 
+  /// How long our `call.start` waits for its `call.started`.
+  final Duration _startTimeout;
+  Timer? _startTimer;
+
   SfuCallService({
     required CallSignalPort port,
     required CallsApi api,
@@ -59,6 +63,7 @@ class SfuCallService implements DirectCallEngine {
     Duration pendingStartDeadline = const Duration(seconds: 15),
     Duration connectTimeout = const Duration(seconds: 30),
     Duration rejoinEvery = const Duration(seconds: 4),
+    Duration startTimeout = const Duration(seconds: 15),
   })  : _port = port,
         _api = api,
         _transport = transport,
@@ -68,7 +73,8 @@ class SfuCallService implements DirectCallEngine {
         _reconnectBlip = reconnectBlip,
         _pendingStartDeadline = pendingStartDeadline,
         _connectTimeout = connectTimeout,
-        _rejoinEvery = rejoinEvery {
+        _rejoinEvery = rejoinEvery,
+        _startTimeout = startTimeout {
     network.addListener(_followLayout); // their camera
   }
 
@@ -168,6 +174,7 @@ class SfuCallService implements DirectCallEngine {
       'media': isVideo ? 'video' : 'audio',
       'merge': true, // we can join a call-merged call (both tapped Call)
     });
+    _armStartDeadline();
   }
 
   /// Callee: the call screen opened for a ring the user tapped Answer on.
@@ -436,6 +443,8 @@ class SfuCallService implements DirectCallEngine {
     _watch.end();
     _connectTimer?.cancel();
     _connectTimer = null;
+    _startTimer?.cancel();
+    _startTimer = null;
     _answered = false;
     _failure = null; // its end notice has been delivered
     _rejoining = false;

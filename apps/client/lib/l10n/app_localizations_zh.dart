@@ -3538,6 +3538,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get callErrStartTimeout => '无法发起通话——服务器没有响应，请重试。';
+
+  @override
   String get groupCallJoinFailed => '无法加入通话，请重试。';
 
   @override

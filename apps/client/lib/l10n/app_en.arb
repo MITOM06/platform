@@ -1750,6 +1750,7 @@
       }
     }
   },
+  "callErrStartTimeout": "Couldn't start the call — the server didn't respond. Please try again.",
   "groupCallJoinFailed": "Couldn't join the call. Please try again.",
   "callSpeaker": "Speaker",
   "callSwitchCamera": "Switch camera",

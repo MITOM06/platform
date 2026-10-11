@@ -3581,6 +3581,9 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get callErrStartTimeout => '통화를 시작하지 못했습니다. 서버가 응답하지 않습니다. 다시 시도하세요.';
+
+  @override
   String get groupCallJoinFailed => '통화에 참여하지 못했습니다. 다시 시도해 주세요.';
 
   @override

@@ -6799,6 +6799,12 @@ abstract class AppLocalizations {
   /// **'Couldn\'t connect to {name}. Please try again.'**
   String callErrPeerNeverJoined(String name);
 
+  /// No description provided for @callErrStartTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start the call — the server didn\'t respond. Please try again.'**
+  String get callErrStartTimeout;
+
   /// No description provided for @groupCallJoinFailed.
   ///
   /// In en, this message translates to:

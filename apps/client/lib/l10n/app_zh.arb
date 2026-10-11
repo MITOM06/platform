@@ -1271,6 +1271,7 @@
   "callErrNotSfu": "无法从这里加入此通话，请重新拨打。",
   "callErrForbidden": "你无法加入此通话。",
   "callErrPeerNeverJoined": "无法连接到 {name}，请重试。",
+  "callErrStartTimeout": "无法发起通话——服务器没有响应，请重试。",
   "groupCallJoinFailed": "无法加入通话，请重试。",
   "callSpeaker": "扬声器",
   "callSwitchCamera": "切换摄像头",
