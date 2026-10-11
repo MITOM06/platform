@@ -3886,6 +3886,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Este correo ya está vinculado a otra cuenta de inicio de sesión';
 
   @override
+  String get authErrTooManyOtpRequests =>
+      'Has solicitado demasiados códigos OTP. Inténtalo de nuevo en 10 minutos.';
+
+  @override
+  String get authErrSocialProviderUnsupported =>
+      'Este método de inicio de sesión no es compatible.';
+
+  @override
   String get aiActionConfirm => 'Confirmar';
 
   @override

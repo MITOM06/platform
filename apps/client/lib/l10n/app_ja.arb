@@ -1315,6 +1315,8 @@
   "authErrCurrentPasswordRequired": "現在のパスワードを入力してください",
   "authErrSsoEmailUnverified": "サインインプロバイダーでこのメールアドレスが確認されていません",
   "authErrSocialAccountConflict": "このメールは別のサインインアカウントに既にリンクされています",
+  "authErrTooManyOtpRequests": "OTP コードのリクエストが多すぎます。10 分後にもう一度お試しください。",
+  "authErrSocialProviderUnsupported": "このサインイン方法はサポートされていません。",
   "aiActionConfirm": "確認",
   "aiActionCancel": "キャンセル",
   "aiActionSendEmail": "メールを送信",

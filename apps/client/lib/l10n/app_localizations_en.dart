@@ -3855,6 +3855,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'This email is already linked to a different sign-in account';
 
   @override
+  String get authErrTooManyOtpRequests =>
+      'You\'ve requested too many OTP codes. Please try again in 10 minutes.';
+
+  @override
+  String get authErrSocialProviderUnsupported =>
+      'This sign-in method isn\'t supported.';
+
+  @override
   String get aiActionConfirm => 'Confirm';
 
   @override

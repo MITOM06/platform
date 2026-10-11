@@ -1315,6 +1315,8 @@
   "authErrCurrentPasswordRequired": "Vui lòng nhập mật khẩu hiện tại",
   "authErrSsoEmailUnverified": "Nhà cung cấp đăng nhập chưa xác minh địa chỉ email này",
   "authErrSocialAccountConflict": "Email này đã được liên kết với một tài khoản đăng nhập khác",
+  "authErrTooManyOtpRequests": "Bạn đã yêu cầu quá nhiều mã OTP. Vui lòng thử lại sau 10 phút.",
+  "authErrSocialProviderUnsupported": "Phương thức đăng nhập này không được hỗ trợ.",
   "aiActionConfirm": "Xác nhận",
   "aiActionCancel": "Huỷ",
   "aiActionSendEmail": "Gửi email",

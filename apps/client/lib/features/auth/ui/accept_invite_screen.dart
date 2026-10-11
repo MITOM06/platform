@@ -11,6 +11,7 @@ import '../domain/auth_provider.dart';
 import '../domain/auth_state.dart';
 import '../domain/invitation_preview.dart';
 import '../domain/invitation_preview_provider.dart';
+import '../domain/sso_info_provider.dart';
 import '../utils/auth_error.dart';
 import 'widgets/accept_invite_password_form.dart';
 import 'widgets/auth_notice_box.dart';
@@ -187,46 +188,51 @@ class _AcceptInviteScreenState extends ConsumerState<AcceptInviteScreen> {
         const SsoSignInButton(emphasised: true),
       ];
 
-  /// Terms + "Continue with Google" + display name / password form.
+  /// Terms + "Continue with Google" (unless the server has Google sign-in
+  /// off) + display name / password form.
   List<Widget> _acceptOptions(BuildContext context, InvitationPreview preview) {
     final l10n = context.l10n;
     final muted = AppTheme.mutedText(context);
+    final googleEnabled =
+        ref.watch(ssoInfoProvider).valueOrNull?.googleEnabled ?? true;
     return [
       TermsAgreementRow(
         value: _agreedToTerms,
         onChanged: (v) => setState(() => _agreedToTerms = v),
       ),
       const SizedBox(height: 20),
-      OutlinedButton.icon(
-        onPressed: _continueWithGoogle,
-        icon: const GoogleLogoIcon(size: 18),
-        label: Text(l10n.inviteContinueWithGoogle),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: Theme.of(context).colorScheme.onSurface,
-          side: BorderSide(color: AppTheme.hairline(context)),
-        ),
-      ),
-      const SizedBox(height: 6),
-      Text(
-        l10n.inviteGoogleHint(preview.email),
-        textAlign: TextAlign.center,
-        style: TextStyle(color: muted, fontSize: 12),
-      ),
-      const SizedBox(height: 16),
-      Row(
-        children: [
-          Expanded(child: Divider(color: AppTheme.hairline(context))),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text(
-              l10n.inviteOrSetPassword,
-              style: TextStyle(color: muted, fontSize: 12),
-            ),
+      if (googleEnabled) ...[
+        OutlinedButton.icon(
+          onPressed: _continueWithGoogle,
+          icon: const GoogleLogoIcon(size: 18),
+          label: Text(l10n.inviteContinueWithGoogle),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Theme.of(context).colorScheme.onSurface,
+            side: BorderSide(color: AppTheme.hairline(context)),
           ),
-          Expanded(child: Divider(color: AppTheme.hairline(context))),
-        ],
-      ),
-      const SizedBox(height: 16),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          l10n.inviteGoogleHint(preview.email),
+          textAlign: TextAlign.center,
+          style: TextStyle(color: muted, fontSize: 12),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(child: Divider(color: AppTheme.hairline(context))),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                l10n.inviteOrSetPassword,
+                style: TextStyle(color: muted, fontSize: 12),
+              ),
+            ),
+            Expanded(child: Divider(color: AppTheme.hairline(context))),
+          ],
+        ),
+        const SizedBox(height: 16),
+      ],
       AcceptInvitePasswordForm(
         token: widget.token,
         agreedToTerms: _agreedToTerms,

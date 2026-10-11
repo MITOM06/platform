@@ -7063,6 +7063,18 @@ abstract class AppLocalizations {
   /// **'This email is already linked to a different sign-in account'**
   String get authErrSocialAccountConflict;
 
+  /// No description provided for @authErrTooManyOtpRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve requested too many OTP codes. Please try again in 10 minutes.'**
+  String get authErrTooManyOtpRequests;
+
+  /// No description provided for @authErrSocialProviderUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This sign-in method isn\'t supported.'**
+  String get authErrSocialProviderUnsupported;
+
   /// No description provided for @aiActionConfirm.
   ///
   /// In en, this message translates to:

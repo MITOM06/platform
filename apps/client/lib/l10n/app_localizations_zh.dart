@@ -3696,6 +3696,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authErrSocialAccountConflict => '此邮箱已关联到其他登录账号';
 
   @override
+  String get authErrTooManyOtpRequests => '你请求的验证码次数过多。请在 10 分钟后重试。';
+
+  @override
+  String get authErrSocialProviderUnsupported => '不支持此登录方式。';
+
+  @override
   String get aiActionConfirm => '确认';
 
   @override

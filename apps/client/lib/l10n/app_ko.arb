@@ -1315,6 +1315,8 @@
   "authErrCurrentPasswordRequired": "현재 비밀번호를 입력하세요",
   "authErrSsoEmailUnverified": "로그인 제공업체에서 이 이메일 주소를 인증하지 않았습니다",
   "authErrSocialAccountConflict": "이 이메일은 이미 다른 로그인 계정에 연결되어 있습니다",
+  "authErrTooManyOtpRequests": "OTP 코드를 너무 많이 요청했습니다. 10분 후에 다시 시도해 주세요.",
+  "authErrSocialProviderUnsupported": "이 로그인 방식은 지원되지 않습니다.",
   "aiActionConfirm": "확인",
   "aiActionCancel": "취소",
   "aiActionSendEmail": "이메일 보내기",

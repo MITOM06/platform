@@ -3911,6 +3911,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cet e-mail est déjà lié à un autre compte de connexion';
 
   @override
+  String get authErrTooManyOtpRequests =>
+      'Vous avez demandé trop de codes OTP. Veuillez réessayer dans 10 minutes.';
+
+  @override
+  String get authErrSocialProviderUnsupported =>
+      'Ce mode de connexion n\'est pas pris en charge.';
+
+  @override
   String get aiActionConfirm => 'Confirmer';
 
   @override

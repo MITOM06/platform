@@ -1315,6 +1315,8 @@
   "authErrCurrentPasswordRequired": "Saisissez votre mot de passe actuel",
   "authErrSsoEmailUnverified": "Votre fournisseur de connexion n'a pas vérifié cette adresse e-mail",
   "authErrSocialAccountConflict": "Cet e-mail est déjà lié à un autre compte de connexion",
+  "authErrTooManyOtpRequests": "Vous avez demandé trop de codes OTP. Veuillez réessayer dans 10 minutes.",
+  "authErrSocialProviderUnsupported": "Ce mode de connexion n'est pas pris en charge.",
   "aiActionConfirm": "Confirmer",
   "aiActionCancel": "Annuler",
   "aiActionSendEmail": "Envoyer un e-mail",

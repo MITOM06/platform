@@ -3739,6 +3739,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get authErrSocialAccountConflict => 'このメールは別のサインインアカウントに既にリンクされています';
 
   @override
+  String get authErrTooManyOtpRequests =>
+      'OTP コードのリクエストが多すぎます。10 分後にもう一度お試しください。';
+
+  @override
+  String get authErrSocialProviderUnsupported => 'このサインイン方法はサポートされていません。';
+
+  @override
   String get aiActionConfirm => '確認';
 
   @override

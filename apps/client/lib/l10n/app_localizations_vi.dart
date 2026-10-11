@@ -3835,6 +3835,14 @@ class AppLocalizationsVi extends AppLocalizations {
       'Email này đã được liên kết với một tài khoản đăng nhập khác';
 
   @override
+  String get authErrTooManyOtpRequests =>
+      'Bạn đã yêu cầu quá nhiều mã OTP. Vui lòng thử lại sau 10 phút.';
+
+  @override
+  String get authErrSocialProviderUnsupported =>
+      'Phương thức đăng nhập này không được hỗ trợ.';
+
+  @override
   String get aiActionConfirm => 'Xác nhận';
 
   @override

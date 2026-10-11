@@ -3739,6 +3739,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authErrSocialAccountConflict => '이 이메일은 이미 다른 로그인 계정에 연결되어 있습니다';
 
   @override
+  String get authErrTooManyOtpRequests =>
+      'OTP 코드를 너무 많이 요청했습니다. 10분 후에 다시 시도해 주세요.';
+
+  @override
+  String get authErrSocialProviderUnsupported => '이 로그인 방식은 지원되지 않습니다.';
+
+  @override
   String get aiActionConfirm => '확인';
 
   @override

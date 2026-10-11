@@ -1897,6 +1897,8 @@
   "authErrCurrentPasswordRequired": "Enter your current password",
   "authErrSsoEmailUnverified": "Your sign-in provider hasn't verified this email address",
   "authErrSocialAccountConflict": "This email is already linked to a different sign-in account",
+  "authErrTooManyOtpRequests": "You've requested too many OTP codes. Please try again in 10 minutes.",
+  "authErrSocialProviderUnsupported": "This sign-in method isn't supported.",
   "aiActionConfirm": "Confirm",
   "aiActionCancel": "Cancel",
   "aiActionSendEmail": "Send email",

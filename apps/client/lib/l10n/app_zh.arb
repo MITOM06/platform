@@ -1315,6 +1315,8 @@
   "authErrCurrentPasswordRequired": "请输入当前密码",
   "authErrSsoEmailUnverified": "你的登录提供方尚未验证此邮箱地址",
   "authErrSocialAccountConflict": "此邮箱已关联到其他登录账号",
+  "authErrTooManyOtpRequests": "你请求的验证码次数过多。请在 10 分钟后重试。",
+  "authErrSocialProviderUnsupported": "不支持此登录方式。",
   "aiActionConfirm": "确认",
   "aiActionCancel": "取消",
   "aiActionSendEmail": "发送邮件",
