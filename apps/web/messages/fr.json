@@ -321,7 +321,9 @@
     "errMfaAlreadyEnrolled": "L'authentification à deux facteurs est déjà configurée pour ce compte. Veuillez vous reconnecter.",
     "errMfaResetForbidden": "Vous n’avez pas l’autorisation de réinitialiser l’authentification à deux facteurs de ce membre.",
     "errMfaResetSelfForbidden": "Vous ne pouvez pas réinitialiser votre propre authentification à deux facteurs.",
-    "errMfaRequiredByRole": "Votre rôle exige l'authentification à deux facteurs : elle ne peut pas être désactivée."
+    "errMfaRequiredByRole": "Votre rôle exige l'authentification à deux facteurs : elle ne peut pas être désactivée.",
+    "errTooManyRequests": "Trop de requêtes. Patientez un instant puis réessayez.",
+    "errNetwork": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez."
   },
   "settings": {
     "title": "Paramètres",

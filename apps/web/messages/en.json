@@ -321,7 +321,9 @@
     "errMfaAlreadyEnrolled": "Two-factor authentication is already set up for this account. Please sign in again.",
     "errMfaResetForbidden": "You don't have permission to reset this member's two-factor authentication.",
     "errMfaResetSelfForbidden": "You can't reset your own two-factor authentication.",
-    "errMfaRequiredByRole": "Your role requires two-factor authentication, so it can't be turned off."
+    "errMfaRequiredByRole": "Your role requires two-factor authentication, so it can't be turned off.",
+    "errTooManyRequests": "Too many requests. Please wait a moment and try again.",
+    "errNetwork": "Can't reach the server. Check your connection and try again."
   },
   "settings": {
     "title": "Settings",

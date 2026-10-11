@@ -321,7 +321,9 @@
     "errMfaAlreadyEnrolled": "このアカウントでは二要素認証がすでに設定されています。もう一度サインインしてください。",
     "errMfaResetForbidden": "このメンバーの二要素認証をリセットする権限がありません。",
     "errMfaResetSelfForbidden": "自分の二要素認証はリセットできません。",
-    "errMfaRequiredByRole": "あなたのロールでは二要素認証が必須のため、オフにできません。"
+    "errMfaRequiredByRole": "あなたのロールでは二要素認証が必須のため、オフにできません。",
+    "errTooManyRequests": "リクエストが多すぎます。しばらく待ってからもう一度お試しください。",
+    "errNetwork": "サーバーに接続できません。ネットワークを確認してもう一度お試しください。"
   },
   "settings": {
     "title": "設定",

@@ -123,6 +123,11 @@ export interface SsoInfo {
    * Optional: an older server omits it (= not enforced).
    */
   enforced?: boolean
+  /**
+   * "Continue with Google" is configured on this deployment. Optional: an older
+   * server omits it (= enabled, as before).
+   */
+  googleEnabled?: boolean
   loginUrl: string | null
   buttonLabel: string
 }
