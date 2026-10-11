@@ -3581,6 +3581,9 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get callErrStartTimeout => '通話を開始できませんでした。サーバーから応答がありません。もう一度お試しください。';
+
+  @override
   String get groupCallJoinFailed => '通話に参加できませんでした。もう一度お試しください。';
 
   @override
@@ -3739,6 +3742,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get authErrSsoEmailUnverified => 'サインインプロバイダーでこのメールアドレスが確認されていません';
+
+  @override
+  String get authErrSsoStateInvalid => 'サインインリンクの有効期限が切れているか無効です。もう一度お試しください。';
+
+  @override
+  String get authErrSsoExchangeFailed => 'シングルサインオンを完了できませんでした。もう一度お試しください。';
 
   @override
   String get authErrSocialAccountConflict => 'このメールは別のサインインアカウントに既にリンクされています';

@@ -3691,6 +3691,10 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get callErrStartTimeout =>
+      'No se pudo iniciar la llamada: el servidor no respondió. Inténtalo de nuevo.';
+
+  @override
   String get groupCallJoinFailed =>
       'No se pudo unir a la llamada. Inténtalo de nuevo.';
 
@@ -3886,6 +3890,14 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get authErrSsoEmailUnverified =>
       'Tu proveedor de inicio de sesión no ha verificado este correo';
+
+  @override
+  String get authErrSsoStateInvalid =>
+      'El enlace de inicio de sesión caducó o no es válido. Inténtalo de nuevo.';
+
+  @override
+  String get authErrSsoExchangeFailed =>
+      'No se pudo completar el inicio de sesión único. Inténtalo de nuevo.';
 
   @override
   String get authErrSocialAccountConflict =>

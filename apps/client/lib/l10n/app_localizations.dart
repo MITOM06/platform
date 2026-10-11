@@ -6799,6 +6799,12 @@ abstract class AppLocalizations {
   /// **'Couldn\'t connect to {name}. Please try again.'**
   String callErrPeerNeverJoined(String name);
 
+  /// No description provided for @callErrStartTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start the call — the server didn\'t respond. Please try again.'**
+  String get callErrStartTimeout;
+
   /// No description provided for @groupCallJoinFailed.
   ///
   /// In en, this message translates to:
@@ -7062,6 +7068,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your sign-in provider hasn\'t verified this email address'**
   String get authErrSsoEmailUnverified;
+
+  /// No description provided for @authErrSsoStateInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The sign-in link expired or is invalid. Please try again.'**
+  String get authErrSsoStateInvalid;
+
+  /// No description provided for @authErrSsoExchangeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Single sign-on couldn\'t be completed. Please try again.'**
+  String get authErrSsoExchangeFailed;
 
   /// No description provided for @authErrSocialAccountConflict.
   ///

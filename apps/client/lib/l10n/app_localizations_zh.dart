@@ -3538,6 +3538,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get callErrStartTimeout => '无法发起通话——服务器没有响应，请重试。';
+
+  @override
   String get groupCallJoinFailed => '无法加入通话，请重试。';
 
   @override
@@ -3696,6 +3699,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get authErrSsoEmailUnverified => '你的登录提供方尚未验证此邮箱地址';
+
+  @override
+  String get authErrSsoStateInvalid => '登录链接已过期或无效，请重试。';
+
+  @override
+  String get authErrSsoExchangeFailed => '无法完成单点登录，请重试。';
 
   @override
   String get authErrSocialAccountConflict => '此邮箱已关联到其他登录账号';

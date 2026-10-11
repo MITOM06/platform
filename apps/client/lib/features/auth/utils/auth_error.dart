@@ -299,7 +299,16 @@ String _codeToString(
     case 'SSO_ENFORCE_NOT_READY':
       return l10n.authErrSsoEnforceNotReady;
     case 'SSO_EMAIL_UNVERIFIED':
+    // Typed OIDC codes of the SSO error deep link / error bodies (web
+    // `auth-error.ts`): unverified email, a lost / forged state, a failed
+    // code exchange with the IdP.
+    case 'OIDC_EMAIL_UNVERIFIED':
       return l10n.authErrSsoEmailUnverified;
+    case 'OIDC_NO_STATE':
+    case 'OIDC_BAD_STATE':
+      return l10n.authErrSsoStateInvalid;
+    case 'OIDC_EXCHANGE_FAILED':
+      return l10n.authErrSsoExchangeFailed;
     case 'SOCIAL_ACCOUNT_CONFLICT':
       return l10n.authErrSocialAccountConflict;
 

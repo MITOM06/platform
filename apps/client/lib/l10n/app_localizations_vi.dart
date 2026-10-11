@@ -3664,6 +3664,10 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get callErrStartTimeout =>
+      'Không thể bắt đầu cuộc gọi — máy chủ không phản hồi. Vui lòng thử lại.';
+
+  @override
   String get groupCallJoinFailed =>
       'Không thể tham gia cuộc gọi. Vui lòng thử lại.';
 
@@ -3835,6 +3839,14 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get authErrSsoEmailUnverified =>
       'Nhà cung cấp đăng nhập chưa xác minh địa chỉ email này';
+
+  @override
+  String get authErrSsoStateInvalid =>
+      'Liên kết đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng thử lại.';
+
+  @override
+  String get authErrSsoExchangeFailed =>
+      'Không hoàn tất được đăng nhập một lần (SSO). Vui lòng thử lại.';
 
   @override
   String get authErrSocialAccountConflict =>

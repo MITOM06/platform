@@ -26,6 +26,8 @@ extension SfuCallSignals on SfuCallService {
     _pendingStart = false;
     _pendingTimer?.cancel();
     _pendingTimer = null;
+    _startTimer?.cancel();
+    _startTimer = null;
     final cancelled = _cancelledBeforeStart;
     if (cancelled != null) {
       _cancelledBeforeStart = null;
@@ -98,6 +100,21 @@ extension SfuCallSignals on SfuCallService {
     onAnswered?.call();
   }
 
+  /// A `call.start` lost on a dropping socket (or one the server never
+  /// answered) gets no `call.started`: say so instead of ringing on. The
+  /// hang-up then waits, bounded too, to cancel a start that comes late.
+  void _armStartDeadline() {
+    _startTimer?.cancel();
+    _startTimer = Timer(_startTimeout, () {
+      _startTimer = null;
+      if (!_pendingStart || _cancelledBeforeStart != null || _callId != null) {
+        return;
+      }
+      _failure = CallFailure.startTimeout;
+      unawaited(endCall(reason: CallEndReason.failed));
+    });
+  }
+
   /// An answered call whose other side never reaches the room (their app
   /// died, their join failed) must not sit on "Connecting…" forever.
   void _armConnectDeadline() {
@@ -132,6 +149,8 @@ extension SfuCallSignals on SfuCallService {
     if (_callId == callId) return; // a repeated merge: already joining
     _pendingTimer?.cancel();
     _pendingTimer = null;
+    _startTimer?.cancel();
+    _startTimer = null;
     _pendingStart = false; // our call.start was folded into theirs
     _callId = callId;
     // The surviving call brings its own media — for both sides' layout.

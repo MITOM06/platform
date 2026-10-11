@@ -25,6 +25,10 @@ enum CallFailure {
 
   /// The other person answered (or rang) but never joined the room.
   peerNeverJoined,
+
+  /// Our `call.start` never got its `call.started` back (lost on a dropping
+  /// socket, or the server did not answer).
+  startTimeout,
 }
 
 /// The token request was refused for [failure]. Still a
@@ -72,4 +76,5 @@ String callFailureText(
       CallFailure.notSfu => l10n.callErrNotSfu,
       CallFailure.forbidden => l10n.callErrForbidden,
       CallFailure.peerNeverJoined => l10n.callErrPeerNeverJoined(peerName),
+      CallFailure.startTimeout => l10n.callErrStartTimeout,
     };

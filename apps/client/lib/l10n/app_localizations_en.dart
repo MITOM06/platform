@@ -3662,6 +3662,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get callErrStartTimeout =>
+      'Couldn\'t start the call — the server didn\'t respond. Please try again.';
+
+  @override
   String get groupCallJoinFailed =>
       'Couldn\'t join the call. Please try again.';
 
@@ -3855,6 +3859,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authErrSsoEmailUnverified =>
       'Your sign-in provider hasn\'t verified this email address';
+
+  @override
+  String get authErrSsoStateInvalid =>
+      'The sign-in link expired or is invalid. Please try again.';
+
+  @override
+  String get authErrSsoExchangeFailed =>
+      'Single sign-on couldn\'t be completed. Please try again.';
 
   @override
   String get authErrSocialAccountConflict =>

@@ -160,6 +160,7 @@ void main() {
       pendingStartDeadline: const Duration(milliseconds: 30),
       connectTimeout: const Duration(milliseconds: 40),
       rejoinEvery: const Duration(milliseconds: 10),
+      startTimeout: const Duration(milliseconds: 40),
     );
     call
       ..onEndNotice = ((r, byPeer) => notices.add((r, byPeer, call.failure)))
@@ -312,6 +313,84 @@ void main() {
       expect(notices, isEmpty);
       expect(call.isActive, isTrue);
     });
+  });
+
+  group('a call.start the server never answers (W8)', () {
+    test('ends after the deadline with its own message', () async {
+      await call.startOutgoing(
+          targetId: 'bob', conversationId: 'conv', isVideo: false);
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      expect(notices, [(CallEndReason.failed, false, CallFailure.startTimeout)]);
+      expect(call.isActive, isFalse); // a new call is not answered "busy"
+      expect(port.to('/app/call.cancel'), isEmpty); // no call id to cancel
+      expect(port.held, ['conv']); // still waiting to cancel a late start…
+      port.events.add(started());
+      await flush();
+      expect(port.to('/app/call.cancel'), [
+        {'callId': 'c1', 'reason': 'hangup'}
+      ]);
+      expect(port.to('/app/call.leave'), [
+        {'callId': 'c1'}
+      ]);
+      expect(sessions, isEmpty);
+      expect(port.held, isEmpty);
+    });
+
+    test('…and stops waiting for that start after its own deadline', () async {
+      await call.startOutgoing(
+          targetId: 'bob', conversationId: 'conv', isVideo: false);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(notices, hasLength(1));
+      expect(port.held, isEmpty);
+    });
+
+    test('an answer in time leaves no deadline behind', () async {
+      await call.startOutgoing(
+          targetId: 'bob', conversationId: 'conv', isVideo: false);
+      port.events.add(started());
+      await flush();
+      sessions.single.join('bob');
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      expect(notices, isEmpty);
+      expect(call.isActive, isTrue);
+    });
+
+    test('a merge in time leaves no deadline behind', () async {
+      await call.startOutgoing(
+          targetId: 'alice', conversationId: 'conv', isVideo: false);
+      call.handleSignal({
+        'type': 'call-merged',
+        'callId': 'c-a',
+        'conversationId': 'conv',
+        'senderId': 'alice',
+        'media': 'audio',
+      });
+      await flush();
+      sessions.single.join('alice');
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      expect(notices, isEmpty);
+    });
+  });
+
+  test(
+      'call-blocked drops the attempt and its timers; the next call keeps its '
+      'own (W2)', () async {
+    await call.startOutgoing(
+        targetId: 'bob', conversationId: 'conv', isVideo: false);
+    await Future<void>.delayed(const Duration(milliseconds: 25));
+    call.handleSignal({'type': 'call-blocked', 'conversationId': 'conv'});
+    expect(call.isActive, isFalse);
+    expect(port.held, isEmpty);
+    expect(notices, isEmpty);
+
+    // The next call: the first one's start deadline (due at ~40 ms) is gone.
+    await call.startOutgoing(
+        targetId: 'bob', conversationId: 'conv', isVideo: false);
+    await Future<void>.delayed(const Duration(milliseconds: 25));
+    expect(notices, isEmpty);
+    expect(call.isActive, isTrue);
+    await Future<void>.delayed(const Duration(milliseconds: 35));
+    expect(notices, [(CallEndReason.failed, false, CallFailure.startTimeout)]);
   });
 
   group('token refusals (F10)', () {

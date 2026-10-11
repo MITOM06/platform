@@ -3714,6 +3714,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get callErrStartTimeout =>
+      'Impossible de lancer l\'appel : le serveur n\'a pas répondu. Réessayez.';
+
+  @override
   String get groupCallJoinFailed =>
       'Impossible de rejoindre l\'appel. Veuillez réessayer.';
 
@@ -3911,6 +3915,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get authErrSsoEmailUnverified =>
       'Votre fournisseur de connexion n\'a pas vérifié cette adresse e-mail';
+
+  @override
+  String get authErrSsoStateInvalid =>
+      'Le lien de connexion a expiré ou n\'est pas valide. Veuillez réessayer.';
+
+  @override
+  String get authErrSsoExchangeFailed =>
+      'L\'authentification unique n\'a pas pu aboutir. Veuillez réessayer.';
 
   @override
   String get authErrSocialAccountConflict =>

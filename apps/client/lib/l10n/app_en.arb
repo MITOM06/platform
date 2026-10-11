@@ -1750,6 +1750,7 @@
       }
     }
   },
+  "callErrStartTimeout": "Couldn't start the call — the server didn't respond. Please try again.",
   "groupCallJoinFailed": "Couldn't join the call. Please try again.",
   "callSpeaker": "Speaker",
   "callSwitchCamera": "Switch camera",
@@ -1904,6 +1905,8 @@
   "authErrUserBlocked": "Not available — one of you has blocked the other",
   "authErrCurrentPasswordRequired": "Enter your current password",
   "authErrSsoEmailUnverified": "Your sign-in provider hasn't verified this email address",
+  "authErrSsoStateInvalid": "The sign-in link expired or is invalid. Please try again.",
+  "authErrSsoExchangeFailed": "Single sign-on couldn't be completed. Please try again.",
   "authErrSocialAccountConflict": "This email is already linked to a different sign-in account",
   "authErrTooManyOtpRequests": "You've requested too many OTP codes. Please try again in 10 minutes.",
   "authErrSocialProviderUnsupported": "This sign-in method isn't supported.",
