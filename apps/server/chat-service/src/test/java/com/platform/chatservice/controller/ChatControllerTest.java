@@ -178,6 +178,36 @@ class ChatControllerTest {
             anyList());
   }
 
+  /**
+   * RabbitMQ down (production 2026-10-10: the CloudAMQP vhost was gone): the AI request was dropped
+   * by an empty catch — no log, and the asker waited on a bubble that never answered.
+   */
+  @Test
+  void send_WithAtAI_whenTheRequestCannotBeHandedOver_reportsAiUnavailable() throws Exception {
+    ChatMessageDto aiDto =
+        new ChatMessageDto("conv-456", "@AI what is Flutter?", "text", false, null, null);
+    when(messageService.sendMessage(eq(SENDER_ID), any(SendMessageRequest.class)))
+        .thenReturn(
+            new MessageResponse(
+                "msg-1",
+                "conv-456",
+                SENDER_ID,
+                "@AI what is Flutter?",
+                "text",
+                List.of(SENDER_ID),
+                Instant.now()));
+    when(messageQueryService.getAiHistory(eq(SENDER_ID), eq("conv-456"))).thenReturn(List.of());
+    when(messageQueryService.resolveDisplayName(SENDER_ID)).thenReturn("Alice");
+    RuntimeException down = new IllegalStateException("broker unreachable");
+    doThrow(down)
+        .when(aiRedisPublisher)
+        .publishAiRequest(any(), any(), any(), any(), any(), any(), any(), any());
+
+    chatController.send(aiDto, principal);
+
+    verify(aiRedisPublisher, timeout(1000)).reportUnavailable("conv-456", SENDER_ID, down);
+  }
+
   @Test
   void send_WithoutAtAI_ShouldNotTriggerAiPublisher() throws Exception {
     ChatMessageDto dto =
