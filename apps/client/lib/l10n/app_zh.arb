@@ -1316,6 +1316,8 @@
   "authErrUserBlocked": "无法操作——你们其中一方已屏蔽对方",
   "authErrCurrentPasswordRequired": "请输入当前密码",
   "authErrSsoEmailUnverified": "你的登录提供方尚未验证此邮箱地址",
+  "authErrSsoStateInvalid": "登录链接已过期或无效，请重试。",
+  "authErrSsoExchangeFailed": "无法完成单点登录，请重试。",
   "authErrSocialAccountConflict": "此邮箱已关联到其他登录账号",
   "authErrTooManyOtpRequests": "你请求的验证码次数过多。请在 10 分钟后重试。",
   "authErrSocialProviderUnsupported": "不支持此登录方式。",

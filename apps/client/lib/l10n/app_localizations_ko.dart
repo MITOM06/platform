@@ -3744,6 +3744,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authErrSsoEmailUnverified => '로그인 제공업체에서 이 이메일 주소를 인증하지 않았습니다';
 
   @override
+  String get authErrSsoStateInvalid => '로그인 링크가 만료되었거나 유효하지 않습니다. 다시 시도해 주세요.';
+
+  @override
+  String get authErrSsoExchangeFailed => 'SSO 로그인을 완료하지 못했습니다. 다시 시도해 주세요.';
+
+  @override
   String get authErrSocialAccountConflict => '이 이메일은 이미 다른 로그인 계정에 연결되어 있습니다';
 
   @override

@@ -3841,6 +3841,14 @@ class AppLocalizationsVi extends AppLocalizations {
       'Nhà cung cấp đăng nhập chưa xác minh địa chỉ email này';
 
   @override
+  String get authErrSsoStateInvalid =>
+      'Liên kết đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng thử lại.';
+
+  @override
+  String get authErrSsoExchangeFailed =>
+      'Không hoàn tất được đăng nhập một lần (SSO). Vui lòng thử lại.';
+
+  @override
   String get authErrSocialAccountConflict =>
       'Email này đã được liên kết với một tài khoản đăng nhập khác';
 

@@ -3892,6 +3892,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Tu proveedor de inicio de sesión no ha verificado este correo';
 
   @override
+  String get authErrSsoStateInvalid =>
+      'El enlace de inicio de sesión caducó o no es válido. Inténtalo de nuevo.';
+
+  @override
+  String get authErrSsoExchangeFailed =>
+      'No se pudo completar el inicio de sesión único. Inténtalo de nuevo.';
+
+  @override
   String get authErrSocialAccountConflict =>
       'Este correo ya está vinculado a otra cuenta de inicio de sesión';
 

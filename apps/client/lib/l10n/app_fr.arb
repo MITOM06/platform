@@ -1316,6 +1316,8 @@
   "authErrUserBlocked": "Indisponible : l'un de vous a bloqué l'autre",
   "authErrCurrentPasswordRequired": "Saisissez votre mot de passe actuel",
   "authErrSsoEmailUnverified": "Votre fournisseur de connexion n'a pas vérifié cette adresse e-mail",
+  "authErrSsoStateInvalid": "Le lien de connexion a expiré ou n'est pas valide. Veuillez réessayer.",
+  "authErrSsoExchangeFailed": "L'authentification unique n'a pas pu aboutir. Veuillez réessayer.",
   "authErrSocialAccountConflict": "Cet e-mail est déjà lié à un autre compte de connexion",
   "authErrTooManyOtpRequests": "Vous avez demandé trop de codes OTP. Veuillez réessayer dans 10 minutes.",
   "authErrSocialProviderUnsupported": "Ce mode de connexion n'est pas pris en charge.",

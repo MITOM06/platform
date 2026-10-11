@@ -255,6 +255,45 @@ void main() {
         l10n.authErrTooManyOtpRequests);
   });
 
+  group('typed OIDC codes on the SSO error deep link (web parity)', () {
+    Map<String, String> expected(AppLocalizations l10n) => {
+          'OIDC_EMAIL_UNVERIFIED': l10n.authErrSsoEmailUnverified,
+          'OIDC_NO_STATE': l10n.authErrSsoStateInvalid,
+          'OIDC_BAD_STATE': l10n.authErrSsoStateInvalid,
+          'OIDC_EXCHANGE_FAILED': l10n.authErrSsoExchangeFailed,
+          'SOCIAL_PROVIDER_UNSUPPORTED': l10n.authErrSocialProviderUnsupported,
+        };
+
+    testWidgets('each maps to its own message, never the generic one',
+        (tester) async {
+      final h = await _pump(tester, _FakeRepo());
+      final ctx = tester.element(find.byType(Scaffold).first);
+      final l10n = _l10n(tester);
+      for (final e in expected(l10n).entries) {
+        expect(authCodeToString(ctx, e.key), e.value, reason: e.key);
+        expect(
+            authErrorMessage(ctx, _status(400, {'code': e.key})), e.value,
+            reason: e.key);
+        expect(e.value, isNot(l10n.errActionFailed), reason: e.key);
+      }
+      expect(h.auth.hasError, isFalse);
+    });
+
+    testWidgets('each is a login notice the sign-in screen explains',
+        (tester) async {
+      final h = await _pump(tester, _FakeRepo());
+      final l10n = _l10n(tester);
+      for (final e in expected(l10n).entries) {
+        h.notifier.showSignInNotice(e.key); // platform://auth?error=<CODE>
+        await tester.pumpAndSettle();
+        final auth = h.auth.valueOrNull;
+        expect((auth as AuthUnauthenticated).reason, e.key, reason: e.key);
+        expect(find.text(e.value), findsOneWidget, reason: e.key);
+        expect(find.textContaining(e.key), findsNothing, reason: e.key);
+      }
+    });
+  });
+
   testWidgets(
       'Google sign-in refused with SSO_REQUIRED is the SSO notice, not an '
       'error (F15)', (tester) async {

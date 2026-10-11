@@ -1316,6 +1316,8 @@
   "authErrUserBlocked": "No disponible: uno de los dos ha bloqueado al otro",
   "authErrCurrentPasswordRequired": "Introduce tu contraseña actual",
   "authErrSsoEmailUnverified": "Tu proveedor de inicio de sesión no ha verificado este correo",
+  "authErrSsoStateInvalid": "El enlace de inicio de sesión caducó o no es válido. Inténtalo de nuevo.",
+  "authErrSsoExchangeFailed": "No se pudo completar el inicio de sesión único. Inténtalo de nuevo.",
   "authErrSocialAccountConflict": "Este correo ya está vinculado a otra cuenta de inicio de sesión",
   "authErrTooManyOtpRequests": "Has solicitado demasiados códigos OTP. Inténtalo de nuevo en 10 minutos.",
   "authErrSocialProviderUnsupported": "Este método de inicio de sesión no es compatible.",

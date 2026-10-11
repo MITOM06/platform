@@ -1316,6 +1316,8 @@
   "authErrUserBlocked": "ご利用いただけません — どちらかが相手をブロックしています",
   "authErrCurrentPasswordRequired": "現在のパスワードを入力してください",
   "authErrSsoEmailUnverified": "サインインプロバイダーでこのメールアドレスが確認されていません",
+  "authErrSsoStateInvalid": "サインインリンクの有効期限が切れているか無効です。もう一度お試しください。",
+  "authErrSsoExchangeFailed": "シングルサインオンを完了できませんでした。もう一度お試しください。",
   "authErrSocialAccountConflict": "このメールは別のサインインアカウントに既にリンクされています",
   "authErrTooManyOtpRequests": "OTP コードのリクエストが多すぎます。10 分後にもう一度お試しください。",
   "authErrSocialProviderUnsupported": "このサインイン方法はサポートされていません。",

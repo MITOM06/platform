@@ -1316,6 +1316,8 @@
   "authErrUserBlocked": "사용할 수 없습니다 — 둘 중 한 명이 상대를 차단했습니다",
   "authErrCurrentPasswordRequired": "현재 비밀번호를 입력하세요",
   "authErrSsoEmailUnverified": "로그인 제공업체에서 이 이메일 주소를 인증하지 않았습니다",
+  "authErrSsoStateInvalid": "로그인 링크가 만료되었거나 유효하지 않습니다. 다시 시도해 주세요.",
+  "authErrSsoExchangeFailed": "SSO 로그인을 완료하지 못했습니다. 다시 시도해 주세요.",
   "authErrSocialAccountConflict": "이 이메일은 이미 다른 로그인 계정에 연결되어 있습니다",
   "authErrTooManyOtpRequests": "OTP 코드를 너무 많이 요청했습니다. 10분 후에 다시 시도해 주세요.",
   "authErrSocialProviderUnsupported": "이 로그인 방식은 지원되지 않습니다.",

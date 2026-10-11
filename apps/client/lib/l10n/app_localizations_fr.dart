@@ -3917,6 +3917,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre fournisseur de connexion n\'a pas vérifié cette adresse e-mail';
 
   @override
+  String get authErrSsoStateInvalid =>
+      'Le lien de connexion a expiré ou n\'est pas valide. Veuillez réessayer.';
+
+  @override
+  String get authErrSsoExchangeFailed =>
+      'L\'authentification unique n\'a pas pu aboutir. Veuillez réessayer.';
+
+  @override
   String get authErrSocialAccountConflict =>
       'Cet e-mail est déjà lié à un autre compte de connexion';
 

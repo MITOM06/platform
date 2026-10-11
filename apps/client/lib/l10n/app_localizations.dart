@@ -7069,6 +7069,18 @@ abstract class AppLocalizations {
   /// **'Your sign-in provider hasn\'t verified this email address'**
   String get authErrSsoEmailUnverified;
 
+  /// No description provided for @authErrSsoStateInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The sign-in link expired or is invalid. Please try again.'**
+  String get authErrSsoStateInvalid;
+
+  /// No description provided for @authErrSsoExchangeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Single sign-on couldn\'t be completed. Please try again.'**
+  String get authErrSsoExchangeFailed;
+
   /// No description provided for @authErrSocialAccountConflict.
   ///
   /// In en, this message translates to:

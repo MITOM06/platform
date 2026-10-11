@@ -246,8 +246,16 @@ const kLoginNotices = {
   'SSO_DOMAIN_NOT_ALLOWED',
   // "Sign in with SSO" while the company IdP is unreachable (auth-service 503).
   'SSO_UNAVAILABLE',
+  // Google / OIDC sign-in matched an account but the IdP did not verify the
+  // email, or the account is linked to another identity of that provider.
   'SSO_EMAIL_UNVERIFIED',
+  'OIDC_EMAIL_UNVERIFIED',
   'SOCIAL_ACCOUNT_CONFLICT',
+  'SOCIAL_PROVIDER_UNSUPPORTED',
+  // The SSO round trip itself failed: state lost / forged, code exchange.
+  'OIDC_NO_STATE',
+  'OIDC_BAD_STATE',
+  'OIDC_EXCHANGE_FAILED',
   'GENERIC_ERROR',
   // An MFA challenge that can't continue (expired / burned / wrong step).
   ...kMfaRestartCodes,

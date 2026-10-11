@@ -3861,6 +3861,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your sign-in provider hasn\'t verified this email address';
 
   @override
+  String get authErrSsoStateInvalid =>
+      'The sign-in link expired or is invalid. Please try again.';
+
+  @override
+  String get authErrSsoExchangeFailed =>
+      'Single sign-on couldn\'t be completed. Please try again.';
+
+  @override
   String get authErrSocialAccountConflict =>
       'This email is already linked to a different sign-in account';
 
