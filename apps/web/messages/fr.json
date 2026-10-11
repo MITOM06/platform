@@ -1759,7 +1759,8 @@
     "errForbidden": "Vous ne pouvez pas rejoindre cet appel.",
     "errNetwork": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
     "errFailed": "Impossible de connecter l'appel. Réessayez.",
-    "errStartTimeout": "Impossible de lancer l'appel : le serveur n'a pas répondu. Réessayez."
+    "errStartTimeout": "Impossible de lancer l'appel : le serveur n'a pas répondu. Réessayez.",
+    "errPeerNeverJoined": "Impossible de se connecter à {name}. Veuillez réessayer."
   },
   "notFound": {
     "title": "Page introuvable",

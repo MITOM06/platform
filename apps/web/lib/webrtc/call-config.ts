@@ -65,6 +65,13 @@ export const INCOMING_RING_TIMEOUT_MS = RING_TIMEOUT_MS + 5_000
  */
 export const START_TIMEOUT_MS = 15_000
 /**
+ * sfu: an answered call (we answered, the callee answered, or we were merged
+ * into theirs) waits this long for the other person to reach the room before
+ * it fails — their app may have died or their join failed. Mirrors Flutter
+ * `SfuCallService.connectTimeout`.
+ */
+export const CONNECT_TIMEOUT_MS = 30_000
+/**
  * How long a dropped 1-on-1 may try to recover (Wi-Fi ↔ 4G hand-off, a tunnel,
  * a lost network) before the call is ended; the call screen shows "waiting to
  * reconnect" meanwhile. Mirrors Flutter `disconnectGrace` and the server.

@@ -24,6 +24,8 @@ export type CallFailureKey =
   | 'errFailed'
   /** sfu caller: `call.start` never got its `call.started` back. */
   | 'errStartTimeout'
+  /** sfu: the call was answered but the other person never reached the room. Takes `{name}`. */
+  | 'errPeerNeverJoined'
 
 /** Keys in the `call` i18n namespace used to explain an ended call. */
 export type CallNoticeKey =

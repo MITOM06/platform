@@ -1759,7 +1759,8 @@
     "errForbidden": "You can't join this call.",
     "errNetwork": "Couldn't reach the server. Check your connection and try again.",
     "errFailed": "Couldn't connect the call. Please try again.",
-    "errStartTimeout": "Couldn't start the call — the server didn't respond. Please try again."
+    "errStartTimeout": "Couldn't start the call — the server didn't respond. Please try again.",
+    "errPeerNeverJoined": "Couldn't connect to {name}. Please try again."
   },
   "notFound": {
     "title": "Page not found",

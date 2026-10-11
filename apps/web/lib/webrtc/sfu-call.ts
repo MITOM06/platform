@@ -2,10 +2,11 @@ import { stompService } from '@/lib/stomp/client'
 import type { CallEvent, CallTransport } from '@/lib/api/types'
 import { useCallStore } from '@/lib/store/call.store'
 import type { CallEndReason, CallNoticeKey } from './call-end-notice'
-import { RING_TIMEOUT_MS, START_TIMEOUT_MS, type WebRTCSignal } from './call-config'
+import { CONNECT_TIMEOUT_MS, RING_TIMEOUT_MS, START_TIMEOUT_MS, type WebRTCSignal } from './call-config'
 import { canOpenMedia, sendCallLog, subscribeCallEvents } from './call-topic'
 import type { CallHooks } from './call-hooks'
 import { refreshCallTransport } from './call-transport'
+import { OneShotTimer } from './one-shot-timer'
 import { SfuCallRoom } from './sfu-call-room'
 
 const DECLINE_REASONS: ReadonlySet<CallEndReason> = new Set(['declined', 'busy', 'media_error'])
@@ -21,9 +22,12 @@ const store = () => useCallStore.getState()
  */
 export class SfuDirectCall {
   private callId: string | null = null
-  private ringTimer: ReturnType<typeof setTimeout> | null = null
+  /** Caller: how long the callee rings before the call is given up as unanswered. */
+  private readonly ringTimer = new OneShotTimer(RING_TIMEOUT_MS)
+  /** Answered (`connecting`): how long the other person has to reach the room. */
+  private readonly connectTimer = new OneShotTimer(CONNECT_TIMEOUT_MS)
   /** Caller: call.start waiting for its call.started — then, after a hang-up, the wait to cancel it. */
-  private startTimer: ReturnType<typeof setTimeout> | null = null
+  private readonly startTimer = new OneShotTimer(START_TIMEOUT_MS)
   /** Our call.accept has gone out: our own answered-elsewhere echo must not end it. */
   private accepting = false
   /** Caller: call.start sent, call.started (with the id) not back yet. */
@@ -45,7 +49,8 @@ export class SfuDirectCall {
       fail: (reason, notice) => this.endCall(reason, notice),
       roomClosed: (callId) => this.onEnded(callId, 'hangup'),
       peerPresent: () => {
-        this.clearRingTimer()
+        this.ringTimer.clear()
+        this.connectTimer.clear()
         store().setConnected()
       },
     })
@@ -60,7 +65,7 @@ export class SfuDirectCall {
   }
 
   async startCall(targetId: string, targetName: string, conversationId: string, video = true): Promise<void> {
-    this.clearRingTimer() // an earlier attempt never torn down must not ring this one out
+    this.connectTimer.clear() // an earlier attempt never torn down must not end this one
     store().setOutgoing({ peerId: targetId, peerName: targetName, conversationId, video, transport: 'sfu' })
     this.incoming = false
     this.pendingStart = { conversationId }
@@ -68,12 +73,11 @@ export class SfuDirectCall {
     this.subscribeTopic(conversationId)
     // `merge`: we can join a call-merged call when they call us at the same time.
     stompService.publish('/app/call.start', { conversationId, media: video ? 'video' : 'audio', merge: true })
-    this.ringTimer = setTimeout(() => {
-      this.ringTimer = null
+    this.ringTimer.arm(() => {
       if (store().status === 'outgoing') this.endCall('no_answer')
-    }, RING_TIMEOUT_MS)
+    })
     // A call.start lost on a dropping socket never gets its call.started: say so, don't ring on.
-    this.armStartTimer(() => {
+    this.startTimer.arm(() => {
       if (this.pendingStart?.conversationId === conversationId && store().status === 'outgoing') {
         this.endCall('failed', 'errStartTimeout')
       }
@@ -128,7 +132,7 @@ export class SfuDirectCall {
     if (this.callId !== callId) return // the caller gave up while the prompt was open
     this.accepting = true
     stompService.publish('/app/call.accept', { callId })
-    store().setConnecting() // answered: no more prompt, no prompt timeout
+    this.enterConnecting() // answered: no more prompt, no prompt timeout
     await this.room.join(callId)
   }
 
@@ -172,7 +176,7 @@ export class SfuDirectCall {
     const peerName = st.peerName
     this.teardown(keepPendingStart)
     // Waiting to cancel a call.started that may never come (lost call.start): not forever.
-    if (keepPendingStart) this.armStartTimer(() => this.dropPendingStart())
+    if (keepPendingStart) this.startTimer.arm(() => this.dropPendingStart())
     this.notifyEnd(reason, false, peerName, notice)
   }
 
@@ -200,7 +204,7 @@ export class SfuDirectCall {
   private onStarted(callId: string, conversationId: string, transport: CallTransport | undefined): void {
     if (!this.pendingStart || this.pendingStart.conversationId !== conversationId) return
     this.pendingStart = null
-    this.clearStartTimer()
+    this.startTimer.clear()
     if (this.cancelledBeforeStart) {
       const reason = this.cancelledBeforeStart === 'no_answer' ? 'no_answer' : 'hangup'
       this.cancelledBeforeStart = null
@@ -270,23 +274,35 @@ export class SfuDirectCall {
     if (st.status !== 'outgoing' || st.peerId !== senderId || st.conversationId !== conversationId) return
     if (this.callId === callId) return // a repeated merge: already joining
     this.pendingStart = null // our own call.start was folded into theirs: no call.started comes
-    this.clearStartTimer()
-    this.clearRingTimer()
+    this.startTimer.clear()
+    this.ringTimer.clear()
     this.callId = callId
     this.accepting = true // already accepted by the server: its answered-elsewhere echo is ours
     st.setCallId(callId)
     // The call's media wins, cameras included: a voice call merged into a video one shows video.
     const video = signal.media === 'video'
     if (st.video !== video) useCallStore.setState({ video, cameraEnabled: video, peerCamera: video })
-    store().setConnecting()
+    this.enterConnecting()
     void this.room.join(callId)
   }
 
   /** The callee answered our call: stop the ring timer and ringback, it is connecting. */
   private onAccepted(signal: WebRTCSignal): void {
     if (!signal.callId || signal.callId !== this.callId || store().status !== 'outgoing') return
-    this.clearRingTimer()
+    this.ringTimer.clear()
+    this.enterConnecting()
+  }
+
+  /**
+   * Answered, joining the room: no ring timer applies any more, so bound the wait
+   * for the other person instead — their app may have died or their join failed.
+   */
+  private enterConnecting(): void {
     store().setConnecting()
+    const callId = this.callId
+    this.connectTimer.arm(() => {
+      if (this.callId === callId && store().status === 'connecting') this.endCall('failed', 'errPeerNeverJoined')
+    })
   }
 
   /** The server refused our call.start (one of us blocked the other): drop the attempt. */
@@ -333,35 +349,18 @@ export class SfuDirectCall {
     this.topicSub = null
   }
 
-  private clearRingTimer(): void {
-    if (this.ringTimer) clearTimeout(this.ringTimer)
-    this.ringTimer = null
-  }
-
-  private armStartTimer(onExpire: () => void): void {
-    this.clearStartTimer()
-    this.startTimer = setTimeout(() => {
-      this.startTimer = null
-      onExpire()
-    }, START_TIMEOUT_MS)
-  }
-
-  private clearStartTimer(): void {
-    if (this.startTimer) clearTimeout(this.startTimer)
-    this.startTimer = null
-  }
-
   /** Stop waiting for our call.started (cancelled, refused, or it never came). */
   private dropPendingStart(): void {
-    this.clearStartTimer()
+    this.startTimer.clear()
     this.pendingStart = null
     this.cancelledBeforeStart = null
     if (store().status === 'idle') this.unsubscribeTopic() // a call ringing us now keeps it
   }
 
   private teardown(keepPendingStart: boolean): void {
-    this.clearRingTimer()
-    this.clearStartTimer()
+    this.ringTimer.clear()
+    this.connectTimer.clear()
+    this.startTimer.clear()
     this.probing = false
     this.room.close()
     this.callId = null

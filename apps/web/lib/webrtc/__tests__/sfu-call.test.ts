@@ -100,7 +100,7 @@ vi.mock('@/lib/rtc/livekit-session', () => ({
 }))
 
 import { SfuDirectCall } from '../sfu-call'
-import { RECONNECT_BLIP_MS, RING_TIMEOUT_MS, START_TIMEOUT_MS } from '../call-config'
+import { CONNECT_TIMEOUT_MS, RECONNECT_BLIP_MS, RING_TIMEOUT_MS, START_TIMEOUT_MS } from '../call-config'
 import { useCallStore } from '@/lib/store/call.store'
 
 const hooks = {
@@ -863,5 +863,83 @@ describe('typed call errors', () => {
     await flush()
     expect(hooks.onEndNotice).toHaveBeenCalledWith('failed', false, 'Bob', key)
     expect(store().status).toBe('idle')
+  })
+})
+
+describe('an answered call whose other side never reaches the room', () => {
+  const merged = () =>
+    call.handleSignal({
+      type: 'call-merged', callId: 'c-a', conversationId: 'conv', senderId: 'alice',
+      media: 'audio', transport: 'sfu', kind: 'direct',
+    })
+
+  it('caller: gives up 30 s after call-accepted — leaves, logs, says why', async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    started()
+    await flush()
+    accepted()
+    expect(CONNECT_TIMEOUT_MS).toBe(30_000)
+    vi.advanceTimersByTime(CONNECT_TIMEOUT_MS - 1)
+    expect(store().status).toBe('connecting')
+    vi.advanceTimersByTime(1)
+    expect(store().status).toBe('idle')
+    expect(sent('/app/call.leave')).toEqual([{ callId: 'c1' }])
+    expect(m.sendMessage).toHaveBeenCalledWith('conv', 'system.call.missed:voice', 'system')
+    expect(hooks.onEndNotice).toHaveBeenCalledWith('failed', false, 'Bob', 'errPeerNeverJoined')
+    expect(m.FakeSession.last!.disconnect).toHaveBeenCalled()
+  })
+
+  it('callee: gives up 30 s after answering when the caller never shows up', async () => {
+    ring()
+    store().setPeerName('Alice')
+    await call.acceptIncoming()
+    expect(store().status).toBe('connecting')
+    vi.advanceTimersByTime(CONNECT_TIMEOUT_MS)
+    expect(store().status).toBe('idle')
+    expect(sent('/app/call.leave')).toEqual([{ callId: 'c1' }])
+    expect(sent('/app/call.decline')).toEqual([])
+    expect(m.sendMessage).toHaveBeenCalledWith('conv', 'system.call.missed:voice', 'system')
+    expect(hooks.onEndNotice).toHaveBeenCalledWith('failed', false, 'Alice', 'errPeerNeverJoined')
+  })
+
+  it('after a merge too', async () => {
+    await call.startCall('alice', 'Alice', 'conv', false)
+    merged()
+    await flush()
+    vi.advanceTimersByTime(CONNECT_TIMEOUT_MS)
+    expect(store().status).toBe('idle')
+    expect(sent('/app/call.leave')).toEqual([{ callId: 'c-a' }])
+    expect(hooks.onEndNotice).toHaveBeenCalledWith('failed', false, 'Alice', 'errPeerNeverJoined')
+  })
+
+  it('is cleared once they reach the room', async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    started()
+    await flush()
+    accepted()
+    vi.advanceTimersByTime(CONNECT_TIMEOUT_MS - 1_000)
+    m.FakeSession.last!.join('bob')
+    expect(store().status).toBe('connected')
+    vi.advanceTimersByTime(CONNECT_TIMEOUT_MS)
+    expect(store().status).toBe('connected')
+    expect(sent('/app/call.leave')).toEqual([])
+    expect(hooks.onEndNotice).not.toHaveBeenCalled()
+  })
+
+  it('is cleared by any teardown, so it never ends a later call', async () => {
+    await call.startCall('bob', 'Bob', 'conv', false)
+    started()
+    await flush()
+    accepted()
+    call.endCall('hangup')
+    hooks.onEndNotice.mockClear()
+    m.publish.mockClear()
+    await call.startCall('carol', 'Carol', 'conv-2', false)
+    started('c2', 'conv-2')
+    await flush()
+    vi.advanceTimersByTime(CONNECT_TIMEOUT_MS)
+    expect(store().status).toBe('outgoing') // still ringing Carol: the old deadline is gone
+    expect(sent('/app/call.leave')).toEqual([])
+    expect(hooks.onEndNotice).not.toHaveBeenCalled()
   })
 })
