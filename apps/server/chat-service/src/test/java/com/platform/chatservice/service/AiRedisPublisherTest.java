@@ -40,6 +40,7 @@ class AiRedisPublisherTest {
   @Mock private Tracer.SpanInScope spanInScope;
   @Mock private TraceContext traceContext;
   @Mock private ConversationRepository conversationRepository;
+  @Mock private org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
 
   private AiRedisPublisher publisher;
 
@@ -52,7 +53,14 @@ class AiRedisPublisherTest {
     when(traceContext.traceId()).thenReturn("4bf92f3577b34da6a3ce929d0e0e4736");
     when(tracer.withSpan(any(Span.class))).thenReturn(spanInScope);
 
-    publisher = new AiRedisPublisher(rabbitTemplate, tracer, propagator, conversationRepository);
+    publisher =
+        new AiRedisPublisher(
+            rabbitTemplate,
+            tracer,
+            propagator,
+            conversationRepository,
+            redisTemplate,
+            new com.fasterxml.jackson.databind.ObjectMapper());
   }
 
   @Test
@@ -107,5 +115,33 @@ class AiRedisPublisherTest {
     verify(propagator).inject(eq(traceContext), any(MessageProperties.class), any());
     verify(spanInScope).close();
     verify(span).end();
+  }
+
+  /** The asker learns at once that the assistant cannot answer — through the usual AI stream. */
+  @Test
+  void reportUnavailable_sendsAnAiUnavailableErrorOnTheConversationStream() throws Exception {
+    publisher.reportUnavailable("conv-1", "user-1", new IllegalStateException("broker down"));
+
+    ArgumentCaptor<String> json = ArgumentCaptor.forClass(String.class);
+    verify(redisTemplate).convertAndSend(eq("ai:response:conv-1"), json.capture());
+    java.util.Map<?, ?> event =
+        new com.fasterxml.jackson.databind.ObjectMapper()
+            .readValue(json.getValue(), java.util.Map.class);
+    assertThat(event.get("type")).isEqualTo("AI_STREAM_ERROR");
+    assertThat(event.get("code")).isEqualTo("AI_UNAVAILABLE");
+    assertThat(event.get("conversationId")).isEqualTo("conv-1");
+    assertThat(event.get("requesterId")).isEqualTo("user-1");
+    assertThat((String) event.get("replyId")).isNotBlank();
+    // Never the exception text: clients localize by code.
+    assertThat(json.getValue()).doesNotContain("broker down");
+  }
+
+  @Test
+  void reportUnavailable_neverThrows() {
+    doThrow(new IllegalStateException("redis down"))
+        .when(redisTemplate)
+        .convertAndSend(anyString(), anyString());
+
+    publisher.reportUnavailable("conv-1", "user-1", new IllegalStateException("broker down"));
   }
 }

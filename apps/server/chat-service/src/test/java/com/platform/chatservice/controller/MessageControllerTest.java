@@ -68,6 +68,26 @@ class MessageControllerTest {
   }
 
   @Test
+  void sendMessage_whenTheAiRequestCannotBeHandedOver_reportsAiUnavailable() throws Exception {
+    SendMessageRequest request = new SendMessageRequest("conv-456", "chào bạn", "text", null);
+    when(messageService.sendMessage(eq(SENDER_ID), any(SendMessageRequest.class)))
+        .thenReturn(response("chào bạn"));
+    when(conversationService.isDirectAiConversation("conv-456")).thenReturn(true);
+    when(externalBotService.resolveAssistant(eq("conv-456"), eq(SENDER_ID)))
+        .thenReturn(Optional.empty());
+    when(messageQueryService.getAiHistory(eq(SENDER_ID), eq("conv-456"))).thenReturn(List.of());
+    when(messageQueryService.resolveDisplayName(SENDER_ID)).thenReturn("Alice");
+    RuntimeException down = new IllegalStateException("broker unreachable");
+    doThrow(down)
+        .when(aiRedisPublisher)
+        .publishAiRequest(any(), any(), any(), any(), any(), any(), any(), any());
+
+    messageController.sendMessage(request);
+
+    verify(aiRedisPublisher, timeout(1000)).reportUnavailable("conv-456", SENDER_ID, down);
+  }
+
+  @Test
   void sendMessage_InDirectAiConversation_WithoutMention_ShouldTriggerAiPublisher()
       throws Exception {
     SendMessageRequest request = new SendMessageRequest("conv-456", "chào bạn", "text", null);

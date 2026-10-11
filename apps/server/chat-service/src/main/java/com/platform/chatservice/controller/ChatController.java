@@ -104,7 +104,8 @@ public class ChatController {
               String displayName = messageQueryService.resolveDisplayName(uid);
               aiRedisPublisher.publishAiRequest(
                   convId, uid, displayName, stripped, history, role, perms, depts);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+              aiRedisPublisher.reportUnavailable(convId, uid, e);
             }
           });
     }

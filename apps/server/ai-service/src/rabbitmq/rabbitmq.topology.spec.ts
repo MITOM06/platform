@@ -29,4 +29,9 @@ describe('buildRabbitConfig', () => {
       'x-message-ttl': 30_000,
     });
   });
+
+  it('leaves handler registration to AiConsumer (the library would block start-up on it)', () => {
+    expect(config.registerHandlers).toBe(false);
+    expect(config.connectionInitOptions).toEqual({ wait: false });
+  });
 });
