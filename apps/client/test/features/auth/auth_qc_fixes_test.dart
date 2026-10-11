@@ -319,11 +319,11 @@ void main() {
           ssoInfoProvider.overrideWith((ref) async => const SsoInfo(
               enabled: false, buttonLabel: 'SSO', googleEnabled: false)),
         ],
-        child: MaterialApp(
+        child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
-          home: const AcceptInviteScreen(token: token),
+          locale: Locale('en'),
+          home: AcceptInviteScreen(token: token),
         ),
       ));
       await tester.pumpAndSettle();
