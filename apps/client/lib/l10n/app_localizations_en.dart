@@ -3634,6 +3634,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callConnectionLost => 'Call dropped — connection lost';
 
   @override
+  String get callErrUnavailable =>
+      'Calls aren\'t available right now. Please try again later.';
+
+  @override
+  String get callErrNotFound => 'This call no longer exists.';
+
+  @override
+  String get callErrEnded => 'This call has already ended.';
+
+  @override
+  String get callErrNotSfu =>
+      'This call can\'t be joined from here. Please call again.';
+
+  @override
+  String get callErrForbidden => 'You can\'t join this call.';
+
+  @override
+  String callErrPeerNeverJoined(String name) {
+    return 'Couldn\'t connect to $name. Please try again.';
+  }
+
+  @override
+  String get groupCallJoinFailed =>
+      'Couldn\'t join the call. Please try again.';
+
+  @override
   String get callSpeaker => 'Speaker';
 
   @override

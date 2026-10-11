@@ -6757,6 +6757,48 @@ abstract class AppLocalizations {
   /// **'Call dropped — connection lost'**
   String get callConnectionLost;
 
+  /// No description provided for @callErrUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls aren\'t available right now. Please try again later.'**
+  String get callErrUnavailable;
+
+  /// No description provided for @callErrNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This call no longer exists.'**
+  String get callErrNotFound;
+
+  /// No description provided for @callErrEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'This call has already ended.'**
+  String get callErrEnded;
+
+  /// No description provided for @callErrNotSfu.
+  ///
+  /// In en, this message translates to:
+  /// **'This call can\'t be joined from here. Please call again.'**
+  String get callErrNotSfu;
+
+  /// No description provided for @callErrForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t join this call.'**
+  String get callErrForbidden;
+
+  /// No description provided for @callErrPeerNeverJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect to {name}. Please try again.'**
+  String callErrPeerNeverJoined(String name);
+
+  /// No description provided for @groupCallJoinFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t join the call. Please try again.'**
+  String get groupCallJoinFailed;
+
   /// No description provided for @callSpeaker.
   ///
   /// In en, this message translates to:

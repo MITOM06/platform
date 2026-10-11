@@ -1729,6 +1729,20 @@
   },
   "callEnded": "Call ended",
   "callConnectionLost": "Call dropped — connection lost",
+  "callErrUnavailable": "Calls aren't available right now. Please try again later.",
+  "callErrNotFound": "This call no longer exists.",
+  "callErrEnded": "This call has already ended.",
+  "callErrNotSfu": "This call can't be joined from here. Please call again.",
+  "callErrForbidden": "You can't join this call.",
+  "callErrPeerNeverJoined": "Couldn't connect to {name}. Please try again.",
+  "@callErrPeerNeverJoined": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groupCallJoinFailed": "Couldn't join the call. Please try again.",
   "callSpeaker": "Speaker",
   "callSwitchCamera": "Switch camera",
   "callHangUp": "End call",

@@ -8,6 +8,7 @@ import '../../../core/rtc/livekit_session.dart';
 import '../../../core/rtc/rtc_session.dart';
 import '../data/calls_repository.dart';
 import '../data/stomp_service.dart';
+import 'call_failure.dart';
 import 'call_network.dart';
 import 'call_rules.dart';
 import 'call_signal_port.dart';
@@ -40,6 +41,13 @@ class SfuCallService implements DirectCallEngine {
   final Duration _pendingStartDeadline;
   Timer? _pendingTimer;
 
+  /// How long an answered call waits for the other side to reach the room.
+  final Duration _connectTimeout;
+  Timer? _connectTimer;
+
+  /// The beat of re-joining a room we lost.
+  final Duration _rejoinEvery;
+
   SfuCallService({
     required CallSignalPort port,
     required CallsApi api,
@@ -49,6 +57,8 @@ class SfuCallService implements DirectCallEngine {
     Duration peerGrace = ReconnectWatch.reconnectGrace,
     Duration reconnectBlip = ReconnectWatch.blipDelay,
     Duration pendingStartDeadline = const Duration(seconds: 15),
+    Duration connectTimeout = const Duration(seconds: 30),
+    Duration rejoinEvery = const Duration(seconds: 4),
   })  : _port = port,
         _api = api,
         _transport = transport,
@@ -56,9 +66,20 @@ class SfuCallService implements DirectCallEngine {
         _probeMedia = probeMedia,
         _peerGrace = peerGrace,
         _reconnectBlip = reconnectBlip,
-        _pendingStartDeadline = pendingStartDeadline {
+        _pendingStartDeadline = pendingStartDeadline,
+        _connectTimeout = connectTimeout,
+        _rejoinEvery = rejoinEvery {
     network.addListener(_followLayout); // their camera
   }
+
+  /// The callee picked up our call (`call-accepted`): the screen stops the
+  /// ringback and its ring timer and shows "Connecting…".
+  void Function()? onAnswered;
+
+  /// Why the call could not go ahead, more specific than
+  /// [CallEndReason.failed] — set while its end notice is delivered.
+  CallFailure? get failure => _failure;
+  CallFailure? _failure;
 
   @override
   Function(MediaStream)? onLocalStream;
@@ -85,6 +106,9 @@ class SfuCallService implements DirectCallEngine {
   bool _accepting = false;
   bool _probing = false;
   bool _connected = false;
+
+  /// The callee answered our outgoing call (`call-accepted`).
+  bool _answered = false;
   bool _pendingStart = false;
   CallEndReason? _cancelledBeforeStart;
   MediaStream? _lastRemote;
@@ -105,6 +129,7 @@ class SfuCallService implements DirectCallEngine {
   late final _speaker = SpeakerFollowsVideo(setSpeakerOn);
 
   /// A LiveKit 1-on-1 is starting, ringing out, or running.
+  @override
   bool get isActive =>
       _callId != null || (_pendingStart && _cancelledBeforeStart == null);
 
@@ -175,12 +200,15 @@ class SfuCallService implements DirectCallEngine {
     }
     _accepting = true;
     _port.send('/app/call.accept', {'callId': callId});
+    _armConnectDeadline();
     await _join();
   }
 
   @override
   Future<void> endCall(
       {int? duration, CallEndReason reason = CallEndReason.hangup}) async {
+    // Answered: a ring timer firing late is not "no answer".
+    if (reason == CallEndReason.noAnswer && _answered) return;
     final callId = _callId;
     final secs = duration ??
         (_mediaSince == null
@@ -289,56 +317,6 @@ class SfuCallService implements DirectCallEngine {
     if (held != null) _port.releaseConversation(held);
   }
 
-  void _onCallEvent(Map<String, dynamic> e) {
-    if (e['conversationId'] != null && e['conversationId'] != _conversationId) {
-      return;
-    }
-    switch (e['event']) {
-      case 'call.started':
-        // Their call (both tapped Call) is not our start: call-merged follows.
-        if (e['startedBy'] != null && e['startedBy'] == _targetId) return;
-        _onStarted(e['callId'] as String?, e['transport'] as String?);
-      case 'call.ended':
-        if (e['callId'] != null && e['callId'] == _callId) {
-          _remoteEnded(CallEndReason.fromWire(e['reason'] as String?));
-        }
-    }
-  }
-
-  void _onStarted(String? callId, String? transport) {
-    if (!_pendingStart || callId == null) return;
-    _pendingStart = false;
-    _pendingTimer?.cancel();
-    _pendingTimer = null;
-    final cancelled = _cancelledBeforeStart;
-    if (cancelled != null) {
-      _cancelledBeforeStart = null;
-      _port.send('/app/call.cancel', {
-        'callId': callId,
-        'reason': cancelled == CallEndReason.noAnswer ? 'no_answer' : 'hangup'
-      });
-      _port.send('/app/call.leave', {'callId': callId});
-      _release();
-      return;
-    }
-    if (CallTransport.fromWire(transport) != CallTransport.sfu) {
-      // The server moved back to mesh after we read the config: end that
-      // session, re-read the transport and let the user retry.
-      _port.send('/app/call.leave', {'callId': callId});
-      unawaited(_transport.refresh(_api));
-      failLocally(CallEndReason.failed);
-      return;
-    }
-    _callId = callId;
-    unawaited(_join());
-  }
-
-  void _remoteEnded(CallEndReason reason) {
-    final unanswered = _incoming && !_accepting;
-    if (!unanswered) onEndNotice?.call(reason, true);
-    dispose();
-  }
-
   /// Join (or, [rejoin], re-join after losing) the call's room. A failed
   /// rejoin is retried by the reconnect window.
   Future<void> _join({bool rejoin = false}) async {
@@ -347,8 +325,9 @@ class SfuCallService implements DirectCallEngine {
     CallToken token;
     try {
       token = await _api.getToken(callId);
-    } catch (_) {
+    } catch (e) {
       if (!rejoin && _callId == callId) {
+        _failure = callFailureOf(e); // say why: unavailable, forbidden, …
         await endCall(reason: CallEndReason.failed);
       }
       return;
@@ -377,13 +356,14 @@ class SfuCallService implements DirectCallEngine {
         } else {
           // LiveKit could not resume: keep the screen, re-join for a minute.
           _watch.begin(ReconnectWho.self, _giveUp,
-              tick: () => unawaited(_rejoin(callId)));
+              tick: () => unawaited(_rejoin(callId)), every: _rejoinEvery);
         }
       };
+    // The camera as the user has it — a call kind, a rejoin, or turned off
+    // while this join was on its way.
+    final video = _cameraOn;
     try {
-      // A rejoin keeps the camera as the user left it.
-      await session.connect(token.url, token.token,
-          video: rejoin ? _cameraOn : _isVideo);
+      await session.connect(token.url, token.token, video: video);
     } catch (e) {
       if (rejoin || _session != session) return;
       await endCall(
@@ -393,12 +373,17 @@ class SfuCallService implements DirectCallEngine {
       return;
     }
     if (_session != session) return;
+    // connect() always opens the mic, and publishes the camera it was asked
+    // for: a mute / camera-off tapped meanwhile must stand.
+    if (!_micOn) await session.setMic(false);
+    if (_cameraOn != video) await session.setCamera(_cameraOn);
+    if (_session != session) return;
     if (!rejoin) {
       _speaker.reset(_isVideo);
       return setSpeakerOn(_isVideo);
     }
-    // Back in the room: restore what connect() reset, see whether they are here.
-    if (!_micOn) await session.setMic(false); // connect() always opens the mic
+    // Back in the room: no more re-joins, see whether they are here.
+    _watch.stopRetrying();
     await setSpeakerOn(_speakerOn);
     reconnecting.value = false;
     _onPeers();
@@ -441,12 +426,18 @@ class SfuCallService implements DirectCallEngine {
     if (stream == null || identical(stream, _lastRemote)) return;
     _lastRemote = stream;
     _connected = true;
+    _connectTimer?.cancel();
+    _connectTimer = null;
     _mediaSince ??= DateTime.now();
     onRemoteStream?.call(stream);
   }
 
   void _teardown({required bool keepPending, bool notify = true}) {
     _watch.end();
+    _connectTimer?.cancel();
+    _connectTimer = null;
+    _answered = false;
+    _failure = null; // its end notice has been delivered
     _rejoining = false;
     final session = _session;
     _session = null;

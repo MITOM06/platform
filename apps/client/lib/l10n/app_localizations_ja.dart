@@ -3556,6 +3556,29 @@ class AppLocalizationsJa extends AppLocalizations {
   String get callConnectionLost => '接続が切れたため通話が終了しました';
 
   @override
+  String get callErrUnavailable => '現在通話を利用できません。しばらくしてからもう一度お試しください。';
+
+  @override
+  String get callErrNotFound => 'この通話は存在しません。';
+
+  @override
+  String get callErrEnded => 'この通話はすでに終了しています。';
+
+  @override
+  String get callErrNotSfu => 'ここからこの通話に参加できません。もう一度発信してください。';
+
+  @override
+  String get callErrForbidden => 'この通話に参加できません。';
+
+  @override
+  String callErrPeerNeverJoined(String name) {
+    return '$name に接続できませんでした。もう一度お試しください。';
+  }
+
+  @override
+  String get groupCallJoinFailed => '通話に参加できませんでした。もう一度お試しください。';
+
+  @override
   String get callSpeaker => 'スピーカー';
 
   @override

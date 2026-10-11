@@ -127,6 +127,7 @@ class WebRTCService implements DirectCallEngine {
   }
 
   /// True while a 1-on-1 call holds a peer connection (ringing or connected).
+  @override
   bool get isActive => _peerConnection != null;
 
   /// The other party of the active call, or null.

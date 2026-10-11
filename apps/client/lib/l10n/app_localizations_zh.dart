@@ -3513,6 +3513,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get callConnectionLost => '连接中断，通话已结束';
 
   @override
+  String get callErrUnavailable => '通话暂时不可用，请稍后再试。';
+
+  @override
+  String get callErrNotFound => '此通话已不存在。';
+
+  @override
+  String get callErrEnded => '此通话已结束。';
+
+  @override
+  String get callErrNotSfu => '无法从这里加入此通话，请重新拨打。';
+
+  @override
+  String get callErrForbidden => '你无法加入此通话。';
+
+  @override
+  String callErrPeerNeverJoined(String name) {
+    return '无法连接到 $name，请重试。';
+  }
+
+  @override
+  String get groupCallJoinFailed => '无法加入通话，请重试。';
+
+  @override
   String get callSpeaker => '扬声器';
 
   @override

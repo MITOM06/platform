@@ -3556,6 +3556,29 @@ class AppLocalizationsKo extends AppLocalizations {
   String get callConnectionLost => '연결이 끊겨 통화가 종료되었습니다';
 
   @override
+  String get callErrUnavailable => '지금은 통화를 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String get callErrNotFound => '이 통화는 더 이상 존재하지 않습니다.';
+
+  @override
+  String get callErrEnded => '이 통화는 이미 종료되었습니다.';
+
+  @override
+  String get callErrNotSfu => '여기서는 이 통화에 참여할 수 없습니다. 다시 전화해 주세요.';
+
+  @override
+  String get callErrForbidden => '이 통화에 참여할 수 없습니다.';
+
+  @override
+  String callErrPeerNeverJoined(String name) {
+    return '$name님과 연결하지 못했습니다. 다시 시도해 주세요.';
+  }
+
+  @override
+  String get groupCallJoinFailed => '통화에 참여하지 못했습니다. 다시 시도해 주세요.';
+
+  @override
   String get callSpeaker => '스피커';
 
   @override

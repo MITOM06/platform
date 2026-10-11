@@ -3637,6 +3637,31 @@ class AppLocalizationsVi extends AppLocalizations {
   String get callConnectionLost => 'Cuộc gọi bị ngắt do mất kết nối';
 
   @override
+  String get callErrUnavailable => 'Hiện không thể gọi. Vui lòng thử lại sau.';
+
+  @override
+  String get callErrNotFound => 'Cuộc gọi này không còn tồn tại.';
+
+  @override
+  String get callErrEnded => 'Cuộc gọi này đã kết thúc.';
+
+  @override
+  String get callErrNotSfu =>
+      'Không thể tham gia cuộc gọi này từ đây. Vui lòng gọi lại.';
+
+  @override
+  String get callErrForbidden => 'Bạn không thể tham gia cuộc gọi này.';
+
+  @override
+  String callErrPeerNeverJoined(String name) {
+    return 'Không thể kết nối với $name. Vui lòng thử lại.';
+  }
+
+  @override
+  String get groupCallJoinFailed =>
+      'Không thể tham gia cuộc gọi. Vui lòng thử lại.';
+
+  @override
   String get callSpeaker => 'Loa ngoài';
 
   @override

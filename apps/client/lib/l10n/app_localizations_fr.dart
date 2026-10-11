@@ -3686,6 +3686,32 @@ class AppLocalizationsFr extends AppLocalizations {
   String get callConnectionLost => 'Appel interrompu : connexion perdue';
 
   @override
+  String get callErrUnavailable =>
+      'Les appels ne sont pas disponibles pour le moment. Réessayez plus tard.';
+
+  @override
+  String get callErrNotFound => 'Cet appel n\'existe plus.';
+
+  @override
+  String get callErrEnded => 'Cet appel est déjà terminé.';
+
+  @override
+  String get callErrNotSfu =>
+      'Impossible de rejoindre cet appel depuis ici. Veuillez rappeler.';
+
+  @override
+  String get callErrForbidden => 'Vous ne pouvez pas rejoindre cet appel.';
+
+  @override
+  String callErrPeerNeverJoined(String name) {
+    return 'Impossible de se connecter à $name. Veuillez réessayer.';
+  }
+
+  @override
+  String get groupCallJoinFailed =>
+      'Impossible de rejoindre l\'appel. Veuillez réessayer.';
+
+  @override
   String get callSpeaker => 'Haut-parleur';
 
   @override

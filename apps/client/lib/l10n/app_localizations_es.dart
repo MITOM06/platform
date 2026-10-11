@@ -3663,6 +3663,32 @@ class AppLocalizationsEs extends AppLocalizations {
       'La llamada se cortó por pérdida de conexión';
 
   @override
+  String get callErrUnavailable =>
+      'Las llamadas no están disponibles en este momento. Inténtalo de nuevo más tarde.';
+
+  @override
+  String get callErrNotFound => 'Esta llamada ya no existe.';
+
+  @override
+  String get callErrEnded => 'Esta llamada ya ha terminado.';
+
+  @override
+  String get callErrNotSfu =>
+      'No puedes unirte a esta llamada desde aquí. Vuelve a llamar.';
+
+  @override
+  String get callErrForbidden => 'No puedes unirte a esta llamada.';
+
+  @override
+  String callErrPeerNeverJoined(String name) {
+    return 'No se pudo conectar con $name. Inténtalo de nuevo.';
+  }
+
+  @override
+  String get groupCallJoinFailed =>
+      'No se pudo unir a la llamada. Inténtalo de nuevo.';
+
+  @override
   String get callSpeaker => 'Altavoz';
 
   @override
