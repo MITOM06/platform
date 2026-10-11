@@ -72,6 +72,57 @@ class MessageNotificationServiceTest {
         mentions);
   }
 
+  /**
+   * System notices (members added, group renamed…) used to send only {type, conversationId,
+   * senderName:"system"}: the conversation list could not update its preview or order in place.
+   */
+  @Test
+  @SuppressWarnings("unchecked")
+  void systemNotice_carriesTheFullMessagePayload_withoutAPush() {
+    MessageNotificationService svc = service();
+    MessageResponse notice = message("system", "system.members.added:user-9", "system", List.of());
+
+    svc.notifySystemNotice(SENDER, notice);
+
+    verify(clusterBroker, timeout(1000))
+        .convertAndSendToUser(
+            eq(RECIPIENT),
+            eq("/queue/notifications"),
+            argThat(
+                payload -> {
+                  Map<String, String> p = (Map<String, String>) payload;
+                  return "NEW_MESSAGE".equals(p.get("type"))
+                      && CONV.equals(p.get("conversationId"))
+                      && "system".equals(p.get("senderId"))
+                      && "system".equals(p.get("senderName"))
+                      && "system.members.added:user-9".equals(p.get("content"))
+                      && "system".equals(p.get("messageType"))
+                      && "msg-1".equals(p.get("messageId"))
+                      && !p.get("createdAt").isEmpty();
+                }));
+    // The actor already knows what they did.
+    verify(clusterBroker, after(200).never()).convertAndSendToUser(eq(SENDER), anyString(), any());
+    verify(fcmService, never()).sendPushNotification(any(), any(), any(), any());
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void systemNotice_attributedToTheActor_namesThem() {
+    MessageNotificationService svc = service();
+
+    svc.notifySystemNotice(
+        SENDER, message(SENDER, "system.admin.promoted:user-2", "system", List.of()));
+
+    verify(clusterBroker, timeout(1000))
+        .convertAndSendToUser(
+            eq(RECIPIENT),
+            eq("/queue/notifications"),
+            argThat(
+                payload ->
+                    SENDER.equals(((Map<String, String>) payload).get("senderId"))
+                        && "Alice".equals(((Map<String, String>) payload).get("senderName"))));
+  }
+
   @Test
   @SuppressWarnings("unchecked")
   void textMessage_notifiesEveryOtherParticipant_andPushes() {

@@ -43,6 +43,9 @@ public class MessageNotificationService {
   /** Name of the built-in AI when the conversation has no persona of its own. */
   private static final String DEFAULT_AI_NAME = "PON AI";
 
+  /** Sender id (and name) of an anonymous system notice. */
+  private static final String SYSTEM_SENDER = "system";
+
   /** Push title for a sender whose name cannot be resolved — never their id. */
   private static final String UNKNOWN_SENDER_TITLE = "New message";
 
@@ -61,6 +64,53 @@ public class MessageNotificationService {
                 response.id(),
                 response.conversationId(),
                 e);
+          }
+        });
+  }
+
+  /**
+   * Notify every participant except {@code actorId} of a system notice (group created, members
+   * added/left, settings changed…) with the same payload as a normal message, so clients update the
+   * list row in place. The content is the system code — clients humanize it. No push: these are
+   * housekeeping, not messages.
+   */
+  public void notifySystemNotice(String actorId, MessageResponse notice) {
+    CompletableFuture.runAsync(
+        () -> {
+          try {
+            String conversationId = notice.conversationId();
+            String senderId = notice.senderId() != null ? notice.senderId() : SYSTEM_SENDER;
+            String senderName =
+                SYSTEM_SENDER.equals(senderId)
+                    ? SYSTEM_SENDER
+                    : resolveSenderName(senderId, conversationId);
+            Map<String, String> notification =
+                Map.of(
+                    "type",
+                    "NEW_MESSAGE",
+                    "conversationId",
+                    conversationId,
+                    "senderId",
+                    senderId,
+                    "senderName",
+                    senderName,
+                    "content",
+                    notice.content() != null ? notice.content() : "",
+                    "messageType",
+                    "system",
+                    "messageId",
+                    notice.id() != null ? notice.id() : "",
+                    "createdAt",
+                    notice.createdAt() != null ? notice.createdAt().toString() : "");
+            for (String participantId : conversationQueryService.getParticipants(conversationId)) {
+              if (!participantId.equals(actorId)) {
+                clusterBroker.convertAndSendToUser(
+                    participantId, "/queue/notifications", notification);
+              }
+            }
+          } catch (Exception e) {
+            log.error(
+                "System-notice fan-out failed for conversation {}", notice.conversationId(), e);
           }
         });
   }

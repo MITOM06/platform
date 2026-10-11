@@ -833,7 +833,12 @@ only via `/app/meet.host`, the notes switch via `PATCH`). Differences:
 - **Typing Indicator Stream:** `/topic/conversation/{conversationId}/typing`  
   Payload: `{ "userId": "string", "typing": boolean }`
 - **User Notifications Queue:** `/user/queue/notifications`  
-  Payload: `{ "type": "NEW_MESSAGE", "conversationId": "string", "senderName": "string" }`
+  Payload: `{ "type": "NEW_MESSAGE" | "MENTIONED_YOU", "conversationId", "senderId", "senderName",
+  "content", "messageType", "messageId", "createdAt" }` (all strings). System notices (group
+  created, members added/left, settings changed…) use the same shape with `messageType: "system"`
+  and the system code as `content` — humanize it, never show it raw; their `senderId` /
+  `senderName` are `"system"` unless the notice is attributed to the actor. Also
+  `{ "type": "CLAIMS_CHANGED" }`.
 - **Meeting room topic:** `/topic/meeting/{meetingId}` — only for people allowed straight into
   the room (see 📅 Meetings); silent for people removed from the meeting. Events: `meet.roster`,
   `meet.settings`, `meet.ended`, `meet.hands`, `meet.chat`, `meet.notes.updated`

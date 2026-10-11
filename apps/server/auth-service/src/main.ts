@@ -1,5 +1,6 @@
 import './tracing'; // first: OpenTelemetry patches modules before they load
 import * as Sentry from '@sentry/node';
+import { sentryOptions } from './sentry-options';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
@@ -11,12 +12,7 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { applyTrustProxy } from './common/client-ip';
 
-Sentry.init({
-  dsn: process.env.SENTRY_DSN ?? '',
-  environment: process.env.NODE_ENV ?? 'development',
-  tracesSampleRate: 0.1,
-  enabled: !!process.env.SENTRY_DSN,
-});
+Sentry.init(sentryOptions(process.env));
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {

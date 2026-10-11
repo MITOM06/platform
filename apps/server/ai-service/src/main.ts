@@ -1,5 +1,6 @@
 import './tracing';
 import * as Sentry from '@sentry/node';
+import { sentryOptions } from './sentry-options';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { JsonLogger } from './logger';
@@ -7,12 +8,7 @@ import { setupSwagger } from './swagger';
 import { findDegradedInfra, findFatalInfraProblems } from './prod-env-guard';
 import helmet from 'helmet';
 
-Sentry.init({
-  dsn: process.env.SENTRY_DSN ?? '',
-  environment: process.env.NODE_ENV ?? 'development',
-  tracesSampleRate: 0.1,
-  enabled: !!process.env.SENTRY_DSN,
-});
+Sentry.init(sentryOptions(process.env));
 
 async function bootstrap() {
   const logger = new JsonLogger('Bootstrap');
