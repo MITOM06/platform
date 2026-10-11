@@ -113,6 +113,11 @@ export class LlmClientsService {
         ...params,
         model,
       });
+      // A reasoning-only free model can spend the whole budget thinking and
+      // return no text: that is a failed call, not an empty title or summary.
+      if (LlmClientsService.isOpenRouterModel(model) && !hasText(message)) {
+        throw new Error(`empty reply (stop_reason=${message.stop_reason ?? 'none'})`);
+      }
       return { message, model };
     } catch (err) {
       if (!LlmClientsService.isOpenRouterModel(model)) throw err;
@@ -126,4 +131,9 @@ export class LlmClientsService {
       return { message, model: this.claudeLightModel };
     }
   }
+}
+
+/** True when the reply carries some non-blank text. */
+export function hasText(message: Anthropic.Message): boolean {
+  return message.content.some((b) => b.type === 'text' && b.text.trim() !== '');
 }

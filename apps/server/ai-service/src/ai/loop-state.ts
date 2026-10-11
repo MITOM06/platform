@@ -46,6 +46,8 @@ export interface LoopState {
    * model after a continuation — reuses the same pending action.
    */
   readonly pendingActions: Map<string, PendingActionView>;
+  /** Tool name → the round it was first held in (one card per tool per later round). */
+  readonly heldToolRounds: Map<string, number>;
   /** Thinking mode the completed rounds ran with (null before the first call). */
   thinkingMode: boolean | null;
 }

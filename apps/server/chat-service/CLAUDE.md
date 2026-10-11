@@ -113,6 +113,10 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 - `MeetingReminderSweep` — every `app.meeting.sweep-interval-ms` (60 s default, annotation only):
   claims each meeting starting within 10 min (`reminded` false → true, once cluster-wide) and
   sends `meet.starting` + FCM `MEETING_STARTING`; retires SCHEDULED meetings 48h past their start
+- `AssistantTokenRenewal` — every `app.assistant.token-renew-interval-ms` (6 h default): re-issues
+  the MCP token of each member's Bot Factory assistant 14 days before it expires
+  (`external_bots.mcpTokenExpiresAt`, connector `BOT_SESSION_TTL_DAYS`) and swaps it into the bot's
+  `pon_connector` MCP server; per-bot claim, safe on many instances
 
 **Cross-service collections read by chat-service** (owned by NestJS services):
 - `user_blocks` — block relationships (replaces former `users.blockedUsers[]`); read via the

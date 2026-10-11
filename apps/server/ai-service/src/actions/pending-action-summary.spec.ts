@@ -41,7 +41,7 @@ describe('buildActionSummary', () => {
     expect(summary.subject.endsWith('…')).toBe(true);
   });
 
-  it('calendar create/update: title + start + end, never ids, attendees or description', () => {
+  it('calendar create/update: title + start + end + attendees, never ids or description', () => {
     expect(
       buildActionSummary('mcp__calendar__create_event', {
         summary: 'Sprint review',
@@ -55,6 +55,7 @@ describe('buildActionSummary', () => {
       title: 'Sprint review',
       start: '2026-10-06T09:00:00+07:00',
       end: '2026-10-06T10:00:00+07:00',
+      attendees: 'bob@example.com',
     });
     const update = buildActionSummary('mcp__calendar__update_event', {
       eventId: 'evt_9f8e7d6c5b4a',
@@ -92,7 +93,83 @@ describe('buildActionSummary', () => {
     expect(buildActionSummary('mcp__slack__send_message', { channel: 'C1', text: 'hi' })).toEqual({
       kind: 'generic',
       tool: 'Send message',
+      fields: [
+        { label: 'Channel', value: 'C1' },
+        { label: 'Text', value: 'hi' },
+      ],
     });
+  });
+
+  // QC 2026-10-11: the card only named the tool or "to + subject", so a prompt
+  // injection could add `bcc: attacker@x` / an extra attendee / any argument the
+  // user never saw, and a confirm ran exactly that.
+  it('emails also show cc and bcc (still never the body)', () => {
+    const summary = buildActionSummary('mcp__gmail__send_email', {
+      to: 'boss@corp.com',
+      cc: ['team@corp.com'],
+      bcc: 'attacker@evil.com',
+      subject: 'Q3',
+      body: 'confidential numbers',
+    });
+    expect(summary).toEqual({
+      kind: 'send_email',
+      to: 'boss@corp.com',
+      cc: 'team@corp.com',
+      bcc: 'attacker@evil.com',
+      subject: 'Q3',
+    });
+    expect(JSON.stringify(summary)).not.toContain('confidential');
+  });
+
+  it('generic tools list their arguments: labels humanized, ids and secrets left out, capped', () => {
+    const summary = buildActionSummary('mcp__custom_0123456789abcdef01234567__create_ticket', {
+      title: 'Printer on floor 3 is broken',
+      priority: 2,
+      urgent: true,
+      assigneeId: '64b0000000000000000000a1',
+      api_key: 'sk-live-123',
+      labels: ['it', 'hardware'],
+      nested: { deep: 'object' },
+      notes: 'n'.repeat(400),
+    }) as { fields: { label: string; value: string }[] };
+    expect(summary.fields.slice(0, 4)).toEqual([
+      { label: 'Title', value: 'Printer on floor 3 is broken' },
+      { label: 'Priority', value: '2' },
+      { label: 'Urgent', value: 'true' },
+      { label: 'Labels', value: 'it, hardware' },
+    ]);
+    const all = JSON.stringify(summary);
+    expect(all).not.toContain('64b0000000000000000000a1');
+    expect(all).not.toContain('sk-live');
+    expect(all).not.toContain('deep');
+    const notes = summary.fields.find((f) => f.label === 'Notes')!;
+    expect(notes.value.length).toBeLessThanOrEqual(120);
+  });
+
+  it('argument labels: snake_case, kebab-case and camelCase read as words; *_id / *Ids are ids', () => {
+    expect(
+      buildActionSummary('mcp__x__y', {
+        due_date: 'tomorrow',
+        'send-at': '9am',
+        assigneeName: 'Bob',
+        page_id: 'p1',
+        userIds: ['a'],
+      }),
+    ).toEqual({
+      kind: 'generic',
+      tool: 'Y',
+      fields: [
+        { label: 'Due date', value: 'tomorrow' },
+        { label: 'Send at', value: '9am' },
+        { label: 'Assignee name', value: 'Bob' },
+      ],
+    });
+  });
+
+  it('a generic tool lists at most 6 arguments', () => {
+    const input = Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`field${i}`, `v${i}`]));
+    const summary = buildActionSummary('mcp__custom_x__do_it', input) as { fields: unknown[] };
+    expect(summary.fields).toHaveLength(6);
   });
 
   it('humanizes hosted-MCP names', () => {

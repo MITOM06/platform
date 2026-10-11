@@ -48,5 +48,14 @@ public class ExternalBot {
 
   @Builder.Default private boolean enabled = true;
 
+  /**
+   * Expiry of the MCP token chat-service injected into the bot (BotFather Zone setup or the last
+   * renewal). Null for admin-registered bots and assistants set up before it was recorded.
+   */
+  private Instant mcpTokenExpiresAt;
+
+  /** Set while one instance re-issues the MCP token (AssistantTokenStore#claim). */
+  private Instant mcpTokenRenewClaimedAt;
+
   @CreatedDate private Instant createdAt;
 }

@@ -7,6 +7,7 @@ import { PersonaService } from '../persona/persona.service';
 import { SettingsService } from '../settings/settings.service';
 import { UsageService } from '../usage/usage.service';
 import { AiSessionService } from '../session/ai-session.service';
+import { ReplySettledTracker } from './reply-settled.tracker';
 import {
   ACTION_CONFIRMED_NOTICE,
   ACTION_FAILED_NOTICE,
@@ -36,6 +37,7 @@ describe('ActionFollowUpService', () => {
   let isQuotaExceeded: jest.Mock;
   let buildSystemPrompt: jest.Mock;
   let appendMessage: jest.Mock;
+  let waitUntilSettled: jest.Mock;
   let service: ActionFollowUpService;
 
   beforeEach(() => {
@@ -48,6 +50,7 @@ describe('ActionFollowUpService', () => {
     isQuotaExceeded = jest.fn().mockResolvedValue(false);
     buildSystemPrompt = jest.fn().mockReturnValue('You are Nova.');
     appendMessage = jest.fn().mockResolvedValue(undefined);
+    waitUntilSettled = jest.fn().mockResolvedValue(true);
     const config = {
       get: jest.fn((k: string) =>
         k === 'config.anthropic.router.simpleModel' ? 'claude-haiku-4-5' : undefined,
@@ -65,6 +68,7 @@ describe('ActionFollowUpService', () => {
         getOrCreateActiveSession: jest.fn().mockResolvedValue({ _id: { toString: () => 'sess-1' } }),
         appendMessage,
       } as unknown as AiSessionService,
+      { waitUntilSettled } as unknown as ReplySettledTracker,
     );
     (service as any)['anthropic'] = { messages: { create } };
   });
@@ -100,6 +104,28 @@ describe('ActionFollowUpService', () => {
       { countRequest: true },
     );
     expect(appendMessage).toHaveBeenCalledWith('sess-1', 'assistant', 'Đã gửi email cho Bob.');
+  });
+
+  it('waits for the reply holding the card to finish before posting (early confirm)', async () => {
+    let settle!: () => void;
+    waitUntilSettled.mockReturnValue(new Promise<boolean>((r) => (settle = () => r(true))));
+
+    const posting = service.post({ ...record, createdAt: new Date().toISOString() }, confirmed);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(publish).not.toHaveBeenCalled();
+    expect(appendMessage).not.toHaveBeenCalled();
+
+    settle();
+    await posting;
+    expect(waitUntilSettled).toHaveBeenCalledWith('reply-1', expect.anything());
+    expect(events().map((e) => e.type)).toEqual(['AI_STREAM_CHUNK', 'AI_STREAM_DONE']);
+  });
+
+  it('does not wait for a reply that is long over', async () => {
+    await service.post({ ...record, createdAt: new Date(Date.now() - 10 * 60_000).toISOString() }, confirmed);
+
+    expect(waitUntilSettled).not.toHaveBeenCalled();
+    expect(publish).toHaveBeenCalled();
   });
 
   it.each([

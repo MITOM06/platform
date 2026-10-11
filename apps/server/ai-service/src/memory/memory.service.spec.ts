@@ -187,6 +187,24 @@ describe('MemoryService.addFacts — batched embedding', () => {
     expect(bobCall[1].$set.keyFacts).toEqual(['bob private fact']);
   });
 
+  it('an empty summary (model returned no text) keeps the stored summary', async () => {
+    const embed = jest.fn().mockResolvedValue([[1]]);
+    const model = { findOneAndUpdate: jest.fn().mockResolvedValue({}) };
+    const vector = {
+      nearest: jest.fn().mockResolvedValue(null),
+      upsertFact: jest.fn().mockResolvedValue(undefined),
+      listFacts: jest.fn().mockResolvedValue([]),
+    };
+    const service = new MemoryService(model as any, vector as any, { embed } as any, { get: jest.fn() } as any);
+
+    await service.addFacts('c', 'u', ['Thích phở'], '  ', 4);
+
+    const update = model.findOneAndUpdate.mock.calls[0][1];
+    expect(update.$set).not.toHaveProperty('summary');
+    expect(update.$setOnInsert).toEqual({ summary: '' });
+    expect(update.$set.messageCount).toBe(4);
+  });
+
   it('skips blank facts before embedding', async () => {
     const embed = jest.fn().mockResolvedValue([[1]]);
     const { service } = makeService(embed);

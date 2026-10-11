@@ -107,6 +107,36 @@ class AiPendingActionServiceTest {
     assertThat(AiPendingActionService.toWire(action)).doesNotContainKey("input");
   }
 
+  /**
+   * A generic tool's arguments ({@code fields: [{label, value}]}) are what the user confirms; the
+   * scalar-only filter turned them into an empty list, so a reload lost them from the card.
+   */
+  @Test
+  void parseAction_keepsGenericFields_asLabelValuePairsOnly() {
+    Map<String, Object> raw =
+        Map.of(
+            "id", "act-2",
+            "toolName", "mcp__custom_x__create_ticket",
+            "summary",
+                Map.of(
+                    "kind", "generic",
+                    "tool", "Create ticket",
+                    "fields",
+                        List.of(
+                            Map.of("label", "Title", "value", "Printer broken"),
+                            Map.of("label", "Priority", "value", "2", "extra", Map.of("x", 1)),
+                            Map.of("label", "No value"),
+                            "not a map")));
+
+    PendingAction action = AiPendingActionService.parseAction(raw, "user-9");
+
+    assertThat(action.getSummary().get("fields"))
+        .isEqualTo(
+            List.of(
+                Map.of("label", "Title", "value", "Printer broken"),
+                Map.of("label", "Priority", "value", "2")));
+  }
+
   @Test
   void parseAction_rejectsNonObjectsAndMissingIds() {
     assertThat(AiPendingActionService.parseAction("x", "u")).isNull();

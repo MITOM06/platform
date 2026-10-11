@@ -1,6 +1,11 @@
 import { ConfigService } from '@nestjs/config';
 import { AgenticLoopService } from './agentic-loop.service';
-import { ToolRoundRunner, PENDING_CONFIRMATION_RESULT, TOOL_NOT_OFFERED_RESULT } from './tool-round.runner';
+import {
+  ToolRoundRunner,
+  ALREADY_PENDING_RESULT,
+  PENDING_CONFIRMATION_RESULT,
+  TOOL_NOT_OFFERED_RESULT,
+} from './tool-round.runner';
 import { AiReplyStream } from './ai-reply-stream';
 import { RequestContext } from './ai.types';
 import { ACTION_PENDING_FALLBACK_TEXT } from './system-notices';
@@ -204,6 +209,50 @@ describe('ToolRoundRunner — in-chat confirmation of sensitive actions (§F2)',
     const expiresIn = Date.parse(pending.action.expiresAt) - Date.now();
     expect(expiresIn).toBeGreaterThan(590_000);
     expect(expiresIn).toBeLessThanOrEqual(600_000);
+  });
+
+  it('a later round asking for the same held action again gets no second card', async () => {
+    // A weak model ignores PENDING_USER_CONFIRMATION and retries with a tweak:
+    // two cards meant two emails once both were confirmed.
+    mockStream
+      .mockReturnValueOnce(toolTurn(SEND.name, 'tu-1', EMAIL_INPUT))
+      .mockReturnValueOnce(toolTurn(SEND.name, 'tu-2', { ...EMAIL_INPUT, subject: 'Q3 report (final)' }))
+      .mockReturnValueOnce(textTurn('Confirm the email below.'));
+
+    await runLoop();
+
+    expect(events().filter((e) => e.type === 'AI_ACTION_PENDING')).toHaveLength(1);
+    expect(await pendingKeys()).toHaveLength(1);
+    const done = events().find((e) => e.type === 'AI_STREAM_DONE');
+    expect(done.pendingActions).toHaveLength(1);
+    const retried = toolResults(mockStream.mock.calls[2][0]).find((r: any) => r.tool_use_id === 'tu-2');
+    expect(retried).toEqual({
+      type: 'tool_result',
+      tool_use_id: 'tu-2',
+      is_error: true,
+      content: ALREADY_PENDING_RESULT,
+    });
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('several actions of one kind asked for in the same round each get their card', async () => {
+    mockStream
+      .mockReturnValueOnce({
+        ...asyncIter([]),
+        finalMessage: jest.fn().mockResolvedValue({
+          stop_reason: 'tool_use',
+          content: [
+            { type: 'tool_use', id: 'tu-a', name: SEND.name, input: EMAIL_INPUT },
+            { type: 'tool_use', id: 'tu-b', name: SEND.name, input: { ...EMAIL_INPUT, to: 'carol@example.com' } },
+          ],
+          usage: { input_tokens: 8, output_tokens: 4 },
+        }),
+      })
+      .mockReturnValueOnce(textTurn('Confirm both emails below.'));
+
+    await runLoop('Email the Q3 report to Bob and to Carol');
+
+    expect(events().filter((e) => e.type === 'AI_ACTION_PENDING')).toHaveLength(2);
   });
 
   it('emits AI_TOOL_CALL then AI_ACTION_PENDING before the text, all on one replyId', async () => {
