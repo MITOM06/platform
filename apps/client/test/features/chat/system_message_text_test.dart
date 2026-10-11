@@ -118,7 +118,7 @@ void main() {
       expect(chatErrorMessage(l10n, _err(403, 'GROUP_ADMIN_REQUIRED')),
           l10n.errGroupAdminRequired);
       expect(chatErrorMessage(l10n, _err(409, 'PIN_LIMIT_REACHED')),
-          l10n.pinLimitReached);
+          l10n.pinLimitReached(5));
       expect(chatErrorMessage(l10n, _err(403, 'USER_BLOCKED')),
           l10n.errChatUserBlocked);
       expect(chatErrorMessage(l10n, _err(400, 'REPLY_TARGET_INVALID')),
@@ -131,8 +131,8 @@ void main() {
       expect(chatErrorMessage(l10n, _err(429)), l10n.rateLimitError);
     });
 
-    test('the pin limit text says 5', () {
-      expect(l10n.pinLimitReached, contains('5'));
+    test('the pin limit text says the limit', () {
+      expect(l10n.pinLimitReached(5), contains('5'));
     });
   });
 }

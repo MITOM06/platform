@@ -1100,7 +1100,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pinnedMessagesTitle => 'ピン留めしたメッセージ';
 
   @override
-  String get pinLimitReached => 'ピン留めできるメッセージは5件までです';
+  String pinLimitReached(int max) {
+    return 'ピン留めできるメッセージは$max件までです';
+  }
 
   @override
   String get cannotPinCall => '通話はピン留めできません';
@@ -1416,6 +1418,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get aiErrRateLimited => 'AI へのリクエストが多すぎます。少し時間をおいて再試行してください。';
+
+  @override
+  String get aiErrForbidden => 'この会話へのアクセス権がないため、AI はここで返信できません。';
 
   @override
   String get feedbackHelpful => '役に立った';
@@ -3798,6 +3803,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get aiActionFieldWhen => '日時';
+
+  @override
+  String get aiActionFieldCc => 'CC';
+
+  @override
+  String get aiActionFieldBcc => 'BCC';
+
+  @override
+  String get aiActionFieldBody => '本文';
+
+  @override
+  String get aiActionFieldAttendees => '参加者';
 
   @override
   String get aiActionStatusConfirmed => '完了';

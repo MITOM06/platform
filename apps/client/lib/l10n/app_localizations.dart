@@ -2175,8 +2175,8 @@ abstract class AppLocalizations {
   /// No description provided for @pinLimitReached.
   ///
   /// In en, this message translates to:
-  /// **'You can pin up to 5 messages'**
-  String get pinLimitReached;
+  /// **'You can pin up to {max} messages'**
+  String pinLimitReached(int max);
 
   /// No description provided for @cannotPinCall.
   ///
@@ -2795,6 +2795,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Too many AI requests. Please slow down and try again shortly.'**
   String get aiErrRateLimited;
+
+  /// No description provided for @aiErrForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have access to this conversation, so the AI can\'t reply here.'**
+  String get aiErrForbidden;
 
   /// No description provided for @feedbackHelpful.
   ///
@@ -7170,6 +7176,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'When'**
   String get aiActionFieldWhen;
+
+  /// No description provided for @aiActionFieldCc.
+  ///
+  /// In en, this message translates to:
+  /// **'Cc'**
+  String get aiActionFieldCc;
+
+  /// No description provided for @aiActionFieldBcc.
+  ///
+  /// In en, this message translates to:
+  /// **'Bcc'**
+  String get aiActionFieldBcc;
+
+  /// No description provided for @aiActionFieldBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get aiActionFieldBody;
+
+  /// No description provided for @aiActionFieldAttendees.
+  ///
+  /// In en, this message translates to:
+  /// **'Guests'**
+  String get aiActionFieldAttendees;
 
   /// No description provided for @aiActionStatusConfirmed.
   ///

@@ -10,6 +10,7 @@ import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
 import 'widgets/conversation_avatar.dart';
 import 'widgets/message_preview_text.dart';
+import 'widgets/system_name_resolver.dart';
 
 /// Lists conversations the user has archived (`isArchived == true`), with the
 /// ability to restore each one back into the main list. (Task 71)
@@ -191,7 +192,10 @@ class _ArchivedTile extends ConsumerWidget {
               ? Text(
                   // Same sanitized preview as the main list (no raw system
                   // codes, upload URLs or recalled text).
-                  lastMessagePreview(context, conv.lastMessage!),
+                  lastMessagePreview(context, conv.lastMessage!,
+                      resolveName: systemNameResolver(ref, context.l10n,
+                          conversationId: conv.id,
+                          currentUserId: currentUserId)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(

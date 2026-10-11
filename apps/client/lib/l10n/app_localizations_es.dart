@@ -1121,7 +1121,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pinnedMessagesTitle => 'Mensajes fijados';
 
   @override
-  String get pinLimitReached => 'Puedes fijar hasta 5 mensajes';
+  String pinLimitReached(int max) {
+    return 'Puedes fijar hasta $max mensajes';
+  }
 
   @override
   String get cannotPinCall => 'Las llamadas no se pueden fijar';
@@ -1445,6 +1447,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get aiErrRateLimited =>
       'Demasiadas solicitudes de IA. Reduce la velocidad e inténtalo de nuevo en breve.';
+
+  @override
+  String get aiErrForbidden =>
+      'No tienes acceso a esta conversación, así que la IA no puede responder aquí.';
 
   @override
   String get feedbackHelpful => 'Útil';
@@ -3946,6 +3952,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get aiActionFieldWhen => 'Cuándo';
+
+  @override
+  String get aiActionFieldCc => 'CC';
+
+  @override
+  String get aiActionFieldBcc => 'CCO';
+
+  @override
+  String get aiActionFieldBody => 'Mensaje';
+
+  @override
+  String get aiActionFieldAttendees => 'Invitados';
 
   @override
   String get aiActionStatusConfirmed => 'Hecho';

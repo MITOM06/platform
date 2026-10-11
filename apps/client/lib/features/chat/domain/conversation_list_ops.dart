@@ -1,4 +1,61 @@
+import 'package:flutter/foundation.dart';
+
 import 'chat_state.dart';
+
+/// A `NEW_MESSAGE` / `MENTIONED_YOU` on `/user/queue/notifications`:
+/// `{type, conversationId, senderId, senderName, content, messageType,
+/// messageId, createdAt}`. System notices (group created, members added /
+/// left / removed / joined, auto-delete, admin changes) arrive in the same
+/// full shape, sent by "system"; older servers sent only
+/// `{type, conversationId, senderName: "system"}` (no preview to show).
+@immutable
+class IncomingMessageNotice {
+  const IncomingMessageNotice({
+    required this.conversationId,
+    required this.senderId,
+    this.senderName,
+    this.content,
+    this.messageType,
+    this.messageId,
+    this.createdAt,
+  });
+
+  final String conversationId;
+
+  /// The sender's id; `system` for a system notice that names none.
+  final String senderId;
+  final String? senderName;
+  final String? content;
+  final String? messageType;
+  final String? messageId;
+  final DateTime? createdAt;
+
+  /// Null without a conversation id.
+  static IncomingMessageNotice? fromJson(Map<String, dynamic> json) {
+    final conversationId = _text(json['conversationId']);
+    if (conversationId == null) return null;
+    final senderName = _text(json['senderName']);
+    final messageType = _text(json['messageType']);
+    final isSystem = messageType == 'system' || senderName == _systemSender;
+    final createdAt = _text(json['createdAt']);
+    final content = json['content'];
+    return IncomingMessageNotice(
+      conversationId: conversationId,
+      // Legacy payloads carried the sender in senderName only.
+      senderId: _text(json['senderId']) ??
+          (isSystem ? _systemSender : senderName ?? ''),
+      senderName: senderName,
+      content: content is String ? content : null,
+      messageType: messageType,
+      messageId: _text(json['messageId']),
+      createdAt: createdAt == null ? null : DateTime.tryParse(createdAt),
+    );
+  }
+
+  static const _systemSender = 'system';
+
+  static String? _text(Object? v) => v is String && v.isNotEmpty ? v : null;
+}
 
 /// What a `CONVERSATION_UPDATED` did to the conversation list.
 enum ConversationMergeOutcome {

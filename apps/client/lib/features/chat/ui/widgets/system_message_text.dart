@@ -125,22 +125,25 @@ String? systemMessageText(
   return null;
 }
 
-/// Short preview of a system message for surfaces with no participant
-/// context (conversation list, reply quote, push body): names are generic,
-/// nickname changes collapse to one line, unknown codes get a generic label.
+/// Short preview of a system message (conversation list, reply quote, push
+/// body). With [resolveName] — the conversation list, which knows the
+/// conversation — people are named like in the bubble (web resolves them
+/// too); without it names are generic and nickname changes collapse to one
+/// line. Unknown codes get a generic label.
 String systemPreviewText(
   AppLocalizations l10n,
   String content, {
   String senderId = kSystemSenderId,
+  SystemNameResolver? resolveName,
 }) {
-  if (content.startsWith('system.nickname.changed:')) {
+  if (resolveName == null && content.startsWith('system.nickname.changed:')) {
     return l10n.systemNicknameChanged;
   }
   return systemMessageText(
         l10n,
         content,
         senderId: senderId,
-        resolveName: (_) => l10n.someone,
+        resolveName: resolveName ?? (_) => l10n.someone,
       ) ??
       l10n.pinnedSystemMessage;
 }

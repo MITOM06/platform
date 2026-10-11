@@ -1113,7 +1113,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pinnedMessagesTitle => 'Tin nhắn đã ghim';
 
   @override
-  String get pinLimitReached => 'Bạn chỉ có thể ghim tối đa 5 tin nhắn';
+  String pinLimitReached(int max) {
+    return 'Bạn chỉ có thể ghim tối đa $max tin nhắn';
+  }
 
   @override
   String get cannotPinCall => 'Không thể ghim cuộc gọi';
@@ -1433,6 +1435,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get aiErrRateLimited =>
       'Quá nhiều yêu cầu AI. Vui lòng chậm lại và thử lại sau giây lát.';
+
+  @override
+  String get aiErrForbidden =>
+      'Bạn không có quyền truy cập cuộc trò chuyện này nên AI không thể trả lời tại đây.';
 
   @override
   String get feedbackHelpful => 'Hữu ích';
@@ -3895,6 +3901,18 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get aiActionFieldWhen => 'Thời gian';
+
+  @override
+  String get aiActionFieldCc => 'CC';
+
+  @override
+  String get aiActionFieldBcc => 'BCC';
+
+  @override
+  String get aiActionFieldBody => 'Nội dung';
+
+  @override
+  String get aiActionFieldAttendees => 'Khách mời';
 
   @override
   String get aiActionStatusConfirmed => 'Đã thực hiện';

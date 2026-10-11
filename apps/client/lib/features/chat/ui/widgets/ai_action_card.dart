@@ -166,7 +166,7 @@ class _AiActionCardState extends ConsumerState<AiActionCard> {
             children: [
               SizedBox(
                 width: 72,
-                child: Text(_fieldLabel(l10n, line.field),
+                child: Text(aiActionFieldLabel(l10n, line),
                     style: TextStyle(color: muted, fontSize: 12)),
               ),
               Expanded(
@@ -174,6 +174,11 @@ class _AiActionCardState extends ConsumerState<AiActionCard> {
                   line.field == ActionSummaryField.when
                       ? formatActionWhen(line.value, line.end, locale)
                       : line.value,
+                  // The start of an email body: a few lines, not the letter.
+                  maxLines: line.field == ActionSummaryField.body ? 3 : null,
+                  overflow: line.field == ActionSummaryField.body
+                      ? TextOverflow.ellipsis
+                      : null,
                   style: TextStyle(color: onSurface, fontSize: 12),
                 ),
               ),
@@ -289,16 +294,28 @@ String aiActionTitle(AppLocalizations l10n, AiPendingAction action) {
   return tool == null ? l10n.aiActionGeneric : l10n.aiActionGenericNamed(tool);
 }
 
-String _fieldLabel(AppLocalizations l10n, ActionSummaryField field) {
-  switch (field) {
+/// Localized label of a detail row; a generic action's row keeps the
+/// server's humanized label.
+String aiActionFieldLabel(AppLocalizations l10n, ActionSummaryLine line) {
+  switch (line.field) {
     case ActionSummaryField.to:
       return l10n.aiActionFieldTo;
+    case ActionSummaryField.cc:
+      return l10n.aiActionFieldCc;
+    case ActionSummaryField.bcc:
+      return l10n.aiActionFieldBcc;
     case ActionSummaryField.subject:
       return l10n.aiActionFieldSubject;
+    case ActionSummaryField.body:
+      return l10n.aiActionFieldBody;
     case ActionSummaryField.title:
       return l10n.aiActionFieldTitle;
     case ActionSummaryField.when:
       return l10n.aiActionFieldWhen;
+    case ActionSummaryField.attendees:
+      return l10n.aiActionFieldAttendees;
+    case ActionSummaryField.custom:
+      return line.label ?? '';
   }
 }
 

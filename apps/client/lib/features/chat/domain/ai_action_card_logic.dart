@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import 'ai_pending_action.dart';
+import 'conversations_realtime_handlers.dart' show looksLikeRawId;
 
 /// What a confirmation card shows for one pending action. Pure logic shared by
 /// the card widget and the tests — mirror of web `lib/ai/pending-actions.ts`.
@@ -112,8 +113,19 @@ AiActionErrorOutcome aiActionErrorOutcome(Object error) {
   return const AiActionErrorOutcome(AiActionError.generic, null);
 }
 
-/// One "label: value" row under the card headline.
-enum ActionSummaryField { to, subject, title, when }
+/// One "label: value" row under the card headline. [custom] rows carry the
+/// server's own humanized label (generic actions).
+enum ActionSummaryField {
+  to,
+  cc,
+  bcc,
+  subject,
+  body,
+  title,
+  when,
+  attendees,
+  custom,
+}
 
 class ActionSummaryLine {
   final ActionSummaryField field;
@@ -123,16 +135,21 @@ class ActionSummaryLine {
   /// `YYYY-MM-DD`) — the widget formats them for the locale.
   final String? end;
 
-  const ActionSummaryLine(this.field, this.value, {this.end});
+  /// For [ActionSummaryField.custom]: the server-humanized parameter name
+  /// ("Title"), shown as is.
+  final String? label;
+
+  const ActionSummaryLine(this.field, this.value, {this.end, this.label});
 }
 
-/// The detail rows of an action's `summary` (never the raw tool name).
-/// Strings are collapsed to one line and capped.
+/// The detail rows of an action's `summary` (never the raw tool name, never
+/// a raw id). Strings are collapsed to one line and capped. Fields an older
+/// ai-service does not send are simply absent.
 List<ActionSummaryLine> actionSummaryLines(AiPendingAction action) {
   final s = action.summary;
   final lines = <ActionSummaryLine>[];
-  void push(ActionSummaryField field, Object? value) {
-    final v = summaryText(value);
+  void push(ActionSummaryField field, Object? value, {int max = 200}) {
+    final v = summaryText(value, max: max);
     if (v != null) lines.add(ActionSummaryLine(field, v));
   }
 
@@ -140,7 +157,10 @@ List<ActionSummaryLine> actionSummaryLines(AiPendingAction action) {
     case 'send_email':
     case 'draft_email':
       push(ActionSummaryField.to, s['to']);
+      push(ActionSummaryField.cc, s['cc']);
+      push(ActionSummaryField.bcc, s['bcc']);
       push(ActionSummaryField.subject, s['subject']);
+      push(ActionSummaryField.body, s['bodyPreview'], max: 300);
     case 'create_event':
     case 'update_event':
       push(ActionSummaryField.title, s['title']);
@@ -149,11 +169,27 @@ List<ActionSummaryLine> actionSummaryLines(AiPendingAction action) {
         lines.add(ActionSummaryLine(ActionSummaryField.when, start,
             end: summaryText(s['end'], max: 64)));
       }
+      push(ActionSummaryField.attendees, s['attendees']);
     case 'create_page':
     case 'update_page':
       push(ActionSummaryField.title, s['title']);
+    default: // generic: `fields: [{label, value}]`
+      lines.addAll(_genericFields(s['fields']));
   }
   return lines;
+}
+
+/// "label: value" rows of a generic action. Entries without a label or a
+/// value, and values that are a raw id, are left out.
+Iterable<ActionSummaryLine> _genericFields(Object? raw) sync* {
+  if (raw is! List) return;
+  for (final f in raw) {
+    if (f is! Map) continue;
+    final label = summaryText(f['label'], max: 40);
+    final value = summaryText(f['value']);
+    if (label == null || value == null || looksLikeRawId(value)) continue;
+    yield ActionSummaryLine(ActionSummaryField.custom, value, label: label);
+  }
 }
 
 /// A single-line, length-capped summary string; null when empty.

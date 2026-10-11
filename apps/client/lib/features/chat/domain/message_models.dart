@@ -127,6 +127,9 @@ class MessageModel {
   bool get isAiEmptyResponse =>
       isAiMessage && content == kAiEmptyResponseSentinel;
 
+  /// The requester has no access to the conversation (`AI_FORBIDDEN`).
+  bool get isAiForbidden => isAiMessage && content == kAiForbiddenSentinel;
+
   /// Any AI failure state (rendered as a localized notice, never the
   /// sentinel itself).
   bool get isAiFailure =>
@@ -135,7 +138,8 @@ class MessageModel {
       isAiRateLimited ||
       isAiStreamInterrupted ||
       isAiUnavailable ||
-      isAiEmptyResponse;
+      isAiEmptyResponse ||
+      isAiForbidden;
   bool get isImage => type == 'image';
   bool get isVideo => type == 'video';
   bool get isMedia => isImage || isVideo;

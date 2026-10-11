@@ -38,9 +38,11 @@ class AiPendingAction {
   final String provider;
 
   /// Humanized, non-secret description built by ai-service:
-  /// `{kind: send_email|draft_email, to?, subject?}`,
-  /// `{kind: create_event|update_event, title?, start?, end?}`,
-  /// `{kind: create_page|update_page, title?}`, `{kind: generic, tool}`.
+  /// `{kind: send_email|draft_email, to?, cc?, bcc?, subject?, bodyPreview?}`,
+  /// `{kind: create_event|update_event, title?, start?, end?, attendees?}`,
+  /// `{kind: create_page|update_page, title?}`,
+  /// `{kind: generic, tool, fields?: [{label, value}]}` (`label` humanized by
+  /// the server). Older servers send none of the optional fields.
   final Map<String, dynamic> summary;
   final AiActionStatus status;
   final DateTime? expiresAt;
@@ -113,8 +115,10 @@ List<AiPendingAction>? parsePendingActions(Object? raw,
 }
 
 /// Adds [action] (from `AI_ACTION_PENDING`) unless the message already knows
-/// it — an already-known action keeps its (possibly newer) status and only
-/// gains a missing requester.
+/// it. An already-known action keeps a resolved status (a late pending never
+/// reopens it) but takes a resolved one over its own `pending` — the saved
+/// message of another device's answer, which would otherwise leave an
+/// actionable card that answers 409. A missing requester is filled in.
 List<AiPendingAction> upsertPendingAction(
   List<AiPendingAction>? current,
   AiPendingAction action,
@@ -122,10 +126,19 @@ List<AiPendingAction> upsertPendingAction(
   final list = current ?? const <AiPendingAction>[];
   final existing = list.firstWhereOrNull((a) => a.id == action.id);
   if (existing == null) return [...list, action];
-  if (existing.requesterId != null || action.requesterId == null) return list;
+  final resolves = existing.status == AiActionStatus.pending &&
+      action.status != AiActionStatus.pending;
+  final addsRequester =
+      existing.requesterId == null && action.requesterId != null;
+  if (!resolves && !addsRequester) return list;
   return [
     for (final a in list)
-      a.id == action.id ? a.copyWith(requesterId: action.requesterId) : a,
+      a.id == action.id
+          ? a.copyWith(
+              status: resolves ? action.status : null,
+              requesterId: addsRequester ? action.requesterId : null,
+            )
+          : a,
   ];
 }
 

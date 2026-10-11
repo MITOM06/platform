@@ -3,6 +3,10 @@ import 'package:dio/dio.dart';
 import '../../../core/utils/app_error.dart';
 import '../../../l10n/app_localizations.dart';
 
+/// Most messages a conversation can pin (chat-service `MAX_PINNED_MESSAGES`);
+/// the server's `params.max` wins when it sends one.
+const kMaxPinnedMessages = 5;
+
 /// The stable `code` of a chat-service error body
 /// (`{error, message, code, statusCode}` — `message` is English diagnostics
 /// and is never shown). Null for network failures and code-less bodies.
@@ -16,10 +20,23 @@ String? chatErrorCode(Object error) {
   return null;
 }
 
-/// Localized message for a chat-service error [code] — shared by REST errors
-/// and the STOMP `MESSAGE_REJECTED` event. Null for codes without a specific
-/// message (the caller falls back to the HTTP-status message).
-String? chatCodeMessage(AppLocalizations l10n, String code) {
+/// The `params` of a chat-service error body (`{code, params}`), or null.
+Map<String, dynamic>? chatErrorParams(Object error) {
+  if (error is! DioException) return null;
+  final data = error.response?.data;
+  final params = data is Map ? data['params'] : null;
+  return params is Map ? Map<String, dynamic>.from(params) : null;
+}
+
+/// Localized message for a chat-service error [code] (with its [params]) —
+/// shared by REST errors and the STOMP `MESSAGE_REJECTED` event. Null for
+/// codes without a specific message (the caller falls back to the
+/// HTTP-status message).
+String? chatCodeMessage(
+  AppLocalizations l10n,
+  String code, {
+  Map<String, dynamic>? params,
+}) {
   switch (code) {
     case 'GROUP_ADMIN_REQUIRED':
       return l10n.errGroupAdminRequired;
@@ -34,7 +51,9 @@ String? chatCodeMessage(AppLocalizations l10n, String code) {
     case 'INVALID_PARAMETER':
       return l10n.errInvalidData;
     case 'PIN_LIMIT_REACHED':
-      return l10n.pinLimitReached;
+      final max = params?['max'];
+      return l10n.pinLimitReached(
+          max is num && max > 0 ? max.toInt() : kMaxPinnedMessages);
     case 'PUBLIC_DEPARTMENT_CHANNEL_NOT_ALLOWED':
       return l10n.errPublicDepartmentChannel;
     case 'NOT_A_GROUP':
@@ -61,7 +80,8 @@ String? chatCodeMessage(AppLocalizations l10n, String code) {
 String chatErrorMessage(AppLocalizations l10n, Object error) {
   final code = chatErrorCode(error);
   if (code != null) {
-    final specific = chatCodeMessage(l10n, code);
+    final specific =
+        chatCodeMessage(l10n, code, params: chatErrorParams(error));
     if (specific != null) return specific;
   }
   if (error is DioException && error.response?.statusCode == 429) {

@@ -1127,7 +1127,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pinnedMessagesTitle => 'Messages épinglés';
 
   @override
-  String get pinLimitReached => 'Vous pouvez épingler jusqu\'à 5 messages';
+  String pinLimitReached(int max) {
+    return 'Vous pouvez épingler jusqu\'à $max messages';
+  }
 
   @override
   String get cannotPinCall => 'Les appels ne peuvent pas être épinglés';
@@ -1452,6 +1454,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get aiErrRateLimited =>
       'Trop de requêtes IA. Veuillez ralentir et réessayer dans un instant.';
+
+  @override
+  String get aiErrForbidden =>
+      'Vous n\'avez pas accès à cette conversation, l\'IA ne peut donc pas répondre ici.';
 
   @override
   String get feedbackHelpful => 'Utile';
@@ -3971,6 +3977,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get aiActionFieldWhen => 'Quand';
+
+  @override
+  String get aiActionFieldCc => 'Cc';
+
+  @override
+  String get aiActionFieldBcc => 'Cci';
+
+  @override
+  String get aiActionFieldBody => 'Message';
+
+  @override
+  String get aiActionFieldAttendees => 'Invités';
 
   @override
   String get aiActionStatusConfirmed => 'Effectué';

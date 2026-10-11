@@ -1097,7 +1097,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinnedMessagesTitle => '置顶消息';
 
   @override
-  String get pinLimitReached => '最多只能置顶 5 条消息';
+  String pinLimitReached(int max) {
+    return '最多只能置顶 $max 条消息';
+  }
 
   @override
   String get cannotPinCall => '通话无法置顶';
@@ -1413,6 +1415,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiErrRateLimited => 'AI 请求过于频繁。请稍后再试。';
+
+  @override
+  String get aiErrForbidden => '你无权访问此对话，因此 AI 无法在此回复。';
 
   @override
   String get feedbackHelpful => '有帮助';
@@ -3754,6 +3759,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiActionFieldWhen => '时间';
+
+  @override
+  String get aiActionFieldCc => '抄送';
+
+  @override
+  String get aiActionFieldBcc => '密送';
+
+  @override
+  String get aiActionFieldBody => '正文';
+
+  @override
+  String get aiActionFieldAttendees => '参与者';
 
   @override
   String get aiActionStatusConfirmed => '已完成';

@@ -1100,7 +1100,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get pinnedMessagesTitle => '고정된 메시지';
 
   @override
-  String get pinLimitReached => '메시지는 최대 5개까지 고정할 수 있습니다';
+  String pinLimitReached(int max) {
+    return '메시지는 최대 $max개까지 고정할 수 있습니다';
+  }
 
   @override
   String get cannotPinCall => '통화는 고정할 수 없습니다';
@@ -1416,6 +1418,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiErrRateLimited => 'AI 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String get aiErrForbidden => '이 대화에 대한 접근 권한이 없어 AI가 여기서 답할 수 없습니다.';
 
   @override
   String get feedbackHelpful => '도움이 됨';
@@ -3798,6 +3803,18 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiActionFieldWhen => '일시';
+
+  @override
+  String get aiActionFieldCc => '참조';
+
+  @override
+  String get aiActionFieldBcc => '숨은 참조';
+
+  @override
+  String get aiActionFieldBody => '본문';
+
+  @override
+  String get aiActionFieldAttendees => '참석자';
 
   @override
   String get aiActionStatusConfirmed => '완료됨';
