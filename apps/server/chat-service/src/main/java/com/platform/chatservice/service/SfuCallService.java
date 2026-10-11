@@ -66,8 +66,13 @@ public class SfuCallService implements RtcRoomEventHandler {
 
   /** The callee answered: they are busy now, and their other devices stop ringing. */
   public void accept(String userId, String callId) {
-    sfuSessionFor(userId, callId)
-        .ifPresent(
+    if (sfuSessionFor(userId, callId).isEmpty()) {
+      return;
+    }
+    Instant now = Instant.now();
+    calls
+        .updateActive(
+            callId,
             s -> {
               CallSession.Participant p = participant(s, userId);
               if (p == null) {
@@ -75,14 +80,39 @@ public class SfuCallService implements RtcRoomEventHandler {
                 s.getParticipants().add(p);
               }
               if (p.getAcceptedAt() == null) {
-                p.setAcceptedAt(Instant.now());
+                p.setAcceptedAt(now);
               }
-              if (!calls.saveIfActive(s)) {
-                return;
-              }
-              busy.markBusy(userId, callId);
+              return true;
+            })
+        .ifPresent(
+            s -> {
+              markBusyWhileActive(userId, callId);
               calls.sendToUser(userId, ringCancel(callId, "answered_elsewhere"));
+              // The caller stops its own ring timer now, not when the callee reaches the room:
+              // an answer in the last seconds was otherwise cancelled while still connecting.
+              if (!userId.equals(s.getStartedBy())) {
+                calls.sendToUser(
+                    s.getStartedBy(),
+                    WebRTCSignalDto.builder()
+                        .type("call-accepted")
+                        .callId(callId)
+                        .conversationId(s.getConversationId())
+                        .senderId(userId)
+                        .build());
+              }
             });
+  }
+
+  /**
+   * Mark {@code userId} busy in {@code callId} — and undo it if the call ended between the write
+   * that let them in and this mark (an end clears every member first, so a late mark would
+   * otherwise stay for the 6-hour safety TTL and report them busy to everyone).
+   */
+  private void markBusyWhileActive(String userId, String callId) {
+    busy.markBusy(userId, callId);
+    if (calls.activeSession(callId).isEmpty()) {
+      busy.clear(userId, callId);
+    }
   }
 
   /** The callee declined (or could not take it): a 1-on-1 ends, a group call goes on. */
@@ -113,7 +143,7 @@ public class SfuCallService implements RtcRoomEventHandler {
   public void cancel(String userId, String callId, String reason) {
     sfuSessionFor(userId, callId)
         .filter(s -> userId.equals(s.getStartedBy()))
-        .filter(s -> !CallService.answeredByOthers(s))
+        .filter(s -> !CallSessions.answeredByOthers(s))
         .ifPresent(
             s -> {
               String why = reason != null && CANCEL_REASONS.contains(reason) ? reason : "hangup";
@@ -140,7 +170,7 @@ public class SfuCallService implements RtcRoomEventHandler {
     if (s.getEndedAt() != null) {
       throw new ApiException(HttpStatus.CONFLICT, "CALL_ENDED");
     }
-    if (!CallService.isSfu(s)) {
+    if (!CallSessions.isSfu(s)) {
       throw new ApiException(HttpStatus.CONFLICT, "CALL_NOT_SFU");
     }
     List<String> members = calls.membersOf(s.getConversationId());
@@ -197,8 +227,14 @@ public class SfuCallService implements RtcRoomEventHandler {
 
   @Override
   public void onParticipantJoined(RtcParticipantEvent e) {
-    sfuSessionForRoom(e.room())
-        .ifPresent(
+    String callId = RtcRooms.idOf(e.room(), RtcRooms.CALL_PREFIX);
+    if (sfuSessionForRoom(e.room()).isEmpty()) {
+      return;
+    }
+    Instant joinedAt = e.createdAt() == null ? Instant.now() : e.createdAt();
+    calls
+        .updateActive(
+            callId,
             s -> {
               CallSession.Participant p = participant(s, e.identity());
               if (p == null) {
@@ -206,49 +242,58 @@ public class SfuCallService implements RtcRoomEventHandler {
                 s.getParticipants().add(p);
               }
               if (p.getJoinedAt() == null) {
-                p.setJoinedAt(e.createdAt() == null ? Instant.now() : e.createdAt());
+                p.setJoinedAt(joinedAt);
               }
               p.setLeftAt(null);
               p.setSid(e.participantSid());
-              if (!calls.saveIfActive(s)) {
-                return;
-              }
+              return true;
+            })
+        .ifPresent(
+            s -> {
               calls.broadcastRoster(s);
-              busy.markBusy(e.identity(), s.getCallId());
+              markBusyWhileActive(e.identity(), callId);
             });
   }
 
   @Override
   public void onParticipantLeft(RtcParticipantEvent e) {
-    sfuSessionForRoom(e.room())
-        .ifPresent(
-            s -> {
-              CallSession.Participant p = participant(s, e.identity());
-              if (p == null || p.getLeftAt() != null) {
-                return; // unknown, or already left through call.leave
-              }
-              if (p.getSid() != null
-                  && e.participantSid() != null
-                  && !p.getSid().equals(e.participantSid())) {
-                return; // an older session, kicked when they rejoined from another device
-              }
-              p.setLeftAt(Instant.now());
-              if (!calls.saveIfActive(s)) {
-                return;
-              }
-              calls.broadcastRoster(s);
-              busy.clear(e.identity(), s.getCallId());
-              if ("direct".equals(s.getKind())) {
-                // Gone without hanging up: a dropped connection or a killed app — unless the same
-                // person comes back (rejoin, full reconnect) within the grace period.
-                String callId = s.getCallId();
-                String identity = e.identity();
-                String sid = e.participantSid();
-                timers.after(RECONNECT_GRACE, () -> endIfStillGone(callId, identity, sid));
-              } else if (s.getParticipants().stream().allMatch(x -> x.getLeftAt() != null)) {
-                calls.endCall(s.getCallId(), "hangup");
-              }
-            });
+    String callId = RtcRooms.idOf(e.room(), RtcRooms.CALL_PREFIX);
+    if (sfuSessionForRoom(e.room()).isEmpty()) {
+      return;
+    }
+    Instant leftAt = Instant.now();
+    CallSession s =
+        calls
+            .updateActive(
+                callId,
+                session -> {
+                  CallSession.Participant p = participant(session, e.identity());
+                  if (p == null || p.getLeftAt() != null) {
+                    return false; // unknown, or already left through call.leave
+                  }
+                  if (p.getSid() != null
+                      && e.participantSid() != null
+                      && !p.getSid().equals(e.participantSid())) {
+                    return false; // an older session, kicked when they rejoined elsewhere
+                  }
+                  p.setLeftAt(leftAt);
+                  return true;
+                })
+            .orElse(null);
+    if (s == null) {
+      return;
+    }
+    calls.broadcastRoster(s);
+    busy.clear(e.identity(), callId);
+    if ("direct".equals(s.getKind())) {
+      // Gone without hanging up: a dropped connection or a killed app — unless the same person
+      // comes back (rejoin, full reconnect) within the grace period.
+      String identity = e.identity();
+      String sid = e.participantSid();
+      timers.after(RECONNECT_GRACE, () -> endIfStillGone(callId, identity, sid));
+    } else if (s.getParticipants().stream().allMatch(x -> x.getLeftAt() != null)) {
+      calls.endCall(callId, "hangup");
+    }
   }
 
   @Override
@@ -274,7 +319,7 @@ public class SfuCallService implements RtcRoomEventHandler {
   private Optional<CallSession> sfuSessionForRoom(String room) {
     return calls
         .activeSession(RtcRooms.idOf(room, RtcRooms.CALL_PREFIX))
-        .filter(CallService::isSfu);
+        .filter(CallSessions::isSfu);
   }
 
   private static CallSession.Participant participant(CallSession s, String userId) {
@@ -287,7 +332,7 @@ public class SfuCallService implements RtcRoomEventHandler {
   private Optional<CallSession> sfuSessionFor(String userId, String callId) {
     return calls
         .activeSession(callId)
-        .filter(CallService::isSfu)
+        .filter(CallSessions::isSfu)
         .filter(s -> calls.membersOf(s.getConversationId()).contains(userId));
   }
 

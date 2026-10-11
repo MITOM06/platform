@@ -74,6 +74,11 @@ export class CallSummaryService {
   async summarize(msg: CallSummarizeMessage): Promise<void> {
     const { callId, conversationId } = msg;
 
+    // call:summarize is pub/sub, so every instance receives it: only the one that
+    // claims the call pays for the model call and publishes the result.
+    const claimed = await this.redis.set(`call:summarize:claim:${callId}`, '1', 'EX', 3600, 'NX');
+    if (claimed !== 'OK') return;
+
     const segments = await this.loadSegments(callId);
     if (segments.length === 0) {
       this.logger.log(`No transcript for call ${callId}; skipping summary.`);

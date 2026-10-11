@@ -3,6 +3,7 @@ package com.platform.chatservice.controller;
 import com.platform.chatservice.dto.CallTranscriptDto;
 import com.platform.chatservice.dto.WebRTCSignalDto;
 import com.platform.chatservice.service.CallService;
+import com.platform.chatservice.service.CallTranscriptService;
 import com.platform.chatservice.service.SfuCallService;
 import java.security.Principal;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class CallController {
 
   private final CallService callService;
   private final SfuCallService sfuCallService;
+  private final CallTranscriptService callTranscriptService;
 
   @MessageMapping("/call.start")
   public void start(@Payload WebRTCSignalDto dto, Principal principal) {
@@ -66,6 +68,7 @@ public class CallController {
 
   @MessageMapping("/call.transcript")
   public void transcript(@Payload CallTranscriptDto dto, Principal principal) {
-    callService.appendTranscript(principal.getName(), dto.getCallId(), dto.getText(), dto.getTs());
+    callTranscriptService.appendTranscript(
+        principal.getName(), dto.getCallId(), dto.getText(), dto.getTs());
   }
 }

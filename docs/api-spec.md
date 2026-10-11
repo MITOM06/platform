@@ -889,4 +889,17 @@ for the whole call; `mesh` (default) keeps the routes above unchanged.
   session still ringing for that caller in that conversation stops ringing (no end, no call log);
   the session that answered is no longer ringing and ignores it. Older apps ignore the type.
 
+- `/user/queue/webrtc` `call-accepted { callId, conversationId, senderId: <callee> }` to the caller when
+  the callee answers (sfu): the caller stops its own ring timer then, not when the callee reaches the
+  room. `call-merged { callId, conversationId, senderId, media, transport, kind }` to someone whose
+  `call.start` (with `merge: true`) found the other person already calling them: join that call.
+
+**Who may signal (all transports).** `/app/call.start` and `/app/call.join` only work for a member of
+the conversation; `/app/call.transcript` only for a member of a running call's conversation.
+`/app/call.offer|answer|ice|end|state` without a `callId` must name the `conversationId` both ends
+belong to, and are dropped when the target has blocked the sender; with a `callId` (group mesh) both
+ends must belong to that running call's conversation. A 1-on-1 `call.start` blocked in either
+direction answers `call-blocked`. Anything that does not qualify is dropped silently.
+`kind` comes from the conversation type (`direct` / `group`), so a two-member group is a group call.
+
 **LiveKit webhook:** `POST /api/rtc/livekit/webhook` (no user JWT; signed by the LiveKit API secret).

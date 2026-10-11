@@ -181,3 +181,29 @@ describe('CallSummaryService — pure helpers', () => {
     });
   });
 });
+
+describe('CallSummaryService — one summary per call across instances', () => {
+  // call:summarize is pub/sub: every ai-service instance receives it. Without a
+  // claim each one would pay for its own model call (chat-service then drops the
+  // duplicates, but the tokens are spent).
+  it('only the instance that claims the call reads the transcript', async () => {
+    const redis = {
+      set: jest.fn().mockResolvedValueOnce('OK').mockResolvedValueOnce(null),
+      lrange: jest.fn().mockResolvedValue([]),
+    };
+    const config = { get: jest.fn().mockReturnValue(undefined) };
+    const svc = new CallSummaryService(
+      redis as never,
+      {} as never,
+      {} as never,
+      { publishToChannel: jest.fn() } as never,
+      config as never,
+    );
+
+    await svc.summarize({ callId: 'c1', conversationId: 'conv' });
+    await svc.summarize({ callId: 'c1', conversationId: 'conv' });
+
+    expect(redis.set).toHaveBeenCalledWith('call:summarize:claim:c1', '1', 'EX', 3600, 'NX');
+    expect(redis.lrange).toHaveBeenCalledTimes(1);
+  });
+});

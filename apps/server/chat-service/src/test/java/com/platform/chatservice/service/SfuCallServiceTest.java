@@ -39,6 +39,18 @@ class SfuCallServiceTest {
     session = session("direct", "alice", "bob");
   }
 
+  /** {@code calls.updateActive} runs the change on {@code s}, as CallSessionWriter would. */
+  @SuppressWarnings("unchecked")
+  private void writable(CallSession s) {
+    when(calls.updateActive(
+            org.mockito.ArgumentMatchers.eq(s.getCallId()), org.mockito.ArgumentMatchers.any()))
+        .thenAnswer(
+            inv -> {
+              java.util.function.Predicate<CallSession> change = inv.getArgument(1);
+              return change.test(s) ? Optional.of(s) : Optional.empty();
+            });
+  }
+
   private CallSession session(String kind, String startedBy, String... others) {
     List<CallSession.Participant> list = new ArrayList<>();
     list.add(CallSession.Participant.builder().userId(startedBy).joinedAt(Instant.now()).build());
@@ -55,7 +67,7 @@ class SfuCallServiceTest {
     members.addAll(List.of(others));
     when(calls.activeSession("c1")).thenReturn(Optional.of(s));
     when(calls.membersOf("conv")).thenReturn(members);
-    when(calls.saveIfActive(s)).thenReturn(true);
+    writable(s);
     return s;
   }
 
@@ -186,7 +198,8 @@ class SfuCallServiceTest {
               assertThat(p.getAcceptedAt()).isNotNull();
               assertThat(p.getJoinedAt()).isNull();
             });
-    verify(calls).saveIfActive(session);
+    verify(calls)
+        .updateActive(org.mockito.ArgumentMatchers.eq("c1"), org.mockito.ArgumentMatchers.any());
   }
 
   @Test
@@ -205,5 +218,37 @@ class SfuCallServiceTest {
     service.decline("alice", "c1", "declined"); // caller declining their own call
 
     verify(calls, never()).endCall(anyString(), anyString());
+  }
+
+  /**
+   * The call ended (caller hung up, ring timeout) between the accept being written and the busy
+   * mark: the end cleared every member first, so a late mark stayed for the 6-hour safety TTL.
+   */
+  @Test
+  void anAcceptRacingTheEndDoesNotLeaveTheCalleeBusy() {
+    when(calls.activeSession("c1")).thenReturn(Optional.of(session), Optional.empty());
+
+    service.accept("bob", "c1");
+
+    verify(busy).markBusy("bob", "c1");
+    verify(busy).clear("bob", "c1");
+  }
+
+  /**
+   * The caller's app stopped its 45 s ring timer only once the callee showed up in the LiveKit
+   * room; an answer in the last seconds (token fetch + connect) was cancelled by that timer.
+   */
+  @Test
+  void acceptTellsTheCallerSoItsRingTimerStops() {
+    service.accept("bob", "c1");
+
+    assertThat(sentTo("alice"))
+        .singleElement()
+        .satisfies(
+            s -> {
+              assertThat(s.getType()).isEqualTo("call-accepted");
+              assertThat(s.getCallId()).isEqualTo("c1");
+              assertThat(s.getSenderId()).isEqualTo("bob");
+            });
   }
 }
