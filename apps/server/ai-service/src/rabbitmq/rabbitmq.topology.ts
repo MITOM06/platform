@@ -1,4 +1,8 @@
-import { RabbitMQConfig } from '@golevelup/nestjs-rabbitmq';
+import {
+  MessageHandlerErrorBehavior,
+  MessageHandlerOptions,
+  RabbitMQConfig,
+} from '@golevelup/nestjs-rabbitmq';
 
 // Must match chat-service RabbitMqConfig — queue arguments are part of the
 // queue's identity, so a mismatch fails the declaration with PRECONDITION_FAILED.
@@ -13,6 +17,21 @@ export const AI_QUEUE_ARGUMENTS = {
   'x-dead-letter-exchange': AI_DLX,
   'x-dead-letter-routing-key': AI_DLQ_ROUTING_KEY,
   'x-message-ttl': 30_000,
+};
+
+/**
+ * The ai.requests subscription. AiConsumer registers it itself, without waiting
+ * for the broker (see AiConsumer.onApplicationBootstrap).
+ */
+export const AI_SUBSCRIPTION: MessageHandlerOptions = {
+  exchange: AI_EXCHANGE,
+  routingKey: AI_ROUTING_KEY,
+  queue: AI_QUEUE,
+  queueOptions: { durable: true, arguments: AI_QUEUE_ARGUMENTS },
+  // The library default is REQUEUE: a failed request was redelivered ~1/s until
+  // its 30s TTL ran out — dozens of model calls, AI_STREAM_ERROR events and
+  // rate-limit hits per user message. NACK without requeue dead-letters it once.
+  errorBehavior: MessageHandlerErrorBehavior.NACK,
 };
 
 /**
@@ -41,5 +60,9 @@ export function buildRabbitConfig(uri: string): RabbitMQConfig {
       },
     ],
     connectionInitOptions: { wait: false },
+    // The library awaits each handler's consumer setup in onApplicationBootstrap,
+    // and that waits for a channel: with the broker down the HTTP server never
+    // started. AiConsumer subscribes itself instead.
+    registerHandlers: false,
   };
 }

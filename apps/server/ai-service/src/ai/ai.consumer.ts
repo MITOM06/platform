@@ -1,32 +1,37 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { MessageHandlerErrorBehavior, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { ConsumeMessage } from 'amqplib';
 import { propagation, context, trace, SpanStatusCode } from '@opentelemetry/api';
 import { AiService, AiRequestPayload } from './ai.service';
-import {
-  AI_EXCHANGE,
-  AI_QUEUE,
-  AI_QUEUE_ARGUMENTS,
-  AI_ROUTING_KEY,
-} from '../rabbitmq/rabbitmq.topology';
+import { AI_QUEUE, AI_SUBSCRIPTION } from '../rabbitmq/rabbitmq.topology';
 
 @Injectable()
-export class AiConsumer {
+export class AiConsumer implements OnApplicationBootstrap {
   private readonly logger = new Logger(AiConsumer.name);
   private readonly tracer = trace.getTracer('ai-service');
 
-  constructor(private readonly aiService: AiService) {}
+  constructor(
+    private readonly aiService: AiService,
+    private readonly amqp: AmqpConnection,
+  ) {}
 
-  @RabbitSubscribe({
-    exchange: AI_EXCHANGE,
-    routingKey: AI_ROUTING_KEY,
-    queue: AI_QUEUE,
-    queueOptions: { durable: true, arguments: AI_QUEUE_ARGUMENTS },
-    // The library default is REQUEUE: a failed request was redelivered ~1/s until
-    // its 30s TTL ran out — dozens of model calls, AI_STREAM_ERROR events and
-    // rate-limit hits per user message. NACK without requeue dead-letters it once.
-    errorBehavior: MessageHandlerErrorBehavior.NACK,
-  })
+  /**
+   * Subscribe to ai.requests without waiting for it: the setup runs whenever
+   * the broker connects — now, after an outage, and again after every
+   * reconnect. Waiting for it (the library's own handler registration) kept the
+   * HTTP server from starting while RabbitMQ was unreachable.
+   */
+  onApplicationBootstrap(): void {
+    this.amqp
+      .createSubscriber<AiRequestPayload>(
+        (payload, amqpMsg) => this.handleAiRequest(payload as AiRequestPayload, amqpMsg as ConsumeMessage),
+        AI_SUBSCRIPTION,
+        'AiConsumer.handleAiRequest',
+      )
+      .then(() => this.logger.log(`Consuming ${AI_QUEUE}`))
+      .catch((err) => this.logger.error(`Could not subscribe to ${AI_QUEUE}`, err));
+  }
+
   async handleAiRequest(
     payload: AiRequestPayload,
     amqpMsg: ConsumeMessage,

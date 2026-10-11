@@ -3,6 +3,31 @@
 All notable changes to PON. One version per promotion to `main`; web, mobile and the
 NestJS services share the product version (`apps/client/pubspec.yaml`, `apps/*/package.json`).
 
+## 1.4.1 — 2026-10-11
+
+One branch, `fix/ai-start-without-rabbitmq`: the AI assistant no longer takes the rest of
+ai-service down with RabbitMQ, and an AI request that cannot be delivered is reported instead of
+lost. Found while production's CloudAMQP vhost was missing after 1.4.0 shipped.
+
+### ai-service starts without RabbitMQ
+
+- **ai-service serves HTTP while the broker is unreachable.** It used to wait for the `ai.requests`
+  consumer before listening, so with RabbitMQ down `/health`, the usage and quota screens, AI
+  sessions and the confirm / cancel buttons of action cards all answered 502, and the Mac mini
+  redeploy rolled every deploy back. The consumer now attaches by itself whenever the broker
+  connects — at boot, after an outage, and after every reconnect — with no restart. The library
+  logs "Skipping RabbitMQ Handlers"; `Consuming ai.requests` confirms the subscription.
+
+### AI requests that cannot be delivered
+
+- **The asker hears at once that the assistant is unavailable.** When chat-service could not hand
+  an AI request to ai-service (RabbitMQ down, history lookup failed) the error was swallowed: no
+  log line, and the asker watched a reply bubble that never answered. Now chat-service logs a
+  warning and sends `AI_STREAM_ERROR` / `AI_UNAVAILABLE` on the conversation's AI stream, which web
+  and mobile already show as "AI is temporarily unavailable".
+
+Versions: 1.4.1 (web, NestJS services), 1.4.1+6 (mobile, unchanged apart from the version).
+
 ## 1.4.0 — 2026-10-11
 
 Two branches tested together on `dev`: `feat/new-login-on-main` — Hoàng Dũng's sign-in work
