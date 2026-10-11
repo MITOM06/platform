@@ -3767,9 +3767,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiActionFieldBcc => '密送';
 
   @override
-  String get aiActionFieldBody => '正文';
-
-  @override
   String get aiActionFieldAttendees => '参与者';
 
   @override

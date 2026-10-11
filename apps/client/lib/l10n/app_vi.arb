@@ -1336,7 +1336,6 @@
   "aiActionFieldWhen": "Thời gian",
   "aiActionFieldCc": "CC",
   "aiActionFieldBcc": "BCC",
-  "aiActionFieldBody": "Nội dung",
   "aiActionFieldAttendees": "Khách mời",
   "aiActionStatusConfirmed": "Đã thực hiện",
   "aiActionStatusCancelled": "Đã huỷ",

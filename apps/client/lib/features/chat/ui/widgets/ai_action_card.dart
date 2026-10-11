@@ -174,11 +174,6 @@ class _AiActionCardState extends ConsumerState<AiActionCard> {
                   line.field == ActionSummaryField.when
                       ? formatActionWhen(line.value, line.end, locale)
                       : line.value,
-                  // The start of an email body: a few lines, not the letter.
-                  maxLines: line.field == ActionSummaryField.body ? 3 : null,
-                  overflow: line.field == ActionSummaryField.body
-                      ? TextOverflow.ellipsis
-                      : null,
                   style: TextStyle(color: onSurface, fontSize: 12),
                 ),
               ),
@@ -306,8 +301,6 @@ String aiActionFieldLabel(AppLocalizations l10n, ActionSummaryLine line) {
       return l10n.aiActionFieldBcc;
     case ActionSummaryField.subject:
       return l10n.aiActionFieldSubject;
-    case ActionSummaryField.body:
-      return l10n.aiActionFieldBody;
     case ActionSummaryField.title:
       return l10n.aiActionFieldTitle;
     case ActionSummaryField.when:

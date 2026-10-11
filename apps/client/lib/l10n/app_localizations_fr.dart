@@ -3985,9 +3985,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiActionFieldBcc => 'Cci';
 
   @override
-  String get aiActionFieldBody => 'Message';
-
-  @override
   String get aiActionFieldAttendees => 'Invités';
 
   @override

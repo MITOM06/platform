@@ -1336,7 +1336,6 @@
   "aiActionFieldWhen": "일시",
   "aiActionFieldCc": "참조",
   "aiActionFieldBcc": "숨은 참조",
-  "aiActionFieldBody": "본문",
   "aiActionFieldAttendees": "참석자",
   "aiActionStatusConfirmed": "완료됨",
   "aiActionStatusCancelled": "취소됨",

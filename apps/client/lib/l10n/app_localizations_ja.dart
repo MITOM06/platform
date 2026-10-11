@@ -3811,9 +3811,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aiActionFieldBcc => 'BCC';
 
   @override
-  String get aiActionFieldBody => '本文';
-
-  @override
   String get aiActionFieldAttendees => '参加者';
 
   @override

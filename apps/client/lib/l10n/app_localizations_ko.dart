@@ -3811,9 +3811,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiActionFieldBcc => '숨은 참조';
 
   @override
-  String get aiActionFieldBody => '본문';
-
-  @override
   String get aiActionFieldAttendees => '참석자';
 
   @override

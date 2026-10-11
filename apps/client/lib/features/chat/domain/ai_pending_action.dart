@@ -38,11 +38,13 @@ class AiPendingAction {
   final String provider;
 
   /// Humanized, non-secret description built by ai-service:
-  /// `{kind: send_email|draft_email, to?, cc?, bcc?, subject?, bodyPreview?}`,
+  /// `{kind: send_email|draft_email, to?, cc?, bcc?, subject?}` (never the
+  /// body — the card is visible to the whole group),
   /// `{kind: create_event|update_event, title?, start?, end?, attendees?}`,
   /// `{kind: create_page|update_page, title?}`,
   /// `{kind: generic, tool, fields?: [{label, value}]}` (`label` humanized by
-  /// the server). Older servers send none of the optional fields.
+  /// the server, `value` ≤ 120 chars, ≤ 6 rows). Older servers send none of
+  /// the optional fields.
   final Map<String, dynamic> summary;
   final AiActionStatus status;
   final DateTime? expiresAt;

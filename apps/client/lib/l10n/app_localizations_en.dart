@@ -3929,9 +3929,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiActionFieldBcc => 'Bcc';
 
   @override
-  String get aiActionFieldBody => 'Message';
-
-  @override
   String get aiActionFieldAttendees => 'Guests';
 
   @override

@@ -1,6 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:platform_client/features/auth/domain/auth_provider.dart';
+import 'package:platform_client/features/auth/domain/auth_state.dart';
+import 'package:platform_client/features/chat/domain/conversations_realtime_handlers.dart'
+    show notificationBodyText;
+import 'package:platform_client/features/integrations/state/integrations_provider.dart';
 import 'package:platform_client/features/chat/domain/ai_action_card_logic.dart';
 import 'package:platform_client/features/chat/domain/chat_ai_stream_handler.dart';
 import 'package:platform_client/features/chat/domain/chat_state.dart';
@@ -43,6 +49,11 @@ Future<BuildContext> _context(WidgetTester tester,
     ),
   ));
   return ctx;
+}
+
+class _NoAuth extends AuthNotifier {
+  @override
+  Future<AuthState> build() async => const AuthUnauthenticated();
 }
 
 ConversationModel _conv(String id, {int unread = 0}) => ConversationModel(
@@ -121,23 +132,46 @@ void main() {
     AiPendingAction action(Map<String, dynamic> summary) =>
         AiPendingAction(id: 'a1', summary: summary);
 
-    test('an email shows cc, bcc and the start of the body', () {
+    test('an email shows cc and bcc — never its body, even if sent', () {
       final lines = actionSummaryLines(action({
         'kind': 'send_email',
         'to': 'a@x.com',
         'cc': 'b@x.com',
         'bcc': 'c@x.com',
         'subject': 'Hi',
-        'bodyPreview': 'Hello\nthere',
+        // Group privacy: the server never sends these; if one ever arrives
+        // it is still not shown.
+        'bodyPreview': 'Secret salary numbers',
+        'body': 'Secret salary numbers',
       }));
       expect(lines.map((l) => l.field), [
         ActionSummaryField.to,
         ActionSummaryField.cc,
         ActionSummaryField.bcc,
         ActionSummaryField.subject,
-        ActionSummaryField.body,
       ]);
-      expect(lines.last.value, 'Hello there');
+      expect(lines.map((l) => l.value), isNot(contains(contains('Secret'))));
+    });
+
+    testWidgets('the rendered card never shows an email body', (tester) async {
+      await _context(tester,
+          child: ProviderScope(
+            overrides: [
+              authNotifierProvider.overrideWith(_NoAuth.new),
+              connectorNamesProvider.overrideWithValue(const {}),
+            ],
+            child: const AiActionCard(
+              action: AiPendingAction(id: 'a1', summary: {
+                'kind': 'draft_email',
+                'to': 'a@x.com',
+                'bodyPreview': 'Secret salary numbers',
+                'body': 'Secret salary numbers',
+              }),
+            ),
+          ));
+      await tester.pump();
+      expect(find.text('a@x.com'), findsOneWidget);
+      expect(find.textContaining('Secret'), findsNothing);
     });
 
     test('an event shows its attendees', () {
@@ -173,6 +207,30 @@ void main() {
       expect(lines.single.value, 'Write report');
     });
 
+    test('a generic action shows at most 6 rows, values capped at 120', () {
+      final lines = actionSummaryLines(action({
+        'kind': 'generic',
+        'tool': 'Post message',
+        'fields': [
+          for (var i = 0; i < 9; i++) {'label': 'Field $i', 'value': 'v$i'},
+        ],
+      }));
+      expect(lines.map((l) => l.label),
+          ['Field 0', 'Field 1', 'Field 2', 'Field 3', 'Field 4', 'Field 5']);
+
+      final long = actionSummaryLines(action({
+        'kind': 'generic',
+        'fields': [
+          {'label': 'Channel', 'value': 'x' * 300},
+          {'label': 'Due date', 'value': 42}, // not a string: malformed
+          {'label': 7, 'value': 'y'}, // not a string: malformed
+        ],
+      }));
+      expect(long, hasLength(1));
+      expect(long.single.label, 'Channel');
+      expect(long.single.value.length, lessThanOrEqualTo(120));
+    });
+
     test('older servers without the new fields show what they did', () {
       final lines = actionSummaryLines(
           action({'kind': 'send_email', 'to': 'a@x.com', 'subject': 'Hi'}));
@@ -185,8 +243,6 @@ void main() {
           l10n.aiActionFieldCc);
       expect(aiActionFieldLabel(l10n, const ActionSummaryLine(ActionSummaryField.bcc, 'x')),
           l10n.aiActionFieldBcc);
-      expect(aiActionFieldLabel(l10n, const ActionSummaryLine(ActionSummaryField.body, 'x')),
-          l10n.aiActionFieldBody);
       expect(
           aiActionFieldLabel(l10n,
               const ActionSummaryLine(ActionSummaryField.attendees, 'x')),
@@ -309,6 +365,39 @@ void main() {
 
     test('no conversation, no notice', () {
       expect(IncomingMessageNotice.fromJson({'type': 'NEW_MESSAGE'}), isNull);
+    });
+
+    testWidgets('its banner is humanized and names the actor',
+        (tester) async {
+      final ctx = await _context(tester);
+      expect(
+          notificationBodyText(ctx,
+              name: 'Bob',
+              isMention: false,
+              content: 'system.member.left',
+              messageType: 'system',
+              senderId: 'u2',
+              actorName: 'Bob'),
+          l10n.sysMemberLeft('Bob'));
+      // Sent by "system" (no actor): the actor-less sentence.
+      expect(
+          notificationBodyText(ctx,
+              name: l10n.conversationDefault,
+              isMention: false,
+              content: 'system.member.left',
+              messageType: 'system',
+              senderId: 'system'),
+          l10n.sysMemberLeftNoActor);
+      // An unknown code: a generic label, never the raw code.
+      final unknown = notificationBodyText(ctx,
+          name: 'Bob',
+          isMention: false,
+          content: 'system.member.added:64b7f0c2a1b2c3d4e5f60718',
+          messageType: 'system',
+          senderId: 'u2',
+          actorName: 'Bob');
+      expect(unknown, isNot(contains('system.')));
+      expect(unknown, isNot(contains('64b7f0c2')));
     });
   });
 }

@@ -3960,9 +3960,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get aiActionFieldBcc => 'CCO';
 
   @override
-  String get aiActionFieldBody => 'Mensaje';
-
-  @override
   String get aiActionFieldAttendees => 'Invitados';
 
   @override

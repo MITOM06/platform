@@ -1336,7 +1336,6 @@
   "aiActionFieldWhen": "日時",
   "aiActionFieldCc": "CC",
   "aiActionFieldBcc": "BCC",
-  "aiActionFieldBody": "本文",
   "aiActionFieldAttendees": "参加者",
   "aiActionStatusConfirmed": "完了",
   "aiActionStatusCancelled": "キャンセル済み",

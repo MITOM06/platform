@@ -7189,12 +7189,6 @@ abstract class AppLocalizations {
   /// **'Bcc'**
   String get aiActionFieldBcc;
 
-  /// No description provided for @aiActionFieldBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Message'**
-  String get aiActionFieldBody;
-
   /// No description provided for @aiActionFieldAttendees.
   ///
   /// In en, this message translates to:

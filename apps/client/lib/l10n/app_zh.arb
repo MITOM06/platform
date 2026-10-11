@@ -1336,7 +1336,6 @@
   "aiActionFieldWhen": "时间",
   "aiActionFieldCc": "抄送",
   "aiActionFieldBcc": "密送",
-  "aiActionFieldBody": "正文",
   "aiActionFieldAttendees": "参与者",
   "aiActionStatusConfirmed": "已完成",
   "aiActionStatusCancelled": "已取消",

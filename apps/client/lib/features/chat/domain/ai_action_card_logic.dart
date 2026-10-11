@@ -114,18 +114,22 @@ AiActionErrorOutcome aiActionErrorOutcome(Object error) {
 }
 
 /// One "label: value" row under the card headline. [custom] rows carry the
-/// server's own humanized label (generic actions).
+/// server's own humanized label (generic actions). There is deliberately no
+/// body row: the card is visible to the whole group, so an email's body is
+/// never shown (the server never sends it either).
 enum ActionSummaryField {
   to,
   cc,
   bcc,
   subject,
-  body,
   title,
   when,
   attendees,
   custom,
 }
+
+/// Most rows a generic action's `fields` adds to the card.
+const kMaxGenericActionFields = 6;
 
 class ActionSummaryLine {
   final ActionSummaryField field;
@@ -160,7 +164,7 @@ List<ActionSummaryLine> actionSummaryLines(AiPendingAction action) {
       push(ActionSummaryField.cc, s['cc']);
       push(ActionSummaryField.bcc, s['bcc']);
       push(ActionSummaryField.subject, s['subject']);
-      push(ActionSummaryField.body, s['bodyPreview'], max: 300);
+    // Never the body (`body` / `bodyPreview`), even if one were sent.
     case 'create_event':
     case 'update_event':
       push(ActionSummaryField.title, s['title']);
@@ -174,19 +178,22 @@ List<ActionSummaryLine> actionSummaryLines(AiPendingAction action) {
     case 'update_page':
       push(ActionSummaryField.title, s['title']);
     default: // generic: `fields: [{label, value}]`
-      lines.addAll(_genericFields(s['fields']));
+      lines.addAll(_genericFields(s['fields']).take(kMaxGenericActionFields));
   }
   return lines;
 }
 
-/// "label: value" rows of a generic action. Entries without a label or a
-/// value, and values that are a raw id, are left out.
+/// "label: value" rows of a generic action: `label` is humanized by the
+/// server ("Channel", "Due date") and shown as is; `value` is a string (a
+/// list arrives joined with ", "), at most 120 characters. Malformed rows —
+/// not a map, a non-string or empty label / value — and values that are a
+/// raw id are left out.
 Iterable<ActionSummaryLine> _genericFields(Object? raw) sync* {
   if (raw is! List) return;
   for (final f in raw) {
     if (f is! Map) continue;
-    final label = summaryText(f['label'], max: 40);
-    final value = summaryText(f['value']);
+    final label = summaryText(f['label'], max: 60);
+    final value = summaryText(f['value'], max: 120);
     if (label == null || value == null || looksLikeRawId(value)) continue;
     yield ActionSummaryLine(ActionSummaryField.custom, value, label: label);
   }

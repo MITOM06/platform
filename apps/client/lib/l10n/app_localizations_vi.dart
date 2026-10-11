@@ -3909,9 +3909,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get aiActionFieldBcc => 'BCC';
 
   @override
-  String get aiActionFieldBody => 'Nội dung';
-
-  @override
   String get aiActionFieldAttendees => 'Khách mời';
 
   @override

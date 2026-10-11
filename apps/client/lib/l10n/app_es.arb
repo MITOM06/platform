@@ -1336,7 +1336,6 @@
   "aiActionFieldWhen": "Cuándo",
   "aiActionFieldCc": "CC",
   "aiActionFieldBcc": "CCO",
-  "aiActionFieldBody": "Mensaje",
   "aiActionFieldAttendees": "Invitados",
   "aiActionStatusConfirmed": "Hecho",
   "aiActionStatusCancelled": "Cancelado",

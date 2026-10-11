@@ -8,6 +8,7 @@ import '../../../core/router/app_router.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../ui/widgets/message_preview_text.dart';
+import '../ui/widgets/system_message_text.dart' show isSystemSender;
 import 'call_rules.dart';
 import '../../../core/api/token_manager.dart';
 import '../../auth/domain/auth_provider.dart';
@@ -173,14 +174,17 @@ bool looksLikeRawId(String value) =>
 /// event pushed `system.nickname.changed:<userId>:<value>`, and a meeting summary pushed its
 /// JSON — onto the lock screen, where the user cannot even dismiss it by scrolling past
 /// (.claude/rules/no-raw-system-data-in-ui.md). Everything now goes through the same
-/// sanitizer the reply quotes and the conversation list use. System events carry no
-/// meaningful sender, so they drop the `"<name>: "` prefix the way web does.
+/// sanitizer the reply quotes and the conversation list use. System events drop the
+/// `"<name>: "` prefix the way web does; their sentence names the actor ([senderId],
+/// resolved to [actorName]) when known, else it is the actor-less one.
 String notificationBodyText(
   BuildContext context, {
   required String name,
   required bool isMention,
   String? content,
   String? messageType,
+  String? senderId,
+  String? actorName,
 }) {
   final l10n = context.l10n;
   if (isMention) return l10n.mentionNotificationBody(name);
@@ -189,8 +193,18 @@ String notificationBodyText(
   if (messageType == 'file') return '$name: [${l10n.attachFile}]';
   if (content == null || content.isEmpty) return l10n.newNotificationBody(name);
 
-  final preview = messagePreviewFromContent(context, content);
-  return content.startsWith('system.') ? preview : '$name: $preview';
+  if (!content.startsWith('system.')) {
+    return '$name: ${messagePreviewFromContent(context, content)}';
+  }
+  final actor = actorName?.trim() ?? '';
+  final actorId = senderId ?? '';
+  if (actor.isEmpty || actorId.isEmpty || isSystemSender(actorId)) {
+    return messagePreviewFromContent(context, content);
+  }
+  // Only the actor's name is known here; anyone else stays generic.
+  return messagePreviewFromContent(context, content,
+      senderId: actorId,
+      resolveName: (id) => id == actorId ? actor : l10n.someone);
 }
 
 /// Resolves [senderId] to a display name then shows the top in-app banner and
@@ -238,6 +252,9 @@ Future<void> showIncomingMessageBanner(
     isMention: isMention,
     content: content,
     messageType: messageType,
+    // A system notice ("Bob left the group") names its actor.
+    senderId: senderId,
+    actorName: resolvedName,
   );
 
   final title =
