@@ -1,11 +1,11 @@
 # PON on a Mac mini — compute here, data stays managed.
 #
-# This is compose.prod.yml with the data tier removed. mongo / redis / rabbitmq
-# / qdrant are NOT started: the deployment keeps using the same Atlas, Upstash,
-# CloudAMQP and Qdrant Cloud instances Cloud Run used, so no migration and no
-# second copy of the data. Every one of those addresses is therefore required —
-# there is no container to fall back to, and a silent fallback is what wired a
-# green revision to nothing once already.
+# This is compose.prod.yml with most of the data tier removed. mongo / redis
+# are NOT started: the deployment keeps using the same Atlas and Upstash
+# instances Cloud Run used, so no migration and no second copy of the data.
+# Those addresses are therefore required — there is no container to fall back
+# to, and a silent fallback is what wired a green revision to nothing once
+# already. qdrant and rabbitmq DO run here (see their services for why).
 #
 # The web app is NOT here either; it stays on Vercel and calls this host
 # cross-origin, exactly as it called Cloud Run.
@@ -96,15 +96,18 @@ services:
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?required}
       SPRING_DATA_MONGODB_URI: ${MONGODB_URI:?required}
       SPRING_DATA_REDIS_URL: ${REDIS_URL:?required}
-      SPRING_RABBITMQ_HOST: ${RABBITMQ_HOST:?set RABBITMQ_HOST to the CloudAMQP host}
-      SPRING_RABBITMQ_PORT: ${RABBITMQ_PORT:-5671}
-      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:?required}
+      # The local `rabbitmq` service over app-net — plain AMQP, it never leaves
+      # the compose network. Point RABBITMQ_HOST/PORT/SSL at a managed broker
+      # only if you move off the local one.
+      SPRING_RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      SPRING_RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-pon}
       SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?required}
-      # CloudAMQP gives you a *named* vhost. Leaving this at the broker default
-      # '/' publishes into a vhost with no consumers — which is how AI went
-      # silent in production once already.
-      SPRING_RABBITMQ_VIRTUAL_HOST: ${RABBITMQ_VHOST:?required — CloudAMQP vhost, not '/'}
-      SPRING_RABBITMQ_SSL_ENABLED: "true"
+      # Must be the vhost ai-service consumes from (the one in RABBITMQ_URL).
+      # Leaving this at the broker default '/' publishes into a vhost with no
+      # consumers — which is how AI went silent in production once already.
+      SPRING_RABBITMQ_VIRTUAL_HOST: ${RABBITMQ_VHOST:-pon}
+      SPRING_RABBITMQ_SSL_ENABLED: ${RABBITMQ_SSL:-false}
       ALLOWED_ORIGINS: ${WEB_ORIGIN:?required}
       BOTFACTORY_BASE_URL: ${BOTFACTORY_BASE_URL:-}
       BOTFACTORY_WORKER_TOKEN: ${BOTFACTORY_WORKER_TOKEN:-}
@@ -125,6 +128,9 @@ services:
       MAIL_USER: ${MAIL_USER:-}
       MAIL_PASS: ${MAIL_PASS:-}
       FIREBASE_SERVICE_ACCOUNT_BASE64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:-}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
       interval: 20s
@@ -143,7 +149,7 @@ services:
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?required}
       MONGODB_URI: ${MONGODB_URI:?required}
       REDIS_URL: ${REDIS_URL:?required}
-      RABBITMQ_URL: ${RABBITMQ_URL:?set RABBITMQ_URL to the full amqps:// CloudAMQP URL}
+      RABBITMQ_URL: ${RABBITMQ_URL:?set RABBITMQ_URL, e.g. amqp://pon:<password>@rabbitmq:5672/pon}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?required}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-5}
       ANTHROPIC_FALLBACK_MODEL: ${ANTHROPIC_FALLBACK_MODEL:-claude-haiku-4-5-20251001}
@@ -179,6 +185,9 @@ services:
       CONNECTOR_INTERNAL_URL: http://connector-service:3003
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:?required}
       CORS_ORIGINS: ${WEB_ORIGIN:?required}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     # ai-service was the one service with no probe, so up.sh reported a healthy
     # stack while it sat in a Redis reconnect loop with port 3002 never opened.
     healthcheck:
@@ -305,11 +314,47 @@ services:
       start_period: 15s
     networks: [app-net]
 
+  # AI request queue (chat-service -> ai-service). Self-hosted for the same
+  # reason as qdrant: the free CloudAMQP instance was deleted on 2026-10-08 as
+  # "unused for 2 months" — a quiet demo deployment looks idle to them — and
+  # from then on every AI request failed with 530 NOT_ALLOWED on the vhost.
+  #
+  # No published ports, same reasoning as qdrant. The management plugin ships
+  # in this image but is only reachable from inside app-net
+  # (`docker exec ... rabbitmqctl` for anything operational).
+  #
+  # hostname is fixed because RabbitMQ keys its on-disk database by node name
+  # (rabbit@<hostname>); a random container hostname would orphan the volume
+  # on every recreate.
+  #
+  # RABBITMQ_DEFAULT_* only apply when the volume is first initialised. To
+  # change the password afterwards:
+  #   docker exec <container> rabbitmqctl change_password pon '<new>'
+  # Same Docker Hub caveat as qdrant; pull via mirror.gcr.io/library/rabbitmq.
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    <<: *restart
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-pon}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?required}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-pon}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    networks: [app-net]
+
 networks:
   app-net:
     driver: bridge
 
-# Qdrant is the only thing on this host that stores its own data; everything
-# else (Mongo, Redis, RabbitMQ) is managed off-machine.
+# qdrant and rabbitmq are the only things on this host that store their own
+# data; Mongo and Redis are managed off-machine.
 volumes:
   qdrant_data:
+  rabbitmq_data:
