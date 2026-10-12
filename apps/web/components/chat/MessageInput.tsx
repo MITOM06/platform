@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
@@ -18,7 +19,12 @@ import { useSenderDisplayName } from '@/lib/hooks/use-display-names'
 import { EmojiStickerPicker } from '@/components/chat/EmojiStickerPicker'
 import { MediaPreviewStrip } from '@/components/chat/MediaPreviewStrip'
 import {
-  ReplyBanner, EditBanner, RecordingBar, AttachMenu, SlashSuggestion, MentionPopover,
+  ReplyBanner,
+  EditBanner,
+  RecordingBar,
+  AttachMenu,
+  SlashSuggestion,
+  MentionPopover,
 } from '@/components/chat/MessageInputParts'
 import type { Message, MessageType, Conversation } from '@/lib/api/types'
 
@@ -57,9 +63,11 @@ export function MessageInput({
     conversation?.id,
     !!replyingTo && !replyIsOwn,
   )
+
   const [value, setValue] = useState('')
   const [sending, setSending] = useState(false)
   const [uploading, setUploading] = useState(false)
+
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
@@ -80,6 +88,7 @@ export function MessageInput({
     pendingAttachments,
     isAllHD,
     stageImages,
+    stageFiles,
     stageFile,
     removeAttachment,
     toggleAllHD,
@@ -88,8 +97,7 @@ export function MessageInput({
 
   const mention = useMentionAutocomplete({ conversation, value, setValue, textareaRef })
 
-  // Grow the textarea to fit content, capped at max-h-32 (128px). Driven by JS
-  // (not `field-sizing-content`) so the empty box doesn't grow to the placeholder.
+  // Grow the textarea to fit content, capped at max-h-32 (128px).
   const resizeTextarea = () => {
     const el = textareaRef.current
     if (!el) return
@@ -97,7 +105,7 @@ export function MessageInput({
     el.style.height = Math.min(el.scrollHeight, 128) + 'px'
   }
 
-  // Populate textarea when entering edit mode
+  // Populate textarea when entering edit mode.
   useEffect(() => {
     const timer = setTimeout(() => {
       if (editingMessage) {
@@ -108,10 +116,11 @@ export function MessageInput({
       }
       resizeTextarea()
     }, 0)
+
     return () => clearTimeout(timer)
   }, [editingMessage])
 
-  // Focus when starting a reply
+  // Focus when starting a reply.
   useEffect(() => {
     if (replyingTo) textareaRef.current?.focus()
   }, [replyingTo])
@@ -125,79 +134,130 @@ export function MessageInput({
 
     if (onTypingChange && !editingMessage) {
       onTypingChange(true)
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+      }
+
       typingTimeoutRef.current = setTimeout(() => onTypingChange(false), 3000)
     }
   }
 
-  // Send (or submit the edit of) a text message. The box is cleared ONLY on
-  // success — a failed send keeps the draft so nothing the user typed is lost.
+  // Paste images from the clipboard, such as screenshots copied with Snipping Tool.
+  // Normal text pasting continues to work as usual.
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    if (editingMessage || disabled || sending || uploading) return
+
+    const imageFiles = Array.from(e.clipboardData.items)
+      .filter(
+        (item) => item.kind === 'file' && item.type.startsWith('image/'),
+      )
+      .map((item) => item.getAsFile())
+      .filter((file): file is File => file !== null)
+
+    // If the clipboard doesn't contain an image, let the browser paste normally.
+    if (imageFiles.length === 0) return
+
+    e.preventDefault()
+
+    const result = stageFiles(imageFiles)
+
+    if (result.tooLarge) {
+      toast.error(t('uploadTooLarge'))
+    }
+  }
+
+  // Send (or submit the edit of) a text message.
+  // The box is cleared ONLY on success.
   const sendText = async (content: string) => {
     if (sending) return
+
     setSending(true)
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
+    }
+
     onTypingChange?.(false)
+
     try {
-      if (editingMessage && onEditSubmit) await onEditSubmit(content)
-      else await onSend(content, 'text')
+      if (editingMessage && onEditSubmit) {
+        await onEditSubmit(content)
+      } else {
+        await onSend(content, 'text')
+      }
+
       setValue('')
-      if (textareaRef.current) textareaRef.current.style.height = 'auto'
+
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto'
+      }
     } catch (err) {
-      if (!isReportedSendError(err)) toast.error(t('sendMessageError'))
+      if (!isReportedSendError(err)) {
+        toast.error(t('sendMessageError'))
+      }
     } finally {
       setSending(false)
       textareaRef.current?.focus()
     }
   }
 
-  // Stickers / quick reaction: the page already toasts a failure; just don't
-  // leave an unhandled rejection behind.
+  // Stickers / quick reaction.
   const sendQuick = (content: string, type: MessageType) => {
     onSend(content, type).catch((err) => {
-      if (!isReportedSendError(err)) toast.error(t('sendMessageError'))
+      if (!isReportedSendError(err)) {
+        toast.error(t('sendMessageError'))
+      }
     })
   }
 
   const handleSend = async () => {
-    // Staged attachments take priority: upload + send, then stop (text isn't
-    // sent in the same action — matches Messenger/Zalo).
+    // Staged attachments take priority over text.
     if (pendingAttachments.length > 0 && !editingMessage) {
       if (sending) return
+
       setSending(true)
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+      }
+
       onTypingChange?.(false)
+
       try {
-        // Sent items leave the strip one by one; whatever failed stays staged.
         await flushAttachments(onSend)
       } catch (err) {
         if (!isReportedSendError(err)) {
-          const tooLarge = err instanceof Error && err.message === FILE_TOO_LARGE
+          const tooLarge =
+            err instanceof Error && err.message === FILE_TOO_LARGE
+
           toast.error(tooLarge ? t('uploadTooLarge') : t('uploadError'))
         }
       } finally {
         setSending(false)
       }
+
       return
     }
 
     const content = value.trim()
     if (!content) return
+
     await sendText(content)
   }
 
-  // `/new` slash command: send it as a plain text message. ai-service intercepts
-  // it to start a fresh session (mirrors the AiSessionPanel "new" button).
+  // `/new` slash command.
   const sendSlashNew = () => sendText('/new')
 
-  // Show the `/new` suggestion only in 1-1 (direct) AI conversations, when the
-  // input is exactly '/', and not while editing or mentioning. In GROUP AI
-  // conversations a bare `/new` never starts a session (chat-service only routes
-  // `@AI`-mentioned messages), so we hide the suggestion there.
   const isDirectAiConversation =
     conversation?.type !== 'group' &&
     (conversation?.participants?.includes(AI_BOT_ID) ?? false)
+
   const showSlashSuggestion =
-    isDirectAiConversation && value === '/' && !editingMessage && !mention.hasQuery
+    isDirectAiConversation &&
+    value === '/' &&
+    !editingMessage &&
+    !mention.hasQuery
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (mention.handleKey(e)) return
@@ -206,6 +266,7 @@ export function MessageInput({
       e.preventDefault()
       handleSend()
     }
+
     if (e.key === 'Escape') {
       if (editingMessage) onCancelEdit?.()
       else if (replyingTo) onCancelReply?.()
@@ -214,14 +275,18 @@ export function MessageInput({
 
   const insertEmoji = (emoji: string) => {
     const el = textareaRef.current
+
     if (!el) {
       setValue((v) => v + emoji)
       return
     }
+
     const start = el.selectionStart ?? value.length
     const end = el.selectionEnd ?? value.length
     const next = value.slice(0, start) + emoji + value.slice(end)
+
     setValue(next)
+
     requestAnimationFrame(() => {
       el.focus()
       el.selectionStart = el.selectionEnd = start + emoji.length
@@ -243,7 +308,10 @@ export function MessageInput({
 
       {/* Edit mode banner */}
       {editingMessage && (
-        <EditBanner editingMessage={editingMessage} onCancelEdit={onCancelEdit} />
+        <EditBanner
+          editingMessage={editingMessage}
+          onCancelEdit={onCancelEdit}
+        />
       )}
 
       {/* Hidden file inputs */}
@@ -255,6 +323,7 @@ export function MessageInput({
         className="hidden"
         onChange={stageImages}
       />
+
       <input
         ref={fileInputRef}
         type="file"
@@ -262,7 +331,7 @@ export function MessageInput({
         onChange={stageFile}
       />
 
-      {/* Staged attachments preview (above the composer row) */}
+      {/* Staged attachments preview */}
       {!editingMessage && (
         <MediaPreviewStrip
           attachments={pendingAttachments}
@@ -296,6 +365,7 @@ export function MessageInput({
               value={value}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
+              onPaste={handlePaste}
               placeholder={
                 editingMessage
                   ? t('editPlaceholder')
@@ -306,9 +376,12 @@ export function MessageInput({
               disabled={disabled || sending}
             />
 
-            {/* `/new` slash suggestion (AI conversations) */}
+            {/* `/new` slash suggestion */}
             {showSlashSuggestion && (
-              <SlashSuggestion disabled={busy} onSelect={sendSlashNew} />
+              <SlashSuggestion
+                disabled={busy}
+                onSelect={sendSlashNew}
+              />
             )}
 
             {/* Mention Popover */}
@@ -322,23 +395,29 @@ export function MessageInput({
             )}
           </div>
 
-          {/* Emoji — right side, adjacent to Send/Mic */}
+          {/* Emoji */}
           <EmojiStickerPicker
             disabled={busy}
             onInsertEmoji={insertEmoji}
             onSendSticker={(sticker) => sendQuick(sticker, 'sticker')}
           />
 
-          {/* Send (when text OR staged attachments present) OR Mic+👍 (when empty) */}
+          {/* Send OR Mic + quick reaction */}
           {value.trim() || editingMessage || pendingAttachments.length > 0 ? (
             <Button
               size="icon"
               onClick={handleSend}
-              disabled={(!value.trim() && pendingAttachments.length === 0) || busy}
+              disabled={
+                (!value.trim() && pendingAttachments.length === 0) || busy
+              }
               className="shrink-0 transition-transform duration-[180ms] active:scale-95 tap"
               variant={editingMessage ? 'outline' : 'default'}
             >
-              {editingMessage ? <Pencil className="size-4" /> : <Send className="size-4" />}
+              {editingMessage ? (
+                <Pencil className="size-4" />
+              ) : (
+                <Send className="size-4" />
+              )}
             </Button>
           ) : (
             <>
@@ -352,6 +431,7 @@ export function MessageInput({
               >
                 <Mic className="size-5 text-primary" />
               </Button>
+
               <button
                 onClick={() => sendQuick(quickReaction, 'text')}
                 disabled={busy}

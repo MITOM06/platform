@@ -1,7 +1,8 @@
+
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { chatService } from '@/lib/api/chat'
+import { chatService, MAX_UPLOAD_BYTES } from '@/lib/api/chat'
 import type { PendingAttachment } from '@/components/chat/MediaPreviewStrip'
 import type { MessageType } from '@/lib/api/types'
 
@@ -17,23 +18,29 @@ async function compressImage(file: File, quality = 0.7): Promise<File> {
   return new Promise((resolve) => {
     const img = new Image()
     const src = URL.createObjectURL(file)
+
     img.onload = () => {
       URL.revokeObjectURL(src)
+
       const canvas = document.createElement('canvas')
       canvas.width = img.width
       canvas.height = img.height
+
       const ctx = canvas.getContext('2d')
       if (!ctx) {
         resolve(file)
         return
       }
+
       ctx.drawImage(img, 0, 0)
+
       canvas.toBlob(
         (blob) => {
           if (!blob) {
             resolve(file)
             return
           }
+
           const name = file.name.replace(/\.[^.]+$/, '') + '.jpg'
           resolve(new File([blob], name, { type: 'image/jpeg' }))
         },
@@ -41,34 +48,35 @@ async function compressImage(file: File, quality = 0.7): Promise<File> {
         quality,
       )
     }
+
     img.onerror = () => {
       URL.revokeObjectURL(src)
       resolve(file)
     }
+
     img.src = src
   })
 }
 
 type SendFn = (content: string, type?: MessageType) => Promise<void>
 
+type StageFilesResult = {
+  tooLarge: boolean
+}
+
 /**
  * Owns the "stage first, upload on Send" attachment flow for the composer.
- * Images/videos are appended and previewed via object URLs; a document replaces
- * the strip (single-shot, like Zalo/Messenger). Object URLs are revoked on
- * remove, on flush, and on unmount so no blobs leak.
  */
 export function useStagedAttachments() {
   const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([])
-  // Single global HD flag for the whole batch (default ON = original quality).
   const [isAllHD, setIsAllHD] = useState(true)
 
-  // Mirror into a ref so unmount cleanup and flush see the *current* set
-  // without re-subscribing effects on every change (which would revoke URLs
-  // still shown). Synced in an effect — never written during render.
   const ref = useRef<PendingAttachment[]>([])
+
   useEffect(() => {
     ref.current = pendingAttachments
   }, [pendingAttachments])
+
   useEffect(
     () => () => {
       ref.current.forEach((a) => {
@@ -78,32 +86,66 @@ export function useStagedAttachments() {
     [],
   )
 
-  const stageImages = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? [])
-    e.target.value = ''
-    if (files.length === 0) return
+  /**
+   * Stage images/videos from either the file picker or clipboard.
+   * Files over the existing upload limit are rejected before previewing.
+   */
+  const stageFiles = useCallback((files: File[]): StageFilesResult => {
+    if (files.length === 0) {
+      return { tooLarge: false }
+    }
+
+    if (files.some((file) => file.size > MAX_UPLOAD_BYTES)) {
+      return { tooLarge: true }
+    }
+
     const newItems: PendingAttachment[] = files.map((file) => ({
       id: randomId(),
       file,
       previewUrl: URL.createObjectURL(file),
       type: file.type.startsWith('video/') ? 'video' : 'image',
     }))
+
     setPendingAttachments((prev) => {
       // A staged document doesn't mix with media — replace it.
       if (prev[0]?.type === 'file') {
-        prev.forEach((a) => a.previewUrl && URL.revokeObjectURL(a.previewUrl))
+        prev.forEach((a) => {
+          if (a.previewUrl) URL.revokeObjectURL(a.previewUrl)
+        })
         return newItems
       }
+
       return [...prev, ...newItems]
     })
+
+    return { tooLarge: false }
   }, [])
+
+  // Keep the existing file-picker flow working.
+  const stageImages = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(e.target.files ?? [])
+      e.target.value = ''
+      stageFiles(files)
+    },
+    [stageFiles],
+  )
 
   const stageFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     e.target.value = ''
+
     if (!file) return
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return
+    }
+
     setPendingAttachments((prev) => {
-      prev.forEach((a) => a.previewUrl && URL.revokeObjectURL(a.previewUrl))
+      prev.forEach((a) => {
+        if (a.previewUrl) URL.revokeObjectURL(a.previewUrl)
+      })
+
       return [{ id: randomId(), file, previewUrl: '', type: 'file' }]
     })
   }, [])
@@ -116,57 +158,77 @@ export function useStagedAttachments() {
     })
   }, [])
 
-  const toggleAllHD = useCallback(() => setIsAllHD((v) => !v), [])
+  const toggleAllHD = useCallback(() => {
+    setIsAllHD((v) => !v)
+  }, [])
 
-  /** Drop sent items from the strip (and free their preview URLs). */
   const dropSent = useCallback((sent: PendingAttachment[]) => {
     if (sent.length === 0) return
+
     const ids = new Set(sent.map((a) => a.id))
-    sent.forEach((a) => a.previewUrl && URL.revokeObjectURL(a.previewUrl))
+
+    sent.forEach((a) => {
+      if (a.previewUrl) URL.revokeObjectURL(a.previewUrl)
+    })
+
     setPendingAttachments((prev) => prev.filter((a) => !ids.has(a.id)))
   }, [])
 
-  /**
-   * Upload every staged attachment then send it. Images are batched into one
-   * message (single url, or JSON array for a gallery); videos/files send one
-   * each. Each item leaves the strip as soon as its message is sent, so on the
-   * first failure (rethrown for the caller's localized error) only what was NOT
-   * sent stays staged — a retry never duplicates the ones that went out.
-   */
-  const flushAttachments = useCallback(async (onSend: SendFn) => {
-    const items = ref.current
-    if (items.length === 0) return
-    const images: string[] = []
-    const imageItems: PendingAttachment[] = []
-    for (const att of items) {
-      if (att.type === 'file') {
-        const { url, filename, size } = await chatService.uploadFile(att.file)
-        await onSend(
-          JSON.stringify({ url, name: filename || att.file.name, size: Number(size) || 0 }),
-          'file',
-        )
-        dropSent([att])
-      } else if (att.type === 'video') {
-        const { url } = await chatService.uploadFile(att.file)
-        await onSend(url, 'video')
-        dropSent([att])
-      } else {
-        const fileToUpload = isAllHD ? att.file : await compressImage(att.file, 0.7)
-        const { url } = await chatService.uploadFile(fileToUpload)
-        images.push(url)
-        imageItems.push(att)
+  const flushAttachments = useCallback(
+    async (onSend: SendFn) => {
+      const items = ref.current
+      if (items.length === 0) return
+
+      const images: string[] = []
+      const imageItems: PendingAttachment[] = []
+
+      for (const att of items) {
+        if (att.type === 'file') {
+          const { url, filename, size } = await chatService.uploadFile(att.file)
+
+          await onSend(
+            JSON.stringify({
+              url,
+              name: filename || att.file.name,
+              size: Number(size) || 0,
+            }),
+            'file',
+          )
+
+          dropSent([att])
+        } else if (att.type === 'video') {
+          const { url } = await chatService.uploadFile(att.file)
+          await onSend(url, 'video')
+          dropSent([att])
+        } else {
+          const fileToUpload = isAllHD
+            ? att.file
+            : await compressImage(att.file, 0.7)
+
+          const { url } = await chatService.uploadFile(fileToUpload)
+
+          images.push(url)
+          imageItems.push(att)
+        }
       }
-    }
-    if (images.length === 1) await onSend(images[0], 'image')
-    else if (images.length > 1) await onSend(JSON.stringify(images), 'image')
-    dropSent(imageItems)
-    setIsAllHD(true) // reset to default (HD ON) for the next batch
-  }, [isAllHD, dropSent])
+
+      if (images.length === 1) {
+        await onSend(images[0], 'image')
+      } else if (images.length > 1) {
+        await onSend(JSON.stringify(images), 'image')
+      }
+
+      dropSent(imageItems)
+      setIsAllHD(true)
+    },
+    [isAllHD, dropSent],
+  )
 
   return {
     pendingAttachments,
     isAllHD,
     stageImages,
+    stageFiles,
     stageFile,
     removeAttachment,
     toggleAllHD,
