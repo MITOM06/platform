@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
+import '../../../../core/rtc/adaptive_video_view.dart';
+
 /// One [MediaStream] on screen. Owns its own [RTCVideoRenderer] (created once,
 /// re-pointed when the stream changes, disposed with the widget) — the stream
 /// is handed to the UI once, never re-created per frame. Callers only build
@@ -82,12 +84,11 @@ class _StreamVideoState extends State<StreamVideo> {
   @override
   Widget build(BuildContext context) {
     if (!_ready) return const SizedBox.expand();
-    return RTCVideoView(
+    // Screen shares are never cropped; cameras follow their picture's shape.
+    return AdaptiveVideoView(
       _renderer,
       mirror: widget.mirror,
-      objectFit: widget.contain
-          ? RTCVideoViewObjectFit.RTCVideoViewObjectFitContain
-          : RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+      fit: widget.contain ? RTCVideoViewObjectFit.RTCVideoViewObjectFitContain : null,
     );
   }
 }

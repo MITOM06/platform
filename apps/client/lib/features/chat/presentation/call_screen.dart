@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/rtc/adaptive_video_view.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/chat_repository.dart';
@@ -303,9 +304,9 @@ class _CallScreenState extends ConsumerState<CallScreen> {
           Positioned.fill(
             child: _isConnected
                 ? (video && network.peerCamera
-                    ? RTCVideoView(_remoteRenderer,
-                        objectFit:
-                            RTCVideoViewObjectFit.RTCVideoViewObjectFitCover)
+                    // Fills the screen, or shows the picture whole when its
+                    // shape differs (a laptop's landscape camera on a phone).
+                    ? AdaptiveVideoView(_remoteRenderer)
                     : Center(
                         child: Icon(
                           Icons.phone_in_talk_rounded,

@@ -95,7 +95,8 @@ export function MeetingTile({ tile, variant }: { tile: StageTile; variant: TileV
       mirror={tile.isLocal && !screenTile}
       label={label}
       speaking={!screenTile && !!peer?.speaking}
-      fit={screenTile ? 'contain' : 'cover'}
+      // Cameras follow their picture (a phone's portrait camera is shown whole); shares never crop.
+      fit={screenTile ? 'contain' : undefined}
       avatarUrl={tile.isLocal ? myAvatarUrl : peer?.avatarUrl}
       badges={badges}
       className={SIZE[variant]}

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
+import '../../../../core/rtc/adaptive_video_view.dart';
+import '../../../../core/rtc/video_fit.dart';
+
 /// "Calling Bob…" / "Connecting…" over the dark call stage, until the other
 /// person's media arrives.
 class CallWaitingLabel extends StatelessWidget {
@@ -34,11 +37,19 @@ class CallLocalPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      right: 16,
-      bottom: 120,
-      width: 100,
-      height: 150,
+    // Takes our camera's shape: portrait on a phone, landscape on a laptop.
+    return ValueListenableBuilder<RTCVideoValue>(
+      valueListenable: renderer,
+      builder: (context, value, child) {
+        final size = selfViewSize(videoAspectOf(value));
+        return Positioned(
+          right: 16,
+          bottom: 120,
+          width: size.width,
+          height: size.height,
+          child: child!,
+        );
+      },
       child: Container(
         decoration: BoxDecoration(
           color: Colors.grey.shade900,
