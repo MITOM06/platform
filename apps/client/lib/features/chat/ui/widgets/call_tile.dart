@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import '../../../../core/rtc/adaptive_video_view.dart';
 import '../../../../core/theme/app_theme.dart';
 
 /// A single participant tile in the group-call grid. Shows live video when
@@ -35,11 +36,8 @@ class CallTile extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           if (showVideo)
-            RTCVideoView(
-              renderer!,
-              mirror: mirror,
-              objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-            )
+            // A phone's portrait camera is shown whole in a wide tile.
+            AdaptiveVideoView(renderer!, mirror: mirror)
           else
             Center(
               child: CircleAvatar(

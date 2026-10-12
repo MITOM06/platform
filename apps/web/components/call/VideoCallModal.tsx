@@ -8,6 +8,8 @@ import { CallConnectionNotice } from './CallConnectionNotice'
 import { CallReconnectOverlay } from './CallReconnectOverlay'
 import { callManager } from '@/lib/webrtc/call-manager'
 import { cn } from '@/lib/utils'
+import { useVideoFit } from '@/lib/hooks/use-video-fit'
+import { pipSize } from '@/lib/webrtc/video-fit'
 
 function formatDuration(total: number): string {
   const m = Math.floor(total / 60).toString().padStart(2, '0')
@@ -31,6 +33,11 @@ export function VideoCallModal() {
   const localRef = useRef<HTMLVideoElement>(null)
   const remoteRef = useRef<HTMLVideoElement>(null)
   const connected = status === 'connected'
+  // A phone sends portrait video, a laptop landscape: the other side's picture is
+  // shown whole when filling the screen would crop most of it, and the self-view
+  // takes our own camera's shape.
+  const remoteFit = useVideoFit(remoteRef).fit
+  const selfView = pipSize(useVideoFit(localRef).videoSize)
 
   useEffect(() => {
     callManager.onLocalStream = (stream) => {
@@ -56,7 +63,11 @@ export function VideoCallModal() {
           ref={remoteRef}
           autoPlay
           playsInline
-          className={cn('h-full w-full object-cover', !connected && 'opacity-0')}
+          className={cn(
+            'h-full w-full',
+            remoteFit === 'contain' ? 'object-contain' : 'object-cover',
+            !connected && 'opacity-0',
+          )}
         />
         {!connected && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white">
@@ -92,8 +103,9 @@ export function VideoCallModal() {
           autoPlay
           playsInline
           muted
+          style={{ width: selfView.width, height: selfView.height }}
           className={cn(
-            'absolute bottom-28 right-4 h-40 w-28 rounded-xl border border-white/20 object-cover bg-neutral-900 -scale-x-100',
+            'absolute bottom-28 right-4 rounded-xl border border-white/20 object-cover bg-neutral-900 -scale-x-100',
             !cameraEnabled && 'hidden',
           )}
         />

@@ -4,6 +4,7 @@ import { useEffect, useRef, type ReactNode } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { absoluteMediaUrl } from '@/lib/media'
 import { cn } from '@/lib/utils'
+import { useVideoFit } from '@/lib/hooks/use-video-fit'
 
 function initial(name: string): string {
   return name?.[0]?.toUpperCase() ?? '?'
@@ -20,7 +21,11 @@ export interface VideoTileProps {
   speaking?: boolean
   /** Small icons in the top-right corner (mic off, raised hand…). */
   badges?: ReactNode
-  /** 'contain' for screen shares (nothing cropped). Default 'cover'. */
+  /**
+   * 'contain' for screen shares (nothing cropped). Default: follows the picture —
+   * cover when its shape is close to the tile's, contain when cover would crop
+   * most of it (a phone's portrait camera in a landscape tile).
+   */
   fit?: 'cover' | 'contain'
   /** Shown instead of the first letter while there is no video. */
   avatarUrl?: string
@@ -41,11 +46,13 @@ export function VideoTile({
   label,
   speaking,
   badges,
-  fit = 'cover',
+  fit,
   avatarUrl,
   className,
 }: VideoTileProps) {
   const ref = useRef<HTMLVideoElement>(null)
+  const auto = useVideoFit(ref).fit
+  const shownFit = fit ?? auto
   useEffect(() => {
     if (ref.current && ref.current.srcObject !== stream) ref.current.srcObject = stream
   }, [stream])
@@ -67,7 +74,7 @@ export function VideoTile({
         muted={muted}
         className={cn(
           'h-full w-full',
-          fit === 'contain' ? 'object-contain' : 'object-cover',
+          shownFit === 'contain' ? 'object-contain' : 'object-cover',
           !hasVideoTrack && 'opacity-0',
           mirror && '-scale-x-100',
         )}
