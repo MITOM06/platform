@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useRef, memo } from 'react'
@@ -68,6 +69,7 @@ const MessageBubbleInner = function MessageBubble({
 }: Props) {
   const t = useTranslations('chat')
   const locale = useLocale()
+
   // Group bubbles: chat-service sends no sender name, so resolve it (nickname →
   // profile → localized "Member"); DMs and own messages carry no label.
   const senderDisplay = useSenderDisplayName(
@@ -75,6 +77,7 @@ const MessageBubbleInner = function MessageBubble({
     conversationId,
     showSenderName && !isOwn && message.type !== 'system',
   )
+
   const [hovered, setHovered] = useState(false)
   const [longPressActive, setLongPressActive] = useState(false)
   const [profileUserId, setProfileUserId] = useState<string | null>(null)
@@ -118,6 +121,7 @@ const MessageBubbleInner = function MessageBubble({
   // neutralize inner controls so any tap selects instead of firing actions.
   const wrapSelectable = (node: React.ReactNode) => {
     if (!multiSelectMode) return node
+
     return (
       <div
         className={cn(
@@ -130,10 +134,14 @@ const MessageBubbleInner = function MessageBubble({
           <div
             className={cn(
               'size-5 rounded-full border-2 flex items-center justify-center transition-colors',
-              isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/50 bg-background/80',
+              isSelected
+                ? 'bg-primary border-primary'
+                : 'border-muted-foreground/50 bg-background/80',
             )}
           >
-            {isSelected && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
+            {isSelected && (
+              <Check className="size-3 text-primary-foreground" strokeWidth={3} />
+            )}
           </div>
         </div>
         <div className="pl-8 pointer-events-none">{node}</div>
@@ -175,8 +183,10 @@ const MessageBubbleInner = function MessageBubble({
   })
 
   const isBare = BARE_TYPES.has(message.type)
+
   // Emoji-only text renders large and frameless (no bubble), like Messenger.
   const isEmojiMsg = message.type === 'text' && isEmojiOnly(message.content)
+
   // Feedback only on real AI answers — not the error/quota/interrupted sentinels.
   const showFeedback =
     message.type === 'ai' &&
@@ -195,7 +205,9 @@ const MessageBubbleInner = function MessageBubble({
   )
 
   const openProfile = () => {
-    if (!isOwn && isHumanUserId(message.senderId)) setProfileUserId(message.senderId)
+    if (!isOwn && isHumanUserId(message.senderId)) {
+      setProfileUserId(message.senderId)
+    }
   }
 
   const senderLabel = !isOwn && senderDisplay && (
@@ -211,6 +223,7 @@ const MessageBubbleInner = function MessageBubble({
   // Read receipt tick for OWN messages in direct chats (parity with mobile):
   // single check = sent, double cyan check = seen (otherUserId in readBy).
   const isRead = !!otherUserId && (message.readBy?.includes(otherUserId) ?? false)
+
   const readTick = isOwn && !isGroup && otherUserId && (
     isRead
       ? <CheckCheck className="size-3 text-primary" aria-label={t('seen')} />
@@ -222,7 +235,9 @@ const MessageBubbleInner = function MessageBubble({
   const metaRow = (readTick || message.editedAt) && (
     <div className={cn('flex items-center gap-1', isOwn ? 'justify-end' : 'justify-start')}>
       {message.editedAt && (
-        <span className="text-[10px] italic text-muted-foreground/70">{t('edited')}</span>
+        <span className="text-[10px] italic text-muted-foreground/70">
+          {t('edited')}
+        </span>
       )}
       {readTick}
     </div>
@@ -245,117 +260,152 @@ const MessageBubbleInner = function MessageBubble({
 
   return (
     <>
-    {wrapSelectable(
-    <div
-      className={cn('flex group', isOwn ? 'flex-row-reverse' : 'flex-row', 'items-end gap-1')}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onTouchMove={handleTouchMove}
-      onClick={handleRowClick}
-    >
-      <div
-        className={cn(
-          'relative flex flex-col gap-1 max-w-[70%]',
-          // AI replies are long-form prose: cap the line length on wide screens for a
-          // comfortable reading measure (~80-90 chars). User messages stay percentage-based.
-          message.type === 'ai' && 'lg:max-w-[640px]',
-        )}
-      >
-        {hoverTime}
-        {isEmojiMsg ? (
-          <div className={cn('flex flex-col', isOwn ? 'items-end' : 'items-start')}>
-            {senderLabel}
-            {replyPreview}
-            {/* Emoji-only: large & frameless, no bubble background/border. */}
-            <span className="text-5xl leading-none select-none py-0.5">{message.content}</span>
-          </div>
-        ) : isBare ? (
-          <div className={cn('flex flex-col', isOwn ? 'items-end' : 'items-start')}>
-            {senderLabel}
-            {replyPreview}
-            {body}
-          </div>
-        ) : (
+      {wrapSelectable(
+        <div
+          className={cn(
+            'flex group',
+            isOwn ? 'flex-row-reverse' : 'flex-row',
+            'items-end gap-1',
+          )}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchMove={handleTouchMove}
+          onClick={handleRowClick}
+        >
           <div
             className={cn(
-              'rounded-[14px] px-4 py-2.5 text-sm break-words relative overflow-hidden border',
-              isOwn
-                ? 'bg-primary text-primary-foreground border-primary/30 rounded-tr-[4px]'
-                : 'bg-muted/70 text-foreground border-border/50 rounded-tl-[4px]',
-              isPinned && 'ring-2 ring-primary/40',
+              'relative flex flex-col gap-1 max-w-[70%]',
+              // AI replies are long-form prose: cap the line length on wide screens for a
+              // comfortable reading measure (~80-90 chars). User messages stay percentage-based.
+              message.type === 'ai' && 'lg:max-w-[640px]',
             )}
           >
-            {senderLabel}
-            {replyPreview}
-            {body}
-            {showFeedback && message.sources && message.sources.length > 0 && (
-              <MessageSources sources={message.sources} conversationId={conversationId} />
+            {hoverTime}
+
+            {isEmojiMsg ? (
+              <div className={cn('flex flex-col', isOwn ? 'items-end' : 'items-start')}>
+                {senderLabel}
+                {replyPreview}
+                {/* Emoji-only: large & frameless, no bubble background/border. */}
+                <span className="text-5xl leading-none select-none py-0.5">
+                  {message.content}
+                </span>
+              </div>
+            ) : isBare ? (
+              <div className={cn('flex flex-col', isOwn ? 'items-end' : 'items-start')}>
+                {senderLabel}
+                {replyPreview}
+                {body}
+              </div>
+            ) : (
+              <div
+                className={cn(
+                  // Updated: increase message text from text-sm to text-base (16px).
+                  'rounded-[14px] px-4 py-2.5 text-base break-words relative overflow-hidden border',
+                  isOwn
+                    ? 'bg-primary text-primary-foreground border-primary/30 rounded-tr-[4px]'
+                    : 'bg-muted/70 text-foreground border-border/50 rounded-tl-[4px]',
+                  isPinned && 'ring-2 ring-primary/40',
+                )}
+              >
+                {senderLabel}
+                {replyPreview}
+                {body}
+
+                {showFeedback && message.sources && message.sources.length > 0 && (
+                  <MessageSources
+                    sources={message.sources}
+                    conversationId={conversationId}
+                  />
+                )}
+
+                {message.type === 'ai' &&
+                  message.pendingActions?.map((action) => (
+                    <AiActionCard
+                      key={action.id}
+                      action={action}
+                      conversationId={conversationId ?? message.conversationId}
+                    />
+                  ))}
+              </div>
             )}
-            {message.type === 'ai' &&
-              message.pendingActions?.map((action) => (
-                <AiActionCard
-                  key={action.id}
-                  action={action}
-                  conversationId={conversationId ?? message.conversationId}
-                />
-              ))}
+
+            {metaRow}
+
+            {/* AI answer feedback (👍/👎) — under the bubble, AI messages only */}
+            {showFeedback && (
+              <div className={cn('flex', isOwn ? 'justify-end' : 'justify-start')}>
+                <MessageFeedback messageId={message.id} />
+              </div>
+            )}
+
+            {/* Reaction badges */}
+            {reactionMap.size > 0 && (
+              <div className={cn('flex flex-wrap gap-1', isOwn ? 'justify-end' : 'justify-start')}>
+                {Array.from(reactionMap.entries()).map(([emoji, count]) => (
+                  <ReactionBadge
+                    key={emoji}
+                    emoji={emoji}
+                    count={count}
+                    onClick={() => setShowReactionsDetail(true)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        )}
 
-        {metaRow}
-
-        {/* AI answer feedback (👍/👎) — under the bubble, AI messages only */}
-        {showFeedback && (
-          <div className={cn('flex', isOwn ? 'justify-end' : 'justify-start')}>
-            <MessageFeedback messageId={message.id} />
-          </div>
-        )}
-
-        {/* Reaction badges */}
-        {reactionMap.size > 0 && (
-          <div className={cn('flex flex-wrap gap-1', isOwn ? 'justify-end' : 'justify-start')}>
-            {Array.from(reactionMap.entries()).map(([emoji, count]) => (
-              <ReactionBadge 
-                key={emoji} 
-                emoji={emoji} 
-                count={count} 
-                onClick={() => setShowReactionsDetail(true)}
+          {/* Action menu — visible on hover (desktop) or long-press (touch).
+              Hidden entirely in multi-select mode (row is a selection target). */}
+          {!multiSelectMode && (
+            <div className={cn('flex items-center mb-1', !hovered && !longPressActive && 'invisible')}>
+              <MessageActions
+                message={message}
+                isOwn={isOwn}
+                currentUserId={currentUserId}
+                isPinned={isPinned}
+                pinnedCount={pinnedCount}
+                onEdit={onEdit ? () => onEdit(message) : undefined}
+                onForward={onForward ? () => onForward(message) : undefined}
+                onReply={onReply ? () => onReply(message) : undefined}
+                onAiTrace={onAiTrace ? () => onAiTrace(message.id) : undefined}
+                onOptimisticUpdate={onOptimisticUpdate}
+                onGroupReadDetails={isOwn && isGroup ? () => setShowReadDetails(true) : undefined}
+                onReactionsDetail={
+                  message.reactions && message.reactions.length > 0
+                    ? () => setShowReactionsDetail(true)
+                    : undefined
+                }
+                onEnterMultiSelect={onEnterMultiSelect}
+                onMenuOpen={onMenuOpen ? () => onMenuOpen(message.createdAt) : undefined}
+                onMenuClose={onMenuClose}
               />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Action menu — visible on hover (desktop) or long-press (touch).
-          Hidden entirely in multi-select mode (row is a selection target). */}
-      {!multiSelectMode && (
-        <div className={cn('flex items-center mb-1', !hovered && !longPressActive && 'invisible')}>
-          <MessageActions
-            message={message}
-            isOwn={isOwn}
-            currentUserId={currentUserId}
-            isPinned={isPinned}
-            pinnedCount={pinnedCount}
-            onEdit={onEdit ? () => onEdit(message) : undefined}
-            onForward={onForward ? () => onForward(message) : undefined}
-            onReply={onReply ? () => onReply(message) : undefined}
-            onAiTrace={onAiTrace ? () => onAiTrace(message.id) : undefined}
-            onOptimisticUpdate={onOptimisticUpdate}
-            onGroupReadDetails={isOwn && isGroup ? () => setShowReadDetails(true) : undefined}
-            onReactionsDetail={message.reactions && message.reactions.length > 0 ? () => setShowReactionsDetail(true) : undefined}
-            onEnterMultiSelect={onEnterMultiSelect}
-            onMenuOpen={onMenuOpen ? () => onMenuOpen(message.createdAt) : undefined}
-            onMenuClose={onMenuClose}
-          />
-        </div>
+            </div>
+          )}
+        </div>,
       )}
-    </div>,
-    )}
-    <UserProfileDrawer userId={profileUserId} onClose={() => setProfileUserId(null)} />
-    {showReadDetails && <GroupReadDetailsModal message={message} open={showReadDetails} onClose={() => setShowReadDetails(false)} />}
-    {showReactionsDetail && <ReactionsDetailModal message={message} open={showReactionsDetail} onClose={() => setShowReactionsDetail(false)} />}
+
+      <UserProfileDrawer
+        userId={profileUserId}
+        onClose={() => setProfileUserId(null)}
+      />
+
+      {showReadDetails && (
+        <GroupReadDetailsModal
+          message={message}
+          open={showReadDetails}
+          onClose={() => setShowReadDetails(false)}
+        />
+      )}
+
+      {showReactionsDetail && (
+        <ReactionsDetailModal
+          message={message}
+          open={showReactionsDetail}
+          onClose={() => setShowReactionsDetail(false)}
+        />
+      )}
     </>
   )
 }

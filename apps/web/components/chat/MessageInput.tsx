@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
@@ -12,7 +11,7 @@ import { useVoiceRecorder } from '@/lib/hooks/use-voice-recorder'
 import { useStagedAttachments } from '@/lib/hooks/use-staged-attachments'
 import { useMentionAutocomplete } from '@/lib/hooks/use-mention-autocomplete'
 import { AI_BOT_ID } from '@/lib/constants'
-import { FILE_TOO_LARGE } from '@/lib/api/chat'
+import { FILE_TOO_LARGE, MAX_UPLOAD_BYTES } from '@/lib/api/chat'
 import { isReportedSendError } from '@/lib/chat/send-error'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useSenderDisplayName } from '@/lib/hooks/use-display-names'
@@ -29,9 +28,7 @@ import {
 import type { Message, MessageType, Conversation } from '@/lib/api/types'
 
 interface Props {
-  /** Send a NEW message. Rejects (after its own toast) when the send failed. */
   onSend: (content: string, type?: MessageType) => Promise<void>
-  /** Submit the edit of `editingMessage` (text only). Rejects on failure. */
   onEditSubmit?: (content: string) => Promise<void>
   onTypingChange?: (isTyping: boolean) => void
   disabled?: boolean
@@ -87,7 +84,6 @@ export function MessageInput({
   const {
     pendingAttachments,
     isAllHD,
-    stageImages,
     stageFiles,
     stageFile,
     removeAttachment,
@@ -95,17 +91,21 @@ export function MessageInput({
     flushAttachments,
   } = useStagedAttachments()
 
-  const mention = useMentionAutocomplete({ conversation, value, setValue, textareaRef })
+  const mention = useMentionAutocomplete({
+    conversation,
+    value,
+    setValue,
+    textareaRef,
+  })
 
-  // Grow the textarea to fit content, capped at max-h-32 (128px).
   const resizeTextarea = () => {
     const el = textareaRef.current
     if (!el) return
+
     el.style.height = 'auto'
     el.style.height = Math.min(el.scrollHeight, 128) + 'px'
   }
 
-  // Populate textarea when entering edit mode.
   useEffect(() => {
     const timer = setTimeout(() => {
       if (editingMessage) {
@@ -114,16 +114,25 @@ export function MessageInput({
       } else {
         setValue('')
       }
+
       resizeTextarea()
     }, 0)
 
     return () => clearTimeout(timer)
   }, [editingMessage])
 
-  // Focus when starting a reply.
   useEffect(() => {
     if (replyingTo) textareaRef.current?.focus()
   }, [replyingTo])
+
+  // Show a larger warning toast without a close button.
+  const showUploadTooLargeWarning = () => {
+    toast.error(t('uploadTooLarge'), {
+      duration: 3000,
+      closeButton: false,
+      className: 'upload-warning-toast',
+    })
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value
@@ -143,8 +152,7 @@ export function MessageInput({
     }
   }
 
-  // Paste images from the clipboard, such as screenshots copied with Snipping Tool.
-  // Normal text pasting continues to work as usual.
+  // Paste images from clipboard.
   const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     if (editingMessage || disabled || sending || uploading) return
 
@@ -155,7 +163,6 @@ export function MessageInput({
       .map((item) => item.getAsFile())
       .filter((file): file is File => file !== null)
 
-    // If the clipboard doesn't contain an image, let the browser paste normally.
     if (imageFiles.length === 0) return
 
     e.preventDefault()
@@ -163,12 +170,35 @@ export function MessageInput({
     const result = stageFiles(imageFiles)
 
     if (result.tooLarge) {
-      toast.error(t('uploadTooLarge'))
+      showUploadTooLargeWarning()
     }
   }
 
-  // Send (or submit the edit of) a text message.
-  // The box is cleared ONLY on success.
+  // Stage images/videos and warn when a selected file is too large.
+  const handleStageImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    e.target.value = ''
+
+    const result = stageFiles(files)
+
+    if (result.tooLarge) {
+      showUploadTooLargeWarning()
+    }
+  }
+
+  // Warn when a document exceeds the upload limit.
+  const handleStageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+
+    if (file && file.size > MAX_UPLOAD_BYTES) {
+      e.target.value = ''
+      showUploadTooLargeWarning()
+      return
+    }
+
+    stageFile(e)
+  }
+
   const sendText = async (content: string) => {
     if (sending) return
 
@@ -202,7 +232,6 @@ export function MessageInput({
     }
   }
 
-  // Stickers / quick reaction.
   const sendQuick = (content: string, type: MessageType) => {
     onSend(content, type).catch((err) => {
       if (!isReportedSendError(err)) {
@@ -212,7 +241,6 @@ export function MessageInput({
   }
 
   const handleSend = async () => {
-    // Staged attachments take priority over text.
     if (pendingAttachments.length > 0 && !editingMessage) {
       if (sending) return
 
@@ -231,7 +259,11 @@ export function MessageInput({
           const tooLarge =
             err instanceof Error && err.message === FILE_TOO_LARGE
 
-          toast.error(tooLarge ? t('uploadTooLarge') : t('uploadError'))
+          if (tooLarge) {
+            showUploadTooLargeWarning()
+          } else {
+            toast.error(t('uploadError'))
+          }
         }
       } finally {
         setSending(false)
@@ -246,7 +278,7 @@ export function MessageInput({
     await sendText(content)
   }
 
-  // `/new` slash command.
+  // /new slash command.
   const sendSlashNew = () => sendText('/new')
 
   const isDirectAiConversation =
@@ -297,7 +329,6 @@ export function MessageInput({
 
   return (
     <div className="flex flex-col border-t bg-background pb-safe">
-      {/* Reply banner */}
       {replyingTo && !editingMessage && (
         <ReplyBanner
           replyingTo={replyingTo}
@@ -306,7 +337,6 @@ export function MessageInput({
         />
       )}
 
-      {/* Edit mode banner */}
       {editingMessage && (
         <EditBanner
           editingMessage={editingMessage}
@@ -314,24 +344,22 @@ export function MessageInput({
         />
       )}
 
-      {/* Hidden file inputs */}
       <input
         ref={imageInputRef}
         type="file"
         accept="image/*,video/*"
         multiple
         className="hidden"
-        onChange={stageImages}
+        onChange={handleStageImages}
       />
 
       <input
         ref={fileInputRef}
         type="file"
         className="hidden"
-        onChange={stageFile}
+        onChange={handleStageFile}
       />
 
-      {/* Staged attachments preview */}
       {!editingMessage && (
         <MediaPreviewStrip
           attachments={pendingAttachments}
@@ -350,7 +378,6 @@ export function MessageInput({
         />
       ) : (
         <div className="flex items-end gap-1 p-2 md:p-3">
-          {/* Attach — left side */}
           {!editingMessage && (
             <AttachMenu
               disabled={busy}
@@ -376,7 +403,6 @@ export function MessageInput({
               disabled={disabled || sending}
             />
 
-            {/* `/new` slash suggestion */}
             {showSlashSuggestion && (
               <SlashSuggestion
                 disabled={busy}
@@ -384,7 +410,6 @@ export function MessageInput({
               />
             )}
 
-            {/* Mention Popover */}
             {mention.isOpen && (
               <MentionPopover
                 candidates={mention.candidates}
@@ -395,14 +420,12 @@ export function MessageInput({
             )}
           </div>
 
-          {/* Emoji */}
           <EmojiStickerPicker
             disabled={busy}
             onInsertEmoji={insertEmoji}
             onSendSticker={(sticker) => sendQuick(sticker, 'sticker')}
           />
 
-          {/* Send OR Mic + quick reaction */}
           {value.trim() || editingMessage || pendingAttachments.length > 0 ? (
             <Button
               size="icon"
