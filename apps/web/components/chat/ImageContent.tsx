@@ -67,20 +67,20 @@ export function ImageContent({ content }: { content: string }) {
       <Tile
         url={urls[0]}
         onClick={() => open(0)}
-        className="max-h-[280px] max-w-[240px] rounded-xl [&>img]:max-h-[280px] [&>img]:w-auto"
+        className="h-auto max-h-[340px] w-full max-w-[320px] rounded-xl [&>img]:h-auto [&>img]:max-h-[340px] [&>img]:w-full [&>img]:object-contain"
       />
     )
   } else if (urls.length === 2) {
     grid = (
-      <div className="grid w-full max-w-[240px] grid-cols-2 gap-0.5 overflow-hidden rounded-xl">
+      <div className="grid w-full max-w-[320px] grid-cols-2 gap-0.5 overflow-hidden rounded-xl">
         {urls.map((u, i) => (
-          <Tile key={i} url={u} onClick={() => open(i)} className="h-[180px]" />
+          <Tile key={i} url={u} onClick={() => open(i)} className="h-[160px]" />
         ))}
       </div>
     )
   } else if (urls.length === 3) {
     grid = (
-      <div className="flex w-full max-w-[240px] gap-0.5 overflow-hidden rounded-xl">
+      <div className="flex w-full max-w-[320px] gap-0.5 overflow-hidden rounded-xl">
         <Tile
           url={urls[0]}
           onClick={() => open(0)}
@@ -96,13 +96,13 @@ export function ImageContent({ content }: { content: string }) {
     const extras = urls.length - 4
 
     grid = (
-      <div className="grid w-full max-w-[240px] grid-cols-2 gap-0.5 overflow-hidden rounded-xl">
+      <div className="grid w-full max-w-[320px] grid-cols-2 gap-0.5 overflow-hidden rounded-xl">
         {urls.slice(0, 4).map((u, i) => (
           <Tile
             key={i}
             url={u}
             onClick={() => open(i)}
-            className="h-[119px]"
+            className="h-[159px]"
             overlay={i === 3 && extras > 0 ? `+${extras}` : undefined}
           />
         ))}
