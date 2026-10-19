@@ -9,10 +9,11 @@ import {
 import { McpOAuthService } from '../oauth/mcp-oauth.service';
 import { RemoteMcpAdapter } from './remote-mcp.adapter';
 import { GoogleRestAdapter } from './google-rest.adapter';
+import { NotionRestAdapter } from './notion-rest.adapter';
 import { AdapterRegistryService } from './adapter-registry.service';
 
 /**
- * Provides the provider-adapter registry (remote-mcp + google-rest) used by the
+ * Provides the provider-adapter registry (remote-mcp + google-rest + notion-rest) used by the
  * internal tools service to fetch/run a user's connector tools.
  */
 @Module({
@@ -27,6 +28,7 @@ import { AdapterRegistryService } from './adapter-registry.service';
     McpOAuthService,
     RemoteMcpAdapter,
     GoogleRestAdapter,
+    NotionRestAdapter,
     AdapterRegistryService,
   ],
   exports: [AdapterRegistryService],
