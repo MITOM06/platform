@@ -1,7 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import axios from 'axios'
 import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios'
-import { isLoginNotice, isLogoutReason, loginPath, logoutReasonFromError } from '@/lib/auth/force-logout'
+import {
+  isLoginNotice,
+  isLogoutReason,
+  loginNoticeI18nKey,
+  loginPath,
+  logoutReasonFromError,
+} from '@/lib/auth/force-logout'
 import { logoutReasonFromBody } from '@/lib/auth/logout-reason'
 
 function errWith(data: unknown) {
@@ -59,6 +65,19 @@ describe('force-logout helpers', () => {
       // Other revocation reasons stay a plain logout.
       expect(logoutReasonFromError(errWith({ code: 'SESSION_REVOKED', reason: 'role_changed' }))).toBeUndefined()
       expect(logoutReasonFromError(errWith({ code: 'SESSION_REVOKED', params: { reason: '<b>x</b>' } }))).toBeUndefined()
+    })
+  })
+
+  describe('MFA_REQUIRED_BY_ROLE (promoted to an Admin-like role without 2FA)', () => {
+    it('a refused refresh signs out with a reason the login screen explains', () => {
+      expect(logoutReasonFromError(errWith({ code: 'MFA_REQUIRED_BY_ROLE' }))).toBe('MFA_REQUIRED_BY_ROLE')
+      expect(logoutReasonFromBody({ code: 'MFA_REQUIRED_BY_ROLE' })).toBe('MFA_REQUIRED_BY_ROLE')
+      expect(loginPath('MFA_REQUIRED_BY_ROLE')).toBe('/login?reason=MFA_REQUIRED_BY_ROLE')
+    })
+
+    it('uses the "sign in again to set it up" notice, not the Settings "can\'t turn off" error', () => {
+      expect(loginNoticeI18nKey('MFA_REQUIRED_BY_ROLE')).toBe('noticeMfaSetupRequiredByRole')
+      expect(loginNoticeI18nKey('ACCOUNT_BLOCKED')).toBe('errAccountBlocked')
     })
   })
 

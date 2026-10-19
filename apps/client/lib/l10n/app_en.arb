@@ -2279,6 +2279,7 @@
   "securityMfaTurnOffSubmit": "Turn off",
   "securityMfaTurnedOff": "Two-factor authentication is off.",
   "authErrMfaRequiredByRole": "Your role requires two-factor authentication, so it can't be turned off.",
+  "authNoticeMfaSetupRequiredByRole": "Your new role requires two-factor authentication. Sign in again to set it up.",
   "adminMfaBadge": "2FA on",
   "adminMfaReset": "Reset 2FA",
   "adminMfaResetConfirm": "Reset two-factor authentication for {name}? They will be signed out everywhere and must set it up again at their next sign-in.",

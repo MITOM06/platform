@@ -4459,6 +4459,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authErrMfaRequiredByRole => '회원님의 역할에는 2단계 인증이 필수이므로 끌 수 없습니다.';
 
   @override
+  String get authNoticeMfaSetupRequiredByRole =>
+      '새 역할에는 2단계 인증이 필수입니다. 다시 로그인하여 설정하세요.';
+
+  @override
   String get adminMfaBadge => '2FA 켜짐';
 
   @override

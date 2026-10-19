@@ -322,6 +322,7 @@
     "errMfaResetForbidden": "No tienes permiso para restablecer la autenticación de dos factores de este miembro.",
     "errMfaResetSelfForbidden": "No puedes restablecer tu propia autenticación de dos factores.",
     "errMfaRequiredByRole": "Tu rol exige la autenticación de dos factores, así que no se puede desactivar.",
+    "noticeMfaSetupRequiredByRole": "Tu nuevo rol exige la autenticación de dos factores. Vuelve a iniciar sesión para configurarla.",
     "errTooManyRequests": "Demasiadas solicitudes. Espera un momento y vuelve a intentarlo.",
     "errNetwork": "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo."
   },

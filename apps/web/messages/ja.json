@@ -322,6 +322,7 @@
     "errMfaResetForbidden": "このメンバーの二要素認証をリセットする権限がありません。",
     "errMfaResetSelfForbidden": "自分の二要素認証はリセットできません。",
     "errMfaRequiredByRole": "あなたのロールでは二要素認証が必須のため、オフにできません。",
+    "noticeMfaSetupRequiredByRole": "新しいロールでは二要素認証が必須です。もう一度サインインして設定してください。",
     "errTooManyRequests": "リクエストが多すぎます。しばらく待ってからもう一度お試しください。",
     "errNetwork": "サーバーに接続できません。ネットワークを確認してもう一度お試しください。"
   },

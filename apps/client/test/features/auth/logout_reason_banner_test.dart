@@ -42,7 +42,19 @@ void main() {
   });
 
   test('only allow-listed codes are logout reasons', () {
-    expect(kLogoutReasons, {'ACCOUNT_BLOCKED', 'SSO_REQUIRED'});
+    expect(kLogoutReasons,
+        {'ACCOUNT_BLOCKED', 'SSO_REQUIRED', 'MFA_REQUIRED_BY_ROLE'});
+  });
+
+  testWidgets(
+      'promoted to an Admin-like role without 2FA: "sign in again to set it '
+      'up", not the Settings error or the raw code', (tester) async {
+    final l10n = await _pump(
+        tester, const AuthUnauthenticated(reason: 'MFA_REQUIRED_BY_ROLE'));
+    expect(find.text(l10n.authNoticeMfaSetupRequiredByRole), findsOneWidget);
+    expect(find.text(l10n.authErrMfaRequiredByRole), findsNothing);
+    expect(find.byIcon(Icons.security_rounded), findsOneWidget);
+    expect(find.textContaining('MFA_REQUIRED_BY_ROLE'), findsNothing);
   });
 
   testWidgets('SSO required: the localized SSO notice, never the raw code',

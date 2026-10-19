@@ -358,8 +358,9 @@ export class SessionService {
 
   /**
    * The user's role / departments / permissions changed: every access token
-   * issued before now carries stale claims. Sets `claimsAt = floor(now/1000)`
-   * on each live `sess:{sid}` of the user (TTL kept) — validators then answer
+   * issued before now carries stale claims. Moves `claimsAt` past every token
+   * issued so far on each live `sess:{sid}` of the user (TTL kept; see
+   * MARK_CLAIMS_STALE_LUA) — validators then answer
    * `401 TOKEN_CLAIMS_STALE` for a token with `iat < claimsAt`, while the
    * session itself stays valid and `/auth/refresh` mints fresh claims — and
    * publishes `auth:claims-changed` `{"userId"}` so connected clients refresh

@@ -1541,6 +1541,7 @@
   "securityMfaTurnOffSubmit": "끄기",
   "securityMfaTurnedOff": "2단계 인증이 꺼졌습니다.",
   "authErrMfaRequiredByRole": "회원님의 역할에는 2단계 인증이 필수이므로 끌 수 없습니다.",
+  "authNoticeMfaSetupRequiredByRole": "새 역할에는 2단계 인증이 필수입니다. 다시 로그인하여 설정하세요.",
   "adminMfaBadge": "2FA 켜짐",
   "adminMfaReset": "2FA 재설정",
   "adminMfaResetConfirm": "{name}님의 2단계 인증을 재설정할까요? 모든 기기에서 로그아웃되며 다음 로그인 시 다시 설정해야 합니다.",
