@@ -27,10 +27,13 @@ export interface CatalogOAuthConfig {
 
 /**
  * How a connector's tools are fetched/executed:
- *  - 'remote-mcp': talk to a remote MCP server (Notion + custom servers).
+ *  - 'remote-mcp': talk to a remote MCP server (custom servers, directory entries).
  *  - 'google-rest': static tool defs backed by Google REST APIs (Gmail/Calendar).
+ *  - 'notion-rest': static tool defs backed by the Notion REST API (Notion). Notion's
+ *    hosted MCP answers the catalog OAuth token with 403 `restricted_resource`
+ *    ("This token type cannot access Notion MCP"), so the catalog tile uses REST.
  */
-export type CatalogAdapter = 'remote-mcp' | 'google-rest';
+export type CatalogAdapter = 'remote-mcp' | 'google-rest' | 'notion-rest';
 
 export interface CatalogEntry {
   id: string;
@@ -82,8 +85,8 @@ export const CATALOG: CatalogEntry[] = [
     scopes: ['read_content', 'update_content', 'insert_content'],
     authType: 'oauth2',
     tier: 'both',
-    adapter: 'remote-mcp',
-    mcpUrl: process.env.NOTION_MCP_URL ?? 'https://mcp.notion.com/sse',
+    adapter: 'notion-rest',
+    mcpUrl: '',
     available: true,
     oauth: {
       authorizeUrl: 'https://api.notion.com/v1/oauth/authorize',

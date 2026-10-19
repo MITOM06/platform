@@ -64,6 +64,8 @@ const REST_ERROR_KEYS: Record<string, string> = {
   DCR_FAILED: 'errDcrFailed',
   INVALID_ENV_OAUTH: 'errEnvOauthNotConfigured',
   ENV_OAUTH_NOT_CONFIGURED: 'errEnvOauthNotConfigured',
+  // A catalog connector (Notion/Google) whose OAuth client id/secret is unset on the server.
+  CONNECTOR_NOT_CONFIGURED: 'errEnvOauthNotConfigured',
   MCP_DISCOVERY_FAILED: 'customDiscoverError',
 }
 

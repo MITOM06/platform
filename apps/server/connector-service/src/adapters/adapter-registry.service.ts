@@ -4,24 +4,27 @@ import { isCustomProvider } from '../internal/tool-naming';
 import { ProviderAdapter } from './provider-adapter.interface';
 import { RemoteMcpAdapter } from './remote-mcp.adapter';
 import { GoogleRestAdapter } from './google-rest.adapter';
+import { NotionRestAdapter } from './notion-rest.adapter';
 
 /**
  * Resolves the right {@link ProviderAdapter} for a provider id. Custom MCP
- * servers (`custom_<id>`, legacy `custom:<id>`) and remote-mcp catalog entries (Notion) use the
+ * servers (`custom_<id>`, legacy `custom:<id>`) and directory entries use the
  * remote-mcp adapter; `google-rest` catalog entries (Gmail/Calendar) use the
- * Google REST adapter.
+ * Google REST adapter; `notion-rest` (Notion) uses the Notion REST adapter.
  */
 @Injectable()
 export class AdapterRegistryService {
   constructor(
     private readonly remoteMcp: RemoteMcpAdapter,
     private readonly googleRest: GoogleRestAdapter,
+    private readonly notionRest: NotionRestAdapter,
   ) {}
 
   forProvider(provider: string): ProviderAdapter {
     if (isCustomProvider(provider)) return this.remoteMcp;
     const entry = findCatalogEntry(provider);
     if (entry?.adapter === 'google-rest') return this.googleRest;
+    if (entry?.adapter === 'notion-rest') return this.notionRest;
     return this.remoteMcp;
   }
 }

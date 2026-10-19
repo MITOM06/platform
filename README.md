@@ -282,7 +282,7 @@ Operational notes:
   - **Source Citation:** Renders citation cards below AI messages, linking directly to referenced documents.
 
 ### 🔌 MCP Connectors & Skills
-- 🧩 **Integrations gallery:** connect third-party accounts (Notion via remote MCP; Gmail + Google Calendar via the Google REST adapter; Google Drive listed as coming soon) over OAuth, with a clear view of the scopes the assistant can touch.
+- 🧩 **Integrations gallery:** connect third-party accounts (Notion via the Notion REST adapter; Gmail + Google Calendar via the Google REST adapter; Google Drive listed as coming soon; any other MCP server via the MCP directory or a custom endpoint) over OAuth, with a clear view of the scopes the assistant can touch.
 - 🛠️ **Bring-your-own MCP:** point the assistant at any MCP server — discover its tools and use them on the next message (admin-gated for security).
 - 🤖 **Agentic actions from chat:** the assistant decides which tool to call and acts — e.g. "book a sync Thursday and email the brief" → calendar + mail tools run in one turn.
 - 🎚️ **Skills:** turn capabilities (Scheduler, Mail writer, Researcher, Project keeper) on/off; each shows the connectors it needs.
