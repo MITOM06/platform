@@ -4400,6 +4400,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authErrMfaRequiredByRole => '你的角色要求启用双重验证，因此无法关闭。';
 
   @override
+  String get authNoticeMfaSetupRequiredByRole => '你的新角色要求启用双重验证。请重新登录以完成设置。';
+
+  @override
   String get adminMfaBadge => '已开启双重验证';
 
   @override

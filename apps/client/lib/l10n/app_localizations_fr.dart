@@ -4683,6 +4683,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre rôle exige l\'authentification à deux facteurs : elle ne peut pas être désactivée.';
 
   @override
+  String get authNoticeMfaSetupRequiredByRole =>
+      'Votre nouveau rôle exige l\'authentification à deux facteurs. Reconnectez-vous pour la configurer.';
+
+  @override
   String get adminMfaBadge => '2FA activée';
 
   @override
