@@ -1541,6 +1541,7 @@
   "securityMfaTurnOffSubmit": "Desactivar",
   "securityMfaTurnedOff": "La autenticación de dos factores está desactivada.",
   "authErrMfaRequiredByRole": "Tu rol requiere la autenticación de dos factores, así que no se puede desactivar.",
+  "authNoticeMfaSetupRequiredByRole": "Tu nuevo rol requiere la autenticación de dos factores. Vuelve a iniciar sesión para configurarla.",
   "adminMfaBadge": "2FA activada",
   "adminMfaReset": "Restablecer 2FA",
   "adminMfaResetConfirm": "¿Restablecer la autenticación de dos factores de {name}? Se cerrará su sesión en todos los dispositivos y deberá configurarla de nuevo en su próximo inicio de sesión.",

@@ -4609,6 +4609,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your role requires two-factor authentication, so it can\'t be turned off.';
 
   @override
+  String get authNoticeMfaSetupRequiredByRole =>
+      'Your new role requires two-factor authentication. Sign in again to set it up.';
+
+  @override
   String get adminMfaBadge => '2FA on';
 
   @override

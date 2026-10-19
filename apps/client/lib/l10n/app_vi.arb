@@ -1541,6 +1541,7 @@
   "securityMfaTurnOffSubmit": "Tắt",
   "securityMfaTurnedOff": "Đã tắt xác thực hai yếu tố.",
   "authErrMfaRequiredByRole": "Vai trò của bạn bắt buộc xác thực hai yếu tố nên không thể tắt.",
+  "authNoticeMfaSetupRequiredByRole": "Vai trò mới của bạn bắt buộc xác thực hai yếu tố. Hãy đăng nhập lại để thiết lập.",
   "adminMfaBadge": "Đã bật 2FA",
   "adminMfaReset": "Đặt lại 2FA",
   "adminMfaResetConfirm": "Đặt lại xác thực hai yếu tố cho {name}? Người này sẽ bị đăng xuất khỏi mọi thiết bị và phải thiết lập lại ở lần đăng nhập tới.",

@@ -322,6 +322,7 @@
     "errMfaResetForbidden": "You don't have permission to reset this member's two-factor authentication.",
     "errMfaResetSelfForbidden": "You can't reset your own two-factor authentication.",
     "errMfaRequiredByRole": "Your role requires two-factor authentication, so it can't be turned off.",
+    "noticeMfaSetupRequiredByRole": "Your new role requires two-factor authentication. Sign in again to set it up.",
     "errTooManyRequests": "Too many requests. Please wait a moment and try again.",
     "errNetwork": "Can't reach the server. Check your connection and try again."
   },

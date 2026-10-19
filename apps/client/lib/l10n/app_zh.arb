@@ -1541,6 +1541,7 @@
   "securityMfaTurnOffSubmit": "关闭",
   "securityMfaTurnedOff": "双重验证已关闭。",
   "authErrMfaRequiredByRole": "你的角色要求启用双重验证，因此无法关闭。",
+  "authNoticeMfaSetupRequiredByRole": "你的新角色要求启用双重验证。请重新登录以完成设置。",
   "adminMfaBadge": "已开启双重验证",
   "adminMfaReset": "重置双重验证",
   "adminMfaResetConfirm": "要重置 {name} 的双重验证吗？对方将在所有设备上被登出，并需在下次登录时重新设置。",

@@ -8377,6 +8377,12 @@ abstract class AppLocalizations {
   /// **'Your role requires two-factor authentication, so it can\'t be turned off.'**
   String get authErrMfaRequiredByRole;
 
+  /// No description provided for @authNoticeMfaSetupRequiredByRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Your new role requires two-factor authentication. Sign in again to set it up.'**
+  String get authNoticeMfaSetupRequiredByRole;
+
   /// No description provided for @adminMfaBadge.
   ///
   /// In en, this message translates to:

@@ -4582,6 +4582,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Vai trò của bạn bắt buộc xác thực hai yếu tố nên không thể tắt.';
 
   @override
+  String get authNoticeMfaSetupRequiredByRole =>
+      'Vai trò mới của bạn bắt buộc xác thực hai yếu tố. Hãy đăng nhập lại để thiết lập.';
+
+  @override
   String get adminMfaBadge => 'Đã bật 2FA';
 
   @override

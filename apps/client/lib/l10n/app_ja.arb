@@ -1541,6 +1541,7 @@
   "securityMfaTurnOffSubmit": "オフにする",
   "securityMfaTurnedOff": "二要素認証をオフにしました。",
   "authErrMfaRequiredByRole": "あなたのロールでは二要素認証が必須のため、オフにできません。",
+  "authNoticeMfaSetupRequiredByRole": "新しいロールでは二要素認証が必須です。もう一度サインインして設定してください。",
   "adminMfaBadge": "2FA オン",
   "adminMfaReset": "2FA をリセット",
   "adminMfaResetConfirm": "{name} さんの二要素認証をリセットしますか？すべての端末からサインアウトされ、次回のサインイン時に再設定が必要になります。",

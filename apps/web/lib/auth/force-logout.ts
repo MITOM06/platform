@@ -2,6 +2,7 @@ import axios from 'axios'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { LOGOUT_REASONS, logoutReasonFromBody, type LogoutReason } from '@/lib/auth/logout-reason'
 import { clearQueryCache } from '@/lib/query-client'
+import { authCodeToI18nKey } from '@/lib/auth/auth-error'
 
 /**
  * Reasons the login screen can explain after a forced logout live in
@@ -54,6 +55,16 @@ export type LoginNotice = (typeof LOGIN_NOTICES)[number]
 
 export function isLoginNotice(value: unknown): value is LoginNotice {
   return typeof value === 'string' && (LOGIN_NOTICES as readonly string[]).includes(value)
+}
+
+/**
+ * The `auth` translation key of a login notice. Same as the error text except
+ * where the code means something else after a sign-out: MFA_REQUIRED_BY_ROLE
+ * elsewhere answers "turn 2FA off" ("can't be turned off"), here it tells a
+ * newly promoted member to sign in again and set 2FA up.
+ */
+export function loginNoticeI18nKey(notice: LoginNotice): string {
+  return notice === 'MFA_REQUIRED_BY_ROLE' ? 'noticeMfaSetupRequiredByRole' : authCodeToI18nKey(notice)
 }
 
 /**

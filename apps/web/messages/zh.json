@@ -322,6 +322,7 @@
     "errMfaResetForbidden": "您无权重置该成员的双重身份验证。",
     "errMfaResetSelfForbidden": "您不能重置自己的双重身份验证。",
     "errMfaRequiredByRole": "您的角色要求启用双重身份验证，因此无法关闭。",
+    "noticeMfaSetupRequiredByRole": "您的新角色要求启用双重身份验证。请重新登录以完成设置。",
     "errTooManyRequests": "请求过于频繁，请稍后再试。",
     "errNetwork": "无法连接到服务器，请检查网络后重试。"
   },

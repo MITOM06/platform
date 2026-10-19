@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/l10n/l10n_ext.dart';
 import '../../domain/auth_provider.dart';
 import '../../domain/auth_state.dart';
 import '../../utils/auth_error.dart';
@@ -24,11 +25,16 @@ class LogoutReasonBanner extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 20),
       child: AuthNoticeBox(
         key: const ValueKey('logout-reason'),
-        message: authCodeToString(context, reason),
+        // After a sign-out MFA_REQUIRED_BY_ROLE means "sign in again and set
+        // 2FA up", not the Settings "can't be turned off" error.
+        message: reason == kMfaRequiredByRole
+            ? context.l10n.authNoticeMfaSetupRequiredByRole
+            : authCodeToString(context, reason),
         isError: !isSso,
         icon: switch (reason) {
           'ACCOUNT_BLOCKED' => Icons.block_rounded,
           kSsoRequired => Icons.vpn_key_rounded,
+          kMfaRequiredByRole => Icons.security_rounded,
           _ => Icons.error_outline_rounded,
         },
       ),

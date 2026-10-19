@@ -223,10 +223,17 @@ class AuthAuthenticated extends AuthState {
 /// `SSO_REQUIRED` (contract 13 §C): "Require SSO" was switched on for the
 /// member's email domain and their non-SSO session was revoked — or a password
 /// sign-in / Google redirect was refused for the same reason.
-const kLogoutReasons = {'ACCOUNT_BLOCKED', kSsoRequired};
+///
+/// `MFA_REQUIRED_BY_ROLE`: the member was given an Admin-like role but has no
+/// two-factor authentication yet, so the refresh was refused; signing in again
+/// walks them through setting it up.
+const kLogoutReasons = {'ACCOUNT_BLOCKED', kSsoRequired, kMfaRequiredByRole};
 
 /// The member's email domain must sign in with the company IdP (contract 13).
 const kSsoRequired = 'SSO_REQUIRED';
+
+/// The member's (new) role requires 2FA they have not set up yet.
+const kMfaRequiredByRole = 'MFA_REQUIRED_BY_ROLE';
 
 /// Codes the login screen may show as a persistent notice: the forced-logout
 /// reasons plus every code a Google / SSO error deep link

@@ -4457,6 +4457,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get authErrMfaRequiredByRole => 'あなたのロールでは二要素認証が必須のため、オフにできません。';
 
   @override
+  String get authNoticeMfaSetupRequiredByRole =>
+      '新しいロールでは二要素認証が必須です。もう一度サインインして設定してください。';
+
+  @override
   String get adminMfaBadge => '2FA オン';
 
   @override
