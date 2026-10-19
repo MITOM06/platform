@@ -175,8 +175,18 @@ export class OAuthService {
 
   buildAuthorizeUrl(entry: CatalogEntry, state: string): string {
     const cfg = entry.oauth!;
+    const clientId = process.env[cfg.clientIdEnv];
+    // compose passes `${NOTION_CLIENT_ID:-}`, so an unfilled .env arrives as ''
+    // (set, but empty). Building the URL anyway sends the member to the provider
+    // with `client_id=`, which answers with raw validation JSON (Notion: "client_id
+    // should be a string ... instead was `0`"). Refuse with a coded error the
+    // clients localize. The secret is checked too: without it the member would
+    // clear the consent screen and only fail at the token exchange.
+    if (!clientId || !process.env[cfg.clientSecretEnv]) {
+      throw new OAuthFlowError('CONNECTOR_NOT_CONFIGURED', { provider: entry.id });
+    }
     const url = new URL(cfg.authorizeUrl);
-    url.searchParams.set('client_id', process.env[cfg.clientIdEnv] ?? '');
+    url.searchParams.set('client_id', clientId);
     url.searchParams.set('response_type', 'code');
     url.searchParams.set('redirect_uri', this.redirectUri(entry.id));
     url.searchParams.set('state', state);
