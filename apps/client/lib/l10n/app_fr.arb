@@ -1541,6 +1541,7 @@
   "securityMfaTurnOffSubmit": "Désactiver",
   "securityMfaTurnedOff": "L'authentification à deux facteurs est désactivée.",
   "authErrMfaRequiredByRole": "Votre rôle exige l'authentification à deux facteurs : elle ne peut pas être désactivée.",
+  "authNoticeMfaSetupRequiredByRole": "Votre nouveau rôle exige l'authentification à deux facteurs. Reconnectez-vous pour la configurer.",
   "adminMfaBadge": "2FA activée",
   "adminMfaReset": "Réinitialiser la 2FA",
   "adminMfaResetConfirm": "Réinitialiser l'authentification à deux facteurs de {name} ? Cette personne sera déconnectée partout et devra la reconfigurer à sa prochaine connexion.",
