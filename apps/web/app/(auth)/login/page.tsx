@@ -12,7 +12,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
 import { parseAuthError, authCodeToI18nKey } from '@/lib/auth/auth-error'
-import { isLoginNotice } from '@/lib/auth/force-logout'
+import { isLoginNotice, loginNoticeI18nKey } from '@/lib/auth/force-logout'
 import { MFA_PATH, isMfaChallenge, savePendingMfa } from '@/lib/auth/mfa'
 import { establishSession } from '@/lib/auth/sign-in'
 import { maybeRequestNotificationPermission } from '@/lib/notifications'
@@ -157,7 +157,7 @@ export default function LoginPage() {
               data-testid="logout-reason"
               className="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
             >
-              {t(authCodeToI18nKey(notice))}
+              {t(loginNoticeI18nKey(notice))}
             </div>
           )
         )}
