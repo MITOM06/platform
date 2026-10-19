@@ -52,10 +52,29 @@ CAT=$(body "$CONN/catalog" -H "Authorization: Bearer $DEV")
 { echo "$CAT" | grep -q '"id":"notion"' && echo "$CAT" | grep -q '"id":"gmail"' \
   && echo "$CAT" | grep -q '"id":"calendar"'; } \
   && ok "catalog lists notion + gmail + calendar" || no "catalog missing a connector"
+# A non-empty authorizeUrl is not enough: with NOTION_CLIENT_ID unset the
+# service used to return a URL carrying `client_id=`, and the user landed on
+# Notion's raw validation JSON. Each provider must either hand out a URL with a
+# real client_id, or refuse cleanly with CONNECTOR_NOT_CONFIGURED (expected on
+# a machine without that provider's credentials).
 for p in notion gmail calendar; do
-  U=$(body "$CONN/oauth/$p/start" -H "Authorization: Bearer $DEV" \
-      | python3 -c "import sys,json;print(json.load(sys.stdin).get('authorizeUrl',''))" 2>/dev/null)
-  [ -n "$U" ] && ok "OAuth start ($p) returns an authorize URL" || no "OAuth start ($p) failed"
+  R=$(body "$CONN/oauth/$p/start" -H "Authorization: Bearer $DEV")
+  V=$(echo "$R" | python3 -c "
+import sys,json,urllib.parse
+try: d=json.load(sys.stdin)
+except Exception: print('bad'); sys.exit()
+u=d.get('authorizeUrl') if isinstance(d,dict) else None
+if u:
+    q=urllib.parse.parse_qs(urllib.parse.urlparse(u).query, keep_blank_values=True)
+    print('url' if q.get('client_id',[''])[0] else 'empty-client-id')
+elif isinstance(d,dict) and d.get('code')=='CONNECTOR_NOT_CONFIGURED': print('not-configured')
+else: print('bad')" 2>/dev/null)
+  case "$V" in
+    url)             ok "OAuth start ($p) returns an authorize URL with a client_id" ;;
+    not-configured)  ok "OAuth start ($p) refused cleanly — no credentials on this machine (CONNECTOR_NOT_CONFIGURED)" ;;
+    empty-client-id) no "OAuth start ($p) built a URL with an EMPTY client_id — user lands on the provider's raw error" ;;
+    *)               no "OAuth start ($p) failed: $R" ;;
+  esac
 done
 # connect + disconnect, exercised via a simulated stored connection (real OAuth
 # needs NOTION/GOOGLE client creds, unavailable locally):
