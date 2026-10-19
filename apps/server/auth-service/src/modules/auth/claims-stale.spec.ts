@@ -101,8 +101,9 @@ class FakeRedis {
       if (!h) return 0;
       if (h.get('revoked') === '1') return 2;
       const cur = Number(h.get('claimsAt'));
-      if (!h.has('claimsAt') || cur < Number(argv[0]))
-        h.set('claimsAt', argv[0]);
+      const next =
+        h.has('claimsAt') && cur >= Number(argv[0]) ? cur + 1 : Number(argv[0]);
+      h.set('claimsAt', String(next));
       return 1;
     }
     if (script.includes("'tokenVersion'")) {
@@ -381,15 +382,39 @@ describe('F1 — claims-stale access tokens', () => {
     expect(redis.hashes.size).toBe(0);
   });
 
-  it('claimsAt only moves forward', async () => {
+  it('claimsAt only moves forward — by at least one on every change', async () => {
     const s = await auth.issueTokensForUser(user, 'phone', 'mobile', 'password');
     setNow(T0 + 60_000);
     await session.markClaimsStale('u1');
     setNow(T0 + 1_000); // another instance with a slower clock
     await session.markClaimsStale('u1');
     expect(redis.hashes.get(`sess:${s.sid}`)?.get('claimsAt')).toBe(
-      String((T0 + 60_000) / 1000 + 1),
+      String((T0 + 60_000) / 1000 + 2),
     );
+  });
+
+  it('a second change in the same second still invalidates the token refreshed in between', async () => {
+    const login = await auth.issueTokensForUser(user, 'web-login', 'web', 'password');
+    // An admin grants VIEW_AUDIT_LOG; the client refreshes right away (the
+    // auth:claims-changed push) and gets it...
+    setNow(T0 + 20_100);
+    claims = { role: 'Member', perms: ['VIEW_AUDIT_LOG'] as any, depts: [] };
+    await session.markClaimsStale('u1');
+    setNow(T0 + 20_300);
+    const granted = await auth.refresh(login.sid, login.refreshToken);
+    await expect(check(granted.accessToken)).resolves.toBe('OK');
+
+    // ...and the admin takes it back within that same second.
+    setNow(T0 + 20_700);
+    claims = { role: 'Member', perms: [] as any, depts: [] };
+    await session.markClaimsStale('u1');
+
+    await expect(check(granted.accessToken)).resolves.toBe(
+      '401 TOKEN_CLAIMS_STALE',
+    );
+    const revoked = await auth.refresh(login.sid, granted.refreshToken);
+    await expect(check(revoked.accessToken)).resolves.toBe('OK');
+    expect(decode(revoked.accessToken)).toMatchObject({ perms: [] });
   });
 
   it('refresh on an instance whose clock is behind claimsAt still mints a passing token', async () => {
