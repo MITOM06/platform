@@ -14,10 +14,12 @@ const login = vi.fn()
 const ssoInfo = vi.hoisted(() => ({
   value: { enabled: false, loginUrl: null, buttonLabel: '' } as SsoInfo,
 }))
+// One stable object per test, like Next.js between navigations.
+const search = vi.hoisted(() => ({ params: new URLSearchParams('') }))
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push, replace: vi.fn() }),
-  useSearchParams: () => new URLSearchParams(''),
+  useSearchParams: () => search.params,
 }))
 vi.mock('next-intl', () => ({
   useTranslations: (ns?: string) => (key: string) => (ns ? `${ns}.${key}` : key),
@@ -56,7 +58,40 @@ function submitLogin() {
 beforeEach(() => {
   vi.clearAllMocks()
   ssoInfo.value = { enabled: false, loginUrl: null, buttonLabel: '' }
+  search.params = new URLSearchParams('')
+  window.history.replaceState(null, '', '/login')
   useAuthStore.setState({ user: null, accessToken: null })
+})
+
+/** Land on /login the way a redirect does: address bar and useSearchParams agree. */
+function visitLogin(query: string) {
+  search.params = new URLSearchParams(query)
+  window.history.replaceState(null, '', `/login?${query}`)
+}
+
+describe('login: after a sign-out (?cleared=1)', () => {
+  it('wipes the autofilled fields, then drops the one-shot flag from the address bar', async () => {
+    visitLogin('cleared=1&reason=GENERIC_ERROR')
+    renderLogin()
+    const email = screen.getByLabelText('auth.emailLabel') as HTMLInputElement
+    fireEvent.input(email, { target: { value: 'autofill@acme.com' } })
+
+    await waitFor(() => expect(email.value).toBe(''))
+    expect(window.location.pathname).toBe('/login')
+    // Only `cleared` goes — the reason notice survives a reload.
+    expect(window.location.search).toBe('?reason=GENERIC_ERROR')
+  })
+
+  it('a plain visit keeps autofill and leaves the URL alone', async () => {
+    visitLogin('reason=GENERIC_ERROR')
+    renderLogin()
+    const email = screen.getByLabelText('auth.emailLabel') as HTMLInputElement
+    fireEvent.input(email, { target: { value: 'autofill@acme.com' } })
+
+    await new Promise((r) => setTimeout(r, 250))
+    expect(email.value).toBe('autofill@acme.com')
+    expect(window.location.search).toBe('?reason=GENERIC_ERROR')
+  })
 })
 
 describe('login: failures that carry no business code', () => {
