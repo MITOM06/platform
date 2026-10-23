@@ -22,6 +22,7 @@ import { useUiStore } from '@/lib/store/ui.store'
 import { useSidebarResize } from '@/lib/hooks/use-sidebar-resize'
 import { useRealtimeNotifications } from '@/lib/hooks/use-realtime-notifications'
 import { SetPasswordGate } from '@/components/auth/SetPasswordGate'
+import { SignedOutCurtain } from '@/components/auth/SignedOutCurtain'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,12 +41,16 @@ const CallOverlay = dynamic(
 
 // A Google-invited member who has not created a PON password yet is held on
 // /set-password: the gate renders a spinner instead of the shell (so STOMP and
-// the conversation list never start) and redirects.
+// the conversation list never start) and redirects. After a sign-out the curtain
+// hides the shell, so Back never shows the previous user's conversations.
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SetPasswordGate>
-      <MainShell>{children}</MainShell>
-    </SetPasswordGate>
+    <>
+      <SignedOutCurtain />
+      <SetPasswordGate>
+        <MainShell>{children}</MainShell>
+      </SetPasswordGate>
+    </>
   )
 }
 
