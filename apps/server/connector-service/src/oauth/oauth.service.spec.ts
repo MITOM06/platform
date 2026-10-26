@@ -126,8 +126,56 @@ describe('OAuthService callback (never raw JSON in the popup)', () => {
   });
 });
 
+/** Gives every catalog connector a client id/secret for the tests inside the calling describe. */
+function withClientCredentialsEnv() {
+  const keys = ['NOTION_CLIENT_ID', 'NOTION_CLIENT_SECRET', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'];
+  const saved: Record<string, string | undefined> = {};
+  beforeEach(() => {
+    for (const k of keys) {
+      saved[k] = process.env[k];
+      process.env[k] = `${k.toLowerCase()}-value`;
+    }
+  });
+  afterEach(() => {
+    for (const k of keys) {
+      if (saved[k] === undefined) delete process.env[k];
+      else process.env[k] = saved[k];
+    }
+  });
+}
+
 describe('OAuthService buildAuthorizeUrl (Task P5-1)', () => {
   const { svc } = makeService();
+  withClientCredentialsEnv();
+
+  it('uses the configured client id', () => {
+    const url = new URL(svc.buildAuthorizeUrl(findCatalogEntry('notion')!, 'st'));
+    expect(url.searchParams.get('client_id')).toBe('notion_client_id-value');
+  });
+
+  // compose passes `${NOTION_CLIENT_ID:-}`, so an unfilled .env arrives as '' and
+  // Notion answers the resulting `client_id=` with raw validation JSON.
+  it.each([
+    ['NOTION_CLIENT_ID', ''],
+    ['NOTION_CLIENT_ID', undefined],
+    ['NOTION_CLIENT_SECRET', ''],
+  ])('refuses CONNECTOR_NOT_CONFIGURED when %s is %j', (name, value) => {
+    if (value === undefined) delete process.env[name];
+    else process.env[name] = value;
+    expect(() => svc.buildAuthorizeUrl(findCatalogEntry('notion')!, 'st')).toThrow(
+      expect.objectContaining({ code: 'CONNECTOR_NOT_CONFIGURED' }),
+    );
+  });
+
+  it('names the provider so the client can say which connector is not set up', () => {
+    process.env.GOOGLE_CLIENT_ID = '';
+    try {
+      svc.buildAuthorizeUrl(findCatalogEntry('gmail')!, 'st');
+      throw new Error('should have thrown');
+    } catch (err) {
+      expect((err as any).getResponse()).toEqual({ code: 'CONNECTOR_NOT_CONFIGURED', provider: 'gmail' });
+    }
+  });
 
   it('gmail URL includes scope + access_type + prompt and NO owner', () => {
     const url = svc.buildAuthorizeUrl(findCatalogEntry('gmail')!, 'st');
@@ -146,6 +194,7 @@ describe('OAuthService buildAuthorizeUrl (Task P5-1)', () => {
 });
 
 describe('OAuthService connect gating', () => {
+  withClientCredentialsEnv();
   it('denies personal connect without CONNECT_PERSONAL_CONNECTOR', async () => {
     const { svc } = makeService();
     await expect(svc.startAuthorization('notion', jwtUser([]))).rejects.toBeInstanceOf(ForbiddenException);

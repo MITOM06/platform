@@ -9,18 +9,21 @@ import { CLAIMS_CHANGED_CHANNEL, Redis } from '@platform/database';
 
 /**
  * Mark ONE session claims-stale. Only touches a live hash (HSET on a missing key
- * would recreate it without a TTL) and keeps its TTL; `claimsAt` only moves
- * forward. Returns 1 = marked, 0 = hash gone (dangling sid), 2 = revoked (left
- * alone).
+ * would recreate it without a TTL) and keeps its TTL. `claimsAt` strictly moves
+ * forward on every change: when it is already at or past ARGV[1] it becomes
+ * `claimsAt + 1`. Otherwise a second change in the same second would leave it
+ * where the first one put it — and the token `refresh` minted between the two
+ * (iat pinned to that value) would keep the claims the second change took away.
+ * Returns 1 = marked, 0 = hash gone (dangling sid), 2 = revoked (left alone).
  * KEYS[1] = sess key, ARGV[1] = claimsAt (unix seconds)
  */
 export const MARK_CLAIMS_STALE_LUA = `
   if redis.call('EXISTS', KEYS[1]) == 0 then return 0 end
   if redis.call('HGET', KEYS[1], 'revoked') == '1' then return 2 end
   local cur = tonumber(redis.call('HGET', KEYS[1], 'claimsAt'))
-  if cur == nil or cur < tonumber(ARGV[1]) then
-    redis.call('HSET', KEYS[1], 'claimsAt', ARGV[1])
-  end
+  local next = tonumber(ARGV[1])
+  if cur ~= nil and cur >= next then next = cur + 1 end
+  redis.call('HSET', KEYS[1], 'claimsAt', tostring(next))
   return 1
 `;
 

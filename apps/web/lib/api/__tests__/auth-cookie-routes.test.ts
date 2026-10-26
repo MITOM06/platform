@@ -15,11 +15,15 @@ function upstreamError(status: number, data: unknown) {
   } as AxiosResponse)
 }
 
-function request(path: string, method: 'GET' | 'POST') {
+function request(path: string, method: 'GET' | 'POST', cookie = 'sid=s1; refreshToken=r1') {
   return new NextRequest(`http://web.test${path}`, {
     method,
-    headers: { cookie: 'sid=s1; refreshToken=r1' },
+    headers: { cookie },
   })
+}
+
+function ok<T>(data: T) {
+  return { data } as AxiosResponse<T>
 }
 
 /**
@@ -57,5 +61,53 @@ describe('auth cookie routes: forced-logout reason', () => {
     expect(res.status).toBe(401)
     expect(await res.json()).toEqual(code ? { error: 'unauthorized', code } : { error: 'unauthorized' })
     expect(res.cookies.get('sid')?.value).toBe('')
+  })
+})
+
+/**
+ * The account behind a live session was deleted outside the app (straight in
+ * the DB). Reloading used to land on a blank signed-in shell (`{ id: '' }`)
+ * instead of the login screen.
+ */
+describe('/api/auth/session: the account no longer exists', () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  const signedIn = 'accessToken=a1; sid=s1; refreshToken=r1'
+
+  it('an empty 200 from /api/users/me (older auth-service) is a dead session, not a user', async () => {
+    vi.spyOn(axios, 'get').mockResolvedValue(ok(''))
+    const post = vi.spyOn(axios, 'post')
+    const res = await sessionRoute(request('/api/auth/session', 'GET', signedIn))
+    expect(res.status).toBe(401)
+    expect(await res.json()).toEqual({ error: 'unauthorized' })
+    expect(res.cookies.get('accessToken')?.value).toBe('')
+    expect(res.cookies.get('sid')?.value).toBe('')
+    expect(post).not.toHaveBeenCalled()
+  })
+
+  it('a user without any id is refused the same way after a refresh', async () => {
+    vi.spyOn(axios, 'post').mockResolvedValue(ok({ accessToken: 'a2', refreshToken: 'r2' }))
+    vi.spyOn(axios, 'get').mockResolvedValue(ok({ email: 'ghost@acme.com', displayName: '' }))
+    const res = await sessionRoute(request('/api/auth/session', 'GET'))
+    expect(res.status).toBe(401)
+    expect(res.cookies.get('refreshToken')?.value).toBe('')
+  })
+
+  it('401 USER_NOT_FOUND, then the refresh is refused → cookies cleared', async () => {
+    vi.spyOn(axios, 'get').mockRejectedValue(upstreamError(401, { code: 'USER_NOT_FOUND' }))
+    vi.spyOn(axios, 'post').mockRejectedValue(upstreamError(401, { code: 'SESSION_REVOKED' }))
+    const res = await sessionRoute(request('/api/auth/session', 'GET', signedIn))
+    expect(res.status).toBe(401)
+    expect(await res.json()).toEqual({ error: 'unauthorized' })
+    expect(res.cookies.get('sid')?.value).toBe('')
+  })
+
+  it('a real user is still returned, `_id` normalised to `id`', async () => {
+    vi.spyOn(axios, 'get').mockResolvedValue(
+      ok({ _id: 'u1', email: 'jane@acme.com', displayName: 'Jane' }),
+    )
+    const res = await sessionRoute(request('/api/auth/session', 'GET', signedIn))
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({ user: { id: 'u1', displayName: 'Jane' }, accessToken: 'a1' })
   })
 })

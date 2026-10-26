@@ -322,6 +322,7 @@
     "errMfaResetForbidden": "Vous n’avez pas l’autorisation de réinitialiser l’authentification à deux facteurs de ce membre.",
     "errMfaResetSelfForbidden": "Vous ne pouvez pas réinitialiser votre propre authentification à deux facteurs.",
     "errMfaRequiredByRole": "Votre rôle exige l'authentification à deux facteurs : elle ne peut pas être désactivée.",
+    "noticeMfaSetupRequiredByRole": "Votre nouveau rôle exige l'authentification à deux facteurs. Reconnectez-vous pour la configurer.",
     "errTooManyRequests": "Trop de requêtes. Patientez un instant puis réessayez.",
     "errNetwork": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez."
   },

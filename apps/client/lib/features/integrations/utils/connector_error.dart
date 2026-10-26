@@ -40,6 +40,7 @@ String? connectorCodeMessage(
     case 'DCR_FAILED':
     case 'INVALID_ENV_OAUTH':
     case 'ENV_OAUTH_NOT_CONFIGURED':
+    case 'CONNECTOR_NOT_CONFIGURED':
       return l10n.connErrOauthSetup;
     case 'BOT_BRIDGE_DISABLED':
       return l10n.connErrBotBridgeDisabled;

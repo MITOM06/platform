@@ -3,6 +3,47 @@
 All notable changes to PON. One version per promotion to `main`; web, mobile and the
 NestJS services share the product version (`apps/client/pubspec.yaml`, `apps/*/package.json`).
 
+## 1.5.0 — 2026-10-26
+
+Everything the team tested on `dev` since 1.4.1, promoted feature by feature (no dev-only
+commits): Minh's Notion connector, Dũng's session and sign-out fixes, Trí's chat attachment
+work and the call video fix. Also ships the Mac mini RabbitMQ move already on `main` since 1.4.1.
+
+### Connectors
+
+- **Notion works end to end.** Notion's hosted MCP rejects the tokens its public OAuth app issues
+  (`403 restricted_resource`), so a member could connect Notion but never got a tool. Notion is
+  now served through the Notion REST API (`NotionRestAdapter`): search, read, query, create and update pages.
+- **A connector without client credentials refuses to start OAuth** with
+  `CONNECTOR_NOT_CONFIGURED` instead of sending the member to the provider's raw error page.
+  Web and mobile show it as "this connector is not set up yet".
+
+### Sign-in and sessions
+
+- **Two role changes in the same second both take effect.** A token refreshed between them used
+  to keep the first change's permissions.
+- **A deleted account's sessions end.** Refresh and `GET /api/users/me` no longer keep a session
+  alive for a user document that no longer exists; the web treats an empty `/me` as signed out
+  instead of showing a blank shell.
+- **Signed out by `MFA_REQUIRED_BY_ROLE`** now explains why on the login screen (web and mobile).
+- **Web: Back after signing out** no longer shows the previous user's page, and the one-shot
+  `?cleared=1` is dropped from the login URL.
+
+### Chat and calls
+
+- **Web chat attachments:** reworked media viewer, staged-attachment upload, size-limit warning
+  and font sizes in the composer and bubbles.
+- **Call video keeps its shape:** a phone's portrait video and a laptop's landscape video are
+  shown whole instead of cropped into a fixed box (web).
+
+### Infrastructure
+
+- **Mac mini runs its own RabbitMQ** (the free CloudAMQP vhost was deleted on 2026-10-08):
+  `rabbitmq` service on `app-net`, no published ports; chat-service and ai-service start once the
+  broker is healthy.
+
+Versions: 1.5.0 (web, NestJS services), 1.5.0+7 (mobile).
+
 ## 1.4.1 — 2026-10-11
 
 One branch, `fix/ai-start-without-rabbitmq`: the AI assistant no longer takes the rest of

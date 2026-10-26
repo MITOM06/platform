@@ -384,6 +384,35 @@ describe('AuthService — sign-in, sessions, Require SSO', () => {
       expect(session.revokeAllSessions).not.toHaveBeenCalled();
     });
 
+    // The user document was deleted outside the app (e.g. straight in the DB):
+    // the session used to keep refreshing forever, so the web showed a blank
+    // signed-in shell instead of the login screen.
+    it('user no longer exists → revokes all + 401 SESSION_REVOKED, no new tokens', async () => {
+      users.findById.mockResolvedValue(null);
+      await expect(service.refresh('s1', 'r1')).rejects.toMatchObject({
+        status: 401,
+        response: { code: 'SESSION_REVOKED' },
+      });
+      expect(session.refreshTokenBelongsToSession).toHaveBeenCalledWith(
+        's1',
+        'r1',
+      );
+      expect(session.revokeAllSessions).toHaveBeenCalledWith('u1', 'other');
+      expect(session.rotateRefreshToken).not.toHaveBeenCalled();
+    });
+
+    it('user no longer exists but foreign refresh token → normal session error', async () => {
+      users.findById.mockResolvedValue(null);
+      session.refreshTokenBelongsToSession.mockResolvedValue(false);
+      session.rotateRefreshToken.mockRejectedValue(
+        new UnauthorizedException({ code: 'REFRESH_TOKEN_INVALID' }),
+      );
+      await expect(service.refresh('s1', 'bogus')).rejects.toMatchObject({
+        response: { code: 'REFRESH_TOKEN_INVALID' },
+      });
+      expect(session.revokeAllSessions).not.toHaveBeenCalled();
+    });
+
     it('unknown session → falls through to the rotation error', async () => {
       session.peekSession.mockResolvedValue(null);
       session.rotateRefreshToken.mockRejectedValue(

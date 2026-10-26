@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState } from 'react'
@@ -8,7 +9,7 @@ import { DialogA11yDescription } from '@/components/common/dialog-a11y-descripti
 import { absoluteMediaUrl, downloadMediaUrl, parseImageUrls } from '@/lib/media'
 import { cn } from '@/lib/utils'
 
-// ── Single image / collage grid (mirror Flutter image_content.dart) ───────────
+// ── Single image / collage grid ───────────────────────────────────────────────
 
 function Tile({
   url,
@@ -22,6 +23,7 @@ function Tile({
   overlay?: string
 }) {
   const [errored, setErrored] = useState(false)
+
   return (
     <button
       type="button"
@@ -33,14 +35,6 @@ function Tile({
           <ImageOff className="size-6" />
         </div>
       ) : (
-        // Plain <img>, NOT next/image. The previous next/image version broke chat
-        // images two ways: (1) the Image Optimizer 400s because the chat-service
-        // upload host drifts per Cloud Run revision (not in next.config
-        // remotePatterns); (2) `fill` makes the <img> position:absolute height:100%,
-        // which collapses to 0px inside the single-image tile (its button has no
-        // fixed height) so the image renders invisible. A natural-sized <img>
-        // matches mobile's CachedNetworkImage and the lightbox, and renders
-        // reliably regardless of host.
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={absoluteMediaUrl(url)}
@@ -50,6 +44,7 @@ function Tile({
           loading="lazy"
         />
       )}
+
       {overlay && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/55 text-xl font-bold text-white">
           {overlay}
@@ -66,26 +61,31 @@ export function ImageContent({ content }: { content: string }) {
   const open = (i: number) => setLightboxIndex(i)
 
   let grid: React.ReactNode
+
   if (urls.length === 1) {
     grid = (
       <Tile
         url={urls[0]}
         onClick={() => open(0)}
-        className="max-h-[280px] max-w-[240px] rounded-xl [&>img]:max-h-[280px] [&>img]:w-auto"
+        className="h-auto max-h-[340px] w-full max-w-[320px] rounded-xl [&>img]:h-auto [&>img]:max-h-[340px] [&>img]:w-full [&>img]:object-contain"
       />
     )
   } else if (urls.length === 2) {
     grid = (
-      <div className="grid w-full max-w-[240px] grid-cols-2 gap-0.5 overflow-hidden rounded-xl">
+      <div className="grid w-full max-w-[320px] grid-cols-2 gap-0.5 overflow-hidden rounded-xl">
         {urls.map((u, i) => (
-          <Tile key={i} url={u} onClick={() => open(i)} className="h-[180px]" />
+          <Tile key={i} url={u} onClick={() => open(i)} className="h-[160px]" />
         ))}
       </div>
     )
   } else if (urls.length === 3) {
     grid = (
-      <div className="flex w-full max-w-[240px] gap-0.5 overflow-hidden rounded-xl">
-        <Tile url={urls[0]} onClick={() => open(0)} className="h-[200px] flex-[0.62]" />
+      <div className="flex w-full max-w-[320px] gap-0.5 overflow-hidden rounded-xl">
+        <Tile
+          url={urls[0]}
+          onClick={() => open(0)}
+          className="h-[200px] flex-[0.62]"
+        />
         <div className="flex flex-1 flex-col gap-0.5">
           <Tile url={urls[1]} onClick={() => open(1)} className="h-[99px]" />
           <Tile url={urls[2]} onClick={() => open(2)} className="h-[99px]" />
@@ -94,14 +94,15 @@ export function ImageContent({ content }: { content: string }) {
     )
   } else {
     const extras = urls.length - 4
+
     grid = (
-      <div className="grid w-full max-w-[240px] grid-cols-2 gap-0.5 overflow-hidden rounded-xl">
+      <div className="grid w-full max-w-[320px] grid-cols-2 gap-0.5 overflow-hidden rounded-xl">
         {urls.slice(0, 4).map((u, i) => (
           <Tile
             key={i}
             url={u}
             onClick={() => open(i)}
-            className="h-[119px]"
+            className="h-[159px]"
             overlay={i === 3 && extras > 0 ? `+${extras}` : undefined}
           />
         ))}
@@ -112,6 +113,7 @@ export function ImageContent({ content }: { content: string }) {
   return (
     <>
       {grid}
+
       <Lightbox
         urls={urls}
         index={lightboxIndex}
@@ -121,6 +123,8 @@ export function ImageContent({ content }: { content: string }) {
     </>
   )
 }
+
+// ── Full-screen image viewer ──────────────────────────────────────────────────
 
 function Lightbox({
   urls,
@@ -134,7 +138,9 @@ function Lightbox({
   onIndexChange: (i: number) => void
 }) {
   const t = useTranslations('chat')
+
   if (index === null) return null
+
   const hasMany = urls.length > 1
   const prev = () => onIndexChange((index - 1 + urls.length) % urls.length)
   const next = () => onIndexChange((index + 1) % urls.length)
@@ -142,17 +148,18 @@ function Lightbox({
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent
-        className="flex h-fit w-fit max-h-[92dvh] max-w-[95vw] items-center justify-center border-none bg-black/85 p-2 sm:p-3"
+        className="flex h-[92dvh] w-[95vw] max-h-[92dvh] max-w-[95vw] items-center justify-center overflow-hidden border-none bg-black/85 p-2 sm:max-w-[95vw] sm:p-3"
         showCloseButton={false}
       >
         <DialogTitle className="sr-only">{t('imageViewer')}</DialogTitle>
         <DialogA11yDescription />
-        <div className="relative flex items-center justify-center">
+
+        <div className="relative flex max-h-full max-w-full items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={absoluteMediaUrl(urls[index])}
             alt=""
-            className="block max-h-[88dvh] max-w-[93vw] rounded-sm object-contain"
+            className="block h-auto max-h-[86dvh] w-auto max-w-full rounded-sm object-contain"
           />
 
           <div className="absolute right-3 top-3 flex items-center gap-2">
@@ -161,9 +168,7 @@ function Lightbox({
                 {index + 1} / {urls.length}
               </span>
             )}
-            {/* Open the original, full-resolution file in a new tab (no
-                download flag, no Next.js optimization) — the "HD" affordance,
-                mirroring the mobile viewer's View-HD button. */}
+
             <a
               href={absoluteMediaUrl(urls[index])}
               target="_blank"
@@ -173,6 +178,7 @@ function Lightbox({
             >
               HD
             </a>
+
             <a
               href={downloadMediaUrl(urls[index])}
               target="_blank"
@@ -181,10 +187,12 @@ function Lightbox({
             >
               <Download className="size-4" />
             </a>
+
             <button
               type="button"
               onClick={onClose}
               className="rounded-full bg-black/60 p-2 text-white hover:bg-black/80"
+              aria-label={t('imageViewer')}
             >
               <X className="size-4" />
             </button>
@@ -195,13 +203,16 @@ function Lightbox({
               <button
                 type="button"
                 onClick={prev}
+                aria-label="Previous image"
                 className="absolute left-3 rounded-full bg-black/60 p-2 text-white hover:bg-black/80"
               >
                 <ChevronLeft className="size-5" />
               </button>
+
               <button
                 type="button"
                 onClick={next}
+                aria-label="Next image"
                 className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-2 text-white hover:bg-black/80"
               >
                 <ChevronRight className="size-5" />
@@ -214,7 +225,7 @@ function Lightbox({
   )
 }
 
-// ── Video (thumbnail card that plays inline in a dialog) ──────────────────────
+// ── Video thumbnail and viewer ────────────────────────────────────────────────
 
 export function VideoContent({ content }: { content: string }) {
   const t = useTranslations('chat')
@@ -223,9 +234,6 @@ export function VideoContent({ content }: { content: string }) {
 
   return (
     <>
-      {/* Thumbnail — tapping plays inline. A muted <video preload="metadata">
-          renders the first frame as a natural poster instead of a flat black box.
-          Download moved to the message 3-dot menu (MessageActions). */}
       <button
         type="button"
         onClick={() => setOpen(true)}
@@ -239,41 +247,48 @@ export function VideoContent({ content }: { content: string }) {
           playsInline
           className="absolute inset-0 h-full w-full object-cover"
         />
+
         <div className="absolute inset-0 bg-black/10 transition-colors group-hover:bg-black/20" />
+
         <div className="relative rounded-full bg-black/50 p-2.5 transition-colors group-hover:bg-black/70">
           <Play className="size-7 fill-white text-white" />
         </div>
       </button>
 
-      {/* Inline video player dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
-          className="flex h-fit w-fit max-h-[92dvh] max-w-[95vw] items-center justify-center border-none bg-black/85 p-2 sm:p-3"
+          className="flex h-[92dvh] w-[95vw] max-h-[92dvh] max-w-[95vw] items-center justify-center overflow-hidden border-none bg-black/85 p-2 sm:max-w-[95vw] sm:p-3"
           showCloseButton={false}
         >
           <DialogTitle className="sr-only">{t('videoViewer')}</DialogTitle>
           <DialogA11yDescription />
-          <div className="relative flex items-center justify-center">
+
+          <div className="relative flex max-h-full max-w-full items-center justify-center">
             {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
             <video
               src={url}
               controls
               autoPlay
-              className="block max-h-[88dvh] max-w-[93vw] rounded-sm object-contain outline-none"
+              playsInline
+              className="block h-auto max-h-[86dvh] w-auto max-w-full rounded-sm object-contain outline-none"
             />
+
             <div className="absolute right-3 top-3 flex gap-2">
               <a
                 href={downloadMediaUrl(content)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-full bg-black/60 p-2 text-white hover:bg-black/80"
+                aria-label="Download video"
               >
                 <Download className="size-4" />
               </a>
+
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 className="rounded-full bg-black/60 p-2 text-white hover:bg-black/80"
+                aria-label={t('videoViewer')}
               >
                 <X className="size-4" />
               </button>

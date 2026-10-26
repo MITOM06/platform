@@ -9,8 +9,11 @@
  * - `ACCOUNT_BLOCKED`: the account was blocked while signed in.
  * - `SSO_REQUIRED`: the workspace now requires single sign-on for this email
  *   domain, so a password / Google session was signed out (contract 13 C).
+ * - `MFA_REQUIRED_BY_ROLE`: the member was given an Admin-like role but has no
+ *   two-factor authentication yet, so the refresh was refused; signing in again
+ *   walks them through setting it up.
  */
-export const LOGOUT_REASONS = ['ACCOUNT_BLOCKED', 'SSO_REQUIRED'] as const
+export const LOGOUT_REASONS = ['ACCOUNT_BLOCKED', 'SSO_REQUIRED', 'MFA_REQUIRED_BY_ROLE'] as const
 export type LogoutReason = (typeof LOGOUT_REASONS)[number]
 
 export function isLogoutReason(value: unknown): value is LogoutReason {

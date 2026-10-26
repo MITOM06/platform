@@ -3,10 +3,11 @@ import { AdapterRegistryService } from './adapter-registry.service';
 describe('AdapterRegistryService', () => {
   const remote = { listTools: jest.fn(), callTool: jest.fn() } as any;
   const google = { listTools: jest.fn(), callTool: jest.fn() } as any;
-  const reg = new AdapterRegistryService(remote, google);
+  const notion = { listTools: jest.fn(), callTool: jest.fn() } as any;
+  const reg = new AdapterRegistryService(remote, google, notion);
 
-  it('notion → remote-mcp adapter', () => {
-    expect(reg.forProvider('notion')).toBe(remote);
+  it('notion → notion-rest adapter (the hosted MCP rejects the catalog OAuth token)', () => {
+    expect(reg.forProvider('notion')).toBe(notion);
   });
 
   it('gmail → google-rest adapter', () => {

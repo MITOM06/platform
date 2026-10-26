@@ -83,6 +83,16 @@ describe('UsersController — /me (2FA, roleName) and change-password body', () 
       expect(me).toMatchObject({ mfaEnabled: false, mfaRequired: false });
     });
 
+    it('account no longer exists → 401 USER_NOT_FOUND, never a 200 with an empty body', async () => {
+      users.findById.mockResolvedValue(null);
+      await expect(
+        controller.getMe({ user: { sub: 'u1' } }),
+      ).rejects.toMatchObject({
+        status: 401,
+        response: { code: 'USER_NOT_FOUND' },
+      });
+    });
+
     it('custom role with MANAGE_ROLES → mfaRequired:true (not enrolled yet)', async () => {
       users.findById.mockResolvedValue(doc());
       const me = await controller.getMe({

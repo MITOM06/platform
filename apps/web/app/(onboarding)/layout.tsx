@@ -1,5 +1,6 @@
 import { AuthShell } from '@/components/auth/AuthShell'
 import { SetPasswordGate } from '@/components/auth/SetPasswordGate'
+import { SignedOutCurtain } from '@/components/auth/SignedOutCurtain'
 
 /**
  * Signed-in onboarding steps that must be finished before the app shell
@@ -10,6 +11,7 @@ import { SetPasswordGate } from '@/components/auth/SetPasswordGate'
 export default function OnboardingLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthShell>
+      <SignedOutCurtain />
       <SetPasswordGate inline>{children}</SetPasswordGate>
     </AuthShell>
   )

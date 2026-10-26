@@ -322,6 +322,7 @@
     "errMfaResetForbidden": "Bạn không có quyền đặt lại xác thực hai yếu tố của thành viên này.",
     "errMfaResetSelfForbidden": "Bạn không thể tự đặt lại xác thực hai yếu tố của chính mình.",
     "errMfaRequiredByRole": "Vai trò của bạn bắt buộc xác thực hai yếu tố nên không thể tắt.",
+    "noticeMfaSetupRequiredByRole": "Vai trò mới của bạn bắt buộc xác thực hai yếu tố. Hãy đăng nhập lại để thiết lập.",
     "errTooManyRequests": "Bạn gửi quá nhiều yêu cầu. Vui lòng đợi một lát rồi thử lại.",
     "errNetwork": "Không kết nối được tới máy chủ. Kiểm tra mạng rồi thử lại."
   },

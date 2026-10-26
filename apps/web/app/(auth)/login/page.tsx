@@ -12,7 +12,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
 import { parseAuthError, authCodeToI18nKey } from '@/lib/auth/auth-error'
-import { isLoginNotice } from '@/lib/auth/force-logout'
+import { isLoginNotice, loginNoticeI18nKey } from '@/lib/auth/force-logout'
 import { MFA_PATH, isMfaChallenge, savePendingMfa } from '@/lib/auth/mfa'
 import { establishSession } from '@/lib/auth/sign-in'
 import { maybeRequestNotificationPermission } from '@/lib/notifications'
@@ -61,7 +61,8 @@ export default function LoginPage() {
   // After a logout we redirect here with `?cleared=1`. Browsers re-autofill the
   // form *after* React renders, so we wipe the fields on a short delay to win
   // that race. A normal visit to /login (no `?cleared=1`) keeps legitimate
-  // autofill working.
+  // autofill working. The flag is one-shot: once used it is dropped from the
+  // address bar, so a reload or a bookmark is a plain /login again.
   const searchParams = useSearchParams()
   // Forced logout (e.g. the account was blocked) and failed Google / SSO
   // sign-ins land here with `?reason=CODE`. Only allow-listed codes are shown,
@@ -84,6 +85,10 @@ export default function LoginPage() {
     const timer = setTimeout(() => {
       setValue('email', '')
       setValue('password', '')
+      // Any other param (`?reason=`) stays; Next.js keeps useSearchParams in sync.
+      const url = new URL(window.location.href)
+      url.searchParams.delete('cleared')
+      window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`)
     }, 150)
     return () => clearTimeout(timer)
   }, [searchParams, setValue])
@@ -157,7 +162,7 @@ export default function LoginPage() {
               data-testid="logout-reason"
               className="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
             >
-              {t(authCodeToI18nKey(notice))}
+              {t(loginNoticeI18nKey(notice))}
             </div>
           )
         )}
