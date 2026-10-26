@@ -11,6 +11,7 @@ import {
   Patch,
   Body,
   Post,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
@@ -52,7 +53,12 @@ export class UsersController {
       this.usersService.findById(req.user.sub),
       this.usersService.getHasPassword(req.user.sub),
     ]);
-    if (!user) return null;
+    // A live token whose account no longer exists (deleted outside the app) is
+    // no session at all: 401, so clients refresh — which /auth/refresh refuses,
+    // revoking the sessions — and land on the login screen. A 200 with an empty
+    // body used to leave the web on a blank signed-in shell.
+    if (!user)
+      throw new UnauthorizedException({ code: AuthCode.USER_NOT_FOUND });
     // user is a Mongoose Document — spread via toObject() so we can add hasPassword.
     // The raw 2FA sub-document never leaves the server; only the flags do.
     const { mfa, ...doc } = user.toObject();

@@ -382,15 +382,26 @@ export class AuthService {
   /**
    * Blocked / pending owner → revoke all sessions + 403. A non-SSO session of a
    * member covered by "Require SSO" → revoke their non-SSO sessions + 403
-   * SSO_REQUIRED (the client shows "use SSO" instead of a plain logout). Only
-   * revealed to a caller holding a genuine (current or previous) refresh token
-   * of this session.
+   * SSO_REQUIRED (the client shows "use SSO" instead of a plain logout). An
+   * owner whose account no longer exists → revoke all sessions + 401
+   * SESSION_REVOKED. Only revealed to a caller holding a genuine (current or
+   * previous) refresh token of this session.
    */
   private async assertRefreshOwnerCanSignIn(sid: string, refreshToken: string) {
     const peek = await this.session.peekSession(sid);
     if (!peek) return;
     const user = await this.usersService.findById(peek.userId);
-    if (!user) return;
+    if (!user) {
+      // The user document is gone (deleted outside the app): the session used
+      // to keep refreshing forever with claims for nobody.
+      if (
+        !(await this.session.refreshTokenBelongsToSession(sid, refreshToken))
+      ) {
+        return;
+      }
+      await this.session.revokeAllSessions(peek.userId, 'other');
+      throw new UnauthorizedException({ code: AuthCode.SESSION_REVOKED });
+    }
     const inactive = user.status === 'blocked' || user.status === 'pending';
     const ssoOnly =
       !inactive &&
