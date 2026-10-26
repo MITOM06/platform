@@ -163,10 +163,9 @@ export class InvitationAcceptService {
       displayName: profile.displayName || inv.email.split('@')[0],
       avatarUrl: profile.avatar || '',
       socialLinks: profile.id ? { google: profile.id } : {},
-      // The ONLY place this flag is set: clients ask a Google invitee to create
-      // a PON password before using the app (an onboarding step, not a security
-      // boundary — any password change / reset clears it).
-      mustSetPassword: true,
+      // No forced "create your PON password" step any more (2026-10-26): a
+      // Google invitee goes straight into the app and may add a password later
+      // (Settings → Password & Security, or reset). `mustSetPassword` stays false.
     });
     this.sendWelcome(inv, user, 'google');
     return user._id.toString();

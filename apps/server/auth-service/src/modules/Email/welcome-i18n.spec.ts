@@ -12,7 +12,9 @@ describe('welcome email i18n', () => {
     expect(google.subject).toBe('Your PON account is active');
     expect(google.body).toContain('Acme');
     expect(google.body).toContain('Admin');
-    expect(google.nextStep).toMatch(/^Next step: create your PON password/);
+    // No forced password step after Google: a password is optional, in Settings.
+    expect(google.nextStep).toMatch(/^Sign in with Google any time\./);
+    expect(google.nextStep).toContain('Settings → Password & Security');
     expect(password.nextStep).toBe(
       'Sign in with your email and the password you just set.',
     );
@@ -69,7 +71,7 @@ describe('welcome email i18n', () => {
     );
     expect(html).toContain('href="https://pon.acme.com/login"');
     expect(html).toContain('Open PON');
-    expect(html).toContain('Next step: create your PON password');
+    expect(html).toContain('Sign in with Google any time.');
     expect(html).not.toContain('<script>');
     expect(html).toContain('&lt;script&gt;');
   });
