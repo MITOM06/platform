@@ -52,8 +52,10 @@ docker info >/dev/null 2>&1 || die "Docker is not running. Open Docker Desktop f
 
 # Report every blank required value at once. Compose would abort on the first
 # one it interpolates, which turns filling in the file into a guessing loop.
+# RABBITMQ_HOST is not here: compose defaults it to the stack's own `rabbitmq`
+# service and it is set only for a managed broker (.env.mini.example).
 missing=""
-for key in MONGODB_URI REDIS_URL RABBITMQ_HOST RABBITMQ_USERNAME RABBITMQ_PASSWORD \
+for key in MONGODB_URI REDIS_URL RABBITMQ_USERNAME RABBITMQ_PASSWORD \
            RABBITMQ_VHOST RABBITMQ_URL JWT_ACCESS_SECRET JWT_REFRESH_SECRET \
            SESSION_SECRET CONNECTOR_VAULT_KEY INTERNAL_API_KEY ANTHROPIC_API_KEY \
            WEB_ORIGIN; do

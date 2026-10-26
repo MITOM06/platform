@@ -3,6 +3,18 @@
 All notable changes to PON. One version per promotion to `main`; web, mobile and the
 NestJS services share the product version (`apps/client/pubspec.yaml`, `apps/*/package.json`).
 
+## 1.5.1 — 2026-10-26
+
+One fix, `fix/mini-up-rabbitmq-host`: the Mac mini can deploy again.
+
+- **`scripts/mini/up.sh` no longer requires `RABBITMQ_HOST`.** Since the mini runs its own
+  RabbitMQ (1.5.0), compose defaults the host to the `rabbitmq` service and `.env.mini.example`
+  leaves it unset, but the preflight still listed it as required. Every deploy since 2026-10-12
+  stopped there and rolled back, so production kept serving `0891d5f` (1.4.1 + the RabbitMQ
+  move) and never picked up 1.5.0. Nothing to configure.
+
+Versions: 1.5.1 (web, NestJS services), 1.5.1+8 (mobile, unchanged apart from the version).
+
 ## 1.5.0 — 2026-10-26
 
 Everything the team tested on `dev` since 1.4.1, promoted feature by feature (no dev-only
