@@ -26,7 +26,9 @@ import { OWNER_ROLE } from '../invitations/invitation.shared';
  *      full matrix, the others only gain missing capability keys,
  *   3. removal of retired presets (the former "Manager": holders → Member),
  *   4. the first Owner (a user matching BOOTSTRAP_OWNER_EMAIL with no role yet),
- *      or — when no such user exists — an Owner invitation emailed to it.
+ *      or — when no such user exists — an Owner invitation emailed to it,
+ *   5. release of accounts still held by the retired Google-invite
+ *      "create your PON password" step (`mustSetPassword`).
  *
  * Every step is idempotent — running it twice yields exactly one workspace and
  * the three preset roles, so it is safe to re-run on every boot and redeploy.
@@ -50,6 +52,32 @@ export class BootstrapService implements OnApplicationBootstrap {
     await this.ensurePresetRoles();
     await this.removeRetiredPresets();
     await this.ensureBootstrapOwner();
+    await this.clearRetiredPasswordStep();
+  }
+
+  /**
+   * Accepting an invitation with Google no longer forces a PON password
+   * (2026-10-26): nothing sets `mustSetPassword` any more, so accounts flagged
+   * before that are released here instead of staying held on /set-password.
+   * A password stays optional (Settings → Password & Security, or reset).
+   * Idempotent; never blocks boot.
+   */
+  private async clearRetiredPasswordStep(): Promise<void> {
+    try {
+      const { modifiedCount } = await this.userModel.updateMany(
+        { mustSetPassword: true },
+        { $set: { mustSetPassword: false } },
+      );
+      if (modifiedCount > 0) {
+        this.logger.log(
+          `Released ${modifiedCount} account(s) from the retired set-password step`,
+        );
+      }
+    } catch (err) {
+      this.logger.error(
+        `Set-password flag cleanup failed (retried next boot): ${err instanceof Error ? err.message : typeof err}`,
+      );
+    }
   }
 
   /**

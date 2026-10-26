@@ -247,6 +247,12 @@ clears it. It is an onboarding step, not a security boundary: no endpoint refuse
 Since 2026-10-06 it is always `false` for a member covered by "Require SSO" (they have no PON
 password to set; change-password answers `403 SSO_REQUIRED`).
 
+**Retired 2026-10-26.** Accepting an invitation with Google no longer forces a PON password: the
+invitee goes straight into the app, and a password stays optional (Settings → Password &
+Security, or `POST /auth/reset-password`). Nothing sets the flag any more; auth-service clears it on
+accounts still flagged at boot (`BootstrapService`). The field is kept in every payload above, so
+existing clients simply always read `false`; the client gate is removed in a later cleanup.
+
 After an invitation is accepted (password or Google) the invitee also gets a localized
 **welcome email** (invitation locale; Google variant adds the "create your PON password" step).
 It is fire-and-forget: a mail failure never fails or delays the accept.

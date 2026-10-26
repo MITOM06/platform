@@ -250,7 +250,9 @@ describe('AuthService — sign-in, sessions, Require SSO', () => {
       });
     });
 
-    it('Google invitee → user.mustSetPassword:true so the client gates before /me', async () => {
+    // Nothing sets the flag any more (cleared at boot); the payload still
+    // reports whatever the account holds, so older clients stay consistent.
+    it('a still-flagged account → user.mustSetPassword:true, as stored', async () => {
       redis.getdel.mockResolvedValue('u1');
       users.findById.mockResolvedValue({
         ...activeUser,

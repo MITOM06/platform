@@ -308,12 +308,14 @@ describe('InvitationAcceptService', () => {
       );
     });
 
-    it('Google accept: user created with mustSetPassword:true, welcome email with the google variant', async () => {
+    // 2026-10-26: no forced "create your PON password" step after Google —
+    // the invitee goes straight into the app (a password stays optional).
+    it('Google accept: flag NOT set, welcome email with the google variant', async () => {
       redis.getdel.mockResolvedValue(INV_ID);
       await service.acceptWithGoogle('flow_abcdefghijklmnop', GOOGLE_PROFILE);
-      expect(users.create.mock.calls[0][0]).toMatchObject({
-        mustSetPassword: true,
-      });
+      expect(users.create.mock.calls[0][0]).not.toHaveProperty(
+        'mustSetPassword',
+      );
       expect(mailer.sendWelcome).toHaveBeenCalledTimes(1);
       expect(mailer.sendWelcome).toHaveBeenCalledWith(
         expect.objectContaining({ email: 'jane@acme.com' }),
