@@ -22,6 +22,8 @@ const isUpstreamAuthRejection = (err: unknown): boolean =>
   axios.isAxiosError(err) &&
   (err.response?.status === 401 || err.response?.status === 403)
 
+type UpstreamUser = AuthUser & { _id?: string; avatarUrl?: string }
+
 const upstreamCode = (err: unknown): string | undefined =>
   axios.isAxiosError(err)
     ? (err.response?.data as { code?: string } | undefined)?.code
@@ -44,12 +46,17 @@ export async function GET(request: NextRequest) {
   // refresh we MUST write the rotated refreshToken back to the cookie.
   let rotatedRefreshToken: string | null = null
 
-  const fetchUser = async (token: string): Promise<AuthUser & { avatarUrl?: string }> => {
-    const { data } = await axios.get<AuthUser & { _id?: string; avatarUrl?: string }>(`${authUrl}/api/users/me`, {
+  // The signed-in user, or null when auth-service answered without one: an older
+  // auth-service sends 200 with an empty body for an account that no longer
+  // exists (deleted outside the app). That is a dead session, never a user —
+  // it used to become `{ id: '' }` and a blank signed-in shell.
+  const fetchUser = async (token: string): Promise<UpstreamUser | null> => {
+    const { data } = await axios.get<UpstreamUser | ''>(`${authUrl}/api/users/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     // Mongoose may serialize _id but omit the id virtual — normalise here
-    return { ...data, id: data.id || data._id || '' }
+    const id = data ? data.id || data._id : undefined
+    return data && id ? { ...data, id } : null
   }
 
   const refresh = async (): Promise<string> => {
@@ -136,6 +143,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const user = await fetchUser(accessToken)
+    if (!user) return clearSession()
     return withSessionCookies(NextResponse.json({ user, accessToken }), accessToken)
   } catch (error) {
     if (!isUpstreamAuthRejection(error)) {
@@ -151,6 +159,7 @@ export async function GET(request: NextRequest) {
         // access token if the fetchUser below fails non-fatally.
         accessToken = newAccessToken
         const user = await fetchUser(newAccessToken)
+        if (!user) return clearSession()
         return withSessionCookies(NextResponse.json({ user, accessToken: newAccessToken }), newAccessToken)
       } catch (err) {
         // The nested fetchUser can also fail transiently — classify again.
