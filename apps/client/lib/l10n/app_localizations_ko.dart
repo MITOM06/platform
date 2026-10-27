@@ -2125,6 +2125,14 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get skillReady => '사용 가능';
+
+  @override
+  String skillMissing(String connectors) {
+    return '연결 안 됨: $connectors';
+  }
+
+  @override
   String get skillSchedulerName => '일정 관리';
 
   @override

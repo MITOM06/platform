@@ -4075,6 +4075,18 @@ abstract class AppLocalizations {
   /// **'Needs {requirements}'**
   String skillNeeds(String requirements);
 
+  /// No description provided for @skillReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get skillReady;
+
+  /// No description provided for @skillMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected: {connectors}'**
+  String skillMissing(String connectors);
+
   /// No description provided for @skillSchedulerName.
   ///
   /// In en, this message translates to:

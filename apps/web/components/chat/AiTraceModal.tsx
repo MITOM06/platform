@@ -8,7 +8,7 @@ import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { Badge } from '@/components/ui/badge'
 import { chatService } from '@/lib/api/chat'
 import { useProviderNameSources } from '@/lib/hooks/use-connectors'
-import { toolDisplayLabel } from '@/lib/ai/connector-names'
+import { toolCallLabel } from '@/lib/ai/connector-names'
 import { modelDisplayName, toolCallStatus, type ToolCallStatus } from '@/lib/ai/trace'
 import type { AiTraceResponse } from '@/lib/api/types'
 
@@ -161,7 +161,7 @@ export function AiTraceModal({ messageId, onClose }: Props) {
                   return (
                     <li key={i} className="flex items-center justify-between gap-2">
                       <span className="text-sm text-foreground">
-                        {toolDisplayLabel(tc.toolName, t, providerSources)}
+                        {toolCallLabel(tc.toolName, t, providerSources)}
                       </span>
                       <Badge variant={status === 'failed' ? 'destructive' : 'secondary'}>
                         {t(STATUS_KEYS[status])}

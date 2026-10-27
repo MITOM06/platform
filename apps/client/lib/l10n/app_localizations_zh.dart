@@ -2114,6 +2114,14 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get skillReady => '已就绪';
+
+  @override
+  String skillMissing(String connectors) {
+    return '未连接：$connectors';
+  }
+
+  @override
   String get skillSchedulerName => '日程助手';
 
   @override

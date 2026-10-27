@@ -2125,6 +2125,14 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get skillReady => '利用可能';
+
+  @override
+  String skillMissing(String connectors) {
+    return '未接続：$connectors';
+  }
+
+  @override
   String get skillSchedulerName => 'スケジューラー';
 
   @override

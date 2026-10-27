@@ -1092,6 +1092,15 @@
       }
     }
   },
+  "skillReady": "Ready",
+  "skillMissing": "Not connected: {connectors}",
+  "@skillMissing": {
+    "placeholders": {
+      "connectors": {
+        "type": "String"
+      }
+    }
+  },
   "skillSchedulerName": "Scheduler",
   "skillSchedulerDesc": "Suggests meeting times and drafts invites — you still send them via your calendar/mail app (or connect Google Calendar/Gmail so it can act directly).",
   "skillMailWriterName": "Mail writer",

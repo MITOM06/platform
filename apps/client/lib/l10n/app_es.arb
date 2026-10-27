@@ -782,6 +782,8 @@
   "skillsRealActionNote": "Las habilidades cambian cómo piensa y se expresa tu asistente. Para que actúe de verdad (enviar correos, crear eventos, escribir en Notion…), conecta la app correspondiente que aparece abajo.",
   "skillsSettingsSubtitle": "Elige en qué es bueno tu asistente",
   "skillNeeds": "Necesita {requirements}",
+  "skillReady": "Lista",
+  "skillMissing": "Sin conectar: {connectors}",
   "skillSchedulerName": "Planificador",
   "skillSchedulerDesc": "Sugiere horarios de reunión y redacta invitaciones — aún debes enviarlas desde tu app de calendario/correo (o conecta Google Calendar/Gmail para que actúe directamente).",
   "skillMailWriterName": "Redactor de correos",

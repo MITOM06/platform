@@ -2180,6 +2180,14 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get skillReady => 'Lista';
+
+  @override
+  String skillMissing(String connectors) {
+    return 'Sin conectar: $connectors';
+  }
+
+  @override
   String get skillSchedulerName => 'Planificador';
 
   @override
