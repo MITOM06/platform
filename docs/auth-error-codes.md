@@ -434,6 +434,7 @@ request retries; it answers `?error=SSO_UNAVAILABLE`.
 | `OIDC_EMAIL_UNVERIFIED` | OAuth redirect `?error=` | Your identity provider did not confirm your email address. | — |
 | `SOCIAL_LOGIN_CANCELLED` | OAuth redirect `?error=` (Google answered `error=access_denied`) | Google sign-in was cancelled. | — |
 | `SOCIAL_LOGIN_FAILED` | OAuth redirect `?error=` (Google refused the code, or any other provider error) | Google sign-in didn't complete. Please try again. | — |
+| `INVITE_GOOGLE_FLOW_EXPIRED` | 410 · OAuth redirect `?error=` (the Google round trip of an invitation is over 10 minutes old, or was already used by a successful accept) | This Google sign-in attempt expired. Please try again from your invitation. | — |
 
 `/auth/refresh` answers 401 `MFA_REQUIRED_BY_ROLE` (and revokes that session) when the member's
 role now requires 2FA — Owner / Admin-like — but they never enrolled and the session was not opened
@@ -510,7 +511,7 @@ Only `AuthCode` values (and only for 4xx errors) are placed in the URL; anything
 `GENERIC_ERROR`. `params` are never put in the URL. Codes that can appear:
 `ACCOUNT_NOT_PROVISIONED, ACCOUNT_BLOCKED, INVITATION_PENDING, INVITATION_INVALID,
 INVITATION_EXPIRED, INVITATION_REVOKED, INVITATION_ALREADY_ACCEPTED, INVITATION_EMAIL_MISMATCH,
-MEMBER_ALREADY_EXISTS, SOCIAL_EMAIL_UNAVAILABLE, SSO_DISABLED, SSO_DOMAIN_NOT_ALLOWED,
+INVITE_GOOGLE_FLOW_EXPIRED, MEMBER_ALREADY_EXISTS, SOCIAL_EMAIL_UNAVAILABLE, SSO_DISABLED, SSO_DOMAIN_NOT_ALLOWED,
 SSO_EMAIL_UNVERIFIED, SOCIAL_ACCOUNT_CONFLICT, SOCIAL_LOGIN_CANCELLED, SOCIAL_LOGIN_FAILED, SSO_REQUIRED,
 SSO_UNAVAILABLE, GENERIC_ERROR`. `SSO_UNAVAILABLE`
 (IdP unreachable) is the only 5xx code that is put in the URL; `GET /auth/oidc/login` also redirects with it
@@ -521,6 +522,14 @@ show a raw 401 / 500 JSON page): `SOCIAL_LOGIN_CANCELLED` when the person cancel
 `SOCIAL_LOGIN_FAILED` when Google refused the code. A Google flow started from an invitation returns to that
 invitation page with `?reason=<CODE>` for these two codes (web: the token is remembered in the tab before
 leaving for Google; mobile: the invite screen stays open and shows the notice).
+
+Invitation round trip (2026-10-27): the flow id that `/auth/social/google/init?invite=…` creates lives
+10 minutes and is deleted only by a **successful** accept — a refused attempt (wrong Google account →
+`INVITATION_EMAIL_MISMATCH`) keeps it, so Back to Google's account chooser and picking the invited account
+still works (the invitation claim is atomic, so a reused flow id can never create a second account). A
+missing flow id answers `INVITE_GOOGLE_FLOW_EXPIRED` instead of `INVITATION_INVALID` (the invitation itself
+may still be valid). `INVITATION_EMAIL_MISMATCH` and `INVITE_GOOGLE_FLOW_EXPIRED` return to the invitation
+page too, like the two codes above.
 
 ## Example response shapes
 
