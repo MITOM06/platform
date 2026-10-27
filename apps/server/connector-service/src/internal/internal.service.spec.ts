@@ -85,6 +85,25 @@ describe('InternalService', () => {
     expect(list[0].input_schema).toEqual({ type: 'object', properties: {} });
   });
 
+  it('names the tools the ROLE withholds, so the AI can say why instead of asking for a reconnect', async () => {
+    const { tools: list, withheld } = await svc.getTools('u1');
+    expect(list.map((t) => t.name)).toEqual(['mcp__notion__search']);
+    expect(withheld).toEqual([{ name: 'mcp__notion__create_page', reason: 'role' }]);
+  });
+
+  it('withholds nothing for a role with RUN_SENSITIVE_SKILL', async () => {
+    permSet.add(Capability.RUN_SENSITIVE_SKILL);
+    expect((await svc.getTools('u1')).withheld).toEqual([]);
+  });
+
+  it('a tool held back by the connection grant (not the role) is not reported as withheld', async () => {
+    permSet.add(Capability.RUN_SENSITIVE_SKILL);
+    connModel.find.mockReturnValue(lean([{ ...connDoc, actionGroups: ['view'] }]));
+    const { tools: list, withheld } = await svc.getTools('u1');
+    expect(list.map((t) => t.name)).toEqual(['mcp__notion__search']);
+    expect(withheld).toEqual([]);
+  });
+
   it('a Member cannot run a hosted write through a workspace connector (unknown verb → sensitive)', async () => {
     connModel.find.mockReturnValue(lean([{ ...connDoc, provider: 'stripe', userId: 'admin', scope: 'workspace' }]));
     adapter.listTools.mockResolvedValue(tools('create_refund', 'finalize_invoice', 'list_customers'));

@@ -33,6 +33,24 @@ export interface CallToolOptions {
   write?: boolean;
 }
 
+const MAX_WITHHELD = 50;
+
+/** Valid `{name: 'mcp__…', reason: 'role'}` items of connector-service `withheld` (older services send none). */
+function roleWithheldNames(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter(
+      (w): w is { name: string } =>
+        !!w &&
+        typeof w === 'object' &&
+        (w as { reason?: unknown }).reason === 'role' &&
+        typeof (w as { name?: unknown }).name === 'string' &&
+        (w as { name: string }).name.startsWith('mcp__'),
+    )
+    .slice(0, MAX_WITHHELD)
+    .map((w) => w.name);
+}
+
 class ConnectorTimeoutError extends Error {
   constructor(ms: number) {
     super(`timed out after ${ms}ms`);
@@ -91,7 +109,12 @@ export class McpConnectorClient {
     }
   }
 
-  async getTools(userId: string): Promise<ToolDefinition[]> {
+  /**
+   * The member's connector tools. `withheldSink`, when given, receives the names of
+   * the tools connector-service holds back because of the member's ROLE (`withheld`,
+   * reason `role`) — connected apps whose write actions this role may not run.
+   */
+  async getTools(userId: string, withheldSink?: string[]): Promise<ToolDefinition[]> {
     try {
       const url = `${this.baseUrl}/internal/tools?userId=${encodeURIComponent(userId)}`;
       const res = await this.fetchWithTimeout(
@@ -103,8 +126,9 @@ export class McpConnectorClient {
         this.logger.warn(`connector getTools returned ${res.status} — degrading to []`);
         return [];
       }
-      const body = (await res.json()) as { tools?: ConnectorTool[] };
+      const body = (await res.json()) as { tools?: ConnectorTool[]; withheld?: unknown };
       const tools = body.tools ?? [];
+      if (withheldSink) withheldSink.push(...roleWithheldNames(body.withheld));
       // Whitelist the fields: `actionGroup` (and anything else connector-service
       // adds later) is dropped here; `sensitive` is kept INTERNALLY for the
       // confirmation gate. An older connector without the flag falls back to

@@ -152,9 +152,20 @@ describe('ToolRegistryService', () => {
     const registry = makeRegistry({ mcpGetTools: getTools });
     // notion is gated by the projectKeeper skill — enable it so the tool passes.
     const defs = await registry.getDefinitions({ ...ctx, enabledSkillIds: ['projectKeeper'] });
-    expect(getTools).toHaveBeenCalledWith('user-1');
+    expect(getTools).toHaveBeenCalledWith('user-1', expect.any(Array));
     expect(defs).toHaveLength(7);
     expect(defs.map((d) => d.name)).toContain('mcp__notion__create_page');
+  });
+
+  it('reports the role-withheld connector tools, within the AI allow-list', async () => {
+    const getTools = jest.fn(async (_userId: string, sink?: string[]) => {
+      sink?.push('mcp__gmail__send_email', 'mcp__notion__create_page');
+      return [];
+    });
+    const registry = makeRegistry({ mcpGetTools: getTools });
+    const withheldSink: string[] = [];
+    await registry.getDefinitions({ ...ctx, allowedConnectors: ['gmail'], withheldSink });
+    expect(withheldSink).toEqual(['mcp__gmail__send_email']); // notion is not an AI connector here
   });
 
   it('dispatches to search_messages tool', async () => {

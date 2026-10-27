@@ -88,6 +88,17 @@ interface Access {
 interface Verdict {
   cls: ToolClassification;
   denied?: string;
+  /** Denied because the member's ROLE lacks RUN_SENSITIVE_SKILL (the connection itself is fine). */
+  byRole?: boolean;
+}
+
+/**
+ * A tool of a connected app that the member's role may not run. Listed so the
+ * AI can say so, instead of guessing that the app is not connected.
+ */
+export interface WithheldTool {
+  name: string;
+  reason: 'role';
 }
 
 const fingerprint = (value: unknown): string =>
@@ -126,19 +137,31 @@ export class InternalService {
 
   // ── Listing ───────────────────────────────────────────────────────────────
 
-  async getTools(userId: string, channel: ToolChannel = 'ai'): Promise<{ tools: InternalToolDef[] }> {
+  async getTools(
+    userId: string,
+    channel: ToolChannel = 'ai',
+  ): Promise<{ tools: InternalToolDef[]; withheld: WithheldTool[] }> {
     const access = await this.loadAccess(userId, channel);
-    if (!access) return { tools: [] };
+    if (!access) return { tools: [], withheld: [] };
     const sources = await this.visibleSources(userId, access);
     // Parallel, each bounded: one slow server no longer empties the whole list.
     const lists = await Promise.all(sources.map((s) => this.listSource(s, userId)));
 
     const tools: InternalToolDef[] = [];
+    const withheld: WithheldTool[] = [];
     const seen = new Set<string>();
     sources.forEach((source, i) => {
       for (const t of lists[i]) {
         const verdict = this.permits(source, t.name, t.annotations, access);
-        if (verdict.denied) continue;
+        if (verdict.denied) {
+          // The AI channel hears which tools the role withholds, so the assistant can
+          // say why (only an admin can change it) rather than ask for a reconnect.
+          const withheldName = verdict.byRole && channel === 'ai' ? buildToolName(source.provider, t.name) : null;
+          if (withheldName && !withheld.some((w) => w.name === withheldName)) {
+            withheld.push({ name: withheldName, reason: 'role' });
+          }
+          continue;
+        }
         const sensitive = InternalService.needsConfirmation(verdict.cls);
         // Bot Factory cannot show PON's confirmation card: read-only tools only.
         if (sensitive && channel === 'bot') continue;
@@ -161,7 +184,7 @@ export class InternalService {
         });
       }
     });
-    return { tools };
+    return { tools, withheld };
   }
 
   private async visibleSources(userId: string, access: Access): Promise<ToolSource[]> {
@@ -361,7 +384,7 @@ export class InternalService {
       return { cls, denied: `${cls.group} access not granted for ${source.provider}` };
     }
     if (cls.sensitive && !access.member.perms.has(Capability.RUN_SENSITIVE_SKILL)) {
-      return { cls, denied: 'sensitive skill' };
+      return { cls, denied: 'sensitive skill', byRole: true };
     }
     return { cls };
   }

@@ -48,4 +48,11 @@ export interface ToolContext {
    * `undefined`/`[]` ⇒ no gated-provider tools are offered.
    */
   enabledSkillIds?: string[];
+  /**
+   * Filled by `ToolRegistryService.getDefinitions`: connector tools (`mcp__<provider>__<tool>`)
+   * of connected apps that the member's ROLE may not run, within the AI allow-list. The loop
+   * turns them into a system-prompt note so the assistant explains the role limit instead of
+   * asking for a reconnect. Optional — absent for code paths that don't need it.
+   */
+  withheldSink?: string[];
 }
