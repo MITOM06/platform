@@ -120,17 +120,21 @@ export default function LoginPage() {
     try {
       const { data: result } = await authService.login(data.email, data.password)
       // The password was right but no session exists yet — the authenticator
-      // code (or first-time 2FA setup) is finished on /mfa.
+      // code (or first-time 2FA setup) is finished on /mfa (it has its own way
+      // back to sign-in).
+      // `replace`, not `push`, here and below: a signed-in Back must never land
+      // on this form again — Back is a client-side navigation, so the
+      // middleware that bounces signed-in users off /login never runs.
       if (isMfaChallenge(result)) {
         savePendingMfa(result)
-        router.push(MFA_PATH)
+        router.replace(MFA_PATH)
         return
       }
 
       const path = await establishSession(result)
       // Prompt for notification permission only after a successful login.
       void maybeRequestNotificationPermission()
-      router.push(path)
+      router.replace(path)
     } catch (err: unknown) {
       const { code, params } = parseAuthError(err)
       if (code === 'SSO_REQUIRED') {

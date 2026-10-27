@@ -76,7 +76,9 @@ describe('sign-in screens → 2FA step', () => {
     renderWithQuery(<LoginPage />)
     submitLogin()
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/mfa'))
+    // `replace`: Back from /mfa (or later from the app) never shows this form again.
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/mfa'))
+    expect(push).not.toHaveBeenCalled()
     expect(login).toHaveBeenCalledWith('owner@acme.com', 'Secret#123')
     expect(readPendingMfa()).toMatchObject({ mfaToken: 'mfa-tok', enrollmentRequired: false })
     expect(fetchMock).not.toHaveBeenCalled()
@@ -88,7 +90,10 @@ describe('sign-in screens → 2FA step', () => {
     renderWithQuery(<LoginPage />)
     submitLogin()
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/'))
+    // QC 2026-10-27: `push` left /login in the history, so Back after signing in
+    // showed the login form again (until a reload).
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/'))
+    expect(push).not.toHaveBeenCalled()
     expect(fetchMock).toHaveBeenCalledWith('/api/auth/set-cookie', expect.objectContaining({ method: 'POST' }))
     expect(useAuthStore.getState()).toMatchObject({ accessToken: 'acc', user: { id: 'm1' } })
     expect(readPendingMfa()).toBeNull()

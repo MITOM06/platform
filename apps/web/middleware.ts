@@ -1,21 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isSafeReturnPath, RETURN_PATH_COOKIE, RETURN_PATH_MAX_AGE } from '@/lib/auth/return-path'
+import { isGuestOnlyPath } from '@/lib/auth/guest-paths'
 
-// Auth pages — redirect logged-in users away.
-// /oauth-callback must be reachable without a session: the user lands here from
-// Google with no cookie yet — the page exchanges the code, sets cookies, then
-// redirects to '/'. It is logged-out-only, hence it belongs here.
-// /invite/<token> is logged-out-only too: a signed-in user opening an invite
-// link is bounced home (the invitation is for a not-yet-existing account).
-// /mfa is the second sign-in step (2FA for every member): it runs before any
-// session cookie exists, so it is logged-out-only as well.
-const AUTH_ONLY_PATHS = ['/login', '/invite', '/verify-otp', '/oauth-callback', '/forgot-password', '/mfa']
+// Auth pages (lib/auth/guest-paths.ts) — redirect logged-in users away.
 // Legal pages — accessible to everyone regardless of auth state
 const ALWAYS_PUBLIC_PATHS = ['/privacy', '/terms']
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const isAuthOnly = AUTH_ONLY_PATHS.some((p) => pathname.startsWith(p))
+  const isAuthOnly = isGuestOnlyPath(pathname)
   const isAlwaysPublic = ALWAYS_PUBLIC_PATHS.some((p) => pathname.startsWith(p))
   const hasSession = request.cookies.has('accessToken') || request.cookies.has('refreshToken')
 
