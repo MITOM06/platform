@@ -225,6 +225,7 @@
     "errInvitationRevoked": "この招待は取り消されました。",
     "errInvitationAlreadyAccepted": "この招待はすでに承諾されています。ログインしてください。",
     "errInvitationEmailMismatch": "招待されたメールアドレスと一致する Google アカウントでログインしてください。",
+    "errInviteGoogleFlowExpired": "この Google でのサインインは期限切れになりました。招待からもう一度お試しください。",
     "errInvitationAlreadyPending": "このメールアドレスには保留中の招待がすでにあります。",
     "errInvitationNotPending": "この招待は保留中ではありません。",
     "errInvitationNotFound": "招待が見つかりません。",

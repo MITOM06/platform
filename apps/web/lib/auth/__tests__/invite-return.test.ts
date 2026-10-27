@@ -11,10 +11,12 @@ const KEY = 'pon:auth:invite-return'
 describe('invite-return: a failed Google sign-in goes back to its invitation', () => {
   beforeEach(() => sessionStorage.clear())
 
-  it('only cancelled / refused Google sign-ins are retried from the invitation', () => {
+  it('Google outcomes worth retrying go back to the invitation; a dead invitation does not', () => {
     expect(isInviteRetryNotice('SOCIAL_LOGIN_CANCELLED')).toBe(true)
     expect(isInviteRetryNotice('SOCIAL_LOGIN_FAILED')).toBe(true)
-    expect(isInviteRetryNotice('INVITATION_EMAIL_MISMATCH')).toBe(false)
+    expect(isInviteRetryNotice('INVITATION_EMAIL_MISMATCH')).toBe(true)
+    expect(isInviteRetryNotice('INVITE_GOOGLE_FLOW_EXPIRED')).toBe(true)
+    expect(isInviteRetryNotice('INVITATION_REVOKED')).toBe(false)
     expect(isInviteRetryNotice(null)).toBe(false)
   })
 
@@ -26,7 +28,7 @@ describe('invite-return: a failed Google sign-in goes back to its invitation', (
 
   it('any other code goes to the login page and still clears the memory', () => {
     rememberInviteReturn('tok-1')
-    expect(inviteReturnPath('INVITATION_EMAIL_MISMATCH')).toBeNull()
+    expect(inviteReturnPath('INVITATION_REVOKED')).toBeNull()
     expect(sessionStorage.getItem(KEY)).toBeNull()
   })
 

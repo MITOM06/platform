@@ -3486,6 +3486,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Inicia sesión con la cuenta de Google que coincide con el correo invitado.';
 
   @override
+  String get authErrInviteGoogleFlowExpired =>
+      'Este intento de inicio de sesión con Google ha caducado. Vuelve a intentarlo desde tu invitación.';
+
+  @override
   String get authErrInvitationAlreadyPending =>
       'Este correo ya tiene una invitación pendiente.';
 

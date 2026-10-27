@@ -2,9 +2,10 @@
  * A Google sign-in started from an invitation page comes back through
  * /oauth-callback, and the auth-service only knows the invite *flow* id there —
  * never the invitation token. So the tab remembers which invitation it left
- * from: a cancelled or refused Google sign-in returns to that page
- * (`/invite/<token>?reason=CODE`) to try again, instead of the login page,
- * where an invite-only workspace offers no way back in.
+ * from: a cancelled or refused Google sign-in, the wrong Google account, or an
+ * expired round trip returns to that page (`/invite/<token>?reason=CODE`) to
+ * try again, instead of the login page, where an invite-only workspace offers
+ * no way back in.
  *
  * Same tab only (sessionStorage), consumed once, and dropped after the
  * server-side invite flow's 10 minutes.
@@ -13,7 +14,14 @@ const KEY = 'pon:auth:invite-return'
 const MAX_AGE_MS = 10 * 60 * 1000
 
 /** Google sign-in outcomes worth retrying from the invitation page. */
-export const INVITE_RETRY_NOTICES = ['SOCIAL_LOGIN_CANCELLED', 'SOCIAL_LOGIN_FAILED'] as const
+export const INVITE_RETRY_NOTICES = [
+  'SOCIAL_LOGIN_CANCELLED',
+  'SOCIAL_LOGIN_FAILED',
+  // Signed in with another Google account than the invited one: pick again.
+  'INVITATION_EMAIL_MISMATCH',
+  // The round trip took over 10 minutes (or was already used): start again.
+  'INVITE_GOOGLE_FLOW_EXPIRED',
+] as const
 export type InviteRetryNotice = (typeof INVITE_RETRY_NOTICES)[number]
 
 export function isInviteRetryNotice(value: unknown): value is InviteRetryNotice {

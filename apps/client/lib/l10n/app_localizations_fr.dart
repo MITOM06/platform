@@ -3509,6 +3509,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Connectez-vous avec le compte Google correspondant à l\'e-mail invité.';
 
   @override
+  String get authErrInviteGoogleFlowExpired =>
+      'Cette tentative de connexion avec Google a expiré. Réessayez depuis votre invitation.';
+
+  @override
   String get authErrInvitationAlreadyPending =>
       'Cet e-mail a déjà une invitation en attente.';
 

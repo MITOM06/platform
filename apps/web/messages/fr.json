@@ -225,6 +225,7 @@
     "errInvitationRevoked": "Cette invitation a été révoquée.",
     "errInvitationAlreadyAccepted": "Cette invitation a déjà été acceptée. Veuillez vous connecter.",
     "errInvitationEmailMismatch": "Connectez-vous avec le compte Google correspondant à l'e-mail invité.",
+    "errInviteGoogleFlowExpired": "Cette tentative de connexion avec Google a expiré. Réessayez depuis votre invitation.",
     "errInvitationAlreadyPending": "Cet e-mail a déjà une invitation en attente.",
     "errInvitationNotPending": "Cette invitation n'est plus en attente.",
     "errInvitationNotFound": "Invitation introuvable.",

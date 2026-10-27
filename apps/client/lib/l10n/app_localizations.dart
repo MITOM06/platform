@@ -6463,6 +6463,12 @@ abstract class AppLocalizations {
   /// **'Sign in with the Google account that matches the invited email.'**
   String get authErrInvitationEmailMismatch;
 
+  /// No description provided for @authErrInviteGoogleFlowExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This Google sign-in attempt expired. Please try again from your invitation.'**
+  String get authErrInviteGoogleFlowExpired;
+
   /// No description provided for @authErrInvitationAlreadyPending.
   ///
   /// In en, this message translates to:

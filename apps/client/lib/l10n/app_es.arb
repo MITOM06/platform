@@ -1194,6 +1194,7 @@
   "authErrInvitationRevoked": "Esta invitación fue revocada.",
   "authErrInvitationAlreadyAccepted": "Esta invitación ya fue aceptada. Inicia sesión.",
   "authErrInvitationEmailMismatch": "Inicia sesión con la cuenta de Google que coincide con el correo invitado.",
+  "authErrInviteGoogleFlowExpired": "Este intento de inicio de sesión con Google ha caducado. Vuelve a intentarlo desde tu invitación.",
   "authErrInvitationAlreadyPending": "Este correo ya tiene una invitación pendiente.",
   "authErrInvitationNotPending": "Esta invitación ya no está pendiente.",
   "authErrInvitationNotFound": "Invitación no encontrada.",

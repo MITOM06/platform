@@ -85,6 +85,7 @@ export function authCodeToI18nKey(code: string): string {
     INVITATION_REVOKED: 'errInvitationRevoked',
     INVITATION_ALREADY_ACCEPTED: 'errInvitationAlreadyAccepted',
     INVITATION_EMAIL_MISMATCH: 'errInvitationEmailMismatch',
+    INVITE_GOOGLE_FLOW_EXPIRED: 'errInviteGoogleFlowExpired',
     INVITATION_ALREADY_PENDING: 'errInvitationAlreadyPending',
     INVITATION_NOT_PENDING: 'errInvitationNotPending',
     INVITATION_NOT_FOUND: 'errInvitationNotFound',

@@ -225,6 +225,7 @@
     "errInvitationRevoked": "此邀请已被撤销。",
     "errInvitationAlreadyAccepted": "此邀请已被接受。请登录。",
     "errInvitationEmailMismatch": "请使用与受邀邮箱一致的 Google 账号登录。",
+    "errInviteGoogleFlowExpired": "此次 Google 登录已过期，请从邀请重新开始。",
     "errInvitationAlreadyPending": "此邮箱已有待处理的邀请。",
     "errInvitationNotPending": "此邀请已不再处于待处理状态。",
     "errInvitationNotFound": "未找到邀请。",

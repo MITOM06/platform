@@ -39,7 +39,7 @@ describe('InvitationAcceptService', () => {
   let departmentModel: any;
   let users: { findByEmailInsensitive: jest.Mock; create: jest.Mock };
   let audit: { record: jest.Mock };
-  let redis: { set: jest.Mock; getdel: jest.Mock };
+  let redis: { set: jest.Mock; get: jest.Mock; del: jest.Mock };
   let sso: { assertNotEnforced: jest.Mock };
   let mailer: {
     workspaceName: jest.Mock;
@@ -71,7 +71,11 @@ describe('InvitationAcceptService', () => {
       create: jest.fn(async (d: any) => ({ _id: oid('new-user'), ...d })),
     };
     audit = { record: jest.fn().mockResolvedValue(undefined) };
-    redis = { set: jest.fn().mockResolvedValue('OK'), getdel: jest.fn() };
+    redis = {
+      set: jest.fn().mockResolvedValue('OK'),
+      get: jest.fn(),
+      del: jest.fn().mockResolvedValue(1),
+    };
     sso = { assertNotEnforced: jest.fn().mockResolvedValue(undefined) };
     mailer = {
       workspaceName: jest.fn().mockResolvedValue('Acme'),
@@ -245,8 +249,8 @@ describe('InvitationAcceptService', () => {
       );
     });
 
-    it('acceptWithGoogle consumes the flow once and matches email case-insensitively', async () => {
-      redis.getdel.mockResolvedValueOnce(INV_ID).mockResolvedValueOnce(null);
+    it('acceptWithGoogle matches email case-insensitively; the flow dies with the accept', async () => {
+      redis.get.mockResolvedValueOnce(INV_ID).mockResolvedValueOnce(null);
       const userId = await service.acceptWithGoogle('flow_abcdefghijklmnop', {
         id: 'g-123',
         email: 'Jane@Acme.COM',
@@ -260,20 +264,23 @@ describe('InvitationAcceptService', () => {
         socialLinks: { google: 'g-123' },
         status: 'active',
       });
+      expect(redis.del).toHaveBeenCalledWith(
+        'invite_oauth:flow_abcdefghijklmnop',
+      );
 
-      // Second use of the same flow id: gone.
+      // Second use of the same flow id: gone — and said so, not "invalid invitation".
       await expect(
         service.acceptWithGoogle('flow_abcdefghijklmnop', {
           email: 'jane@acme.com',
         }),
       ).rejects.toMatchObject({
-        status: 404,
-        response: { code: 'INVITATION_INVALID' },
+        status: 410,
+        response: { code: 'INVITE_GOOGLE_FLOW_EXPIRED' },
       });
     });
 
     it('email mismatch → 403 INVITATION_EMAIL_MISMATCH and the invitation stays pending', async () => {
-      redis.getdel.mockResolvedValue(INV_ID);
+      redis.get.mockResolvedValue(INV_ID);
       await expect(
         service.acceptWithGoogle('flow_abcdefghijklmnop', {
           email: 'other@acme.com',
@@ -284,6 +291,57 @@ describe('InvitationAcceptService', () => {
       });
       expect(invitationModel.findOneAndUpdate).not.toHaveBeenCalled();
       expect(users.create).not.toHaveBeenCalled();
+    });
+
+    // QC 2026-10-27: wrong Google account → mismatch → Back to Google's chooser
+    // → the invited account answered "This invitation link is invalid", because
+    // the refused attempt had already burned the flow id.
+    it('a refused attempt keeps the flow: Back and the invited account still works', async () => {
+      redis.get.mockResolvedValue(INV_ID);
+      await expect(
+        service.acceptWithGoogle('flow_abcdefghijklmnop', {
+          email: 'other@acme.com',
+        }),
+      ).rejects.toMatchObject({
+        response: { code: 'INVITATION_EMAIL_MISMATCH' },
+      });
+      expect(redis.del).not.toHaveBeenCalled();
+
+      await expect(
+        service.acceptWithGoogle('flow_abcdefghijklmnop', {
+          id: 'g-123',
+          email: 'jane@acme.com',
+        }),
+      ).resolves.toBe('new-user');
+      expect(redis.del).toHaveBeenCalledTimes(1);
+    });
+
+    it('flow older than 10 minutes → 410 INVITE_GOOGLE_FLOW_EXPIRED (the invitation may still be valid)', async () => {
+      redis.get.mockResolvedValue(null);
+      await expect(
+        service.acceptWithGoogle('flow_abcdefghijklmnop', {
+          email: 'jane@acme.com',
+        }),
+      ).rejects.toMatchObject({
+        status: 410,
+        response: { code: 'INVITE_GOOGLE_FLOW_EXPIRED' },
+      });
+      expect(invitationModel.findById).not.toHaveBeenCalled();
+    });
+
+    it('a live flow whose invitation was deleted → 404 INVITATION_INVALID', async () => {
+      redis.get.mockResolvedValue(INV_ID);
+      invitationModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      });
+      await expect(
+        service.acceptWithGoogle('flow_abcdefghijklmnop', {
+          email: 'jane@acme.com',
+        }),
+      ).rejects.toMatchObject({
+        status: 404,
+        response: { code: 'INVITATION_INVALID' },
+      });
     });
   });
 
@@ -311,7 +369,7 @@ describe('InvitationAcceptService', () => {
     // 2026-10-26: no forced "create your PON password" step after Google —
     // the invitee goes straight into the app (a password stays optional).
     it('Google accept: flag NOT set, welcome email with the google variant', async () => {
-      redis.getdel.mockResolvedValue(INV_ID);
+      redis.get.mockResolvedValue(INV_ID);
       await service.acceptWithGoogle('flow_abcdefghijklmnop', GOOGLE_PROFILE);
       expect(users.create.mock.calls[0][0]).not.toHaveProperty(
         'mustSetPassword',
@@ -337,7 +395,7 @@ describe('InvitationAcceptService', () => {
       await expect(
         service.acceptWithPassword(TOKEN, PASSWORD_DTO),
       ).resolves.toBeDefined();
-      redis.getdel.mockResolvedValue(INV_ID);
+      redis.get.mockResolvedValue(INV_ID);
       await expect(
         service.acceptWithGoogle('flow_abcdefghijklmnop', GOOGLE_PROFILE),
       ).resolves.toBe('new-user');
@@ -387,7 +445,7 @@ describe('InvitationAcceptService', () => {
       });
       expect(redis.set).not.toHaveBeenCalled();
 
-      redis.getdel.mockResolvedValue(INV_ID);
+      redis.get.mockResolvedValue(INV_ID);
       await expect(
         service.acceptWithGoogle('flow_abcdefghijklmnop', GOOGLE),
       ).rejects.toMatchObject({ response: { code: 'SSO_REQUIRED' } });

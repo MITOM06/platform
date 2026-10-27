@@ -236,8 +236,15 @@ const kSsoRequired = 'SSO_REQUIRED';
 const kMfaRequiredByRole = 'MFA_REQUIRED_BY_ROLE';
 
 /// Google sign-in outcomes the invite screen shows in place, so the member can
-/// try again from the invitation (mirror of web `INVITE_RETRY_NOTICES`).
-const kInviteRetryNotices = {'SOCIAL_LOGIN_CANCELLED', 'SOCIAL_LOGIN_FAILED'};
+/// try again from the invitation (mirror of web `INVITE_RETRY_NOTICES`): a
+/// cancelled / refused sign-in, the wrong Google account, or a round trip
+/// that expired (10 minutes) or was already used.
+const kInviteRetryNotices = {
+  'SOCIAL_LOGIN_CANCELLED',
+  'SOCIAL_LOGIN_FAILED',
+  'INVITATION_EMAIL_MISMATCH',
+  'INVITE_GOOGLE_FLOW_EXPIRED',
+};
 
 /// Codes the login screen may show as a persistent notice: the forced-logout
 /// reasons plus every code a Google / SSO error deep link
@@ -250,7 +257,7 @@ const kLoginNotices = {
   'INVITATION_EXPIRED',
   'INVITATION_REVOKED',
   'INVITATION_ALREADY_ACCEPTED',
-  'INVITATION_EMAIL_MISMATCH',
+  // INVITATION_EMAIL_MISMATCH comes in with kInviteRetryNotices below.
   'MEMBER_ALREADY_EXISTS',
   'SOCIAL_EMAIL_UNAVAILABLE',
   'SSO_DISABLED',

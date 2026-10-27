@@ -175,6 +175,8 @@ String _codeToString(
       return l10n.authErrInvitationAlreadyAccepted;
     case 'INVITATION_EMAIL_MISMATCH':
       return l10n.authErrInvitationEmailMismatch;
+    case 'INVITE_GOOGLE_FLOW_EXPIRED':
+      return l10n.authErrInviteGoogleFlowExpired;
     case 'INVITATION_ALREADY_PENDING':
       return l10n.authErrInvitationAlreadyPending;
     case 'INVITATION_NOT_PENDING':

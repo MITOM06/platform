@@ -1194,6 +1194,7 @@
   "authErrInvitationRevoked": "이 초대는 취소되었습니다.",
   "authErrInvitationAlreadyAccepted": "이 초대는 이미 수락되었습니다. 로그인해 주세요.",
   "authErrInvitationEmailMismatch": "초대된 이메일과 일치하는 Google 계정으로 로그인하세요.",
+  "authErrInviteGoogleFlowExpired": "이번 Google 로그인 시도가 만료되었습니다. 초대에서 다시 시도해 주세요.",
   "authErrInvitationAlreadyPending": "이 이메일에는 이미 대기 중인 초대가 있습니다.",
   "authErrInvitationNotPending": "이 초대는 더 이상 대기 상태가 아닙니다.",
   "authErrInvitationNotFound": "초대를 찾을 수 없습니다.",

@@ -1194,6 +1194,7 @@
   "authErrInvitationRevoked": "Cette invitation a été révoquée.",
   "authErrInvitationAlreadyAccepted": "Cette invitation a déjà été acceptée. Veuillez vous connecter.",
   "authErrInvitationEmailMismatch": "Connectez-vous avec le compte Google correspondant à l'e-mail invité.",
+  "authErrInviteGoogleFlowExpired": "Cette tentative de connexion avec Google a expiré. Réessayez depuis votre invitation.",
   "authErrInvitationAlreadyPending": "Cet e-mail a déjà une invitation en attente.",
   "authErrInvitationNotPending": "Cette invitation n'est plus en attente.",
   "authErrInvitationNotFound": "Invitation introuvable.",

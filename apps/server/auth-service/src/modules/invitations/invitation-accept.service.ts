@@ -116,7 +116,10 @@ export class InvitationAcceptService {
     return user;
   }
 
-  /** Validates the invitation; returns a single-use flow id for the Google round-trip. */
+  /**
+   * Validates the invitation; returns a flow id for the Google round-trip. It
+   * lives 10 minutes and dies only with a successful accept (acceptWithGoogle).
+   */
   async startGoogleFlow(token: string): Promise<string> {
     const inv = await this.findByToken(token);
     this.assertAcceptable(inv);
@@ -132,18 +135,27 @@ export class InvitationAcceptService {
   }
 
   /**
-   * Completes the Google invite flow; returns the new user's id. On an email
-   * mismatch the invitation stays pending (the flow id is consumed regardless).
+   * Completes the Google invite flow; returns the new user's id.
+   *
+   * The flow id survives a refused attempt (wrong Google account, …): Back to
+   * Google's account chooser and picking the invited account must still work.
+   * It is deleted only once the invitation is claimed — the claim itself is
+   * atomic, so a reused flow id can never create a second account. A missing
+   * flow id (10 minutes passed, or already used) is INVITE_GOOGLE_FLOW_EXPIRED,
+   * not "invalid invitation": the invitation may well still be valid.
    */
   async acceptWithGoogle(
     flowId: string,
     profile: InviteSocialProfile,
   ): Promise<string> {
-    const invId = await this.redis.getdel(inviteOauthKey(flowId));
-    const inv =
-      invId && isValidObjectId(invId)
-        ? await this.invitationModel.findById(invId).exec()
-        : null;
+    const flowKey = inviteOauthKey(flowId);
+    const invId = await this.redis.get(flowKey);
+    if (!invId) {
+      throw new GoneException({ code: AuthCode.INVITE_GOOGLE_FLOW_EXPIRED });
+    }
+    const inv = isValidObjectId(invId)
+      ? await this.invitationModel.findById(invId).exec()
+      : null;
     if (!inv)
       throw new NotFoundException({ code: AuthCode.INVITATION_INVALID });
     this.assertAcceptable(inv);
@@ -167,6 +179,7 @@ export class InvitationAcceptService {
       // Google invitee goes straight into the app and may add a password later
       // (Settings → Password & Security, or reset). `mustSetPassword` stays false.
     });
+    await this.redis.del(flowKey);
     this.sendWelcome(inv, user, 'google');
     return user._id.toString();
   }

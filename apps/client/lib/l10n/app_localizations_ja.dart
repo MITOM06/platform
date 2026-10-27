@@ -3388,6 +3388,10 @@ class AppLocalizationsJa extends AppLocalizations {
       '招待されたメールアドレスと一致する Google アカウントでサインインしてください。';
 
   @override
+  String get authErrInviteGoogleFlowExpired =>
+      'この Google でのサインインは期限切れになりました。招待からもう一度お試しください。';
+
+  @override
   String get authErrInvitationAlreadyPending => 'このメールアドレスにはすでに保留中の招待があります。';
 
   @override
