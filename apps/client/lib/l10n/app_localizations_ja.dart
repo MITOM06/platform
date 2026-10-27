@@ -3760,6 +3760,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get authErrSocialProviderUnsupported => 'このサインイン方法はサポートされていません。';
 
   @override
+  String get authErrSocialLoginCancelled => 'Google でのログインがキャンセルされました。';
+
+  @override
+  String get authErrSocialLoginFailed =>
+      'Google でのログインを完了できませんでした。もう一度お試しください。';
+
+  @override
   String get aiActionConfirm => '確認';
 
   @override

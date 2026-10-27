@@ -3861,6 +3861,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Phương thức đăng nhập này không được hỗ trợ.';
 
   @override
+  String get authErrSocialLoginCancelled => 'Bạn đã huỷ đăng nhập bằng Google.';
+
+  @override
+  String get authErrSocialLoginFailed =>
+      'Đăng nhập bằng Google chưa hoàn tất. Vui lòng thử lại.';
+
+  @override
   String get aiActionConfirm => 'Xác nhận';
 
   @override

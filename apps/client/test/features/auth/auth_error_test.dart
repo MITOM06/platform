@@ -60,6 +60,8 @@ void main() {
       'SSO_DOMAIN_NOT_ALLOWED': l10n.authErrSsoDomainNotAllowed,
       'SSO_EMAIL_UNVERIFIED': l10n.authErrSsoEmailUnverified,
       'SOCIAL_ACCOUNT_CONFLICT': l10n.authErrSocialAccountConflict,
+      'SOCIAL_LOGIN_CANCELLED': l10n.authErrSocialLoginCancelled,
+      'SOCIAL_LOGIN_FAILED': l10n.authErrSocialLoginFailed,
       'USER_BLOCKED': l10n.authErrUserBlocked,
       'CURRENT_PASSWORD_REQUIRED': l10n.authErrCurrentPasswordRequired,
       'CURRENT_PASSWORD_INCORRECT': l10n.errCurrentPasswordIncorrect,

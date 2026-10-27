@@ -3881,6 +3881,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'This sign-in method isn\'t supported.';
 
   @override
+  String get authErrSocialLoginCancelled => 'Google sign-in was cancelled.';
+
+  @override
+  String get authErrSocialLoginFailed =>
+      'Google sign-in didn\'t complete. Please try again.';
+
+  @override
   String get aiActionConfirm => 'Confirm';
 
   @override

@@ -311,6 +311,11 @@ String _codeToString(
       return l10n.authErrSsoExchangeFailed;
     case 'SOCIAL_ACCOUNT_CONFLICT':
       return l10n.authErrSocialAccountConflict;
+    // Google came back without a user (cancelled / code refused).
+    case 'SOCIAL_LOGIN_CANCELLED':
+      return l10n.authErrSocialLoginCancelled;
+    case 'SOCIAL_LOGIN_FAILED':
+      return l10n.authErrSocialLoginFailed;
 
     // ── Friends / blocking ───────────────────────────────────────────────────
     case 'USER_BLOCKED':
