@@ -138,6 +138,13 @@ export enum AuthCode {
    * linked to a DIFFERENT identity of the same provider (OAuth redirect only).
    */
   SOCIAL_ACCOUNT_CONFLICT = 'SOCIAL_ACCOUNT_CONFLICT',
+  /** The user cancelled the Google sign-in on Google's page (OAuth redirect only). */
+  SOCIAL_LOGIN_CANCELLED = 'SOCIAL_LOGIN_CANCELLED',
+  /**
+   * Google refused the sign-in: authorization code rejected (expired / already
+   * used) or any other provider error (OAuth redirect only).
+   */
+  SOCIAL_LOGIN_FAILED = 'SOCIAL_LOGIN_FAILED',
   /**
    * The actor may not reset this member's 2FA: not an Owner / member manager,
    * or a non-Owner targeting an Owner / admin-like member.
