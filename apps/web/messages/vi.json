@@ -191,6 +191,8 @@
     "errRefreshTokenRotated": "Refresh token đã được xoay vòng.",
     "errTokenSessionMismatch": "Token không khớp với phiên.",
     "errSocialEmailUnavailable": "Không thể lấy email từ tài khoản mạng xã hội.",
+    "errSocialLoginCancelled": "Bạn đã huỷ đăng nhập bằng Google.",
+    "errSocialLoginFailed": "Đăng nhập bằng Google chưa hoàn tất. Vui lòng thử lại.",
     "errLoginCodeInvalid": "Mã đăng nhập không hợp lệ hoặc đã hết hạn.",
     "errEmailNotFound": "Email không tồn tại trong hệ thống.",
     "errUserNotFound": "Không tìm thấy người dùng.",

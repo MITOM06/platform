@@ -191,6 +191,8 @@
     "errRefreshTokenRotated": "Refresh token has already been rotated.",
     "errTokenSessionMismatch": "Token does not match the session.",
     "errSocialEmailUnavailable": "Unable to retrieve email from social account.",
+    "errSocialLoginCancelled": "Google sign-in was cancelled.",
+    "errSocialLoginFailed": "Google sign-in didn't complete. Please try again.",
     "errLoginCodeInvalid": "Login code is invalid or has expired.",
     "errEmailNotFound": "Email does not exist in the system.",
     "errUserNotFound": "User not found.",

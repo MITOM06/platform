@@ -9,6 +9,7 @@ import { parseAuthError, authCodeToI18nKey } from '@/lib/auth/auth-error'
 import { isLoginNotice, loginPath } from '@/lib/auth/force-logout'
 import { MFA_PATH, isMfaChallenge, savePendingMfa } from '@/lib/auth/mfa'
 import { establishSession } from '@/lib/auth/sign-in'
+import { forgetInviteReturn, inviteReturnPath } from '@/lib/auth/invite-return'
 
 export default function OAuthCallbackPage() {
   const searchParams = useSearchParams()
@@ -23,11 +24,14 @@ export default function OAuthCallbackPage() {
     // SSO_REQUIRED when the email's domain must use single sign-on).
     // The reason is handed to /login as a persistent banner rather than a
     // toast: on a slow load the toast is gone before /login has rendered.
+    // A cancelled / refused Google sign-in started from an invitation goes
+    // back to that invitation to try again (lib/auth/invite-return.ts).
     const error = searchParams.get('error')
     if (error) {
-      router.replace(loginPath(isLoginNotice(error) ? error : 'GENERIC_ERROR'))
+      router.replace(inviteReturnPath(error) ?? loginPath(isLoginNotice(error) ? error : 'GENERIC_ERROR'))
       return
     }
+    forgetInviteReturn()
 
     const code = searchParams.get('code')
     if (!code) {

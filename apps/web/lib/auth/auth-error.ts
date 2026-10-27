@@ -135,6 +135,8 @@ export function authCodeToI18nKey(code: string): string {
     OIDC_EMAIL_UNVERIFIED: 'errSsoEmailUnverified',
     SOCIAL_ACCOUNT_CONFLICT: 'errSocialAccountConflict',
     SOCIAL_PROVIDER_UNSUPPORTED: 'errSocialProviderUnsupported',
+    SOCIAL_LOGIN_CANCELLED: 'errSocialLoginCancelled',
+    SOCIAL_LOGIN_FAILED: 'errSocialLoginFailed',
     OIDC_NO_STATE: 'errSsoStateInvalid',
     OIDC_BAD_STATE: 'errSsoStateInvalid',
     OIDC_EXCHANGE_FAILED: 'errSsoExchangeFailed',

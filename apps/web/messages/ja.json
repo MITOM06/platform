@@ -191,6 +191,8 @@
     "errRefreshTokenRotated": "リフレッシュトークンはすでにローテーションされています。",
     "errTokenSessionMismatch": "トークンがセッションと一致しません。",
     "errSocialEmailUnavailable": "ソーシャルアカウントからメールを取得できません。",
+    "errSocialLoginCancelled": "Google でのログインがキャンセルされました。",
+    "errSocialLoginFailed": "Google でのログインを完了できませんでした。もう一度お試しください。",
     "errLoginCodeInvalid": "ログインコードが無効か期限切れです。",
     "errEmailNotFound": "システムにそのメールは存在しません。",
     "errUserNotFound": "ユーザーが見つかりません。",

@@ -40,6 +40,9 @@ export const LOGIN_NOTICES = [
   'OIDC_EMAIL_UNVERIFIED',
   'SOCIAL_ACCOUNT_CONFLICT',
   'SOCIAL_PROVIDER_UNSUPPORTED',
+  // Google came back without a user: cancelled on its page, or the code was refused.
+  'SOCIAL_LOGIN_CANCELLED',
+  'SOCIAL_LOGIN_FAILED',
   'OIDC_NO_STATE',
   'OIDC_BAD_STATE',
   'OIDC_EXCHANGE_FAILED',
