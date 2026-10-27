@@ -225,6 +225,7 @@
     "errInvitationRevoked": "Lời mời này đã bị thu hồi.",
     "errInvitationAlreadyAccepted": "Lời mời này đã được chấp nhận. Vui lòng đăng nhập.",
     "errInvitationEmailMismatch": "Hãy đăng nhập bằng tài khoản Google trùng với email được mời.",
+    "errInviteGoogleFlowExpired": "Lượt đăng nhập Google này đã hết hạn. Vui lòng thử lại từ lời mời.",
     "errInvitationAlreadyPending": "Email này đã có một lời mời đang chờ.",
     "errInvitationNotPending": "Lời mời này không còn ở trạng thái chờ.",
     "errInvitationNotFound": "Không tìm thấy lời mời.",

@@ -66,6 +66,16 @@ describe('/invite/[token]: back from a failed Google attempt', () => {
     expect(await screen.findByTestId('invite-notice')).toHaveTextContent('auth.errSocialLoginCancelled')
   })
 
+  it.each([
+    ['INVITATION_EMAIL_MISMATCH', 'auth.errInvitationEmailMismatch'],
+    ['INVITE_GOOGLE_FLOW_EXPIRED', 'auth.errInviteGoogleFlowExpired'],
+  ])('?reason=%s explains it above a still-usable form', async (reason, text) => {
+    nav.search = `reason=${reason}`
+    renderPage()
+    expect(await screen.findByTestId('invite-notice')).toHaveTextContent(text)
+    expect(google()).not.toBeNull()
+  })
+
   it('an unrelated ?reason= is ignored', async () => {
     nav.search = 'reason=ACCOUNT_BLOCKED'
     renderPage()
