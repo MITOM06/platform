@@ -3387,6 +3387,10 @@ class AppLocalizationsKo extends AppLocalizations {
       '초대된 이메일과 일치하는 Google 계정으로 로그인하세요.';
 
   @override
+  String get authErrInviteGoogleFlowExpired =>
+      '이번 Google 로그인 시도가 만료되었습니다. 초대에서 다시 시도해 주세요.';
+
+  @override
   String get authErrInvitationAlreadyPending => '이 이메일에는 이미 대기 중인 초대가 있습니다.';
 
   @override

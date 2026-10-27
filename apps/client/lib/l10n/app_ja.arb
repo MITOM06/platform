@@ -1194,6 +1194,7 @@
   "authErrInvitationRevoked": "この招待は取り消されました。",
   "authErrInvitationAlreadyAccepted": "この招待はすでに承諾されています。サインインしてください。",
   "authErrInvitationEmailMismatch": "招待されたメールアドレスと一致する Google アカウントでサインインしてください。",
+  "authErrInviteGoogleFlowExpired": "この Google でのサインインは期限切れになりました。招待からもう一度お試しください。",
   "authErrInvitationAlreadyPending": "このメールアドレスにはすでに保留中の招待があります。",
   "authErrInvitationNotPending": "この招待は保留中ではありません。",
   "authErrInvitationNotFound": "招待が見つかりません。",

@@ -3459,6 +3459,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sign in with the Google account that matches the invited email.';
 
   @override
+  String get authErrInviteGoogleFlowExpired =>
+      'This Google sign-in attempt expired. Please try again from your invitation.';
+
+  @override
   String get authErrInvitationAlreadyPending =>
       'This email already has a pending invitation.';
 

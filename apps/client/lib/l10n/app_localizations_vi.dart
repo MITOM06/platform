@@ -3462,6 +3462,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Hãy đăng nhập bằng tài khoản Google trùng với email được mời.';
 
   @override
+  String get authErrInviteGoogleFlowExpired =>
+      'Lượt đăng nhập Google này đã hết hạn. Vui lòng thử lại từ lời mời.';
+
+  @override
   String get authErrInvitationAlreadyPending =>
       'Email này đã có một lời mời đang chờ.';
 

@@ -357,6 +357,26 @@ void main() {
     expect(find.text(l10n.authErrSocialLoginFailed), findsOneWidget);
   });
 
+  // QC 2026-10-27: the wrong Google account came back to this screen with no
+  // word at all (the web went to /login); an expired round trip said
+  // "invitation invalid". Both now explain themselves here, ready to retry.
+  testWidgets('wrong Google account / expired attempt → notice on the invite',
+      (tester) async {
+    final h = await _pump(tester);
+    final l10n = _l10n(tester);
+
+    h.notifier.showSignInNotice('INVITATION_EMAIL_MISMATCH');
+    await tester.pumpAndSettle();
+    expect(h.path, '/invite/$_token');
+    expect(find.text(l10n.authErrInvitationEmailMismatch), findsOneWidget);
+    expect(find.text(l10n.inviteContinueWithGoogle), findsOneWidget);
+
+    h.notifier.showSignInNotice('INVITE_GOOGLE_FLOW_EXPIRED');
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.authErrInviteGoogleFlowExpired), findsOneWidget);
+    expect(find.textContaining('INVITE_GOOGLE'), findsNothing);
+  });
+
   testWidgets('a stale Google notice from an earlier session is not shown',
       (tester) async {
     await _pump(tester,

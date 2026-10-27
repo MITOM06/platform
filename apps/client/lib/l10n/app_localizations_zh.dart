@@ -3349,6 +3349,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authErrInvitationEmailMismatch => '请使用与受邀邮箱一致的 Google 账号登录。';
 
   @override
+  String get authErrInviteGoogleFlowExpired => '此次 Google 登录已过期，请从邀请重新开始。';
+
+  @override
   String get authErrInvitationAlreadyPending => '此邮箱已有待处理的邀请。';
 
   @override
