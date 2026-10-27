@@ -1,21 +1,25 @@
 'use client'
 
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { authService } from '@/lib/api/auth'
 import { parseAuthError } from '@/lib/auth/auth-error'
 import { InviteAcceptForm } from '@/components/auth/InviteAcceptForm'
 import { InviteStatusCard } from '@/components/auth/InviteStatusCard'
+import { isInviteRetryNotice } from '@/lib/auth/invite-return'
 
 /**
  * Public invitation landing page — the link mailed to the invitee
  * (`${WEB_ORIGIN}/invite/<token>`). Guest-only (middleware bounces signed-in
  * users home). Previews the invitation, then lets the invitee accept with
- * Google or by setting a password.
+ * Google or by setting a password. A cancelled / refused Google attempt comes
+ * back here with `?reason=CODE` (allow-listed) to try again.
  */
 export default function InvitePage() {
   const { token } = useParams<{ token: string }>()
+  const rawReason = useSearchParams()?.get('reason')
+  const notice = isInviteRetryNotice(rawReason) ? rawReason : null
   const t = useTranslations('auth.invite')
 
   const { data, error, isPending } = useQuery({
@@ -48,5 +52,12 @@ export default function InvitePage() {
   }
 
   // Hidden only when the server says Google is off (older servers omit the flag).
-  return <InviteAcceptForm token={token} preview={data} googleEnabled={sso?.googleEnabled !== false} />
+  return (
+    <InviteAcceptForm
+      token={token}
+      preview={data}
+      googleEnabled={sso?.googleEnabled !== false}
+      notice={notice}
+    />
+  )
 }

@@ -3937,6 +3937,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ce mode de connexion n\'est pas pris en charge.';
 
   @override
+  String get authErrSocialLoginCancelled =>
+      'La connexion avec Google a été annulée.';
+
+  @override
+  String get authErrSocialLoginFailed =>
+      'La connexion avec Google n\'a pas abouti. Veuillez réessayer.';
+
+  @override
   String get aiActionConfirm => 'Confirmer';
 
   @override

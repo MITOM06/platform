@@ -1910,6 +1910,8 @@
   "authErrSocialAccountConflict": "This email is already linked to a different sign-in account",
   "authErrTooManyOtpRequests": "You've requested too many OTP codes. Please try again in 10 minutes.",
   "authErrSocialProviderUnsupported": "This sign-in method isn't supported.",
+  "authErrSocialLoginCancelled": "Google sign-in was cancelled.",
+  "authErrSocialLoginFailed": "Google sign-in didn't complete. Please try again.",
   "aiActionConfirm": "Confirm",
   "aiActionCancel": "Cancel",
   "aiActionSendEmail": "Send email",

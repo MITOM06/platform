@@ -1321,6 +1321,8 @@
   "authErrSocialAccountConflict": "此邮箱已关联到其他登录账号",
   "authErrTooManyOtpRequests": "你请求的验证码次数过多。请在 10 分钟后重试。",
   "authErrSocialProviderUnsupported": "不支持此登录方式。",
+  "authErrSocialLoginCancelled": "已取消 Google 登录。",
+  "authErrSocialLoginFailed": "Google 登录未完成，请重试。",
   "aiActionConfirm": "确认",
   "aiActionCancel": "取消",
   "aiActionSendEmail": "发送邮件",

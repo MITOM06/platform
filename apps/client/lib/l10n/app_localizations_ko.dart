@@ -3760,6 +3760,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authErrSocialProviderUnsupported => '이 로그인 방식은 지원되지 않습니다.';
 
   @override
+  String get authErrSocialLoginCancelled => 'Google 로그인이 취소되었습니다.';
+
+  @override
+  String get authErrSocialLoginFailed => 'Google 로그인을 완료하지 못했습니다. 다시 시도해 주세요.';
+
+  @override
   String get aiActionConfirm => '확인';
 
   @override

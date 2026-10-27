@@ -6,6 +6,7 @@ import {
   Body,
   Res,
   UseGuards,
+  UseFilters,
   Query,
   Headers,
   HttpCode,
@@ -26,7 +27,11 @@ import {
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
-import { GoogleOAuthGuard } from './guards/google-oauth.guard';
+import {
+  GoogleOAuthGuard,
+  parseGoogleCallbackState,
+} from './guards/google-oauth.guard';
+import { OAuthCallbackErrorFilter } from './guards/oauth-callback-error.filter';
 import { AuthService } from './auth.service';
 import { OidcService } from './oidc/oidc.service';
 import type { Response } from 'express';
@@ -100,17 +105,14 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(GoogleOAuthGuard)
+  // The guard runs before the try/catch below: a cancelled sign-in or a refused
+  // code is redirected with `?error=` by this filter, never answered as JSON.
+  @UseFilters(OAuthCallbackErrorFilter)
   @ApiOperation({ summary: 'Google OAuth callback (redirects back to client)' })
   async googleCallback(@Req() req: any, @Res() res: Response) {
     // ✅ Platform travels in the OAuth `state` param (echoed back by Google) as
-    // "<platform>" (login) or "<platform>.<flowId>" (invite accept). Fall back
-    // to the cookie for backwards compatibility / older links.
-    const [statePlatform, flowId] = String(req.query?.state ?? '').split(
-      '.',
-      2,
-    );
-    const platform =
-      statePlatform || req.cookies?.['oauth_platform'] || 'mobile';
+    // "<platform>" (login) or "<platform>.<flowId>" (invite accept).
+    const { platform, flowId } = parseGoogleCallbackState(req);
     res.clearCookie('oauth_platform');
     // Browser navigation: failures must redirect with ?error=CODE, never JSON.
     try {

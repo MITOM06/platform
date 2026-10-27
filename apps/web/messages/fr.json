@@ -191,6 +191,8 @@
     "errRefreshTokenRotated": "Le jeton d'actualisation a déjà été renouvelé.",
     "errTokenSessionMismatch": "Le jeton ne correspond pas à la session.",
     "errSocialEmailUnavailable": "Impossible de récupérer l'e-mail depuis le compte social.",
+    "errSocialLoginCancelled": "La connexion avec Google a été annulée.",
+    "errSocialLoginFailed": "La connexion avec Google n'a pas abouti. Veuillez réessayer.",
     "errLoginCodeInvalid": "Le code de connexion est invalide ou a expiré.",
     "errEmailNotFound": "Cette adresse e-mail n'existe pas dans le système.",
     "errUserNotFound": "Utilisateur introuvable.",

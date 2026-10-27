@@ -1321,6 +1321,8 @@
   "authErrSocialAccountConflict": "Este correo ya está vinculado a otra cuenta de inicio de sesión",
   "authErrTooManyOtpRequests": "Has solicitado demasiados códigos OTP. Inténtalo de nuevo en 10 minutos.",
   "authErrSocialProviderUnsupported": "Este método de inicio de sesión no es compatible.",
+  "authErrSocialLoginCancelled": "Se canceló el inicio de sesión con Google.",
+  "authErrSocialLoginFailed": "No se pudo completar el inicio de sesión con Google. Inténtalo de nuevo.",
   "aiActionConfirm": "Confirmar",
   "aiActionCancel": "Cancelar",
   "aiActionSendEmail": "Enviar correo",

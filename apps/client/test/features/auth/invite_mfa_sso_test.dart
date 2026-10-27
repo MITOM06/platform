@@ -333,6 +333,37 @@ void main() {
     expect(find.text(_l10n(tester).inviteSubmit), findsOneWidget);
   });
 
+  // QC 2026-10-26 (TC D-027): cancelling on Google's page (or Google refusing
+  // the code) showed a raw JSON page; it now comes back as a typed deep link
+  // and the invite screen says so in place, ready to try again.
+  testWidgets('Google cancelled / refused (deep link) → notice on the invite',
+      (tester) async {
+    final h = await _pump(tester);
+    final l10n = _l10n(tester);
+    expect(find.byKey(const ValueKey('invite-notice')), findsNothing);
+
+    h.notifier.showSignInNotice('SOCIAL_LOGIN_CANCELLED');
+    await tester.pumpAndSettle();
+
+    expect(h.path, '/invite/$_token');
+    expect(find.text(l10n.authErrSocialLoginCancelled), findsOneWidget);
+    // Still the full accept card: Google and the password form stay usable.
+    expect(find.text(l10n.inviteContinueWithGoogle), findsOneWidget);
+    expect(find.text(l10n.inviteSubmit), findsOneWidget);
+    expect(find.textContaining('SOCIAL_LOGIN'), findsNothing);
+
+    h.notifier.showSignInNotice('SOCIAL_LOGIN_FAILED');
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.authErrSocialLoginFailed), findsOneWidget);
+  });
+
+  testWidgets('a stale Google notice from an earlier session is not shown',
+      (tester) async {
+    await _pump(tester,
+        initial: const AuthUnauthenticated(reason: 'SOCIAL_LOGIN_CANCELLED'));
+    expect(find.byKey(const ValueKey('invite-notice')), findsNothing);
+  });
+
   testWidgets('other accept errors stay a localized snackbar',
       (tester) async {
     final repo = _FakeRepo()

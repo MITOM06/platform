@@ -3912,6 +3912,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Este método de inicio de sesión no es compatible.';
 
   @override
+  String get authErrSocialLoginCancelled =>
+      'Se canceló el inicio de sesión con Google.';
+
+  @override
+  String get authErrSocialLoginFailed =>
+      'No se pudo completar el inicio de sesión con Google. Inténtalo de nuevo.';
+
+  @override
   String get aiActionConfirm => 'Confirmar';
 
   @override

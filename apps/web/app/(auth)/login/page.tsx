@@ -15,6 +15,7 @@ import { parseAuthError, authCodeToI18nKey } from '@/lib/auth/auth-error'
 import { isLoginNotice, loginNoticeI18nKey } from '@/lib/auth/force-logout'
 import { MFA_PATH, isMfaChallenge, savePendingMfa } from '@/lib/auth/mfa'
 import { establishSession } from '@/lib/auth/sign-in'
+import { forgetInviteReturn } from '@/lib/auth/invite-return'
 import { maybeRequestNotificationPermission } from '@/lib/notifications'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -247,6 +248,8 @@ export default function LoginPage() {
             <div className="flex flex-col gap-2">
               <a
                 href={`${authBase}/auth/social/google/init?platform=web`}
+                // A plain sign-in: a failure lands back here, not on an old invitation.
+                onClick={forgetInviteReturn}
                 className="flex items-center justify-center gap-2 w-full rounded-[10px] border border-border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
               >
                 <GoogleIcon className="h-4 w-4" />

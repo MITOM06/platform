@@ -16,6 +16,7 @@ import { MFA_PATH, isMfaChallenge, savePendingMfa } from '@/lib/auth/mfa'
 import { establishSession } from '@/lib/auth/sign-in'
 import { maybeRequestNotificationPermission } from '@/lib/notifications'
 import { AUTH_URL } from '@/lib/config/env'
+import { rememberInviteReturn, type InviteRetryNotice } from '@/lib/auth/invite-return'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -48,6 +49,8 @@ interface Props {
    * Default true: an older server does not say, and offered it before.
    */
   googleEnabled?: boolean
+  /** A Google attempt from this page was cancelled / refused (`?reason=`). */
+  notice?: InviteRetryNotice | null
 }
 
 /** Invitation title + "X invited you to join Y (as Z)". */
@@ -92,7 +95,7 @@ function InvitedEmail({ email }: { email: string }) {
  * (`SSO_REQUIRED`), the card switches to "Sign in with SSO", which consumes the
  * pending invitation.
  */
-export function InviteAcceptForm({ token, preview, googleEnabled = true }: Props) {
+export function InviteAcceptForm({ token, preview, googleEnabled = true, notice = null }: Props) {
   const t = useTranslations('auth')
   const router = useRouter()
   const [ssoRequired, setSsoRequired] = useState(false)
@@ -151,6 +154,8 @@ export function InviteAcceptForm({ token, preview, googleEnabled = true }: Props
 
   const onGoogle = async () => {
     if (!(await trigger('agreeToTerms'))) return
+    // A cancelled / refused attempt comes back to this page, not to /login.
+    rememberInviteReturn(token)
     window.location.href =
       `${AUTH_URL}/auth/social/google/init?platform=web&invite=${encodeURIComponent(token)}`
   }
@@ -197,6 +202,15 @@ export function InviteAcceptForm({ token, preview, googleEnabled = true }: Props
     <Card className="w-full max-w-md shadow-none border-border">
       <InviteHeader preview={preview} />
       <CardContent className="space-y-4">
+        {notice && (
+          <div
+            role="alert"
+            data-testid="invite-notice"
+            className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
+            {t(authCodeToI18nKey(notice))}
+          </div>
+        )}
         <InvitedEmail email={preview.email} />
 
         <div className="flex flex-row items-start gap-3 py-1">

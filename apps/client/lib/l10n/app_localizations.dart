@@ -7099,6 +7099,18 @@ abstract class AppLocalizations {
   /// **'This sign-in method isn\'t supported.'**
   String get authErrSocialProviderUnsupported;
 
+  /// No description provided for @authErrSocialLoginCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in was cancelled.'**
+  String get authErrSocialLoginCancelled;
+
+  /// No description provided for @authErrSocialLoginFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in didn\'t complete. Please try again.'**
+  String get authErrSocialLoginFailed;
+
   /// No description provided for @aiActionConfirm.
   ///
   /// In en, this message translates to:
