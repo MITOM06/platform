@@ -375,6 +375,8 @@
       "confirmPlaceholder": "再次输入新密码...",
       "mismatch": "两次输入的密码不一致",
       "success": "密码修改成功！",
+      "incorrectCurrent": "当前密码不正确",
+      "currentRequired": "请输入当前密码",
       "genericError": "发生错误",
       "tooShort": "密码至少需要 {min} 个字符。",
       "networkError": "无网络连接，请检查网络后重试。"
@@ -411,6 +413,8 @@
       "changeSuccess": "密码更改成功",
       "setSuccess": "密码设置成功",
       "mismatch": "密码不匹配",
+      "incorrectCurrent": "当前密码不正确",
+      "currentRequired": "请输入当前密码",
       "genericError": "更新密码失败",
       "ssoPasswordDisabled": "您的组织要求使用单点登录，因此您的账户已停用密码登录。",
       "twoFaTitle": "双重身份验证",

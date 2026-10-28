@@ -375,6 +375,8 @@
       "confirmPlaceholder": "Re-enter new password...",
       "mismatch": "Passwords do not match",
       "success": "Password changed successfully!",
+      "incorrectCurrent": "Current password is incorrect",
+      "currentRequired": "Please enter your current password",
       "genericError": "Something went wrong",
       "tooShort": "Password must be at least {min} characters.",
       "networkError": "No connection. Check your network and try again."
@@ -411,6 +413,8 @@
       "changeSuccess": "Password changed successfully",
       "setSuccess": "Password set successfully",
       "mismatch": "Passwords don't match",
+      "incorrectCurrent": "Current password is incorrect",
+      "currentRequired": "Please enter your current password",
       "genericError": "Failed to update password",
       "ssoPasswordDisabled": "Your organization requires single sign-on, so password sign-in is turned off for your account.",
       "twoFaTitle": "Two-factor authentication",

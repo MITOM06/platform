@@ -375,6 +375,8 @@
       "confirmPlaceholder": "Ressaisissez le nouveau mot de passe...",
       "mismatch": "Les mots de passe ne correspondent pas",
       "success": "Mot de passe modifié avec succès !",
+      "incorrectCurrent": "Le mot de passe actuel est incorrect",
+      "currentRequired": "Veuillez saisir votre mot de passe actuel",
       "genericError": "Une erreur s'est produite",
       "tooShort": "Le mot de passe doit contenir au moins {min} caractères.",
       "networkError": "Pas de connexion. Vérifiez votre réseau et réessayez."
@@ -411,6 +413,8 @@
       "changeSuccess": "Mot de passe modifié avec succès",
       "setSuccess": "Mot de passe défini avec succès",
       "mismatch": "Les mots de passe ne correspondent pas",
+      "incorrectCurrent": "Le mot de passe actuel est incorrect",
+      "currentRequired": "Veuillez saisir votre mot de passe actuel",
       "genericError": "Échec de la mise à jour du mot de passe",
       "ssoPasswordDisabled": "Votre organisation exige l’authentification unique : la connexion par mot de passe est donc désactivée pour votre compte.",
       "twoFaTitle": "Authentification à deux facteurs",
