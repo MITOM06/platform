@@ -21,10 +21,14 @@
         <jjwt.version>0.11.5</jjwt.version>
         <spotless.version>2.43.0</spotless.version>
         <google-java-format.version>1.22.0</google-java-format.version>
-        <!-- Override Testcontainers to 1.20.4 (docker-java 3.4.x) which supports
-             Docker Desktop 29.x (minimum API 1.40 requirement). Spring Boot 3.3.5
-             pins to 1.19.8/docker-java 3.3.6 which sends API 1.32 and is rejected. -->
-        <testcontainers.version>1.20.4</testcontainers.version>
+        <!-- Override the Testcontainers BOM (Spring Boot 3.3.5 manages 1.19.8; the
+             testcontainers / junit-jupiter / mongodb modules all follow this property).
+             Docker Engine 29 raised its minimum API version (the GitHub runner and
+             Docker Desktop 29.6 both reject < 1.40), and every release before 1.21.4 pings
+             the daemon with API 1.32 ("client version 1.32 is too old"), so no Docker
+             environment is found. 1.21.4 pings with 1.44 first and falls back to 1.32
+             for older engines. -->
+        <testcontainers.version>1.21.4</testcontainers.version>
     </properties>
 
     <dependencies>
@@ -225,8 +229,8 @@
                          TESTCONTAINERS_RYUK_DISABLED from the environment).
 
                          CI (ubuntu-latest, standard /var/run/docker.sock) needs NO Docker
-                         API version override — Testcontainers 1.20.4 / docker-java 3.4
-                         negotiate correctly against the runner's Docker daemon. The local
+                         API version override — Testcontainers 1.21.4 negotiates the API
+                         version against the runner's Docker daemon. The local
                          Docker Desktop 29.x API-version quirk is handled by the
                          "local-docker-desktop" profile below, which activates ONLY when
                          the Docker Desktop raw socket exists (never on CI).
