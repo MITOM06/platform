@@ -412,6 +412,8 @@
       "setButton": "Đặt mật khẩu",
       "changeSuccess": "Đổi mật khẩu thành công",
       "setSuccess": "Đặt mật khẩu thành công",
+      "changeDoneBody": "Các thiết bị khác đã bị đăng xuất.",
+      "setDoneBody": "Giờ bạn có thể đăng nhập bằng email và mật khẩu này.",
       "mismatch": "Mật khẩu không khớp",
       "incorrectCurrent": "Mật khẩu hiện tại không đúng",
       "currentRequired": "Vui lòng nhập mật khẩu hiện tại",

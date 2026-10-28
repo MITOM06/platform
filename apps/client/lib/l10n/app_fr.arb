@@ -29,6 +29,8 @@
   "securitySetButton": "Définir le mot de passe",
   "securityChangeButton": "Changer le mot de passe",
   "securitySetSuccess": "Mot de passe défini avec succès",
+  "securityChangeDoneBody": "Vos autres appareils ont été déconnectés.",
+  "securitySetDoneBody": "Vous pouvez désormais aussi vous connecter avec votre e-mail et ce mot de passe.",
   "securityTwoFaTitle": "Authentification à deux facteurs",
   "securityTwoFaSubtitle": "Ajoutez une couche de sécurité supplémentaire à votre compte.",
   "securityTwoFaComingSoon": "L'authentification à deux facteurs arrive bientôt.",

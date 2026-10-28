@@ -412,6 +412,8 @@
       "setButton": "Establecer contraseña",
       "changeSuccess": "Contraseña cambiada correctamente",
       "setSuccess": "Contraseña establecida correctamente",
+      "changeDoneBody": "Se cerró la sesión en tus otros dispositivos.",
+      "setDoneBody": "Ahora también puedes iniciar sesión con tu correo y esta contraseña.",
       "mismatch": "Las contraseñas no coinciden",
       "incorrectCurrent": "La contraseña actual es incorrecta",
       "currentRequired": "Por favor ingresa tu contraseña actual",

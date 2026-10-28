@@ -29,6 +29,8 @@
   "securitySetButton": "Đặt mật khẩu",
   "securityChangeButton": "Đổi mật khẩu",
   "securitySetSuccess": "Đặt mật khẩu thành công",
+  "securityChangeDoneBody": "Các thiết bị khác đã bị đăng xuất.",
+  "securitySetDoneBody": "Giờ bạn có thể đăng nhập bằng email và mật khẩu này.",
   "securityTwoFaTitle": "Xác thực hai yếu tố",
   "securityTwoFaSubtitle": "Thêm một lớp bảo mật cho tài khoản của bạn.",
   "securityTwoFaComingSoon": "Xác thực hai yếu tố sẽ sớm ra mắt.",

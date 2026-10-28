@@ -29,6 +29,8 @@
   "securitySetButton": "Establecer contraseña",
   "securityChangeButton": "Cambiar contraseña",
   "securitySetSuccess": "Contraseña establecida correctamente",
+  "securityChangeDoneBody": "Se cerró la sesión en tus otros dispositivos.",
+  "securitySetDoneBody": "Ahora también puedes iniciar sesión con tu correo y esta contraseña.",
   "securityTwoFaTitle": "Autenticación de dos factores",
   "securityTwoFaSubtitle": "Añade una capa adicional de seguridad a tu cuenta.",
   "securityTwoFaComingSoon": "La autenticación de dos factores estará disponible pronto.",

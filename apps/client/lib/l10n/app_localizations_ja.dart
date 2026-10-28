@@ -97,6 +97,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get securitySetSuccess => 'パスワードを設定しました';
 
   @override
+  String get securityChangeDoneBody => '他の端末はサインアウトされました。';
+
+  @override
+  String get securitySetDoneBody => '今後はメールアドレスとこのパスワードでもサインインできます。';
+
+  @override
   String get securityTwoFaTitle => '二要素認証';
 
   @override

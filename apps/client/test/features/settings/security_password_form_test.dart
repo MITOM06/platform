@@ -224,5 +224,24 @@ void main() {
       expect(form.errorOf('current'), isNull);
       expect(form.errorOf('new'), isNull);
     });
+
+    testWidgets('a success stays confirmed in the card until an input is edited',
+        (tester) async {
+      final form = await _pump(tester);
+      await form.enter('current', 'old-password');
+      await form.enter('new', _good);
+      await form.enter('confirm', _good);
+      await form.submit();
+
+      final done = find.byKey(const ValueKey('security-done'));
+      expect(done, findsOneWidget);
+      expect(find.descendant(of: done, matching: find.text(form.l10n.passwordChangedSuccess)),
+          findsOneWidget);
+      expect(find.descendant(of: done, matching: find.text(form.l10n.securityChangeDoneBody)),
+          findsOneWidget);
+
+      await form.enter('current', 'o');
+      expect(done, findsNothing);
+    });
   });
 }

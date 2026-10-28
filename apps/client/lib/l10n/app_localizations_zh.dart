@@ -94,6 +94,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securitySetSuccess => '密码设置成功';
 
   @override
+  String get securityChangeDoneBody => '其他设备已退出登录。';
+
+  @override
+  String get securitySetDoneBody => '现在您也可以使用邮箱和此密码登录。';
+
+  @override
   String get securityTwoFaTitle => '双重验证';
 
   @override

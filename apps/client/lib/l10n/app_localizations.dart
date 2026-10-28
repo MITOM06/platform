@@ -270,6 +270,18 @@ abstract class AppLocalizations {
   /// **'Password set successfully'**
   String get securitySetSuccess;
 
+  /// No description provided for @securityChangeDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your other devices have been signed out.'**
+  String get securityChangeDoneBody;
+
+  /// No description provided for @securitySetDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can now also sign in with your email and this password.'**
+  String get securitySetDoneBody;
+
   /// No description provided for @securityTwoFaTitle.
   ///
   /// In en, this message translates to:

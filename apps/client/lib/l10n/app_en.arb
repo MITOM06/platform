@@ -46,6 +46,8 @@
   "securitySetButton": "Set password",
   "securityChangeButton": "Change password",
   "securitySetSuccess": "Password set successfully",
+  "securityChangeDoneBody": "Your other devices have been signed out.",
+  "securitySetDoneBody": "You can now also sign in with your email and this password.",
   "securityTwoFaTitle": "Two-factor authentication",
   "securityTwoFaSubtitle": "Add an extra layer of security to your account.",
   "securityTwoFaComingSoon": "Two-factor authentication is coming soon.",

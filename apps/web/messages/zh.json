@@ -412,6 +412,8 @@
       "setButton": "设置密码",
       "changeSuccess": "密码更改成功",
       "setSuccess": "密码设置成功",
+      "changeDoneBody": "其他设备已退出登录。",
+      "setDoneBody": "现在您也可以使用邮箱和此密码登录。",
       "mismatch": "密码不匹配",
       "incorrectCurrent": "当前密码不正确",
       "currentRequired": "请输入当前密码",

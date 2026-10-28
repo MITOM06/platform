@@ -412,6 +412,8 @@
       "setButton": "Définir le mot de passe",
       "changeSuccess": "Mot de passe modifié avec succès",
       "setSuccess": "Mot de passe défini avec succès",
+      "changeDoneBody": "Vos autres appareils ont été déconnectés.",
+      "setDoneBody": "Vous pouvez désormais aussi vous connecter avec votre e-mail et ce mot de passe.",
       "mismatch": "Les mots de passe ne correspondent pas",
       "incorrectCurrent": "Le mot de passe actuel est incorrect",
       "currentRequired": "Veuillez saisir votre mot de passe actuel",

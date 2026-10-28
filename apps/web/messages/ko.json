@@ -412,6 +412,8 @@
       "setButton": "비밀번호 설정",
       "changeSuccess": "비밀번호가 변경되었습니다",
       "setSuccess": "비밀번호가 설정되었습니다",
+      "changeDoneBody": "다른 기기에서는 로그아웃되었습니다.",
+      "setDoneBody": "이제 이메일과 이 비밀번호로도 로그인할 수 있습니다.",
       "mismatch": "비밀번호가 일치하지 않습니다",
       "incorrectCurrent": "현재 비밀번호가 올바르지 않습니다",
       "currentRequired": "현재 비밀번호를 입력하세요",

@@ -412,6 +412,8 @@
       "setButton": "Set password",
       "changeSuccess": "Password changed successfully",
       "setSuccess": "Password set successfully",
+      "changeDoneBody": "Your other devices have been signed out.",
+      "setDoneBody": "You can now also sign in with your email and this password.",
       "mismatch": "Passwords don't match",
       "incorrectCurrent": "Current password is incorrect",
       "currentRequired": "Please enter your current password",

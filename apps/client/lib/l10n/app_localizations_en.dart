@@ -98,6 +98,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securitySetSuccess => 'Password set successfully';
 
   @override
+  String get securityChangeDoneBody =>
+      'Your other devices have been signed out.';
+
+  @override
+  String get securitySetDoneBody =>
+      'You can now also sign in with your email and this password.';
+
+  @override
   String get securityTwoFaTitle => 'Two-factor authentication';
 
   @override
