@@ -372,6 +372,8 @@
       "confirmPlaceholder": "새 비밀번호 다시 입력...",
       "mismatch": "비밀번호가 일치하지 않습니다",
       "success": "비밀번호를 변경했습니다!",
+      "incorrectCurrent": "현재 비밀번호가 올바르지 않습니다",
+      "currentRequired": "현재 비밀번호를 입력하세요",
       "genericError": "오류가 발생했습니다",
       "tooShort": "비밀번호는 {min}자 이상이어야 합니다.",
       "networkError": "연결이 없습니다. 네트워크를 확인하고 다시 시도하세요."
@@ -408,6 +410,8 @@
       "changeSuccess": "비밀번호가 변경되었습니다",
       "setSuccess": "비밀번호가 설정되었습니다",
       "mismatch": "비밀번호가 일치하지 않습니다",
+      "incorrectCurrent": "현재 비밀번호가 올바르지 않습니다",
+      "currentRequired": "현재 비밀번호를 입력하세요",
       "genericError": "비밀번호 업데이트에 실패했습니다",
       "ssoPasswordDisabled": "조직에서 통합 로그인(SSO)을 요구하므로 회원님의 계정은 비밀번호 로그인이 꺼져 있습니다.",
       "twoFaTitle": "2단계 인증",

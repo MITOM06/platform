@@ -372,6 +372,8 @@
       "confirmPlaceholder": "Nhập lại mật khẩu mới...",
       "mismatch": "Mật khẩu xác nhận không khớp",
       "success": "Đổi mật khẩu thành công!",
+      "incorrectCurrent": "Mật khẩu hiện tại không đúng",
+      "currentRequired": "Vui lòng nhập mật khẩu hiện tại",
       "genericError": "Có lỗi xảy ra",
       "tooShort": "Mật khẩu phải có ít nhất {min} ký tự.",
       "networkError": "Không có kết nối. Kiểm tra mạng và thử lại."
@@ -408,6 +410,8 @@
       "changeSuccess": "Đổi mật khẩu thành công",
       "setSuccess": "Đặt mật khẩu thành công",
       "mismatch": "Mật khẩu không khớp",
+      "incorrectCurrent": "Mật khẩu hiện tại không đúng",
+      "currentRequired": "Vui lòng nhập mật khẩu hiện tại",
       "genericError": "Cập nhật mật khẩu thất bại",
       "ssoPasswordDisabled": "Tổ chức của bạn yêu cầu đăng nhập một lần (SSO), nên đăng nhập bằng mật khẩu đã bị tắt cho tài khoản của bạn.",
       "twoFaTitle": "Xác thực hai yếu tố",
