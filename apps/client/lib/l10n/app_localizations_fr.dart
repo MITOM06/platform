@@ -100,6 +100,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get securitySetSuccess => 'Mot de passe défini avec succès';
 
   @override
+  String get securityChangeDoneBody =>
+      'Vos autres appareils ont été déconnectés.';
+
+  @override
+  String get securitySetDoneBody =>
+      'Vous pouvez désormais aussi vous connecter avec votre e-mail et ce mot de passe.';
+
+  @override
   String get securityTwoFaTitle => 'Authentification à deux facteurs';
 
   @override

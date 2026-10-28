@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/global_messenger.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_provider.dart';
@@ -10,6 +9,7 @@ import '../../auth/domain/auth_state.dart';
 import '../../auth/ui/widgets/password_strength_indicator.dart';
 import '../utils/change_password_error.dart';
 import '../utils/password_change_form.dart';
+import 'widgets/password_changed_notice.dart';
 import 'widgets/two_factor_section.dart';
 
 /// Dedicated "Password & Security" screen (mirror of web `/settings/security`).
@@ -107,6 +107,9 @@ class _NoPasswordBanner extends StatelessWidget {
   }
 }
 
+/// Which success the form confirms: a changed password or a first one.
+enum _Done { changed, set }
+
 /// The password set/change form. Stateful: holds controllers + submit state.
 class _PasswordForm extends ConsumerStatefulWidget {
   final bool hasPassword;
@@ -132,6 +135,9 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
   String? _serverFieldError;
   String? _errorText;
   String _newPasswordValue = '';
+  // Confirmation shown in the card after a success, until the form is touched
+  // again ([PasswordChangedNotice]).
+  _Done? _done;
 
   @override
   void dispose() {
@@ -144,20 +150,27 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
   String? _serverErrorFor(ChangePasswordField field) =>
       _serverField == field ? _serverFieldError : null;
 
-  void _clearServerError(ChangePasswordField field) {
-    if (_serverField != field) return;
+  /// Typing in an input clears the success notice and that input's server error.
+  void _onEdit(ChangePasswordField? field) {
+    if (_done == null && (field == null || _serverField != field)) return;
     setState(() {
-      _serverField = null;
-      _serverFieldError = null;
+      _done = null;
+      if (field != null && _serverField == field) {
+        _serverField = null;
+        _serverFieldError = null;
+      }
     });
   }
 
   Future<void> _submit() async {
+    // Read before the profile refresh flips it (first password → change).
+    final hadPassword = widget.hasPassword;
     setState(() {
       _attempted = true;
       _errorText = null;
       _serverField = null;
       _serverFieldError = null;
+      _done = null;
     });
     // Shows every input's problem in place; nothing is sent until all pass.
     if (!_formKey.currentState!.validate()) return;
@@ -168,22 +181,18 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
       // body); the server only enforces the current-password check for
       // accounts that already have one.
       await ref.read(authRepositoryProvider).changePassword(
-          widget.hasPassword ? _currentController.text : null,
-          _newController.text);
+          hadPassword ? _currentController.text : null, _newController.text);
       // Re-fetch the user so `hasPassword` flips and the UI updates.
       await ref.read(authNotifierProvider.notifier).refreshUser();
       if (!mounted) return;
-      showInfoSnackBar(
-        widget.hasPassword
-            ? context.l10n.passwordChangedSuccess
-            : context.l10n.securitySetSuccess,
-      );
-      // Back to a pristine form: empty inputs, no "required" errors.
+      // Back to a pristine form: empty inputs, no "required" errors. The reset
+      // fires the inputs' onChanged, so the notice is set after it.
       setState(() {
         _attempted = false;
         _newPasswordValue = '';
       });
       _formKey.currentState?.reset();
+      setState(() => _done = hadPassword ? _Done.changed : _Done.set);
     } catch (e) {
       if (!mounted) return;
       final field = changePasswordErrorField(e);
@@ -227,7 +236,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
               enabled: !_isLoading,
               // Never let OS autofill prefill the current password.
               autofillHints: const [],
-              onChanged: (_) => _clearServerError(ChangePasswordField.current),
+              onChanged: (_) => _onEdit(ChangePasswordField.current),
               validator: (v) =>
                   _serverErrorFor(ChangePasswordField.current) ??
                   currentPasswordError(l10n, v),
@@ -246,7 +255,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
             enabled: !_isLoading,
             onChanged: (v) {
               setState(() => _newPasswordValue = v);
-              _clearServerError(ChangePasswordField.next);
+              _onEdit(ChangePasswordField.next);
             },
             validator: (v) =>
                 _serverErrorFor(ChangePasswordField.next) ??
@@ -264,6 +273,7 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
             style: textStyle,
             textInputAction: TextInputAction.done,
             enabled: !_isLoading,
+            onChanged: (_) => _onEdit(null),
             onFieldSubmitted: (_) => _submit(),
             validator: (v) =>
                 confirmPasswordError(l10n, _newController.text, v),
@@ -330,6 +340,18 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
               Text(
                 _errorText!,
                 style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 14),
+              ),
+              const SizedBox(height: 12),
+            ],
+            if (_done case final done?) ...[
+              PasswordChangedNotice(
+                key: const ValueKey('security-done'),
+                title: done == _Done.changed
+                    ? context.l10n.passwordChangedSuccess
+                    : context.l10n.securitySetSuccess,
+                body: done == _Done.changed
+                    ? context.l10n.securityChangeDoneBody
+                    : context.l10n.securitySetDoneBody,
               ),
               const SizedBox(height: 12),
             ],

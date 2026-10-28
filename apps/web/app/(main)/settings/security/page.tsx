@@ -11,9 +11,9 @@ import {
   Eye,
   EyeOff,
   AlertTriangle,
+  CircleCheck,
   Loader2,
 } from 'lucide-react'
-import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { authService } from '@/lib/api/auth'
 import { passwordChangeErrorKey } from '@/lib/auth/password-change-error'
@@ -63,6 +63,9 @@ export default function SecurityPage() {
   const [serverFieldError, setServerFieldError] = useState<ServerFieldError | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  // Confirmation shown in the card after a success, until the form is touched
+  // again (a toast faded before people noticed and the emptied form looked unchanged).
+  const [done, setDone] = useState<'changed' | 'set' | null>(null)
   // Inputs are disabled while saving, so focus moves once the request settles.
   const focusAfterSave = useRef<PasswordChangeField | null>(null)
 
@@ -82,6 +85,7 @@ export default function SecurityPage() {
 
   const edit = (field: PasswordChangeField, setValue: (v: string) => void) => (value: string) => {
     setValue(value)
+    setDone(null)
     if (serverFieldError?.field === field) setServerFieldError(null)
   }
 
@@ -96,11 +100,13 @@ export default function SecurityPage() {
   const reset = () => {
     clearForm()
     setError(null)
+    setDone(null)
   }
 
   const handleSubmit = async () => {
     setAttempted(true)
     setError(null)
+    setDone(null)
     setServerFieldError(null)
     const errors = validatePasswordChange(form, hasPassword)
     const firstInvalid = PASSWORD_CHANGE_FIELDS.find((f) => errors[f])
@@ -112,13 +118,13 @@ export default function SecurityPage() {
     setSaving(true)
     try {
       await authService.changePassword(hasPassword ? currentPw : undefined, newPw)
-      toast.success(hasPassword ? t('changeSuccess') : t('setSuccess'))
       // Refresh the profile so `hasPassword` updates in the auth store.
       const updated = await authService.getMe()
       if (updated && accessToken && user) {
         setAuth({ ...user, ...updated }, accessToken)
       }
       clearForm()
+      setDone(hasPassword ? 'changed' : 'set')
     } catch (e: unknown) {
       // Mapped by error `code`, never the raw English server text
       // (.claude/rules/no-raw-system-data-in-ui.md). SSO_REQUIRED (passwords are
@@ -194,6 +200,23 @@ export default function SecurityPage() {
                   className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2.5 text-sm text-destructive"
                 >
                   {error}
+                </div>
+              )}
+
+              {done && (
+                <div
+                  role="status"
+                  className="flex gap-3 items-start rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-2.5"
+                >
+                  <CircleCheck className="size-4 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-green-700 dark:text-green-400">
+                      {done === 'changed' ? t('changeSuccess') : t('setSuccess')}
+                    </p>
+                    <p className="text-xs text-green-700/80 dark:text-green-400/80 mt-0.5">
+                      {done === 'changed' ? t('changeDoneBody') : t('setDoneBody')}
+                    </p>
+                  </div>
                 </div>
               )}
 

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import axios from 'axios'
 import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import { toast } from 'sonner'
 import SecurityPage from '@/app/(main)/settings/security/page'
 import { useAuthStore } from '@/lib/store/auth.store'
 
@@ -121,5 +122,22 @@ describe('Settings → Security: password form validation', () => {
     await waitFor(() => expect(next()).toHaveValue(''))
     expect(errorOf(current())).toBeNull()
     expect(errorOf(next())).toBeNull()
+  })
+
+  it('a successful change stays confirmed in the card until the form is touched again', async () => {
+    changePassword.mockResolvedValue(undefined)
+    type(current(), 'old-password')
+    type(next(), GOOD)
+    type(confirm(), GOOD)
+    submit()
+
+    const done = await screen.findByRole('status')
+    expect(done).toHaveTextContent(`${T}.changeSuccess`)
+    expect(done).toHaveTextContent(`${T}.changeDoneBody`)
+    // In the card, not a toast that fades out.
+    expect(toast.success).not.toHaveBeenCalled()
+
+    type(current(), 'o')
+    expect(screen.queryByRole('status')).toBeNull()
   })
 })

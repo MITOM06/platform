@@ -409,6 +409,8 @@
       "setButton": "パスワードを設定",
       "changeSuccess": "パスワードを変更しました",
       "setSuccess": "パスワードを設定しました",
+      "changeDoneBody": "他の端末はサインアウトされました。",
+      "setDoneBody": "今後はメールアドレスとこのパスワードでもサインインできます。",
       "mismatch": "パスワードが一致しません",
       "incorrectCurrent": "現在のパスワードが正しくありません",
       "currentRequired": "現在のパスワードを入力してください",

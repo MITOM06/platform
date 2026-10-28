@@ -78,6 +78,10 @@ describe('every field message exists in settings.security', () => {
   it.each(SUPPORTED_LOCALES)('%s', (locale) => {
     const messages = JSON.parse(fs.readFileSync(path.join(MESSAGES_DIR, `${locale}.json`), 'utf8'))
     const security: Record<string, unknown> = messages.settings.security
+    // The confirmation the page shows in the card after a success.
+    for (const key of ['changeSuccess', 'changeDoneBody', 'setSuccess', 'setDoneBody']) {
+      expect(typeof security[key], `settings.security.${key}`).toBe('string')
+    }
     for (const e of returned) {
       const message = security[e!.key]
       expect(typeof message, `settings.security.${e!.key}`).toBe('string')

@@ -97,6 +97,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get securitySetSuccess => '비밀번호가 설정되었습니다';
 
   @override
+  String get securityChangeDoneBody => '다른 기기에서는 로그아웃되었습니다.';
+
+  @override
+  String get securitySetDoneBody => '이제 이메일과 이 비밀번호로도 로그인할 수 있습니다.';
+
+  @override
   String get securityTwoFaTitle => '2단계 인증';
 
   @override

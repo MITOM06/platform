@@ -29,6 +29,8 @@
   "securitySetButton": "设置密码",
   "securityChangeButton": "更改密码",
   "securitySetSuccess": "密码设置成功",
+  "securityChangeDoneBody": "其他设备已退出登录。",
+  "securitySetDoneBody": "现在您也可以使用邮箱和此密码登录。",
   "securityTwoFaTitle": "双重验证",
   "securityTwoFaSubtitle": "为你的账户增加一层安全保护。",
   "securityTwoFaComingSoon": "双重验证即将推出。",

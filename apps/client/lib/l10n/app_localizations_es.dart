@@ -99,6 +99,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get securitySetSuccess => 'Contraseña establecida correctamente';
 
   @override
+  String get securityChangeDoneBody =>
+      'Se cerró la sesión en tus otros dispositivos.';
+
+  @override
+  String get securitySetDoneBody =>
+      'Ahora también puedes iniciar sesión con tu correo y esta contraseña.';
+
+  @override
   String get securityTwoFaTitle => 'Autenticación de dos factores';
 
   @override
