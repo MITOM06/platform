@@ -29,6 +29,8 @@
   "securitySetButton": "パスワードを設定",
   "securityChangeButton": "パスワードを変更",
   "securitySetSuccess": "パスワードを設定しました",
+  "securityChangeDoneBody": "他の端末はサインアウトされました。",
+  "securitySetDoneBody": "今後はメールアドレスとこのパスワードでもサインインできます。",
   "securityTwoFaTitle": "二要素認証",
   "securityTwoFaSubtitle": "アカウントにさらなるセキュリティ層を追加します。",
   "securityTwoFaComingSoon": "二要素認証は近日公開予定です。",

@@ -99,6 +99,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get securitySetSuccess => 'Đặt mật khẩu thành công';
 
   @override
+  String get securityChangeDoneBody => 'Các thiết bị khác đã bị đăng xuất.';
+
+  @override
+  String get securitySetDoneBody =>
+      'Giờ bạn có thể đăng nhập bằng email và mật khẩu này.';
+
+  @override
   String get securityTwoFaTitle => 'Xác thực hai yếu tố';
 
   @override

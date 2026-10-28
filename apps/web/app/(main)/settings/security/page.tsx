@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import {
@@ -11,18 +11,37 @@ import {
   Eye,
   EyeOff,
   AlertTriangle,
+  CircleCheck,
   Loader2,
 } from 'lucide-react'
-import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { authService } from '@/lib/api/auth'
 import { passwordChangeErrorKey } from '@/lib/auth/password-change-error'
+import {
+  PASSWORD_CHANGE_FIELDS,
+  passwordChangeErrorField,
+  validatePasswordChange,
+  type FieldError,
+  type PasswordChangeField,
+} from '@/lib/auth/password-change-form'
 import { parseAuthError } from '@/lib/auth/auth-error'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter'
 import { TwoFactorSection } from '@/components/settings/TwoFactorSection'
+
+const FIELD_IDS: Record<PasswordChangeField, string> = {
+  current: 'sec-current',
+  next: 'sec-new',
+  confirm: 'sec-confirm',
+}
+
+type ServerFieldError = FieldError & { field: PasswordChangeField }
+
+function focusField(field: PasswordChangeField) {
+  document.getElementById(FIELD_IDS[field])?.focus()
+}
 
 export default function SecurityPage() {
   const t = useTranslations('settings.security')
@@ -37,52 +56,75 @@ export default function SecurityPage() {
   const [currentPw, setCurrentPw] = useState('')
   const [newPw, setNewPw] = useState('')
   const [confirmPw, setConfirmPw] = useState('')
-  const [showCurrent, setShowCurrent] = useState(false)
-  const [showNew, setShowNew] = useState(false)
-  const [showConfirm, setShowConfirm] = useState(false)
+  // Input problems show under their input from the first submit on, re-checked as
+  // the user types. A server answer about one input (wrong current password) stays
+  // until that input is edited; `error` is for problems of the whole form.
+  const [attempted, setAttempted] = useState(false)
+  const [serverFieldError, setServerFieldError] = useState<ServerFieldError | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  // Confirmation shown in the card after a success, until the form is touched
+  // again (a toast faded before people noticed and the emptied form looked unchanged).
+  const [done, setDone] = useState<'changed' | 'set' | null>(null)
+  // Inputs are disabled while saving, so focus moves once the request settles.
+  const focusAfterSave = useRef<PasswordChangeField | null>(null)
 
-  const validatePassword = (pw: string): string | null => {
-    if (pw.length < 8) return tReg('reqLength')
-    if (!/[A-Z]/.test(pw)) return tReg('reqUppercase')
-    if (!/[a-z]/.test(pw)) return tReg('reqLowercase')
-    if (!/[0-9]/.test(pw)) return tReg('reqDigit')
-    if (!/[!@#$%^&*]/.test(pw)) return tReg('reqSpecial')
-    return null
+  useEffect(() => {
+    if (saving || !focusAfterSave.current) return
+    focusField(focusAfterSave.current)
+    focusAfterSave.current = null
+  }, [saving])
+
+  const form = { current: currentPw, next: newPw, confirm: confirmPw }
+  const localErrors = attempted ? validatePasswordChange(form, hasPassword) : {}
+
+  const fieldError = (field: PasswordChangeField) => {
+    const e = localErrors[field] ?? (serverFieldError?.field === field ? serverFieldError : undefined)
+    return e ? t(e.key, e.values) : undefined
   }
 
-  const reset = () => {
+  const edit = (field: PasswordChangeField, setValue: (v: string) => void) => (value: string) => {
+    setValue(value)
+    setDone(null)
+    if (serverFieldError?.field === field) setServerFieldError(null)
+  }
+
+  const clearForm = () => {
     setCurrentPw('')
     setNewPw('')
     setConfirmPw('')
+    setAttempted(false)
+    setServerFieldError(null)
+  }
+
+  const reset = () => {
+    clearForm()
     setError(null)
+    setDone(null)
   }
 
   const handleSubmit = async () => {
-    const pwError = validatePassword(newPw)
-    if (pwError) {
-      setError(pwError)
-      return
-    }
-    if (newPw !== confirmPw) {
-      setError(t('mismatch'))
+    setAttempted(true)
+    setError(null)
+    setDone(null)
+    setServerFieldError(null)
+    const errors = validatePasswordChange(form, hasPassword)
+    const firstInvalid = PASSWORD_CHANGE_FIELDS.find((f) => errors[f])
+    if (firstInvalid) {
+      focusField(firstInvalid)
       return
     }
 
     setSaving(true)
-    setError(null)
     try {
       await authService.changePassword(hasPassword ? currentPw : undefined, newPw)
-      toast.success(hasPassword ? t('changeSuccess') : t('setSuccess'))
       // Refresh the profile so `hasPassword` updates in the auth store.
       const updated = await authService.getMe()
       if (updated && accessToken && user) {
         setAuth({ ...user, ...updated }, accessToken)
       }
-      setCurrentPw('')
-      setNewPw('')
-      setConfirmPw('')
+      clearForm()
+      setDone(hasPassword ? 'changed' : 'set')
     } catch (e: unknown) {
       // Mapped by error `code`, never the raw English server text
       // (.claude/rules/no-raw-system-data-in-ui.md). SSO_REQUIRED (passwords are
@@ -90,8 +132,14 @@ export default function SecurityPage() {
       if (parseAuthError(e).code === 'SSO_REQUIRED') {
         setError(t('ssoPasswordDisabled'))
       } else {
-        const { key, values } = passwordChangeErrorKey(e)
-        setError(t(key, values))
+        const mapped = passwordChangeErrorKey(e)
+        const field = passwordChangeErrorField(mapped.key)
+        if (field) {
+          setServerFieldError({ field, ...mapped })
+          focusAfterSave.current = field
+        } else {
+          setError(t(mapped.key, mapped.values))
+        }
       }
     } finally {
       setSaving(false)
@@ -147,71 +195,56 @@ export default function SecurityPage() {
 
             <div className="rounded-xl border bg-card p-5 space-y-4">
               {error && (
-                <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2.5 text-sm text-destructive">
+                <div
+                  role="alert"
+                  className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2.5 text-sm text-destructive"
+                >
                   {error}
                 </div>
               )}
 
-              {hasPassword && (
-                <div className="space-y-2">
-                  <Label htmlFor="sec-current">{t('currentLabel')}</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                    <Input
-                      id="sec-current"
-                      type={showCurrent ? 'text' : 'password'}
-                      value={currentPw}
-                      onChange={(e) => setCurrentPw(e.target.value)}
-                      placeholder={t('currentPlaceholder')}
-                      className="pl-9 pr-10"
-                      disabled={saving}
-                      autoComplete="current-password"
-                    />
-                    <button
-                      type="button"
-                      tabIndex={-1}
-                      onClick={() => setShowCurrent(!showCurrent)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showCurrent ? (
-                        <EyeOff className="size-4" />
-                      ) : (
-                        <Eye className="size-4" />
-                      )}
-                    </button>
+              {done && (
+                <div
+                  role="status"
+                  className="flex gap-3 items-start rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-2.5"
+                >
+                  <CircleCheck className="size-4 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-green-700 dark:text-green-400">
+                      {done === 'changed' ? t('changeSuccess') : t('setSuccess')}
+                    </p>
+                    <p className="text-xs text-green-700/80 dark:text-green-400/80 mt-0.5">
+                      {done === 'changed' ? t('changeDoneBody') : t('setDoneBody')}
+                    </p>
                   </div>
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="sec-new">
-                  {hasPassword ? t('newLabel') : t('passwordLabel')}
-                </Label>
-                <div className="relative">
-                  <LockOpen className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                  <Input
-                    id="sec-new"
-                    type={showNew ? 'text' : 'password'}
-                    value={newPw}
-                    onChange={(e) => setNewPw(e.target.value)}
-                    placeholder={t('newPlaceholder')}
-                    className="pl-9 pr-10"
-                    disabled={saving}
-                    autoComplete="new-password"
-                  />
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    onClick={() => setShowNew(!showNew)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showNew ? (
-                      <EyeOff className="size-4" />
-                    ) : (
-                      <Eye className="size-4" />
-                    )}
-                  </button>
-                </div>
+              {hasPassword && (
+                <PasswordInput
+                  id={FIELD_IDS.current}
+                  label={t('currentLabel')}
+                  icon={Lock}
+                  value={currentPw}
+                  onChange={edit('current', setCurrentPw)}
+                  placeholder={t('currentPlaceholder')}
+                  disabled={saving}
+                  autoComplete="current-password"
+                  error={fieldError('current')}
+                />
+              )}
+
+              <PasswordInput
+                id={FIELD_IDS.next}
+                label={hasPassword ? t('newLabel') : t('passwordLabel')}
+                icon={LockOpen}
+                value={newPw}
+                onChange={edit('next', setNewPw)}
+                placeholder={t('newPlaceholder')}
+                disabled={saving}
+                autoComplete="new-password"
+                error={fieldError('next')}
+              >
                 <PasswordStrengthMeter
                   password={newPw}
                   labels={{
@@ -226,39 +259,20 @@ export default function SecurityPage() {
                     reqSpecial: tReg('reqSpecial'),
                   }}
                 />
-              </div>
+              </PasswordInput>
 
-              <div className="space-y-2">
-                <Label htmlFor="sec-confirm">{t('confirmLabel')}</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                  <Input
-                    id="sec-confirm"
-                    type={showConfirm ? 'text' : 'password'}
-                    value={confirmPw}
-                    onChange={(e) => setConfirmPw(e.target.value)}
-                    placeholder={t('confirmPlaceholder')}
-                    className="pl-9 pr-10"
-                    disabled={saving}
-                    autoComplete="new-password"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleSubmit()
-                    }}
-                  />
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showConfirm ? (
-                      <EyeOff className="size-4" />
-                    ) : (
-                      <Eye className="size-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
+              <PasswordInput
+                id={FIELD_IDS.confirm}
+                label={t('confirmLabel')}
+                icon={Lock}
+                value={confirmPw}
+                onChange={edit('confirm', setConfirmPw)}
+                placeholder={t('confirmPlaceholder')}
+                disabled={saving}
+                autoComplete="new-password"
+                error={fieldError('confirm')}
+                onEnter={handleSubmit}
+              />
 
               <div className="flex items-center justify-between pt-1">
                 {/* Changing the password signs every OTHER device out (server-side). */}
@@ -281,6 +295,71 @@ export default function SecurityPage() {
           <TwoFactorSection />
         </div>
       </div>
+    </div>
+  )
+}
+
+/** Labelled password input with a show/hide toggle and its own error line. */
+function PasswordInput({
+  id,
+  label,
+  icon: Icon,
+  value,
+  onChange,
+  placeholder,
+  disabled,
+  autoComplete,
+  error,
+  onEnter,
+  children,
+}: {
+  id: string
+  label: string
+  icon: ComponentType<{ className?: string }>
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+  disabled: boolean
+  autoComplete: string
+  error?: string
+  onEnter?: () => void
+  children?: ReactNode
+}) {
+  const [show, setShow] = useState(false)
+  const errorId = `${id}-error`
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      <div className="relative">
+        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <Input
+          id={id}
+          type={show ? 'text' : 'password'}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="pl-9 pr-10"
+          disabled={disabled}
+          autoComplete={autoComplete}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+          onKeyDown={onEnter ? (e) => { if (e.key === 'Enter') onEnter() } : undefined}
+        />
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={() => setShow(!show)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+        >
+          {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+        </button>
+      </div>
+      {error && (
+        <p id={errorId} className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+      {children}
     </div>
   )
 }

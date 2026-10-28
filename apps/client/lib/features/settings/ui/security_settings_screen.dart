@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/global_messenger.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_provider.dart';
 import '../../auth/domain/auth_state.dart';
 import '../../auth/ui/widgets/password_strength_indicator.dart';
 import '../utils/change_password_error.dart';
-import '../../auth/utils/password_policy.dart';
+import '../utils/password_change_form.dart';
+import 'widgets/password_changed_notice.dart';
 import 'widgets/two_factor_section.dart';
 
 /// Dedicated "Password & Security" screen (mirror of web `/settings/security`).
@@ -107,6 +107,9 @@ class _NoPasswordBanner extends StatelessWidget {
   }
 }
 
+/// Which success the form confirms: a changed password or a first one.
+enum _Done { changed, set }
+
 /// The password set/change form. Stateful: holds controllers + submit state.
 class _PasswordForm extends ConsumerStatefulWidget {
   final bool hasPassword;
@@ -118,12 +121,23 @@ class _PasswordForm extends ConsumerStatefulWidget {
 }
 
 class _PasswordFormState extends ConsumerState<_PasswordForm> {
+  final _formKey = GlobalKey<FormState>();
   final _currentController = TextEditingController();
   final _newController = TextEditingController();
   final _confirmController = TextEditingController();
   bool _isLoading = false;
+  // Input problems show under their input from the first submit on, re-checked
+  // as the user types (mirror of web /settings/security). A server answer
+  // about one input stays until that input is edited; `_errorText` is for
+  // problems of the whole form (network, SSO, unknown).
+  bool _attempted = false;
+  ChangePasswordField? _serverField;
+  String? _serverFieldError;
   String? _errorText;
   String _newPasswordValue = '';
+  // Confirmation shown in the card after a success, until the form is touched
+  // again ([PasswordChangedNotice]).
+  _Done? _done;
 
   @override
   void dispose() {
@@ -133,55 +147,140 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
     super.dispose();
   }
 
-  /// Validates the new password against the same rules as the invitation accept form.
-  String? _validate(BuildContext context, String newPass, String confirm) {
-    final l10n = context.l10n;
-    final policyError = newPasswordPolicyError(l10n, newPass);
-    if (policyError != null) return policyError;
-    if (newPass != confirm) return l10n.valPasswordMismatch;
-    return null;
+  String? _serverErrorFor(ChangePasswordField field) =>
+      _serverField == field ? _serverFieldError : null;
+
+  /// Typing in an input clears the success notice and that input's server error.
+  void _onEdit(ChangePasswordField? field) {
+    if (_done == null && (field == null || _serverField != field)) return;
+    setState(() {
+      _done = null;
+      if (field != null && _serverField == field) {
+        _serverField = null;
+        _serverFieldError = null;
+      }
+    });
   }
 
   Future<void> _submit() async {
-    final current = _currentController.text;
-    final newPass = _newController.text;
-    final confirm = _confirmController.text;
-
-    final validationError = _validate(context, newPass, confirm);
-    if (validationError != null) {
-      setState(() => _errorText = validationError);
-      return;
-    }
-
+    // Read before the profile refresh flips it (first password → change).
+    final hadPassword = widget.hasPassword;
     setState(() {
-      _isLoading = true;
+      _attempted = true;
       _errorText = null;
+      _serverField = null;
+      _serverFieldError = null;
+      _done = null;
     });
+    // Shows every input's problem in place; nothing is sent until all pass.
+    if (!_formKey.currentState!.validate()) return;
 
+    setState(() => _isLoading = true);
     try {
       // For first-time setup there is no current password (omitted from the
       // body); the server only enforces the current-password check for
       // accounts that already have one.
-      await ref
-          .read(authRepositoryProvider)
-          .changePassword(widget.hasPassword ? current : null, newPass);
+      await ref.read(authRepositoryProvider).changePassword(
+          hadPassword ? _currentController.text : null, _newController.text);
       // Re-fetch the user so `hasPassword` flips and the UI updates.
       await ref.read(authNotifierProvider.notifier).refreshUser();
       if (!mounted) return;
-      showInfoSnackBar(
-        widget.hasPassword
-            ? context.l10n.passwordChangedSuccess
-            : context.l10n.securitySetSuccess,
-      );
-      _currentController.clear();
-      _newController.clear();
-      _confirmController.clear();
-      setState(() => _newPasswordValue = '');
+      // Back to a pristine form: empty inputs, no "required" errors. The reset
+      // fires the inputs' onChanged, so the notice is set after it.
+      setState(() {
+        _attempted = false;
+        _newPasswordValue = '';
+      });
+      _formKey.currentState?.reset();
+      setState(() => _done = hadPassword ? _Done.changed : _Done.set);
     } catch (e) {
-      if (mounted) setState(() => _errorText = changePasswordErrorMessage(context, e));
+      if (!mounted) return;
+      final field = changePasswordErrorField(e);
+      final message = changePasswordErrorMessage(context, e);
+      setState(() {
+        if (field != null) {
+          _serverField = field;
+          _serverFieldError = message;
+        } else {
+          _errorText = message;
+        }
+      });
+      _formKey.currentState?.validate();
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  /// The inputs, each validated in place (`utils/password_change_form.dart`).
+  Widget _fields(BuildContext context) {
+    final l10n = context.l10n;
+    final textStyle = TextStyle(color: Theme.of(context).colorScheme.onSurface);
+    return Form(
+      key: _formKey,
+      autovalidateMode: _attempted
+          ? AutovalidateMode.onUserInteraction
+          : AutovalidateMode.disabled,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (widget.hasPassword) ...[
+            PonTextField(
+              key: const ValueKey('security-current'),
+              controller: _currentController,
+              labelText: l10n.currentPassword,
+              prefixIcon: Icons.lock_outline_rounded,
+              obscureText: true,
+              enableVisibilityToggle: true,
+              style: textStyle,
+              textInputAction: TextInputAction.next,
+              enabled: !_isLoading,
+              // Never let OS autofill prefill the current password.
+              autofillHints: const [],
+              onChanged: (_) => _onEdit(ChangePasswordField.current),
+              validator: (v) =>
+                  _serverErrorFor(ChangePasswordField.current) ??
+                  currentPasswordError(l10n, v),
+            ),
+            const SizedBox(height: 12),
+          ],
+          PonTextField(
+            key: const ValueKey('security-new'),
+            controller: _newController,
+            labelText: l10n.newPassword,
+            prefixIcon: Icons.lock_open_rounded,
+            obscureText: true,
+            enableVisibilityToggle: true,
+            style: textStyle,
+            textInputAction: TextInputAction.next,
+            enabled: !_isLoading,
+            onChanged: (v) {
+              setState(() => _newPasswordValue = v);
+              _onEdit(ChangePasswordField.next);
+            },
+            validator: (v) =>
+                _serverErrorFor(ChangePasswordField.next) ??
+                newPasswordError(l10n, v),
+          ),
+          PasswordStrengthIndicator(password: _newPasswordValue),
+          const SizedBox(height: 12),
+          PonTextField(
+            key: const ValueKey('security-confirm'),
+            controller: _confirmController,
+            labelText: l10n.confirmPassword,
+            prefixIcon: Icons.lock_rounded,
+            obscureText: true,
+            enableVisibilityToggle: true,
+            style: textStyle,
+            textInputAction: TextInputAction.done,
+            enabled: !_isLoading,
+            onChanged: (_) => _onEdit(null),
+            onFieldSubmitted: (_) => _submit(),
+            validator: (v) =>
+                confirmPasswordError(l10n, _newController.text, v),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -244,47 +343,22 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
               ),
               const SizedBox(height: 12),
             ],
-            if (widget.hasPassword) ...[
-              PonTextField(
-                controller: _currentController,
-                labelText: context.l10n.currentPassword,
-                prefixIcon: Icons.lock_outline_rounded,
-                obscureText: true,
-                enableVisibilityToggle: true,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                textInputAction: TextInputAction.next,
-                enabled: !_isLoading,
-                // Never let OS autofill prefill the current password.
-                autofillHints: const [],
+            if (_done case final done?) ...[
+              PasswordChangedNotice(
+                key: const ValueKey('security-done'),
+                title: done == _Done.changed
+                    ? context.l10n.passwordChangedSuccess
+                    : context.l10n.securitySetSuccess,
+                body: done == _Done.changed
+                    ? context.l10n.securityChangeDoneBody
+                    : context.l10n.securitySetDoneBody,
               ),
               const SizedBox(height: 12),
             ],
-            PonTextField(
-              controller: _newController,
-              labelText: context.l10n.newPassword,
-              prefixIcon: Icons.lock_open_rounded,
-              obscureText: true,
-              enableVisibilityToggle: true,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-              textInputAction: TextInputAction.next,
-              enabled: !_isLoading,
-              onChanged: (v) => setState(() => _newPasswordValue = v),
-            ),
-            PasswordStrengthIndicator(password: _newPasswordValue),
-            const SizedBox(height: 12),
-            PonTextField(
-              controller: _confirmController,
-              labelText: context.l10n.confirmPassword,
-              prefixIcon: Icons.lock_rounded,
-              obscureText: true,
-              enableVisibilityToggle: true,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-              textInputAction: TextInputAction.done,
-              enabled: !_isLoading,
-              onFieldSubmitted: (_) => _submit(),
-            ),
+            _fields(context),
             const SizedBox(height: 20),
             FilledButton(
+              key: const ValueKey('security-submit'),
               style: FilledButton.styleFrom(
                 backgroundColor: accent,
                 foregroundColor: Colors.white,
