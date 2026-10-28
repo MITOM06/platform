@@ -235,6 +235,10 @@ const kSsoRequired = 'SSO_REQUIRED';
 /// The member's (new) role requires 2FA they have not set up yet.
 const kMfaRequiredByRole = 'MFA_REQUIRED_BY_ROLE';
 
+/// Google sign-in outcomes the invite screen shows in place, so the member can
+/// try again from the invitation (mirror of web `INVITE_RETRY_NOTICES`).
+const kInviteRetryNotices = {'SOCIAL_LOGIN_CANCELLED', 'SOCIAL_LOGIN_FAILED'};
+
 /// Codes the login screen may show as a persistent notice: the forced-logout
 /// reasons plus every code a Google / SSO error deep link
 /// (`platform://auth?error=CODE`) can carry. Mirror of web `LOGIN_NOTICES`.
@@ -259,6 +263,8 @@ const kLoginNotices = {
   'OIDC_EMAIL_UNVERIFIED',
   'SOCIAL_ACCOUNT_CONFLICT',
   'SOCIAL_PROVIDER_UNSUPPORTED',
+  // Google came back without a user: cancelled on its page, or the code was refused.
+  ...kInviteRetryNotices,
   // The SSO round trip itself failed: state lost / forged, code exchange.
   'OIDC_NO_STATE',
   'OIDC_BAD_STATE',

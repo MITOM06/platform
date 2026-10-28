@@ -432,6 +432,8 @@ request retries; it answers `?error=SSO_UNAVAILABLE`.
 | `OIDC_BAD_STATE` | OAuth redirect `?error=` | This sign-in link has expired or was already used. Start single sign-on again. | — |
 | `OIDC_EXCHANGE_FAILED` | OAuth redirect `?error=` | Your identity provider refused the sign-in. Try again. | — |
 | `OIDC_EMAIL_UNVERIFIED` | OAuth redirect `?error=` | Your identity provider did not confirm your email address. | — |
+| `SOCIAL_LOGIN_CANCELLED` | OAuth redirect `?error=` (Google answered `error=access_denied`) | Google sign-in was cancelled. | — |
+| `SOCIAL_LOGIN_FAILED` | OAuth redirect `?error=` (Google refused the code, or any other provider error) | Google sign-in didn't complete. Please try again. | — |
 
 `/auth/refresh` answers 401 `MFA_REQUIRED_BY_ROLE` (and revokes that session) when the member's
 role now requires 2FA — Owner / Admin-like — but they never enrolled and the session was not opened
@@ -509,9 +511,16 @@ Only `AuthCode` values (and only for 4xx errors) are placed in the URL; anything
 `ACCOUNT_NOT_PROVISIONED, ACCOUNT_BLOCKED, INVITATION_PENDING, INVITATION_INVALID,
 INVITATION_EXPIRED, INVITATION_REVOKED, INVITATION_ALREADY_ACCEPTED, INVITATION_EMAIL_MISMATCH,
 MEMBER_ALREADY_EXISTS, SOCIAL_EMAIL_UNAVAILABLE, SSO_DISABLED, SSO_DOMAIN_NOT_ALLOWED,
-SSO_EMAIL_UNVERIFIED, SOCIAL_ACCOUNT_CONFLICT, SSO_REQUIRED, SSO_UNAVAILABLE, GENERIC_ERROR`. `SSO_UNAVAILABLE`
+SSO_EMAIL_UNVERIFIED, SOCIAL_ACCOUNT_CONFLICT, SOCIAL_LOGIN_CANCELLED, SOCIAL_LOGIN_FAILED, SSO_REQUIRED,
+SSO_UNAVAILABLE, GENERIC_ERROR`. `SSO_UNAVAILABLE`
 (IdP unreachable) is the only 5xx code that is put in the URL; `GET /auth/oidc/login` also redirects with it
 instead of answering 500.
+
+`GET /auth/google/callback` redirects even when Google comes back without a user (2026-10-26 — it used to
+show a raw 401 / 500 JSON page): `SOCIAL_LOGIN_CANCELLED` when the person cancelled on Google's page,
+`SOCIAL_LOGIN_FAILED` when Google refused the code. A Google flow started from an invitation returns to that
+invitation page with `?reason=<CODE>` for these two codes (web: the token is remembered in the tab before
+leaving for Google; mobile: the invite screen stays open and shows the notice).
 
 ## Example response shapes
 

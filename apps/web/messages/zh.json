@@ -191,6 +191,8 @@
     "errRefreshTokenRotated": "刷新令牌已轮换。",
     "errTokenSessionMismatch": "令牌与会话不匹配。",
     "errSocialEmailUnavailable": "无法从社交账户获取邮箱。",
+    "errSocialLoginCancelled": "已取消 Google 登录。",
+    "errSocialLoginFailed": "Google 登录未完成，请重试。",
     "errLoginCodeInvalid": "登录码无效或已过期。",
     "errEmailNotFound": "系统中不存在该邮箱。",
     "errUserNotFound": "用户未找到。",

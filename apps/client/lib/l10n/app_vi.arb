@@ -1321,6 +1321,8 @@
   "authErrSocialAccountConflict": "Email này đã được liên kết với một tài khoản đăng nhập khác",
   "authErrTooManyOtpRequests": "Bạn đã yêu cầu quá nhiều mã OTP. Vui lòng thử lại sau 10 phút.",
   "authErrSocialProviderUnsupported": "Phương thức đăng nhập này không được hỗ trợ.",
+  "authErrSocialLoginCancelled": "Bạn đã huỷ đăng nhập bằng Google.",
+  "authErrSocialLoginFailed": "Đăng nhập bằng Google chưa hoàn tất. Vui lòng thử lại.",
   "aiActionConfirm": "Xác nhận",
   "aiActionCancel": "Huỷ",
   "aiActionSendEmail": "Gửi email",

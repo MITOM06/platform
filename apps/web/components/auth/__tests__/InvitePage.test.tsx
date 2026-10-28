@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 import InvitePage from '@/app/(auth)/invite/[token]/page'
@@ -9,10 +9,12 @@ import type { InvitationPreview } from '@/lib/api/types'
 const ssoInfo = vi.hoisted(() => ({
   value: { enabled: false, loginUrl: null, buttonLabel: '' } as SsoInfo,
 }))
+const nav = vi.hoisted(() => ({ search: '' }))
 
 vi.mock('next/navigation', () => ({
   useParams: () => ({ token: 'tok-1' }),
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(nav.search),
 }))
 vi.mock('next-intl', () => ({
   useTranslations: (ns?: string) => {
@@ -51,6 +53,41 @@ const google = () => screen.queryByRole('button', { name: /auth\.invite\.continu
 
 beforeEach(() => {
   ssoInfo.value = { enabled: false, loginUrl: null, buttonLabel: '' }
+  nav.search = ''
+  sessionStorage.clear()
+})
+
+// QC 2026-10-26 (TC D-027): a cancelled / refused Google attempt comes back to
+// the invitation instead of a raw JSON page or the login screen.
+describe('/invite/[token]: back from a failed Google attempt', () => {
+  it('?reason=SOCIAL_LOGIN_CANCELLED shows the notice above the form', async () => {
+    nav.search = 'reason=SOCIAL_LOGIN_CANCELLED'
+    renderPage()
+    expect(await screen.findByTestId('invite-notice')).toHaveTextContent('auth.errSocialLoginCancelled')
+  })
+
+  it('an unrelated ?reason= is ignored', async () => {
+    nav.search = 'reason=ACCOUNT_BLOCKED'
+    renderPage()
+    await screen.findByDisplayValue('jane@acme.com')
+    expect(screen.queryByTestId('invite-notice')).toBeNull()
+  })
+
+  it('"Continue with Google" remembers this invitation before leaving', async () => {
+    const realLocation = window.location
+    const nav2 = { href: '' }
+    Object.defineProperty(window, 'location', { configurable: true, value: nav2 })
+    try {
+      renderPage()
+      await screen.findByDisplayValue('jane@acme.com')
+      fireEvent.click(screen.getByRole('checkbox'))
+      fireEvent.click(await waitFor(() => google()!))
+      await waitFor(() => expect(nav2.href).toContain('invite=tok-1'))
+      expect(sessionStorage.getItem('pon:auth:invite-return')).toContain('"token":"tok-1"')
+    } finally {
+      Object.defineProperty(window, 'location', { configurable: true, value: realLocation })
+    }
+  })
 })
 
 describe('/invite/[token]: Google option follows /auth/sso/info', () => {

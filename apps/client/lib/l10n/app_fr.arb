@@ -1321,6 +1321,8 @@
   "authErrSocialAccountConflict": "Cet e-mail est déjà lié à un autre compte de connexion",
   "authErrTooManyOtpRequests": "Vous avez demandé trop de codes OTP. Veuillez réessayer dans 10 minutes.",
   "authErrSocialProviderUnsupported": "Ce mode de connexion n'est pas pris en charge.",
+  "authErrSocialLoginCancelled": "La connexion avec Google a été annulée.",
+  "authErrSocialLoginFailed": "La connexion avec Google n'a pas abouti. Veuillez réessayer.",
   "aiActionConfirm": "Confirmer",
   "aiActionCancel": "Annuler",
   "aiActionSendEmail": "Envoyer un e-mail",

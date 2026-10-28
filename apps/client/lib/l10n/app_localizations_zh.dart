@@ -3716,6 +3716,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authErrSocialProviderUnsupported => '不支持此登录方式。';
 
   @override
+  String get authErrSocialLoginCancelled => '已取消 Google 登录。';
+
+  @override
+  String get authErrSocialLoginFailed => 'Google 登录未完成，请重试。';
+
+  @override
   String get aiActionConfirm => '确认';
 
   @override

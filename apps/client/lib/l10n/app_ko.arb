@@ -1321,6 +1321,8 @@
   "authErrSocialAccountConflict": "이 이메일은 이미 다른 로그인 계정에 연결되어 있습니다",
   "authErrTooManyOtpRequests": "OTP 코드를 너무 많이 요청했습니다. 10분 후에 다시 시도해 주세요.",
   "authErrSocialProviderUnsupported": "이 로그인 방식은 지원되지 않습니다.",
+  "authErrSocialLoginCancelled": "Google 로그인이 취소되었습니다.",
+  "authErrSocialLoginFailed": "Google 로그인을 완료하지 못했습니다. 다시 시도해 주세요.",
   "aiActionConfirm": "확인",
   "aiActionCancel": "취소",
   "aiActionSendEmail": "이메일 보내기",

@@ -191,6 +191,8 @@
     "errRefreshTokenRotated": "El token de actualización ya ha sido rotado.",
     "errTokenSessionMismatch": "El token no coincide con la sesión.",
     "errSocialEmailUnavailable": "No se puede obtener el correo de la cuenta social.",
+    "errSocialLoginCancelled": "Se canceló el inicio de sesión con Google.",
+    "errSocialLoginFailed": "No se pudo completar el inicio de sesión con Google. Inténtalo de nuevo.",
     "errLoginCodeInvalid": "El código de inicio de sesión es inválido o ha expirado.",
     "errEmailNotFound": "El correo no existe en el sistema.",
     "errUserNotFound": "Usuario no encontrado.",
