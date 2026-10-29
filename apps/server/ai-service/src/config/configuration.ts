@@ -1,4 +1,5 @@
 import { registerAs } from '@nestjs/config';
+import { GEMINI_BASE_URL, geminiTierModel } from '../llm/gemini-test';
 
 export interface ModelPrice {
   inputPerMTok: number;
@@ -71,9 +72,10 @@ export default registerAs('config', () => ({
     router: {
       // Set ANTHROPIC_ROUTER_ENABLED=false to disable routing and always use complexModel.
       enabled: process.env.ANTHROPIC_ROUTER_ENABLED !== 'false',
-      simpleModel: process.env.ANTHROPIC_SIMPLE_MODEL ?? 'claude-haiku-4-5',
-      midModel: process.env.ANTHROPIC_MID_MODEL ?? 'claude-sonnet-4-6',
-      complexModel: process.env.ANTHROPIC_COMPLEX_MODEL ?? 'claude-opus-4-8',
+      // Dev-only Gemini test mode (GEMINI_API_KEY set) puts every tier on Gemini.
+      simpleModel: geminiTierModel() ?? process.env.ANTHROPIC_SIMPLE_MODEL ?? 'claude-haiku-4-5',
+      midModel: geminiTierModel() ?? process.env.ANTHROPIC_MID_MODEL ?? 'claude-sonnet-4-6',
+      complexModel: geminiTierModel() ?? process.env.ANTHROPIC_COMPLEX_MODEL ?? 'claude-opus-4-8',
       simpleMaxChars: parseInt(process.env.ANTHROPIC_ROUTER_SIMPLE_MAX_CHARS ?? '280', 10),
       simpleMaxHistory: parseInt(process.env.ANTHROPIC_ROUTER_SIMPLE_MAX_HISTORY ?? '4', 10),
       midMaxChars: parseInt(process.env.ANTHROPIC_ROUTER_MID_MAX_CHARS ?? '1200', 10),
@@ -90,6 +92,18 @@ export default registerAs('config', () => ({
     appUrl: process.env.OPENROUTER_APP_URL || undefined,
     // After a 429 (free-model limits), skip OpenRouter for this long.
     cooldownMs: parseInt(process.env.OPENROUTER_COOLDOWN_MS ?? '600000', 10),
+  },
+  // DEV-ONLY: chat on Gemini's OpenAI-compatible endpoint to test without Claude
+  // credit (src/llm/gemini-test.ts). Empty GEMINI_API_KEY = Claude, as before.
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY || undefined,
+    model: geminiTierModel(),
+    baseUrl: process.env.GEMINI_BASE_URL || GEMINI_BASE_URL,
+    // Free-tier per-minute limits clear fast; a short pause beats ten minutes on Claude.
+    cooldownMs: parseInt(process.env.GEMINI_COOLDOWN_MS ?? '60000', 10),
+    // The free tier sends nothing until it has thought (measured 10–40 s). A reply past
+    // the clients' 30 s watchdog still arrives as a saved message.
+    firstTokenTimeoutMs: parseInt(process.env.GEMINI_FIRST_TOKEN_TIMEOUT_MS ?? '90000', 10),
   },
   bot: {
     userId: process.env.AI_BOT_USER_ID ?? 'ai-bot-000000000000000000000001',

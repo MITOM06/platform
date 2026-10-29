@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
 import { LlmClient, OpenRouterClient } from './openrouter-client';
+import { GEMINI_BASE_URL, GeminiThoughtSignatures, toGeminiBody } from './gemini-test';
 
 export interface LightCallResult {
   message: Anthropic.Message;
@@ -32,13 +33,30 @@ export class LlmClientsService {
     this.anthropic = new Anthropic({
       apiKey: configService.get<string>('config.anthropic.apiKey'),
     }) as unknown as LlmClient;
-    this.cooldownMs = configService.get<number>('config.openRouter.cooldownMs') ?? 10 * 60_000;
+    const geminiKey = configService.get<string>('config.gemini.apiKey');
+    const geminiModel = configService.get<string>('config.gemini.model');
+    this.cooldownMs = geminiKey
+      ? (configService.get<number>('config.gemini.cooldownMs') ?? 60_000)
+      : (configService.get<number>('config.openRouter.cooldownMs') ?? 10 * 60_000);
     this.claudeLightModel =
       configService.get<string>('config.anthropic.fallbackModel') ?? 'claude-haiku-4-5';
 
     const apiKey = configService.get<string>('config.openRouter.apiKey');
     const model = configService.get<string>('config.openRouter.model');
-    if (apiKey && model) {
+    if (geminiKey && geminiModel) {
+      // Dev-only Gemini test mode (gemini-test.ts): Gemini takes the OpenRouter slot.
+      const signatures = new GeminiThoughtSignatures();
+      this.openRouter = new OpenRouterClient({
+        apiKey: geminiKey,
+        baseUrl: configService.get<string>('config.gemini.baseUrl') ?? GEMINI_BASE_URL,
+        prepareBody: (body) => signatures.attach(toGeminiBody(body)),
+        onToolCallExtra: signatures.remember,
+        firstTokenTimeoutMs: configService.get<number>('config.gemini.firstTokenTimeoutMs') ?? 90_000,
+        onUnavailable: () => this.startCooldown(),
+      });
+      this.openRouterModel = geminiModel;
+      this.logger.warn(`Gemini TEST mode on: every chat tier runs on ${geminiModel} (dev only)`);
+    } else if (apiKey && model) {
       this.openRouter = new OpenRouterClient({
         apiKey,
         baseUrl:
