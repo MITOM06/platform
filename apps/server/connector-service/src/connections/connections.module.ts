@@ -10,6 +10,7 @@ import { UserSkill, UserSkillSchema } from './schemas/user-skill.schema';
 import { ConnectionsService } from './connections.service';
 import { ConnectionStoreService } from './connection-store.service';
 import { CustomMcpService } from './custom-mcp.service';
+import { CustomMcpEvents } from './custom-mcp-events';
 import { ConnectionsController } from './connections.controller';
 
 const mongoFeature = MongooseModule.forFeature([
@@ -21,7 +22,7 @@ const mongoFeature = MongooseModule.forFeature([
 @Module({
   imports: [mongoFeature, VaultModule, McpModule, AuditModule, AdapterModule],
   controllers: [ConnectionsController],
-  providers: [ConnectionsService, ConnectionStoreService, CustomMcpService],
-  exports: [mongoFeature, ConnectionsService, ConnectionStoreService],
+  providers: [ConnectionsService, ConnectionStoreService, CustomMcpService, CustomMcpEvents],
+  exports: [mongoFeature, ConnectionsService, ConnectionStoreService, CustomMcpEvents],
 })
 export class ConnectionsModule {}

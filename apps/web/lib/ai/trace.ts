@@ -6,7 +6,7 @@
  * Neither is ever rendered; only a status derived from the result is.
  */
 
-export type ToolCallStatus = 'done' | 'failed' | 'awaiting' | 'skipped'
+export type ToolCallStatus = 'done' | 'failed' | 'awaiting' | 'skipped' | 'cancelled' | 'expired'
 
 /** Outcome of one traced tool call, from ai-service's fixed result markers. */
 export function toolCallStatus(resultSummary: string | null | undefined): ToolCallStatus {
@@ -16,6 +16,38 @@ export function toolCallStatus(resultSummary: string | null | undefined): ToolCa
   if (r === 'Not performed') return 'failed'
   if (/^(tool error|error)\b/i.test(r)) return 'failed'
   return 'done'
+}
+
+/**
+ * The trace is written when the reply ends, so a held call stays "awaiting" in it
+ * forever. The confirmation card on the same message carries the real outcome:
+ * each awaiting call takes the status of the next card with the same tool name
+ * (in order). Pending or unmatched calls stay awaiting.
+ */
+export function resolvedToolCallStatuses(
+  toolCalls: ReadonlyArray<{ toolName: string; resultSummary?: string | null }>,
+  actions: ReadonlyArray<{ toolName?: string; status?: string }> | null | undefined,
+): ToolCallStatus[] {
+  const used = new Set<number>()
+  return toolCalls.map((tc) => {
+    const base = toolCallStatus(tc.resultSummary)
+    if (base !== 'awaiting' || !actions) return base
+    const idx = actions.findIndex((a, i) => !used.has(i) && a.toolName === tc.toolName)
+    if (idx < 0) return base
+    used.add(idx)
+    switch (actions[idx].status) {
+      case 'confirmed':
+        return 'done'
+      case 'cancelled':
+        return 'cancelled'
+      case 'expired':
+        return 'expired'
+      case 'failed':
+        return 'failed'
+      default:
+        return base
+    }
+  })
 }
 
 /**

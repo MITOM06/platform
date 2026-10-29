@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../data/models/connector_models.dart';
 import '../../utils/connector_labels.dart';
+import 'provider_logo.dart';
 
 /// Gallery card for a single connector — mirrors the web `ConnectorCard`:
 /// icon, name + status pill, description, localized scope chips, and a
@@ -34,6 +35,11 @@ class ConnectorCard extends StatelessWidget {
     final entry = item.entry;
     final connected = item.isConnected;
     final available = entry.available;
+    // Left out of the workspace allow-list: connecting would 403, so say so up front.
+    final notAllowed = available &&
+        !entry.allowedByWorkspace &&
+        !connected &&
+        !item.needsReconnect;
     final scopes = scopeLabels(context.l10n, entry.scopes);
 
     return PonCard(
@@ -63,6 +69,7 @@ class ConnectorCard extends StatelessWidget {
                   connected: connected,
                   needsReconnect: item.needsReconnect,
                   available: available,
+                  notAllowed: notAllowed,
                 ),
               ],
             ),
@@ -88,11 +95,22 @@ class ConnectorCard extends StatelessWidget {
               item: item,
               busy: busy,
               connected: connected,
-              available: available,
+              available: available && !notAllowed,
               onConnect: onConnect,
               onManage: onManage,
               onPermissions: onPermissions,
             ),
+            if (notAllowed) ...[
+              const SizedBox(height: 8),
+              Text(
+                context.l10n.connectorNotAllowedHint,
+                style: TextStyle(
+                  color: AppTheme.mutedText(context),
+                  fontSize: 12,
+                  height: 1.3,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -115,60 +133,25 @@ class _IconBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.hairline(context)),
       ),
-      child: _ConnectorLogo(id: icon),
+      child: ProviderLogo(
+        icon: icon,
+        name: icon,
+        monogramColor: AppTheme.mutedText(context),
+      ),
     );
   }
-}
-
-/// Renders a brand logo for a provider id using the official favicon CDN.
-/// Falls back to the provider's initial letter if the image can't load
-/// (e.g. offline).
-class _ConnectorLogo extends StatelessWidget {
-  final String id;
-  const _ConnectorLogo({required this.id});
-
-  static const _logos = {
-    'notion': 'https://www.notion.so/front-static/favicon.ico',
-    'gmail': 'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico',
-    'calendar':
-        'https://calendar.google.com/googlecalendar/images/favicon_v2018_256.png',
-    'drive':
-        'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png',
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final url = _logos[id];
-    if (url == null) {
-      return _initials(context);
-    }
-    return Image.network(
-      url,
-      width: 26,
-      height: 26,
-      fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) => _initials(context),
-    );
-  }
-
-  Widget _initials(BuildContext context) => Text(
-        id.isNotEmpty ? id[0].toUpperCase() : '?',
-        style: TextStyle(
-          color: AppTheme.mutedText(context),
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-        ),
-      );
 }
 
 class _StatusPill extends StatelessWidget {
   final bool connected;
   final bool needsReconnect;
   final bool available;
+  final bool notAllowed;
   const _StatusPill({
     required this.connected,
     required this.needsReconnect,
     required this.available,
+    required this.notAllowed,
   });
 
   @override
@@ -181,6 +164,9 @@ class _StatusPill extends StatelessWidget {
     } else if (needsReconnect) {
       color = AppTheme.warning;
       label = context.l10n.connectorStatusReconnect;
+    } else if (notAllowed) {
+      color = AppTheme.warning;
+      label = context.l10n.connectorStatusNotAllowed;
     } else if (available) {
       color = AppTheme.accent(context);
       label = context.l10n.connectorStatusAvailable;

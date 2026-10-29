@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../data/models/connector_models.dart';
 import '../../utils/connector_labels.dart';
+import 'provider_logo.dart';
 
 /// Card for one MCP directory entry — mirrors the web `DirectoryCard`:
 /// monogram badge, name + localized tier/auth meta, description, 1-click
@@ -46,7 +47,7 @@ class DirectoryCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _Monogram(name: entry.name),
+                _LogoTile(icon: entry.icon, name: entry.name),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -120,13 +121,14 @@ class DirectoryCard extends StatelessWidget {
   }
 }
 
-class _Monogram extends StatelessWidget {
+/// Brand logo in the card's tile; the name's monogram when no logo is known.
+class _LogoTile extends StatelessWidget {
+  final String icon;
   final String name;
-  const _Monogram({required this.name});
+  const _LogoTile({required this.icon, required this.name});
 
   @override
   Widget build(BuildContext context) {
-    final letter = name.isEmpty ? '?' : name[0].toUpperCase();
     return Container(
       width: 42,
       height: 42,
@@ -136,13 +138,10 @@ class _Monogram extends StatelessWidget {
         borderRadius: BorderRadius.circular(11),
         border: Border.all(color: AppTheme.hairline(context)),
       ),
-      child: Text(
-        letter,
-        style: TextStyle(
-          color: AppTheme.accent(context),
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-        ),
+      child: ProviderLogo(
+        icon: icon,
+        name: name,
+        monogramColor: AppTheme.accent(context),
       ),
     );
   }

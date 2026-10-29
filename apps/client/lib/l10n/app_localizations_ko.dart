@@ -2015,6 +2015,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get connectorStatusAvailable => '사용 가능';
 
   @override
+  String get connectorStatusNotAllowed => '허용되지 않음';
+
+  @override
+  String get connectorNotAllowedHint =>
+      '워크스페이스에서 이 커넥터를 허용하지 않습니다. 관리자에게 허용 목록에 추가해 달라고 요청하세요.';
+
+  @override
   String get connectorStatusComingSoon => '출시 예정';
 
   @override
@@ -3910,6 +3917,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiTraceToolNotRun => '실행 안 됨';
+
+  @override
+  String get aiTraceToolCancelled => '취소됨';
+
+  @override
+  String get aiTraceToolExpired => '만료됨';
 
   @override
   String aiTraceTokens(String input, String output) {

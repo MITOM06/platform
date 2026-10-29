@@ -3,11 +3,12 @@ import { InjectModel } from '@nestjs/mongoose';
 import { isValidObjectId, Model } from 'mongoose';
 import { AuditService } from '../audit/audit.service';
 import { redactUrl } from '../common/redact';
-import { httpStatusOf, McpAuth, McpClientService } from '../mcp/mcp-client.service';
+import { httpStatusOf, McpAuth, McpClientService, McpTool } from '../mcp/mcp-client.service';
 import { assertSafeUrl, UnsafeUrlError } from '../security/url-guard';
 import { TokenVaultService } from '../vault/token-vault.service';
 import { CreateCustomMcpDto, CustomMcpView, DiscoverCustomMcpDto } from './dto/custom-mcp.dto';
 import { DiscoverResult } from './dto/connection-view.dto';
+import { CustomMcpEvents } from './custom-mcp-events';
 import {
   CustomMcpAuthType,
   CustomMcpServer,
@@ -36,6 +37,7 @@ export class CustomMcpService {
     private readonly vault: TokenVaultService,
     private readonly mcp: McpClientService,
     private readonly audit: AuditService,
+    private readonly events: CustomMcpEvents,
   ) {}
 
   async discover(dto: DiscoverCustomMcpDto): Promise<DiscoverResult> {
@@ -58,9 +60,10 @@ export class CustomMcpService {
 
     // Best-effort tool preview; failure here must not block saving the server.
     let toolsPreview: { name: string; description: string }[] = [];
+    let discovered: McpTool[] = [];
     try {
-      const tools = await this.mcp.discoverTools(dto.url, toAuth(dto.authType, dto.credential));
-      toolsPreview = tools.map((t) => ({ name: t.name, description: t.description }));
+      discovered = await this.mcp.discoverTools(dto.url, toAuth(dto.authType, dto.credential));
+      toolsPreview = discovered.map((t) => ({ name: t.name, description: t.description }));
     } catch (err) {
       this.logger.warn(`Tool preview failed for custom MCP ${redactUrl(dto.url)}: ${(err as Error).message}`);
     }
@@ -81,6 +84,8 @@ export class CustomMcpService {
       targetId: String(doc._id),
       meta: { name: dto.name, url: redactUrl(dto.url) },
     });
+    // Primes the internal tool cache, so the very next chat already sees these tools.
+    this.events.saved({ server: doc, tools: discovered });
     return this.toView(doc);
   }
 

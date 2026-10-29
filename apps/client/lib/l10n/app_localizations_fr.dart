@@ -2081,6 +2081,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get connectorStatusAvailable => 'Disponible';
 
   @override
+  String get connectorStatusNotAllowed => 'Non autorisé';
+
+  @override
+  String get connectorNotAllowedHint =>
+      'Votre espace de travail n\'autorise pas ce connecteur. Demandez à un administrateur de l\'ajouter à la liste autorisée.';
+
+  @override
   String get connectorStatusComingSoon => 'Bientôt disponible';
 
   @override
@@ -4093,6 +4100,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get aiTraceToolNotRun => 'Non exécuté';
+
+  @override
+  String get aiTraceToolCancelled => 'Annulée';
+
+  @override
+  String get aiTraceToolExpired => 'Expirée';
 
   @override
   String aiTraceTokens(String input, String output) {

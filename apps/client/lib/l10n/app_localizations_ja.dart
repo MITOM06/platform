@@ -2015,6 +2015,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get connectorStatusAvailable => '利用可能';
 
   @override
+  String get connectorStatusNotAllowed => '許可されていません';
+
+  @override
+  String get connectorNotAllowedHint =>
+      'このワークスペースではこのコネクタは許可されていません。管理者に許可リストへの追加を依頼してください。';
+
+  @override
   String get connectorStatusComingSoon => '近日公開';
 
   @override
@@ -3911,6 +3918,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get aiTraceToolNotRun => '未実行';
+
+  @override
+  String get aiTraceToolCancelled => 'キャンセル済み';
+
+  @override
+  String get aiTraceToolExpired => '期限切れ';
 
   @override
   String aiTraceTokens(String input, String output) {

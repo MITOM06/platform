@@ -16,6 +16,7 @@ import { ConnectionLike } from '../adapters/provider-adapter.interface';
 import { envInt, TimeoutError } from '../common/with-timeout';
 import { ConnectorPolicy, skillGateAllows } from '../governance/connector-policy';
 import { ConnectorPolicyService } from '../governance/connector-policy.service';
+import { CustomMcpEvents } from '../connections/custom-mcp-events';
 import { httpStatusOf, McpTool } from '../mcp/mcp-client.service';
 import { UnsafeUrlError } from '../security/url-guard';
 import {
@@ -133,7 +134,26 @@ export class InternalService {
     private readonly audit: AuditService,
     private readonly adapters: AdapterRegistryService,
     private readonly policyService: ConnectorPolicyService,
-  ) {}
+    customEvents: CustomMcpEvents,
+  ) {
+    customEvents.onSaved(({ server, tools }) => this.primeCustomTools(server, tools));
+  }
+
+  /**
+   * A just-saved custom server: seed its tool list (discovered during the save),
+   * or start listing it in the background, so a slow server is not skipped by the
+   * first chat's listing timeout.
+   */
+  private primeCustomTools(server: unknown, tools: McpTool[]): void {
+    const source = this.customSource(server);
+    if (tools.length > 0) {
+      this.toolCache.prime(source.cacheKey, tools);
+      return;
+    }
+    this.fetchTools(source).catch((err) =>
+      this.logger.warn(`Background tool listing for ${source.provider} failed: ${(err as Error)?.message ?? err}`),
+    );
+  }
 
   // ── Listing ───────────────────────────────────────────────────────────────
 

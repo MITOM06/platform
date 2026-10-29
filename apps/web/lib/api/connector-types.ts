@@ -23,6 +23,8 @@ export interface CatalogEntry {
   /** Governance tier — decides which capability connecting needs. */
   tier?: DirectoryTier
   available: boolean
+  /** False when the workspace allow-list leaves this connector out — nobody can connect it. */
+  allowedByWorkspace?: boolean
 }
 
 /** Who a connection belongs to: the caller only, or the whole workspace. */

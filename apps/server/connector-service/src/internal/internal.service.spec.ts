@@ -3,6 +3,7 @@ import { Capability } from '@platform/database';
 import { InternalService } from './internal.service';
 import { InternalKeyGuard } from './internal-key.guard';
 import { ConnectorPolicy } from '../governance/connector-policy';
+import { CustomMcpEvents } from '../connections/custom-mcp-events';
 
 describe('InternalKeyGuard', () => {
   const cfg = { get: (k: string) => (k === 'internalApiKey' ? 'secret-key' : undefined) } as any;
@@ -30,6 +31,7 @@ describe('InternalService', () => {
   let policyService: any;
   let audit: { record: jest.Mock };
   let permSet: Set<string>;
+  let events: CustomMcpEvents;
 
   const connDoc = {
     _id: 'c1',
@@ -45,6 +47,7 @@ describe('InternalService', () => {
     (await svc.getTools('u1', channel)).tools.map((t) => t.name);
 
   beforeEach(() => {
+    events = new CustomMcpEvents();
     connModel = {
       find: jest.fn().mockReturnValue(lean([connDoc])),
       updateOne: jest.fn().mockResolvedValue({}),
@@ -66,7 +69,7 @@ describe('InternalService', () => {
       enabledSkillIds: jest.fn().mockResolvedValue([]),
     };
     audit = { record: jest.fn().mockResolvedValue(undefined) };
-    svc = new InternalService(connModel, customModel, perms as any, audit as any, adapters as any, policyService);
+    svc = new InternalService(connModel, customModel, perms as any, audit as any, adapters as any, policyService, events);
   });
 
   // ── Listing ─────────────────────────────────────────────────────────────
@@ -164,7 +167,7 @@ describe('InternalService', () => {
 
   it('one slow server does not empty the whole list', async () => {
     process.env.TOOL_LIST_TIMEOUT_MS = '50';
-    svc = new InternalService(connModel, customModel, perms as any, audit as any, adapters as any, policyService);
+    svc = new InternalService(connModel, customModel, perms as any, audit as any, adapters as any, policyService, events);
     delete process.env.TOOL_LIST_TIMEOUT_MS;
     connModel.find.mockReturnValue(lean([connDoc, { ...connDoc, _id: 'c2', provider: 'linear' }]));
     adapter.listTools.mockImplementation(async (conn: any) =>
@@ -191,6 +194,20 @@ describe('InternalService', () => {
 
     // In-flight requests that still use the old `custom:<id>` form keep working.
     expect((await svc.callTool('u1', `mcp__custom:${SERVER_ID}__lookup.record`, {})).result).toBe('found');
+  });
+
+  it('a just-saved custom server offers the tools found while saving, without listing it again', async () => {
+    permSet.add(Capability.ADD_CUSTOM_MCP);
+    connModel.find.mockReturnValue(lean([]));
+    const srv = { _id: SERVER_ID, userId: 'u1', url: 'https://slow.example.com', authType: 'none' };
+    customModel.find.mockReturnValue(lean([srv]));
+    // A server slower than the listing timeout: a cold first chat would skip it.
+    adapter.listTools.mockImplementation(() => new Promise(() => undefined));
+
+    events.saved({ server: srv, tools: tools('read_wiki_contents') });
+
+    expect(await names()).toEqual([expect.stringMatching(/^mcp__custom_6650c0ffee0123456789abcd__read_wiki_contents/)]);
+    expect(adapter.listTools).not.toHaveBeenCalled();
   });
 
   it('custom MCP servers need ADD_CUSTOM_MCP at use time', async () => {

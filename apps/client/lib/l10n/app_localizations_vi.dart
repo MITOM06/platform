@@ -2049,6 +2049,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get connectorStatusAvailable => 'Có sẵn';
 
   @override
+  String get connectorStatusNotAllowed => 'Không được phép';
+
+  @override
+  String get connectorNotAllowedHint =>
+      'Workspace của bạn chưa cho phép connector này. Hãy nhờ quản trị viên thêm nó vào danh sách cho phép.';
+
+  @override
   String get connectorStatusComingSoon => 'Sắp ra mắt';
 
   @override
@@ -4013,6 +4020,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get aiTraceToolNotRun => 'Chưa chạy';
+
+  @override
+  String get aiTraceToolCancelled => 'Đã huỷ';
+
+  @override
+  String get aiTraceToolExpired => 'Đã hết hạn';
 
   @override
   String aiTraceTokens(String input, String output) {

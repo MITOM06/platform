@@ -1044,6 +1044,8 @@
   "integrationsSettingsSubtitle": "Connect tools your assistant can use",
   "connectorStatusConnected": "Connected",
   "connectorStatusAvailable": "Available",
+  "connectorStatusNotAllowed": "Not allowed",
+  "connectorNotAllowedHint": "Your workspace doesn't allow this connector. Ask an administrator to add it to the allow-list.",
   "connectorStatusComingSoon": "Coming soon",
   "connectorConnect": "Connect",
   "connectorManage": "Manage",
@@ -1995,6 +1997,8 @@
   "aiTraceToolAwaiting": "Awaiting confirmation",
   "aiTraceToolDone": "Done",
   "aiTraceToolNotRun": "Not run",
+  "aiTraceToolCancelled": "Cancelled",
+  "aiTraceToolExpired": "Expired",
   "aiTraceTokens": "{input} in · {output} out",
   "@aiTraceTokens": {
     "placeholders": {
