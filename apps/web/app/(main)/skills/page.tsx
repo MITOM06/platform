@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import { ArrowLeft, Plug, Sparkles } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useCatalog, useSkills, useSkillToggle } from '@/lib/hooks/use-connectors'
-import { SKILLS } from '@/lib/skills'
+import { useCatalog, useConnections, useSkills, useSkillToggle } from '@/lib/hooks/use-connectors'
+import { SKILLS, missingConnectors } from '@/lib/skills'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SkillToggle } from '@/components/integrations/SkillToggle'
@@ -14,6 +14,7 @@ export default function SkillsPage() {
   const t = useTranslations('skills')
   const { data: catalog = [], isLoading: loadingCatalog } = useCatalog()
   const { data: skillStates = [], isLoading: loadingSkills } = useSkills()
+  const { data: connections } = useConnections()
   const toggle = useSkillToggle()
 
   const catalogById = new Map<string, CatalogEntry>(
@@ -70,6 +71,12 @@ export default function SkillsPage() {
               const requiredConnectors = skill.requires
                 .map((id) => catalogById.get(id))
                 .filter((c): c is CatalogEntry => !!c)
+              // Readiness shows once the connections are known (C-4: "đủ điều kiện").
+              const missing = connections
+                ? requiredConnectors.filter((c) =>
+                    missingConnectors(skill.requires, connections).includes(c.id),
+                  )
+                : null
               return (
                 <SkillToggle
                   key={skill.id}
@@ -79,6 +86,7 @@ export default function SkillsPage() {
                     toggle.isPending && toggle.variables?.skillId === skill.id
                   }
                   requiredConnectors={requiredConnectors}
+                  missingConnectors={missing}
                   onToggle={(skillId, enabled) =>
                     toggle.mutate({ skillId, enabled })
                   }

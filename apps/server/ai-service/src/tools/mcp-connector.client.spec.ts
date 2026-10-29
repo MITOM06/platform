@@ -17,6 +17,36 @@ describe('McpConnectorClient', () => {
   });
 
   describe('getTools', () => {
+    it('passes the role-withheld tool names to the sink, ignoring anything malformed', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({
+          tools: [],
+          withheld: [
+            { name: 'mcp__gmail__send_email', reason: 'role' },
+            { name: 'mcp__gmail__create_draft', reason: 'grant' },
+            { name: 'send_email', reason: 'role' },
+            'mcp__notion__create_page',
+          ],
+        }),
+      }) as any;
+      const sink: string[] = [];
+      await makeClient().getTools('user-1', sink);
+      expect(sink).toEqual(['mcp__gmail__send_email']);
+    });
+
+    it('leaves the sink empty for a connector-service that reports no withheld tools', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({ tools: [] }),
+      }) as any;
+      const sink: string[] = [];
+      await makeClient().getTools('user-1', sink);
+      expect(sink).toEqual([]);
+    });
+
     it('maps response tools to ToolDefinition[]', async () => {
       const tools = [
         {

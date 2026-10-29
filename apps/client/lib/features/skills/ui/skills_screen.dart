@@ -6,7 +6,9 @@ import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../../../core/widgets/pon_widgets.dart';
+import '../../integrations/state/integrations_provider.dart';
 import '../data/skill_defs.dart';
+import '../domain/skill_readiness.dart';
 import '../state/skills_provider.dart';
 
 /// Skills selector — mirrors web `/skills`. Lists static skill defs with a
@@ -18,6 +20,9 @@ class SkillsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final skillsAsync = ref.watch(skillsProvider);
+    // Readiness ("đủ điều kiện") shows once the connections are known; while they
+    // load (or fail) the tiles simply leave it out.
+    final connections = ref.watch(connectionsProvider).valueOrNull;
 
     return Scaffold(
       appBar: AppBar(
@@ -60,6 +65,9 @@ class SkillsScreen extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _SkillTile(
                   def: def,
+                  missing: connections == null
+                      ? null
+                      : missingConnectors(def.requires, connections),
                   enabled: enabledMap[def.id] ?? false,
                   onChanged: (v) => _toggle(context, ref, def.id, v),
                 ),
@@ -126,11 +134,15 @@ class SkillsScreen extends ConsumerWidget {
 
 class _SkillTile extends StatelessWidget {
   final SkillDef def;
+
+  /// Required connectors not connected yet (empty = ready); null while unknown.
+  final List<String>? missing;
   final bool enabled;
   final ValueChanged<bool> onChanged;
 
   const _SkillTile({
     required this.def,
+    required this.missing,
     required this.enabled,
     required this.onChanged,
   });
@@ -140,6 +152,7 @@ class _SkillTile extends StatelessWidget {
     final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
     final copy = skillCopy(l10n, def.id);
+    final missing = this.missing; // a local, so the null check below promotes it
     // Mirror web: resolve connector ids to display labels and drop any id that
     // doesn't map to a known connector (never render a raw id).
     final needs =
@@ -197,6 +210,15 @@ class _SkillTile extends StatelessWidget {
                         fontFamily: AppTheme.fontMono,
                       ),
                     ),
+                    if (missing != null) ...[
+                      const SizedBox(height: 8),
+                      _ReadinessPill(
+                        missingLabels: missing
+                            .map(_providerLabel)
+                            .whereType<String>()
+                            .toList(),
+                      ),
+                    ],
                   ],
                 ],
               ),
@@ -228,6 +250,34 @@ class _SkillTile extends StatelessWidget {
       default:
         return null;
     }
+  }
+}
+
+/// "Ready" (green) or "Not connected: Gmail" (grey) — the same pill style as the
+/// connector cards, mirroring web `SkillToggle`.
+class _ReadinessPill extends StatelessWidget {
+  final List<String> missingLabels;
+  const _ReadinessPill({required this.missingLabels});
+
+  @override
+  Widget build(BuildContext context) {
+    final ready = missingLabels.isEmpty;
+    final color = ready ? AppTheme.onlineGreen : AppTheme.offlineGrey;
+    final label = ready
+        ? context.l10n.skillReady
+        : context.l10n.skillMissing(missingLabels.join(' · '));
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w500),
+      ),
+    );
   }
 }
 

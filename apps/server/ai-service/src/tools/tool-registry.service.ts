@@ -59,11 +59,14 @@ export function filterByAllowedConnectors(
   allowedConnectors: string[] | null | undefined,
 ): ToolDefinition[] {
   if (allowedConnectors == null) return tools; // inherit — no AI-specific filter
-  const allow = new Set(allowedConnectors);
-  return tools.filter((t) => {
-    const provider = providerOf(t.name);
-    return provider !== null && allow.has(provider);
-  });
+  return tools.filter((t) => connectorAllowed(t.name, allowedConnectors));
+}
+
+/** Whether the AI allow-list (see {@link filterByAllowedConnectors}) lets the AI use this MCP tool's provider. */
+export function connectorAllowed(toolName: string, allowedConnectors: string[] | null | undefined): boolean {
+  if (allowedConnectors == null) return true;
+  const provider = providerOf(toolName);
+  return provider !== null && allowedConnectors.includes(provider);
 }
 
 /**
@@ -171,10 +174,15 @@ export class ToolRegistryService {
     if (ctx.webSearchEnabled !== false && this.webSearchService.isAvailable()) {
       staticDefs.push(WebSearchTool.definition);
     }
-    const dynamicDefs = await this.mcpConnector.getTools(ctx.userId);
+    const withheld: string[] = [];
+    const dynamicDefs = await this.mcpConnector.getTools(ctx.userId, withheld);
     // RBAC allow-list first (highest priority), then the skill consent gate.
     const rbacFiltered = filterByAllowedConnectors(dynamicDefs, ctx.allowedConnectors);
+    // Role-withheld tools are reported within the same AI allow-list (never a connector the AI may not use).
+    ctx.withheldSink?.push(...withheld.filter((name) => connectorAllowed(name, ctx.allowedConnectors)));
     const skillFiltered = filterBySkillGate(rbacFiltered, ctx.enabledSkillIds ?? []);
+    const kept = new Set(skillFiltered);
+    ctx.skillOffSink?.push(...rbacFiltered.filter((t) => !kept.has(t)).map((t) => t.name));
     return sanitizeToolDefinitions([...staticDefs, ...skillFiltered], (m) =>
       this.logger.warn(`${m} (user ${ctx.userId})`),
     );

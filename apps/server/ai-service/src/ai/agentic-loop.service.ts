@@ -18,6 +18,7 @@ import { ACTION_PENDING_FALLBACK_TEXT } from './system-notices';
 import { addTokens, countTokens, zeroTokens } from '../usage/token-counts';
 import { LlmClient } from '../llm/openrouter-client';
 import { LlmClientsService } from '../llm/llm-clients.service';
+import { buildToolNotes } from '../tools/withheld-tools';
 
 const MAX_ITER = 5;
 const MAX_ITER_NOTICE = 'I had trouble completing that action. Please try again.';
@@ -81,6 +82,8 @@ export class AgenticLoopService {
     // Reply-wide citation list: KB sources (numbered in the system prompt) first;
     // KB/web tools register theirs after them (ai/source-registry).
     const citations: RagSource[] = [...ctx.ragSources];
+    const withheld: string[] = [];
+    const skillOff: string[] = [];
     const toolCtx: ToolContext = {
       conversationId: ctx.conversationId,
       userId: ctx.userId,
@@ -91,6 +94,8 @@ export class AgenticLoopService {
       webSearchEnabled: ctx.settings.webSearchEnabled,
       allowedConnectors: ctx.settings.allowedConnectors,
       enabledSkillIds: ctx.enabledSkillIds,
+      withheldSink: withheld,
+      skillOffSink: skillOff,
     };
     const defs = await this.toolRegistry.getDefinitions(toolCtx);
     // Single chokepoint for the final messages array: normalizeMessages drops a
@@ -101,7 +106,7 @@ export class AgenticLoopService {
       { role: 'user', content: userContent },
     ]);
     return {
-      system: this.buildSystemBlocks(ctx),
+      system: this.buildSystemBlocks(ctx, buildToolNotes(withheld, skillOff)),
       tools: this.toAnthropicTools(defs),
       offeredTools: new Map(defs.map((d) => [d.name, d])),
       toolCtx,
@@ -367,7 +372,8 @@ export class AgenticLoopService {
   }
 
   /** System blocks: stable (cached) persona/contract + volatile grounding after it. */
-  private buildSystemBlocks(ctx: RequestContext): Anthropic.TextBlockParam[] {
+  /** `toolNote`: per-member tool context (role-withheld / skill-off connector actions) — volatile, never cached. */
+  private buildSystemBlocks(ctx: RequestContext, toolNote = ''): Anthropic.TextBlockParam[] {
     const blocks: Anthropic.TextBlockParam[] = [
       {
         type: 'text',
@@ -375,9 +381,10 @@ export class AgenticLoopService {
         ...(this.promptCacheEnabled ? { cache_control: { type: 'ephemeral' as const } } : {}),
       },
     ];
-    if (ctx.volatileSystem.trim()) {
+    const volatile = [ctx.volatileSystem, toolNote].filter((s) => s.trim()).join('\n\n');
+    if (volatile) {
       // Volatile content AFTER the cache breakpoint — does not bust the cache.
-      blocks.push({ type: 'text', text: ctx.volatileSystem });
+      blocks.push({ type: 'text', text: volatile });
     }
     return blocks;
   }

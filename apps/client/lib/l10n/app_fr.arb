@@ -784,6 +784,8 @@
   "skillsRealActionNote": "Les compétences changent la façon dont votre assistant réfléchit et s'exprime. Pour qu'il agisse réellement (envoyer un e-mail, créer des événements, écrire dans Notion…), connectez l'application correspondante ci-dessous.",
   "skillsSettingsSubtitle": "Choisissez les points forts de votre assistant",
   "skillNeeds": "Nécessite {requirements}",
+  "skillReady": "Prête",
+  "skillMissing": "Non connecté : {connectors}",
   "skillSchedulerName": "Planificateur",
   "skillSchedulerDesc": "Propose des horaires de réunion et rédige des invitations — c'est à vous de les envoyer via votre agenda/messagerie (ou connectez Google Agenda/Gmail pour qu'il agisse directement).",
   "skillMailWriterName": "Rédacteur d'e-mails",

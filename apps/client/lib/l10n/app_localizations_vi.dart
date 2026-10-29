@@ -2166,6 +2166,14 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get skillReady => 'Đã đủ điều kiện';
+
+  @override
+  String skillMissing(String connectors) {
+    return 'Chưa kết nối: $connectors';
+  }
+
+  @override
   String get skillSchedulerName => 'Trợ lý lịch';
 
   @override
