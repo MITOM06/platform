@@ -18,7 +18,7 @@ import { ACTION_PENDING_FALLBACK_TEXT } from './system-notices';
 import { addTokens, countTokens, zeroTokens } from '../usage/token-counts';
 import { LlmClient } from '../llm/openrouter-client';
 import { LlmClientsService } from '../llm/llm-clients.service';
-import { buildWithheldNote } from '../tools/withheld-tools';
+import { buildToolNotes } from '../tools/withheld-tools';
 
 const MAX_ITER = 5;
 const MAX_ITER_NOTICE = 'I had trouble completing that action. Please try again.';
@@ -83,6 +83,7 @@ export class AgenticLoopService {
     // KB/web tools register theirs after them (ai/source-registry).
     const citations: RagSource[] = [...ctx.ragSources];
     const withheld: string[] = [];
+    const skillOff: string[] = [];
     const toolCtx: ToolContext = {
       conversationId: ctx.conversationId,
       userId: ctx.userId,
@@ -94,6 +95,7 @@ export class AgenticLoopService {
       allowedConnectors: ctx.settings.allowedConnectors,
       enabledSkillIds: ctx.enabledSkillIds,
       withheldSink: withheld,
+      skillOffSink: skillOff,
     };
     const defs = await this.toolRegistry.getDefinitions(toolCtx);
     // Single chokepoint for the final messages array: normalizeMessages drops a
@@ -104,7 +106,7 @@ export class AgenticLoopService {
       { role: 'user', content: userContent },
     ]);
     return {
-      system: this.buildSystemBlocks(ctx, buildWithheldNote(withheld)),
+      system: this.buildSystemBlocks(ctx, buildToolNotes(withheld, skillOff)),
       tools: this.toAnthropicTools(defs),
       offeredTools: new Map(defs.map((d) => [d.name, d])),
       toolCtx,
@@ -370,7 +372,7 @@ export class AgenticLoopService {
   }
 
   /** System blocks: stable (cached) persona/contract + volatile grounding after it. */
-  /** `toolNote`: per-member tool context (role-withheld connector actions) — volatile, never cached. */
+  /** `toolNote`: per-member tool context (role-withheld / skill-off connector actions) — volatile, never cached. */
   private buildSystemBlocks(ctx: RequestContext, toolNote = ''): Anthropic.TextBlockParam[] {
     const blocks: Anthropic.TextBlockParam[] = [
       {

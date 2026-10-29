@@ -168,6 +168,19 @@ describe('ToolRegistryService', () => {
     expect(withheldSink).toEqual(['mcp__gmail__send_email']); // notion is not an AI connector here
   });
 
+  it('reports the connected-app tools the skill gate drops, and none when the skill is on', async () => {
+    const getTools = jest.fn().mockResolvedValue([dynamicTool]);
+    const registry = makeRegistry({ mcpGetTools: getTools });
+    const skillOffSink: string[] = [];
+    const defs = await registry.getDefinitions({ ...ctx, enabledSkillIds: [], skillOffSink });
+    expect(defs.map((d) => d.name)).not.toContain('mcp__notion__create_page');
+    expect(skillOffSink).toEqual(['mcp__notion__create_page']);
+
+    const onSink: string[] = [];
+    await registry.getDefinitions({ ...ctx, enabledSkillIds: ['projectKeeper'], skillOffSink: onSink });
+    expect(onSink).toEqual([]);
+  });
+
   it('dispatches to search_messages tool', async () => {
     const searchFn = jest.fn().mockResolvedValue('found: hello');
     const registry = makeRegistry({ search: searchFn });

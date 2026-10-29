@@ -55,4 +55,10 @@ export interface ToolContext {
    * asking for a reconnect. Optional — absent for code paths that don't need it.
    */
   withheldSink?: string[];
+  /**
+   * Collects the tools of connected apps that the skill gate drops because the user turned
+   * the unlocking skill off; the loop turns them into a system-prompt note so the assistant
+   * says the skill is off instead of answering from earlier turns. Optional, like withheldSink.
+   */
+  skillOffSink?: string[];
 }

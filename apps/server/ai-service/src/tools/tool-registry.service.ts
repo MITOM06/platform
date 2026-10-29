@@ -181,6 +181,8 @@ export class ToolRegistryService {
     // Role-withheld tools are reported within the same AI allow-list (never a connector the AI may not use).
     ctx.withheldSink?.push(...withheld.filter((name) => connectorAllowed(name, ctx.allowedConnectors)));
     const skillFiltered = filterBySkillGate(rbacFiltered, ctx.enabledSkillIds ?? []);
+    const kept = new Set(skillFiltered);
+    ctx.skillOffSink?.push(...rbacFiltered.filter((t) => !kept.has(t)).map((t) => t.name));
     return sanitizeToolDefinitions([...staticDefs, ...skillFiltered], (m) =>
       this.logger.warn(`${m} (user ${ctx.userId})`),
     );
