@@ -2001,6 +2001,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get connectorStatusAvailable => '可用';
 
   @override
+  String get connectorStatusNotAllowed => '未获允许';
+
+  @override
+  String get connectorNotAllowedHint => '你的工作区不允许此连接器。请让管理员将其加入允许列表。';
+
+  @override
   String get connectorStatusComingSoon => '即将推出';
 
   @override
@@ -3850,6 +3856,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiTraceToolNotRun => '未执行';
+
+  @override
+  String get aiTraceToolCancelled => '已取消';
+
+  @override
+  String get aiTraceToolExpired => '已过期';
 
   @override
   String aiTraceTokens(String input, String output) {

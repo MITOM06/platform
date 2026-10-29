@@ -2061,6 +2061,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get connectorStatusAvailable => 'Disponible';
 
   @override
+  String get connectorStatusNotAllowed => 'No permitido';
+
+  @override
+  String get connectorNotAllowedHint =>
+      'Tu espacio de trabajo no permite este conector. Pide a un administrador que lo añada a la lista de permitidos.';
+
+  @override
   String get connectorStatusComingSoon => 'Próximamente';
 
   @override
@@ -4046,6 +4053,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get aiTraceToolNotRun => 'No ejecutado';
+
+  @override
+  String get aiTraceToolCancelled => 'Cancelada';
+
+  @override
+  String get aiTraceToolExpired => 'Caducada';
 
   @override
   String aiTraceTokens(String input, String output) {

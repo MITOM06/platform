@@ -3859,6 +3859,18 @@ abstract class AppLocalizations {
   /// **'Available'**
   String get connectorStatusAvailable;
 
+  /// No description provided for @connectorStatusNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not allowed'**
+  String get connectorStatusNotAllowed;
+
+  /// No description provided for @connectorNotAllowedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your workspace doesn\'t allow this connector. Ask an administrator to add it to the allow-list.'**
+  String get connectorNotAllowedHint;
+
   /// No description provided for @connectorStatusComingSoon.
   ///
   /// In en, this message translates to:
@@ -7350,6 +7362,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not run'**
   String get aiTraceToolNotRun;
+
+  /// No description provided for @aiTraceToolCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get aiTraceToolCancelled;
+
+  /// No description provided for @aiTraceToolExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get aiTraceToolExpired;
 
   /// No description provided for @aiTraceTokens.
   ///

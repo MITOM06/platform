@@ -184,7 +184,10 @@ class MessageBubbleBody extends StatelessWidget {
               if (message.pendingActions?.isNotEmpty ?? false)
                 AiActionCards(actions: message.pendingActions!),
               if (message.trace != null)
-                TracePanel(trace: message.trace!),
+                TracePanel(
+                  trace: message.trace!,
+                  actions: message.pendingActions,
+                ),
             ],
           )
         else

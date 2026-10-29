@@ -54,6 +54,10 @@ class CatalogEntry {
   final String mcpUrl;
   final bool available;
 
+  /// False when the workspace allow-list leaves this connector out — nobody can
+  /// connect it (the server answers 403 CONNECTOR_NOT_ALLOWED).
+  final bool allowedByWorkspace;
+
   const CatalogEntry({
     required this.id,
     required this.name,
@@ -63,6 +67,7 @@ class CatalogEntry {
     required this.authType,
     required this.mcpUrl,
     required this.available,
+    this.allowedByWorkspace = true,
   });
 
   factory CatalogEntry.fromJson(Map<String, dynamic> json) => CatalogEntry(
@@ -76,6 +81,7 @@ class CatalogEntry {
         authType: _authTypeFromString(json['authType'] as String?),
         mcpUrl: json['mcpUrl'] as String? ?? '',
         available: json['available'] as bool? ?? false,
+        allowedByWorkspace: json['allowedByWorkspace'] as bool? ?? true,
       );
 }
 
