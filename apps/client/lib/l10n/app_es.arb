@@ -1520,6 +1520,8 @@
   "mfaCopyCodes": "Copiar códigos",
   "mfaCodesCopied": "Códigos de respaldo copiados",
   "mfaSavedCheckbox": "He guardado mis códigos de respaldo",
+  "mfaCopyCodesFirst": "Primero copia los códigos",
+  "mfaCodesCopyFailed": "No se pudieron copiar los códigos. Inténtalo de nuevo.",
   "mfaContinue": "Continuar",
   "securityMfaOn": "Se requiere un código de tu app de autenticación cada vez que inicias sesión.",
   "securityMfaPending": "Obligatoria para tu rol. La configurarás en tu próximo inicio de sesión.",

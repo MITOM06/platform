@@ -4538,6 +4538,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mfaSavedCheckbox => 'I saved my backup codes';
 
   @override
+  String get mfaCopyCodesFirst => 'Copy the codes first';
+
+  @override
+  String get mfaCodesCopyFailed =>
+      'Couldn\'t copy the codes. Please try again.';
+
+  @override
   String get mfaContinue => 'Continue';
 
   @override

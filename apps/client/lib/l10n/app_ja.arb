@@ -1520,6 +1520,8 @@
   "mfaCopyCodes": "コードをコピー",
   "mfaCodesCopied": "バックアップコードをコピーしました",
   "mfaSavedCheckbox": "バックアップコードを保存しました",
+  "mfaCopyCodesFirst": "先にコードをコピーしてください",
+  "mfaCodesCopyFailed": "コードをコピーできませんでした。もう一度お試しください。",
   "mfaContinue": "続行",
   "securityMfaOn": "サインインのたびに認証アプリのコードが必要です。",
   "securityMfaPending": "あなたのロールでは必須です。次回のサインイン時に設定します。",

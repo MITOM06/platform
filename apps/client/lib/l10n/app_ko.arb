@@ -1520,6 +1520,8 @@
   "mfaCopyCodes": "코드 복사",
   "mfaCodesCopied": "백업 코드를 복사했습니다",
   "mfaSavedCheckbox": "백업 코드를 저장했습니다",
+  "mfaCopyCodesFirst": "먼저 코드를 복사하세요",
+  "mfaCodesCopyFailed": "코드를 복사하지 못했습니다. 다시 시도해 주세요.",
   "mfaContinue": "계속",
   "securityMfaOn": "로그인할 때마다 인증 앱의 코드가 필요합니다.",
   "securityMfaPending": "회원님의 역할에 필수입니다. 다음 로그인 시 설정합니다.",

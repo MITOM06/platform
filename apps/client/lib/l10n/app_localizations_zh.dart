@@ -4337,6 +4337,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mfaSavedCheckbox => '我已保存备用码';
 
   @override
+  String get mfaCopyCodesFirst => '请先复制备用码';
+
+  @override
+  String get mfaCodesCopyFailed => '无法复制备用码，请重试。';
+
+  @override
   String get mfaContinue => '继续';
 
   @override

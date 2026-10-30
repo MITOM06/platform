@@ -256,7 +256,14 @@ void main() {
       PonButton done() => tester
           .widget<PonButton>(find.byKey(const ValueKey('mfa-codes-continue')));
       expect(done().onPressed, isNull);
+      expect(
+          tester
+              .widget<Checkbox>(find.byKey(const ValueKey('mfa-saved-checkbox')))
+              .onChanged,
+          isNull);
+      expect(find.text(h.l10n.mfaCopyCodesFirst), findsOneWidget);
 
+      await copyBackupCodes(tester);
       await h.tap('mfa-saved-checkbox');
       await h.tap('mfa-codes-continue');
 

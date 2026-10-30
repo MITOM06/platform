@@ -1520,6 +1520,8 @@
   "mfaCopyCodes": "复制备用码",
   "mfaCodesCopied": "已复制备用码",
   "mfaSavedCheckbox": "我已保存备用码",
+  "mfaCopyCodesFirst": "请先复制备用码",
+  "mfaCodesCopyFailed": "无法复制备用码，请重试。",
   "mfaContinue": "继续",
   "securityMfaOn": "每次登录都需要输入身份验证器应用中的验证码。",
   "securityMfaPending": "你的角色必须启用。下次登录时将进行设置。",

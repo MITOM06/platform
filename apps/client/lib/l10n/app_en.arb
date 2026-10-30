@@ -2258,6 +2258,8 @@
   "mfaCopyCodes": "Copy codes",
   "mfaCodesCopied": "Backup codes copied",
   "mfaSavedCheckbox": "I saved my backup codes",
+  "mfaCopyCodesFirst": "Copy the codes first",
+  "mfaCodesCopyFailed": "Couldn't copy the codes. Please try again.",
   "mfaContinue": "Continue",
   "securityMfaOn": "A code from your authenticator app is required every time you sign in.",
   "securityMfaPending": "Required for your role. You'll set it up at your next sign-in.",

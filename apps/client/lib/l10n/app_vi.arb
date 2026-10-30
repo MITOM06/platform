@@ -1520,6 +1520,8 @@
   "mfaCopyCodes": "Sao chép mã",
   "mfaCodesCopied": "Đã sao chép mã dự phòng",
   "mfaSavedCheckbox": "Tôi đã lưu mã dự phòng",
+  "mfaCopyCodesFirst": "Hãy sao chép mã trước",
+  "mfaCodesCopyFailed": "Không sao chép được mã. Vui lòng thử lại.",
   "mfaContinue": "Tiếp tục",
   "securityMfaOn": "Mỗi lần đăng nhập đều cần mã từ ứng dụng xác thực.",
   "securityMfaPending": "Bắt buộc với vai trò của bạn. Bạn sẽ thiết lập ở lần đăng nhập tới.",
