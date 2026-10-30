@@ -179,6 +179,38 @@ void main() {
     expect(box().onChanged, isNull);
   });
 
+  testWidgets('regenerate: Back closes the code step, not the new codes',
+      (tester) async {
+    await _pump(tester, _enrolled);
+    final dialog = find.byType(RegenerateBackupCodesDialog);
+
+    // Nothing is lost yet on the code step, so Back still cancels.
+    await tester.tap(find.byKey(const ValueKey('security-mfa-regenerate')));
+    await tester.pumpAndSettle();
+    expect(dialog, findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(dialog, findsNothing);
+
+    // The old codes are dead now: Back must not lose the new ones.
+    await tester.tap(find.byKey(const ValueKey('security-mfa-regenerate')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('regen-code')), '123456');
+    await tester.pumpAndSettle();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(dialog, findsOneWidget);
+    expect(find.text(_newCodes.first), findsOneWidget);
+
+    // The confirm button is still the way out.
+    await copyBackupCodes(tester);
+    await tester.tap(find.byKey(const ValueKey('mfa-saved-checkbox')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('mfa-codes-continue')));
+    await tester.pumpAndSettle();
+    expect(dialog, findsNothing);
+  });
+
   testWidgets('regenerate with a wrong code shows a localized error',
       (tester) async {
     final repo = await _pump(tester, _enrolled);
