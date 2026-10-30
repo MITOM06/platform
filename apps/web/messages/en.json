@@ -433,7 +433,9 @@
       "turnOffTitle": "Turn off two-factor authentication?",
       "turnOffBody": "Enter the current code from your authenticator app, or one of your backup codes. Sign-in will no longer ask for a code, and your backup codes will stop working.",
       "turnOffSubmit": "Turn off",
-      "turnOffSuccess": "Two-factor authentication is off"
+      "turnOffSuccess": "Two-factor authentication is off",
+      "backupCodesLeft": "{count, plural, one {# backup code left} other {# backup codes left}}",
+      "backupCodesLow": "Generate new ones with “{action}” below while you still have your authenticator app. Without the app or a backup code, you can't sign in."
     },
     "adminConsole": "Admin console",
     "adminConsoleSubtitle": "Workspace, members, roles and AI settings"

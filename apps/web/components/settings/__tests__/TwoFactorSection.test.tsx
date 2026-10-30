@@ -147,4 +147,93 @@ describe('Settings → Security: two-factor section states (contract 15)', () =>
     expect(screen.queryByText(/bad totp/)).not.toBeInTheDocument()
     expect(screen.queryByTestId('backup-code')).toBeNull()
   })
+
+  describe('backup codes left', () => {
+    const on = { ...me, ...REQUIRED, mfaEnabled: true }
+    const left = (count: number) => `settings.security.backupCodesLeft:${JSON.stringify({ count })}`
+    const LOW = `settings.security.backupCodesLow:${JSON.stringify({ action: 'settings.security.regenerateButton' })}`
+
+    async function regenerateWithCode() {
+      regenerateBackupCodes.mockResolvedValue({ backupCodes: NEW_CODES })
+      fireEvent.click(await screen.findByRole('button', { name: 'settings.security.regenerateButton' }))
+      typeCode('246810')
+      await waitFor(() => expect(screen.getAllByTestId('backup-code')).toHaveLength(10))
+    }
+
+    it.each([10, 4])('%i left: the count, no warning', async (count) => {
+      getMe.mockResolvedValue({ ...on, backupCodesRemaining: count })
+      renderSection()
+      expect(await screen.findByTestId('backup-codes-remaining')).toHaveTextContent(left(count))
+      expect(screen.queryByTestId('backup-codes-low')).toBeNull()
+    })
+
+    it.each([3, 1, 0])('%i left: the count and a warning pointing at Regenerate', async (count) => {
+      getMe.mockResolvedValue({ ...on, backupCodesRemaining: count })
+      renderSection()
+      expect(await screen.findByTestId('backup-codes-remaining')).toHaveTextContent(left(count))
+      expect(screen.getByTestId('backup-codes-low')).toHaveTextContent(LOW)
+      expect(screen.getByRole('button', { name: 'settings.security.regenerateButton' })).toBeInTheDocument()
+    })
+
+    it('also for a Member who turned 2FA on', async () => {
+      getMe.mockResolvedValue({ ...me, ...OPTIONAL, mfaEnabled: true, backupCodesRemaining: 2 })
+      renderSection()
+      expect(await screen.findByTestId('backup-codes-remaining')).toHaveTextContent(left(2))
+      expect(screen.getByTestId('backup-codes-low')).toBeInTheDocument()
+    })
+
+    it('an older server without the field: nothing, not 0', async () => {
+      getMe.mockResolvedValue(on)
+      renderSection()
+      await screen.findByTestId('two-factor-status')
+      expect(screen.queryByTestId('backup-codes-remaining')).toBeNull()
+      expect(screen.queryByTestId('backup-codes-low')).toBeNull()
+    })
+
+    it('2FA off: nothing, even with a count in the answer', async () => {
+      getMe.mockResolvedValue({ ...me, ...OPTIONAL, mfaEnabled: false, backupCodesRemaining: 0 })
+      renderSection()
+      await screen.findByTestId('two-factor-status')
+      expect(screen.queryByTestId('backup-codes-remaining')).toBeNull()
+      expect(screen.queryByTestId('backup-codes-low')).toBeNull()
+    })
+
+    it('re-reads /me on every visit, even with a fresh cached copy', async () => {
+      const qc = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: 60_000 } } })
+      qc.setQueryData(['me'], { ...on, backupCodesRemaining: 5 })
+      getMe.mockResolvedValue({ ...on, backupCodesRemaining: 4 })
+      render(
+        <QueryClientProvider client={qc}>
+          <TwoFactorSection />
+        </QueryClientProvider>,
+      )
+      await waitFor(() => expect(screen.getByTestId('backup-codes-remaining')).toHaveTextContent(left(4)))
+    })
+
+    it('regenerating updates the count and clears the warning', async () => {
+      getMe.mockResolvedValueOnce({ ...on, backupCodesRemaining: 2 }).mockResolvedValue({ ...on, backupCodesRemaining: 10 })
+      renderSection()
+      await regenerateWithCode()
+      await waitFor(() => expect(getMe).toHaveBeenCalledTimes(2))
+      expect(screen.getByTestId('backup-codes-remaining')).toHaveTextContent(left(10))
+      expect(screen.queryByTestId('backup-codes-low')).toBeNull()
+    })
+
+    it('regenerating when only the /me refresh fails: the new count, no stale warning', async () => {
+      getMe.mockResolvedValueOnce({ ...on, backupCodesRemaining: 2 }).mockRejectedValue(new Error('offline'))
+      renderSection()
+      await regenerateWithCode()
+      await waitFor(() => expect(getMe).toHaveBeenCalledTimes(2))
+      expect(screen.getByTestId('backup-codes-remaining')).toHaveTextContent(left(10))
+      expect(screen.queryByTestId('backup-codes-low')).toBeNull()
+    })
+
+    it('regenerating on an older server still shows no count', async () => {
+      getMe.mockResolvedValue(on)
+      renderSection()
+      await regenerateWithCode()
+      await waitFor(() => expect(getMe).toHaveBeenCalledTimes(2))
+      expect(screen.queryByTestId('backup-codes-remaining')).toBeNull()
+    })
+  })
 })

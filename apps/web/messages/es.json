@@ -433,7 +433,9 @@
       "turnOffTitle": "¿Desactivar la autenticación de dos factores?",
       "turnOffBody": "Introduce el código actual de tu aplicación de autenticación o uno de tus códigos de respaldo. El inicio de sesión ya no pedirá un código y tus códigos de respaldo dejarán de funcionar.",
       "turnOffSubmit": "Desactivar",
-      "turnOffSuccess": "La autenticación de dos factores está desactivada"
+      "turnOffSuccess": "La autenticación de dos factores está desactivada",
+      "backupCodesLeft": "{count, plural, one {# código de respaldo restante} other {# códigos de respaldo restantes}}",
+      "backupCodesLow": "Genera otros nuevos con “{action}” aquí abajo mientras conserves tu aplicación de autenticación. Sin la aplicación ni un código de respaldo, no podrás iniciar sesión."
     },
     "adminConsole": "Consola de administración",
     "adminConsoleSubtitle": "Espacio de trabajo, miembros, roles y ajustes de IA"

@@ -433,7 +433,9 @@
       "turnOffTitle": "要关闭双重身份验证吗？",
       "turnOffBody": "请输入身份验证器应用中的当前验证码，或任意一个备用码。登录时将不再要求输入验证码，您的备用码也将失效。",
       "turnOffSubmit": "关闭",
-      "turnOffSuccess": "双重身份验证已关闭"
+      "turnOffSuccess": "双重身份验证已关闭",
+      "backupCodesLeft": "{count, plural, other {还剩 # 个备用码}}",
+      "backupCodesLow": "请趁身份验证器应用还可用时，使用下方的“{action}”生成新的备用码。既没有该应用也没有备用码时，您将无法登录。"
     },
     "adminConsole": "管理控制台",
     "adminConsoleSubtitle": "工作区、成员、角色和 AI 设置"

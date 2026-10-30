@@ -433,7 +433,9 @@
       "turnOffTitle": "2단계 인증을 끄시겠습니까?",
       "turnOffBody": "인증 앱의 현재 코드 또는 백업 코드 중 하나를 입력하세요. 로그인할 때 더 이상 코드를 묻지 않으며, 백업 코드는 더 이상 사용할 수 없습니다.",
       "turnOffSubmit": "끄기",
-      "turnOffSuccess": "2단계 인증이 꺼졌습니다"
+      "turnOffSuccess": "2단계 인증이 꺼졌습니다",
+      "backupCodesLeft": "{count, plural, other {백업 코드가 #개 남았습니다}}",
+      "backupCodesLow": "인증 앱을 사용할 수 있을 때 아래의 “{action}”으로 새 코드를 만드세요. 인증 앱과 백업 코드가 모두 없으면 로그인할 수 없습니다."
     },
     "adminConsole": "관리 콘솔",
     "adminConsoleSubtitle": "워크스페이스, 멤버, 역할 및 AI 설정"

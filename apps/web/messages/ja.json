@@ -433,7 +433,9 @@
       "turnOffTitle": "二要素認証をオフにしますか？",
       "turnOffBody": "認証アプリに表示されている現在のコード、またはバックアップコードのいずれかを入力してください。サインイン時にコードを求められなくなり、バックアップコードは使えなくなります。",
       "turnOffSubmit": "オフにする",
-      "turnOffSuccess": "二要素認証をオフにしました"
+      "turnOffSuccess": "二要素認証をオフにしました",
+      "backupCodesLeft": "{count, plural, other {残りのバックアップコードは # 個です}}",
+      "backupCodesLow": "認証アプリが使えるうちに、下の「{action}」で新しいコードを作成してください。認証アプリもバックアップコードもないと、サインインできなくなります。"
     },
     "adminConsole": "管理コンソール",
     "adminConsoleSubtitle": "ワークスペース、メンバー、ロール、AI 設定"
