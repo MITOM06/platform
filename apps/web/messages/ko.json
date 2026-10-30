@@ -304,6 +304,7 @@
       "downloadCodes": ".txt 다운로드",
       "codesCopied": "백업 코드를 복사했습니다",
       "savedCheckbox": "백업 코드를 저장했습니다",
+      "copyOrDownloadFirst": "먼저 코드를 복사하거나 다운로드하세요",
       "continue": "계속",
       "codesLoading": "백업 코드를 불러오는 중...",
       "fileHeader": "{email}의 PON 백업 코드",

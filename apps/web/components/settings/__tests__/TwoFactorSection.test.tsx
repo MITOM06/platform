@@ -6,6 +6,7 @@ import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import React from 'react'
 import { TwoFactorSection } from '@/components/settings/TwoFactorSection'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { copyBackupCodes } from '@/components/auth/__tests__/backup-codes-helpers'
 
 const getMe = vi.fn()
 const regenerateBackupCodes = vi.fn()
@@ -131,9 +132,18 @@ describe('Settings → Security: two-factor section states (contract 15)', () =>
     expect(regenerateBackupCodes).toHaveBeenCalledWith('246810')
     const done = screen.getByRole('button', { name: 'settings.security.regenerateDone' })
     expect(done).toBeDisabled()
+    expect(screen.getByRole('checkbox', { name: 'auth.mfa.savedCheckbox' })).toBeDisabled()
+    expect(screen.getByText('auth.mfa.copyOrDownloadFirst')).toBeInTheDocument()
+    await copyBackupCodes()
     fireEvent.click(screen.getByRole('checkbox', { name: 'auth.mfa.savedCheckbox' }))
     fireEvent.click(done)
     await waitFor(() => expect(screen.queryByTestId('backup-code')).toBeNull())
+
+    // New codes, new start: having copied the previous ones does not unlock these.
+    fireEvent.click(screen.getByRole('button', { name: 'settings.security.regenerateButton' }))
+    typeCode('135790')
+    await waitFor(() => expect(screen.getAllByTestId('backup-code')).toHaveLength(10))
+    expect(screen.getByRole('checkbox', { name: 'auth.mfa.savedCheckbox' })).toBeDisabled()
   })
 
   it('shows a wrong current code as a localized message', async () => {

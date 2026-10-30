@@ -13,6 +13,7 @@ import {
   readPendingMfa,
   savePendingMfa,
 } from '@/lib/auth/mfa'
+import { copyBackupCodes } from './backup-codes-helpers'
 
 const replace = vi.fn()
 const push = vi.fn()
@@ -252,6 +253,12 @@ describe('/mfa page', () => {
       fireEvent.click(continueBtn())
       expect(mfaEnrollComplete).not.toHaveBeenCalled()
 
+      // The checkbox itself is locked until the codes were taken.
+      expect(savedBox()).toBeDisabled()
+      expect(screen.getByText('auth.mfa.copyOrDownloadFirst')).toBeInTheDocument()
+      await copyBackupCodes()
+      expect(continueBtn()).toBeDisabled()
+
       fireEvent.click(savedBox())
       expect(continueBtn()).toBeEnabled()
       fireEvent.click(continueBtn())
@@ -274,6 +281,7 @@ describe('/mfa page', () => {
       mfaEnrollComplete.mockResolvedValue({ ...signedIn, user: { ...user, mustSetPassword: true } })
       renderPage()
       await confirmEnrollment()
+      await copyBackupCodes()
       fireEvent.click(savedBox())
       fireEvent.click(continueBtn())
       await waitFor(() => expect(replace).toHaveBeenCalledWith('/set-password'))
@@ -293,7 +301,10 @@ describe('/mfa page', () => {
       expect(replace).not.toHaveBeenCalled()
       expect(fetchMock).not.toHaveBeenCalled()
       expect(continueBtn()).toBeDisabled()
+      // A reload starts locked again, even if the codes were copied before it.
+      expect(savedBox()).toBeDisabled()
 
+      await copyBackupCodes()
       fireEvent.click(savedBox())
       fireEvent.click(continueBtn())
       await waitFor(() => expect(replace).toHaveBeenCalledWith('/'))
@@ -327,6 +338,7 @@ describe('/mfa page', () => {
       mfaEnrollComplete.mockRejectedValueOnce(new Error('Network Error'))
       renderPage()
       await confirmEnrollment()
+      await copyBackupCodes()
       fireEvent.click(savedBox())
       fireEvent.click(continueBtn())
 

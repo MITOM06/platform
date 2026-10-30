@@ -304,6 +304,7 @@
       "downloadCodes": "Tải tệp .txt",
       "codesCopied": "Đã sao chép mã dự phòng",
       "savedCheckbox": "Tôi đã lưu mã dự phòng",
+      "copyOrDownloadFirst": "Hãy sao chép hoặc tải mã xuống trước",
       "continue": "Tiếp tục",
       "codesLoading": "Đang tải mã dự phòng...",
       "fileHeader": "Mã dự phòng PON của {email}",

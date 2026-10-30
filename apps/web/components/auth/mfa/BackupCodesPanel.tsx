@@ -22,16 +22,21 @@ const FILE_NAME = 'pon-backup-codes.txt'
 /**
  * The 10 single-use backup codes, shown exactly once (after enrolling, or after
  * regenerating them in Settings → Security). Copy / Download .txt, and the
- * user must tick "I saved my backup codes" before continuing.
+ * user must tick "I saved my backup codes" before continuing. The checkbox
+ * stays locked until a Copy succeeded or Download was clicked: that does not
+ * prove the codes were stored, it only stops continuing by accident.
  */
 export function BackupCodesPanel({ codes, accountEmail, continueLabel, onContinue, busy = false }: Props) {
   const t = useTranslations('auth.mfa')
+  const [taken, setTaken] = useState(false)
   const [saved, setSaved] = useState(false)
   const checkboxId = useId()
+  const hintId = useId()
 
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(codes.join('\n'))
+      setTaken(true)
       toast.success(t('codesCopied'))
     } catch {
       toast.error(t('copyFailed'))
@@ -48,6 +53,7 @@ export function BackupCodesPanel({ codes, accountEmail, continueLabel, onContinu
     a.click()
     a.remove()
     URL.revokeObjectURL(url)
+    setTaken(true)
   }
 
   return (
@@ -74,11 +80,25 @@ export function BackupCodesPanel({ codes, accountEmail, continueLabel, onContinu
         </Button>
       </div>
 
-      <div className="flex items-center gap-3 rounded-lg border px-3 py-2.5">
-        <Checkbox id={checkboxId} checked={saved} onCheckedChange={(v) => setSaved(v === true)} />
-        <Label htmlFor={checkboxId} className="cursor-pointer text-sm font-medium">
-          {t('savedCheckbox')}
-        </Label>
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-3 rounded-lg border px-3 py-2.5">
+          <Checkbox
+            id={checkboxId}
+            checked={saved}
+            disabled={!taken}
+            aria-describedby={taken ? undefined : hintId}
+            onCheckedChange={(v) => setSaved(v === true)}
+          />
+          <Label htmlFor={checkboxId} className="cursor-pointer text-sm font-medium">
+            {t('savedCheckbox')}
+          </Label>
+        </div>
+        {/* Visible text, not a tooltip: it has to work on touch screens. */}
+        {!taken && (
+          <p id={hintId} className="text-xs text-muted-foreground">
+            {t('copyOrDownloadFirst')}
+          </p>
+        )}
       </div>
 
       <Button
