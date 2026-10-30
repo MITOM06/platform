@@ -127,6 +127,12 @@ describe('Settings → Security: optional 2FA for Members (contract 15)', () => 
       await waitFor(() => expect(screen.getAllByTestId('backup-code')).toHaveLength(10))
       // Still on the one-time codes screen: the count waits until it is left.
       expect(screen.queryByTestId('backup-codes-remaining')).toBeNull()
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: { writeText: vi.fn().mockResolvedValue(undefined) },
+      })
+      fireEvent.click(screen.getByRole('button', { name: 'auth.mfa.copyCodes' }))
+      await waitFor(() => expect(screen.getByRole('checkbox', { name: 'auth.mfa.savedCheckbox' })).toBeEnabled())
       fireEvent.click(screen.getByRole('checkbox', { name: 'auth.mfa.savedCheckbox' }))
       fireEvent.click(screen.getByRole('button', { name: 'settings.security.turnOnDone' }))
 

@@ -214,14 +214,12 @@ void main() {
           backupCodesRemaining: count,
         );
 
+    /// Up to the new codes on screen: the count behind the dialog is already
+    /// updated by then, so leaving the dialog changes nothing.
     Future<void> regenerate(WidgetTester tester) async {
       await tester.tap(find.byKey(const ValueKey('security-mfa-regenerate')));
       await tester.pumpAndSettle();
       await tester.enterText(find.byKey(const ValueKey('regen-code')), '123456');
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('mfa-saved-checkbox')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('mfa-codes-continue')));
       await tester.pumpAndSettle();
     }
 
