@@ -448,7 +448,9 @@
       "turnOffTitle": "Désactiver l'authentification à deux facteurs ?",
       "turnOffBody": "Saisissez le code actuel de votre application d'authentification ou l'un de vos codes de secours. La connexion ne demandera plus de code et vos codes de secours ne fonctionneront plus.",
       "turnOffSubmit": "Désactiver",
-      "turnOffSuccess": "L'authentification à deux facteurs est désactivée"
+      "turnOffSuccess": "L'authentification à deux facteurs est désactivée",
+      "backupCodesLeft": "{count, plural, one {# code de secours restant} other {# codes de secours restants}}",
+      "backupCodesLow": "Générez-en de nouveaux avec « {action} » ci-dessous tant que vous avez encore votre application d'authentification. Sans l'application ni code de secours, vous ne pourrez plus vous connecter."
     },
     "adminConsole": "Console d'administration",
     "adminConsoleSubtitle": "Espace de travail, membres, rôles et réglages IA"

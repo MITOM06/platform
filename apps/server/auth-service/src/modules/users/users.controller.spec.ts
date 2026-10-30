@@ -20,6 +20,7 @@ describe('UsersController — device tokens & change-password wiring', () => {
       passwordChange as any,
       {} as any,
       { assertNotEnforcedForUserId: jest.fn().mockResolvedValue(undefined) } as any,
+      {} as any,
     );
     return { ctrl, usersService, passwordChange };
   }
@@ -74,6 +75,7 @@ describe('UsersController — /me 2FA flags and Require SSO', () => {
   let users: Record<string, jest.Mock>;
   let passwordChange: { changePassword: jest.Mock };
   let sso: { isEnforcedFor: jest.Mock; assertNotEnforcedForUserId: jest.Mock };
+  let backupCodesCount: { remaining: jest.Mock };
   let controller: UsersController;
 
   const doc = (over: Record<string, unknown> = {}) => ({
@@ -92,6 +94,7 @@ describe('UsersController — /me 2FA flags and Require SSO', () => {
       getHasPassword: jest.fn().mockResolvedValue(false),
       getRoleName: jest.fn().mockResolvedValue('Admin'),
     };
+    backupCodesCount = { remaining: jest.fn().mockResolvedValue(10) };
     passwordChange = {
       changePassword: jest.fn().mockResolvedValue({ success: true }),
     };
@@ -104,6 +107,7 @@ describe('UsersController — /me 2FA flags and Require SSO', () => {
       passwordChange as any,
       {} as any,
       sso as any,
+      backupCodesCount as any,
     );
   });
 
@@ -213,6 +217,80 @@ describe('UsersController — /me 2FA flags and Require SSO', () => {
         user: { sub: 'u1', role: 'Admin', perms: ['MANAGE_MEMBERS'] },
       });
       expect(me).toMatchObject({ mfaRequired: false, mfaAvailable: false });
+    });
+
+    describe('backupCodesRemaining', () => {
+      const enrolled = () => doc({ mfa: { enabled: true } });
+      const member = { sub: 'u1', role: 'Member', perms: [] };
+
+      it.each([10, 3, 0])(
+        '2FA on → the count from the service (%i)',
+        async (left) => {
+          users.findById.mockResolvedValue(enrolled());
+          backupCodesCount.remaining.mockResolvedValue(left);
+          const me = await controller.getMe({ user: member });
+          expect(backupCodesCount.remaining).toHaveBeenCalledWith('u1');
+          expect(me).toMatchObject({ backupCodesRemaining: left });
+        },
+      );
+
+      it('2FA off → no field and no extra read', async () => {
+        users.findById.mockResolvedValue(doc());
+        const me = await controller.getMe({ user: member });
+        expect(me).not.toHaveProperty('backupCodesRemaining');
+        expect(backupCodesCount.remaining).not.toHaveBeenCalled();
+      });
+
+      it('unknown count → no field rather than 0, and /me still answers', async () => {
+        users.findById.mockResolvedValue(enrolled());
+        backupCodesCount.remaining.mockResolvedValue(undefined);
+        const me = await controller.getMe({ user: member });
+        expect(me).not.toHaveProperty('backupCodesRemaining');
+        expect(me).toMatchObject({ mfaEnabled: true });
+      });
+
+      it('never returns the hashes or the secret, even if they were loaded', async () => {
+        users.findById.mockResolvedValue(
+          doc({
+            mfa: {
+              enabled: true,
+              secretEnc: 'enc-secret-value',
+              backupCodeHashes: ['hash-value-1', 'hash-value-2'],
+            },
+          }),
+        );
+        backupCodesCount.remaining.mockResolvedValue(2);
+        const me = await controller.getMe({ user: member });
+        const body = JSON.stringify(me);
+        expect(me).not.toHaveProperty('mfa');
+        for (const leak of [
+          'backupCodeHashes',
+          'hash-value',
+          'secretEnc',
+          'enc-secret-value',
+        ]) {
+          expect(body).not.toContain(leak);
+        }
+        expect(me).toMatchObject({ backupCodesRemaining: 2 });
+      });
+
+      it('adds nothing else to /me: the other fields are unchanged', async () => {
+        users.findById.mockResolvedValue(enrolled());
+        backupCodesCount.remaining.mockResolvedValue(4);
+        await expect(controller.getMe({ user: member })).resolves.toEqual({
+          _id: 'u1',
+          email: 'jane@acme.com',
+          displayName: 'Jane',
+          roleId: { name: 'Admin' },
+          hasPassword: false,
+          mfaEnabled: true,
+          mfaRequired: false,
+          mfaAvailable: true,
+          backupCodesRemaining: 4,
+          mustSetPassword: false,
+          roleName: 'Admin',
+        });
+      });
     });
   });
 

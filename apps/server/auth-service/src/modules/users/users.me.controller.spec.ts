@@ -35,6 +35,7 @@ describe('UsersController — /me (2FA, roleName) and change-password body', () 
         isEnforcedFor: jest.fn().mockResolvedValue(false),
         assertNotEnforcedForUserId: jest.fn().mockResolvedValue(undefined),
       } as any,
+      { remaining: jest.fn().mockResolvedValue(10) } as any,
     );
   });
 

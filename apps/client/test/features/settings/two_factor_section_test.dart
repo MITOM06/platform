@@ -33,10 +33,19 @@ class _FakeRepo implements AuthRepository {
   _FakeRepo(this.me);
   UserModel me;
   Object? regenError;
+  Object? getMeError;
   final regenCalls = <String>[];
+  final cached = <UserModel>[];
 
   @override
-  Future<UserModel> getMe() async => me;
+  Future<UserModel> getMe() async {
+    final error = getMeError;
+    if (error != null) throw error;
+    return me;
+  }
+
+  @override
+  Future<void> cacheUser(UserModel user) async => cached.add(user);
 
   @override
   Future<List<String>> regenerateBackupCodes(String code) async {
@@ -234,5 +243,134 @@ void main() {
     expect(find.text(l10n.authErrMfaCodeInvalid), findsOneWidget);
     expect(find.textContaining('MFA_CODE_INVALID'), findsNothing);
     expect(find.byType(RegenerateBackupCodesDialog), findsOneWidget);
+  });
+
+  group('backup codes left', () {
+    const left = ValueKey('security-mfa-backup-codes-left');
+    const low = ValueKey('security-mfa-backup-codes-low');
+
+    UserModel withCount(int? count, {bool enabled = true, bool required = true}) =>
+        UserModel(
+          id: 'u1',
+          email: 'o@acme.com',
+          displayName: 'Olga',
+          mfaRequired: required,
+          mfaAvailable: true,
+          mfaEnabled: enabled,
+          backupCodesRemaining: count,
+        );
+
+    /// Up to the new codes on screen: the count behind the dialog is already
+    /// updated by then, so leaving the dialog changes nothing.
+    Future<void> regenerate(WidgetTester tester) async {
+      await tester.tap(find.byKey(const ValueKey('security-mfa-regenerate')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const ValueKey('regen-code')), '123456');
+      await tester.pumpAndSettle();
+    }
+
+    for (final count in [10, 4]) {
+      testWidgets('$count left: the count, no warning', (tester) async {
+        await _pump(tester, withCount(count));
+        final l10n = _l10n(tester);
+        expect(find.text(l10n.securityMfaBackupCodesLeft(count)), findsOneWidget);
+        expect(find.byKey(low), findsNothing);
+      });
+    }
+
+    for (final count in [3, 1, 0]) {
+      testWidgets('$count left: the count and a warning pointing at Regenerate',
+          (tester) async {
+        await _pump(tester, withCount(count));
+        final l10n = _l10n(tester);
+        expect(find.text(l10n.securityMfaBackupCodesLeft(count)), findsOneWidget);
+        expect(find.byKey(low), findsOneWidget);
+        final warning =
+            l10n.securityMfaBackupCodesLow(l10n.securityMfaRegenerate);
+        expect(find.text(warning), findsOneWidget);
+        expect(warning, contains(l10n.securityMfaRegenerate));
+        expect(
+            find.byKey(const ValueKey('security-mfa-regenerate')), findsOneWidget);
+      });
+    }
+
+    testWidgets('also for a Member who turned 2FA on', (tester) async {
+      await _pump(tester, withCount(2, required: false));
+      expect(find.byKey(left), findsOneWidget);
+      expect(find.byKey(low), findsOneWidget);
+      expect(find.byKey(const ValueKey('security-mfa-turn-off')), findsOneWidget);
+    });
+
+    testWidgets('an older server without the field: nothing, not 0',
+        (tester) async {
+      await _pump(tester, withCount(null));
+      expect(find.byKey(left), findsNothing);
+      expect(find.byKey(low), findsNothing);
+      expect(find.byKey(const ValueKey('security-mfa-regenerate')), findsOneWidget);
+    });
+
+    testWidgets('2FA off: nothing, even with a count in the answer',
+        (tester) async {
+      await _pump(tester, withCount(0, enabled: false, required: false));
+      expect(find.byKey(left), findsNothing);
+      expect(find.byKey(low), findsNothing);
+    });
+
+    testWidgets('the /me re-sync on opening brings the current count',
+        (tester) async {
+      await _pump(tester, withCount(5), me: withCount(4));
+      expect(find.text(_l10n(tester).securityMfaBackupCodesLeft(4)), findsOneWidget);
+    });
+
+    testWidgets('regenerating updates the count and clears the warning',
+        (tester) async {
+      final repo = await _pump(tester, withCount(2));
+      expect(find.byKey(low), findsOneWidget);
+
+      repo.me = withCount(10);
+      await regenerate(tester);
+
+      expect(find.text(_l10n(tester).securityMfaBackupCodesLeft(10)), findsOneWidget);
+      expect(find.byKey(low), findsNothing);
+    });
+
+    testWidgets(
+        'regenerating when only the /me refresh fails: the new count, cached, '
+        'no stale warning', (tester) async {
+      final repo = await _pump(tester, withCount(2));
+
+      repo.getMeError = DioException(
+        requestOptions: RequestOptions(path: '/api/users/me'),
+        type: DioExceptionType.connectionError,
+      );
+      await regenerate(tester);
+
+      expect(find.text(_l10n(tester).securityMfaBackupCodesLeft(10)), findsOneWidget);
+      expect(find.byKey(low), findsNothing);
+      expect(repo.cached.last.backupCodesRemaining, 10);
+    });
+
+    testWidgets('regenerating on an older server still shows no count',
+        (tester) async {
+      await _pump(tester, withCount(null));
+      await regenerate(tester);
+      expect(find.byKey(left), findsNothing);
+    });
+
+    test('every locale: the real number (French 0 too), no raw ICU', () async {
+      for (final locale in AppLocalizations.supportedLocales) {
+        final l10n = await AppLocalizations.delegate.load(locale);
+        for (final count in [0, 1, 2, 3, 10]) {
+          final text = l10n.securityMfaBackupCodesLeft(count);
+          expect(text, contains('$count'), reason: '$locale $count');
+          expect(text, isNot(matches(RegExp(r'[{}#]|plural'))));
+        }
+        final warning =
+            l10n.securityMfaBackupCodesLow(l10n.securityMfaRegenerate);
+        expect(warning, contains(l10n.securityMfaRegenerate),
+            reason: '$locale warning');
+        expect(warning, isNot(matches(RegExp(r'[{}]'))));
+      }
+    });
   });
 }

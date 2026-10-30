@@ -2298,6 +2298,22 @@
   "securityMfaTurnOffHint": "Enter a current code from your authenticator app to confirm. You won't be asked for a code when you sign in anymore.",
   "securityMfaTurnOffSubmit": "Turn off",
   "securityMfaTurnedOff": "Two-factor authentication is off.",
+  "securityMfaBackupCodesLeft": "{count, plural, =1{{count} backup code left} other{{count} backup codes left}}",
+  "@securityMfaBackupCodesLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "securityMfaBackupCodesLow": "Generate new ones with “{action}” below while you still have your authenticator app. Without the app or a backup code, you can't sign in.",
+  "@securityMfaBackupCodesLow": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
   "authErrMfaRequiredByRole": "Your role requires two-factor authentication, so it can't be turned off.",
   "authNoticeMfaSetupRequiredByRole": "Your new role requires two-factor authentication. Sign in again to set it up.",
   "adminMfaBadge": "2FA on",

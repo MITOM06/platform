@@ -1553,6 +1553,8 @@
   "securityMfaTurnOffHint": "確認のため、認証アプリに表示されている現在のコードを入力してください。今後はサインイン時にコードを求められなくなります。",
   "securityMfaTurnOffSubmit": "オフにする",
   "securityMfaTurnedOff": "二要素認証をオフにしました。",
+  "securityMfaBackupCodesLeft": "{count, plural, other{残りのバックアップコードは {count} 個です}}",
+  "securityMfaBackupCodesLow": "認証アプリが使えるうちに、下の「{action}」で新しいコードを作成してください。認証アプリもバックアップコードもないと、サインインできなくなります。",
   "authErrMfaRequiredByRole": "あなたのロールでは二要素認証が必須のため、オフにできません。",
   "authNoticeMfaSetupRequiredByRole": "新しいロールでは二要素認証が必須です。もう一度サインインして設定してください。",
   "adminMfaBadge": "2FA オン",

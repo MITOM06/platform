@@ -1553,6 +1553,8 @@
   "securityMfaTurnOffHint": "Nhập mã hiện tại từ ứng dụng xác thực để xác nhận. Bạn sẽ không còn phải nhập mã khi đăng nhập.",
   "securityMfaTurnOffSubmit": "Tắt",
   "securityMfaTurnedOff": "Đã tắt xác thực hai yếu tố.",
+  "securityMfaBackupCodesLeft": "{count, plural, other{{count} mã dự phòng còn lại}}",
+  "securityMfaBackupCodesLow": "Hãy tạo mã mới bằng “{action}” bên dưới khi bạn vẫn còn ứng dụng xác thực. Không có ứng dụng hoặc mã dự phòng thì bạn sẽ không đăng nhập được.",
   "authErrMfaRequiredByRole": "Vai trò của bạn bắt buộc xác thực hai yếu tố nên không thể tắt.",
   "authNoticeMfaSetupRequiredByRole": "Vai trò mới của bạn bắt buộc xác thực hai yếu tố. Hãy đăng nhập lại để thiết lập.",
   "adminMfaBadge": "Đã bật 2FA",

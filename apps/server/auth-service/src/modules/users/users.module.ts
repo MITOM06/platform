@@ -1,4 +1,5 @@
 import { MfaPendingStore } from '../mfa/mfa-pending.store';
+import { BackupCodesCountService } from '../mfa/backup-codes-count.service';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersService } from './users.service';
@@ -46,6 +47,8 @@ import {
     UsersService,
     // Stateless over the global REDIS_CLIENT: burns pending 2FA steps on password change.
     MfaPendingStore,
+    // Backup codes left, for /me.
+    BackupCodesCountService,
     PasswordChangeService,
     SessionService,
     MyDepartmentsService,

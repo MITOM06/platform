@@ -8449,6 +8449,18 @@ abstract class AppLocalizations {
   /// **'Two-factor authentication is off.'**
   String get securityMfaTurnedOff;
 
+  /// No description provided for @securityMfaBackupCodesLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} backup code left} other{{count} backup codes left}}'**
+  String securityMfaBackupCodesLeft(int count);
+
+  /// No description provided for @securityMfaBackupCodesLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate new ones with “{action}” below while you still have your authenticator app. Without the app or a backup code, you can\'t sign in.'**
+  String securityMfaBackupCodesLow(String action);
+
   /// No description provided for @authErrMfaRequiredByRole.
   ///
   /// In en, this message translates to:

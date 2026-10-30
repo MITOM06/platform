@@ -313,7 +313,11 @@ the exchange body values for Google). The set-password gate (`user.mustSetPasswo
 - `mfaRequired`: mandatory for this account = privileged (from the access-token claims) AND not a
   bot AND not covered by "Require SSO" — it cannot be turned off;
 - `mfaAvailable`: the account can use / turn on 2FA at all = not a bot AND not covered by
-  "Require SSO".
+  "Require SSO";
+- `backupCodesRemaining` (2026-10-30, optional): how many unused backup codes are left. Sent only
+  while `mfaEnabled` is true. The hashes themselves are never returned. Absent (2FA off, the count
+  could not be read, an older server) means unknown: clients show nothing, not 0. Settings warns
+  at 3 or fewer.
 
 `POST /api/users/me/mfa/backup-codes { code }` (current TOTP; backup codes not accepted) →
 `{ backupCodes: string[10] }`, old codes stop working. Turning 2FA on / off from Settings: see

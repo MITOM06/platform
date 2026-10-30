@@ -448,7 +448,9 @@
       "turnOffTitle": "Tắt xác thực hai yếu tố?",
       "turnOffBody": "Nhập mã hiện tại từ ứng dụng xác thực hoặc một trong các mã dự phòng của bạn. Khi đăng nhập sẽ không còn hỏi mã nữa và các mã dự phòng sẽ ngừng hoạt động.",
       "turnOffSubmit": "Tắt",
-      "turnOffSuccess": "Đã tắt xác thực hai yếu tố"
+      "turnOffSuccess": "Đã tắt xác thực hai yếu tố",
+      "backupCodesLeft": "{count, plural, other {# mã dự phòng còn lại}}",
+      "backupCodesLow": "Hãy tạo mã mới bằng “{action}” bên dưới khi bạn vẫn còn ứng dụng xác thực. Không có ứng dụng hoặc mã dự phòng thì bạn sẽ không đăng nhập được."
     },
     "adminConsole": "Bảng quản trị",
     "adminConsoleSubtitle": "Không gian làm việc, thành viên, vai trò và cài đặt AI"

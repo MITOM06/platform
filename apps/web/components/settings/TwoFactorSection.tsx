@@ -4,10 +4,10 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
-import { KeyRound, Loader2, ShieldCheck, ShieldOff } from 'lucide-react'
+import { KeyRound, Loader2, ShieldCheck, ShieldOff, TriangleAlert } from 'lucide-react'
 import { authService, type UserProfile } from '@/lib/api/auth'
 import type { SelfMfaEnrollStartResponse } from '@/lib/api/types'
-import { mfaSelfErrorMessage } from '@/lib/auth/mfa'
+import { BACKUP_CODES_LOW_THRESHOLD, mfaSelfErrorMessage } from '@/lib/auth/mfa'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -27,6 +27,8 @@ const ME_KEY = ['me'] as const
  *   flow (QR + key → one code → backup codes once) that changes no session;
  * - optional, on: the status, "Regenerate backup codes" and "Turn off 2FA"
  *   (a current code or a backup code).
+ * Whenever 2FA is on it also shows how many backup codes are left, with a warning
+ * when few are (only if the server reports the count).
  * Mirror of the mobile `two_factor_section.dart`.
  */
 export function TwoFactorSection() {
@@ -41,15 +43,28 @@ export function TwoFactorSection() {
   const [notice, setNotice] = useState<string | null>(null)
 
   // Same key as the profile editor's `/me` query — one cache entry for the profile.
+  // Re-read on every visit: a backup code used on any device lowers the count.
   const { data: me } = useQuery({
     queryKey: ME_KEY,
     queryFn: () => authService.getMe(),
     enabled: !!accessToken,
+    staleTime: 0,
   })
 
   const refreshMe = () => void qc.invalidateQueries({ queryKey: ME_KEY })
+  // The old count stops being true here; the `/me` refresh brings the new one.
   const setMfaEnabled = (mfaEnabled: boolean) =>
-    qc.setQueryData<UserProfile>(ME_KEY, (old) => (old ? { ...old, mfaEnabled } : old))
+    qc.setQueryData<UserProfile>(ME_KEY, (old) =>
+      old ? { ...old, mfaEnabled, backupCodesRemaining: undefined } : old,
+    )
+  // Set locally too: if only the refresh fails, a stale "few left" warning must
+  // not push the member to regenerate again and void the codes they just saved.
+  const onRegenerated = (count: number) => {
+    qc.setQueryData<UserProfile>(ME_KEY, (old) =>
+      old?.backupCodesRemaining === undefined ? old : { ...old, backupCodesRemaining: count },
+    )
+    refreshMe()
+  }
 
   const start = useMutation({
     mutationFn: () => authService.selfMfaEnrollStart(),
@@ -120,6 +135,9 @@ export function TwoFactorSection() {
               </Badge>
               <p className="text-sm text-muted-foreground">{body}</p>
             </div>
+            {enabled && typeof me.backupCodesRemaining === 'number' && (
+              <BackupCodesStatus remaining={me.backupCodesRemaining} />
+            )}
             {notice && <MfaAlert>{notice}</MfaAlert>}
             <TwoFactorActions
               required={required}
@@ -137,7 +155,12 @@ export function TwoFactorSection() {
       </div>
 
       {enabled && (
-        <RegenerateBackupCodesDialog open={regenerateOpen} onOpenChange={setRegenerateOpen} accountEmail={accountEmail} />
+        <RegenerateBackupCodesDialog
+          open={regenerateOpen}
+          onOpenChange={setRegenerateOpen}
+          accountEmail={accountEmail}
+          onRegenerated={onRegenerated}
+        />
       )}
       {/* Always mounted: the `/me` refetch after an error (e.g. MFA_REQUIRED_BY_ROLE)
           must not unmount it while it shows that message. */}
@@ -152,6 +175,28 @@ export function TwoFactorSection() {
         onStale={refreshMe}
       />
     </section>
+  )
+}
+
+/** "N backup codes left", plus a warning pointing at "Regenerate" when few are. */
+function BackupCodesStatus({ remaining }: { remaining: number }) {
+  const t = useTranslations('settings.security')
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium" data-testid="backup-codes-remaining">
+        {t('backupCodesLeft', { count: remaining })}
+      </p>
+      {remaining <= BACKUP_CODES_LOW_THRESHOLD && (
+        <div
+          role="status"
+          data-testid="backup-codes-low"
+          className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm"
+        >
+          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
+          <span>{t('backupCodesLow', { action: t('regenerateButton') })}</span>
+        </div>
+      )}
+    </div>
   )
 }
 

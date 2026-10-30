@@ -1553,6 +1553,8 @@
   "securityMfaTurnOffHint": "확인을 위해 인증 앱의 현재 코드를 입력하세요. 이후 로그인할 때 더 이상 코드를 묻지 않습니다.",
   "securityMfaTurnOffSubmit": "끄기",
   "securityMfaTurnedOff": "2단계 인증이 꺼졌습니다.",
+  "securityMfaBackupCodesLeft": "{count, plural, other{백업 코드가 {count}개 남았습니다}}",
+  "securityMfaBackupCodesLow": "인증 앱을 사용할 수 있을 때 아래의 “{action}”으로 새 코드를 만드세요. 인증 앱과 백업 코드가 모두 없으면 로그인할 수 없습니다.",
   "authErrMfaRequiredByRole": "회원님의 역할에는 2단계 인증이 필수이므로 끌 수 없습니다.",
   "authNoticeMfaSetupRequiredByRole": "새 역할에는 2단계 인증이 필수입니다. 다시 로그인하여 설정하세요.",
   "adminMfaBadge": "2FA 켜짐",

@@ -33,6 +33,7 @@ import {
 } from './dto/change-password.dto';
 import { SsoPolicyService } from '../sso/sso-policy.service';
 import { isAdminLike, mfaStatus } from '../mfa/mfa-policy';
+import { BackupCodesCountService } from '../mfa/backup-codes-count.service';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -44,6 +45,7 @@ export class UsersController {
     private readonly passwordChange: PasswordChangeService,
     private readonly friendsService: FriendsService,
     private readonly ssoPolicy: SsoPolicyService,
+    private readonly backupCodesCount: BackupCodesCountService,
   ) {}
 
   @Get('me')
@@ -62,11 +64,13 @@ export class UsersController {
     // user is a Mongoose Document — spread via toObject() so we can add hasPassword.
     // The raw 2FA sub-document never leaves the server; only the flags do.
     const { mfa, ...doc } = user.toObject();
-    const [roleName, ssoEnforced] = await Promise.all([
+    const enrolled = mfa?.enabled === true;
+    const [roleName, ssoEnforced, backupCodesRemaining] = await Promise.all([
       this.usersService.getRoleName(doc.roleId),
       // Require SSO: such a member signs in only with SSO (no PON 2FA, no
       // set-password step). Owners are never covered (break-glass).
       this.ssoPolicy.isEnforcedFor(doc),
+      enrolled ? this.backupCodesCount.remaining(req.user.sub) : undefined,
     ]);
     return {
       ...doc,
@@ -75,11 +79,14 @@ export class UsersController {
       // role, from the access-token claims; a role change revokes sessions),
       // mfaAvailable (can use / turn on 2FA at all: no bot, no "Require SSO").
       ...mfaStatus({
-        enrolled: mfa?.enabled === true,
+        enrolled,
         privileged: isAdminLike(req.user),
         ssoEnforced,
         isBot: doc.isBot === true,
       }),
+      // A count only, and only while 2FA is on. When it is absent (2FA off, a
+      // failed read, an older server) clients show nothing, never "0 left".
+      ...(backupCodesRemaining !== undefined ? { backupCodesRemaining } : {}),
       // Google-invite onboarding gate (clients force "create your PON password").
       mustSetPassword: doc.mustSetPassword === true && !ssoEnforced,
       // Effective role: Owner / Admin / Member or a custom role (unassigned → Member).

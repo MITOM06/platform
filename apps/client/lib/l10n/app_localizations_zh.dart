@@ -4438,6 +4438,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityMfaTurnedOff => '双重验证已关闭。';
 
   @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '还剩 $count 个备用码',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return '请趁身份验证器应用还可用时，使用下方的“$action”生成新的备用码。既没有该应用也没有备用码时，您将无法登录。';
+  }
+
+  @override
   String get authErrMfaRequiredByRole => '你的角色要求启用双重验证，因此无法关闭。';
 
   @override

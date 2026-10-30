@@ -4652,6 +4652,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityMfaTurnedOff => 'Two-factor authentication is off.';
 
   @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count backup codes left',
+      one: '$count backup code left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return 'Generate new ones with “$action” below while you still have your authenticator app. Without the app or a backup code, you can\'t sign in.';
+  }
+
+  @override
   String get authErrMfaRequiredByRole =>
       'Your role requires two-factor authentication, so it can\'t be turned off.';
 

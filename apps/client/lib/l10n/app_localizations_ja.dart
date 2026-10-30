@@ -4498,6 +4498,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get securityMfaTurnedOff => '二要素認証をオフにしました。';
 
   @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '残りのバックアップコードは $count 個です',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return '認証アプリが使えるうちに、下の「$action」で新しいコードを作成してください。認証アプリもバックアップコードもないと、サインインできなくなります。';
+  }
+
+  @override
   String get authErrMfaRequiredByRole => 'あなたのロールでは二要素認証が必須のため、オフにできません。';
 
   @override
