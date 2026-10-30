@@ -45,7 +45,7 @@ export default function OAuthCallbackPage() {
           router.replace(MFA_PATH)
           return
         }
-        // A member who just joined with Google must create a PON password first.
+        // Signed in. /set-password only applies to an account still flagged from before.
         router.replace(await establishSession(data))
       })
       .catch((err: unknown) => {
