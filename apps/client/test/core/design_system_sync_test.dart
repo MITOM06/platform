@@ -98,8 +98,9 @@ void main() {
     test('weights stop at 600 (web uses 400 / 500 / 600)', () {
       final hits = offenders(
         RegExp(r'FontWeight\.(bold|w700|w800|w900)'),
-        // The PON wordmark is the one bold element.
-        skip: (p) => p.endsWith('core/widgets/pon_widgets.dart'),
+        // The PON wordmark is the one bold element. Paths use `\` on Windows.
+        skip: (p) =>
+            p.replaceAll(r'\', '/').endsWith('core/widgets/pon_widgets.dart'),
       );
       expect(hits, isEmpty);
     });
