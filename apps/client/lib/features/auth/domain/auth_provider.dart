@@ -300,6 +300,24 @@ class AuthNotifier extends _$AuthNotifier {
     }
   }
 
+  /// New backup codes were just issued (Settings → Security): re-sync `/me`. If
+  /// only this refresh fails the count is updated locally, so a stale "few left"
+  /// warning can't push the member to regenerate again and void the codes they
+  /// just saved.
+  Future<void> resyncBackupCodes(int issued) async {
+    final repo = ref.read(authRepositoryProvider);
+    try {
+      await refreshUser();
+    } catch (_) {
+      final current = state.valueOrNull;
+      // A 401 during the refresh already forced a logout — nothing to update.
+      if (current is! AuthAuthenticated) return;
+      final user = current.user.withBackupCodesIssued(issued);
+      await repo.cacheUser(user);
+      state = AsyncData(AuthAuthenticated(user));
+    }
+  }
+
   /// Creates the first PON password of a member who must have one
   /// (`mustSetPassword` — joined via a Google invitation) and refreshes the
   /// user so the router gate lets them into the app.

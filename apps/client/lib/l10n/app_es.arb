@@ -1540,6 +1540,8 @@
   "securityMfaTurnOffHint": "Introduce un código actual de tu app de autenticación para confirmar. Ya no se te pedirá un código al iniciar sesión.",
   "securityMfaTurnOffSubmit": "Desactivar",
   "securityMfaTurnedOff": "La autenticación de dos factores está desactivada.",
+  "securityMfaBackupCodesLeft": "{count, plural, =1{{count} código de respaldo restante} other{{count} códigos de respaldo restantes}}",
+  "securityMfaBackupCodesLow": "Genera otros nuevos con “{action}” aquí abajo mientras conserves tu aplicación de autenticación. Sin la aplicación ni un código de respaldo, no podrás iniciar sesión.",
   "authErrMfaRequiredByRole": "Tu rol requiere la autenticación de dos factores, así que no se puede desactivar.",
   "authNoticeMfaSetupRequiredByRole": "Tu nuevo rol requiere la autenticación de dos factores. Vuelve a iniciar sesión para configurarla.",
   "adminMfaBadge": "2FA activada",

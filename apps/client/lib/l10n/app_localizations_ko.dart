@@ -4456,6 +4456,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get securityMfaTurnedOff => '2단계 인증이 꺼졌습니다.';
 
   @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '백업 코드가 $count개 남았습니다',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return '인증 앱을 사용할 수 있을 때 아래의 “$action”으로 새 코드를 만드세요. 인증 앱과 백업 코드가 모두 없으면 로그인할 수 없습니다.';
+  }
+
+  @override
   String get authErrMfaRequiredByRole => '회원님의 역할에는 2단계 인증이 필수이므로 끌 수 없습니다.';
 
   @override

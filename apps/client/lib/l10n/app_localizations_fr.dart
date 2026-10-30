@@ -4679,6 +4679,22 @@ class AppLocalizationsFr extends AppLocalizations {
       'L\'authentification à deux facteurs est désactivée.';
 
   @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count codes de secours restants',
+      one: '$count code de secours restant',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return 'Générez-en de nouveaux avec « $action » ci-dessous tant que vous avez encore votre application d\'authentification. Sans l\'application ni code de secours, vous ne pourrez plus vous connecter.';
+  }
+
+  @override
   String get authErrMfaRequiredByRole =>
       'Votre rôle exige l\'authentification à deux facteurs : elle ne peut pas être désactivée.';
 

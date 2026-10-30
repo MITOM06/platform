@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:platform_client/features/auth/data/auth_repository.dart';
 import 'package:platform_client/features/auth/domain/auth_state.dart';
+import 'package:platform_client/features/auth/domain/mfa_models.dart';
 
 import 'mfa_test_data.dart';
 
@@ -127,6 +128,53 @@ void main() {
       expect(user.mfaRequired, isFalse);
       expect(user.hasPassword, isTrue);
       expect(user.roleName, 'Member');
+    });
+  });
+
+  group('UserModel.backupCodesRemaining', () {
+    UserModel parse(Map<String, dynamic> flags) => UserModel.fromJson(
+        {'id': 'u1', 'email': 'a@acme.com', 'displayName': 'A', ...flags});
+
+    test('read from /me; a real 0 stays 0', () {
+      expect(parse({'backupCodesRemaining': 7}).backupCodesRemaining, 7);
+      expect(parse({'backupCodesRemaining': 0}).backupCodesRemaining, 0);
+    });
+
+    test('an older server without the field is unknown, not 0', () {
+      expect(parse({'mfaEnabled': true}).backupCodesRemaining, isNull);
+    });
+
+    test('survives the session cache round trip', () {
+      final user = parse({'backupCodesRemaining': 2});
+      expect(UserModel.fromJson(user.toJson()).backupCodesRemaining, 2);
+      final unknown = parse({});
+      expect(unknown.toJson().containsKey('backupCodesRemaining'), isFalse);
+      expect(UserModel.fromJson(unknown.toJson()).backupCodesRemaining, isNull);
+    });
+
+    test('turning 2FA on / off drops the old count', () {
+      final user = parse({'backupCodesRemaining': 2, 'mfaEnabled': true});
+      expect(user.withMfaEnabled(false).backupCodesRemaining, isNull);
+      expect(user.withMfaEnabled(true).backupCodesRemaining, isNull);
+    });
+
+    test('setting a password keeps it', () {
+      final user = parse({'backupCodesRemaining': 2});
+      expect(user.withPasswordSet().backupCodesRemaining, 2);
+    });
+
+    test('withBackupCodesIssued sets a known count, an unknown one stays', () {
+      expect(
+        parse({'backupCodesRemaining': 2})
+            .withBackupCodesIssued(10)
+            .backupCodesRemaining,
+        10,
+      );
+      expect(parse({}).withBackupCodesIssued(10).backupCodesRemaining, isNull);
+    });
+
+    test('warns at 3 or fewer', () {
+      expect(kBackupCodesLowThreshold, 3);
     });
   });
 }

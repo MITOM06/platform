@@ -4578,6 +4578,21 @@ class AppLocalizationsVi extends AppLocalizations {
   String get securityMfaTurnedOff => 'Đã tắt xác thực hai yếu tố.';
 
   @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count mã dự phòng còn lại',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return 'Hãy tạo mã mới bằng “$action” bên dưới khi bạn vẫn còn ứng dụng xác thực. Không có ứng dụng hoặc mã dự phòng thì bạn sẽ không đăng nhập được.';
+  }
+
+  @override
   String get authErrMfaRequiredByRole =>
       'Vai trò của bạn bắt buộc xác thực hai yếu tố nên không thể tắt.';
 

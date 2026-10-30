@@ -1540,6 +1540,8 @@
   "securityMfaTurnOffHint": "Saisissez un code actuel de votre application d'authentification pour confirmer. Aucun code ne vous sera plus demandé à la connexion.",
   "securityMfaTurnOffSubmit": "Désactiver",
   "securityMfaTurnedOff": "L'authentification à deux facteurs est désactivée.",
+  "securityMfaBackupCodesLeft": "{count, plural, =1{{count} code de secours restant} other{{count} codes de secours restants}}",
+  "securityMfaBackupCodesLow": "Générez-en de nouveaux avec « {action} » ci-dessous tant que vous avez encore votre application d'authentification. Sans l'application ni code de secours, vous ne pourrez plus vous connecter.",
   "authErrMfaRequiredByRole": "Votre rôle exige l'authentification à deux facteurs : elle ne peut pas être désactivée.",
   "authNoticeMfaSetupRequiredByRole": "Votre nouveau rôle exige l'authentification à deux facteurs. Reconnectez-vous pour la configurer.",
   "adminMfaBadge": "2FA activée",

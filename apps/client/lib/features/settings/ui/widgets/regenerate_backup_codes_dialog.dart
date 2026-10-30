@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/data/auth_repository.dart';
+import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/ui/widgets/backup_codes_panel.dart';
 import '../../../auth/ui/widgets/mfa_code_field.dart';
 import '../../../auth/utils/mfa_code.dart';
@@ -51,11 +52,14 @@ class _RegenerateBackupCodesDialogState
       _isLoading = true;
       _errorText = null;
     });
+    // Read before the await: this dialog can't use `ref` once it is closed.
+    final auth = ref.read(authNotifierProvider.notifier);
     try {
       final codes = await ref
           .read(authRepositoryProvider)
           .regenerateBackupCodes(normalizeTotpCode(_codeController.text));
       if (mounted) setState(() => _codes = codes);
+      await auth.resyncBackupCodes(codes.length);
     } catch (e) {
       // MFA_CODE_INVALID / MFA_NOT_ENROLLED / too many codes / network →
       // localized, never raw.

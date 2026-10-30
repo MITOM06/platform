@@ -120,3 +120,8 @@ const kMfaRestartCodes = {
   'MFA_NOT_ENROLLED',
   'MFA_ALREADY_ENROLLED',
 };
+
+/// Settings warns once this many backup codes or fewer are left (10 are
+/// issued). Regenerating needs the authenticator app, so the warning must come
+/// while the member still has it. Mirror of web `BACKUP_CODES_LOW_THRESHOLD`.
+const kBackupCodesLowThreshold = 3;
