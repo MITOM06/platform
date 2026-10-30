@@ -307,6 +307,7 @@
       "downloadCodes": "Descargar .txt",
       "codesCopied": "Códigos de respaldo copiados",
       "savedCheckbox": "He guardado mis códigos de respaldo",
+      "copyOrDownloadFirst": "Primero copia o descarga los códigos",
       "continue": "Continuar",
       "codesLoading": "Cargando tus códigos de respaldo...",
       "fileHeader": "Códigos de respaldo de PON para {email}",

@@ -4550,6 +4550,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mfaSavedCheckbox => 'Tôi đã lưu mã dự phòng';
 
   @override
+  String get mfaCopyCodesFirst => 'Hãy sao chép mã trước';
+
+  @override
+  String get mfaCodesCopyFailed => 'Không sao chép được mã. Vui lòng thử lại.';
+
+  @override
   String get mfaContinue => 'Tiếp tục';
 
   @override

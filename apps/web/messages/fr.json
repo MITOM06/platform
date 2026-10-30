@@ -307,6 +307,7 @@
       "downloadCodes": "Télécharger le .txt",
       "codesCopied": "Codes de secours copiés",
       "savedCheckbox": "J'ai enregistré mes codes de secours",
+      "copyOrDownloadFirst": "Copiez ou téléchargez d'abord les codes",
       "continue": "Continuer",
       "codesLoading": "Chargement de vos codes de secours...",
       "fileHeader": "Codes de secours PON pour {email}",

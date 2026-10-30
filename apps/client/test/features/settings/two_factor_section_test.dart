@@ -11,6 +11,8 @@ import 'package:platform_client/features/settings/ui/widgets/regenerate_backup_c
 import 'package:platform_client/features/settings/ui/widgets/two_factor_section.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
 
+import '../auth/mfa_test_data.dart';
+
 /// An Owner / Admin-like member: 2FA required by the role (contract 15).
 const _enrolled = UserModel(
   id: 'u1',
@@ -157,12 +159,24 @@ void main() {
     PonButton done() => tester
         .widget<PonButton>(find.byKey(const ValueKey('mfa-codes-continue')));
     expect(done().onPressed, isNull);
+    Checkbox box() => tester
+        .widget<Checkbox>(find.byKey(const ValueKey('mfa-saved-checkbox')));
+    expect(box().onChanged, isNull);
+    expect(find.text(l10n.mfaCopyCodesFirst), findsOneWidget);
 
+    await copyBackupCodes(tester);
     await tester.tap(find.byKey(const ValueKey('mfa-saved-checkbox')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('mfa-codes-continue')));
     await tester.pumpAndSettle();
     expect(find.byType(RegenerateBackupCodesDialog), findsNothing);
+
+    // New codes, new start: having copied the previous ones does not unlock.
+    await tester.tap(find.byKey(const ValueKey('security-mfa-regenerate')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('regen-code')), '654321');
+    await tester.pumpAndSettle();
+    expect(box().onChanged, isNull);
   });
 
   testWidgets('regenerate with a wrong code shows a localized error',

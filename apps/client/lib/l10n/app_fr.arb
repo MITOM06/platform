@@ -1531,6 +1531,8 @@
   "mfaCopyCodes": "Copier les codes",
   "mfaCodesCopied": "Codes de secours copiés",
   "mfaSavedCheckbox": "J'ai enregistré mes codes de secours",
+  "mfaCopyCodesFirst": "Copiez d'abord les codes",
+  "mfaCodesCopyFailed": "Impossible de copier les codes. Veuillez réessayer.",
   "mfaContinue": "Continuer",
   "securityMfaOn": "Un code de votre application d'authentification est requis à chaque connexion.",
   "securityMfaPending": "Obligatoire pour votre rôle. Vous la configurerez à votre prochaine connexion.",

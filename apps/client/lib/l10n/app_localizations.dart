@@ -8317,6 +8317,18 @@ abstract class AppLocalizations {
   /// **'I saved my backup codes'**
   String get mfaSavedCheckbox;
 
+  /// No description provided for @mfaCopyCodesFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the codes first'**
+  String get mfaCopyCodesFirst;
+
+  /// No description provided for @mfaCodesCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t copy the codes. Please try again.'**
+  String get mfaCodesCopyFailed;
+
   /// No description provided for @mfaContinue.
   ///
   /// In en, this message translates to:

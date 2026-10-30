@@ -307,6 +307,7 @@
       "downloadCodes": ".txt をダウンロード",
       "codesCopied": "バックアップコードをコピーしました",
       "savedCheckbox": "バックアップコードを保存しました",
+      "copyOrDownloadFirst": "先にコードをコピーまたはダウンロードしてください",
       "continue": "続行",
       "codesLoading": "バックアップコードを読み込んでいます...",
       "fileHeader": "{email} の PON バックアップコード",

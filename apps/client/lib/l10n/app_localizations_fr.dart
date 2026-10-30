@@ -4650,6 +4650,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mfaSavedCheckbox => 'J\'ai enregistré mes codes de secours';
 
   @override
+  String get mfaCopyCodesFirst => 'Copiez d\'abord les codes';
+
+  @override
+  String get mfaCodesCopyFailed =>
+      'Impossible de copier les codes. Veuillez réessayer.';
+
+  @override
   String get mfaContinue => 'Continuer';
 
   @override

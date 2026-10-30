@@ -7,6 +7,7 @@ import React from 'react'
 import { toast } from 'sonner'
 import { TwoFactorSection } from '@/components/settings/TwoFactorSection'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { copyBackupCodes } from '@/components/auth/__tests__/backup-codes-helpers'
 
 const getMe = vi.fn()
 const selfMfaEnrollStart = vi.fn()
@@ -100,6 +101,9 @@ describe('Settings → Security: optional 2FA for Members (contract 15)', () => 
       expect(screen.queryByTestId('two-factor-status')).toBeNull()
       const done = screen.getByRole('button', { name: 'settings.security.turnOnDone' })
       expect(done).toBeDisabled()
+      expect(screen.getByRole('checkbox', { name: 'auth.mfa.savedCheckbox' })).toBeDisabled()
+      expect(screen.getByText('auth.mfa.copyOrDownloadFirst')).toBeInTheDocument()
+      await copyBackupCodes()
       fireEvent.click(screen.getByRole('checkbox', { name: 'auth.mfa.savedCheckbox' }))
       fireEvent.click(done)
 

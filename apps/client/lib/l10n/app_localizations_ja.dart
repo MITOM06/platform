@@ -4429,6 +4429,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get mfaSavedCheckbox => 'バックアップコードを保存しました';
 
   @override
+  String get mfaCopyCodesFirst => '先にコードをコピーしてください';
+
+  @override
+  String get mfaCodesCopyFailed => 'コードをコピーできませんでした。もう一度お試しください。';
+
+  @override
   String get mfaContinue => '続行';
 
   @override

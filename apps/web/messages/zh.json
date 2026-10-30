@@ -307,6 +307,7 @@
       "downloadCodes": "下载 .txt",
       "codesCopied": "备用码已复制",
       "savedCheckbox": "我已保存备用码",
+      "copyOrDownloadFirst": "请先复制或下载备用码",
       "continue": "继续",
       "codesLoading": "正在加载您的备用码...",
       "fileHeader": "{email} 的 PON 备用码",

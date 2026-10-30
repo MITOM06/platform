@@ -307,6 +307,7 @@
       "downloadCodes": "Download .txt",
       "codesCopied": "Backup codes copied",
       "savedCheckbox": "I saved my backup codes",
+      "copyOrDownloadFirst": "Copy or download the codes first",
       "continue": "Continue",
       "codesLoading": "Loading your backup codes...",
       "fileHeader": "PON backup codes for {email}",
