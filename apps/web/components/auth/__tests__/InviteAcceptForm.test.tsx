@@ -105,6 +105,16 @@ describe('InviteAcceptForm: accept with a password (contracts 13 C, 15)', () => 
     expect(readPendingMfa()).toBeNull()
   })
 
+  it('accepting with a password forgets an earlier failed Google attempt', async () => {
+    sessionStorage.setItem('pon:auth:invite-return', JSON.stringify({ token: 'tok-1', at: Date.now() }))
+    acceptInvitation.mockResolvedValue(challenge)
+    render(<InviteAcceptForm token="tok-1" preview={preview} />)
+    fillAndSubmit()
+
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/mfa'))
+    expect(sessionStorage.getItem('pon:auth:invite-return')).toBeNull()
+  })
+
   it('a token answer for an account that must still create its password lands on /set-password', async () => {
     acceptInvitation.mockResolvedValue({
       accessToken: 'acc',

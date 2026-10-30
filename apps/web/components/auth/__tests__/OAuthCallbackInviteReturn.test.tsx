@@ -80,6 +80,17 @@ describe('/oauth-callback: cancelled / refused Google sign-in', () => {
     )
   })
 
+  it('the wrong Google account twice in a row → back to the invitation both times', async () => {
+    rememberInviteReturn('tok-1')
+    nav.search = 'error=INVITATION_EMAIL_MISMATCH'
+    const first = render(<OAuthCallbackPage />)
+    await waitFor(() => expect(replace).toHaveBeenCalledTimes(1))
+    first.unmount()
+    render(<OAuthCallbackPage />)
+    await waitFor(() => expect(replace).toHaveBeenCalledTimes(2))
+    expect(replace).toHaveBeenLastCalledWith('/invite/tok-1?reason=INVITATION_EMAIL_MISMATCH')
+  })
+
   it('an expired round trip without a remembered invitation → the login notice', async () => {
     nav.search = 'error=INVITE_GOOGLE_FLOW_EXPIRED'
     render(<OAuthCallbackPage />)
