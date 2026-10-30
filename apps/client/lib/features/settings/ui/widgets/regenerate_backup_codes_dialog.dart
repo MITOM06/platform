@@ -15,7 +15,8 @@ import '../../utils/two_factor_error.dart';
 class RegenerateBackupCodesDialog extends ConsumerStatefulWidget {
   const RegenerateBackupCodesDialog({super.key});
 
-  /// Not dismissible by tapping outside: new codes must not be lost unseen.
+  /// Not dismissible by tapping outside, and Back is blocked while the new
+  /// codes show: they must not be lost unseen.
   static Future<void> show(BuildContext context) => showDialog<void>(
         context: context,
         barrierDismissible: false,
@@ -77,7 +78,7 @@ class _RegenerateBackupCodesDialogState
     final hintStyle =
         TextStyle(color: AppTheme.mutedText(context), fontSize: 14, height: 1.4);
 
-    return AlertDialog(
+    final dialog = AlertDialog(
       scrollable: true,
       title: Text(
         codes == null ? l10n.securityMfaRegenerate : l10n.mfaBackupCodesTitle,
@@ -148,5 +149,8 @@ class _RegenerateBackupCodesDialogState
               ),
             ],
     );
+
+    // New codes on screen: only the panel's confirm button closes, as on web.
+    return PopScope(canPop: codes == null, child: dialog);
   }
 }
