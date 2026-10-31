@@ -4327,6 +4327,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get adminAuditActionMemberUpdate => 'Miembro actualizado';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate =>
+      'Contexto de IA de un miembro cambiado';
+
+  @override
   String get adminAuditActionMemberSsoUpdate => 'Miembro actualizado por SSO';
 
   @override

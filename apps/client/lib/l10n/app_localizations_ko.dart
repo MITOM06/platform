@@ -4155,6 +4155,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get adminAuditActionMemberUpdate => '멤버 업데이트';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate => '멤버 AI 컨텍스트 변경';
+
+  @override
   String get adminAuditActionMemberSsoUpdate => 'SSO로 멤버 업데이트';
 
   @override

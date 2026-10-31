@@ -1439,6 +1439,7 @@
   "adminAuditActionDepartmentUpdate": "更新了部门",
   "adminAuditActionDepartmentDelete": "删除了部门",
   "adminAuditActionMemberUpdate": "更新了成员",
+  "adminAuditActionMemberAiContextUpdate": "更改了成员的 AI 上下文",
   "adminAuditActionMemberSsoUpdate": "通过 SSO 更新了成员",
   "adminAuditActionMemberBlock": "封禁了成员",
   "adminAuditActionMemberUnblock": "解封了成员",

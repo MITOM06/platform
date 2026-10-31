@@ -4154,6 +4154,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get adminAuditActionMemberUpdate => 'メンバーを更新';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate => 'メンバーのAIコンテキストを変更';
+
+  @override
   String get adminAuditActionMemberSsoUpdate => 'SSO によりメンバーを更新';
 
   @override

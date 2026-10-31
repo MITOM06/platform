@@ -58,3 +58,15 @@ bool canResetMemberMfa({
   if (callerIsOwner) return true;
   return callerCanManageMembers && !targetPrivileged;
 }
+
+/// A non-Owner can't read or edit an Owner's AI context, so the action is
+/// hidden (mirror of the guard on `/ai-context/users/:id`, 403
+/// INSUFFICIENT_PERMISSION, and of web `memberAiContextLocked`). A role the
+/// caller can't resolve isn't known to be Owner, so the action stays and the
+/// server still refuses it: hiding it would also take it away on ordinary
+/// members.
+bool memberAiContextLocked({
+  required bool callerIsOwner,
+  required bool targetIsOwner,
+}) =>
+    targetIsOwner && !callerIsOwner;

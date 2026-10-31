@@ -1439,6 +1439,7 @@
   "adminAuditActionDepartmentUpdate": "부서 업데이트",
   "adminAuditActionDepartmentDelete": "부서 삭제",
   "adminAuditActionMemberUpdate": "멤버 업데이트",
+  "adminAuditActionMemberAiContextUpdate": "멤버 AI 컨텍스트 변경",
   "adminAuditActionMemberSsoUpdate": "SSO로 멤버 업데이트",
   "adminAuditActionMemberBlock": "멤버 차단",
   "adminAuditActionMemberUnblock": "멤버 차단 해제",

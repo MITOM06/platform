@@ -1439,6 +1439,7 @@
   "adminAuditActionDepartmentUpdate": "Service mis à jour",
   "adminAuditActionDepartmentDelete": "Service supprimé",
   "adminAuditActionMemberUpdate": "Membre mis à jour",
+  "adminAuditActionMemberAiContextUpdate": "Contexte IA d'un membre modifié",
   "adminAuditActionMemberSsoUpdate": "Membre mis à jour par SSO",
   "adminAuditActionMemberBlock": "Membre bloqué",
   "adminAuditActionMemberUnblock": "Membre débloqué",

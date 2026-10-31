@@ -4108,6 +4108,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminAuditActionMemberUpdate => '更新了成员';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate => '更改了成员的 AI 上下文';
+
+  @override
   String get adminAuditActionMemberSsoUpdate => '通过 SSO 更新了成员';
 
   @override
