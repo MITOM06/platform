@@ -14,9 +14,9 @@ function initials(name: string) {
 interface Props {
   member: Member
   roleName?: string
-  /** The signed-in admin's own row — the block action is hidden. */
-  isSelf: boolean
   canManageMembers: boolean
+  /** The caller may block / unblock this member — the action is offered (see `canToggleMemberBlock`). */
+  canToggleBlock: boolean
   /** The caller may reset this member's 2FA — "Reset 2FA" is offered (see `canResetMemberMfa`). */
   canResetMfa: boolean
   onEdit: (m: Member) => void
@@ -29,8 +29,8 @@ interface Props {
 export function MemberRow({
   member: m,
   roleName,
-  isSelf,
   canManageMembers,
+  canToggleBlock,
   canResetMfa,
   onEdit,
   onAiContext,
@@ -73,7 +73,7 @@ export function MemberRow({
           <Brain className="size-4" />
         </Button>
       )}
-      {canManageMembers && !isSelf && (
+      {canToggleBlock && (
         <Button
           variant="ghost"
           size="icon"

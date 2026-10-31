@@ -223,7 +223,13 @@ class MembersPanel extends ConsumerWidget {
             member: m,
             roleName: role?.name,
             canManageMembers: canManageMembers,
-            isSelf: isSelf,
+            canToggleBlock: canToggleMemberBlock(
+              isSelf: isSelf,
+              callerIsOwner: callerIsOwner,
+              callerCanManageMembers: canManageMembers,
+              targetIsOwner: role?.isOwner ?? false,
+              targetBlocked: m.isBlocked,
+            ),
             canResetMfa: canResetMemberMfa(
               isSelf: isSelf,
               callerIsOwner: callerIsOwner,

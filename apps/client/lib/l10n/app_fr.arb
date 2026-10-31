@@ -889,6 +889,7 @@
   "adminMemberRoleLockedSelf": "Vous ne pouvez pas modifier votre propre rôle.",
   "adminMemberRoleLockedOwner": "Seul un Propriétaire peut modifier le rôle d'un Propriétaire.",
   "adminMemberDepartments": "Départements",
+  "adminMemberDepartmentsLockedOwner": "Seul un Propriétaire peut modifier les départements d'un Propriétaire.",
   "adminRoleHint": "Activez les permissions de chaque rôle. Le rôle Owner est en lecture seule.",
   "adminRoleCapability": "Permission",
   "adminRolePreset": "Prédéfini",

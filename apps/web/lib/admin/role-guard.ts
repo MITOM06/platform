@@ -22,6 +22,27 @@ export function memberRoleLock(opts: {
   return null
 }
 
+/**
+ * Whether the caller sees block / unblock on a member row (mirror of the guard on
+ * `PATCH /admin/members/:id/status` and of Flutter `canToggleMemberBlock`):
+ * - only with MANAGE_MEMBERS, and never on your own row (CANNOT_BLOCK_SELF);
+ * - a non-Owner can't block an Owner (OWNER_BLOCK_FORBIDDEN). The server guards
+ *   blocking only, so a blocked Owner can still be unblocked.
+ *
+ * A role the caller can't resolve (no role list) isn't known to be Owner, so the
+ * action stays: hiding it would also take blocking away on ordinary members.
+ */
+export function canToggleMemberBlock(opts: {
+  callerIsOwner: boolean
+  callerCanManageMembers: boolean
+  isSelf: boolean
+  targetIsOwner: boolean
+  targetBlocked: boolean
+}): boolean {
+  if (!opts.callerCanManageMembers || opts.isSelf) return false
+  return opts.callerIsOwner || !opts.targetIsOwner || opts.targetBlocked
+}
+
 /** Roles the caller may grant: the Owner role only when the caller is Owner. */
 export function assignableRoles(roles: Role[], callerIsOwner: boolean): Role[] {
   return callerIsOwner ? roles : roles.filter((r) => r.name !== OWNER_ROLE_NAME)

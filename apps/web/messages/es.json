@@ -1528,6 +1528,7 @@
     "memberRoleLockedSelf": "No puedes cambiar tu propio rol.",
     "memberRoleLockedOwner": "Solo un Propietario puede cambiar el rol de un Propietario.",
     "memberDepartments": "Departamentos",
+    "memberDepartmentsLockedOwner": "Solo un Propietario puede cambiar los departamentos de un Propietario.",
     "roleHint": "Activa los permisos de cada rol. El rol Owner es de solo lectura.",
     "roleCapability": "Permiso",
     "rolePreset": "Predefinido",

@@ -2510,6 +2510,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get adminMemberDepartments => 'Phòng ban';
 
   @override
+  String get adminMemberDepartmentsLockedOwner =>
+      'Chỉ Chủ sở hữu mới có thể thay đổi phòng ban của Chủ sở hữu.';
+
+  @override
   String get adminRoleHint =>
       'Bật/tắt quyền cho từng vai trò. Vai trò Owner chỉ đọc.';
 

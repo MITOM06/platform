@@ -1206,6 +1206,7 @@
   "adminMemberRoleLockedSelf": "You can't change your own role.",
   "adminMemberRoleLockedOwner": "Only an Owner can change an Owner's role.",
   "adminMemberDepartments": "Departments",
+  "adminMemberDepartmentsLockedOwner": "Only an Owner can change an Owner's departments.",
   "adminRoleHint": "Toggle each role's permissions. The Owner role is read-only.",
   "adminRoleCapability": "Capability",
   "adminRolePreset": "Preset",

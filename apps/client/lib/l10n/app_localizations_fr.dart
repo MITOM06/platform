@@ -2550,6 +2550,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminMemberDepartments => 'Départements';
 
   @override
+  String get adminMemberDepartmentsLockedOwner =>
+      'Seul un Propriétaire peut modifier les départements d\'un Propriétaire.';
+
+  @override
   String get adminRoleHint =>
       'Activez les permissions de chaque rôle. Le rôle Owner est en lecture seule.';
 

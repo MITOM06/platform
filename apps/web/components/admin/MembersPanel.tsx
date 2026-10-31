@@ -32,6 +32,7 @@ import {
   OWNER_ROLE_NAME,
   assignableRoles,
   canResetMemberMfa,
+  canToggleMemberBlock,
   isPrivilegedRole,
   memberRoleLock,
 } from '@/lib/admin/role-guard'
@@ -98,6 +99,7 @@ export function MembersPanel() {
     )
 
   const roleName = (id?: string) => roles.find((r) => r._id === id)?.name
+  const targetIsOwner = (m: Member) => roleName(m.roleId) === OWNER_ROLE_NAME
 
   // The target's role is Owner/Admin-like; no role = Member; a role this caller
   // can't resolve (no role list) = unknown → no reset offered to a non-Owner.
@@ -119,15 +121,19 @@ export function MembersPanel() {
       targetPrivileged: targetPrivileged(m),
     })
 
-  // Own row and (for non-Owners) an Owner's row: role is read-only, departments
-  // stay editable. Owner option is offered to Owners only.
+  // Own row and (for non-Owners) an Owner's row: role is read-only. Owner option
+  // is offered to Owners only.
   const roleLock = editing
     ? memberRoleLock({
         isSelf: editing._id === selfId,
-        targetIsOwner: roleName(editing.roleId) === OWNER_ROLE_NAME,
+        targetIsOwner: targetIsOwner(editing),
         callerIsOwner,
       })
     : null
+  // A non-Owner can't change an Owner's departments either (the server answers
+  // 403 OWNER_ROLE_ASSIGN_FORBIDDEN), so nothing is left to save. Not 'self': your
+  // own departments stay editable.
+  const ownerRowLocked = roleLock === 'owner'
   // A locked picker still lists every role so the current one (maybe Owner) renders.
   const roleOptions = roleLock ? roles : assignableRoles(roles, callerIsOwner)
 
@@ -169,8 +175,14 @@ export function MembersPanel() {
           key={m._id}
           member={m}
           roleName={roleName(m.roleId)}
-          isSelf={m._id === selfId}
           canManageMembers={canManageMembers}
+          canToggleBlock={canToggleMemberBlock({
+            callerIsOwner,
+            callerCanManageMembers: canManageMembers,
+            isSelf: m._id === selfId,
+            targetIsOwner: targetIsOwner(m),
+            targetBlocked: m.status === 'blocked',
+          })}
           canResetMfa={canResetMfa(m)}
           onEdit={openEdit}
           onAiContext={openAiContext}
@@ -240,7 +252,7 @@ export function MembersPanel() {
             <Button variant="outline" onClick={() => setOpen(false)}>
               {t('cancel')}
             </Button>
-            <Button onClick={onSubmit} disabled={updateMember.isPending}>
+            <Button onClick={onSubmit} disabled={updateMember.isPending || ownerRowLocked}>
               {t('save')}
             </Button>
           </>
@@ -286,16 +298,24 @@ export function MembersPanel() {
                   {departments.map((d) => (
                     <label
                       key={d._id}
-                      className="flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer hover:bg-muted/50"
+                      className={`flex items-center gap-3 rounded-lg border px-3 py-2 ${
+                        ownerRowLocked ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-muted/50'
+                      }`}
                     >
                       <Checkbox
                         checked={deptIds.includes(d._id)}
+                        disabled={ownerRowLocked}
                         onCheckedChange={() => toggleDept(d._id)}
                       />
-                      <span className="text-sm">{d.name}</span>
+                      <span className={`text-sm ${ownerRowLocked ? 'text-muted-foreground' : ''}`}>{d.name}</span>
                     </label>
                   ))}
                 </div>
+              )}
+              {ownerRowLocked && (
+                <p className="text-xs text-muted-foreground" data-testid="member-departments-locked">
+                  {t('memberDepartmentsLockedOwner')}
+                </p>
               )}
             </div>
           )}

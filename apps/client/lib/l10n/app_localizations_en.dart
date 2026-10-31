@@ -2509,6 +2509,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminMemberDepartments => 'Departments';
 
   @override
+  String get adminMemberDepartmentsLockedOwner =>
+      'Only an Owner can change an Owner\'s departments.';
+
+  @override
   String get adminRoleHint =>
       'Toggle each role\'s permissions. The Owner role is read-only.';
 

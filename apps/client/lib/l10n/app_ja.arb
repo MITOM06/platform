@@ -889,6 +889,7 @@
   "adminMemberRoleLockedSelf": "自分のロールは変更できません。",
   "adminMemberRoleLockedOwner": "オーナーのロールを変更できるのはオーナーのみです。",
   "adminMemberDepartments": "部門",
+  "adminMemberDepartmentsLockedOwner": "オーナーの部門を変更できるのはオーナーのみです。",
   "adminRoleHint": "各ロールの権限を切り替えます。Owner ロールは読み取り専用です。",
   "adminRoleCapability": "権限",
   "adminRolePreset": "プリセット",

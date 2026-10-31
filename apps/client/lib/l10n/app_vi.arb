@@ -889,6 +889,7 @@
   "adminMemberRoleLockedSelf": "Bạn không thể tự thay đổi vai trò của mình.",
   "adminMemberRoleLockedOwner": "Chỉ Chủ sở hữu mới có thể thay đổi vai trò của Chủ sở hữu.",
   "adminMemberDepartments": "Phòng ban",
+  "adminMemberDepartmentsLockedOwner": "Chỉ Chủ sở hữu mới có thể thay đổi phòng ban của Chủ sở hữu.",
   "adminRoleHint": "Bật/tắt quyền cho từng vai trò. Vai trò Owner chỉ đọc.",
   "adminRoleCapability": "Quyền",
   "adminRolePreset": "Mặc định",

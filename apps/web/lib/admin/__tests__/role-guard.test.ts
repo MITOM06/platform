@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { assignableRoles, canResetMemberMfa, isPrivilegedRole, memberRoleLock } from '@/lib/admin/role-guard'
+import {
+  assignableRoles,
+  canResetMemberMfa,
+  canToggleMemberBlock,
+  isPrivilegedRole,
+  memberRoleLock,
+} from '@/lib/admin/role-guard'
 import type { Role } from '@/lib/api/admin-types'
 
 const roles: Role[] = [
@@ -33,6 +39,29 @@ describe('role guard', () => {
     expect(isPrivilegedRole({ name: 'Ops', permissions: { MANAGE_WORKSPACE: true } })).toBe(true)
     expect(isPrivilegedRole({ name: 'Viewer', permissions: { VIEW_AUDIT_LOG: true, MANAGE_ROLES: false } })).toBe(false)
     expect(isPrivilegedRole(undefined)).toBe(false)
+  })
+
+  describe('block / unblock', () => {
+    const owner = { callerIsOwner: true, callerCanManageMembers: true, isSelf: false, targetIsOwner: true, targetBlocked: false }
+    const admin = { ...owner, callerIsOwner: false }
+
+    it("lets only an Owner block an Owner (OWNER_BLOCK_FORBIDDEN)", () => {
+      expect(canToggleMemberBlock(owner)).toBe(true)
+      expect(canToggleMemberBlock(admin)).toBe(false)
+    })
+
+    it('lets a member manager block anyone else', () => {
+      expect(canToggleMemberBlock({ ...admin, targetIsOwner: false })).toBe(true)
+    })
+
+    it('still lets a member manager unblock an Owner: the server only guards blocking', () => {
+      expect(canToggleMemberBlock({ ...admin, targetBlocked: true })).toBe(true)
+    })
+
+    it('is never offered on your own row or without MANAGE_MEMBERS', () => {
+      expect(canToggleMemberBlock({ ...owner, isSelf: true })).toBe(false)
+      expect(canToggleMemberBlock({ ...admin, targetIsOwner: false, callerCanManageMembers: false })).toBe(false)
+    })
   })
 
   describe('"Reset 2FA" (contract 13 B)', () => {

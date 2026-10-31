@@ -2441,6 +2441,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminMemberDepartments => '部门';
 
   @override
+  String get adminMemberDepartmentsLockedOwner => '只有所有者才能更改所有者的部门。';
+
+  @override
   String get adminRoleHint => '切换每个角色的权限。Owner 角色为只读。';
 
   @override

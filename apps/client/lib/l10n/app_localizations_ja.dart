@@ -2455,6 +2455,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get adminMemberDepartments => '部門';
 
   @override
+  String get adminMemberDepartmentsLockedOwner => 'オーナーの部門を変更できるのはオーナーのみです。';
+
+  @override
   String get adminRoleHint => '各ロールの権限を切り替えます。Owner ロールは読み取り専用です。';
 
   @override

@@ -1528,6 +1528,7 @@
     "memberRoleLockedSelf": "You can't change your own role.",
     "memberRoleLockedOwner": "Only an Owner can change an Owner's role.",
     "memberDepartments": "Departments",
+    "memberDepartmentsLockedOwner": "Only an Owner can change an Owner's departments.",
     "roleHint": "Toggle each role's permissions. The Owner role is read-only.",
     "roleCapability": "Capability",
     "rolePreset": "Preset",

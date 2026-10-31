@@ -1528,6 +1528,7 @@
     "memberRoleLockedSelf": "Bạn không thể tự thay đổi vai trò của mình.",
     "memberRoleLockedOwner": "Chỉ Chủ sở hữu mới có thể thay đổi vai trò của Chủ sở hữu.",
     "memberDepartments": "Phòng ban",
+    "memberDepartmentsLockedOwner": "Chỉ Chủ sở hữu mới có thể thay đổi phòng ban của Chủ sở hữu.",
     "roleHint": "Bật/tắt quyền cho từng vai trò. Vai trò Owner chỉ đọc.",
     "roleCapability": "Quyền",
     "rolePreset": "Mặc định",
