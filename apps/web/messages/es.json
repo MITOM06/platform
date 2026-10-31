@@ -307,6 +307,7 @@
       "downloadCodes": "Descargar .txt",
       "codesCopied": "Códigos de respaldo copiados",
       "savedCheckbox": "He guardado mis códigos de respaldo",
+      "copyOrDownloadFirst": "Primero copia o descarga los códigos",
       "continue": "Continuar",
       "codesLoading": "Cargando tus códigos de respaldo...",
       "fileHeader": "Códigos de respaldo de PON para {email}",
@@ -447,7 +448,9 @@
       "turnOffTitle": "¿Desactivar la autenticación de dos factores?",
       "turnOffBody": "Introduce el código actual de tu aplicación de autenticación o uno de tus códigos de respaldo. El inicio de sesión ya no pedirá un código y tus códigos de respaldo dejarán de funcionar.",
       "turnOffSubmit": "Desactivar",
-      "turnOffSuccess": "La autenticación de dos factores está desactivada"
+      "turnOffSuccess": "La autenticación de dos factores está desactivada",
+      "backupCodesLeft": "{count, plural, one {# código de respaldo restante} other {# códigos de respaldo restantes}}",
+      "backupCodesLow": "Genera otros nuevos con “{action}” aquí abajo mientras conserves tu aplicación de autenticación. Sin la aplicación ni un código de respaldo, no podrás iniciar sesión."
     },
     "adminConsole": "Consola de administración",
     "adminConsoleSubtitle": "Espacio de trabajo, miembros, roles y ajustes de IA"
@@ -1525,6 +1528,7 @@
     "memberRoleLockedSelf": "No puedes cambiar tu propio rol.",
     "memberRoleLockedOwner": "Solo un Propietario puede cambiar el rol de un Propietario.",
     "memberDepartments": "Departamentos",
+    "memberDepartmentsLockedOwner": "Solo un Propietario puede cambiar los departamentos de un Propietario.",
     "roleHint": "Activa los permisos de cada rol. El rol Owner es de solo lectura.",
     "roleCapability": "Permiso",
     "rolePreset": "Predefinido",
@@ -1678,6 +1682,7 @@
     "auditAction_department_update": "Departamento actualizado",
     "auditAction_department_delete": "Departamento eliminado",
     "auditAction_member_update": "Rol o departamentos de un miembro cambiados",
+    "auditAction_member_ai_context_update": "Contexto de IA de un miembro cambiado",
     "auditAction_member_sso_update": "Miembro actualizado por SSO",
     "auditAction_member_block": "Miembro bloqueado",
     "auditAction_member_unblock": "Miembro desbloqueado",

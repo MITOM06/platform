@@ -65,6 +65,11 @@ export interface UserProfile extends AuthUser {
    * an older server: fall back to `mfaRequired`.
    */
   mfaAvailable?: boolean
+  /**
+   * Self only: unused backup codes left, sent only while 2FA is on. Absent means
+   * unknown (e.g. an older server): show nothing, not 0.
+   */
+  backupCodesRemaining?: number
   /** Workspace role name (Owner/Admin/Member or custom). Null/undefined
    *  = user has no assigned role → client renders the default "Member". Always
    *  public (no privacy gate), but omitted on blocked-by-owner minimal profiles. */
@@ -95,6 +100,11 @@ export interface LoginResponse {
   accessToken: string
   refreshToken: string
   sid: string
+  /**
+   * `POST /auth/exchange` only: how this sign-in happened. Absent elsewhere and
+   * from an older server (= not SSO).
+   */
+  method?: 'google' | 'oidc'
   user: AuthUser
 }
 

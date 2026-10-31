@@ -4717,6 +4717,12 @@ abstract class AppLocalizations {
   /// **'Departments'**
   String get adminMemberDepartments;
 
+  /// No description provided for @adminMemberDepartmentsLockedOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an Owner can change an Owner\'s departments.'**
+  String get adminMemberDepartmentsLockedOwner;
+
   /// No description provided for @adminRoleHint.
   ///
   /// In en, this message translates to:
@@ -7873,6 +7879,12 @@ abstract class AppLocalizations {
   /// **'Member updated'**
   String get adminAuditActionMemberUpdate;
 
+  /// No description provided for @adminAuditActionMemberAiContextUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Member\'s AI context changed'**
+  String get adminAuditActionMemberAiContextUpdate;
+
   /// No description provided for @adminAuditActionMemberSsoUpdate.
   ///
   /// In en, this message translates to:
@@ -8317,6 +8329,18 @@ abstract class AppLocalizations {
   /// **'I saved my backup codes'**
   String get mfaSavedCheckbox;
 
+  /// No description provided for @mfaCopyCodesFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the codes first'**
+  String get mfaCopyCodesFirst;
+
+  /// No description provided for @mfaCodesCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t copy the codes. Please try again.'**
+  String get mfaCodesCopyFailed;
+
   /// No description provided for @mfaContinue.
   ///
   /// In en, this message translates to:
@@ -8436,6 +8460,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Two-factor authentication is off.'**
   String get securityMfaTurnedOff;
+
+  /// No description provided for @securityMfaBackupCodesLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} backup code left} other{{count} backup codes left}}'**
+  String securityMfaBackupCodesLeft(int count);
+
+  /// No description provided for @securityMfaBackupCodesLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate new ones with “{action}” below while you still have your authenticator app. Without the app or a backup code, you can\'t sign in.'**
+  String securityMfaBackupCodesLow(String action);
 
   /// No description provided for @authErrMfaRequiredByRole.
   ///

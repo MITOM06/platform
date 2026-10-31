@@ -21,6 +21,7 @@ export const AUDIT_ACTIONS = [
   'department.delete',
   'member.update',
   'member.sso_update',
+  'member.ai_context_update',
   'member.block',
   'member.unblock',
   'role.create',

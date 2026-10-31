@@ -58,8 +58,8 @@ export class InvitationMailerService {
   }
 
   /**
-   * Welcome email after an accepted invitation (`google` adds the "create your
-   * PON password" next step). Never rejects: callers fire and forget it.
+   * Welcome email after an accepted invitation (`google` says a PON password is
+   * optional, in Settings). Never rejects: callers fire and forget it.
    */
   async sendWelcome(
     inv: InvitationDocument,

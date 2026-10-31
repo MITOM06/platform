@@ -2510,6 +2510,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get adminMemberDepartments => 'Phòng ban';
 
   @override
+  String get adminMemberDepartmentsLockedOwner =>
+      'Chỉ Chủ sở hữu mới có thể thay đổi phòng ban của Chủ sở hữu.';
+
+  @override
   String get adminRoleHint =>
       'Bật/tắt quyền cho từng vai trò. Vai trò Owner chỉ đọc.';
 
@@ -4304,6 +4308,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get adminAuditActionMemberUpdate => 'Cập nhật thành viên';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate =>
+      'Đổi ngữ cảnh AI của thành viên';
+
+  @override
   String get adminAuditActionMemberSsoUpdate =>
       'Thành viên được cập nhật qua SSO';
 
@@ -4550,6 +4558,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mfaSavedCheckbox => 'Tôi đã lưu mã dự phòng';
 
   @override
+  String get mfaCopyCodesFirst => 'Hãy sao chép mã trước';
+
+  @override
+  String get mfaCodesCopyFailed => 'Không sao chép được mã. Vui lòng thử lại.';
+
+  @override
   String get mfaContinue => 'Tiếp tục';
 
   @override
@@ -4615,6 +4629,21 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get securityMfaTurnedOff => 'Đã tắt xác thực hai yếu tố.';
+
+  @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count mã dự phòng còn lại',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return 'Hãy tạo mã mới bằng “$action” bên dưới khi bạn vẫn còn ứng dụng xác thực. Không có ứng dụng hoặc mã dự phòng thì bạn sẽ không đăng nhập được.';
+  }
 
   @override
   String get authErrMfaRequiredByRole =>

@@ -2509,6 +2509,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminMemberDepartments => 'Departments';
 
   @override
+  String get adminMemberDepartmentsLockedOwner =>
+      'Only an Owner can change an Owner\'s departments.';
+
+  @override
   String get adminRoleHint =>
       'Toggle each role\'s permissions. The Owner role is read-only.';
 
@@ -4332,6 +4336,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminAuditActionMemberUpdate => 'Member updated';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate =>
+      'Member\'s AI context changed';
+
+  @override
   String get adminAuditActionMemberSsoUpdate => 'Member updated by SSO';
 
   @override
@@ -4578,6 +4586,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mfaSavedCheckbox => 'I saved my backup codes';
 
   @override
+  String get mfaCopyCodesFirst => 'Copy the codes first';
+
+  @override
+  String get mfaCodesCopyFailed =>
+      'Couldn\'t copy the codes. Please try again.';
+
+  @override
   String get mfaContinue => 'Continue';
 
   @override
@@ -4643,6 +4658,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityMfaTurnedOff => 'Two-factor authentication is off.';
+
+  @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count backup codes left',
+      one: '$count backup code left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return 'Generate new ones with “$action” below while you still have your authenticator app. Without the app or a backup code, you can\'t sign in.';
+  }
 
   @override
   String get authErrMfaRequiredByRole =>

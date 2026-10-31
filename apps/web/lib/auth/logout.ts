@@ -3,6 +3,7 @@ import { authService } from '@/lib/api/auth'
 import { stompService } from '@/lib/stomp/client'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { clearQueryCache } from '@/lib/query-client'
+import { markSsoReauth } from '@/lib/auth/sso-reauth'
 
 /** Never let a slow auth-service hold the user on a "signing out" spinner. */
 const LOGOUT_REQUEST_TIMEOUT_MS = 4000
@@ -26,15 +27,19 @@ function settleWithin(promise: Promise<unknown>, ms: number): Promise<void> {
 /**
  * User-initiated sign-out (sidebar profile menu, Settings).
  *
- * 1. `POST /auth/logout` revokes the server session — the server takes the sid from
+ * 1. Remember that the next SSO on this device must re-authenticate at the IdP.
+ *    First, so a slow server or a closed tab cannot skip it. `forceLogout` does
+ *    not do this: nobody chose to leave, so SSO may silently bring them back.
+ * 2. `POST /auth/logout` revokes the server session — the server takes the sid from
  *    the access token, so the 30-day refresh token dies too (previously it stayed
  *    valid after "logging out").
- * 2. Tear down realtime, wipe the httpOnly cookies and the in-memory auth.
- * 3. Clear the whole query cache, then HARD-navigate to /login so nothing of this
+ * 3. Tear down realtime, wipe the httpOnly cookies and the in-memory auth.
+ * 4. Clear the whole query cache, then HARD-navigate to /login so nothing of this
  *    user (conversations, AI context, usage…) survives for the next person.
  *    `?cleared=1` makes the login form drop browser-autofilled credentials.
  */
 export async function performLogout(): Promise<void> {
+  markSsoReauth()
   await settleWithin(authService.logout(), LOGOUT_REQUEST_TIMEOUT_MS)
   stompService.disconnect()
   await axios.post('/api/auth/clear-cookie').catch(() => {})

@@ -15,6 +15,8 @@ interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   accountEmail: string
+  /** New codes were issued, so `count` is the number the account has now. */
+  onRegenerated: (count: number) => void
 }
 
 /**
@@ -23,7 +25,7 @@ interface Props {
  * working). While the new codes are on screen the dialog can only be left
  * through "I saved my backup codes" + Done.
  */
-export function RegenerateBackupCodesDialog({ open, onOpenChange, accountEmail }: Props) {
+export function RegenerateBackupCodesDialog({ open, onOpenChange, accountEmail, onRegenerated }: Props) {
   const t = useTranslations('settings.security')
   const tAuth = useTranslations('auth')
   const tCommon = useTranslations('common')
@@ -33,7 +35,10 @@ export function RegenerateBackupCodesDialog({ open, onOpenChange, accountEmail }
 
   const regenerate = useMutation({
     mutationFn: (code: string) => authService.regenerateBackupCodes(code),
-    onSuccess: (res) => setCodes(res.backupCodes),
+    onSuccess: (res) => {
+      setCodes(res.backupCodes)
+      onRegenerated(res.backupCodes.length)
+    },
     onError: (err) => {
       const msg = mfaAccountErrorMessage(err)
       setError(tAuth(msg.key, msg.values))

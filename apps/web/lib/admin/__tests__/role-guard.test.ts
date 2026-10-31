@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { assignableRoles, canResetMemberMfa, isPrivilegedRole, memberRoleLock } from '@/lib/admin/role-guard'
+import {
+  assignableRoles,
+  canResetMemberMfa,
+  canToggleMemberBlock,
+  isPrivilegedRole,
+  memberAiContextLocked,
+  memberRoleLock,
+} from '@/lib/admin/role-guard'
 import type { Role } from '@/lib/api/admin-types'
 
 const roles: Role[] = [
@@ -35,6 +42,29 @@ describe('role guard', () => {
     expect(isPrivilegedRole(undefined)).toBe(false)
   })
 
+  describe('block / unblock', () => {
+    const owner = { callerIsOwner: true, callerCanManageMembers: true, isSelf: false, targetIsOwner: true, targetBlocked: false }
+    const admin = { ...owner, callerIsOwner: false }
+
+    it("lets only an Owner block an Owner (OWNER_BLOCK_FORBIDDEN)", () => {
+      expect(canToggleMemberBlock(owner)).toBe(true)
+      expect(canToggleMemberBlock(admin)).toBe(false)
+    })
+
+    it('lets a member manager block anyone else', () => {
+      expect(canToggleMemberBlock({ ...admin, targetIsOwner: false })).toBe(true)
+    })
+
+    it('still lets a member manager unblock an Owner: the server only guards blocking', () => {
+      expect(canToggleMemberBlock({ ...admin, targetBlocked: true })).toBe(true)
+    })
+
+    it('is never offered on your own row or without MANAGE_MEMBERS', () => {
+      expect(canToggleMemberBlock({ ...owner, isSelf: true })).toBe(false)
+      expect(canToggleMemberBlock({ ...admin, targetIsOwner: false, callerCanManageMembers: false })).toBe(false)
+    })
+  })
+
   describe('"Reset 2FA" (contract 13 B)', () => {
     const owner = { callerIsOwner: true, callerCanManageMembers: true, isSelf: false, targetMfaEnabled: true }
     const admin = { callerIsOwner: false, callerCanManageMembers: true, isSelf: false, targetMfaEnabled: true }
@@ -64,5 +94,12 @@ describe('role guard', () => {
       expect(canResetMemberMfa({ ...member, targetPrivileged: false })).toBe(false)
       expect(canResetMemberMfa({ ...member, targetPrivileged: true })).toBe(false)
     })
+  })
+
+  it("locks an Owner's AI context unless the caller is Owner", () => {
+    expect(memberAiContextLocked({ callerIsOwner: false, targetIsOwner: true })).toBe(true)
+    expect(memberAiContextLocked({ callerIsOwner: true, targetIsOwner: true })).toBe(false)
+    expect(memberAiContextLocked({ callerIsOwner: false, targetIsOwner: false })).toBe(false)
+    expect(memberAiContextLocked({ callerIsOwner: true, targetIsOwner: false })).toBe(false)
   })
 })

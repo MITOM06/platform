@@ -2441,6 +2441,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminMemberDepartments => '部门';
 
   @override
+  String get adminMemberDepartmentsLockedOwner => '只有所有者才能更改所有者的部门。';
+
+  @override
   String get adminRoleHint => '切换每个角色的权限。Owner 角色为只读。';
 
   @override
@@ -4143,6 +4146,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminAuditActionMemberUpdate => '更新了成员';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate => '更改了成员的 AI 上下文';
+
+  @override
   String get adminAuditActionMemberSsoUpdate => '通过 SSO 更新了成员';
 
   @override
@@ -4372,6 +4378,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mfaSavedCheckbox => '我已保存备用码';
 
   @override
+  String get mfaCopyCodesFirst => '请先复制备用码';
+
+  @override
+  String get mfaCodesCopyFailed => '无法复制备用码，请重试。';
+
+  @override
   String get mfaContinue => '继续';
 
   @override
@@ -4430,6 +4442,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get securityMfaTurnedOff => '双重验证已关闭。';
+
+  @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '还剩 $count 个备用码',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return '请趁身份验证器应用还可用时，使用下方的“$action”生成新的备用码。既没有该应用也没有备用码时，您将无法登录。';
+  }
 
   @override
   String get authErrMfaRequiredByRole => '你的角色要求启用双重验证，因此无法关闭。';

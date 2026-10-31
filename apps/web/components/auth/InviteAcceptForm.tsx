@@ -16,7 +16,7 @@ import { MFA_PATH, isMfaChallenge, savePendingMfa } from '@/lib/auth/mfa'
 import { establishSession } from '@/lib/auth/sign-in'
 import { maybeRequestNotificationPermission } from '@/lib/notifications'
 import { AUTH_URL } from '@/lib/config/env'
-import { rememberInviteReturn, type InviteRetryNotice } from '@/lib/auth/invite-return'
+import { forgetInviteReturn, rememberInviteReturn, type InviteRetryNotice } from '@/lib/auth/invite-return'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -163,6 +163,8 @@ export function InviteAcceptForm({ token, preview, googleEnabled = true, notice 
   const onSubmit = async (data: FormData) => {
     try {
       const result = await authService.acceptInvitation(token, data.displayName.trim(), data.password)
+      // Accepted: an earlier failed Google attempt has nothing left to come back to.
+      forgetInviteReturn()
       // Owner/Admin-like invite: 2FA is mandatory, so the session only comes
       // from the first-time setup on /mfa — same as a password sign-in.
       if (isMfaChallenge(result)) {

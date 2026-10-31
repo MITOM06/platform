@@ -307,6 +307,7 @@
       "downloadCodes": "下载 .txt",
       "codesCopied": "备用码已复制",
       "savedCheckbox": "我已保存备用码",
+      "copyOrDownloadFirst": "请先复制或下载备用码",
       "continue": "继续",
       "codesLoading": "正在加载您的备用码...",
       "fileHeader": "{email} 的 PON 备用码",
@@ -447,7 +448,9 @@
       "turnOffTitle": "要关闭双重身份验证吗？",
       "turnOffBody": "请输入身份验证器应用中的当前验证码，或任意一个备用码。登录时将不再要求输入验证码，您的备用码也将失效。",
       "turnOffSubmit": "关闭",
-      "turnOffSuccess": "双重身份验证已关闭"
+      "turnOffSuccess": "双重身份验证已关闭",
+      "backupCodesLeft": "{count, plural, other {还剩 # 个备用码}}",
+      "backupCodesLow": "请趁身份验证器应用还可用时，使用下方的“{action}”生成新的备用码。既没有该应用也没有备用码时，您将无法登录。"
     },
     "adminConsole": "管理控制台",
     "adminConsoleSubtitle": "工作区、成员、角色和 AI 设置"
@@ -1525,6 +1528,7 @@
     "memberRoleLockedSelf": "你不能更改自己的角色。",
     "memberRoleLockedOwner": "只有所有者才能更改所有者的角色。",
     "memberDepartments": "部门",
+    "memberDepartmentsLockedOwner": "只有所有者才能更改所有者的部门。",
     "roleHint": "切换每个角色的权限。Owner 角色为只读。",
     "roleCapability": "权限",
     "rolePreset": "预设",
@@ -1678,6 +1682,7 @@
     "auditAction_department_update": "更新了部门",
     "auditAction_department_delete": "删除了部门",
     "auditAction_member_update": "更改了成员的角色或部门",
+    "auditAction_member_ai_context_update": "更改了成员的 AI 上下文",
     "auditAction_member_sso_update": "SSO 更新了成员",
     "auditAction_member_block": "禁用了成员",
     "auditAction_member_unblock": "解除禁用成员",

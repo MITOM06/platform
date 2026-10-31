@@ -184,7 +184,7 @@ members of the `AuthCode` enum — values unchanged.
 | `PRESET_ROLE_RENAME_FORBIDDEN` | 400 — `PATCH /admin/roles/:id` | Built-in roles can't be renamed. | — |
 | `ROLE_NAME_TAKEN` | 409 — `POST /admin/roles`, `PATCH /admin/roles/:id` (duplicate name, or a reserved preset name Owner/Admin/Manager/Member in any casing; used to be a raw 500) | A role with this name already exists. | — |
 | `OWNER_SSO_MAPPING_FORBIDDEN` | 403 — `PATCH /admin/workspace` (non-Owner mapping an SSO group or `defaultRole` to Owner) | Only an Owner can map SSO groups to the Owner role. | — |
-| `INSUFFICIENT_PERMISSION` | 403 — now also `GET /ai-context/users/:userId` (not self / not their manager) and AI-context entry edits that touch a scope you can't manage | You do not have permission to perform this action. | — |
+| `INSUFFICIENT_PERMISSION` | 403 — now also `GET /ai-context/users/:userId` and `PATCH …/hard` (see "Who may touch a member's AI profile" below) and AI-context entry edits that touch a scope you can't manage | You do not have permission to perform this action. | — |
 | `USER_BLOCKED` | 403 — `POST /api/friends/request`, `PUT /api/friends/accept` while either user blocked the other | You can't add this person. | — |
 | `SSO_EMAIL_UNVERIFIED` | 401 (OAuth redirect) — Google/OIDC sign-in matched an existing account (or the bootstrap Owner) by email but the IdP did not assert `email_verified: true` | Your sign-in provider hasn't verified this email address, so it can't be used to sign in to this account. | — |
 | `SOCIAL_ACCOUNT_CONFLICT` | 403 (OAuth redirect) — the matched account is already linked to a different identity of that provider | This email is linked to a different Google/SSO account. Sign in with that account or contact your administrator. | — |
@@ -313,7 +313,11 @@ the exchange body values for Google). The set-password gate (`user.mustSetPasswo
 - `mfaRequired`: mandatory for this account = privileged (from the access-token claims) AND not a
   bot AND not covered by "Require SSO" — it cannot be turned off;
 - `mfaAvailable`: the account can use / turn on 2FA at all = not a bot AND not covered by
-  "Require SSO".
+  "Require SSO";
+- `backupCodesRemaining` (2026-10-30, optional): how many unused backup codes are left. Sent only
+  while `mfaEnabled` is true. The hashes themselves are never returned. Absent (2FA off, the count
+  could not be read, an older server) means unknown: clients show nothing, not 0. Settings warns
+  at 3 or fewer.
 
 `POST /api/users/me/mfa/backup-codes { code }` (current TOTP; backup codes not accepted) →
 `{ backupCodes: string[10] }`, old codes stop working. Turning 2FA on / off from Settings: see
@@ -504,6 +508,32 @@ confirm cannot immediately turn 2FA off again (wait for the next code).
 | `MFA_REQUIRED_BY_ROLE` | 400 (`POST /api/users/me/mfa/disable`) | Two-factor authentication is required for your role and can't be turned off. | — |
 | `MFA_BACKUP_CODES_ISSUED` | 201 body (`POST /api/users/me/mfa/enroll/confirm`, reused) | Save your backup codes. (not an error) | — |
 
+### Who may touch a member's AI profile (2026-10-31)
+
+This narrows access that used to be allowed: `MANAGE_MEMBERS` reached every member, and a department
+lead reached everyone in their department, Owners included. The profile goes into that member's
+assistant prompt, which can act through their connectors.
+
+`GET /ai-context/users/:userId` and `PATCH /ai-context/users/:userId/hard`, target's role read from
+the database. "403" is `INSUFFICIENT_PERMISSION`; an unknown or malformed id stays 404 `USER_NOT_FOUND`.
+
+| Caller | Owner | Admin-like (Admin, or any role with `MANAGE_WORKSPACE` / `MANAGE_MEMBERS` / `MANAGE_ROLES`) | Other member |
+|--------|-------|------------------------------------------------------------------------------------------|--------------|
+| Owner | allowed | allowed | allowed |
+| `MANAGE_MEMBERS`, not Owner | 403 | allowed | allowed |
+| Lead of one of the target's departments, without `MANAGE_MEMBERS` | 403 | 403 | allowed |
+| Anyone else | 403 | 403 | 403 |
+
+Your own profile: `GET` is always allowed. `PATCH` follows the rows above, except that your own role
+never blocks you (an Owner may edit themself; a lead may edit themself whatever their role).
+
+- `projects` on `PATCH …/hard`: at most 20 items of at most 200 characters; beyond that, a
+  class-validator 400 (no `code`).
+- Audit action `member.ai_context_update`, `meta.changes` = the fields that really changed. A Save
+  that changes nothing writes nothing and is not audited.
+- ai-service fences `jobTitle`, `projects`, `style` and `preferences` as data in the prompt, wherever
+  they came from. Company/department entries, role names and department names stay trusted text.
+
 ## OAuth / SSO redirect errors
 
 `GET /auth/google/callback`, `GET /auth/oidc/callback` and
@@ -536,6 +566,42 @@ still works (the invitation claim is atomic, so a reused flow id can never creat
 missing flow id answers `INVITE_GOOGLE_FLOW_EXPIRED` instead of `INVITATION_INVALID` (the invitation itself
 may still be valid). `INVITATION_EMAIL_MISMATCH` and `INVITE_GOOGLE_FLOW_EXPIRED` return to the invitation
 page too, like the two codes above.
+
+## Re-authentication after a PON sign-out (2026-10-31)
+
+Signing out of PON does not end the company IdP's own session, so its cookie survives and "Sign in with
+SSO" would silently re-enter the previous person's account. RP-initiated logout (`end_session_endpoint`) is
+deliberately not used: it would sign the person out of every other company app. Instead:
+
+`GET /auth/oidc/login?platform=<web|mobile>&reauth=1` adds a `prompt` to the IdP authorize URL:
+
+| IdP (`OIDC_ISSUER`) | `prompt` | What the person gets |
+|---------------------|----------|----------------------|
+| Google (`https://accounts.google.com`) | `select_account` | The account chooser. Google lists no `prompt=login`. Someone else can pick their own account, but choosing one with a live Google session may not ask for a password. |
+| Any other (Keycloak, Microsoft Entra, Okta, …) | `login` | Must enter credentials again. How the screen looks is up to the IdP (Keycloak locks the username and offers "Restart login"). |
+
+- Only the exact value `1` counts. Any other value is ignored, and `prompt` is never read from the request.
+- Without `reauth` nothing changes: normal SSO stays silent.
+
+**Client flag** (web `lib/auth/sso-reauth.ts` in localStorage, mobile `sso_reauth_flag.dart` in
+shared_preferences). One device-wide flag with no personal data; it survives closing the tab or app.
+
+| Event | Flag |
+|-------|------|
+| User-initiated sign-out (even if the server is unreachable) | set |
+| Forced logout: session revoked, account blocked, "Require SSO" switched on | unchanged |
+| Successful SSO sign-in (`POST /auth/exchange` answers `method: "oidc"`) | cleared |
+| Password or Google sign-in, 2FA step, failed exchange, `?error=` redirect | unchanged |
+
+While set, every SSO button sends `reauth=1` (login screen, `SSO_REQUIRED` notice, invite card). A Google or
+password sign-in leaves it set because the IdP session may still be the previous person's.
+
+`POST /auth/exchange` tokens now include `method: "google" | "oidc"` (additive: a client that ignores it
+behaves as before, and a client talking to an older server keeps the flag, at worst one extra prompt). The
+`MFA_REQUIRED` body has no `method`.
+
+If the IdP cannot re-authenticate it answers with an error, which ends as
+`?error=OIDC_EXCHANGE_FAILED` like any refused sign-in.
 
 ## Example response shapes
 

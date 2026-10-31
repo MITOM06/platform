@@ -2550,6 +2550,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminMemberDepartments => 'Départements';
 
   @override
+  String get adminMemberDepartmentsLockedOwner =>
+      'Seul un Propriétaire peut modifier les départements d\'un Propriétaire.';
+
+  @override
   String get adminRoleHint =>
       'Activez les permissions de chaque rôle. Le rôle Owner est en lecture seule.';
 
@@ -4395,6 +4399,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminAuditActionMemberUpdate => 'Membre mis à jour';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate =>
+      'Contexte IA d\'un membre modifié';
+
+  @override
   String get adminAuditActionMemberSsoUpdate => 'Membre mis à jour par SSO';
 
   @override
@@ -4650,6 +4658,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mfaSavedCheckbox => 'J\'ai enregistré mes codes de secours';
 
   @override
+  String get mfaCopyCodesFirst => 'Copiez d\'abord les codes';
+
+  @override
+  String get mfaCodesCopyFailed =>
+      'Impossible de copier les codes. Veuillez réessayer.';
+
+  @override
   String get mfaContinue => 'Continuer';
 
   @override
@@ -4718,6 +4733,22 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get securityMfaTurnedOff =>
       'L\'authentification à deux facteurs est désactivée.';
+
+  @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count codes de secours restants',
+      one: '$count code de secours restant',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return 'Générez-en de nouveaux avec « $action » ci-dessous tant que vous avez encore votre application d\'authentification. Sans l\'application ni code de secours, vous ne pourrez plus vous connecter.';
+  }
 
   @override
   String get authErrMfaRequiredByRole =>

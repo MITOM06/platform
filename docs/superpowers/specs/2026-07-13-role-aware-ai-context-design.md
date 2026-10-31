@@ -162,9 +162,11 @@ Each turn, prepend a bounded **"About the user & their organization"** block:
 1. Read `userId`, `perms`, `departmentIds` from the `ai.requests` payload.
 2. Fetch: company entries (perms-filtered) + department entries (membership + perms) +
    `ai_user_context` for U + derived role/department names + global learned facts.
-3. Compose a length-capped text block (protect token budget). Company/department/user-profile
-   text is trusted (admin/superior authored); learned facts keep the existing
-   `sanitizeUntrusted` treatment.
+3. Compose a length-capped text block (protect token budget). Company/department text is trusted
+   (admin/superior authored); learned facts keep the existing `sanitizeUntrusted` treatment.
+   **Changed 2026-10-31:** the user profile (`jobTitle`, `projects`, `style`, `preferences`) is no
+   longer trusted: it is fenced as data with `wrapUntrusted`, after an Admin was found able to write
+   text into an Owner's prompt. Access rule: `docs/auth-error-codes.md`.
 4. Inject into the volatile grounding context (so role/context changes take effect without
    busting the cached persona prefix). Fail-soft: on read error, skip the block, never crash
    (same try/catch pattern already in `context-builder`).

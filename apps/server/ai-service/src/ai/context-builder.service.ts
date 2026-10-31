@@ -65,7 +65,8 @@ export class ContextBuilderService {
     const ragSources: RagSource[] = [];
 
     // --- Role-aware org context block (personal profile + company/dept notes) ---
-    // Trusted (admin/superior-authored) → placed first, not fenced as untrusted.
+    // Placed first. Admin-authored org text is trusted; the member's profile is
+    // fenced as data inside the block.
     // Fail-soft: any read error is swallowed by the reader (returns empty).
     if (org) {
       try {

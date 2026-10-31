@@ -2455,6 +2455,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get adminMemberDepartments => '부서';
 
   @override
+  String get adminMemberDepartmentsLockedOwner => '소유자만 소유자의 부서를 변경할 수 있습니다.';
+
+  @override
   String get adminRoleHint => '각 역할의 권한을 전환합니다. Owner 역할은 읽기 전용입니다.';
 
   @override
@@ -4192,6 +4195,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get adminAuditActionMemberUpdate => '멤버 업데이트';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate => '멤버 AI 컨텍스트 변경';
+
+  @override
   String get adminAuditActionMemberSsoUpdate => 'SSO로 멤버 업데이트';
 
   @override
@@ -4429,6 +4435,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get mfaSavedCheckbox => '백업 코드를 저장했습니다';
 
   @override
+  String get mfaCopyCodesFirst => '먼저 코드를 복사하세요';
+
+  @override
+  String get mfaCodesCopyFailed => '코드를 복사하지 못했습니다. 다시 시도해 주세요.';
+
+  @override
   String get mfaContinue => '계속';
 
   @override
@@ -4491,6 +4503,21 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get securityMfaTurnedOff => '2단계 인증이 꺼졌습니다.';
+
+  @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '백업 코드가 $count개 남았습니다',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return '인증 앱을 사용할 수 있을 때 아래의 “$action”으로 새 코드를 만드세요. 인증 앱과 백업 코드가 모두 없으면 로그인할 수 없습니다.';
+  }
 
   @override
   String get authErrMfaRequiredByRole => '회원님의 역할에는 2단계 인증이 필수이므로 끌 수 없습니다.';

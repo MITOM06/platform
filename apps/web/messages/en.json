@@ -307,6 +307,7 @@
       "downloadCodes": "Download .txt",
       "codesCopied": "Backup codes copied",
       "savedCheckbox": "I saved my backup codes",
+      "copyOrDownloadFirst": "Copy or download the codes first",
       "continue": "Continue",
       "codesLoading": "Loading your backup codes...",
       "fileHeader": "PON backup codes for {email}",
@@ -447,7 +448,9 @@
       "turnOffTitle": "Turn off two-factor authentication?",
       "turnOffBody": "Enter the current code from your authenticator app, or one of your backup codes. Sign-in will no longer ask for a code, and your backup codes will stop working.",
       "turnOffSubmit": "Turn off",
-      "turnOffSuccess": "Two-factor authentication is off"
+      "turnOffSuccess": "Two-factor authentication is off",
+      "backupCodesLeft": "{count, plural, one {# backup code left} other {# backup codes left}}",
+      "backupCodesLow": "Generate new ones with “{action}” below while you still have your authenticator app. Without the app or a backup code, you can't sign in."
     },
     "adminConsole": "Admin console",
     "adminConsoleSubtitle": "Workspace, members, roles and AI settings"
@@ -1525,6 +1528,7 @@
     "memberRoleLockedSelf": "You can't change your own role.",
     "memberRoleLockedOwner": "Only an Owner can change an Owner's role.",
     "memberDepartments": "Departments",
+    "memberDepartmentsLockedOwner": "Only an Owner can change an Owner's departments.",
     "roleHint": "Toggle each role's permissions. The Owner role is read-only.",
     "roleCapability": "Capability",
     "rolePreset": "Preset",
@@ -1678,6 +1682,7 @@
     "auditAction_department_update": "Department updated",
     "auditAction_department_delete": "Department deleted",
     "auditAction_member_update": "Member's role or departments changed",
+    "auditAction_member_ai_context_update": "Member's AI context changed",
     "auditAction_member_sso_update": "Member updated by SSO",
     "auditAction_member_block": "Member blocked",
     "auditAction_member_unblock": "Member unblocked",

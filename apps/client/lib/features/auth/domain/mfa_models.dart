@@ -91,7 +91,11 @@ sealed class SignInResult {
 
 class SignInSuccess extends SignInResult {
   final UserModel user;
-  const SignInSuccess(this.user);
+
+  /// The company IdP just signed this person in (`/auth/exchange` answered
+  /// `method: oidc`). False for password and Google sign-ins.
+  final bool viaSso;
+  const SignInSuccess(this.user, {this.viaSso = false});
 }
 
 class SignInMfaRequired extends SignInResult {
@@ -120,3 +124,8 @@ const kMfaRestartCodes = {
   'MFA_NOT_ENROLLED',
   'MFA_ALREADY_ENROLLED',
 };
+
+/// Settings warns once this many backup codes or fewer are left (10 are
+/// issued). Regenerating needs the authenticator app, so the warning must come
+/// while the member still has it. Mirror of web `BACKUP_CODES_LOW_THRESHOLD`.
+const kBackupCodesLowThreshold = 3;

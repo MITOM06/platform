@@ -307,6 +307,7 @@
       "downloadCodes": "Télécharger le .txt",
       "codesCopied": "Codes de secours copiés",
       "savedCheckbox": "J'ai enregistré mes codes de secours",
+      "copyOrDownloadFirst": "Copiez ou téléchargez d'abord les codes",
       "continue": "Continuer",
       "codesLoading": "Chargement de vos codes de secours...",
       "fileHeader": "Codes de secours PON pour {email}",
@@ -447,7 +448,9 @@
       "turnOffTitle": "Désactiver l'authentification à deux facteurs ?",
       "turnOffBody": "Saisissez le code actuel de votre application d'authentification ou l'un de vos codes de secours. La connexion ne demandera plus de code et vos codes de secours ne fonctionneront plus.",
       "turnOffSubmit": "Désactiver",
-      "turnOffSuccess": "L'authentification à deux facteurs est désactivée"
+      "turnOffSuccess": "L'authentification à deux facteurs est désactivée",
+      "backupCodesLeft": "{count, plural, one {# code de secours restant} other {# codes de secours restants}}",
+      "backupCodesLow": "Générez-en de nouveaux avec « {action} » ci-dessous tant que vous avez encore votre application d'authentification. Sans l'application ni code de secours, vous ne pourrez plus vous connecter."
     },
     "adminConsole": "Console d'administration",
     "adminConsoleSubtitle": "Espace de travail, membres, rôles et réglages IA"
@@ -1525,6 +1528,7 @@
     "memberRoleLockedSelf": "Vous ne pouvez pas modifier votre propre rôle.",
     "memberRoleLockedOwner": "Seul un Propriétaire peut modifier le rôle d'un Propriétaire.",
     "memberDepartments": "Départements",
+    "memberDepartmentsLockedOwner": "Seul un Propriétaire peut modifier les départements d'un Propriétaire.",
     "roleHint": "Activez les permissions de chaque rôle. Le rôle Owner est en lecture seule.",
     "roleCapability": "Permission",
     "rolePreset": "Prédéfini",
@@ -1678,6 +1682,7 @@
     "auditAction_department_update": "Département modifié",
     "auditAction_department_delete": "Département supprimé",
     "auditAction_member_update": "Rôle ou départements d'un membre modifiés",
+    "auditAction_member_ai_context_update": "Contexte IA d'un membre modifié",
     "auditAction_member_sso_update": "Membre mis à jour par SSO",
     "auditAction_member_block": "Membre bloqué",
     "auditAction_member_unblock": "Membre débloqué",

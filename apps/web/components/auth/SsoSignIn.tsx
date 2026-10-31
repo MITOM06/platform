@@ -1,14 +1,22 @@
 'use client'
 
+import { useSyncExternalStore } from 'react'
 import { KeyRound } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { AUTH_URL } from '@/lib/config/env'
+import { isSsoReauthDue, subscribeSsoReauth } from '@/lib/auth/sso-reauth'
 import { cn } from '@/lib/utils'
 
-/** Start of the OIDC sign-in (auth-service redirects to the company IdP). */
-export function ssoLoginHref(): string {
-  return `${AUTH_URL}/auth/oidc/login?platform=web`
+/**
+ * Start of the OIDC sign-in (auth-service redirects to the company IdP).
+ * `reauth`: someone signed out on this device, so the IdP must ask again instead
+ * of silently re-entering their account (see `lib/auth/sso-reauth.ts`).
+ */
+export function ssoLoginHref(reauth = false): string {
+  return `${AUTH_URL}/auth/oidc/login?platform=web${reauth ? '&reauth=1' : ''}`
 }
+
+const noReauthOnServer = () => false
 
 /**
  * "Sign in with SSO". `emphasised` when the workspace requires SSO (or the
@@ -17,9 +25,13 @@ export function ssoLoginHref(): string {
  */
 export function SsoButton({ emphasised = false, className }: { emphasised?: boolean; className?: string }) {
   const t = useTranslations('auth.login')
+  // Through this hook, not read directly: the server has no localStorage, and
+  // React would keep the server's href on hydration. In the href (not onClick),
+  // so opening the link in a new tab sends the flag too.
+  const reauth = useSyncExternalStore(subscribeSsoReauth, isSsoReauthDue, noReauthOnServer)
   return (
     <a
-      href={ssoLoginHref()}
+      href={ssoLoginHref(reauth)}
       data-testid="sso-button"
       data-emphasised={emphasised ? 'true' : 'false'}
       className={cn(

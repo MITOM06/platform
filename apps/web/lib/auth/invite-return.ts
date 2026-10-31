@@ -7,11 +7,14 @@
  * try again, instead of the login page, where an invite-only workspace offers
  * no way back in.
  *
- * Same tab only (sessionStorage), consumed once, and dropped after the
- * server-side invite flow's 10 minutes.
+ * Same tab only (sessionStorage). Kept across failed attempts — wrong account,
+ * Back, wrong account again still comes back here — until the invitation is
+ * accepted, a plain Google sign-in starts, or a code retrying cannot help.
+ * Outlives the server-side invite flow's 10 minutes on purpose: when that flow
+ * runs out (INVITE_GOOGLE_FLOW_EXPIRED) the way back must still be known.
  */
 const KEY = 'pon:auth:invite-return'
-const MAX_AGE_MS = 10 * 60 * 1000
+const MAX_AGE_MS = 60 * 60 * 1000
 
 /** Google sign-in outcomes worth retrying from the invitation page. */
 export const INVITE_RETRY_NOTICES = [
@@ -48,16 +51,16 @@ export function forgetInviteReturn(): void {
 
 /**
  * Where a failed Google sign-in goes back to: the remembered invitation page
- * for a retryable code, otherwise null (→ the login page). Always consumes
- * what was remembered.
+ * for a retryable code, otherwise null (→ the login page). A retryable code
+ * keeps the memory for the next attempt; anything else clears it.
  */
 export function inviteReturnPath(error: string, now = Date.now()): string | null {
   let saved: { token?: unknown; at?: unknown } | null = null
   try {
     const raw = sessionStorage.getItem(KEY)
-    sessionStorage.removeItem(KEY)
     saved = raw ? (JSON.parse(raw) as { token?: unknown; at?: unknown }) : null
   } catch {
+    forgetInviteReturn()
     return null
   }
   if (
@@ -67,6 +70,7 @@ export function inviteReturnPath(error: string, now = Date.now()): string | null
     typeof saved.at !== 'number' ||
     now - saved.at > MAX_AGE_MS
   ) {
+    forgetInviteReturn()
     return null
   }
   return `/invite/${encodeURIComponent(saved.token)}?reason=${error}`

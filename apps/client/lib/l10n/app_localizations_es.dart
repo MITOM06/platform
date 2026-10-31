@@ -2534,6 +2534,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get adminMemberDepartments => 'Departamentos';
 
   @override
+  String get adminMemberDepartmentsLockedOwner =>
+      'Solo un Propietario puede cambiar los departamentos de un Propietario.';
+
+  @override
   String get adminRoleHint =>
       'Activa los permisos de cada rol. El rol Owner es de solo lectura.';
 
@@ -4368,6 +4372,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get adminAuditActionMemberUpdate => 'Miembro actualizado';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate =>
+      'Contexto de IA de un miembro cambiado';
+
+  @override
   String get adminAuditActionMemberSsoUpdate => 'Miembro actualizado por SSO';
 
   @override
@@ -4620,6 +4628,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mfaSavedCheckbox => 'He guardado mis códigos de respaldo';
 
   @override
+  String get mfaCopyCodesFirst => 'Primero copia los códigos';
+
+  @override
+  String get mfaCodesCopyFailed =>
+      'No se pudieron copiar los códigos. Inténtalo de nuevo.';
+
+  @override
   String get mfaContinue => 'Continuar';
 
   @override
@@ -4688,6 +4703,22 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get securityMfaTurnedOff =>
       'La autenticación de dos factores está desactivada.';
+
+  @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count códigos de respaldo restantes',
+      one: '$count código de respaldo restante',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return 'Genera otros nuevos con “$action” aquí abajo mientras conserves tu aplicación de autenticación. Sin la aplicación ni un código de respaldo, no podrás iniciar sesión.';
+  }
 
   @override
   String get authErrMfaRequiredByRole =>

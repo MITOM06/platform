@@ -1206,6 +1206,7 @@
   "adminMemberRoleLockedSelf": "You can't change your own role.",
   "adminMemberRoleLockedOwner": "Only an Owner can change an Owner's role.",
   "adminMemberDepartments": "Departments",
+  "adminMemberDepartmentsLockedOwner": "Only an Owner can change an Owner's departments.",
   "adminRoleHint": "Toggle each role's permissions. The Owner role is read-only.",
   "adminRoleCapability": "Capability",
   "adminRolePreset": "Preset",
@@ -2181,6 +2182,7 @@
   "adminAuditActionDepartmentUpdate": "Department updated",
   "adminAuditActionDepartmentDelete": "Department deleted",
   "adminAuditActionMemberUpdate": "Member updated",
+  "adminAuditActionMemberAiContextUpdate": "Member's AI context changed",
   "adminAuditActionMemberSsoUpdate": "Member updated by SSO",
   "adminAuditActionMemberBlock": "Member blocked",
   "adminAuditActionMemberUnblock": "Member unblocked",
@@ -2276,6 +2278,8 @@
   "mfaCopyCodes": "Copy codes",
   "mfaCodesCopied": "Backup codes copied",
   "mfaSavedCheckbox": "I saved my backup codes",
+  "mfaCopyCodesFirst": "Copy the codes first",
+  "mfaCodesCopyFailed": "Couldn't copy the codes. Please try again.",
   "mfaContinue": "Continue",
   "securityMfaOn": "A code from your authenticator app is required every time you sign in.",
   "securityMfaPending": "Required for your role. You'll set it up at your next sign-in.",
@@ -2296,6 +2300,22 @@
   "securityMfaTurnOffHint": "Enter a current code from your authenticator app to confirm. You won't be asked for a code when you sign in anymore.",
   "securityMfaTurnOffSubmit": "Turn off",
   "securityMfaTurnedOff": "Two-factor authentication is off.",
+  "securityMfaBackupCodesLeft": "{count, plural, =1{{count} backup code left} other{{count} backup codes left}}",
+  "@securityMfaBackupCodesLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "securityMfaBackupCodesLow": "Generate new ones with “{action}” below while you still have your authenticator app. Without the app or a backup code, you can't sign in.",
+  "@securityMfaBackupCodesLow": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
   "authErrMfaRequiredByRole": "Your role requires two-factor authentication, so it can't be turned off.",
   "authNoticeMfaSetupRequiredByRole": "Your new role requires two-factor authentication. Sign in again to set it up.",
   "adminMfaBadge": "2FA on",

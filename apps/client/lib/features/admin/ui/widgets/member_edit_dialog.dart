@@ -29,7 +29,8 @@ Map<String, dynamic> memberEditPatch(Member member, MemberEditResult result) {
 
 /// Edit a member's role + departments. Mirrors the web `MembersPanel` edit
 /// modal: the role picker is read-only on the caller's own row and (for
-/// non-Owners) on an Owner's row; the Owner option is offered to Owners only.
+/// non-Owners) on an Owner's row, where departments and Save lock too; the
+/// Owner option is offered to Owners only.
 class MemberEditDialog extends StatefulWidget {
   final Member member;
   final List<Role> roles;
@@ -83,6 +84,11 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
   late final Set<String> _selected;
 
   bool get _locked => widget.roleLock != null;
+
+  // A non-Owner can't change an Owner's departments either (the server answers
+  // 403 OWNER_ROLE_ASSIGN_FORBIDDEN), so nothing is left to save. Not `self`:
+  // your own departments stay editable.
+  bool get _ownerRowLocked => widget.roleLock == MemberRoleLock.owner;
 
   @override
   void initState() {
@@ -177,9 +183,22 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
                     contentPadding: EdgeInsets.zero,
                     activeColor: AppTheme.accent(context),
                     controlAffinity: ListTileControlAffinity.leading,
-                    title: Text(d.name, style: TextStyle(color: onSurface)),
+                    title: Text(d.name,
+                        style: TextStyle(
+                            color: _ownerRowLocked ? muted : onSurface)),
                     value: _selected.contains(d.id),
-                    onChanged: (_) => _toggleDept(d.id),
+                    // null onChanged = disabled (locked row).
+                    onChanged:
+                        _ownerRowLocked ? null : (_) => _toggleDept(d.id),
+                  ),
+                ),
+              if (_ownerRowLocked)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    l10n.adminMemberDepartmentsLockedOwner,
+                    key: const ValueKey('member-departments-locked'),
+                    style: TextStyle(color: muted, fontSize: 12),
                   ),
                 ),
             ],
@@ -192,9 +211,11 @@ class _MemberEditDialogState extends State<MemberEditDialog> {
           child: Text(l10n.adminCancel),
         ),
         TextButton(
-          onPressed: _save,
-          child: Text(l10n.adminSave,
-              style: TextStyle(color: AppTheme.accent(context))),
+          onPressed: _ownerRowLocked ? null : _save,
+          // On the button, not the Text, so a disabled Save actually looks disabled.
+          style:
+              TextButton.styleFrom(foregroundColor: AppTheme.accent(context)),
+          child: Text(l10n.adminSave),
         ),
       ],
     );

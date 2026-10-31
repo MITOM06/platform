@@ -2455,6 +2455,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get adminMemberDepartments => '部門';
 
   @override
+  String get adminMemberDepartmentsLockedOwner => 'オーナーの部門を変更できるのはオーナーのみです。';
+
+  @override
   String get adminRoleHint => '各ロールの権限を切り替えます。Owner ロールは読み取り専用です。';
 
   @override
@@ -4192,6 +4195,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get adminAuditActionMemberUpdate => 'メンバーを更新';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate => 'メンバーのAIコンテキストを変更';
+
+  @override
   String get adminAuditActionMemberSsoUpdate => 'SSO によりメンバーを更新';
 
   @override
@@ -4429,6 +4435,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get mfaSavedCheckbox => 'バックアップコードを保存しました';
 
   @override
+  String get mfaCopyCodesFirst => '先にコードをコピーしてください';
+
+  @override
+  String get mfaCodesCopyFailed => 'コードをコピーできませんでした。もう一度お試しください。';
+
+  @override
   String get mfaContinue => '続行';
 
   @override
@@ -4490,6 +4502,21 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get securityMfaTurnedOff => '二要素認証をオフにしました。';
+
+  @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '残りのバックアップコードは $count 個です',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return '認証アプリが使えるうちに、下の「$action」で新しいコードを作成してください。認証アプリもバックアップコードもないと、サインインできなくなります。';
+  }
 
   @override
   String get authErrMfaRequiredByRole => 'あなたのロールでは二要素認証が必須のため、オフにできません。';

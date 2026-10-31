@@ -307,6 +307,7 @@
       "downloadCodes": ".txt 다운로드",
       "codesCopied": "백업 코드를 복사했습니다",
       "savedCheckbox": "백업 코드를 저장했습니다",
+      "copyOrDownloadFirst": "먼저 코드를 복사하거나 다운로드하세요",
       "continue": "계속",
       "codesLoading": "백업 코드를 불러오는 중...",
       "fileHeader": "{email}의 PON 백업 코드",
@@ -447,7 +448,9 @@
       "turnOffTitle": "2단계 인증을 끄시겠습니까?",
       "turnOffBody": "인증 앱의 현재 코드 또는 백업 코드 중 하나를 입력하세요. 로그인할 때 더 이상 코드를 묻지 않으며, 백업 코드는 더 이상 사용할 수 없습니다.",
       "turnOffSubmit": "끄기",
-      "turnOffSuccess": "2단계 인증이 꺼졌습니다"
+      "turnOffSuccess": "2단계 인증이 꺼졌습니다",
+      "backupCodesLeft": "{count, plural, other {백업 코드가 #개 남았습니다}}",
+      "backupCodesLow": "인증 앱을 사용할 수 있을 때 아래의 “{action}”으로 새 코드를 만드세요. 인증 앱과 백업 코드가 모두 없으면 로그인할 수 없습니다."
     },
     "adminConsole": "관리 콘솔",
     "adminConsoleSubtitle": "워크스페이스, 멤버, 역할 및 AI 설정"
@@ -1525,6 +1528,7 @@
     "memberRoleLockedSelf": "자신의 역할은 변경할 수 없습니다.",
     "memberRoleLockedOwner": "소유자만 소유자의 역할을 변경할 수 있습니다.",
     "memberDepartments": "부서",
+    "memberDepartmentsLockedOwner": "소유자만 소유자의 부서를 변경할 수 있습니다.",
     "roleHint": "각 역할의 권한을 전환합니다. Owner 역할은 읽기 전용입니다.",
     "roleCapability": "권한",
     "rolePreset": "프리셋",
@@ -1678,6 +1682,7 @@
     "auditAction_department_update": "부서 수정",
     "auditAction_department_delete": "부서 삭제",
     "auditAction_member_update": "멤버 역할 또는 부서 변경",
+    "auditAction_member_ai_context_update": "멤버 AI 컨텍스트 변경",
     "auditAction_member_sso_update": "SSO로 멤버 수정",
     "auditAction_member_block": "멤버 차단",
     "auditAction_member_unblock": "멤버 차단 해제",
