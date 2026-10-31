@@ -176,7 +176,8 @@ export default function LoginPage() {
             </div>
           </>
         )}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 motion-safe:pon-stagger">
+        {/* POST: a submit before hydration is a native form submit, and a GET one put the password in the URL. */}
+        <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-4 motion-safe:pon-stagger">
           <div className="space-y-1">
             <Label htmlFor="email">{t('emailLabel')}</Label>
             <Input

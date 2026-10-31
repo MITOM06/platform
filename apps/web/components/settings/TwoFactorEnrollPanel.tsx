@@ -108,7 +108,7 @@ export function TwoFactorEnrollPanel({ setup, accountEmail, onEnabled, onDone, o
         <MfaSetupKey setup={setup} />
       </MfaStep>
       <MfaStep n={2} title={tAuth('mfa.enrollStep2Title')} body={tAuth('mfa.enrollStep2Body')}>
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form method="post" onSubmit={onSubmit} className="space-y-4">
           {error && <MfaAlert>{error}</MfaAlert>}
           <MfaCodeInput value={digits} onChange={onDigits} disabled={confirm.isPending} />
           <div className="flex flex-wrap justify-end gap-2">
