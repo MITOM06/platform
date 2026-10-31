@@ -315,4 +315,44 @@ void main() {
       expect(find.text(l10n.adminMfaResetConfirm('Mia')), findsOneWidget);
     });
   });
+
+  group('AI context action', () {
+    Finder action(String id) => find.byKey(ValueKey('member-ai-context-$id'));
+
+    test("an Owner's row is locked unless the caller is Owner", () {
+      expect(
+          memberAiContextLocked(callerIsOwner: false, targetIsOwner: true),
+          isTrue);
+      expect(
+          memberAiContextLocked(callerIsOwner: true, targetIsOwner: true),
+          isFalse);
+      expect(
+          memberAiContextLocked(callerIsOwner: false, targetIsOwner: false),
+          isFalse);
+      expect(
+          memberAiContextLocked(callerIsOwner: true, targetIsOwner: false),
+          isFalse);
+    });
+
+    testWidgets("hidden on an Owner's row for an Admin, kept on every other row",
+        (tester) async {
+      await _pump(tester, callerRole: 'Admin', selfId: 'u-admin');
+      expect(action('u-owner'), findsNothing);
+      for (final id in ['u-admin', 'u-member', 'u-lead', 'u-norole', 'u-new']) {
+        expect(action(id), findsOneWidget, reason: id);
+      }
+    });
+
+    testWidgets("offered on an Owner's row to an Owner", (tester) async {
+      await _pump(tester, callerRole: 'Owner', selfId: 'u-owner');
+      expect(action('u-owner'), findsOneWidget);
+    });
+
+    testWidgets('an unresolvable role keeps the action; the server refuses it',
+        (tester) async {
+      await _pump(tester,
+          callerRole: 'Admin', selfId: 'u-admin', rolesVisible: false);
+      expect(action('u-owner'), findsOneWidget);
+    });
+  });
 }

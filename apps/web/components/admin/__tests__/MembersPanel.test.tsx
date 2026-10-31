@@ -104,6 +104,32 @@ describe('MembersPanel', () => {
     expect(screen.getByText('inviteMember')).toBeInTheDocument()
   })
 
+  describe('AI context action', () => {
+    const OWNER_ROW = 3
+    const action = (row: number) =>
+      within(screen.getAllByTestId('member-row')[row]).queryByTitle('editAiContext')
+
+    it("is hidden on an Owner's row for a non-Owner, and stays on every other row", () => {
+      render(<MembersPanel />)
+      expect(action(OWNER_ROW)).toBeNull()
+      // Own row, Member, no role, Admin, admin-like, plain custom, unresolvable role.
+      for (const row of [0, 1, 2, 4, 5, 6, 7]) expect(action(row)).toBeInTheDocument()
+    })
+
+    it("is offered on an Owner's row to an Owner", () => {
+      caps.role = 'Owner'
+      render(<MembersPanel />)
+      expect(action(OWNER_ROW)).toBeInTheDocument()
+    })
+
+    it('is never offered without MANAGE_MEMBERS', () => {
+      caps.role = 'Owner'
+      caps.manageMembers = false
+      render(<MembersPanel />)
+      for (const row of [0, 1, OWNER_ROW]) expect(action(row)).toBeNull()
+    })
+  })
+
   it('locks the role picker on your own row and never sends a role for it', () => {
     render(<MembersPanel />)
     openEdit(0)

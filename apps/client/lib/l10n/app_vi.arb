@@ -1451,6 +1451,7 @@
   "adminAuditActionDepartmentUpdate": "Cập nhật phòng ban",
   "adminAuditActionDepartmentDelete": "Xoá phòng ban",
   "adminAuditActionMemberUpdate": "Cập nhật thành viên",
+  "adminAuditActionMemberAiContextUpdate": "Đổi ngữ cảnh AI của thành viên",
   "adminAuditActionMemberSsoUpdate": "Thành viên được cập nhật qua SSO",
   "adminAuditActionMemberBlock": "Khoá thành viên",
   "adminAuditActionMemberUnblock": "Mở khoá thành viên",

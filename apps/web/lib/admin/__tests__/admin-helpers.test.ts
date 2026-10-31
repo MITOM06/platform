@@ -127,6 +127,7 @@ describe('audit labels', () => {
       'mfa.backup_codes_regenerated',
       'mfa.verified_backup_code',
       'role.preset_removed',
+      'member.ai_context_update',
     ]
     for (const action of actions) {
       expect(auditActionKey(action)).toBe(`auditAction_${action.replace(/\./g, '_')}`)

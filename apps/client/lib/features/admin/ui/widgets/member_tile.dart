@@ -15,6 +15,10 @@ class MemberTile extends StatelessWidget {
   final bool canManageMembers;
   final bool canToggleBlock;
   final bool canResetMfa;
+
+  /// The caller may not touch this member's AI context — the action is hidden
+  /// (see `memberAiContextLocked`).
+  final bool aiContextLocked;
   final VoidCallback onEdit;
   final VoidCallback onEditAiContext;
   final VoidCallback onToggleBlock;
@@ -30,6 +34,7 @@ class MemberTile extends StatelessWidget {
     required this.onEditAiContext,
     required this.onToggleBlock,
     this.canResetMfa = false,
+    this.aiContextLocked = false,
     this.onResetMfa,
   });
 
@@ -96,8 +101,9 @@ class MemberTile extends StatelessWidget {
         children: [
           if (roleName != null)
             _Badge(label: roleName!, color: AppTheme.accent(context)),
-          if (canManageMembers)
+          if (canManageMembers && !aiContextLocked)
             IconButton(
+              key: ValueKey('member-ai-context-${member.id}'),
               icon: Icon(Icons.psychology_rounded, color: muted),
               tooltip: l10n.adminEditAiContext,
               onPressed: onEditAiContext,

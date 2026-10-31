@@ -1682,6 +1682,7 @@
     "auditAction_department_update": "Cập nhật phòng ban",
     "auditAction_department_delete": "Xoá phòng ban",
     "auditAction_member_update": "Đổi vai trò hoặc phòng ban của thành viên",
+    "auditAction_member_ai_context_update": "Đổi ngữ cảnh AI của thành viên",
     "auditAction_member_sso_update": "Thành viên được cập nhật qua SSO",
     "auditAction_member_block": "Chặn thành viên",
     "auditAction_member_unblock": "Bỏ chặn thành viên",

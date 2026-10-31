@@ -48,6 +48,7 @@ void main() {
             l.adminAuditActionMfaBackupCodesRegenerated,
         'mfa.verified_backup_code': l.adminAuditActionMfaVerifiedBackupCode,
         'role.preset_removed': l.adminAuditActionRolePresetRemoved,
+        'member.ai_context_update': l.adminAuditActionMemberAiContextUpdate,
       };
       for (final e in expected.entries) {
         expect(auditActionLabel(l, e.key), e.value, reason: e.key);

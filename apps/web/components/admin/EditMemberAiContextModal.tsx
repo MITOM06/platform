@@ -20,7 +20,7 @@ export function EditMemberAiContextModal({
   onOpenChange: (open: boolean) => void
 }) {
   const t = useTranslations('admin')
-  const { data } = useMemberAiContext(member?._id ?? '', open && !!member)
+  const { data, isError } = useMemberAiContext(member?._id ?? '', open && !!member)
   const update = useUpdateMemberHard()
   const [jobTitle, setJobTitle] = useState('')
   const [projectsText, setProjectsText] = useState('')
@@ -56,32 +56,39 @@ export function EditMemberAiContextModal({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
-          <Button onClick={onSubmit} disabled={update.isPending}>
+          {/* Nothing to save until this member's context has loaded: the form may
+              be blank or still hold the previous member's values, and saving them
+              would overwrite what is stored. */}
+          <Button onClick={onSubmit} disabled={update.isPending || !data}>
             {t('save')}
           </Button>
         </>
       }
     >
-      <div className="space-y-4 py-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="ai-jobtitle">{t('aiContextJobTitle')}</Label>
-          <Input
-            id="ai-jobtitle"
-            value={jobTitle}
-            maxLength={200}
-            onChange={(e) => setJobTitle(e.target.value)}
-          />
+      {isError && !data ? (
+        <p className="py-4 text-center text-sm text-destructive">{t('loadError')}</p>
+      ) : (
+        <div className="space-y-4 py-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="ai-jobtitle">{t('aiContextJobTitle')}</Label>
+            <Input
+              id="ai-jobtitle"
+              value={jobTitle}
+              maxLength={200}
+              onChange={(e) => setJobTitle(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ai-projects">{t('aiContextProjects')}</Label>
+            <Textarea
+              id="ai-projects"
+              value={projectsText}
+              onChange={(e) => setProjectsText(e.target.value)}
+              placeholder={t('aiContextProjectsHint')}
+            />
+          </div>
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="ai-projects">{t('aiContextProjects')}</Label>
-          <Textarea
-            id="ai-projects"
-            value={projectsText}
-            onChange={(e) => setProjectsText(e.target.value)}
-            placeholder={t('aiContextProjectsHint')}
-          />
-        </div>
-      </div>
+      )}
     </ResponsiveModal>
   )
 }

@@ -4308,6 +4308,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get adminAuditActionMemberUpdate => 'Cập nhật thành viên';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate =>
+      'Đổi ngữ cảnh AI của thành viên';
+
+  @override
   String get adminAuditActionMemberSsoUpdate =>
       'Thành viên được cập nhật qua SSO';
 

@@ -4,6 +4,7 @@ import {
   canResetMemberMfa,
   canToggleMemberBlock,
   isPrivilegedRole,
+  memberAiContextLocked,
   memberRoleLock,
 } from '@/lib/admin/role-guard'
 import type { Role } from '@/lib/api/admin-types'
@@ -93,5 +94,12 @@ describe('role guard', () => {
       expect(canResetMemberMfa({ ...member, targetPrivileged: false })).toBe(false)
       expect(canResetMemberMfa({ ...member, targetPrivileged: true })).toBe(false)
     })
+  })
+
+  it("locks an Owner's AI context unless the caller is Owner", () => {
+    expect(memberAiContextLocked({ callerIsOwner: false, targetIsOwner: true })).toBe(true)
+    expect(memberAiContextLocked({ callerIsOwner: true, targetIsOwner: true })).toBe(false)
+    expect(memberAiContextLocked({ callerIsOwner: false, targetIsOwner: false })).toBe(false)
+    expect(memberAiContextLocked({ callerIsOwner: true, targetIsOwner: false })).toBe(false)
   })
 })

@@ -237,6 +237,10 @@ class MembersPanel extends ConsumerWidget {
               targetMfaEnabled: m.mfaEnabled,
               targetPrivileged: privileged,
             ),
+            aiContextLocked: memberAiContextLocked(
+              callerIsOwner: callerIsOwner,
+              targetIsOwner: role?.isOwner ?? false,
+            ),
             onEdit: () => _edit(context, ref, m, isSelf: isSelf),
             onEditAiContext: () => _editAiContext(context, ref, m),
             onToggleBlock: () => _toggleBlock(context, ref, m),

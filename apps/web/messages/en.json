@@ -1682,6 +1682,7 @@
     "auditAction_department_update": "Department updated",
     "auditAction_department_delete": "Department deleted",
     "auditAction_member_update": "Member's role or departments changed",
+    "auditAction_member_ai_context_update": "Member's AI context changed",
     "auditAction_member_sso_update": "Member updated by SSO",
     "auditAction_member_block": "Member blocked",
     "auditAction_member_unblock": "Member unblocked",

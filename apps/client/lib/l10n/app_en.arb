@@ -2182,6 +2182,7 @@
   "adminAuditActionDepartmentUpdate": "Department updated",
   "adminAuditActionDepartmentDelete": "Department deleted",
   "adminAuditActionMemberUpdate": "Member updated",
+  "adminAuditActionMemberAiContextUpdate": "Member's AI context changed",
   "adminAuditActionMemberSsoUpdate": "Member updated by SSO",
   "adminAuditActionMemberBlock": "Member blocked",
   "adminAuditActionMemberUnblock": "Member unblocked",

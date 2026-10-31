@@ -1451,6 +1451,7 @@
   "adminAuditActionDepartmentUpdate": "部署を更新",
   "adminAuditActionDepartmentDelete": "部署を削除",
   "adminAuditActionMemberUpdate": "メンバーを更新",
+  "adminAuditActionMemberAiContextUpdate": "メンバーのAIコンテキストを変更",
   "adminAuditActionMemberSsoUpdate": "SSO によりメンバーを更新",
   "adminAuditActionMemberBlock": "メンバーをブロック",
   "adminAuditActionMemberUnblock": "メンバーのブロックを解除",

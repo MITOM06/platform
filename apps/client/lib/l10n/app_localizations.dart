@@ -7879,6 +7879,12 @@ abstract class AppLocalizations {
   /// **'Member updated'**
   String get adminAuditActionMemberUpdate;
 
+  /// No description provided for @adminAuditActionMemberAiContextUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Member\'s AI context changed'**
+  String get adminAuditActionMemberAiContextUpdate;
+
   /// No description provided for @adminAuditActionMemberSsoUpdate.
   ///
   /// In en, this message translates to:

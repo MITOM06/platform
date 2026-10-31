@@ -1682,6 +1682,7 @@
     "auditAction_department_update": "부서 수정",
     "auditAction_department_delete": "부서 삭제",
     "auditAction_member_update": "멤버 역할 또는 부서 변경",
+    "auditAction_member_ai_context_update": "멤버 AI 컨텍스트 변경",
     "auditAction_member_sso_update": "SSO로 멤버 수정",
     "auditAction_member_block": "멤버 차단",
     "auditAction_member_unblock": "멤버 차단 해제",

@@ -1,4 +1,5 @@
 import {
+  ArrayMaxSize,
   IsArray,
   IsEnum,
   IsIn,
@@ -28,7 +29,9 @@ export class UpdateHardContextDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(20)
   @IsString({ each: true })
+  @MaxLength(200, { each: true })
   projects?: string[];
 }
 

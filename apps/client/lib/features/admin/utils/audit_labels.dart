@@ -25,6 +25,8 @@ String auditActionLabel(AppLocalizations l, String action) {
       return l.adminAuditActionMemberUpdate;
     case 'member.sso_update':
       return l.adminAuditActionMemberSsoUpdate;
+    case 'member.ai_context_update':
+      return l.adminAuditActionMemberAiContextUpdate;
     case 'member.block':
       return l.adminAuditActionMemberBlock;
     case 'member.unblock':

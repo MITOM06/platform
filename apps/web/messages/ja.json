@@ -1682,6 +1682,7 @@
     "auditAction_department_update": "部門を更新",
     "auditAction_department_delete": "部門を削除",
     "auditAction_member_update": "メンバーのロールまたは部門を変更",
+    "auditAction_member_ai_context_update": "メンバーのAIコンテキストを変更",
     "auditAction_member_sso_update": "SSO によりメンバーを更新",
     "auditAction_member_block": "メンバーをブロック",
     "auditAction_member_unblock": "メンバーのブロックを解除",
