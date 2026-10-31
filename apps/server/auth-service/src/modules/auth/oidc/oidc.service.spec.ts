@@ -112,6 +112,40 @@ describe('OidcService', () => {
         code_challenge: 'challenge',
       });
     });
+
+    describe('when the IdP is Google, which lists no prompt=login', () => {
+      it.each(['https://accounts.google.com', 'https://accounts.google.com/'])(
+        'with the flag asks %s for the account chooser',
+        async (issuer) => {
+          await makeService({}, { OIDC_ISSUER: issuer }).buildAuthorizeUrl(
+            'web',
+            { reauth: true },
+          );
+          expect(sentParams()).toMatchObject({ prompt: 'select_account' });
+        },
+      );
+
+      it('without the flag still sends no prompt', async () => {
+        await makeService(
+          {},
+          { OIDC_ISSUER: 'https://accounts.google.com' },
+        ).buildAuthorizeUrl('web');
+        expect(sentParams()).not.toHaveProperty('prompt');
+      });
+
+      it.each([
+        'https://accounts.google.com.evil.example',
+        'https://accounts.google.com/realms/pon',
+        'http://keycloak.localhost:8180/realms/pon',
+        'https://login.microsoftonline.com/tenant/v2.0',
+      ])('any other issuer keeps prompt=login (%s)', async (issuer) => {
+        await makeService({}, { OIDC_ISSUER: issuer }).buildAuthorizeUrl(
+          'web',
+          { reauth: true },
+        );
+        expect(sentParams()).toMatchObject({ prompt: 'login' });
+      });
+    });
   });
 
   it('handleCallback validates and returns the normalized profile (with platform)', async () => {

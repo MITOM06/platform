@@ -547,7 +547,12 @@ Signing out of PON does not end the company IdP's own session, so its cookie sur
 SSO" would silently re-enter the previous person's account. RP-initiated logout (`end_session_endpoint`) is
 deliberately not used: it would sign the person out of every other company app. Instead:
 
-`GET /auth/oidc/login?platform=<web|mobile>&reauth=1` adds `prompt=login` to the IdP authorize URL.
+`GET /auth/oidc/login?platform=<web|mobile>&reauth=1` adds a `prompt` to the IdP authorize URL:
+
+| IdP (`OIDC_ISSUER`) | `prompt` | What the person gets |
+|---------------------|----------|----------------------|
+| Google (`https://accounts.google.com`) | `select_account` | The account chooser. Google lists no `prompt=login`. Someone else can pick their own account, but choosing one with a live Google session may not ask for a password. |
+| Any other (Keycloak, Microsoft Entra, Okta, …) | `login` | Must enter credentials again. How the screen looks is up to the IdP (Keycloak locks the username and offers "Restart login"). |
 
 - Only the exact value `1` counts. Any other value is ignored, and `prompt` is never read from the request.
 - Without `reauth` nothing changes: normal SSO stays silent.
