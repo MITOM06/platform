@@ -105,7 +105,7 @@ export function TurnOffTwoFactorDialog({ open, onOpenChange, onTurnedOff, onStal
         </>
       }
     >
-      <form onSubmit={onSubmit} className="space-y-3 py-2">
+      <form method="post" onSubmit={onSubmit} className="space-y-3 py-2">
         {error && <MfaAlert>{error}</MfaAlert>}
         {/* Hidden submit so Enter in the code boxes submits too. */}
         <button type="submit" hidden tabIndex={-1} />

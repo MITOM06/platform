@@ -275,7 +275,7 @@ export function InviteAcceptForm({ token, preview, googleEnabled = true, notice 
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1">
             <Label htmlFor="displayName">{t('password.displayNameLabel')}</Label>
             <Input

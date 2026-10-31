@@ -135,7 +135,7 @@ export default function SetPasswordPage() {
         <CardDescription>{t('setPassword.subtitle')}</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+        <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           {serverError && (
             <div
               role="alert"
