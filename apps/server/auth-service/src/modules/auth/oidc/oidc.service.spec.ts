@@ -91,6 +91,29 @@ describe('OidcService', () => {
     });
   });
 
+  describe('re-authentication after a PON sign-out', () => {
+    const sentParams = () =>
+      (mockClient.authorizationUrl.mock.calls.at(-1) as unknown[])[0];
+
+    it('without the flag sends no prompt, so normal SSO stays silent', async () => {
+      await makeService({}).buildAuthorizeUrl('web');
+      expect(sentParams()).not.toHaveProperty('prompt');
+
+      await makeService({}).buildAuthorizeUrl('web', { reauth: false });
+      expect(sentParams()).not.toHaveProperty('prompt');
+    });
+
+    it('with the flag asks the IdP to authenticate again', async () => {
+      await makeService({}).buildAuthorizeUrl('mobile', { reauth: true });
+      expect(sentParams()).toMatchObject({
+        prompt: 'login',
+        state: 'state-abc',
+        nonce: 'nonce-xyz',
+        code_challenge: 'challenge',
+      });
+    });
+  });
+
   it('handleCallback validates and returns the normalized profile (with platform)', async () => {
     const store: Record<string, string> = {
       'oidc:flow:state-abc': JSON.stringify({

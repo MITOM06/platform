@@ -72,7 +72,18 @@ export class OidcService {
     return this.clientPromise;
   }
 
-  async buildAuthorizeUrl(platform: string): Promise<string> {
+  /**
+   * [reauth]: the first SSO after an explicit PON sign-out on this device.
+   * `prompt=login` makes the IdP ask for credentials even though its own session
+   * cookie is still alive; otherwise the button silently re-enters the previous
+   * person's account. Only this literal is ever sent: `prompt` never comes from
+   * the request. Signing out of the IdP itself (RP-initiated logout) is
+   * deliberately avoided, it would end the person's other company apps.
+   */
+  async buildAuthorizeUrl(
+    platform: string,
+    { reauth = false }: { reauth?: boolean } = {},
+  ): Promise<string> {
     const client = await this.getClient();
     const codeVerifier = generators.codeVerifier();
     const codeChallenge = generators.codeChallenge(codeVerifier);
@@ -86,6 +97,7 @@ export class OidcService {
       code_challenge_method: 'S256',
       state,
       nonce,
+      ...(reauth ? { prompt: 'login' } : {}),
     });
   }
 

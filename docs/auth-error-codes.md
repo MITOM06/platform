@@ -513,6 +513,37 @@ SSO_EMAIL_UNVERIFIED, SOCIAL_ACCOUNT_CONFLICT, SSO_REQUIRED, SSO_UNAVAILABLE, GE
 (IdP unreachable) is the only 5xx code that is put in the URL; `GET /auth/oidc/login` also redirects with it
 instead of answering 500.
 
+## Re-authentication after a PON sign-out (2026-10-31)
+
+Signing out of PON does not end the company IdP's own session, so its cookie survives and "Sign in with
+SSO" would silently re-enter the previous person's account. RP-initiated logout (`end_session_endpoint`) is
+deliberately not used: it would sign the person out of every other company app. Instead:
+
+`GET /auth/oidc/login?platform=<web|mobile>&reauth=1` adds `prompt=login` to the IdP authorize URL.
+
+- Only the exact value `1` counts. Any other value is ignored, and `prompt` is never read from the request.
+- Without `reauth` nothing changes: normal SSO stays silent.
+
+**Client flag** (web `lib/auth/sso-reauth.ts` in localStorage, mobile `sso_reauth_flag.dart` in
+shared_preferences). One device-wide flag with no personal data; it survives closing the tab or app.
+
+| Event | Flag |
+|-------|------|
+| User-initiated sign-out (even if the server is unreachable) | set |
+| Forced logout: session revoked, account blocked, "Require SSO" switched on | unchanged |
+| Successful SSO sign-in (`POST /auth/exchange` answers `method: "oidc"`) | cleared |
+| Password or Google sign-in, 2FA step, failed exchange, `?error=` redirect | unchanged |
+
+While set, every SSO button sends `reauth=1` (login screen, `SSO_REQUIRED` notice, invite card). A Google or
+password sign-in leaves it set because the IdP session may still be the previous person's.
+
+`POST /auth/exchange` tokens now include `method: "google" | "oidc"` (additive: a client that ignores it
+behaves as before, and a client talking to an older server keeps the flag, at worst one extra prompt). The
+`MFA_REQUIRED` body has no `method`.
+
+If the IdP cannot re-authenticate it answers with an error, which ends as
+`?error=OIDC_EXCHANGE_FAILED` like any refused sign-in.
+
 ## Example response shapes
 
 ### HTTP exception (400/401/404/409)
