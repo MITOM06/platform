@@ -1657,6 +1657,7 @@
     "auditAction_department_update": "更新了部门",
     "auditAction_department_delete": "删除了部门",
     "auditAction_member_update": "更改了成员的角色或部门",
+    "auditAction_member_ai_context_update": "更改了成员的 AI 上下文",
     "auditAction_member_sso_update": "SSO 更新了成员",
     "auditAction_member_block": "禁用了成员",
     "auditAction_member_unblock": "解除禁用成员",

@@ -33,6 +33,7 @@ import {
   assignableRoles,
   canResetMemberMfa,
   isPrivilegedRole,
+  memberAiContextLocked,
   memberRoleLock,
 } from '@/lib/admin/role-guard'
 import { isEmptyMemberUpdate, memberUpdateDiff } from '@/lib/admin/member-diff'
@@ -172,6 +173,10 @@ export function MembersPanel() {
           isSelf={m._id === selfId}
           canManageMembers={canManageMembers}
           canResetMfa={canResetMfa(m)}
+          aiContextLocked={memberAiContextLocked({
+            callerIsOwner,
+            targetIsOwner: roleName(m.roleId) === OWNER_ROLE_NAME,
+          })}
           onEdit={openEdit}
           onAiContext={openAiContext}
           onToggleBlock={setStatusTarget}

@@ -1657,6 +1657,7 @@
     "auditAction_department_update": "Département modifié",
     "auditAction_department_delete": "Département supprimé",
     "auditAction_member_update": "Rôle ou départements d'un membre modifiés",
+    "auditAction_member_ai_context_update": "Contexte IA d'un membre modifié",
     "auditAction_member_sso_update": "Membre mis à jour par SSO",
     "auditAction_member_block": "Membre bloqué",
     "auditAction_member_unblock": "Membre débloqué",

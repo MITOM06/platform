@@ -110,3 +110,17 @@ export function canResetMemberMfa(opts: {
   if (opts.callerIsOwner) return true
   return opts.callerCanManageMembers && opts.targetPrivileged === false
 }
+
+/**
+ * A non-Owner can't read or edit an Owner's AI context, so the action is hidden
+ * (mirror of the guard on `/ai-context/users/:id`, 403 INSUFFICIENT_PERMISSION,
+ * and of Flutter `memberAiContextLocked`). A role the caller can't resolve isn't
+ * known to be Owner, so the action stays and the server still refuses it: hiding
+ * it would also take it away on ordinary members.
+ */
+export function memberAiContextLocked(opts: {
+  callerIsOwner: boolean
+  targetIsOwner: boolean
+}): boolean {
+  return opts.targetIsOwner && !opts.callerIsOwner
+}
