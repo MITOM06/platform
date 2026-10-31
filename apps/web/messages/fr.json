@@ -1504,6 +1504,7 @@
     "memberRoleLockedSelf": "Vous ne pouvez pas modifier votre propre rôle.",
     "memberRoleLockedOwner": "Seul un Propriétaire peut modifier le rôle d'un Propriétaire.",
     "memberDepartments": "Départements",
+    "memberDepartmentsLockedOwner": "Seul un Propriétaire peut modifier les départements d'un Propriétaire.",
     "roleHint": "Activez les permissions de chaque rôle. Le rôle Owner est en lecture seule.",
     "roleCapability": "Permission",
     "rolePreset": "Prédéfini",

@@ -1504,6 +1504,7 @@
     "memberRoleLockedSelf": "自分のロールは変更できません。",
     "memberRoleLockedOwner": "オーナーのロールを変更できるのはオーナーのみです。",
     "memberDepartments": "部門",
+    "memberDepartmentsLockedOwner": "オーナーの部門を変更できるのはオーナーのみです。",
     "roleHint": "各ロールの権限を切り替えます。Owner ロールは読み取り専用です。",
     "roleCapability": "権限",
     "rolePreset": "プリセット",

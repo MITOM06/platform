@@ -1504,6 +1504,7 @@
     "memberRoleLockedSelf": "你不能更改自己的角色。",
     "memberRoleLockedOwner": "只有所有者才能更改所有者的角色。",
     "memberDepartments": "部门",
+    "memberDepartmentsLockedOwner": "只有所有者才能更改所有者的部门。",
     "roleHint": "切换每个角色的权限。Owner 角色为只读。",
     "roleCapability": "权限",
     "rolePreset": "预设",

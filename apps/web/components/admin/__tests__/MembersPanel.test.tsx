@@ -3,7 +3,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import React from 'react'
 import { MembersPanel } from '@/components/admin/MembersPanel'
 import { useAuthStore } from '@/lib/store/auth.store'
-import type { Member, Role } from '@/lib/api/admin-types'
+import type { Department, Member, Role } from '@/lib/api/admin-types'
 
 const roles: Role[] = [
   { _id: 'r-owner', name: 'Owner', isPreset: true, permissions: {} },
@@ -14,18 +14,25 @@ const roles: Role[] = [
   { _id: 'r-sales', name: 'Sales', isPreset: false, permissions: { USE_GROUP_BOT: true } },
 ]
 
+const departments: Department[] = [
+  { _id: 'd-support', name: 'Support' },
+  { _id: 'd-finance', name: 'Finance' },
+]
+
 const members: Member[] = [
   // The signed-in user's own row has 2FA on — still never resettable by themselves.
   { _id: 'me', displayName: 'Admin Me', email: 'me@x.io', status: 'active', roleId: 'r-member', mfaEnabled: true },
   // 2FA not set up yet — nothing to reset.
   { _id: 'bob', displayName: 'Bob', email: 'bob@x.io', status: 'active', roleId: 'r-member' },
   { _id: 'eve', displayName: 'Eve', email: 'eve@x.io', status: 'blocked', mfaEnabled: true },
-  { _id: 'olga', displayName: 'Olga', email: 'olga@x.io', status: 'active', roleId: 'r-owner', mfaEnabled: true },
+  { _id: 'olga', displayName: 'Olga', email: 'olga@x.io', status: 'active', roleId: 'r-owner', departmentIds: ['d-support'], mfaEnabled: true },
   { _id: 'ada', displayName: 'Ada', email: 'ada@x.io', status: 'active', roleId: 'r-admin', mfaEnabled: true },
   { _id: 'hal', displayName: 'Hal', email: 'hal@x.io', status: 'active', roleId: 'r-hr', mfaEnabled: true },
   { _id: 'sam', displayName: 'Sam', email: 'sam@x.io', status: 'active', roleId: 'r-sales', mfaEnabled: true },
   // A role this caller can't resolve (not in the role list).
   { _id: 'uma', displayName: 'Uma', email: 'uma@x.io', status: 'active', roleId: 'r-unknown', mfaEnabled: true },
+  // A blocked Owner, 2FA not set up.
+  { _id: 'bea', displayName: 'Bea', email: 'bea@x.io', status: 'blocked', roleId: 'r-owner' },
 ]
 
 const caps = vi.hoisted(() => ({ role: 'Admin', manageMembers: true }))
@@ -36,7 +43,7 @@ vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }))
 vi.mock('@/lib/hooks/use-admin', () => ({
   useMembers: () => ({ data: members, isLoading: false }),
   useRoles: () => ({ data: roles }),
-  useDepartments: () => ({ data: [] }),
+  useDepartments: () => ({ data: departments }),
   useUpdateMember: () => ({ mutate: updateMutate, isPending: false }),
   useSetMemberStatus: () => ({ mutate: vi.fn(), isPending: false }),
   useResetMemberMfa: () => ({ mutate: resetMfaMutate, isPending: false }),
@@ -55,6 +62,12 @@ function openEdit(rowIndex: number) {
   const buttons = within(row).getAllByRole('button')
   fireEvent.click(buttons[buttons.length - 1])
 }
+
+const indexOf = (id: string) => members.findIndex((m) => m._id === id)
+const row = (id: string) => screen.getAllByTestId('member-row')[indexOf(id)]
+const deptCheckbox = (name: string) =>
+  within(screen.getByRole('dialog')).getByRole('checkbox', { name })
+const saveButton = () => within(screen.getByRole('dialog')).getByRole('button', { name: 'save' })
 
 describe('MembersPanel', () => {
   beforeEach(() => {
@@ -125,10 +138,83 @@ describe('MembersPanel', () => {
     expect(updateMutate).not.toHaveBeenCalled()
   })
 
-  describe('two-factor authentication', () => {
-    const row = (id: string) =>
-      screen.getAllByTestId('member-row')[members.findIndex((m) => m._id === id)]
+  describe("actions on an Owner's row", () => {
+    it('gives a non-Owner no block action and a read-only edit dialog', () => {
+      render(<MembersPanel />)
+      expect(within(row('olga')).queryByLabelText('memberBlock')).toBeNull()
 
+      openEdit(indexOf('olga'))
+      expect(deptCheckbox('Support')).toBeDisabled()
+      expect(deptCheckbox('Support')).toBeChecked()
+      expect(deptCheckbox('Finance')).toBeDisabled()
+      expect(screen.getByTestId('member-departments-locked')).toHaveTextContent('memberDepartmentsLockedOwner')
+      expect(saveButton()).toBeDisabled()
+
+      fireEvent.click(deptCheckbox('Finance'))
+      expect(deptCheckbox('Finance')).not.toBeChecked()
+      fireEvent.click(saveButton())
+      expect(updateMutate).not.toHaveBeenCalled()
+    })
+
+    it('leaves everything to an Owner', () => {
+      caps.role = 'Owner'
+      render(<MembersPanel />)
+      expect(within(row('olga')).getByLabelText('memberBlock')).toBeInTheDocument()
+
+      openEdit(indexOf('olga'))
+      expect(screen.queryByTestId('member-departments-locked')).toBeNull()
+      expect(saveButton()).not.toBeDisabled()
+
+      fireEvent.click(deptCheckbox('Finance'))
+      fireEvent.click(saveButton())
+      expect(updateMutate).toHaveBeenCalledWith(
+        { id: 'olga', input: { departmentIds: ['d-support', 'd-finance'] } },
+        expect.anything(),
+      )
+    })
+
+    it('still lets a non-Owner unblock a blocked Owner: the server only guards blocking', () => {
+      render(<MembersPanel />)
+      expect(within(row('bea')).getByLabelText('memberUnblock')).toBeInTheDocument()
+    })
+
+    it('keeps the block action on a role this caller cannot resolve (it may not be an Owner)', () => {
+      render(<MembersPanel />)
+      expect(within(row('uma')).getByLabelText('memberBlock')).toBeInTheDocument()
+    })
+
+    it('keeps a regular member fully editable for a non-Owner', () => {
+      render(<MembersPanel />)
+      expect(within(row('bob')).getByLabelText('memberBlock')).toBeInTheDocument()
+
+      openEdit(indexOf('bob'))
+      expect(screen.getByTestId('member-role-select')).not.toBeDisabled()
+      expect(screen.queryByTestId('member-departments-locked')).toBeNull()
+
+      fireEvent.click(deptCheckbox('Finance'))
+      fireEvent.click(saveButton())
+      expect(updateMutate).toHaveBeenCalledWith(
+        { id: 'bob', input: { departmentIds: ['d-finance'] } },
+        expect.anything(),
+      )
+    })
+
+    it('keeps your own departments editable even though your role is locked', () => {
+      render(<MembersPanel />)
+      openEdit(indexOf('me'))
+      expect(screen.getByTestId('member-role-select')).toBeDisabled()
+      expect(screen.queryByTestId('member-departments-locked')).toBeNull()
+
+      fireEvent.click(deptCheckbox('Support'))
+      fireEvent.click(saveButton())
+      expect(updateMutate).toHaveBeenCalledWith(
+        { id: 'me', input: { departmentIds: ['d-support'] } },
+        expect.anything(),
+      )
+    })
+  })
+
+  describe('two-factor authentication', () => {
     it('shows the "2FA on" badge only for members with 2FA enabled', () => {
       render(<MembersPanel />)
       expect(within(row('ada')).getByTestId('member-mfa-badge')).toHaveTextContent('memberMfaOn')
