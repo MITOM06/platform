@@ -883,6 +883,7 @@
   "adminMemberRoleLockedSelf": "你不能更改自己的角色。",
   "adminMemberRoleLockedOwner": "只有所有者才能更改所有者的角色。",
   "adminMemberDepartments": "部门",
+  "adminMemberDepartmentsLockedOwner": "只有所有者才能更改所有者的部门。",
   "adminRoleHint": "切换每个角色的权限。Owner 角色为只读。",
   "adminRoleCapability": "权限",
   "adminRolePreset": "预设",

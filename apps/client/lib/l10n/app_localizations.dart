@@ -4681,6 +4681,12 @@ abstract class AppLocalizations {
   /// **'Departments'**
   String get adminMemberDepartments;
 
+  /// No description provided for @adminMemberDepartmentsLockedOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an Owner can change an Owner\'s departments.'**
+  String get adminMemberDepartmentsLockedOwner;
+
   /// No description provided for @adminRoleHint.
   ///
   /// In en, this message translates to:

@@ -5,15 +5,15 @@ import '../../data/models/admin_models.dart';
 
 /// One row of the admin members list: avatar initials, name/email, role,
 /// blocked and "2FA on" badges, and the row actions. The block/unblock action
-/// is hidden on the caller's own row ([isSelf]) — the server rejects
-/// self-block anyway. "Reset 2FA" sits next to the badges (the subtitle wraps,
-/// so the trailing actions never overflow) and only when [canResetMfa]
+/// shows only when [canToggleBlock] (see `canToggleMemberBlock`) — the server
+/// rejects the rest anyway. "Reset 2FA" sits next to the badges (the subtitle
+/// wraps, so the trailing actions never overflow) and only when [canResetMfa]
 /// (enrolled row the caller may reset — see `canResetMemberMfa`).
 class MemberTile extends StatelessWidget {
   final Member member;
   final String? roleName;
   final bool canManageMembers;
-  final bool isSelf;
+  final bool canToggleBlock;
   final bool canResetMfa;
   final VoidCallback onEdit;
   final VoidCallback onEditAiContext;
@@ -25,7 +25,7 @@ class MemberTile extends StatelessWidget {
     required this.member,
     required this.roleName,
     required this.canManageMembers,
-    required this.isSelf,
+    required this.canToggleBlock,
     required this.onEdit,
     required this.onEditAiContext,
     required this.onToggleBlock,
@@ -102,8 +102,9 @@ class MemberTile extends StatelessWidget {
               tooltip: l10n.adminEditAiContext,
               onPressed: onEditAiContext,
             ),
-          if (canManageMembers && !isSelf)
+          if (canToggleBlock)
             IconButton(
+              key: ValueKey('member-block-${member.id}'),
               icon: Icon(
                 blocked ? Icons.lock_open_rounded : Icons.block_rounded,
                 color: blocked ? muted : error,
@@ -112,6 +113,7 @@ class MemberTile extends StatelessWidget {
               onPressed: onToggleBlock,
             ),
           IconButton(
+            key: ValueKey('member-edit-${member.id}'),
             icon: Icon(Icons.edit_rounded, color: muted),
             onPressed: onEdit,
           ),

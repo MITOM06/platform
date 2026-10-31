@@ -2434,6 +2434,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get adminMemberDepartments => '부서';
 
   @override
+  String get adminMemberDepartmentsLockedOwner => '소유자만 소유자의 부서를 변경할 수 있습니다.';
+
+  @override
   String get adminRoleHint => '각 역할의 권한을 전환합니다. Owner 역할은 읽기 전용입니다.';
 
   @override

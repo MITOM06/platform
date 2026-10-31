@@ -17,6 +17,26 @@ MemberRoleLock? memberRoleLock({
   return null;
 }
 
+/// Who sees block / unblock on a member row (mirror of the guard on
+/// `PATCH /admin/members/:id/status` and of web `canToggleMemberBlock`):
+/// - only with MANAGE_MEMBERS, and never on your own row (CANNOT_BLOCK_SELF);
+/// - a non-Owner can't block an Owner (OWNER_BLOCK_FORBIDDEN). The server
+///   guards blocking only, so a blocked Owner can still be unblocked.
+///
+/// A role the caller can't resolve (no role list) isn't known to be Owner, so
+/// the action stays: hiding it would also take blocking away on ordinary
+/// members.
+bool canToggleMemberBlock({
+  required bool isSelf,
+  required bool callerIsOwner,
+  required bool callerCanManageMembers,
+  required bool targetIsOwner,
+  required bool targetBlocked,
+}) {
+  if (!callerCanManageMembers || isSelf) return false;
+  return callerIsOwner || !targetIsOwner || targetBlocked;
+}
+
 /// Roles the caller may grant: the Owner role only when the caller is Owner.
 List<Role> assignableRoles(List<Role> roles, {required bool callerIsOwner}) =>
     callerIsOwner ? roles : roles.where((r) => !r.isOwner).toList();
