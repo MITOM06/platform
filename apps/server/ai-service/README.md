@@ -105,7 +105,8 @@ Tuning added with the 2026-10 QC sweep (defaults shown):
 | `AI_HISTORY_WINDOW` | `20` | latest AI-session turns sent verbatim (older ones only via the compacted summary; `0` = no cap) |
 | `AI_GROUP_CONTEXT_MESSAGES` | `20` | latest group/DM messages shown to the AI as attributed context when @mentioned |
 | `CHAT_VISION_FETCH_TIMEOUT_MS` | `10000` | per-image fetch budget for chat vision |
-| `CONNECTOR_READ_TIMEOUT_MS` | `5000` | connector tool listing + read-only calls |
+| `CONNECTOR_READ_TIMEOUT_MS` | `5000` | connector tool listing + read-only calls on the catalog connectors (Gmail, Calendar, Drive, Notion) |
+| `CONNECTOR_REMOTE_READ_TIMEOUT_MS` | `30000` | read-only calls on a third-party remote MCP server (MCP directory, custom servers) |
 | `CONNECTOR_WRITE_TIMEOUT_MS` | `30000` | connector writes; a timed-out write is reported as "may have happened", never retried |
 | `AI_PENDING_ACTION_TTL_SEC` | `600` | how long a sensitive action waits for confirmation (the Redis key lives 5 min longer for the 410) |
 | `AI_TIMEZONE` | `Asia/Ho_Chi_Minh` | clock, reminder times without offset, daily-digest day window |

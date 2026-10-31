@@ -242,6 +242,9 @@ export default registerAs('config', () => ({
     // longer: aborting a send that the provider is still completing reported a
     // failure for an action that actually happened, inviting a duplicate retry.
     readTimeoutMs: parseInt(process.env.CONNECTOR_READ_TIMEOUT_MS ?? '5000', 10),
+    // Reads on a third-party remote MCP server (directory entry, custom server):
+    // some take well over 5 s (GitMCP search ~16 s); connector-service allows 60 s.
+    remoteReadTimeoutMs: parseInt(process.env.CONNECTOR_REMOTE_READ_TIMEOUT_MS ?? '30000', 10),
     writeTimeoutMs: parseInt(process.env.CONNECTOR_WRITE_TIMEOUT_MS ?? '30000', 10),
   },
   actions: {
