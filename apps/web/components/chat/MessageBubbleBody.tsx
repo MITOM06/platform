@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { AlertTriangle, Phone, Video } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { firstUrl } from '@/lib/media'
+import { replaceInlineLatex } from '@/lib/ai/inline-latex'
 import { ImageContent, VideoContent } from './ImageContent'
 import { FileContent } from './FileContent'
 import { VoiceMessage } from './VoiceMessage'
@@ -96,7 +97,7 @@ export function MessageBubbleBody({ message, isOwn, isPinned }: Props) {
           </span>
         )
       }
-      return <MarkdownContent content={message.content} />
+      return <MarkdownContent content={replaceInlineLatex(message.content)} />
     default:
       return (
         <>

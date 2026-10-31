@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { ShieldAlert, Wrench } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { BUILTIN_TOOL_LABEL_KEYS } from '@/lib/ai/connector-names'
+import { replaceInlineLatex } from '@/lib/ai/inline-latex'
 import type { AiStreamEntry } from '@/lib/ai/stream-routing'
 import { AiActionCard } from './AiActionCard'
 
@@ -59,7 +60,7 @@ export function AiStreamBubble({
         )}
         {stream.content ? (
           <p className="whitespace-pre-wrap leading-relaxed">
-            {stream.content}
+            {replaceInlineLatex(stream.content)}
             <span className="ml-0.5 inline-block w-[2px] h-[1.05em] translate-y-0.5 bg-primary/70 animate-pulse" />
           </p>
         ) : (

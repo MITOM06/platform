@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../domain/chat_models.dart';
+import '../../domain/inline_latex.dart';
 
 class FinalizedAiBubble extends StatelessWidget {
   final String content;
@@ -25,7 +26,7 @@ class FinalizedAiBubble extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         MarkdownBody(
-          data: content,
+          data: replaceInlineLatex(content),
           styleSheet: MarkdownStyleSheet(
             p: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14, height: 1.45),
             // Inline code was tinted with a translucent purple (0x33B47FFF) —
