@@ -8,6 +8,7 @@ import '../../../core/api/token_manager.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../../chat/domain/chat_provider.dart';
 import '../data/auth_repository.dart';
+import '../data/sso_reauth_flag.dart';
 import 'auth_state.dart';
 import 'session_reset.dart';
 import 'mfa_models.dart';
@@ -158,6 +159,11 @@ class AuthNotifier extends _$AuthNotifier {
     state = const AsyncLoading();
     final next = await AsyncValue.guard(() async {
       final result = await ref.read(authRepositoryProvider).exchangeCode(code);
+      // SSO only: after a Google sign-in the IdP session may still belong to
+      // whoever signed out here, so the next SSO must keep asking.
+      if (result case SignInSuccess(viaSso: true)) {
+        await ref.read(ssoReauthFlagProvider).clear();
+      }
       return _afterFirstFactor(result);
     });
     // Google refused for an SSO-enforced domain: the same login notice as a
@@ -188,7 +194,11 @@ class AuthNotifier extends _$AuthNotifier {
     }
   }
 
+  /// User-initiated sign-out. [forceLogout] does not set the SSO re-auth flag:
+  /// nobody chose to leave there, so SSO may silently bring them back.
   Future<void> logout() async {
+    // First, so a slow server or a closed app cannot skip it.
+    await ref.read(ssoReauthFlagProvider).mark();
     // Unregister the push token first — it needs the still-valid session.
     await _unregisterPushToken();
     await ref.read(authRepositoryProvider).logout();
