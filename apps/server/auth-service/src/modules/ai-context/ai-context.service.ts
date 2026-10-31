@@ -18,10 +18,16 @@ import {
 } from '@platform/database';
 import { AuthCode } from '../../common/auth-code.enum';
 import { isObjectIdString } from '../../common/ids';
+import { isOwnerActor, OWNER_ROLE_NAME } from '../../common/role-grant';
+import { AuditService } from '../audit/audit.service';
+import { ClaimsService } from '../auth/claims.service';
+import { isAdminLike } from '../mfa/mfa-policy';
 
 export interface Actor {
   sub: string;
   perms: string[];
+  /** Role NAME from the JWT `role` claim. */
+  role?: string;
 }
 
 const EMPTY_CONTEXT = (userId: string): AiUserContext =>
@@ -34,6 +40,26 @@ const EMPTY_CONTEXT = (userId: string): AiUserContext =>
     updatedBy: userId,
   } as AiUserContext);
 
+/** The hard fields of `dto` that differ from what is stored. */
+function hardFieldChanges(
+  stored: AiUserContext,
+  dto: { jobTitle?: string; projects?: string[] },
+): { jobTitle?: string; projects?: string[] } {
+  const changes: { jobTitle?: string; projects?: string[] } = {};
+  if (dto.jobTitle !== undefined && dto.jobTitle !== (stored.jobTitle ?? '')) {
+    changes.jobTitle = dto.jobTitle;
+  }
+  const storedProjects = stored.projects ?? [];
+  if (
+    dto.projects !== undefined &&
+    (dto.projects.length !== storedProjects.length ||
+      dto.projects.some((project, i) => project !== storedProjects[i]))
+  ) {
+    changes.projects = dto.projects;
+  }
+  return changes;
+}
+
 @Injectable()
 export class AiContextService {
   constructor(
@@ -44,6 +70,8 @@ export class AiContextService {
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     @InjectModel(Department.name)
     private readonly deptModel: Model<DepartmentDocument>,
+    private readonly claims: ClaimsService,
+    private readonly audit: AuditService,
   ) {}
 
   async resolveDepartmentNames(deptIds: string[]): Promise<string[]> {
@@ -69,8 +97,8 @@ export class AiContextService {
   /**
    * GET /ai-context/users/:userId — a member's AI profile (job title, projects,
    * personal style/preferences). Readable by the member themselves or by
-   * whoever may edit their hard fields (MANAGE_MEMBERS or their department
-   * lead); anyone else gets 403 instead of a colleague's preferences.
+   * whoever may edit their hard fields (see `canManageMemberHardFields`); anyone
+   * else gets 403 instead of a colleague's preferences.
    */
   async getUserContextFor(actor: Actor, userId: string): Promise<AiUserContext> {
     if (userId !== actor.sub) {
@@ -112,30 +140,49 @@ export class AiContextService {
     if (!(await this.canManageMemberHardFields(actor, targetUserId, target))) {
       throw new ForbiddenException({ code: AuthCode.INSUFFICIENT_PERMISSION });
     }
-    const set: Record<string, unknown> = { updatedBy: actor.sub };
-    if (dto.jobTitle !== undefined) set.jobTitle = dto.jobTitle;
-    if (dto.projects !== undefined) set.projects = dto.projects;
-    return this.userCtxModel
-      .findOneAndUpdate({ userId: targetUserId }, { $set: set }, { upsert: true, new: true })
+    const before = await this.getUserContext(targetUserId);
+    const changes = hardFieldChanges(before, dto);
+    // Both clients always send both fields: a Save that changes nothing leaves no trace.
+    if (Object.keys(changes).length === 0) return before;
+    const updated = await this.userCtxModel
+      .findOneAndUpdate(
+        { userId: targetUserId },
+        { $set: { ...changes, updatedBy: actor.sub } },
+        { upsert: true, new: true },
+      )
       .lean()
-      .exec() as Promise<AiUserContext>;
+      .exec();
+    await this.audit.record({
+      actorId: actor.sub,
+      action: 'member.ai_context_update',
+      targetType: 'member',
+      targetId: targetUserId,
+      meta: { changes },
+    });
+    return updated as AiUserContext;
   }
 
   /**
-   * MANAGE_MEMBERS, or lead of one of the target's departments. `preloaded`
-   * skips the user lookup when the caller already has the target (null = gone).
+   * Who may read or edit a member's AI profile, which goes into that member's
+   * assistant prompt. The target's role is read from the database:
+   *  - an Owner's profile: an Owner, or themself;
+   *  - anyone else's: an Owner, or MANAGE_MEMBERS;
+   *  - also the lead of one of the target's departments, unless the target is
+   *    someone else who is admin-like.
    */
-  async canManageMemberHardFields(
+  private async canManageMemberHardFields(
     actor: Actor,
     targetUserId: string,
-    preloaded?: unknown,
+    target: unknown,
   ): Promise<boolean> {
-    if (actor.perms.includes(Capability.MANAGE_MEMBERS)) return true;
-    const target =
-      preloaded !== undefined ? preloaded : await this.loadUser(targetUserId);
-    if (!target) return false;
+    const isSelf = actor.sub === targetUserId;
+    const isOwner = isOwnerActor(actor);
+    const targetClaims = await this.claims.resolve(targetUserId);
+    if (targetClaims.role === OWNER_ROLE_NAME) return isOwner || isSelf;
+    if (isOwner || actor.perms.includes(Capability.MANAGE_MEMBERS)) return true;
+    if (!isSelf && isAdminLike(targetClaims)) return false;
     const targetDeptIds = (
-      (target as unknown as { departmentIds?: unknown[] }).departmentIds ?? []
+      (target as { departmentIds?: unknown[] }).departmentIds ?? []
     ).map((d) => String(d));
     if (targetDeptIds.length === 0) return false;
     const ledDepts = await this.deptModel.find({ leadUserId: actor.sub }).lean().exec();

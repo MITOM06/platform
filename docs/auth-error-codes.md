@@ -184,7 +184,7 @@ members of the `AuthCode` enum — values unchanged.
 | `PRESET_ROLE_RENAME_FORBIDDEN` | 400 — `PATCH /admin/roles/:id` | Built-in roles can't be renamed. | — |
 | `ROLE_NAME_TAKEN` | 409 — `POST /admin/roles`, `PATCH /admin/roles/:id` (duplicate name, or a reserved preset name Owner/Admin/Manager/Member in any casing; used to be a raw 500) | A role with this name already exists. | — |
 | `OWNER_SSO_MAPPING_FORBIDDEN` | 403 — `PATCH /admin/workspace` (non-Owner mapping an SSO group or `defaultRole` to Owner) | Only an Owner can map SSO groups to the Owner role. | — |
-| `INSUFFICIENT_PERMISSION` | 403 — now also `GET /ai-context/users/:userId` (not self / not their manager) and AI-context entry edits that touch a scope you can't manage | You do not have permission to perform this action. | — |
+| `INSUFFICIENT_PERMISSION` | 403 — now also `GET /ai-context/users/:userId` and `PATCH …/hard` (see "Who may touch a member's AI profile" below) and AI-context entry edits that touch a scope you can't manage | You do not have permission to perform this action. | — |
 | `USER_BLOCKED` | 403 — `POST /api/friends/request`, `PUT /api/friends/accept` while either user blocked the other | You can't add this person. | — |
 | `SSO_EMAIL_UNVERIFIED` | 401 (OAuth redirect) — Google/OIDC sign-in matched an existing account (or the bootstrap Owner) by email but the IdP did not assert `email_verified: true` | Your sign-in provider hasn't verified this email address, so it can't be used to sign in to this account. | — |
 | `SOCIAL_ACCOUNT_CONFLICT` | 403 (OAuth redirect) — the matched account is already linked to a different identity of that provider | This email is linked to a different Google/SSO account. Sign in with that account or contact your administrator. | — |
@@ -494,6 +494,32 @@ confirm cannot immediately turn 2FA off again (wait for the next code).
 |------|-----------------------|----------------------|--------|
 | `MFA_REQUIRED_BY_ROLE` | 400 (`POST /api/users/me/mfa/disable`) | Two-factor authentication is required for your role and can't be turned off. | — |
 | `MFA_BACKUP_CODES_ISSUED` | 201 body (`POST /api/users/me/mfa/enroll/confirm`, reused) | Save your backup codes. (not an error) | — |
+
+### Who may touch a member's AI profile (2026-10-31)
+
+This narrows access that used to be allowed: `MANAGE_MEMBERS` reached every member, and a department
+lead reached everyone in their department, Owners included. The profile goes into that member's
+assistant prompt, which can act through their connectors.
+
+`GET /ai-context/users/:userId` and `PATCH /ai-context/users/:userId/hard`, target's role read from
+the database. "403" is `INSUFFICIENT_PERMISSION`; an unknown or malformed id stays 404 `USER_NOT_FOUND`.
+
+| Caller | Owner | Admin-like (Admin, or any role with `MANAGE_WORKSPACE` / `MANAGE_MEMBERS` / `MANAGE_ROLES`) | Other member |
+|--------|-------|------------------------------------------------------------------------------------------|--------------|
+| Owner | allowed | allowed | allowed |
+| `MANAGE_MEMBERS`, not Owner | 403 | allowed | allowed |
+| Lead of one of the target's departments, without `MANAGE_MEMBERS` | 403 | 403 | allowed |
+| Anyone else | 403 | 403 | 403 |
+
+Your own profile: `GET` is always allowed. `PATCH` follows the rows above, except that your own role
+never blocks you (an Owner may edit themself; a lead may edit themself whatever their role).
+
+- `projects` on `PATCH …/hard`: at most 20 items of at most 200 characters; beyond that, a
+  class-validator 400 (no `code`).
+- Audit action `member.ai_context_update`, `meta.changes` = the fields that really changed. A Save
+  that changes nothing writes nothing and is not audited.
+- ai-service fences `jobTitle`, `projects`, `style` and `preferences` as data in the prompt, wherever
+  they came from. Company/department entries, role names and department names stay trusted text.
 
 ## OAuth / SSO redirect errors
 

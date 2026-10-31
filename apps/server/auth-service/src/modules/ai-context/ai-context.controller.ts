@@ -56,11 +56,11 @@ export class AiContextController {
     return this.service.updateSoftContext(user.sub, dto);
   }
 
-  /** Self, MANAGE_MEMBERS, or the member's department lead — else 403. */
+  /** Self, an Owner, MANAGE_MEMBERS (not on an Owner), or the department lead (not on an admin-like member) — else 403. */
   @Get('users/:userId')
   getUser(@CurrentUser() user: JwtUser, @Param('userId') userId: string) {
     return this.service.getUserContextFor(
-      { sub: user.sub, perms: user.perms ?? [] },
+      { sub: user.sub, role: user.role, perms: user.perms ?? [] },
       userId,
     );
   }
@@ -72,7 +72,7 @@ export class AiContextController {
     @Body() dto: UpdateHardContextDto,
   ) {
     return this.service.updateHardContext(
-      { sub: user.sub, perms: user.perms ?? [] },
+      { sub: user.sub, role: user.role, perms: user.perms ?? [] },
       userId,
       dto,
     );
