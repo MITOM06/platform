@@ -2174,7 +2174,7 @@ export interface operations {
         parameters: {
             query: {
                 platform: string;
-                /** @description `1`: ask the IdP to authenticate again (`prompt=login`). Sent by a client on the first SSO after the user signed out on that device. Any other value is ignored. */
+                /** @description `1`: ask the IdP to authenticate again (`prompt=login`; `prompt=select_account` on Google, which lists no `login`). Sent by a client on the first SSO after the user signed out on that device. Any other value is ignored. */
                 reauth?: "1";
             };
             header?: never;

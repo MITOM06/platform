@@ -224,7 +224,7 @@ export class AuthController {
     required: false,
     enum: ['1'],
     description:
-      '`1`: ask the IdP to authenticate again (`prompt=login`). Sent by a client on the first SSO after the user signed out on that device. Any other value is ignored.',
+      '`1`: ask the IdP to authenticate again (`prompt=login`; `prompt=select_account` on Google, which lists no `login`). Sent by a client on the first SSO after the user signed out on that device. Any other value is ignored.',
   })
   async oidcLogin(
     @Query('platform') platform: string,
