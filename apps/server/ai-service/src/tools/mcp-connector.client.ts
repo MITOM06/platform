@@ -2,9 +2,23 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ToolDefinition } from './tool.interface';
 import { isSensitiveTool } from '../ai/injection-guard';
+import { providerOf } from './tool-names';
 
 const DEFAULT_READ_TIMEOUT_MS = 5_000;
+const DEFAULT_REMOTE_READ_TIMEOUT_MS = 30_000;
 const DEFAULT_WRITE_TIMEOUT_MS = 30_000;
+
+/**
+ * Catalog providers connector-service runs on its own REST adapters (Google,
+ * Notion). Any other provider — an MCP-directory slug or a `custom_<id>` server —
+ * is a third-party remote MCP server.
+ */
+const IN_HOUSE_PROVIDERS: ReadonlySet<string> = new Set(['gmail', 'calendar', 'drive', 'notion']);
+
+function isRemoteMcpTool(name: string): boolean {
+  const provider = providerOf(name);
+  return provider !== null && !IN_HOUSE_PROVIDERS.has(provider);
+}
 
 /** Returned to the model when a write's outcome is unknown — it must not blindly retry. */
 export const WRITE_TIMEOUT_RESULT =
@@ -67,7 +81,10 @@ class ConnectorTimeoutError extends Error {
  * Timeouts: listing and read-only calls get the short read budget; state-
  * changing calls (send/create/update/…, `isSensitiveTool`) get the long write
  * budget. Aborting a send after 5 s reported failure for an email the provider
- * then delivered, and the model retried it — a duplicate send.
+ * then delivered, and the model retried it — a duplicate send. Reads on a
+ * third-party remote MCP server get their own longer budget: GitMCP's
+ * `search_repo_docs` takes ~16 s, so a custom server's first chat failed with
+ * "connector unavailable" (connector-service itself allows such a call 60 s).
  */
 @Injectable()
 export class McpConnectorClient {
@@ -88,6 +105,11 @@ export class McpConnectorClient {
   private timeoutFor(toolName: string | null, write = false): number {
     if (write || (toolName !== null && isSensitiveTool(toolName))) {
       return this.config.get<number>('config.connector.writeTimeoutMs') ?? DEFAULT_WRITE_TIMEOUT_MS;
+    }
+    if (toolName !== null && isRemoteMcpTool(toolName)) {
+      return (
+        this.config.get<number>('config.connector.remoteReadTimeoutMs') ?? DEFAULT_REMOTE_READ_TIMEOUT_MS
+      );
     }
     return this.config.get<number>('config.connector.readTimeoutMs') ?? DEFAULT_READ_TIMEOUT_MS;
   }

@@ -173,6 +173,42 @@ describe('McpConnectorClient', () => {
       ).resolves.toBe(WRITE_TIMEOUT_RESULT);
     });
 
+    it('a read on a remote MCP server (custom or directory) gets the remote budget; a catalog read stays fast', async () => {
+      const cfg = {
+        get: (key: string) =>
+          ({
+            'config.connector.internalUrl': 'http://localhost:3003',
+            'config.connector.internalApiKey': 'k',
+            'config.connector.readTimeoutMs': 10,
+            'config.connector.remoteReadTimeoutMs': 500,
+            'config.connector.writeTimeoutMs': 30,
+          })[key],
+      } as any;
+      // Answers after 50 ms — past the catalog budget, within the remote one.
+      global.fetch = jest.fn(
+        (_url: string, init: RequestInit) =>
+          new Promise((resolve, reject) => {
+            const timer = setTimeout(
+              () => resolve({ ok: true, json: async () => ({ result: 'docs' }) }),
+              50,
+            );
+            init.signal?.addEventListener('abort', () => {
+              clearTimeout(timer);
+              reject(new Error('aborted'));
+            });
+          }),
+      ) as any;
+      const client = new McpConnectorClient(cfg);
+
+      await expect(
+        client.callTool('u', 'mcp__custom_6ae6136523f349a57f7a384d__search_repo_docs', {}),
+      ).resolves.toBe('docs');
+      await expect(client.callTool('u', 'mcp__linear__list_issues', {})).resolves.toBe('docs');
+      await expect(client.callTool('u', 'mcp__calendar__list_events', {})).resolves.toBe(
+        'Tool error: connector unavailable',
+      );
+    });
+
     it('returns connector-unavailable message when fetch rejects', async () => {
       global.fetch = jest.fn().mockRejectedValue(new Error('timeout')) as any;
       const client = makeClient();
