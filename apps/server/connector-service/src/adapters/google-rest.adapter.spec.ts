@@ -34,6 +34,7 @@ describe('GoogleRestAdapter', () => {
       updateOne: jest.fn().mockResolvedValue({}),
       findById: jest.fn().mockReturnValue({ lean: jest.fn().mockResolvedValue(null) }),
       exists: jest.fn().mockResolvedValue(null),
+      find: jest.fn().mockReturnValue({ lean: jest.fn().mockResolvedValue([]) }),
     };
     adapter = new GoogleRestAdapter(vault, cfg, connModel);
     fetchMock = jest.fn();
@@ -116,5 +117,38 @@ describe('GoogleRestAdapter', () => {
     expect(fetchMock.mock.calls[1][0]).toBe('https://oauth2.googleapis.com/token');
     expect(fetchMock.mock.calls[2][1].headers.Authorization).toBe('Bearer tok2');
     expect(connModel.updateOne).toHaveBeenCalled();
+  });
+
+  describe('revoke', () => {
+    const others = (rows: Array<{ accountLabel?: string }>) =>
+      connModel.find.mockReturnValue({ lean: jest.fn().mockResolvedValue(rows) });
+    const gmail = { provider: 'gmail', userId: 'u1', _id: 'c1', accountLabel: 'Minh@Example.com' };
+
+    it('revokes at Google when no other active Google connection exists', async () => {
+      fetchMock.mockResolvedValue({ ok: true });
+      await expect(adapter.revoke(gmail)).resolves.toBe('revoked');
+      expect(fetchMock.mock.calls[0][0]).toBe('https://oauth2.googleapis.com/revoke');
+      expect(connModel.find.mock.calls[0][0]).toMatchObject({ _id: { $ne: 'c1' }, status: 'active' });
+    });
+
+    it("skips while another member's connection rides the same Google account", async () => {
+      others([{ accountLabel: 'minh@example.com' }]);
+      await expect(adapter.revoke(gmail)).resolves.toBe('skipped');
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('revokes when the other active connections belong to different Google accounts', async () => {
+      others([{ accountLabel: 'someone@else.com' }]);
+      fetchMock.mockResolvedValue({ ok: true });
+      await expect(adapter.revoke(gmail)).resolves.toBe('revoked');
+    });
+
+    it('treats an unknown account on either side as a possible shared grant', async () => {
+      others([{}]);
+      await expect(adapter.revoke(gmail)).resolves.toBe('skipped');
+      others([{ accountLabel: 'someone@else.com' }]);
+      await expect(adapter.revoke({ provider: 'gmail', userId: 'u1', _id: 'c1' })).resolves.toBe('skipped');
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
   });
 });

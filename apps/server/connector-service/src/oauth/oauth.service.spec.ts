@@ -124,6 +124,18 @@ describe('OAuthService callback (never raw JSON in the popup)', () => {
     expect(write.set.accountLabel).toBe('WS');
     expect(write.unset).toEqual(expect.arrayContaining(['tokenEndpoint', 'encryptedClientCreds', 'directorySlug']));
   });
+
+  it('stores the Google account email as the account label (a disconnect needs it to spot a shared grant)', async () => {
+    const { svc, store } = makeService({ connectorAllowList: ['gmail'] });
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ access_token: 'at', expires_in: 3600 }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ emailAddress: 'Minh@Example.com' }) });
+    const state = svc.signState({ userId: 'u1', provider: 'gmail', scope: 'personal' });
+    await svc.handleCallback('gmail', 'code', state);
+    expect(fetchMock.mock.calls[1][0]).toBe('https://gmail.googleapis.com/gmail/v1/users/me/profile');
+    expect(fetchMock.mock.calls[1][1].headers.Authorization).toBe('Bearer at');
+    expect(store.upsert.mock.calls[0][0].set.accountLabel).toBe('minh@example.com');
+  });
 });
 
 /** Gives every catalog connector a client id/secret for the tests inside the calling describe. */
