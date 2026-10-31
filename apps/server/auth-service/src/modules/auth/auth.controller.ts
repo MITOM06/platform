@@ -221,7 +221,18 @@ export class AuthController {
   // ===================== OIDC SSO =====================
   @Get('oidc/login')
   @ApiOperation({ summary: 'Begin OIDC SSO (redirects to the IdP)' })
-  async oidcLogin(@Query('platform') platform: string, @Res() res: Response) {
+  @ApiQuery({
+    name: 'reauth',
+    required: false,
+    enum: ['1'],
+    description:
+      '`1`: ask the IdP to authenticate again (`prompt=login`). Sent by a client on the first SSO after the user signed out on that device. Any other value is ignored.',
+  })
+  async oidcLogin(
+    @Query('platform') platform: string,
+    @Res() res: Response,
+    @Query('reauth') reauth?: string,
+  ) {
     if (!this.oidc.isEnabledByEnv()) {
       // A browser navigation: answer with a typed ?error=, never raw text.
       return this.oauthRedirect.redirectWithError(
@@ -232,7 +243,9 @@ export class AuthController {
     }
     // IdP unreachable (discovery failed) → ?error=SSO_UNAVAILABLE, not a raw 500.
     try {
-      const url = await this.oidc.buildAuthorizeUrl(platform || 'web');
+      const url = await this.oidc.buildAuthorizeUrl(platform || 'web', {
+        reauth: reauth === '1',
+      });
       return res.redirect(url);
     } catch (err) {
       return this.oauthRedirect.redirectWithError(res, platform || 'web', err);

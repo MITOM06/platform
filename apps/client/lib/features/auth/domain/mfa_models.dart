@@ -91,7 +91,11 @@ sealed class SignInResult {
 
 class SignInSuccess extends SignInResult {
   final UserModel user;
-  const SignInSuccess(this.user);
+
+  /// The company IdP just signed this person in (`/auth/exchange` answered
+  /// `method: oidc`). False for password and Google sign-ins.
+  final bool viaSso;
+  const SignInSuccess(this.user, {this.viaSso = false});
 }
 
 class SignInMfaRequired extends SignInResult {

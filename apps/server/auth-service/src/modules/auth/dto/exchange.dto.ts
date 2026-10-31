@@ -55,6 +55,13 @@ export class ExchangeResponseDto {
   @ApiProperty()
   refreshToken: string;
 
+  @ApiProperty({
+    enum: ['google', 'oidc'],
+    description:
+      'How this sign-in happened. `oidc`: the IdP just signed this person in, so the client drops its "re-authenticate on the next SSO" device flag. Google and password sign-ins leave it set: the IdP session may still be the previous person\'s',
+  })
+  method: 'google' | 'oidc';
+
   @ApiProperty({ type: ExchangeUserDto })
   user: ExchangeUserDto;
 }

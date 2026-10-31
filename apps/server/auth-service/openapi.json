@@ -698,6 +698,18 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "reauth",
+            "required": false,
+            "in": "query",
+            "description": "`1`: ask the IdP to authenticate again (`prompt=login`). Sent by a client on the first SSO after the user signed out on that device. Any other value is ignored.",
+            "schema": {
+              "enum": [
+                "1"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2426,6 +2438,14 @@
           "refreshToken": {
             "type": "string"
           },
+          "method": {
+            "type": "string",
+            "enum": [
+              "google",
+              "oidc"
+            ],
+            "description": "How this sign-in happened. `oidc`: the IdP just signed this person in, so the client drops its \"re-authenticate on the next SSO\" device flag. Google and password sign-ins leave it set: the IdP session may still be the previous person's"
+          },
           "user": {
             "$ref": "#/components/schemas/ExchangeUserDto"
           }
@@ -2435,6 +2455,7 @@
           "sid",
           "accessToken",
           "refreshToken",
+          "method",
           "user"
         ]
       },

@@ -350,6 +350,7 @@ export class AuthService {
       sid: tokens.sid,
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
+      method: ctx.method,
       user: {
         id: user._id,
         email: user.email,

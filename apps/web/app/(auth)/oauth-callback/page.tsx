@@ -10,6 +10,7 @@ import { isLoginNotice, loginPath } from '@/lib/auth/force-logout'
 import { MFA_PATH, isMfaChallenge, savePendingMfa } from '@/lib/auth/mfa'
 import { establishSession } from '@/lib/auth/sign-in'
 import { forgetInviteReturn, inviteReturnPath } from '@/lib/auth/invite-return'
+import { clearSsoReauth } from '@/lib/auth/sso-reauth'
 
 export default function OAuthCallbackPage() {
   const searchParams = useSearchParams()
@@ -58,7 +59,11 @@ export default function OAuthCallbackPage() {
           return
         }
         // Signed in. /set-password only applies to an account still flagged from before.
-        router.replace(await establishSession(data))
+        const next = await establishSession(data)
+        // SSO only: after a Google sign-in the IdP session may still belong to
+        // whoever signed out here, so the next SSO must keep asking.
+        if (data.method === 'oidc') clearSsoReauth()
+        router.replace(next)
       })
       .catch((err: unknown) => {
         // Specific reason when the server gave one (e.g. ACCOUNT_BLOCKED),

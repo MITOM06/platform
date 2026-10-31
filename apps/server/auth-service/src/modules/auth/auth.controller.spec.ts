@@ -536,6 +536,46 @@ describe('AuthController — SSO info, IdP down, password recovery routing', () 
     expect(redirect).toHaveBeenCalledWith(`${WEB}?error=SSO_DISABLED`);
   });
 
+  describe('/auth/oidc/login ?reauth', () => {
+    async function login(reauth?: string) {
+      const buildAuthorizeUrl = jest
+        .fn()
+        .mockResolvedValue('https://idp.example.com/authorize');
+      const { controller } = await buildController({
+        oidc: { isEnabledByEnv: () => true, buildAuthorizeUrl },
+      });
+      const redirect = jest.fn();
+      await controller.oidcLogin(
+        'web',
+        { redirect } as unknown as Response,
+        reauth,
+      );
+      expect(redirect).toHaveBeenCalledWith(
+        'https://idp.example.com/authorize',
+      );
+      return buildAuthorizeUrl;
+    }
+
+    it('reauth=1 asks for re-authentication', async () => {
+      const build = await login('1');
+      expect(build).toHaveBeenCalledWith('web', { reauth: true });
+    });
+
+    it('without the flag nothing changes', async () => {
+      const build = await login();
+      expect(build).toHaveBeenCalledWith('web', { reauth: false });
+    });
+
+    // Allow-list, not pass-through: `prompt` values never come from the query.
+    it.each(['0', 'true', 'login', 'none', 'select_account', '', '1,1'])(
+      'reauth=%s is ignored',
+      async (value) => {
+        const build = await login(value);
+        expect(build).toHaveBeenCalledWith('web', { reauth: false });
+      },
+    );
+  });
+
   // These came out as GENERIC_ERROR: the redirect only passes codes it knows,
   // and they were never in AuthCode — so "the sign-in link expired" and "your
   // IdP did not verify this email" both read as an unknown failure.
