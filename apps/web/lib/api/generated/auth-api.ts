@@ -1186,6 +1186,11 @@ export interface components {
             sid: string;
             accessToken: string;
             refreshToken: string;
+            /**
+             * @description How this sign-in happened. `oidc`: the IdP just signed this person in, so the client drops its "re-authenticate on the next SSO" device flag. Google and password sign-ins leave it set: the IdP session may still be the previous person's
+             * @enum {string}
+             */
+            method: "google" | "oidc";
             user: components["schemas"]["ExchangeUserDto"];
         };
         LoginTokensUserDto: {
@@ -2169,6 +2174,8 @@ export interface operations {
         parameters: {
             query: {
                 platform: string;
+                /** @description `1`: ask the IdP to authenticate again (`prompt=login`). Sent by a client on the first SSO after the user signed out on that device. Any other value is ignored. */
+                reauth?: "1";
             };
             header?: never;
             path?: never;

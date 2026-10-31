@@ -95,6 +95,11 @@ export interface LoginResponse {
   accessToken: string
   refreshToken: string
   sid: string
+  /**
+   * `POST /auth/exchange` only: how this sign-in happened. Absent elsewhere and
+   * from an older server (= not SSO).
+   */
+  method?: 'google' | 'oidc'
   user: AuthUser
 }
 

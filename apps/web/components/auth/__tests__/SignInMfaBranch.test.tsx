@@ -6,6 +6,7 @@ import LoginPage from '@/app/(auth)/login/page'
 import OAuthCallbackPage from '@/app/(auth)/oauth-callback/page'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { clearPendingMfa, readPendingMfa } from '@/lib/auth/mfa'
+import { isSsoReauthDue, markSsoReauth } from '@/lib/auth/sso-reauth'
 
 const push = vi.fn()
 const replace = vi.fn()
@@ -112,5 +113,62 @@ describe('sign-in screens → 2FA step', () => {
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith('/set-password'))
     expect(fetchMock).toHaveBeenCalledWith('/api/auth/set-cookie', expect.anything())
+  })
+
+  describe('oauth-callback and the "re-authenticate on the next SSO" flag', () => {
+    beforeEach(() => {
+      localStorage.clear()
+      markSsoReauth()
+      nav.search = 'code=login-code'
+    })
+
+    it('a successful SSO sign-in clears it', async () => {
+      exchangeCode.mockResolvedValue({ data: { ...tokens, method: 'oidc' } })
+      render(<OAuthCallbackPage />)
+      await waitFor(() => expect(replace).toHaveBeenCalledWith('/'))
+      expect(isSsoReauthDue()).toBe(false)
+    })
+
+    // The IdP session may still be the previous person's: only the IdP having
+    // just signed someone in makes a silent SSO safe again.
+    it.each([
+      ['a Google sign-in', { ...tokens, method: 'google' }],
+      ['an older server that sends no method', tokens],
+    ])('%s keeps it', async (_label, data) => {
+      exchangeCode.mockResolvedValue({ data })
+      render(<OAuthCallbackPage />)
+      await waitFor(() => expect(replace).toHaveBeenCalledWith('/'))
+      expect(isSsoReauthDue()).toBe(true)
+    })
+
+    it('a Google sign-in stopping at the 2FA step keeps it', async () => {
+      exchangeCode.mockResolvedValue({ data: challenge })
+      render(<OAuthCallbackPage />)
+      await waitFor(() => expect(replace).toHaveBeenCalledWith('/mfa'))
+      expect(isSsoReauthDue()).toBe(true)
+    })
+
+    it('a failed exchange keeps it', async () => {
+      exchangeCode.mockRejectedValue(new Error('boom'))
+      render(<OAuthCallbackPage />)
+      await waitFor(() => expect(replace).toHaveBeenCalledWith('/login'))
+      expect(isSsoReauthDue()).toBe(true)
+    })
+
+    it('an IdP that refused the sign-in keeps it', async () => {
+      nav.search = 'error=OIDC_EXCHANGE_FAILED'
+      render(<OAuthCallbackPage />)
+      await waitFor(() => expect(replace).toHaveBeenCalledWith('/login?reason=OIDC_EXCHANGE_FAILED'))
+      expect(exchangeCode).not.toHaveBeenCalled()
+      expect(isSsoReauthDue()).toBe(true)
+    })
+
+    it('a session that could not be established keeps it', async () => {
+      fetchMock.mockRejectedValue(new Error('offline'))
+      exchangeCode.mockResolvedValue({ data: { ...tokens, method: 'oidc' } })
+      render(<OAuthCallbackPage />)
+      await waitFor(() => expect(replace).toHaveBeenCalledWith('/login'))
+      expect(isSsoReauthDue()).toBe(true)
+    })
   })
 })

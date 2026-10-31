@@ -7,6 +7,7 @@ import React from 'react'
 import { toast } from 'sonner'
 import LoginPage from '@/app/(auth)/login/page'
 import OAuthCallbackPage from '@/app/(auth)/oauth-callback/page'
+import { markSsoReauth } from '@/lib/auth/sso-reauth'
 import { useAuthStore } from '@/lib/store/auth.store'
 import type { SsoInfo } from '@/lib/api/auth'
 
@@ -62,6 +63,7 @@ describe('login: single sign-on required (contract 13 C)', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    localStorage.clear()
     nav.search = ''
     ssoInfo.value = { enabled: false, loginUrl: null, buttonLabel: '' }
     useAuthStore.setState({ user: null, accessToken: null })
@@ -81,6 +83,13 @@ describe('login: single sign-on required (contract 13 C)', () => {
     expect(sso.getAttribute('href')).toMatch(/\/auth\/oidc\/login\?platform=web$/)
     expect(screen.getByText('auth.login.orSignInWithPassword')).toBeInTheDocument()
     expect(screen.getAllByTestId('sso-button')).toHaveLength(1)
+  })
+
+  it('the SSO_REQUIRED notice button also asks for re-authentication after a sign-out here', async () => {
+    markSsoReauth()
+    nav.search = 'reason=SSO_REQUIRED'
+    renderLogin()
+    expect(screen.getByTestId('sso-button').getAttribute('href')).toMatch(/\?platform=web&reauth=1$/)
   })
 
   it('a password sign-in answering 403 SSO_REQUIRED switches to the notice, with no toast and no session', async () => {
