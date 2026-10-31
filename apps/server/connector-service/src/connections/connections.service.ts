@@ -126,6 +126,7 @@ export class ConnectionsService {
         adapter.revoke({
           provider: conn.provider,
           userId: conn.userId,
+          accountLabel: conn.accountLabel,
           mcpUrl: conn.mcpUrl,
           encryptedTokens: conn.encryptedTokens,
           encryptedClientCreds: conn.encryptedClientCreds,
