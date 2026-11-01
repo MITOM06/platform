@@ -66,6 +66,11 @@ export class ToolListCache {
     }
   }
 
+  /** Seeds a list just fetched elsewhere (e.g. while saving a custom MCP server). */
+  prime(key: string, tools: McpTool[]): void {
+    this.set(key, tools);
+  }
+
   invalidate(key: string): void {
     this.entries.delete(key);
   }

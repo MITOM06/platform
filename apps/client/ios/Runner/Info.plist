@@ -21,6 +21,21 @@
 	<string>PON needs microphone access for voice and video calls.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>PON transcribes your speech during calls so the AI notetaker can summarize the meeting.</string>
+	<!-- Local development against scripts/dev/up.sh, which serves plain http on the
+	     Mac's LAN IP. NSAllowsLocalNetworking relaxes ATS for private-network and
+	     loopback addresses ONLY — public hosts still require https, so Cloud Run
+	     traffic is unaffected. iOS 14+ additionally shows a Local Network prompt the
+	     first time the app reaches a LAN address; NSLocalNetworkUsageDescription is
+	     the text it displays. Unlike the Android switch this cannot be scoped to a
+	     debug variant — Info.plist ships with release too — so it stays on `dev`
+	     per .claude/rules/dev-local-only.md and must never be merged into main. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>PON connects to the development server running on your computer over the local network.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

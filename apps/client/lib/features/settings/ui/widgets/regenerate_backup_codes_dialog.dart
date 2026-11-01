@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/data/auth_repository.dart';
+import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/ui/widgets/backup_codes_panel.dart';
 import '../../../auth/ui/widgets/mfa_code_field.dart';
 import '../../../auth/utils/mfa_code.dart';
@@ -15,7 +16,8 @@ import '../../utils/two_factor_error.dart';
 class RegenerateBackupCodesDialog extends ConsumerStatefulWidget {
   const RegenerateBackupCodesDialog({super.key});
 
-  /// Not dismissible by tapping outside: new codes must not be lost unseen.
+  /// Not dismissible by tapping outside, and Back is blocked while the new
+  /// codes show: they must not be lost unseen.
   static Future<void> show(BuildContext context) => showDialog<void>(
         context: context,
         barrierDismissible: false,
@@ -51,11 +53,14 @@ class _RegenerateBackupCodesDialogState
       _isLoading = true;
       _errorText = null;
     });
+    // Read before the await: this dialog can't use `ref` once it is closed.
+    final auth = ref.read(authNotifierProvider.notifier);
     try {
       final codes = await ref
           .read(authRepositoryProvider)
           .regenerateBackupCodes(normalizeTotpCode(_codeController.text));
       if (mounted) setState(() => _codes = codes);
+      await auth.resyncBackupCodes(codes.length);
     } catch (e) {
       // MFA_CODE_INVALID / MFA_NOT_ENROLLED / too many codes / network →
       // localized, never raw.
@@ -77,7 +82,7 @@ class _RegenerateBackupCodesDialogState
     final hintStyle =
         TextStyle(color: AppTheme.mutedText(context), fontSize: 14, height: 1.4);
 
-    return AlertDialog(
+    final dialog = AlertDialog(
       scrollable: true,
       title: Text(
         codes == null ? l10n.securityMfaRegenerate : l10n.mfaBackupCodesTitle,
@@ -148,5 +153,8 @@ class _RegenerateBackupCodesDialogState
               ),
             ],
     );
+
+    // New codes on screen: only the panel's confirm button closes, as on web.
+    return PopScope(canPop: codes == null, child: dialog);
   }
 }

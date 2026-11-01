@@ -29,6 +29,8 @@
   "securitySetButton": "Đặt mật khẩu",
   "securityChangeButton": "Đổi mật khẩu",
   "securitySetSuccess": "Đặt mật khẩu thành công",
+  "securityChangeDoneBody": "Các thiết bị khác đã bị đăng xuất.",
+  "securitySetDoneBody": "Giờ bạn có thể đăng nhập bằng email và mật khẩu này.",
   "securityTwoFaTitle": "Xác thực hai yếu tố",
   "securityTwoFaSubtitle": "Thêm một lớp bảo mật cho tài khoản của bạn.",
   "securityTwoFaComingSoon": "Xác thực hai yếu tố sẽ sớm ra mắt.",
@@ -746,6 +748,8 @@
   "integrationsSettingsSubtitle": "Kết nối các công cụ trợ lý có thể dùng",
   "connectorStatusConnected": "Đã kết nối",
   "connectorStatusAvailable": "Có sẵn",
+  "connectorStatusNotAllowed": "Không được phép",
+  "connectorNotAllowedHint": "Workspace của bạn chưa cho phép connector này. Hãy nhờ quản trị viên thêm nó vào danh sách cho phép.",
   "connectorStatusComingSoon": "Sắp ra mắt",
   "connectorConnect": "Kết nối",
   "connectorManage": "Quản lý",
@@ -782,6 +786,8 @@
   "skillsRealActionNote": "Skill thay đổi CÁCH assistant suy nghĩ và trả lời. Để AI thực sự hành động (gửi mail, tạo lịch, ghi vào Notion...), kết nối app tương ứng bên dưới.",
   "skillsSettingsSubtitle": "Chọn thế mạnh cho trợ lý của bạn",
   "skillNeeds": "Cần {requirements}",
+  "skillReady": "Đã đủ điều kiện",
+  "skillMissing": "Chưa kết nối: {connectors}",
   "skillSchedulerName": "Trợ lý lịch",
   "skillSchedulerDesc": "Đề xuất giờ họp và soạn sẵn lời mời — bạn vẫn cần tự gửi qua lịch/mail (hoặc kết nối Google Calendar/Gmail để AI tự thao tác được).",
   "skillMailWriterName": "Soạn thư",
@@ -883,6 +889,7 @@
   "adminMemberRoleLockedSelf": "Bạn không thể tự thay đổi vai trò của mình.",
   "adminMemberRoleLockedOwner": "Chỉ Chủ sở hữu mới có thể thay đổi vai trò của Chủ sở hữu.",
   "adminMemberDepartments": "Phòng ban",
+  "adminMemberDepartmentsLockedOwner": "Chỉ Chủ sở hữu mới có thể thay đổi phòng ban của Chủ sở hữu.",
   "adminRoleHint": "Bật/tắt quyền cho từng vai trò. Vai trò Owner chỉ đọc.",
   "adminRoleCapability": "Quyền",
   "adminRolePreset": "Mặc định",
@@ -1194,6 +1201,7 @@
   "authErrInvitationRevoked": "Lời mời này đã bị thu hồi.",
   "authErrInvitationAlreadyAccepted": "Lời mời này đã được chấp nhận. Vui lòng đăng nhập.",
   "authErrInvitationEmailMismatch": "Hãy đăng nhập bằng tài khoản Google trùng với email được mời.",
+  "authErrInviteGoogleFlowExpired": "Lượt đăng nhập Google này đã hết hạn. Vui lòng thử lại từ lời mời.",
   "authErrInvitationAlreadyPending": "Email này đã có một lời mời đang chờ.",
   "authErrInvitationNotPending": "Lời mời này không còn ở trạng thái chờ.",
   "authErrInvitationNotFound": "Không tìm thấy lời mời.",
@@ -1321,6 +1329,8 @@
   "authErrSocialAccountConflict": "Email này đã được liên kết với một tài khoản đăng nhập khác",
   "authErrTooManyOtpRequests": "Bạn đã yêu cầu quá nhiều mã OTP. Vui lòng thử lại sau 10 phút.",
   "authErrSocialProviderUnsupported": "Phương thức đăng nhập này không được hỗ trợ.",
+  "authErrSocialLoginCancelled": "Bạn đã huỷ đăng nhập bằng Google.",
+  "authErrSocialLoginFailed": "Đăng nhập bằng Google chưa hoàn tất. Vui lòng thử lại.",
   "aiActionConfirm": "Xác nhận",
   "aiActionCancel": "Huỷ",
   "aiActionSendEmail": "Gửi email",
@@ -1361,6 +1371,8 @@
   "aiTraceToolAwaiting": "Đang chờ xác nhận",
   "aiTraceToolDone": "Xong",
   "aiTraceToolNotRun": "Chưa chạy",
+  "aiTraceToolCancelled": "Đã huỷ",
+  "aiTraceToolExpired": "Đã hết hạn",
   "aiTraceTokens": "{input} vào · {output} ra",
   "aiTraceCacheTokens": "cache {read} đọc · {written} ghi",
   "aiTraceThinkingTokens": "{count} suy luận",
@@ -1439,6 +1451,7 @@
   "adminAuditActionDepartmentUpdate": "Cập nhật phòng ban",
   "adminAuditActionDepartmentDelete": "Xoá phòng ban",
   "adminAuditActionMemberUpdate": "Cập nhật thành viên",
+  "adminAuditActionMemberAiContextUpdate": "Đổi ngữ cảnh AI của thành viên",
   "adminAuditActionMemberSsoUpdate": "Thành viên được cập nhật qua SSO",
   "adminAuditActionMemberBlock": "Khoá thành viên",
   "adminAuditActionMemberUnblock": "Mở khoá thành viên",
@@ -1520,6 +1533,8 @@
   "mfaCopyCodes": "Sao chép mã",
   "mfaCodesCopied": "Đã sao chép mã dự phòng",
   "mfaSavedCheckbox": "Tôi đã lưu mã dự phòng",
+  "mfaCopyCodesFirst": "Hãy sao chép mã trước",
+  "mfaCodesCopyFailed": "Không sao chép được mã. Vui lòng thử lại.",
   "mfaContinue": "Tiếp tục",
   "securityMfaOn": "Mỗi lần đăng nhập đều cần mã từ ứng dụng xác thực.",
   "securityMfaPending": "Bắt buộc với vai trò của bạn. Bạn sẽ thiết lập ở lần đăng nhập tới.",
@@ -1540,6 +1555,8 @@
   "securityMfaTurnOffHint": "Nhập mã hiện tại từ ứng dụng xác thực để xác nhận. Bạn sẽ không còn phải nhập mã khi đăng nhập.",
   "securityMfaTurnOffSubmit": "Tắt",
   "securityMfaTurnedOff": "Đã tắt xác thực hai yếu tố.",
+  "securityMfaBackupCodesLeft": "{count, plural, other{{count} mã dự phòng còn lại}}",
+  "securityMfaBackupCodesLow": "Hãy tạo mã mới bằng “{action}” bên dưới khi bạn vẫn còn ứng dụng xác thực. Không có ứng dụng hoặc mã dự phòng thì bạn sẽ không đăng nhập được.",
   "authErrMfaRequiredByRole": "Vai trò của bạn bắt buộc xác thực hai yếu tố nên không thể tắt.",
   "authNoticeMfaSetupRequiredByRole": "Vai trò mới của bạn bắt buộc xác thực hai yếu tố. Hãy đăng nhập lại để thiết lập.",
   "adminMfaBadge": "Đã bật 2FA",
@@ -1571,35 +1588,6 @@
   "authErrMfaAlreadyEnrolled": "Tài khoản này đã thiết lập xác thực hai yếu tố.",
   "authErrMfaResetForbidden": "Bạn không thể đặt lại xác thực hai yếu tố cho thành viên này.",
   "authErrMfaResetSelfForbidden": "Bạn không thể tự đặt lại xác thực hai yếu tố của chính mình.",
-  "callSelfWeakNetwork": "Mạng của bạn đang yếu",
-  "callPeerWeakNetwork": "Mạng của {name} đang yếu",
-  "@callPeerWeakNetwork": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "callUnstableNetwork": "Kết nối không ổn định",
-  "callReconnectingSelf": "Mất kết nối, đang kết nối lại…",
-  "callWaitingForPeer": "Đang chờ {name} kết nối lại…",
-  "@callWaitingForPeer": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "callReconnectCountdown": "Cuộc gọi sẽ kết thúc sau {seconds} giây nếu không kết nối lại được",
-  "@callReconnectCountdown": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "callSwitchToVideo": "Chuyển sang gọi video",
-  "callVideoUnavailable": "Không thể bật video trong cuộc gọi này — người kia có thể cần cập nhật ứng dụng",
   "adminCapHostMeeting": "Tổ chức cuộc họp",
   "meetingErrNotFound": "Cuộc họp không tồn tại",
   "meetingErrForbidden": "Bạn không có quyền làm việc này trong cuộc họp",
@@ -2202,5 +2190,34 @@
   "meetingMediaBlocked": "Quyền micro hoặc camera đang tắt. Bạn vẫn có thể tham gia và bật lại sau trong Cài đặt.",
   "meetingSwitchCamera": "Đổi camera",
   "meetingSpeakerOn": "Dùng loa ngoài",
-  "meetingLoading": "Đang tải cuộc họp…"
+  "meetingLoading": "Đang tải cuộc họp…",
+  "callSelfWeakNetwork": "Mạng của bạn đang yếu",
+  "callPeerWeakNetwork": "Mạng của {name} đang yếu",
+  "@callPeerWeakNetwork": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callUnstableNetwork": "Kết nối không ổn định",
+  "callReconnectingSelf": "Mất kết nối, đang kết nối lại…",
+  "callWaitingForPeer": "Đang chờ {name} kết nối lại…",
+  "@callWaitingForPeer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callReconnectCountdown": "Cuộc gọi sẽ kết thúc sau {seconds} giây nếu không kết nối lại được",
+  "@callReconnectCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "callSwitchToVideo": "Chuyển sang gọi video",
+  "callVideoUnavailable": "Không thể bật video trong cuộc gọi này — người kia có thể cần cập nhật ứng dụng"
 }

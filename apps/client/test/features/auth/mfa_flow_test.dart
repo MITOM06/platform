@@ -438,6 +438,17 @@ void main() {
       expect(h.auth, isA<AuthMfaBackupCodes>());
       expect(h.repo.completeCalls, isEmpty);
 
+      // The checkbox itself is locked until the codes were copied.
+      expect(
+          tester
+              .widget<Checkbox>(find.byKey(const ValueKey('mfa-saved-checkbox')))
+              .onChanged,
+          isNull);
+      expect(find.text(l10n.mfaCopyCodesFirst), findsOneWidget);
+      await copyBackupCodes(tester);
+      expect(find.text(l10n.mfaCopyCodesFirst), findsNothing);
+      expect(cont().onPressed, isNull);
+
       await tester.tap(find.byKey(const ValueKey('mfa-saved-checkbox')));
       await tester.pumpAndSettle();
       expect(cont().onPressed, isNotNull);
@@ -468,6 +479,7 @@ void main() {
           initial: const AuthMfaBackupCodes(_enrollChallenge, _codes),
           repo: repo);
 
+      await copyBackupCodes(tester);
       await tester.tap(find.byKey(const ValueKey('mfa-saved-checkbox')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('mfa-codes-continue')));
@@ -492,6 +504,7 @@ void main() {
           initial: const AuthMfaBackupCodes(_enrollChallenge, _codes),
           repo: repo);
 
+      await copyBackupCodes(tester);
       await tester.tap(find.byKey(const ValueKey('mfa-saved-checkbox')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('mfa-codes-continue')));
@@ -521,6 +534,7 @@ void main() {
       await tester.enterText(
           find.byKey(const ValueKey('mfa-enroll-code')), '135790');
       await tester.pumpAndSettle();
+      await copyBackupCodes(tester);
       await tester.tap(find.byKey(const ValueKey('mfa-saved-checkbox')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('mfa-codes-continue')));

@@ -29,6 +29,8 @@
   "securitySetButton": "设置密码",
   "securityChangeButton": "更改密码",
   "securitySetSuccess": "密码设置成功",
+  "securityChangeDoneBody": "其他设备已退出登录。",
+  "securitySetDoneBody": "现在您也可以使用邮箱和此密码登录。",
   "securityTwoFaTitle": "双重验证",
   "securityTwoFaSubtitle": "为你的账户增加一层安全保护。",
   "securityTwoFaComingSoon": "双重验证即将推出。",
@@ -746,6 +748,8 @@
   "integrationsSettingsSubtitle": "连接助手可使用的工具",
   "connectorStatusConnected": "已连接",
   "connectorStatusAvailable": "可用",
+  "connectorStatusNotAllowed": "未获允许",
+  "connectorNotAllowedHint": "你的工作区不允许此连接器。请让管理员将其加入允许列表。",
   "connectorStatusComingSoon": "即将推出",
   "connectorConnect": "连接",
   "connectorManage": "管理",
@@ -782,6 +786,8 @@
   "skillsRealActionNote": "技能会改变助手的思考和表达方式。若要让它真正执行操作（发送邮件、创建日程、写入 Notion……），请连接下方对应的应用。",
   "skillsSettingsSubtitle": "选择助手擅长的事",
   "skillNeeds": "需要 {requirements}",
+  "skillReady": "已就绪",
+  "skillMissing": "未连接：{connectors}",
   "skillSchedulerName": "日程助手",
   "skillSchedulerDesc": "建议会议时间并起草邀请——你仍需通过日历/邮件应用自行发送（或连接 Google 日历/Gmail 让它直接代为操作）。",
   "skillMailWriterName": "邮件撰写",
@@ -883,6 +889,7 @@
   "adminMemberRoleLockedSelf": "你不能更改自己的角色。",
   "adminMemberRoleLockedOwner": "只有所有者才能更改所有者的角色。",
   "adminMemberDepartments": "部门",
+  "adminMemberDepartmentsLockedOwner": "只有所有者才能更改所有者的部门。",
   "adminRoleHint": "切换每个角色的权限。Owner 角色为只读。",
   "adminRoleCapability": "权限",
   "adminRolePreset": "预设",
@@ -1194,6 +1201,7 @@
   "authErrInvitationRevoked": "此邀请已被撤销。",
   "authErrInvitationAlreadyAccepted": "此邀请已被接受。请登录。",
   "authErrInvitationEmailMismatch": "请使用与受邀邮箱一致的 Google 账号登录。",
+  "authErrInviteGoogleFlowExpired": "此次 Google 登录已过期，请从邀请重新开始。",
   "authErrInvitationAlreadyPending": "此邮箱已有待处理的邀请。",
   "authErrInvitationNotPending": "此邀请已不再处于待处理状态。",
   "authErrInvitationNotFound": "未找到邀请。",
@@ -1321,6 +1329,8 @@
   "authErrSocialAccountConflict": "此邮箱已关联到其他登录账号",
   "authErrTooManyOtpRequests": "你请求的验证码次数过多。请在 10 分钟后重试。",
   "authErrSocialProviderUnsupported": "不支持此登录方式。",
+  "authErrSocialLoginCancelled": "已取消 Google 登录。",
+  "authErrSocialLoginFailed": "Google 登录未完成，请重试。",
   "aiActionConfirm": "确认",
   "aiActionCancel": "取消",
   "aiActionSendEmail": "发送邮件",
@@ -1361,6 +1371,8 @@
   "aiTraceToolAwaiting": "等待确认",
   "aiTraceToolDone": "完成",
   "aiTraceToolNotRun": "未执行",
+  "aiTraceToolCancelled": "已取消",
+  "aiTraceToolExpired": "已过期",
   "aiTraceTokens": "输入 {input} · 输出 {output}",
   "aiTraceCacheTokens": "缓存 读 {read} · 写 {written}",
   "aiTraceThinkingTokens": "思考 {count}",
@@ -1439,6 +1451,7 @@
   "adminAuditActionDepartmentUpdate": "更新了部门",
   "adminAuditActionDepartmentDelete": "删除了部门",
   "adminAuditActionMemberUpdate": "更新了成员",
+  "adminAuditActionMemberAiContextUpdate": "更改了成员的 AI 上下文",
   "adminAuditActionMemberSsoUpdate": "通过 SSO 更新了成员",
   "adminAuditActionMemberBlock": "封禁了成员",
   "adminAuditActionMemberUnblock": "解封了成员",
@@ -1520,6 +1533,8 @@
   "mfaCopyCodes": "复制备用码",
   "mfaCodesCopied": "已复制备用码",
   "mfaSavedCheckbox": "我已保存备用码",
+  "mfaCopyCodesFirst": "请先复制备用码",
+  "mfaCodesCopyFailed": "无法复制备用码，请重试。",
   "mfaContinue": "继续",
   "securityMfaOn": "每次登录都需要输入身份验证器应用中的验证码。",
   "securityMfaPending": "你的角色必须启用。下次登录时将进行设置。",
@@ -1540,6 +1555,8 @@
   "securityMfaTurnOffHint": "输入身份验证器应用中的当前验证码以确认。之后登录时将不再要求输入验证码。",
   "securityMfaTurnOffSubmit": "关闭",
   "securityMfaTurnedOff": "双重验证已关闭。",
+  "securityMfaBackupCodesLeft": "{count, plural, other{还剩 {count} 个备用码}}",
+  "securityMfaBackupCodesLow": "请趁身份验证器应用还可用时，使用下方的“{action}”生成新的备用码。既没有该应用也没有备用码时，您将无法登录。",
   "authErrMfaRequiredByRole": "你的角色要求启用双重验证，因此无法关闭。",
   "authNoticeMfaSetupRequiredByRole": "你的新角色要求启用双重验证。请重新登录以完成设置。",
   "adminMfaBadge": "已开启双重验证",
@@ -1571,35 +1588,6 @@
   "authErrMfaAlreadyEnrolled": "此账号已设置双重验证。",
   "authErrMfaResetForbidden": "你无法重置该成员的双重验证。",
   "authErrMfaResetSelfForbidden": "你不能重置自己的双重验证。",
-  "callSelfWeakNetwork": "你的网络较差",
-  "callPeerWeakNetwork": "{name} 的网络较差",
-  "@callPeerWeakNetwork": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "callUnstableNetwork": "连接不稳定",
-  "callReconnectingSelf": "连接中断，正在重新连接…",
-  "callWaitingForPeer": "正在等待 {name} 重新连接…",
-  "@callWaitingForPeer": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "callReconnectCountdown": "若无法重新连接，通话将在 {seconds} 秒后结束",
-  "@callReconnectCountdown": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "callSwitchToVideo": "切换到视频通话",
-  "callVideoUnavailable": "此通话无法开启视频——对方可能需要更新应用",
   "adminCapHostMeeting": "主持会议",
   "meetingErrNotFound": "该会议不存在",
   "meetingErrForbidden": "你无权在此会议中执行此操作",
@@ -2202,5 +2190,34 @@
   "meetingMediaBlocked": "麦克风或摄像头权限已关闭。你仍可加入，稍后可在“设置”中开启。",
   "meetingSwitchCamera": "切换摄像头",
   "meetingSpeakerOn": "使用扬声器",
-  "meetingLoading": "正在加载会议…"
+  "meetingLoading": "正在加载会议…",
+  "callSelfWeakNetwork": "你的网络较差",
+  "callPeerWeakNetwork": "{name} 的网络较差",
+  "@callPeerWeakNetwork": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callUnstableNetwork": "连接不稳定",
+  "callReconnectingSelf": "连接中断，正在重新连接…",
+  "callWaitingForPeer": "正在等待 {name} 重新连接…",
+  "@callWaitingForPeer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callReconnectCountdown": "若无法重新连接，通话将在 {seconds} 秒后结束",
+  "@callReconnectCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "callSwitchToVideo": "切换到视频通话",
+  "callVideoUnavailable": "此通话无法开启视频——对方可能需要更新应用"
 }

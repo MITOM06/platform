@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import {
+  humanizeToolName,
   isCustomProvider,
   providerDisplayName,
   providerOfTool,
+  toolCallLabel,
   toolDisplayLabel,
 } from '@/lib/ai/connector-names'
 import { modelDisplayName, toolCallStatus } from '@/lib/ai/trace'
@@ -29,6 +31,19 @@ describe('connector display names', () => {
     expect(providerDisplayName(undefined)).toBeNull()
     // Built-ins are named even before the catalog loads.
     expect(providerDisplayName('calendar')).toBe('Google Calendar')
+  })
+
+  it('a connector tool call reads "<Tool> on <Connector>", as on mobile — never the raw id', () => {
+    expect(toolCallLabel('mcp__calendar__list_events', t)).toBe(
+      'aiToolOnConnector:{"tool":"List events","connector":"Google Calendar"}',
+    )
+    expect(toolCallLabel('mcp__gmail__send_email', t, sources)).toBe(
+      'aiToolOnConnector:{"tool":"Send email","connector":"Gmail"}',
+    )
+    expect(toolCallLabel('web_search', t)).toBe('toolWebSearch') // built-ins keep their label
+    expect(toolCallLabel('mcp__gmail__', t)).toBe('Gmail')
+    expect(humanizeToolName('createIssue')).toBe('Create issue')
+    expect(humanizeToolName('notion-create-pages')).toBe('Notion create pages')
   })
 
   it('parses namespaced tool names', () => {

@@ -29,6 +29,8 @@
   "securitySetButton": "パスワードを設定",
   "securityChangeButton": "パスワードを変更",
   "securitySetSuccess": "パスワードを設定しました",
+  "securityChangeDoneBody": "他の端末はサインアウトされました。",
+  "securitySetDoneBody": "今後はメールアドレスとこのパスワードでもサインインできます。",
   "securityTwoFaTitle": "二要素認証",
   "securityTwoFaSubtitle": "アカウントにさらなるセキュリティ層を追加します。",
   "securityTwoFaComingSoon": "二要素認証は近日公開予定です。",
@@ -746,6 +748,8 @@
   "integrationsSettingsSubtitle": "アシスタントが使えるツールを接続",
   "connectorStatusConnected": "接続済み",
   "connectorStatusAvailable": "利用可能",
+  "connectorStatusNotAllowed": "許可されていません",
+  "connectorNotAllowedHint": "このワークスペースではこのコネクタは許可されていません。管理者に許可リストへの追加を依頼してください。",
   "connectorStatusComingSoon": "近日公開",
   "connectorConnect": "接続",
   "connectorManage": "管理",
@@ -782,6 +786,8 @@
   "skillsRealActionNote": "スキルはアシスタントの考え方や話し方を変えます。実際に操作させる（メール送信、予定作成、Notion への書き込みなど）には、下の対応アプリを連携してください。",
   "skillsSettingsSubtitle": "アシスタントの得意分野を選ぶ",
   "skillNeeds": "{requirements} が必要",
+  "skillReady": "利用可能",
+  "skillMissing": "未接続：{connectors}",
   "skillSchedulerName": "スケジューラー",
   "skillSchedulerDesc": "会議の時間を提案し招待状の下書きを作成します——送信はカレンダー/メールアプリでご自身で行ってください（Google カレンダー/Gmail を連携すると直接操作できます）。",
   "skillMailWriterName": "メール作成",
@@ -883,6 +889,7 @@
   "adminMemberRoleLockedSelf": "自分のロールは変更できません。",
   "adminMemberRoleLockedOwner": "オーナーのロールを変更できるのはオーナーのみです。",
   "adminMemberDepartments": "部門",
+  "adminMemberDepartmentsLockedOwner": "オーナーの部門を変更できるのはオーナーのみです。",
   "adminRoleHint": "各ロールの権限を切り替えます。Owner ロールは読み取り専用です。",
   "adminRoleCapability": "権限",
   "adminRolePreset": "プリセット",
@@ -1194,6 +1201,7 @@
   "authErrInvitationRevoked": "この招待は取り消されました。",
   "authErrInvitationAlreadyAccepted": "この招待はすでに承諾されています。サインインしてください。",
   "authErrInvitationEmailMismatch": "招待されたメールアドレスと一致する Google アカウントでサインインしてください。",
+  "authErrInviteGoogleFlowExpired": "この Google でのサインインは期限切れになりました。招待からもう一度お試しください。",
   "authErrInvitationAlreadyPending": "このメールアドレスにはすでに保留中の招待があります。",
   "authErrInvitationNotPending": "この招待は保留中ではありません。",
   "authErrInvitationNotFound": "招待が見つかりません。",
@@ -1321,6 +1329,8 @@
   "authErrSocialAccountConflict": "このメールは別のサインインアカウントに既にリンクされています",
   "authErrTooManyOtpRequests": "OTP コードのリクエストが多すぎます。10 分後にもう一度お試しください。",
   "authErrSocialProviderUnsupported": "このサインイン方法はサポートされていません。",
+  "authErrSocialLoginCancelled": "Google でのログインがキャンセルされました。",
+  "authErrSocialLoginFailed": "Google でのログインを完了できませんでした。もう一度お試しください。",
   "aiActionConfirm": "確認",
   "aiActionCancel": "キャンセル",
   "aiActionSendEmail": "メールを送信",
@@ -1361,6 +1371,8 @@
   "aiTraceToolAwaiting": "確認待ち",
   "aiTraceToolDone": "完了",
   "aiTraceToolNotRun": "未実行",
+  "aiTraceToolCancelled": "キャンセル済み",
+  "aiTraceToolExpired": "期限切れ",
   "aiTraceTokens": "入力 {input} · 出力 {output}",
   "aiTraceCacheTokens": "キャッシュ 読込 {read} · 書込 {written}",
   "aiTraceThinkingTokens": "思考 {count}",
@@ -1439,6 +1451,7 @@
   "adminAuditActionDepartmentUpdate": "部署を更新",
   "adminAuditActionDepartmentDelete": "部署を削除",
   "adminAuditActionMemberUpdate": "メンバーを更新",
+  "adminAuditActionMemberAiContextUpdate": "メンバーのAIコンテキストを変更",
   "adminAuditActionMemberSsoUpdate": "SSO によりメンバーを更新",
   "adminAuditActionMemberBlock": "メンバーをブロック",
   "adminAuditActionMemberUnblock": "メンバーのブロックを解除",
@@ -1520,6 +1533,8 @@
   "mfaCopyCodes": "コードをコピー",
   "mfaCodesCopied": "バックアップコードをコピーしました",
   "mfaSavedCheckbox": "バックアップコードを保存しました",
+  "mfaCopyCodesFirst": "先にコードをコピーしてください",
+  "mfaCodesCopyFailed": "コードをコピーできませんでした。もう一度お試しください。",
   "mfaContinue": "続行",
   "securityMfaOn": "サインインのたびに認証アプリのコードが必要です。",
   "securityMfaPending": "あなたのロールでは必須です。次回のサインイン時に設定します。",
@@ -1540,6 +1555,8 @@
   "securityMfaTurnOffHint": "確認のため、認証アプリに表示されている現在のコードを入力してください。今後はサインイン時にコードを求められなくなります。",
   "securityMfaTurnOffSubmit": "オフにする",
   "securityMfaTurnedOff": "二要素認証をオフにしました。",
+  "securityMfaBackupCodesLeft": "{count, plural, other{残りのバックアップコードは {count} 個です}}",
+  "securityMfaBackupCodesLow": "認証アプリが使えるうちに、下の「{action}」で新しいコードを作成してください。認証アプリもバックアップコードもないと、サインインできなくなります。",
   "authErrMfaRequiredByRole": "あなたのロールでは二要素認証が必須のため、オフにできません。",
   "authNoticeMfaSetupRequiredByRole": "新しいロールでは二要素認証が必須です。もう一度サインインして設定してください。",
   "adminMfaBadge": "2FA オン",
@@ -1571,35 +1588,6 @@
   "authErrMfaAlreadyEnrolled": "このアカウントでは二要素認証がすでに設定されています。",
   "authErrMfaResetForbidden": "このメンバーの二要素認証はリセットできません。",
   "authErrMfaResetSelfForbidden": "自分の二要素認証はリセットできません。",
-  "callSelfWeakNetwork": "あなたのネットワークが不安定です",
-  "callPeerWeakNetwork": "{name}さんのネットワークが不安定です",
-  "@callPeerWeakNetwork": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "callUnstableNetwork": "接続が不安定です",
-  "callReconnectingSelf": "接続が切れました。再接続しています…",
-  "callWaitingForPeer": "{name}さんの再接続を待っています…",
-  "@callWaitingForPeer": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "callReconnectCountdown": "再接続できない場合、{seconds}秒後に通話が終了します",
-  "@callReconnectCountdown": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "callSwitchToVideo": "ビデオ通話に切り替え",
-  "callVideoUnavailable": "この通話ではビデオを使えません。相手のアプリの更新が必要な可能性があります",
   "adminCapHostMeeting": "会議を主催",
   "meetingErrNotFound": "この会議は存在しません",
   "meetingErrForbidden": "この会議ではその操作を行う権限がありません",
@@ -2202,5 +2190,34 @@
   "meetingMediaBlocked": "マイクまたはカメラへのアクセスがオフです。このまま参加して、後で「設定」からオンにできます。",
   "meetingSwitchCamera": "カメラを切り替え",
   "meetingSpeakerOn": "スピーカーを使用",
-  "meetingLoading": "会議を読み込み中…"
+  "meetingLoading": "会議を読み込み中…",
+  "callSelfWeakNetwork": "あなたのネットワークが不安定です",
+  "callPeerWeakNetwork": "{name}さんのネットワークが不安定です",
+  "@callPeerWeakNetwork": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callUnstableNetwork": "接続が不安定です",
+  "callReconnectingSelf": "接続が切れました。再接続しています…",
+  "callWaitingForPeer": "{name}さんの再接続を待っています…",
+  "@callWaitingForPeer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callReconnectCountdown": "再接続できない場合、{seconds}秒後に通話が終了します",
+  "@callReconnectCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "callSwitchToVideo": "ビデオ通話に切り替え",
+  "callVideoUnavailable": "この通話ではビデオを使えません。相手のアプリの更新が必要な可能性があります"
 }

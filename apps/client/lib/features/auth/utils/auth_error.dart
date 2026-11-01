@@ -175,6 +175,8 @@ String _codeToString(
       return l10n.authErrInvitationAlreadyAccepted;
     case 'INVITATION_EMAIL_MISMATCH':
       return l10n.authErrInvitationEmailMismatch;
+    case 'INVITE_GOOGLE_FLOW_EXPIRED':
+      return l10n.authErrInviteGoogleFlowExpired;
     case 'INVITATION_ALREADY_PENDING':
       return l10n.authErrInvitationAlreadyPending;
     case 'INVITATION_NOT_PENDING':
@@ -311,6 +313,11 @@ String _codeToString(
       return l10n.authErrSsoExchangeFailed;
     case 'SOCIAL_ACCOUNT_CONFLICT':
       return l10n.authErrSocialAccountConflict;
+    // Google came back without a user (cancelled / code refused).
+    case 'SOCIAL_LOGIN_CANCELLED':
+      return l10n.authErrSocialLoginCancelled;
+    case 'SOCIAL_LOGIN_FAILED':
+      return l10n.authErrSocialLoginFailed;
 
     // ── Friends / blocking ───────────────────────────────────────────────────
     case 'USER_BLOCKED':

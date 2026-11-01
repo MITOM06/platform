@@ -11,6 +11,8 @@ import { Issuer, generators, Client } from 'openid-client';
 import { AuthCode } from '../../../common/auth-code.enum';
 import { isOidcConfiguredByEnv } from './oidc-env';
 
+const GOOGLE_ISSUER = 'https://accounts.google.com';
+
 interface OidcFlow {
   codeVerifier: string;
   nonce: string;
@@ -72,7 +74,29 @@ export class OidcService {
     return this.clientPromise;
   }
 
-  async buildAuthorizeUrl(platform: string): Promise<string> {
+  /**
+   * The `prompt` that interrupts a silent SSO. Google lists no `prompt=login`
+   * (only `none`, `consent`, `select_account`), so there it asks for the account
+   * chooser: someone else can pick their own account, though choosing one with a
+   * live Google session may not ask for a password.
+   */
+  private reauthPrompt(): 'login' | 'select_account' {
+    const issuer = this.config.get<string>('OIDC_ISSUER')?.replace(/\/+$/, '');
+    return issuer === GOOGLE_ISSUER ? 'select_account' : 'login';
+  }
+
+  /**
+   * [reauth]: the first SSO after an explicit PON sign-out on this device.
+   * [reauthPrompt] makes the IdP ask again even though its own session cookie is
+   * still alive; otherwise the button silently re-enters the previous person's
+   * account. `prompt` never comes from the request. Signing out of the IdP itself
+   * (RP-initiated logout) is deliberately avoided, it would end the person's
+   * other company apps.
+   */
+  async buildAuthorizeUrl(
+    platform: string,
+    { reauth = false }: { reauth?: boolean } = {},
+  ): Promise<string> {
     const client = await this.getClient();
     const codeVerifier = generators.codeVerifier();
     const codeChallenge = generators.codeChallenge(codeVerifier);
@@ -86,6 +110,7 @@ export class OidcService {
       code_challenge_method: 'S256',
       state,
       nonce,
+      ...(reauth ? { prompt: this.reauthPrompt() } : {}),
     });
   }
 

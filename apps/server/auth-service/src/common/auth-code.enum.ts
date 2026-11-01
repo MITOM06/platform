@@ -117,6 +117,12 @@ export enum AuthCode {
   INVITATION_PENDING = 'INVITATION_PENDING',
   /** Google account email differs from the invited email (OAuth redirect only). */
   INVITATION_EMAIL_MISMATCH = 'INVITATION_EMAIL_MISMATCH',
+  /**
+   * The Google round trip started from an invitation is gone: older than
+   * 10 minutes, or already used by a successful accept. The invitation itself
+   * may still be valid — start again from it (OAuth redirect only).
+   */
+  INVITE_GOOGLE_FLOW_EXPIRED = 'INVITE_GOOGLE_FLOW_EXPIRED',
   OWNER_ROLE_ASSIGN_FORBIDDEN = 'OWNER_ROLE_ASSIGN_FORBIDDEN',
   OWNER_BLOCK_FORBIDDEN = 'OWNER_BLOCK_FORBIDDEN',
   /** Capability-gated route (RequirePermissionGuard) or an object-level check failed. */
@@ -138,6 +144,13 @@ export enum AuthCode {
    * linked to a DIFFERENT identity of the same provider (OAuth redirect only).
    */
   SOCIAL_ACCOUNT_CONFLICT = 'SOCIAL_ACCOUNT_CONFLICT',
+  /** The user cancelled the Google sign-in on Google's page (OAuth redirect only). */
+  SOCIAL_LOGIN_CANCELLED = 'SOCIAL_LOGIN_CANCELLED',
+  /**
+   * Google refused the sign-in: authorization code rejected (expired / already
+   * used) or any other provider error (OAuth redirect only).
+   */
+  SOCIAL_LOGIN_FAILED = 'SOCIAL_LOGIN_FAILED',
   /**
    * The actor may not reset this member's 2FA: not an Owner / member manager,
    * or a non-Owner targeting an Owner / admin-like member.

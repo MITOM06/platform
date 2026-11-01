@@ -99,6 +99,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get securitySetSuccess => 'Đặt mật khẩu thành công';
 
   @override
+  String get securityChangeDoneBody => 'Các thiết bị khác đã bị đăng xuất.';
+
+  @override
+  String get securitySetDoneBody =>
+      'Giờ bạn có thể đăng nhập bằng email và mật khẩu này.';
+
+  @override
   String get securityTwoFaTitle => 'Xác thực hai yếu tố';
 
   @override
@@ -2042,6 +2049,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get connectorStatusAvailable => 'Có sẵn';
 
   @override
+  String get connectorStatusNotAllowed => 'Không được phép';
+
+  @override
+  String get connectorNotAllowedHint =>
+      'Workspace của bạn chưa cho phép connector này. Hãy nhờ quản trị viên thêm nó vào danh sách cho phép.';
+
+  @override
   String get connectorStatusComingSoon => 'Sắp ra mắt';
 
   @override
@@ -2156,6 +2170,14 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String skillNeeds(String requirements) {
     return 'Cần $requirements';
+  }
+
+  @override
+  String get skillReady => 'Đã đủ điều kiện';
+
+  @override
+  String skillMissing(String connectors) {
+    return 'Chưa kết nối: $connectors';
   }
 
   @override
@@ -2486,6 +2508,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get adminMemberDepartments => 'Phòng ban';
+
+  @override
+  String get adminMemberDepartmentsLockedOwner =>
+      'Chỉ Chủ sở hữu mới có thể thay đổi phòng ban của Chủ sở hữu.';
 
   @override
   String get adminRoleHint =>
@@ -3462,6 +3488,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Hãy đăng nhập bằng tài khoản Google trùng với email được mời.';
 
   @override
+  String get authErrInviteGoogleFlowExpired =>
+      'Lượt đăng nhập Google này đã hết hạn. Vui lòng thử lại từ lời mời.';
+
+  @override
   String get authErrInvitationAlreadyPending =>
       'Email này đã có một lời mời đang chờ.';
 
@@ -3861,6 +3891,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Phương thức đăng nhập này không được hỗ trợ.';
 
   @override
+  String get authErrSocialLoginCancelled => 'Bạn đã huỷ đăng nhập bằng Google.';
+
+  @override
+  String get authErrSocialLoginFailed =>
+      'Đăng nhập bằng Google chưa hoàn tất. Vui lòng thử lại.';
+
+  @override
   String get aiActionConfirm => 'Xác nhận';
 
   @override
@@ -3987,6 +4024,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get aiTraceToolNotRun => 'Chưa chạy';
+
+  @override
+  String get aiTraceToolCancelled => 'Đã huỷ';
+
+  @override
+  String get aiTraceToolExpired => 'Đã hết hạn';
 
   @override
   String aiTraceTokens(String input, String output) {
@@ -4265,6 +4308,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get adminAuditActionMemberUpdate => 'Cập nhật thành viên';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate =>
+      'Đổi ngữ cảnh AI của thành viên';
+
+  @override
   String get adminAuditActionMemberSsoUpdate =>
       'Thành viên được cập nhật qua SSO';
 
@@ -4511,6 +4558,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mfaSavedCheckbox => 'Tôi đã lưu mã dự phòng';
 
   @override
+  String get mfaCopyCodesFirst => 'Hãy sao chép mã trước';
+
+  @override
+  String get mfaCodesCopyFailed => 'Không sao chép được mã. Vui lòng thử lại.';
+
+  @override
   String get mfaContinue => 'Tiếp tục';
 
   @override
@@ -4576,6 +4629,21 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get securityMfaTurnedOff => 'Đã tắt xác thực hai yếu tố.';
+
+  @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count mã dự phòng còn lại',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return 'Hãy tạo mã mới bằng “$action” bên dưới khi bạn vẫn còn ứng dụng xác thực. Không có ứng dụng hoặc mã dự phòng thì bạn sẽ không đăng nhập được.';
+  }
 
   @override
   String get authErrMfaRequiredByRole =>
@@ -4644,37 +4712,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get authErrMfaResetSelfForbidden =>
       'Bạn không thể tự đặt lại xác thực hai yếu tố của chính mình.';
-
-  @override
-  String get callSelfWeakNetwork => 'Mạng của bạn đang yếu';
-
-  @override
-  String callPeerWeakNetwork(String name) {
-    return 'Mạng của $name đang yếu';
-  }
-
-  @override
-  String get callUnstableNetwork => 'Kết nối không ổn định';
-
-  @override
-  String get callReconnectingSelf => 'Mất kết nối, đang kết nối lại…';
-
-  @override
-  String callWaitingForPeer(String name) {
-    return 'Đang chờ $name kết nối lại…';
-  }
-
-  @override
-  String callReconnectCountdown(int seconds) {
-    return 'Cuộc gọi sẽ kết thúc sau $seconds giây nếu không kết nối lại được';
-  }
-
-  @override
-  String get callSwitchToVideo => 'Chuyển sang gọi video';
-
-  @override
-  String get callVideoUnavailable =>
-      'Không thể bật video trong cuộc gọi này — người kia có thể cần cập nhật ứng dụng';
 
   @override
   String get adminCapHostMeeting => 'Tổ chức cuộc họp';
@@ -5674,4 +5711,35 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get meetingLoading => 'Đang tải cuộc họp…';
+
+  @override
+  String get callSelfWeakNetwork => 'Mạng của bạn đang yếu';
+
+  @override
+  String callPeerWeakNetwork(String name) {
+    return 'Mạng của $name đang yếu';
+  }
+
+  @override
+  String get callUnstableNetwork => 'Kết nối không ổn định';
+
+  @override
+  String get callReconnectingSelf => 'Mất kết nối, đang kết nối lại…';
+
+  @override
+  String callWaitingForPeer(String name) {
+    return 'Đang chờ $name kết nối lại…';
+  }
+
+  @override
+  String callReconnectCountdown(int seconds) {
+    return 'Cuộc gọi sẽ kết thúc sau $seconds giây nếu không kết nối lại được';
+  }
+
+  @override
+  String get callSwitchToVideo => 'Chuyển sang gọi video';
+
+  @override
+  String get callVideoUnavailable =>
+      'Không thể bật video trong cuộc gọi này — người kia có thể cần cập nhật ứng dụng';
 }

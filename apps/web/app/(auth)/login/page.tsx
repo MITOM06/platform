@@ -15,6 +15,7 @@ import { parseAuthError, authCodeToI18nKey } from '@/lib/auth/auth-error'
 import { isLoginNotice, loginNoticeI18nKey } from '@/lib/auth/force-logout'
 import { MFA_PATH, isMfaChallenge, savePendingMfa } from '@/lib/auth/mfa'
 import { establishSession } from '@/lib/auth/sign-in'
+import { forgetInviteReturn } from '@/lib/auth/invite-return'
 import { maybeRequestNotificationPermission } from '@/lib/notifications'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -119,17 +120,21 @@ export default function LoginPage() {
     try {
       const { data: result } = await authService.login(data.email, data.password)
       // The password was right but no session exists yet — the authenticator
-      // code (or first-time 2FA setup) is finished on /mfa.
+      // code (or first-time 2FA setup) is finished on /mfa (it has its own way
+      // back to sign-in).
+      // `replace`, not `push`, here and below: a signed-in Back must never land
+      // on this form again — Back is a client-side navigation, so the
+      // middleware that bounces signed-in users off /login never runs.
       if (isMfaChallenge(result)) {
         savePendingMfa(result)
-        router.push(MFA_PATH)
+        router.replace(MFA_PATH)
         return
       }
 
       const path = await establishSession(result)
       // Prompt for notification permission only after a successful login.
       void maybeRequestNotificationPermission()
-      router.push(path)
+      router.replace(path)
     } catch (err: unknown) {
       const { code, params } = parseAuthError(err)
       if (code === 'SSO_REQUIRED') {
@@ -176,7 +181,8 @@ export default function LoginPage() {
             </div>
           </>
         )}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 motion-safe:pon-stagger">
+        {/* POST: a submit before hydration is a native form submit, and a GET one put the password in the URL. */}
+        <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-4 motion-safe:pon-stagger">
           <div className="space-y-1">
             <Label htmlFor="email">{t('emailLabel')}</Label>
             <Input
@@ -247,6 +253,8 @@ export default function LoginPage() {
             <div className="flex flex-col gap-2">
               <a
                 href={`${authBase}/auth/social/google/init?platform=web`}
+                // A plain sign-in: a failure lands back here, not on an old invitation.
+                onClick={forgetInviteReturn}
                 className="flex items-center justify-center gap-2 w-full rounded-[10px] border border-border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
               >
                 <GoogleIcon className="h-4 w-4" />

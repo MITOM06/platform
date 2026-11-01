@@ -150,7 +150,7 @@ function MfaEnrollSetup({
         </MfaStep>
 
         <MfaStep n={2} title={t('mfa.enrollStep2Title')} body={t('mfa.enrollStep2Body')}>
-          <form onSubmit={onSubmit} className="space-y-4">
+          <form method="post" onSubmit={onSubmit} className="space-y-4">
             {error && <MfaAlert>{error}</MfaAlert>}
             <MfaCodeInput value={digits} onChange={onDigits} disabled={!ready || submitting} />
             <Button

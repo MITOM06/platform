@@ -28,6 +28,8 @@ export const LOGIN_NOTICES = [
   'INVITATION_REVOKED',
   'INVITATION_ALREADY_ACCEPTED',
   'INVITATION_EMAIL_MISMATCH',
+  // The Google round trip of an invitation expired (10 minutes) or was used.
+  'INVITE_GOOGLE_FLOW_EXPIRED',
   'MEMBER_ALREADY_EXISTS',
   'SOCIAL_EMAIL_UNAVAILABLE',
   'SSO_DISABLED',
@@ -40,6 +42,9 @@ export const LOGIN_NOTICES = [
   'OIDC_EMAIL_UNVERIFIED',
   'SOCIAL_ACCOUNT_CONFLICT',
   'SOCIAL_PROVIDER_UNSUPPORTED',
+  // Google came back without a user: cancelled on its page, or the code was refused.
+  'SOCIAL_LOGIN_CANCELLED',
+  'SOCIAL_LOGIN_FAILED',
   'OIDC_NO_STATE',
   'OIDC_BAD_STATE',
   'OIDC_EXCHANGE_FAILED',

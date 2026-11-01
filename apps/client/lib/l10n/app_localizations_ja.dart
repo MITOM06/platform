@@ -97,6 +97,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get securitySetSuccess => 'パスワードを設定しました';
 
   @override
+  String get securityChangeDoneBody => '他の端末はサインアウトされました。';
+
+  @override
+  String get securitySetDoneBody => '今後はメールアドレスとこのパスワードでもサインインできます。';
+
+  @override
   String get securityTwoFaTitle => '二要素認証';
 
   @override
@@ -2009,6 +2015,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get connectorStatusAvailable => '利用可能';
 
   @override
+  String get connectorStatusNotAllowed => '許可されていません';
+
+  @override
+  String get connectorNotAllowedHint =>
+      'このワークスペースではこのコネクタは許可されていません。管理者に許可リストへの追加を依頼してください。';
+
+  @override
   String get connectorStatusComingSoon => '近日公開';
 
   @override
@@ -2122,6 +2135,14 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String skillNeeds(String requirements) {
     return '$requirements が必要';
+  }
+
+  @override
+  String get skillReady => '利用可能';
+
+  @override
+  String skillMissing(String connectors) {
+    return '未接続：$connectors';
   }
 
   @override
@@ -2432,6 +2453,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get adminMemberDepartments => '部門';
+
+  @override
+  String get adminMemberDepartmentsLockedOwner => 'オーナーの部門を変更できるのはオーナーのみです。';
 
   @override
   String get adminRoleHint => '各ロールの権限を切り替えます。Owner ロールは読み取り専用です。';
@@ -3388,6 +3412,10 @@ class AppLocalizationsJa extends AppLocalizations {
       '招待されたメールアドレスと一致する Google アカウントでサインインしてください。';
 
   @override
+  String get authErrInviteGoogleFlowExpired =>
+      'この Google でのサインインは期限切れになりました。招待からもう一度お試しください。';
+
+  @override
   String get authErrInvitationAlreadyPending => 'このメールアドレスにはすでに保留中の招待があります。';
 
   @override
@@ -3760,6 +3788,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get authErrSocialProviderUnsupported => 'このサインイン方法はサポートされていません。';
 
   @override
+  String get authErrSocialLoginCancelled => 'Google でのログインがキャンセルされました。';
+
+  @override
+  String get authErrSocialLoginFailed =>
+      'Google でのログインを完了できませんでした。もう一度お試しください。';
+
+  @override
   String get aiActionConfirm => '確認';
 
   @override
@@ -3886,6 +3921,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get aiTraceToolNotRun => '未実行';
+
+  @override
+  String get aiTraceToolCancelled => 'キャンセル済み';
+
+  @override
+  String get aiTraceToolExpired => '期限切れ';
 
   @override
   String aiTraceTokens(String input, String output) {
@@ -4154,6 +4195,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get adminAuditActionMemberUpdate => 'メンバーを更新';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate => 'メンバーのAIコンテキストを変更';
+
+  @override
   String get adminAuditActionMemberSsoUpdate => 'SSO によりメンバーを更新';
 
   @override
@@ -4391,6 +4435,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get mfaSavedCheckbox => 'バックアップコードを保存しました';
 
   @override
+  String get mfaCopyCodesFirst => '先にコードをコピーしてください';
+
+  @override
+  String get mfaCodesCopyFailed => 'コードをコピーできませんでした。もう一度お試しください。';
+
+  @override
   String get mfaContinue => '続行';
 
   @override
@@ -4454,6 +4504,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get securityMfaTurnedOff => '二要素認証をオフにしました。';
 
   @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '残りのバックアップコードは $count 個です',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return '認証アプリが使えるうちに、下の「$action」で新しいコードを作成してください。認証アプリもバックアップコードもないと、サインインできなくなります。';
+  }
+
+  @override
   String get authErrMfaRequiredByRole => 'あなたのロールでは二要素認証が必須のため、オフにできません。';
 
   @override
@@ -4511,36 +4576,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get authErrMfaResetSelfForbidden => '自分の二要素認証はリセットできません。';
-
-  @override
-  String get callSelfWeakNetwork => 'あなたのネットワークが不安定です';
-
-  @override
-  String callPeerWeakNetwork(String name) {
-    return '$nameさんのネットワークが不安定です';
-  }
-
-  @override
-  String get callUnstableNetwork => '接続が不安定です';
-
-  @override
-  String get callReconnectingSelf => '接続が切れました。再接続しています…';
-
-  @override
-  String callWaitingForPeer(String name) {
-    return '$nameさんの再接続を待っています…';
-  }
-
-  @override
-  String callReconnectCountdown(int seconds) {
-    return '再接続できない場合、$seconds秒後に通話が終了します';
-  }
-
-  @override
-  String get callSwitchToVideo => 'ビデオ通話に切り替え';
-
-  @override
-  String get callVideoUnavailable => 'この通話ではビデオを使えません。相手のアプリの更新が必要な可能性があります';
 
   @override
   String get adminCapHostMeeting => '会議を主催';
@@ -5513,4 +5548,34 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get meetingLoading => '会議を読み込み中…';
+
+  @override
+  String get callSelfWeakNetwork => 'あなたのネットワークが不安定です';
+
+  @override
+  String callPeerWeakNetwork(String name) {
+    return '$nameさんのネットワークが不安定です';
+  }
+
+  @override
+  String get callUnstableNetwork => '接続が不安定です';
+
+  @override
+  String get callReconnectingSelf => '接続が切れました。再接続しています…';
+
+  @override
+  String callWaitingForPeer(String name) {
+    return '$nameさんの再接続を待っています…';
+  }
+
+  @override
+  String callReconnectCountdown(int seconds) {
+    return '再接続できない場合、$seconds秒後に通話が終了します';
+  }
+
+  @override
+  String get callSwitchToVideo => 'ビデオ通話に切り替え';
+
+  @override
+  String get callVideoUnavailable => 'この通話ではビデオを使えません。相手のアプリの更新が必要な可能性があります';
 }

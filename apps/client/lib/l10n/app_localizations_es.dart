@@ -99,6 +99,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get securitySetSuccess => 'Contraseña establecida correctamente';
 
   @override
+  String get securityChangeDoneBody =>
+      'Se cerró la sesión en tus otros dispositivos.';
+
+  @override
+  String get securitySetDoneBody =>
+      'Ahora también puedes iniciar sesión con tu correo y esta contraseña.';
+
+  @override
   String get securityTwoFaTitle => 'Autenticación de dos factores';
 
   @override
@@ -2061,6 +2069,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get connectorStatusAvailable => 'Disponible';
 
   @override
+  String get connectorStatusNotAllowed => 'No permitido';
+
+  @override
+  String get connectorNotAllowedHint =>
+      'Tu espacio de trabajo no permite este conector. Pide a un administrador que lo añada a la lista de permitidos.';
+
+  @override
   String get connectorStatusComingSoon => 'Próximamente';
 
   @override
@@ -2177,6 +2192,14 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String skillNeeds(String requirements) {
     return 'Necesita $requirements';
+  }
+
+  @override
+  String get skillReady => 'Lista';
+
+  @override
+  String skillMissing(String connectors) {
+    return 'Sin conectar: $connectors';
   }
 
   @override
@@ -2509,6 +2532,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get adminMemberDepartments => 'Departamentos';
+
+  @override
+  String get adminMemberDepartmentsLockedOwner =>
+      'Solo un Propietario puede cambiar los departamentos de un Propietario.';
 
   @override
   String get adminRoleHint =>
@@ -3486,6 +3513,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Inicia sesión con la cuenta de Google que coincide con el correo invitado.';
 
   @override
+  String get authErrInviteGoogleFlowExpired =>
+      'Este intento de inicio de sesión con Google ha caducado. Vuelve a intentarlo desde tu invitación.';
+
+  @override
   String get authErrInvitationAlreadyPending =>
       'Este correo ya tiene una invitación pendiente.';
 
@@ -3912,6 +3943,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Este método de inicio de sesión no es compatible.';
 
   @override
+  String get authErrSocialLoginCancelled =>
+      'Se canceló el inicio de sesión con Google.';
+
+  @override
+  String get authErrSocialLoginFailed =>
+      'No se pudo completar el inicio de sesión con Google. Inténtalo de nuevo.';
+
+  @override
   String get aiActionConfirm => 'Confirmar';
 
   @override
@@ -4038,6 +4077,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get aiTraceToolNotRun => 'No ejecutado';
+
+  @override
+  String get aiTraceToolCancelled => 'Cancelada';
+
+  @override
+  String get aiTraceToolExpired => 'Caducada';
 
   @override
   String aiTraceTokens(String input, String output) {
@@ -4327,6 +4372,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get adminAuditActionMemberUpdate => 'Miembro actualizado';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate =>
+      'Contexto de IA de un miembro cambiado';
+
+  @override
   String get adminAuditActionMemberSsoUpdate => 'Miembro actualizado por SSO';
 
   @override
@@ -4579,6 +4628,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mfaSavedCheckbox => 'He guardado mis códigos de respaldo';
 
   @override
+  String get mfaCopyCodesFirst => 'Primero copia los códigos';
+
+  @override
+  String get mfaCodesCopyFailed =>
+      'No se pudieron copiar los códigos. Inténtalo de nuevo.';
+
+  @override
   String get mfaContinue => 'Continuar';
 
   @override
@@ -4649,6 +4705,22 @@ class AppLocalizationsEs extends AppLocalizations {
       'La autenticación de dos factores está desactivada.';
 
   @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count códigos de respaldo restantes',
+      one: '$count código de respaldo restante',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return 'Genera otros nuevos con “$action” aquí abajo mientras conserves tu aplicación de autenticación. Sin la aplicación ni un código de respaldo, no podrás iniciar sesión.';
+  }
+
+  @override
   String get authErrMfaRequiredByRole =>
       'Tu rol requiere la autenticación de dos factores, así que no se puede desactivar.';
 
@@ -4715,37 +4787,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get authErrMfaResetSelfForbidden =>
       'No puedes restablecer tu propia autenticación de dos factores.';
-
-  @override
-  String get callSelfWeakNetwork => 'Tu red es débil';
-
-  @override
-  String callPeerWeakNetwork(String name) {
-    return 'La red de $name es débil';
-  }
-
-  @override
-  String get callUnstableNetwork => 'Conexión inestable';
-
-  @override
-  String get callReconnectingSelf => 'Conexión perdida, reconectando…';
-
-  @override
-  String callWaitingForPeer(String name) {
-    return 'Esperando a que $name se reconecte…';
-  }
-
-  @override
-  String callReconnectCountdown(int seconds) {
-    return 'La llamada terminará en $seconds s si no se reconecta';
-  }
-
-  @override
-  String get callSwitchToVideo => 'Cambiar a videollamada';
-
-  @override
-  String get callVideoUnavailable =>
-      'El vídeo no está disponible en esta llamada; puede que la otra persona tenga que actualizar la app';
 
   @override
   String get adminCapHostMeeting => 'Organizar reuniones';
@@ -5769,4 +5810,35 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meetingLoading => 'Cargando la reunión…';
+
+  @override
+  String get callSelfWeakNetwork => 'Tu red es débil';
+
+  @override
+  String callPeerWeakNetwork(String name) {
+    return 'La red de $name es débil';
+  }
+
+  @override
+  String get callUnstableNetwork => 'Conexión inestable';
+
+  @override
+  String get callReconnectingSelf => 'Conexión perdida, reconectando…';
+
+  @override
+  String callWaitingForPeer(String name) {
+    return 'Esperando a que $name se reconecte…';
+  }
+
+  @override
+  String callReconnectCountdown(int seconds) {
+    return 'La llamada terminará en $seconds s si no se reconecta';
+  }
+
+  @override
+  String get callSwitchToVideo => 'Cambiar a videollamada';
+
+  @override
+  String get callVideoUnavailable =>
+      'El vídeo no está disponible en esta llamada; puede que la otra persona tenga que actualizar la app';
 }

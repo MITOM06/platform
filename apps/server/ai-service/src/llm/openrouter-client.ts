@@ -64,6 +64,10 @@ export interface OpenRouterOptions {
    * daily/minute limits, upstream congestion), 402 (no credits), 404 (model removed).
    */
   onUnavailable?: () => void;
+  /** Rewrites each request body before it is sent (dev-only Gemini test mode, gemini-test.ts). */
+  prepareBody?: (body: Record<string, unknown>) => Record<string, unknown>;
+  /** Sees a tool call's provider `extra_content` (Gemini 3 thought signatures, gemini-test.ts). */
+  onToolCallExtra?: (toolUseId: string, extra: unknown) => void;
 }
 
 /** HTTP failure from OpenRouter. The body excerpt never contains the API key. */
@@ -89,6 +93,7 @@ interface OpenAiChunk {
         index?: number;
         id?: string;
         function?: { name?: string; arguments?: string };
+        extra_content?: unknown;
       }>;
     };
     message?: {
@@ -96,6 +101,7 @@ interface OpenAiChunk {
       tool_calls?: Array<{
         id?: string;
         function?: { name?: string; arguments?: string };
+        extra_content?: unknown;
       }>;
     };
   }>;
@@ -118,6 +124,7 @@ export class OpenRouterClient implements LlmClient {
           firstTokenMs: this.opts.firstTokenTimeoutMs ?? DEFAULT_FIRST_TOKEN_TIMEOUT_MS,
           idleMs: this.opts.idleTimeoutMs ?? DEFAULT_IDLE_TIMEOUT_MS,
         },
+        this.opts.onToolCallExtra,
       ),
   };
 
@@ -136,11 +143,11 @@ export class OpenRouterClient implements LlmClient {
       throw new OpenRouterError(json.error.code ?? 502, json.error.message ?? 'error');
     }
     const choice = json.choices?.[0];
-    const toolCalls = (choice?.message?.tool_calls ?? []).map((tc, i) => ({
-      id: toolUseId(tc.id, i),
-      name: tc.function?.name ?? '',
-      arguments: tc.function?.arguments ?? '',
-    }));
+    const toolCalls = (choice?.message?.tool_calls ?? []).map((tc, i) => {
+      const id = toolUseId(tc.id, i);
+      if (tc.extra_content !== undefined) this.opts.onToolCallExtra?.(id, tc.extra_content);
+      return { id, name: tc.function?.name ?? '', arguments: tc.function?.arguments ?? '' };
+    });
     return buildMessage(
       json.id ?? `or_${randomUUID()}`,
       params.model,
@@ -161,7 +168,7 @@ export class OpenRouterClient implements LlmClient {
         ...(this.opts.appUrl ? { 'HTTP-Referer': this.opts.appUrl } : {}),
         ...(this.opts.appTitle ? { 'X-Title': this.opts.appTitle } : {}),
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(this.opts.prepareBody ? this.opts.prepareBody(body) : body),
       signal,
     });
     if (UNAVAILABLE_STATUSES.has(res.status)) this.opts.onUnavailable?.();
@@ -193,6 +200,7 @@ export class OpenRouterStream implements LlmMessageStream {
       firstTokenMs: DEFAULT_FIRST_TOKEN_TIMEOUT_MS,
       idleMs: DEFAULT_IDLE_TIMEOUT_MS,
     },
+    private readonly onToolCallExtra?: (toolUseId: string, extra: unknown) => void,
   ) {}
 
   async *[Symbol.asyncIterator](): AsyncIterator<Anthropic.RawMessageStreamEvent> {
@@ -281,6 +289,7 @@ export class OpenRouterStream implements LlmMessageStream {
         if (tc.function?.name) current.name += tc.function.name;
         if (tc.function?.arguments) current.arguments += tc.function.arguments;
         if (!current.id) current.id = toolUseId(undefined, index);
+        if (tc.extra_content !== undefined) this.onToolCallExtra?.(current.id, tc.extra_content);
         this.toolCalls.set(index, current);
       }
       if (choice.finish_reason) this.finish = choice.finish_reason;

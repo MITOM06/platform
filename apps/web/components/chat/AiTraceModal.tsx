@@ -8,12 +8,14 @@ import { ResponsiveModal } from '@/components/ui/responsive-modal'
 import { Badge } from '@/components/ui/badge'
 import { chatService } from '@/lib/api/chat'
 import { useProviderNameSources } from '@/lib/hooks/use-connectors'
-import { toolDisplayLabel } from '@/lib/ai/connector-names'
-import { modelDisplayName, toolCallStatus, type ToolCallStatus } from '@/lib/ai/trace'
-import type { AiTraceResponse } from '@/lib/api/types'
+import { toolCallLabel } from '@/lib/ai/connector-names'
+import { modelDisplayName, resolvedToolCallStatuses, type ToolCallStatus } from '@/lib/ai/trace'
+import type { AiPendingAction, AiTraceResponse } from '@/lib/api/types'
 
 interface Props {
   messageId: string | null
+  /** The traced message's confirmation cards — their status replaces a stale "awaiting". */
+  pendingActions?: AiPendingAction[]
   onClose: () => void
 }
 
@@ -38,6 +40,8 @@ const STATUS_KEYS: Record<ToolCallStatus, string> = {
   failed: 'aiTraceToolFailed',
   awaiting: 'aiTraceToolAwaiting',
   skipped: 'aiTraceToolSkipped',
+  cancelled: 'aiTraceToolCancelled',
+  expired: 'aiTraceToolExpired',
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -105,7 +109,7 @@ function TraceStats({ data }: { data: AiTraceResponse }) {
  * tool's display name and outcome only: `inputSummary` / `resultSummary` are raw
  * tool payloads (an email body, a document) and are never rendered.
  */
-export function AiTraceModal({ messageId, onClose }: Props) {
+export function AiTraceModal({ messageId, pendingActions, onClose }: Props) {
   const t = useTranslations('chat')
   // Only fetched while the trace is open (the modal stays mounted with the chat).
   const providerSources = useProviderNameSources(!!messageId)
@@ -116,6 +120,7 @@ export function AiTraceModal({ messageId, onClose }: Props) {
     staleTime: Infinity,
   })
   const toolCalls = data?.toolCalls ?? []
+  const statuses = resolvedToolCallStatuses(toolCalls, pendingActions)
 
   return (
     <ResponsiveModal
@@ -157,11 +162,11 @@ export function AiTraceModal({ messageId, onClose }: Props) {
             <Section title={t('aiTraceToolCalls', { count: toolCalls.length })}>
               <ul className="space-y-1.5">
                 {toolCalls.map((tc, i) => {
-                  const status = toolCallStatus(tc.resultSummary)
+                  const status = statuses[i]
                   return (
                     <li key={i} className="flex items-center justify-between gap-2">
                       <span className="text-sm text-foreground">
-                        {toolDisplayLabel(tc.toolName, t, providerSources)}
+                        {toolCallLabel(tc.toolName, t, providerSources)}
                       </span>
                       <Badge variant={status === 'failed' ? 'destructive' : 'secondary'}>
                         {t(STATUS_KEYS[status])}

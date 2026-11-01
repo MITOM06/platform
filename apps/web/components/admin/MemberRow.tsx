@@ -14,11 +14,13 @@ function initials(name: string) {
 interface Props {
   member: Member
   roleName?: string
-  /** The signed-in admin's own row — the block action is hidden. */
-  isSelf: boolean
   canManageMembers: boolean
+  /** The caller may block / unblock this member — the action is offered (see `canToggleMemberBlock`). */
+  canToggleBlock: boolean
   /** The caller may reset this member's 2FA — "Reset 2FA" is offered (see `canResetMemberMfa`). */
   canResetMfa: boolean
+  /** The caller may not touch this member's AI context — the action is hidden (see `memberAiContextLocked`). */
+  aiContextLocked: boolean
   onEdit: (m: Member) => void
   onAiContext: (m: Member) => void
   onToggleBlock: (m: Member) => void
@@ -29,9 +31,10 @@ interface Props {
 export function MemberRow({
   member: m,
   roleName,
-  isSelf,
   canManageMembers,
+  canToggleBlock,
   canResetMfa,
+  aiContextLocked,
   onEdit,
   onAiContext,
   onToggleBlock,
@@ -62,7 +65,7 @@ export function MemberRow({
         </Badge>
       )}
       {roleName && <Badge variant="secondary">{roleName}</Badge>}
-      {canManageMembers && (
+      {canManageMembers && !aiContextLocked && (
         <Button
           variant="ghost"
           size="icon"
@@ -73,7 +76,7 @@ export function MemberRow({
           <Brain className="size-4" />
         </Button>
       )}
-      {canManageMembers && !isSelf && (
+      {canToggleBlock && (
         <Button
           variant="ghost"
           size="icon"

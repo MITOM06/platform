@@ -4,4 +4,11 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- The local stack (scripts/dev/up.sh) is plain http — auth :3001, chat :8080,
+         ai :3002, connector :3003 — reached over the Mac's LAN IP from a real device
+         or via 10.0.2.2 from the emulator. Android blocks cleartext by default from
+         API 28 on, so every Dio call fails with a connection error that looks like a
+         dead backend. This lives in src/debug/ only: release builds keep the default
+         cleartext-denied policy and still talk https to Cloud Run. -->
+    <application android:usesCleartextTraffic="true"/>
 </manifest>

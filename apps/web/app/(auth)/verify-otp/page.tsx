@@ -78,7 +78,7 @@ function VerifyOtpForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6 motion-safe:pon-stagger">
+        <form method="post" onSubmit={handleSubmit} className="space-y-6 motion-safe:pon-stagger">
           <OtpInput value={otp} onChange={setOtp} length={OTP_LENGTH} disabled={loading} />
 
           <Button type="submit" className="w-full font-bold tracking-wide" disabled={loading}>

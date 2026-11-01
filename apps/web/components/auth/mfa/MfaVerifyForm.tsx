@@ -111,12 +111,12 @@ export function MfaVerifyForm({ challenge, onDone, onRestart }: Props) {
         {error && <MfaAlert>{error}</MfaAlert>}
 
         {mode === 'totp' ? (
-          <form onSubmit={onSubmitTotp} className="space-y-4">
+          <form method="post" onSubmit={onSubmitTotp} className="space-y-4">
             <MfaCodeInput value={digits} onChange={onDigits} disabled={submitting} />
             <SubmitButton submitting={submitting} label={t('mfa.verifyButton')} busyLabel={t('mfa.verifying')} />
           </form>
         ) : (
-          <form onSubmit={onSubmitBackup} className="space-y-4">
+          <form method="post" onSubmit={onSubmitBackup} className="space-y-4">
             <div className="space-y-1">
               <Label htmlFor="mfa-backup-code">{t('mfa.backupCodeLabel')}</Label>
               <Input

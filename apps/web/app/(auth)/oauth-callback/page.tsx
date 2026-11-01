@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
@@ -9,25 +9,38 @@ import { parseAuthError, authCodeToI18nKey } from '@/lib/auth/auth-error'
 import { isLoginNotice, loginPath } from '@/lib/auth/force-logout'
 import { MFA_PATH, isMfaChallenge, savePendingMfa } from '@/lib/auth/mfa'
 import { establishSession } from '@/lib/auth/sign-in'
+import { forgetInviteReturn, inviteReturnPath } from '@/lib/auth/invite-return'
+import { clearSsoReauth } from '@/lib/auth/sso-reauth'
 
 export default function OAuthCallbackPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const t = useTranslations('auth.oauth')
   const tAuth = useTranslations('auth')
+  // This page handles its URL exactly once. The effect can run again — React
+  // Strict Mode in dev, or new search params once the redirect below is under
+  // way (no `error`, no `code`) — and a second pass used to navigate again:
+  // the invitation memory was already spent, or `!code` sent the browser to a
+  // bare /login, so a Google attempt from an invitation lost its way back.
+  const handled = useRef(false)
 
   useEffect(() => {
+    if (handled.current) return
+    handled.current = true
     // OAuth error-redirect contract (plan §1.5): the auth-service sends the
     // browser back here with `?error=<AuthCode>` when Google/SSO sign-in or an
     // invitation accept fails (e.g. ACCOUNT_NOT_PROVISIONED, ACCOUNT_BLOCKED,
     // SSO_REQUIRED when the email's domain must use single sign-on).
     // The reason is handed to /login as a persistent banner rather than a
     // toast: on a slow load the toast is gone before /login has rendered.
+    // A cancelled / refused Google sign-in started from an invitation goes
+    // back to that invitation to try again (lib/auth/invite-return.ts).
     const error = searchParams.get('error')
     if (error) {
-      router.replace(loginPath(isLoginNotice(error) ? error : 'GENERIC_ERROR'))
+      router.replace(inviteReturnPath(error) ?? loginPath(isLoginNotice(error) ? error : 'GENERIC_ERROR'))
       return
     }
+    forgetInviteReturn()
 
     const code = searchParams.get('code')
     if (!code) {
@@ -45,8 +58,12 @@ export default function OAuthCallbackPage() {
           router.replace(MFA_PATH)
           return
         }
-        // A member who just joined with Google must create a PON password first.
-        router.replace(await establishSession(data))
+        // Signed in. /set-password only applies to an account still flagged from before.
+        const next = await establishSession(data)
+        // SSO only: after a Google sign-in the IdP session may still belong to
+        // whoever signed out here, so the next SSO must keep asking.
+        if (data.method === 'oidc') clearSsoReauth()
+        router.replace(next)
       })
       .catch((err: unknown) => {
         // Specific reason when the server gave one (e.g. ACCOUNT_BLOCKED),

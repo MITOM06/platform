@@ -250,7 +250,9 @@ describe('AuthService — sign-in, sessions, Require SSO', () => {
       });
     });
 
-    it('Google invitee → user.mustSetPassword:true so the client gates before /me', async () => {
+    // Nothing sets the flag any more (cleared at boot); the payload still
+    // reports whatever the account holds, so older clients stay consistent.
+    it('a still-flagged account → user.mustSetPassword:true, as stored', async () => {
       redis.getdel.mockResolvedValue('u1');
       users.findById.mockResolvedValue({
         ...activeUser,
@@ -260,6 +262,22 @@ describe('AuthService — sign-in, sessions, Require SSO', () => {
       const res = await service.exchangeLoginCode('c', 'd', 'web');
       expect((res as any).user.mustSetPassword).toBe(true);
     });
+
+    // The client only drops its "re-authenticate on the next SSO" flag for 'oidc'.
+    it.each([
+      [JSON.stringify({ userId: 'u1', via: 'oidc' }), 'oidc'],
+      [JSON.stringify({ userId: 'u1', via: 'google' }), 'google'],
+      ['u1', 'google'], // legacy code minted before `via` existed
+    ])(
+      'tells the client how the sign-in happened (%s → %s)',
+      async (stored, method) => {
+        redis.getdel.mockResolvedValue(stored);
+        users.findById.mockResolvedValue(activeUser);
+        await expect(
+          service.exchangeLoginCode('c', 'd', 'web'),
+        ).resolves.toMatchObject({ method });
+      },
+    );
   });
 
   describe('2FA gate (when the challenge service asks for it)', () => {

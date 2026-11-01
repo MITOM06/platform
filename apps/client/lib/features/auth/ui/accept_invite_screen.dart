@@ -31,6 +31,10 @@ import 'widgets/terms_agreement_row.dart';
 /// When the invited email's domain must use SSO (contract 13 §C), accepting
 /// with a password or Google answers `SSO_REQUIRED`: the card then says so and
 /// offers "Sign in with SSO" instead — that sign-in consumes the invitation.
+///
+/// A Google attempt cancelled on Google's page or refused by Google comes back
+/// as `platform://auth?error=SOCIAL_LOGIN_*`: the card shows it in place so the
+/// member can try again (web returns to `/invite/<token>?reason=`).
 class AcceptInviteScreen extends ConsumerStatefulWidget {
   final String token;
 
@@ -46,23 +50,29 @@ class _AcceptInviteScreenState extends ConsumerState<AcceptInviteScreen> {
   /// The accept attempt was refused with `SSO_REQUIRED`.
   bool _ssoRequired = false;
 
+  /// The last Google attempt was cancelled / refused ([kInviteRetryNotices]).
+  String? _googleNotice;
+
   void _onSsoRequired() {
     if (mounted && !_ssoRequired) setState(() => _ssoRequired = true);
   }
 
-  /// A Google accept refused with `SSO_REQUIRED` comes back as the deep link
-  /// `platform://auth?error=SSO_REQUIRED` while this screen is open (the
-  /// notice lands on the auth state). Only a change seen here counts, so a
-  /// stale reason from an earlier session never shows on a new invitation.
-  void _listenForSsoNotice() {
+  /// A Google accept that fails comes back as the deep link
+  /// `platform://auth?error=CODE` while this screen is open (the notice lands
+  /// on the auth state). Only a change seen here counts, so a stale reason
+  /// from an earlier session never shows on a new invitation.
+  void _listenForSignInNotice() {
     ref.listen<AsyncValue<AuthState>>(authNotifierProvider, (prev, next) {
       String? reasonOf(AsyncValue<AuthState>? v) {
         final s = v?.valueOrNull;
         return s is AuthUnauthenticated ? s.reason : null;
       }
 
-      if (reasonOf(next) == kSsoRequired && reasonOf(prev) != kSsoRequired) {
+      final reason = reasonOf(next);
+      if (reason == kSsoRequired && reasonOf(prev) != kSsoRequired) {
         _onSsoRequired();
+      } else if (kInviteRetryNotices.contains(reason) && mounted) {
+        setState(() => _googleNotice = reason);
       }
     });
   }
@@ -74,6 +84,7 @@ class _AcceptInviteScreenState extends ConsumerState<AcceptInviteScreen> {
       messenger.showSnackBar(SnackBar(content: Text(l10n.valMustAgreeTerms)));
       return;
     }
+    setState(() => _googleNotice = null);
     final uri = Uri.parse(
       '${AppConfig.authBaseUrl}/auth/social/google/init'
       '?platform=mobile&invite=${Uri.encodeComponent(widget.token)}',
@@ -87,7 +98,7 @@ class _AcceptInviteScreenState extends ConsumerState<AcceptInviteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    _listenForSsoNotice();
+    _listenForSignInNotice();
     final async = ref.watch(invitationPreviewProvider(widget.token));
 
     return Scaffold(
@@ -164,6 +175,14 @@ class _AcceptInviteScreenState extends ConsumerState<AcceptInviteScreen> {
               style: TextStyle(color: AppTheme.mutedText(context)),
             ),
             const SizedBox(height: 20),
+            if (_googleNotice != null && !_ssoRequired) ...[
+              AuthNoticeBox(
+                key: const ValueKey('invite-notice'),
+                message: authCodeToString(context, _googleNotice!),
+                icon: Icons.error_outline_rounded,
+              ),
+              const SizedBox(height: 16),
+            ],
             ReadOnlyEmailField(email: preview.email),
             const SizedBox(height: 16),
             if (_ssoRequired)

@@ -66,6 +66,12 @@ export interface CatalogEntryView {
   authType: CatalogAuthType;
   tier: CatalogTier;
   available: boolean;
+  /**
+   * False when the workspace connector allow-list leaves this connector out, so
+   * nobody can connect it (connect-time 403 `CONNECTOR_NOT_ALLOWED`). Lets the
+   * UI say so up front instead of offering a Connect button that fails.
+   */
+  allowedByWorkspace?: boolean;
 }
 
 /**

@@ -225,6 +225,13 @@ export function mfaSelfErrorMessage(err: unknown): MfaErrorMessage & { code: str
 export const TOTP_LENGTH = 6
 
 /**
+ * Settings warns once this many backup codes or fewer are left (10 are issued).
+ * Regenerating needs the authenticator app, so the warning must come while the
+ * member still has it. Mirror of the mobile `kBackupCodesLowThreshold`.
+ */
+export const BACKUP_CODES_LOW_THRESHOLD = 3
+
+/**
  * Normalise what the user typed into a backup code: uppercase, letters and
  * digits only, `XXXXX-XXXXX` once past five characters. Max 10 characters.
  */

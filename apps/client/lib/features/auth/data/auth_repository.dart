@@ -39,7 +39,10 @@ class AuthRepository {
     if (data['code'] == 'MFA_REQUIRED') {
       return SignInMfaRequired(MfaChallenge.fromJson(data));
     }
-    return SignInSuccess(await _persistSession(data));
+    return SignInSuccess(
+      await _persistSession(data),
+      viaSso: data['method'] == 'oidc',
+    );
   }
 
   /// Persists the tokens of a login-success body (login, exchange, invitation

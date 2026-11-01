@@ -41,7 +41,7 @@ const STRINGS: Record<SupportedLocale, RawStrings> = {
     greeting: 'Hello {name},',
     body: 'Your PON account is active. You are now a member of {workspace} with the role {role}.',
     nextStepGoogle:
-      "Next step: create your PON password — you'll be asked right after signing in. You can then sign in with Google or with your email and password.",
+      'Sign in with Google any time. To also sign in with your email, set a PON password in Settings → Password & Security.',
     nextStepPassword: 'Sign in with your email and the password you just set.',
     cta: 'Open PON',
     orCopy: 'Or copy and paste this link into your browser:',
@@ -56,7 +56,7 @@ const STRINGS: Record<SupportedLocale, RawStrings> = {
     greeting: 'Chào {name},',
     body: 'Tài khoản PON của bạn đã được kích hoạt. Bạn hiện là thành viên của {workspace} với vai trò {role}.',
     nextStepGoogle:
-      'Bước tiếp theo: tạo mật khẩu PON — bạn sẽ được yêu cầu ngay sau khi đăng nhập. Sau đó bạn có thể đăng nhập bằng Google hoặc bằng email và mật khẩu.',
+      'Bạn có thể đăng nhập bằng Google bất cứ lúc nào. Muốn đăng nhập bằng email, hãy đặt mật khẩu PON trong Cài đặt → Mật khẩu & Bảo mật.',
     nextStepPassword: 'Đăng nhập bằng email và mật khẩu bạn vừa tạo.',
     cta: 'Mở PON',
     orCopy: 'Hoặc sao chép và dán liên kết này vào trình duyệt:',
@@ -71,7 +71,7 @@ const STRINGS: Record<SupportedLocale, RawStrings> = {
     greeting: '{name}，您好：',
     body: '您的 PON 账户已激活。您现在是 {workspace} 的成员，角色为 {role}。',
     nextStepGoogle:
-      '下一步：创建您的 PON 密码——登录后系统会立即提示您。之后，您既可以使用 Google 登录，也可以使用邮箱和密码登录。',
+      '您可以随时使用 Google 登录。如需同时使用邮箱登录，请在“设置 → 密码与安全”中设置 PON 密码。',
     nextStepPassword: '请使用您的邮箱和刚刚设置的密码登录。',
     cta: '打开 PON',
     orCopy: '或将此链接复制并粘贴到浏览器中：',
@@ -85,7 +85,7 @@ const STRINGS: Record<SupportedLocale, RawStrings> = {
     greeting: '{name} さん、こんにちは。',
     body: 'PON アカウントが有効になりました。あなたは {workspace} のメンバー（ロール: {role}）になりました。',
     nextStepGoogle:
-      '次のステップ：PON のパスワードを作成してください。サインイン直後に作成を求められます。その後は Google でも、メールアドレスとパスワードでもサインインできます。',
+      'いつでも Google でサインインできます。メールアドレスでもサインインしたい場合は、「設定 → パスワードとセキュリティ」で PON のパスワードを設定してください。',
     nextStepPassword:
       'メールアドレスと、先ほど設定したパスワードでサインインしてください。',
     cta: 'PON を開く',
@@ -101,7 +101,7 @@ const STRINGS: Record<SupportedLocale, RawStrings> = {
     greeting: '{name}님, 안녕하세요.',
     body: 'PON 계정이 활성화되었습니다. 이제 {role} 역할로 {workspace}의 멤버가 되었습니다.',
     nextStepGoogle:
-      '다음 단계: PON 비밀번호를 만드세요. 로그인 직후 바로 안내됩니다. 이후에는 Google 또는 이메일과 비밀번호로 로그인할 수 있습니다.',
+      '언제든지 Google로 로그인할 수 있습니다. 이메일로도 로그인하려면 설정 → 비밀번호 및 보안에서 PON 비밀번호를 설정하세요.',
     nextStepPassword: '이메일과 방금 설정한 비밀번호로 로그인하세요.',
     cta: 'PON 열기',
     orCopy: '또는 아래 링크를 복사하여 브라우저에 붙여 넣으세요:',
@@ -116,7 +116,7 @@ const STRINGS: Record<SupportedLocale, RawStrings> = {
     greeting: 'Hola, {name}:',
     body: 'Tu cuenta de PON está activa. Ahora eres miembro de {workspace} con el rol {role}.',
     nextStepGoogle:
-      'Siguiente paso: crea tu contraseña de PON; te la pediremos justo después de iniciar sesión. Después podrás iniciar sesión con Google o con tu correo y contraseña.',
+      'Puedes iniciar sesión con Google en cualquier momento. Para iniciar sesión también con tu correo, crea una contraseña de PON en Ajustes → Contraseña y seguridad.',
     nextStepPassword:
       'Inicia sesión con tu correo y la contraseña que acabas de crear.',
     cta: 'Abrir PON',
@@ -132,7 +132,7 @@ const STRINGS: Record<SupportedLocale, RawStrings> = {
     greeting: 'Bonjour {name},',
     body: 'Votre compte PON est actif. Vous êtes désormais membre de {workspace} avec le rôle {role}.',
     nextStepGoogle:
-      'Prochaine étape : créez votre mot de passe PON — il vous sera demandé juste après la connexion. Vous pourrez ensuite vous connecter avec Google ou avec votre adresse e-mail et votre mot de passe.',
+      'Vous pouvez vous connecter avec Google à tout moment. Pour vous connecter aussi avec votre adresse e-mail, définissez un mot de passe PON dans Paramètres → Mot de passe et sécurité.',
     nextStepPassword:
       'Connectez-vous avec votre adresse e-mail et le mot de passe que vous venez de définir.',
     cta: 'Ouvrir PON',

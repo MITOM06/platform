@@ -29,6 +29,8 @@
   "securitySetButton": "비밀번호 설정",
   "securityChangeButton": "비밀번호 변경",
   "securitySetSuccess": "비밀번호가 설정되었습니다",
+  "securityChangeDoneBody": "다른 기기에서는 로그아웃되었습니다.",
+  "securitySetDoneBody": "이제 이메일과 이 비밀번호로도 로그인할 수 있습니다.",
   "securityTwoFaTitle": "2단계 인증",
   "securityTwoFaSubtitle": "계정에 추가 보안 계층을 더합니다.",
   "securityTwoFaComingSoon": "2단계 인증은 곧 제공될 예정입니다.",
@@ -746,6 +748,8 @@
   "integrationsSettingsSubtitle": "어시스턴트가 사용할 도구 연결",
   "connectorStatusConnected": "연결됨",
   "connectorStatusAvailable": "사용 가능",
+  "connectorStatusNotAllowed": "허용되지 않음",
+  "connectorNotAllowedHint": "워크스페이스에서 이 커넥터를 허용하지 않습니다. 관리자에게 허용 목록에 추가해 달라고 요청하세요.",
   "connectorStatusComingSoon": "출시 예정",
   "connectorConnect": "연결",
   "connectorManage": "관리",
@@ -782,6 +786,8 @@
   "skillsRealActionNote": "스킬은 어시스턴트가 생각하고 말하는 방식을 바꿉니다. 실제로 작동하게 하려면(메일 전송, 일정 생성, Notion에 기록 등) 아래의 해당 앱을 연결하세요.",
   "skillsSettingsSubtitle": "어시스턴트의 장점을 선택하세요",
   "skillNeeds": "{requirements} 필요",
+  "skillReady": "사용 가능",
+  "skillMissing": "연결 안 됨: {connectors}",
   "skillSchedulerName": "일정 관리",
   "skillSchedulerDesc": "회의 시간을 제안하고 초대장을 작성해 줍니다 — 전송은 캘린더/메일 앱에서 직접 하세요(또는 Google 캘린더/Gmail을 연결하면 직접 처리할 수 있습니다).",
   "skillMailWriterName": "메일 작성",
@@ -883,6 +889,7 @@
   "adminMemberRoleLockedSelf": "자신의 역할은 변경할 수 없습니다.",
   "adminMemberRoleLockedOwner": "소유자만 소유자의 역할을 변경할 수 있습니다.",
   "adminMemberDepartments": "부서",
+  "adminMemberDepartmentsLockedOwner": "소유자만 소유자의 부서를 변경할 수 있습니다.",
   "adminRoleHint": "각 역할의 권한을 전환합니다. Owner 역할은 읽기 전용입니다.",
   "adminRoleCapability": "권한",
   "adminRolePreset": "프리셋",
@@ -1194,6 +1201,7 @@
   "authErrInvitationRevoked": "이 초대는 취소되었습니다.",
   "authErrInvitationAlreadyAccepted": "이 초대는 이미 수락되었습니다. 로그인해 주세요.",
   "authErrInvitationEmailMismatch": "초대된 이메일과 일치하는 Google 계정으로 로그인하세요.",
+  "authErrInviteGoogleFlowExpired": "이번 Google 로그인 시도가 만료되었습니다. 초대에서 다시 시도해 주세요.",
   "authErrInvitationAlreadyPending": "이 이메일에는 이미 대기 중인 초대가 있습니다.",
   "authErrInvitationNotPending": "이 초대는 더 이상 대기 상태가 아닙니다.",
   "authErrInvitationNotFound": "초대를 찾을 수 없습니다.",
@@ -1321,6 +1329,8 @@
   "authErrSocialAccountConflict": "이 이메일은 이미 다른 로그인 계정에 연결되어 있습니다",
   "authErrTooManyOtpRequests": "OTP 코드를 너무 많이 요청했습니다. 10분 후에 다시 시도해 주세요.",
   "authErrSocialProviderUnsupported": "이 로그인 방식은 지원되지 않습니다.",
+  "authErrSocialLoginCancelled": "Google 로그인이 취소되었습니다.",
+  "authErrSocialLoginFailed": "Google 로그인을 완료하지 못했습니다. 다시 시도해 주세요.",
   "aiActionConfirm": "확인",
   "aiActionCancel": "취소",
   "aiActionSendEmail": "이메일 보내기",
@@ -1361,6 +1371,8 @@
   "aiTraceToolAwaiting": "확인 대기 중",
   "aiTraceToolDone": "완료",
   "aiTraceToolNotRun": "실행 안 됨",
+  "aiTraceToolCancelled": "취소됨",
+  "aiTraceToolExpired": "만료됨",
   "aiTraceTokens": "입력 {input} · 출력 {output}",
   "aiTraceCacheTokens": "캐시 읽기 {read} · 쓰기 {written}",
   "aiTraceThinkingTokens": "사고 {count}",
@@ -1439,6 +1451,7 @@
   "adminAuditActionDepartmentUpdate": "부서 업데이트",
   "adminAuditActionDepartmentDelete": "부서 삭제",
   "adminAuditActionMemberUpdate": "멤버 업데이트",
+  "adminAuditActionMemberAiContextUpdate": "멤버 AI 컨텍스트 변경",
   "adminAuditActionMemberSsoUpdate": "SSO로 멤버 업데이트",
   "adminAuditActionMemberBlock": "멤버 차단",
   "adminAuditActionMemberUnblock": "멤버 차단 해제",
@@ -1520,6 +1533,8 @@
   "mfaCopyCodes": "코드 복사",
   "mfaCodesCopied": "백업 코드를 복사했습니다",
   "mfaSavedCheckbox": "백업 코드를 저장했습니다",
+  "mfaCopyCodesFirst": "먼저 코드를 복사하세요",
+  "mfaCodesCopyFailed": "코드를 복사하지 못했습니다. 다시 시도해 주세요.",
   "mfaContinue": "계속",
   "securityMfaOn": "로그인할 때마다 인증 앱의 코드가 필요합니다.",
   "securityMfaPending": "회원님의 역할에 필수입니다. 다음 로그인 시 설정합니다.",
@@ -1540,6 +1555,8 @@
   "securityMfaTurnOffHint": "확인을 위해 인증 앱의 현재 코드를 입력하세요. 이후 로그인할 때 더 이상 코드를 묻지 않습니다.",
   "securityMfaTurnOffSubmit": "끄기",
   "securityMfaTurnedOff": "2단계 인증이 꺼졌습니다.",
+  "securityMfaBackupCodesLeft": "{count, plural, other{백업 코드가 {count}개 남았습니다}}",
+  "securityMfaBackupCodesLow": "인증 앱을 사용할 수 있을 때 아래의 “{action}”으로 새 코드를 만드세요. 인증 앱과 백업 코드가 모두 없으면 로그인할 수 없습니다.",
   "authErrMfaRequiredByRole": "회원님의 역할에는 2단계 인증이 필수이므로 끌 수 없습니다.",
   "authNoticeMfaSetupRequiredByRole": "새 역할에는 2단계 인증이 필수입니다. 다시 로그인하여 설정하세요.",
   "adminMfaBadge": "2FA 켜짐",
@@ -1571,35 +1588,6 @@
   "authErrMfaAlreadyEnrolled": "이 계정은 이미 2단계 인증이 설정되어 있습니다.",
   "authErrMfaResetForbidden": "이 멤버의 2단계 인증을 재설정할 수 없습니다.",
   "authErrMfaResetSelfForbidden": "본인의 2단계 인증은 재설정할 수 없습니다.",
-  "callSelfWeakNetwork": "내 네트워크가 약합니다",
-  "callPeerWeakNetwork": "{name}님의 네트워크가 약합니다",
-  "@callPeerWeakNetwork": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "callUnstableNetwork": "연결이 불안정합니다",
-  "callReconnectingSelf": "연결이 끊겨 다시 연결하는 중…",
-  "callWaitingForPeer": "{name}님이 다시 연결되기를 기다리는 중…",
-  "@callWaitingForPeer": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "callReconnectCountdown": "다시 연결되지 않으면 {seconds}초 후 통화가 종료됩니다",
-  "@callReconnectCountdown": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "callSwitchToVideo": "영상 통화로 전환",
-  "callVideoUnavailable": "이 통화에서는 영상을 켤 수 없습니다. 상대방이 앱을 업데이트해야 할 수 있습니다",
   "adminCapHostMeeting": "회의 주최",
   "meetingErrNotFound": "존재하지 않는 회의입니다",
   "meetingErrForbidden": "이 회의에서 해당 작업을 할 권한이 없습니다",
@@ -2202,5 +2190,34 @@
   "meetingMediaBlocked": "마이크 또는 카메라 권한이 꺼져 있습니다. 지금 참여하고 나중에 설정에서 켤 수 있습니다.",
   "meetingSwitchCamera": "카메라 전환",
   "meetingSpeakerOn": "스피커 사용",
-  "meetingLoading": "회의를 불러오는 중…"
+  "meetingLoading": "회의를 불러오는 중…",
+  "callSelfWeakNetwork": "내 네트워크가 약합니다",
+  "callPeerWeakNetwork": "{name}님의 네트워크가 약합니다",
+  "@callPeerWeakNetwork": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callUnstableNetwork": "연결이 불안정합니다",
+  "callReconnectingSelf": "연결이 끊겨 다시 연결하는 중…",
+  "callWaitingForPeer": "{name}님이 다시 연결되기를 기다리는 중…",
+  "@callWaitingForPeer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callReconnectCountdown": "다시 연결되지 않으면 {seconds}초 후 통화가 종료됩니다",
+  "@callReconnectCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "callSwitchToVideo": "영상 통화로 전환",
+  "callVideoUnavailable": "이 통화에서는 영상을 켤 수 없습니다. 상대방이 앱을 업데이트해야 할 수 있습니다"
 }

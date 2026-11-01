@@ -189,21 +189,31 @@ export class GoogleRestAdapter implements ProviderAdapter {
   // ── Revocation ───────────────────────────────────────────────────────────
 
   /**
-   * Revoke the grant at Google before the connection is deleted. Skipped while
-   * the member still has the sibling Google connection (Gmail ↔ Calendar):
-   * both use the same OAuth client, and revoking one token revokes the whole
-   * grant — disconnecting Gmail would silently break Calendar.
+   * Revoke the grant at Google before the connection is deleted. Google revokes
+   * the WHOLE grant of this OAuth client for that Google account, so it is
+   * skipped while another active Gmail/Calendar connection may ride the same
+   * grant: the member's sibling (Gmail ↔ Calendar), or another member who
+   * connected the same Google account — removing a test account's Gmail once
+   * expired the real owner's Gmail and Calendar. A connection whose account is
+   * unknown (stored before `accountLabel`) counts as a possible match. Skipping
+   * only leaves the grant at Google; the delete still drops our copy.
    */
   async revoke(conn: ConnectionLike): Promise<RevokeOutcome> {
     try {
-      if (conn.userId) {
-        const sibling = await this.connModel.exists({
-          userId: conn.userId,
-          provider: { $in: GOOGLE_PROVIDERS.filter((p) => p !== conn.provider) },
-          status: 'active',
-        });
-        if (sibling) return 'skipped';
-      }
+      const others = await this.connModel
+        .find(
+          {
+            ...(conn._id ? { _id: { $ne: conn._id } } : {}),
+            provider: { $in: GOOGLE_PROVIDERS },
+            status: 'active',
+          },
+          { accountLabel: 1 },
+        )
+        .lean();
+      const account = conn.accountLabel?.toLowerCase();
+      const sharesGrant = (other: { accountLabel?: string }) =>
+        !account || !other.accountLabel || other.accountLabel.toLowerCase() === account;
+      if (others.some(sharesGrant)) return 'skipped';
       const tokens = this.decode(conn.encryptedTokens);
       const token = tokens.refresh_token ?? tokens.access_token;
       if (!token) return 'skipped';

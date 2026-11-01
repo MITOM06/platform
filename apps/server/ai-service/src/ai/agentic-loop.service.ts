@@ -18,6 +18,8 @@ import { ACTION_PENDING_FALLBACK_TEXT } from './system-notices';
 import { addTokens, countTokens, zeroTokens } from '../usage/token-counts';
 import { LlmClient } from '../llm/openrouter-client';
 import { LlmClientsService } from '../llm/llm-clients.service';
+import { buildToolNotes } from '../tools/withheld-tools';
+import { ClaudeCliClient } from '../llm/claude-cli.client';
 
 const MAX_ITER = 5;
 const MAX_ITER_NOTICE = 'I had trouble completing that action. Please try again.';
@@ -81,6 +83,8 @@ export class AgenticLoopService {
     // Reply-wide citation list: KB sources (numbered in the system prompt) first;
     // KB/web tools register theirs after them (ai/source-registry).
     const citations: RagSource[] = [...ctx.ragSources];
+    const withheld: string[] = [];
+    const skillOff: string[] = [];
     const toolCtx: ToolContext = {
       conversationId: ctx.conversationId,
       userId: ctx.userId,
@@ -91,6 +95,8 @@ export class AgenticLoopService {
       webSearchEnabled: ctx.settings.webSearchEnabled,
       allowedConnectors: ctx.settings.allowedConnectors,
       enabledSkillIds: ctx.enabledSkillIds,
+      withheldSink: withheld,
+      skillOffSink: skillOff,
     };
     const defs = await this.toolRegistry.getDefinitions(toolCtx);
     // Single chokepoint for the final messages array: normalizeMessages drops a
@@ -101,7 +107,7 @@ export class AgenticLoopService {
       { role: 'user', content: userContent },
     ]);
     return {
-      system: this.buildSystemBlocks(ctx),
+      system: this.buildSystemBlocks(ctx, buildToolNotes(withheld, skillOff)),
       tools: this.toAnthropicTools(defs),
       offeredTools: new Map(defs.map((d) => [d.name, d])),
       toolCtx,
@@ -182,6 +188,7 @@ export class AgenticLoopService {
    */
   async run(p: LoopRunParams): Promise<AiTrace> {
     const { anthropic, model, ctx, state, stream } = p;
+    if (anthropic instanceof ClaudeCliClient) return this.runOnCli(p, anthropic);
     const useThinking = this.resolveThinking(model, ctx, state);
     let finalText = '';
     let stopReason: string | null = null;
@@ -221,6 +228,51 @@ export class AgenticLoopService {
     }
 
     return this.finish(p, finalText, stopReason);
+  }
+
+  /**
+   * The whole reply on the Claude Code subscription (ClaudeCliClient): the CLI
+   * runs the tool loop itself, each tool call comes back through
+   * `ToolRoundRunner.runToolCall` and each completed round is mirrored into
+   * `state` — so a failure before any text was streamed continues on the API
+   * from the same state (runWithFallback), never re-running a tool.
+   */
+  private async runOnCli(p: LoopRunParams, cli: ClaudeCliClient): Promise<AiTrace> {
+    const { model, ctx, state, stream } = p;
+    let streamed = false;
+    let result: Awaited<ReturnType<ClaudeCliClient['runLoop']>>;
+    try {
+      result = await cli.runLoop({
+        model,
+        system: state.system.map((b) => b.text).join('\n\n'),
+        messages: state.messages,
+        tools: [...state.offeredTools.values()],
+        thinking: this.resolveThinking(model, ctx, state),
+        maxTurns: MAX_ITER - state.iteration + 1,
+        onText: async (delta) => {
+          streamed = true;
+          await stream.chunk(delta);
+        },
+        onToolCall: async (block) => {
+          const r = await this.toolRound.runToolCall(block, state, stream);
+          return typeof r.content === 'string' ? r.content : JSON.stringify(r.content ?? '');
+        },
+        onRound: (assistant, results) => this.toolRound.commitRound(assistant, results, state),
+      });
+    } catch (err) {
+      if (streamed) throw new StreamInterruptedError(err);
+      throw err;
+    }
+    state.usage = addTokens(state.usage, result.usage);
+    state.thinkingBlocks.push(...result.thinkingBlocks);
+    // Mirrored rounds carry no thinking blocks: a continuation must not switch thinking on.
+    state.thinkingMode = false;
+    this.logger.log(
+      `Claude CLI reply for ${ctx.conversationId}: ${result.numTurns} turn(s), ` +
+        `${result.usage.inputTokens}/${result.usage.outputTokens} tokens, ` +
+        `cost ${result.costUsd.toFixed(4)} USD on the subscription (not billed to the API key)`,
+    );
+    return this.finish(p, result.text, result.stopReason);
   }
 
   /** Workspace thinking toggle, applied to any routed model that supports adaptive thinking. */
@@ -367,7 +419,8 @@ export class AgenticLoopService {
   }
 
   /** System blocks: stable (cached) persona/contract + volatile grounding after it. */
-  private buildSystemBlocks(ctx: RequestContext): Anthropic.TextBlockParam[] {
+  /** `toolNote`: per-member tool context (role-withheld / skill-off connector actions) — volatile, never cached. */
+  private buildSystemBlocks(ctx: RequestContext, toolNote = ''): Anthropic.TextBlockParam[] {
     const blocks: Anthropic.TextBlockParam[] = [
       {
         type: 'text',
@@ -375,9 +428,10 @@ export class AgenticLoopService {
         ...(this.promptCacheEnabled ? { cache_control: { type: 'ephemeral' as const } } : {}),
       },
     ];
-    if (ctx.volatileSystem.trim()) {
+    const volatile = [ctx.volatileSystem, toolNote].filter((s) => s.trim()).join('\n\n');
+    if (volatile) {
       // Volatile content AFTER the cache breakpoint — does not bust the cache.
-      blocks.push({ type: 'text', text: ctx.volatileSystem });
+      blocks.push({ type: 'text', text: volatile });
     }
     return blocks;
   }

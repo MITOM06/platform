@@ -1,4 +1,5 @@
 import { registerAs } from '@nestjs/config';
+import { GEMINI_BASE_URL, geminiTierModel } from '../llm/gemini-test';
 
 export interface ModelPrice {
   inputPerMTok: number;
@@ -71,9 +72,10 @@ export default registerAs('config', () => ({
     router: {
       // Set ANTHROPIC_ROUTER_ENABLED=false to disable routing and always use complexModel.
       enabled: process.env.ANTHROPIC_ROUTER_ENABLED !== 'false',
-      simpleModel: process.env.ANTHROPIC_SIMPLE_MODEL ?? 'claude-haiku-4-5',
-      midModel: process.env.ANTHROPIC_MID_MODEL ?? 'claude-sonnet-4-6',
-      complexModel: process.env.ANTHROPIC_COMPLEX_MODEL ?? 'claude-opus-4-8',
+      // Dev-only Gemini test mode (GEMINI_API_KEY set) puts every tier on Gemini.
+      simpleModel: geminiTierModel() ?? process.env.ANTHROPIC_SIMPLE_MODEL ?? 'claude-haiku-4-5',
+      midModel: geminiTierModel() ?? process.env.ANTHROPIC_MID_MODEL ?? 'claude-sonnet-4-6',
+      complexModel: geminiTierModel() ?? process.env.ANTHROPIC_COMPLEX_MODEL ?? 'claude-opus-4-8',
       simpleMaxChars: parseInt(process.env.ANTHROPIC_ROUTER_SIMPLE_MAX_CHARS ?? '280', 10),
       simpleMaxHistory: parseInt(process.env.ANTHROPIC_ROUTER_SIMPLE_MAX_HISTORY ?? '4', 10),
       midMaxChars: parseInt(process.env.ANTHROPIC_ROUTER_MID_MAX_CHARS ?? '1200', 10),
@@ -90,6 +92,18 @@ export default registerAs('config', () => ({
     appUrl: process.env.OPENROUTER_APP_URL || undefined,
     // After a 429 (free-model limits), skip OpenRouter for this long.
     cooldownMs: parseInt(process.env.OPENROUTER_COOLDOWN_MS ?? '600000', 10),
+  },
+  // DEV-ONLY: chat on Gemini's OpenAI-compatible endpoint to test without Claude
+  // credit (src/llm/gemini-test.ts). Empty GEMINI_API_KEY = Claude, as before.
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY || undefined,
+    model: geminiTierModel(),
+    baseUrl: process.env.GEMINI_BASE_URL || GEMINI_BASE_URL,
+    // Free-tier per-minute limits clear fast; a short pause beats ten minutes on Claude.
+    cooldownMs: parseInt(process.env.GEMINI_COOLDOWN_MS ?? '60000', 10),
+    // The free tier sends nothing until it has thought (measured 10–40 s). A reply past
+    // the clients' 30 s watchdog still arrives as a saved message.
+    firstTokenTimeoutMs: parseInt(process.env.GEMINI_FIRST_TOKEN_TIMEOUT_MS ?? '90000', 10),
   },
   bot: {
     userId: process.env.AI_BOT_USER_ID ?? 'ai-bot-000000000000000000000001',
@@ -179,6 +193,18 @@ export default registerAs('config', () => ({
     blockMaxChars: Number(process.env.AI_CONTEXT_BLOCK_MAX_CHARS ?? 2000),
   },
   ai: {
+    // Chat replies: 'api' (Anthropic API, default) or 'claude-cli' — the owner's
+    // Claude Code subscription through the Agent SDK, API as the fallback
+    // (docs/superpowers/specs/2026-11-01-ai-claude-cli-provider-design.md).
+    provider: process.env.AI_PROVIDER === 'claude-cli' ? 'claude-cli' : 'api',
+    claudeCli: {
+      // From `claude setup-token`; unset = the credentials in <home>/.claude.
+      oauthToken: process.env.CLAUDE_CODE_OAUTH_TOKEN || undefined,
+      timeoutMs: parseInt(process.env.CLAUDE_CLI_TIMEOUT_MS ?? '120000', 10),
+      // HOME of the CLI subprocess (must be writable); unset = this process's home.
+      home: process.env.CLAUDE_CLI_HOME || undefined,
+      executablePath: process.env.CLAUDE_CLI_EXECUTABLE || undefined,
+    },
     // When true, enable adaptive thinking on the primary model.
     enableThinking: process.env.AI_ENABLE_THINKING === 'true',
     // IANA zone the assistant tells the time in, so "8pm tonight" becomes a real
@@ -242,6 +268,9 @@ export default registerAs('config', () => ({
     // longer: aborting a send that the provider is still completing reported a
     // failure for an action that actually happened, inviting a duplicate retry.
     readTimeoutMs: parseInt(process.env.CONNECTOR_READ_TIMEOUT_MS ?? '5000', 10),
+    // Reads on a third-party remote MCP server (directory entry, custom server):
+    // some take well over 5 s (GitMCP search ~16 s); connector-service allows 60 s.
+    remoteReadTimeoutMs: parseInt(process.env.CONNECTOR_REMOTE_READ_TIMEOUT_MS ?? '30000', 10),
     writeTimeoutMs: parseInt(process.env.CONNECTOR_WRITE_TIMEOUT_MS ?? '30000', 10),
   },
   actions: {

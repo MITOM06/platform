@@ -10,7 +10,7 @@ import '../../utils/ai_tool_names.dart';
 /// What happened to one tool call, from the trace's `resultSummary`. Only
 /// these fixed ai-service markers are read — the summary itself (raw tool
 /// output) is never displayed.
-enum TraceToolStatus { done, awaitingConfirmation, notRun }
+enum TraceToolStatus { done, awaitingConfirmation, notRun, cancelled, expired }
 
 TraceToolStatus traceToolStatus(ToolCallEntry entry) {
   switch (entry.resultSummary) {
@@ -24,13 +24,50 @@ TraceToolStatus traceToolStatus(ToolCallEntry entry) {
   }
 }
 
+/// The trace is written when the reply ends, so a held call stays "awaiting"
+/// in it forever. The confirmation card on the same message carries the real
+/// outcome: each awaiting call takes the status of the next card with the same
+/// tool name (in order). Pending or unmatched calls stay awaiting. Mirrors web
+/// `resolvedToolCallStatuses` (lib/ai/trace.ts).
+List<TraceToolStatus> resolveTraceStatuses(
+  List<ToolCallEntry> calls,
+  List<AiPendingAction>? actions,
+) {
+  final used = <int>{};
+  return calls.map((call) {
+    final base = traceToolStatus(call);
+    if (base != TraceToolStatus.awaitingConfirmation || actions == null) {
+      return base;
+    }
+    var idx = -1;
+    for (var i = 0; i < actions.length; i++) {
+      if (!used.contains(i) && actions[i].toolName == call.toolName) {
+        idx = i;
+        break;
+      }
+    }
+    if (idx < 0) return base;
+    used.add(idx);
+    return switch (actions[idx].status) {
+      AiActionStatus.confirmed => TraceToolStatus.done,
+      AiActionStatus.cancelled => TraceToolStatus.cancelled,
+      AiActionStatus.expired => TraceToolStatus.expired,
+      AiActionStatus.failed => TraceToolStatus.notRun,
+      _ => base,
+    };
+  }).toList();
+}
+
 /// Agent trace under an AI answer: thinking, the tools used (display name +
 /// status), timing and token usage. Tool INPUTS are never shown — an
 /// `inputSummary` can hold the start of an email body or other private text.
 class TracePanel extends ConsumerWidget {
   final AiTrace trace;
 
-  const TracePanel({super.key, required this.trace});
+  /// The message's confirmation cards — their status replaces a stale "awaiting".
+  final List<AiPendingAction>? actions;
+
+  const TracePanel({super.key, required this.trace, this.actions});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -58,7 +95,11 @@ class TracePanel extends ConsumerWidget {
             if (trace.thinkingBlocks.isNotEmpty)
               _ThinkingSection(blocks: trace.thinkingBlocks),
             if (trace.toolCalls.isNotEmpty)
-              _ToolCallsSection(toolCalls: trace.toolCalls, names: names),
+              _ToolCallsSection(
+                toolCalls: trace.toolCalls,
+                statuses: resolveTraceStatuses(trace.toolCalls, actions),
+                names: names,
+              ),
             _StatsRow(trace: trace),
           ],
         ),
@@ -118,8 +159,13 @@ class _ThinkingBlock extends StatelessWidget {
 
 class _ToolCallsSection extends StatelessWidget {
   final List<ToolCallEntry> toolCalls;
+  final List<TraceToolStatus> statuses;
   final Map<String, String> names;
-  const _ToolCallsSection({required this.toolCalls, required this.names});
+  const _ToolCallsSection({
+    required this.toolCalls,
+    required this.statuses,
+    required this.names,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -137,7 +183,8 @@ class _ToolCallsSection extends StatelessWidget {
             ),
           ),
         ),
-        ...toolCalls.map((e) => _ToolEntry(entry: e, names: names)),
+        for (var i = 0; i < toolCalls.length; i++)
+          _ToolEntry(entry: toolCalls[i], status: statuses[i], names: names),
       ],
     );
   }
@@ -166,17 +213,23 @@ IconData _toolIcon(String toolName) {
 
 class _ToolEntry extends StatelessWidget {
   final ToolCallEntry entry;
+  final TraceToolStatus status;
   final Map<String, String> names;
-  const _ToolEntry({required this.entry, required this.names});
+  const _ToolEntry({
+    required this.entry,
+    required this.status,
+    required this.names,
+  });
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final status = traceToolStatus(entry);
     final statusText = switch (status) {
       TraceToolStatus.done => l10n.aiTraceToolDone,
       TraceToolStatus.awaitingConfirmation => l10n.aiTraceToolAwaiting,
       TraceToolStatus.notRun => l10n.aiTraceToolNotRun,
+      TraceToolStatus.cancelled => l10n.aiTraceToolCancelled,
+      TraceToolStatus.expired => l10n.aiTraceToolExpired,
     };
     final muted = AppTheme.mutedText(context);
     return Padding(

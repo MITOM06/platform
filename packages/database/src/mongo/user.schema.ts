@@ -59,10 +59,11 @@ export class User {
   password: string;
 
   /**
-   * Onboarding flag: true only for an account created by accepting an
-   * invitation with Google. The client gates the app behind a "create your PON
-   * password" step until any password is set (change/reset clears it). It is a
-   * UX step, not a security boundary. Missing on legacy docs => false.
+   * Retired onboarding flag (2026-10-26). It used to be true for an account
+   * created by accepting an invitation with Google, and clients gated the app
+   * behind a "create your PON password" step until a password was set. Nothing
+   * sets it any more and auth-service clears leftovers at boot; the field stays
+   * so clients reading it keep getting `false`. Missing on legacy docs => false.
    */
   @Prop({ default: false })
   mustSetPassword: boolean;

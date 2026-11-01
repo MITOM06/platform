@@ -340,7 +340,11 @@ export default function ConversationPage({ params }: Props) {
         />
       )}
 
-      <AiTraceModal messageId={traceMessageId} onClose={() => setTraceMessageId(null)} />
+      <AiTraceModal
+        messageId={traceMessageId}
+        pendingActions={messages.find((m) => m.id === traceMessageId)?.pendingActions}
+        onClose={() => setTraceMessageId(null)}
+      />
       <ForwardMessageModal message={forwardMessage} onClose={() => setForwardMessage(null)} />
     </div>
   )

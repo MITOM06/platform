@@ -7,6 +7,7 @@ import React from 'react'
 import { toast } from 'sonner'
 import { TwoFactorSection } from '@/components/settings/TwoFactorSection'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { copyBackupCodes } from '@/components/auth/__tests__/backup-codes-helpers'
 
 const getMe = vi.fn()
 const selfMfaEnrollStart = vi.fn()
@@ -100,6 +101,9 @@ describe('Settings → Security: optional 2FA for Members (contract 15)', () => 
       expect(screen.queryByTestId('two-factor-status')).toBeNull()
       const done = screen.getByRole('button', { name: 'settings.security.turnOnDone' })
       expect(done).toBeDisabled()
+      expect(screen.getByRole('checkbox', { name: 'auth.mfa.savedCheckbox' })).toBeDisabled()
+      expect(screen.getByText('auth.mfa.copyOrDownloadFirst')).toBeInTheDocument()
+      await copyBackupCodes()
       fireEvent.click(screen.getByRole('checkbox', { name: 'auth.mfa.savedCheckbox' }))
       fireEvent.click(done)
 
@@ -111,6 +115,34 @@ describe('Settings → Security: optional 2FA for Members (contract 15)', () => 
       // No session change: no cookie call, same token in memory.
       expect(fetchMock).not.toHaveBeenCalled()
       expect(useAuthStore.getState().accessToken).toBe('tok')
+    })
+
+    it('the backup-code count appears after Done, from /me', async () => {
+      getMe
+        .mockResolvedValueOnce(memberOff)
+        .mockResolvedValueOnce({ ...memberOn, backupCodesRemaining: 10 })
+      selfMfaEnrollStart.mockResolvedValue(SETUP)
+      selfMfaEnrollConfirm.mockResolvedValue({ code: 'MFA_BACKUP_CODES_ISSUED', backupCodes: CODES })
+      renderSection()
+
+      fireEvent.click(await screen.findByRole('button', { name: 'settings.security.turnOnButton' }))
+      await screen.findByTestId('two-factor-enroll')
+      typeCode('123456')
+      await waitFor(() => expect(screen.getAllByTestId('backup-code')).toHaveLength(10))
+      // Still on the one-time codes screen: the count waits until it is left.
+      expect(screen.queryByTestId('backup-codes-remaining')).toBeNull()
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: { writeText: vi.fn().mockResolvedValue(undefined) },
+      })
+      fireEvent.click(screen.getByRole('button', { name: 'auth.mfa.copyCodes' }))
+      await waitFor(() => expect(screen.getByRole('checkbox', { name: 'auth.mfa.savedCheckbox' })).toBeEnabled())
+      fireEvent.click(screen.getByRole('checkbox', { name: 'auth.mfa.savedCheckbox' }))
+      fireEvent.click(screen.getByRole('button', { name: 'settings.security.turnOnDone' }))
+
+      expect(await screen.findByTestId('backup-codes-remaining')).toHaveTextContent(
+        'settings.security.backupCodesLeft:{"count":10}',
+      )
     })
 
     it('a wrong code stays in the flow with a localized count; Cancel goes back without changes', async () => {
@@ -197,6 +229,20 @@ describe('Settings → Security: optional 2FA for Members (contract 15)', () => 
       expect(await screen.findByTestId('two-factor-status')).toHaveTextContent('settings.security.twoFaOff')
       expect(screen.getByRole('button', { name: 'settings.security.turnOnButton' })).toBeInTheDocument()
       expect(fetchMock).not.toHaveBeenCalled()
+    })
+
+    it('the old backup-code count is gone with 2FA, even if the /me refresh fails', async () => {
+      getMe.mockResolvedValueOnce({ ...memberOn, backupCodesRemaining: 2 }).mockRejectedValue(new Error('offline'))
+      selfMfaDisable.mockResolvedValue({ success: true })
+      renderSection()
+      expect(await screen.findByTestId('backup-codes-remaining')).toBeInTheDocument()
+      const dialog = await openTurnOff()
+      typeCode('654321', dialog)
+      fireEvent.click(within(dialog).getByRole('button', { name: 'settings.security.turnOffSubmit' }))
+
+      await waitFor(() => expect(screen.getByTestId('two-factor-status')).toHaveTextContent('settings.security.twoFaOff'))
+      expect(screen.queryByTestId('backup-codes-remaining')).toBeNull()
+      expect(screen.queryByTestId('backup-codes-low')).toBeNull()
     })
 
     it('with a backup code instead (normalised to XXXXX-XXXXX)', async () => {

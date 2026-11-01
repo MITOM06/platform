@@ -1,5 +1,6 @@
 import { CustomMcpService } from './custom-mcp.service';
 import { resolver } from '../security/url-guard';
+import { CustomMcpEvents, SavedCustomMcp } from './custom-mcp-events';
 
 const ID = '6650c0ffee0123456789abcd';
 const SECRET_URL = 'https://mcp.example.com/mcp/sk-live-abcdef1234567890?api_key=sk-123&team=x';
@@ -10,8 +11,13 @@ describe('CustomMcpService', () => {
   let vault: any;
   let mcp: any;
   let audit: any;
+  let events: CustomMcpEvents;
+  let saved: SavedCustomMcp[];
 
   beforeEach(() => {
+    events = new CustomMcpEvents();
+    saved = [];
+    events.onSaved((e) => saved.push(e));
     jest.spyOn(resolver, 'lookup').mockResolvedValue([{ address: '93.184.216.34', family: 4 }]);
     customModel = {
       create: jest.fn().mockImplementation(async (doc) => ({ toObject: () => ({ _id: ID, ...doc }) })),
@@ -27,7 +33,7 @@ describe('CustomMcpService', () => {
       evictConnection: jest.fn().mockResolvedValue(undefined),
     };
     audit = { record: jest.fn().mockResolvedValue(undefined) };
-    svc = new CustomMcpService(customModel, vault, mcp, audit);
+    svc = new CustomMcpService(customModel, vault, mcp, audit, events);
   });
 
   afterEach(() => jest.restoreAllMocks());
@@ -65,6 +71,19 @@ describe('CustomMcpService', () => {
     await svc.save('u1', { name: 'Open MCP', url: 'https://mcp.example/sse', authType: 'none' });
     expect(vault.encrypt).not.toHaveBeenCalled();
     expect(customModel.create.mock.calls[0][0].encryptedCredential).toBeUndefined();
+  });
+
+  it('save announces the server with the tools it discovered, to prime the tool cache', async () => {
+    await svc.save('u1', { name: 'Wiki', url: 'https://mcp.example/mcp', authType: 'none' });
+    expect(saved).toHaveLength(1);
+    expect(saved[0].server).toMatchObject({ _id: ID, name: 'Wiki' });
+    expect(saved[0].tools.map((t) => t.name)).toEqual(['create_page', 'search']);
+  });
+
+  it('save still announces the server when discovery fails, with no tools', async () => {
+    mcp.discoverTools.mockRejectedValue(new Error('timeout'));
+    await svc.save('u1', { name: 'Slow', url: 'https://mcp.example/mcp', authType: 'none' });
+    expect(saved[0].tools).toEqual([]);
   });
 
   it('list returns only the caller servers, redacted', async () => {

@@ -100,6 +100,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get securitySetSuccess => 'Mot de passe défini avec succès';
 
   @override
+  String get securityChangeDoneBody =>
+      'Vos autres appareils ont été déconnectés.';
+
+  @override
+  String get securitySetDoneBody =>
+      'Vous pouvez désormais aussi vous connecter avec votre e-mail et ce mot de passe.';
+
+  @override
   String get securityTwoFaTitle => 'Authentification à deux facteurs';
 
   @override
@@ -2073,6 +2081,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get connectorStatusAvailable => 'Disponible';
 
   @override
+  String get connectorStatusNotAllowed => 'Non autorisé';
+
+  @override
+  String get connectorNotAllowedHint =>
+      'Votre espace de travail n\'autorise pas ce connecteur. Demandez à un administrateur de l\'ajouter à la liste autorisée.';
+
+  @override
   String get connectorStatusComingSoon => 'Bientôt disponible';
 
   @override
@@ -2191,6 +2206,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String skillNeeds(String requirements) {
     return 'Nécessite $requirements';
+  }
+
+  @override
+  String get skillReady => 'Prête';
+
+  @override
+  String skillMissing(String connectors) {
+    return 'Non connecté : $connectors';
   }
 
   @override
@@ -2525,6 +2548,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get adminMemberDepartments => 'Départements';
+
+  @override
+  String get adminMemberDepartmentsLockedOwner =>
+      'Seul un Propriétaire peut modifier les départements d\'un Propriétaire.';
 
   @override
   String get adminRoleHint =>
@@ -3509,6 +3536,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Connectez-vous avec le compte Google correspondant à l\'e-mail invité.';
 
   @override
+  String get authErrInviteGoogleFlowExpired =>
+      'Cette tentative de connexion avec Google a expiré. Réessayez depuis votre invitation.';
+
+  @override
   String get authErrInvitationAlreadyPending =>
       'Cet e-mail a déjà une invitation en attente.';
 
@@ -3937,6 +3968,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ce mode de connexion n\'est pas pris en charge.';
 
   @override
+  String get authErrSocialLoginCancelled =>
+      'La connexion avec Google a été annulée.';
+
+  @override
+  String get authErrSocialLoginFailed =>
+      'La connexion avec Google n\'a pas abouti. Veuillez réessayer.';
+
+  @override
   String get aiActionConfirm => 'Confirmer';
 
   @override
@@ -4065,6 +4104,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get aiTraceToolNotRun => 'Non exécuté';
+
+  @override
+  String get aiTraceToolCancelled => 'Annulée';
+
+  @override
+  String get aiTraceToolExpired => 'Expirée';
 
   @override
   String aiTraceTokens(String input, String output) {
@@ -4354,6 +4399,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminAuditActionMemberUpdate => 'Membre mis à jour';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate =>
+      'Contexte IA d\'un membre modifié';
+
+  @override
   String get adminAuditActionMemberSsoUpdate => 'Membre mis à jour par SSO';
 
   @override
@@ -4609,6 +4658,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mfaSavedCheckbox => 'J\'ai enregistré mes codes de secours';
 
   @override
+  String get mfaCopyCodesFirst => 'Copiez d\'abord les codes';
+
+  @override
+  String get mfaCodesCopyFailed =>
+      'Impossible de copier les codes. Veuillez réessayer.';
+
+  @override
   String get mfaContinue => 'Continuer';
 
   @override
@@ -4679,6 +4735,22 @@ class AppLocalizationsFr extends AppLocalizations {
       'L\'authentification à deux facteurs est désactivée.';
 
   @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count codes de secours restants',
+      one: '$count code de secours restant',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return 'Générez-en de nouveaux avec « $action » ci-dessous tant que vous avez encore votre application d\'authentification. Sans l\'application ni code de secours, vous ne pourrez plus vous connecter.';
+  }
+
+  @override
   String get authErrMfaRequiredByRole =>
       'Votre rôle exige l\'authentification à deux facteurs : elle ne peut pas être désactivée.';
 
@@ -4745,37 +4817,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get authErrMfaResetSelfForbidden =>
       'Vous ne pouvez pas réinitialiser votre propre authentification à deux facteurs.';
-
-  @override
-  String get callSelfWeakNetwork => 'Votre réseau est faible';
-
-  @override
-  String callPeerWeakNetwork(String name) {
-    return 'Le réseau de $name est faible';
-  }
-
-  @override
-  String get callUnstableNetwork => 'Connexion instable';
-
-  @override
-  String get callReconnectingSelf => 'Connexion perdue, reconnexion…';
-
-  @override
-  String callWaitingForPeer(String name) {
-    return 'En attente de la reconnexion de $name…';
-  }
-
-  @override
-  String callReconnectCountdown(int seconds) {
-    return 'L\'appel prendra fin dans $seconds s sans reconnexion';
-  }
-
-  @override
-  String get callSwitchToVideo => 'Passer en vidéo';
-
-  @override
-  String get callVideoUnavailable =>
-      'La vidéo n\'est pas disponible pour cet appel — l\'autre personne doit peut-être mettre à jour l\'application';
 
   @override
   String get adminCapHostMeeting => 'Organiser des réunions';
@@ -5801,4 +5842,35 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get meetingLoading => 'Chargement de la réunion…';
+
+  @override
+  String get callSelfWeakNetwork => 'Votre réseau est faible';
+
+  @override
+  String callPeerWeakNetwork(String name) {
+    return 'Le réseau de $name est faible';
+  }
+
+  @override
+  String get callUnstableNetwork => 'Connexion instable';
+
+  @override
+  String get callReconnectingSelf => 'Connexion perdue, reconnexion…';
+
+  @override
+  String callWaitingForPeer(String name) {
+    return 'En attente de la reconnexion de $name…';
+  }
+
+  @override
+  String callReconnectCountdown(int seconds) {
+    return 'L\'appel prendra fin dans $seconds s sans reconnexion';
+  }
+
+  @override
+  String get callSwitchToVideo => 'Passer en vidéo';
+
+  @override
+  String get callVideoUnavailable =>
+      'La vidéo n\'est pas disponible pour cet appel — l\'autre personne doit peut-être mettre à jour l\'application';
 }

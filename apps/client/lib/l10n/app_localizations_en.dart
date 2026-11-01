@@ -98,6 +98,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securitySetSuccess => 'Password set successfully';
 
   @override
+  String get securityChangeDoneBody =>
+      'Your other devices have been signed out.';
+
+  @override
+  String get securitySetDoneBody =>
+      'You can now also sign in with your email and this password.';
+
+  @override
   String get securityTwoFaTitle => 'Two-factor authentication';
 
   @override
@@ -2041,6 +2049,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connectorStatusAvailable => 'Available';
 
   @override
+  String get connectorStatusNotAllowed => 'Not allowed';
+
+  @override
+  String get connectorNotAllowedHint =>
+      'Your workspace doesn\'t allow this connector. Ask an administrator to add it to the allow-list.';
+
+  @override
   String get connectorStatusComingSoon => 'Coming soon';
 
   @override
@@ -2156,6 +2171,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String skillNeeds(String requirements) {
     return 'Needs $requirements';
+  }
+
+  @override
+  String get skillReady => 'Ready';
+
+  @override
+  String skillMissing(String connectors) {
+    return 'Not connected: $connectors';
   }
 
   @override
@@ -2484,6 +2507,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminMemberDepartments => 'Departments';
+
+  @override
+  String get adminMemberDepartmentsLockedOwner =>
+      'Only an Owner can change an Owner\'s departments.';
 
   @override
   String get adminRoleHint =>
@@ -3459,6 +3486,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sign in with the Google account that matches the invited email.';
 
   @override
+  String get authErrInviteGoogleFlowExpired =>
+      'This Google sign-in attempt expired. Please try again from your invitation.';
+
+  @override
   String get authErrInvitationAlreadyPending =>
       'This email already has a pending invitation.';
 
@@ -3881,6 +3912,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'This sign-in method isn\'t supported.';
 
   @override
+  String get authErrSocialLoginCancelled => 'Google sign-in was cancelled.';
+
+  @override
+  String get authErrSocialLoginFailed =>
+      'Google sign-in didn\'t complete. Please try again.';
+
+  @override
   String get aiActionConfirm => 'Confirm';
 
   @override
@@ -4008,6 +4046,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiTraceToolNotRun => 'Not run';
+
+  @override
+  String get aiTraceToolCancelled => 'Cancelled';
+
+  @override
+  String get aiTraceToolExpired => 'Expired';
 
   @override
   String aiTraceTokens(String input, String output) {
@@ -4292,6 +4336,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminAuditActionMemberUpdate => 'Member updated';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate =>
+      'Member\'s AI context changed';
+
+  @override
   String get adminAuditActionMemberSsoUpdate => 'Member updated by SSO';
 
   @override
@@ -4538,6 +4586,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mfaSavedCheckbox => 'I saved my backup codes';
 
   @override
+  String get mfaCopyCodesFirst => 'Copy the codes first';
+
+  @override
+  String get mfaCodesCopyFailed =>
+      'Couldn\'t copy the codes. Please try again.';
+
+  @override
   String get mfaContinue => 'Continue';
 
   @override
@@ -4603,6 +4658,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityMfaTurnedOff => 'Two-factor authentication is off.';
+
+  @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count backup codes left',
+      one: '$count backup code left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return 'Generate new ones with “$action” below while you still have your authenticator app. Without the app or a backup code, you can\'t sign in.';
+  }
 
   @override
   String get authErrMfaRequiredByRole =>
@@ -4671,37 +4742,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authErrMfaResetSelfForbidden =>
       'You can\'t reset your own two-factor authentication.';
-
-  @override
-  String get callSelfWeakNetwork => 'Your network is weak';
-
-  @override
-  String callPeerWeakNetwork(String name) {
-    return '$name\'s network is weak';
-  }
-
-  @override
-  String get callUnstableNetwork => 'Unstable connection';
-
-  @override
-  String get callReconnectingSelf => 'Connection lost — reconnecting…';
-
-  @override
-  String callWaitingForPeer(String name) {
-    return 'Waiting for $name to reconnect…';
-  }
-
-  @override
-  String callReconnectCountdown(int seconds) {
-    return 'The call ends in ${seconds}s if it cannot reconnect';
-  }
-
-  @override
-  String get callSwitchToVideo => 'Switch to video';
-
-  @override
-  String get callVideoUnavailable =>
-      'Video isn\'t available in this call — the other person may need to update the app';
 
   @override
   String get adminCapHostMeeting => 'Host meetings';
@@ -5711,4 +5751,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meetingLoading => 'Loading meeting…';
+
+  @override
+  String get callSelfWeakNetwork => 'Your network is weak';
+
+  @override
+  String callPeerWeakNetwork(String name) {
+    return '$name\'s network is weak';
+  }
+
+  @override
+  String get callUnstableNetwork => 'Unstable connection';
+
+  @override
+  String get callReconnectingSelf => 'Connection lost — reconnecting…';
+
+  @override
+  String callWaitingForPeer(String name) {
+    return 'Waiting for $name to reconnect…';
+  }
+
+  @override
+  String callReconnectCountdown(int seconds) {
+    return 'The call ends in ${seconds}s if it cannot reconnect';
+  }
+
+  @override
+  String get callSwitchToVideo => 'Switch to video';
+
+  @override
+  String get callVideoUnavailable =>
+      'Video isn\'t available in this call — the other person may need to update the app';
 }

@@ -26,3 +26,15 @@ export const SKILLS: SkillDef[] = [
   { id: 'webSearch', icon: '🔍', requires: [] },
   { id: 'weatherForecast', icon: '🌤️', requires: [] },
 ]
+
+/**
+ * The connectors a skill requires that are not connected (active) yet — `[]` means the
+ * skill is ready. A connection counts whatever its scope (personal or workspace).
+ */
+export function missingConnectors(
+  requires: readonly string[],
+  connections: ReadonlyArray<{ provider: string; status: string }>,
+): string[] {
+  const active = new Set(connections.filter((c) => c.status === 'active').map((c) => c.provider))
+  return requires.filter((id) => !active.has(id))
+}

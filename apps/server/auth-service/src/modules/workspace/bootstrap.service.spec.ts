@@ -92,6 +92,13 @@ function makeCollectionModel(initial: any[] = []) {
       }
       return { matchedCount: 0, upsertedCount: 0 };
     }),
+    updateMany: jest.fn(async (filter: any, update: any) => {
+      const matched = docs.filter((d) =>
+        Object.entries(filter).every(([k, v]) => d[k] === v),
+      );
+      for (const d of matched) Object.assign(d, update.$set ?? {});
+      return { matchedCount: matched.length, modifiedCount: matched.length };
+    }),
   };
 }
 
@@ -306,6 +313,35 @@ describe('BootstrapService', () => {
   it('never blocks boot when the invitation step fails', async () => {
     config = { BOOTSTRAP_OWNER_EMAIL: 'boss@acme.com' };
     invitations.createBootstrapOwnerInvite.mockRejectedValue(new Error('smtp down'));
+
+    const service = await build();
+    await expect(service.onApplicationBootstrap()).resolves.toBeUndefined();
+  });
+
+  // 2026-10-26: accepting an invitation with Google no longer forces a PON
+  // password; accounts flagged before that must not stay held on /set-password.
+  it('releases accounts still held by the retired set-password step, idempotently', async () => {
+    userModel.docs.push(
+      { _id: 'u1', email: 'g@acme.com', mustSetPassword: true },
+      { _id: 'u2', email: 'p@acme.com', mustSetPassword: false },
+    );
+
+    const service = await build();
+    await service.onApplicationBootstrap();
+    await service.onApplicationBootstrap();
+
+    expect(userModel.docs.map((d: any) => d.mustSetPassword)).toEqual([
+      false,
+      false,
+    ]);
+    expect(userModel.updateMany).toHaveBeenCalledWith(
+      { mustSetPassword: true },
+      { $set: { mustSetPassword: false } },
+    );
+  });
+
+  it('never blocks boot when the set-password cleanup fails', async () => {
+    userModel.updateMany.mockRejectedValue(new Error('mongo down'));
 
     const service = await build();
     await expect(service.onApplicationBootstrap()).resolves.toBeUndefined();

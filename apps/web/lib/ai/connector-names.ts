@@ -94,3 +94,32 @@ export function toolDisplayLabel(
   }
   return t('aiToolGeneric')
 }
+
+/** A tool identifier made readable, as on mobile (`humanizeToolName`): `search_threads` → `Search threads`. */
+export function humanizeToolName(raw: string): string {
+  const words = raw
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_\-.:]+/g, ' ')
+    .trim()
+    .toLowerCase()
+  return words ? words[0].toUpperCase() + words.slice(1) : raw
+}
+
+/**
+ * Trace label of a tool call. A connector tool reads "<Tool> on <Connector>" (as on
+ * mobile, `aiToolDisplayName`), so the trace says which tool ran — still never the raw
+ * `mcp__…` id; other tools keep {@link toolDisplayLabel}.
+ */
+export function toolCallLabel(
+  toolName: string | undefined | null,
+  t: Translate,
+  sources: ProviderNameSources = {},
+): string {
+  const provider = providerOfTool(toolName)
+  const tool = provider && toolName ? toolName.slice(`mcp__${provider}__`.length) : ''
+  if (!tool) return toolDisplayLabel(toolName, t, sources)
+  return t('aiToolOnConnector', {
+    tool: humanizeToolName(tool),
+    connector: toolDisplayLabel(toolName, t, sources),
+  })
+}

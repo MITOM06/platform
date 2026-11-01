@@ -2,9 +2,23 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ToolDefinition } from './tool.interface';
 import { isSensitiveTool } from '../ai/injection-guard';
+import { providerOf } from './tool-names';
 
 const DEFAULT_READ_TIMEOUT_MS = 5_000;
+const DEFAULT_REMOTE_READ_TIMEOUT_MS = 30_000;
 const DEFAULT_WRITE_TIMEOUT_MS = 30_000;
+
+/**
+ * Catalog providers connector-service runs on its own REST adapters (Google,
+ * Notion). Any other provider — an MCP-directory slug or a `custom_<id>` server —
+ * is a third-party remote MCP server.
+ */
+const IN_HOUSE_PROVIDERS: ReadonlySet<string> = new Set(['gmail', 'calendar', 'drive', 'notion']);
+
+function isRemoteMcpTool(name: string): boolean {
+  const provider = providerOf(name);
+  return provider !== null && !IN_HOUSE_PROVIDERS.has(provider);
+}
 
 /** Returned to the model when a write's outcome is unknown — it must not blindly retry. */
 export const WRITE_TIMEOUT_RESULT =
@@ -33,6 +47,24 @@ export interface CallToolOptions {
   write?: boolean;
 }
 
+const MAX_WITHHELD = 50;
+
+/** Valid `{name: 'mcp__…', reason: 'role'}` items of connector-service `withheld` (older services send none). */
+function roleWithheldNames(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter(
+      (w): w is { name: string } =>
+        !!w &&
+        typeof w === 'object' &&
+        (w as { reason?: unknown }).reason === 'role' &&
+        typeof (w as { name?: unknown }).name === 'string' &&
+        (w as { name: string }).name.startsWith('mcp__'),
+    )
+    .slice(0, MAX_WITHHELD)
+    .map((w) => w.name);
+}
+
 class ConnectorTimeoutError extends Error {
   constructor(ms: number) {
     super(`timed out after ${ms}ms`);
@@ -49,7 +81,10 @@ class ConnectorTimeoutError extends Error {
  * Timeouts: listing and read-only calls get the short read budget; state-
  * changing calls (send/create/update/…, `isSensitiveTool`) get the long write
  * budget. Aborting a send after 5 s reported failure for an email the provider
- * then delivered, and the model retried it — a duplicate send.
+ * then delivered, and the model retried it — a duplicate send. Reads on a
+ * third-party remote MCP server get their own longer budget: GitMCP's
+ * `search_repo_docs` takes ~16 s, so a custom server's first chat failed with
+ * "connector unavailable" (connector-service itself allows such a call 60 s).
  */
 @Injectable()
 export class McpConnectorClient {
@@ -71,6 +106,11 @@ export class McpConnectorClient {
     if (write || (toolName !== null && isSensitiveTool(toolName))) {
       return this.config.get<number>('config.connector.writeTimeoutMs') ?? DEFAULT_WRITE_TIMEOUT_MS;
     }
+    if (toolName !== null && isRemoteMcpTool(toolName)) {
+      return (
+        this.config.get<number>('config.connector.remoteReadTimeoutMs') ?? DEFAULT_REMOTE_READ_TIMEOUT_MS
+      );
+    }
     return this.config.get<number>('config.connector.readTimeoutMs') ?? DEFAULT_READ_TIMEOUT_MS;
   }
 
@@ -91,7 +131,12 @@ export class McpConnectorClient {
     }
   }
 
-  async getTools(userId: string): Promise<ToolDefinition[]> {
+  /**
+   * The member's connector tools. `withheldSink`, when given, receives the names of
+   * the tools connector-service holds back because of the member's ROLE (`withheld`,
+   * reason `role`) — connected apps whose write actions this role may not run.
+   */
+  async getTools(userId: string, withheldSink?: string[]): Promise<ToolDefinition[]> {
     try {
       const url = `${this.baseUrl}/internal/tools?userId=${encodeURIComponent(userId)}`;
       const res = await this.fetchWithTimeout(
@@ -103,8 +148,9 @@ export class McpConnectorClient {
         this.logger.warn(`connector getTools returned ${res.status} — degrading to []`);
         return [];
       }
-      const body = (await res.json()) as { tools?: ConnectorTool[] };
+      const body = (await res.json()) as { tools?: ConnectorTool[]; withheld?: unknown };
       const tools = body.tools ?? [];
+      if (withheldSink) withheldSink.push(...roleWithheldNames(body.withheld));
       // Whitelist the fields: `actionGroup` (and anything else connector-service
       // adds later) is dropped here; `sensitive` is kept INTERNALLY for the
       // confirmation gate. An older connector without the flag falls back to

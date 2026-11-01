@@ -46,6 +46,8 @@
   "securitySetButton": "Set password",
   "securityChangeButton": "Change password",
   "securitySetSuccess": "Password set successfully",
+  "securityChangeDoneBody": "Your other devices have been signed out.",
+  "securitySetDoneBody": "You can now also sign in with your email and this password.",
   "securityTwoFaTitle": "Two-factor authentication",
   "securityTwoFaSubtitle": "Add an extra layer of security to your account.",
   "securityTwoFaComingSoon": "Two-factor authentication is coming soon.",
@@ -1042,6 +1044,8 @@
   "integrationsSettingsSubtitle": "Connect tools your assistant can use",
   "connectorStatusConnected": "Connected",
   "connectorStatusAvailable": "Available",
+  "connectorStatusNotAllowed": "Not allowed",
+  "connectorNotAllowedHint": "Your workspace doesn't allow this connector. Ask an administrator to add it to the allow-list.",
   "connectorStatusComingSoon": "Coming soon",
   "connectorConnect": "Connect",
   "connectorManage": "Manage",
@@ -1088,6 +1092,15 @@
   "@skillNeeds": {
     "placeholders": {
       "requirements": {
+        "type": "String"
+      }
+    }
+  },
+  "skillReady": "Ready",
+  "skillMissing": "Not connected: {connectors}",
+  "@skillMissing": {
+    "placeholders": {
+      "connectors": {
         "type": "String"
       }
     }
@@ -1193,6 +1206,7 @@
   "adminMemberRoleLockedSelf": "You can't change your own role.",
   "adminMemberRoleLockedOwner": "Only an Owner can change an Owner's role.",
   "adminMemberDepartments": "Departments",
+  "adminMemberDepartmentsLockedOwner": "Only an Owner can change an Owner's departments.",
   "adminRoleHint": "Toggle each role's permissions. The Owner role is read-only.",
   "adminRoleCapability": "Capability",
   "adminRolePreset": "Preset",
@@ -1622,6 +1636,7 @@
   "authErrInvitationRevoked": "This invitation was revoked.",
   "authErrInvitationAlreadyAccepted": "This invitation was already accepted. Please sign in.",
   "authErrInvitationEmailMismatch": "Sign in with the Google account that matches the invited email.",
+  "authErrInviteGoogleFlowExpired": "This Google sign-in attempt expired. Please try again from your invitation.",
   "authErrInvitationAlreadyPending": "This email already has a pending invitation.",
   "authErrInvitationNotPending": "This invitation is no longer pending.",
   "authErrInvitationNotFound": "Invitation not found.",
@@ -1910,6 +1925,8 @@
   "authErrSocialAccountConflict": "This email is already linked to a different sign-in account",
   "authErrTooManyOtpRequests": "You've requested too many OTP codes. Please try again in 10 minutes.",
   "authErrSocialProviderUnsupported": "This sign-in method isn't supported.",
+  "authErrSocialLoginCancelled": "Google sign-in was cancelled.",
+  "authErrSocialLoginFailed": "Google sign-in didn't complete. Please try again.",
   "aiActionConfirm": "Confirm",
   "aiActionCancel": "Cancel",
   "aiActionSendEmail": "Send email",
@@ -1981,6 +1998,8 @@
   "aiTraceToolAwaiting": "Awaiting confirmation",
   "aiTraceToolDone": "Done",
   "aiTraceToolNotRun": "Not run",
+  "aiTraceToolCancelled": "Cancelled",
+  "aiTraceToolExpired": "Expired",
   "aiTraceTokens": "{input} in · {output} out",
   "@aiTraceTokens": {
     "placeholders": {
@@ -2163,6 +2182,7 @@
   "adminAuditActionDepartmentUpdate": "Department updated",
   "adminAuditActionDepartmentDelete": "Department deleted",
   "adminAuditActionMemberUpdate": "Member updated",
+  "adminAuditActionMemberAiContextUpdate": "Member's AI context changed",
   "adminAuditActionMemberSsoUpdate": "Member updated by SSO",
   "adminAuditActionMemberBlock": "Member blocked",
   "adminAuditActionMemberUnblock": "Member unblocked",
@@ -2258,6 +2278,8 @@
   "mfaCopyCodes": "Copy codes",
   "mfaCodesCopied": "Backup codes copied",
   "mfaSavedCheckbox": "I saved my backup codes",
+  "mfaCopyCodesFirst": "Copy the codes first",
+  "mfaCodesCopyFailed": "Couldn't copy the codes. Please try again.",
   "mfaContinue": "Continue",
   "securityMfaOn": "A code from your authenticator app is required every time you sign in.",
   "securityMfaPending": "Required for your role. You'll set it up at your next sign-in.",
@@ -2278,6 +2300,22 @@
   "securityMfaTurnOffHint": "Enter a current code from your authenticator app to confirm. You won't be asked for a code when you sign in anymore.",
   "securityMfaTurnOffSubmit": "Turn off",
   "securityMfaTurnedOff": "Two-factor authentication is off.",
+  "securityMfaBackupCodesLeft": "{count, plural, =1{{count} backup code left} other{{count} backup codes left}}",
+  "@securityMfaBackupCodesLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "securityMfaBackupCodesLow": "Generate new ones with “{action}” below while you still have your authenticator app. Without the app or a backup code, you can't sign in.",
+  "@securityMfaBackupCodesLow": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
   "authErrMfaRequiredByRole": "Your role requires two-factor authentication, so it can't be turned off.",
   "authNoticeMfaSetupRequiredByRole": "Your new role requires two-factor authentication. Sign in again to set it up.",
   "adminMfaBadge": "2FA on",
@@ -2316,35 +2354,6 @@
   "authErrMfaAlreadyEnrolled": "Two-factor authentication is already set up for this account.",
   "authErrMfaResetForbidden": "You can't reset two-factor authentication for this member.",
   "authErrMfaResetSelfForbidden": "You can't reset your own two-factor authentication.",
-  "callSelfWeakNetwork": "Your network is weak",
-  "callPeerWeakNetwork": "{name}'s network is weak",
-  "@callPeerWeakNetwork": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "callUnstableNetwork": "Unstable connection",
-  "callReconnectingSelf": "Connection lost — reconnecting…",
-  "callWaitingForPeer": "Waiting for {name} to reconnect…",
-  "@callWaitingForPeer": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "callReconnectCountdown": "The call ends in {seconds}s if it cannot reconnect",
-  "@callReconnectCountdown": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "callSwitchToVideo": "Switch to video",
-  "callVideoUnavailable": "Video isn't available in this call — the other person may need to update the app",
   "adminCapHostMeeting": "Host meetings",
   "meetingErrNotFound": "This meeting doesn't exist",
   "meetingErrForbidden": "You can't do that in this meeting",
@@ -2947,5 +2956,34 @@
   "meetingMediaBlocked": "Microphone or camera access is off. You can still join and turn it on later in Settings.",
   "meetingSwitchCamera": "Switch camera",
   "meetingSpeakerOn": "Use speaker",
-  "meetingLoading": "Loading meeting…"
+  "meetingLoading": "Loading meeting…",
+  "callSelfWeakNetwork": "Your network is weak",
+  "callPeerWeakNetwork": "{name}'s network is weak",
+  "@callPeerWeakNetwork": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callUnstableNetwork": "Unstable connection",
+  "callReconnectingSelf": "Connection lost — reconnecting…",
+  "callWaitingForPeer": "Waiting for {name} to reconnect…",
+  "@callWaitingForPeer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callReconnectCountdown": "The call ends in {seconds}s if it cannot reconnect",
+  "@callReconnectCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "callSwitchToVideo": "Switch to video",
+  "callVideoUnavailable": "Video isn't available in this call — the other person may need to update the app"
 }

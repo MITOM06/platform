@@ -17,6 +17,36 @@ describe('McpConnectorClient', () => {
   });
 
   describe('getTools', () => {
+    it('passes the role-withheld tool names to the sink, ignoring anything malformed', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({
+          tools: [],
+          withheld: [
+            { name: 'mcp__gmail__send_email', reason: 'role' },
+            { name: 'mcp__gmail__create_draft', reason: 'grant' },
+            { name: 'send_email', reason: 'role' },
+            'mcp__notion__create_page',
+          ],
+        }),
+      }) as any;
+      const sink: string[] = [];
+      await makeClient().getTools('user-1', sink);
+      expect(sink).toEqual(['mcp__gmail__send_email']);
+    });
+
+    it('leaves the sink empty for a connector-service that reports no withheld tools', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({ tools: [] }),
+      }) as any;
+      const sink: string[] = [];
+      await makeClient().getTools('user-1', sink);
+      expect(sink).toEqual([]);
+    });
+
     it('maps response tools to ToolDefinition[]', async () => {
       const tools = [
         {
@@ -141,6 +171,42 @@ describe('McpConnectorClient', () => {
       await expect(
         client.callTool('u', 'mcp__notion__archive_page', {}, { write: true }),
       ).resolves.toBe(WRITE_TIMEOUT_RESULT);
+    });
+
+    it('a read on a remote MCP server (custom or directory) gets the remote budget; a catalog read stays fast', async () => {
+      const cfg = {
+        get: (key: string) =>
+          ({
+            'config.connector.internalUrl': 'http://localhost:3003',
+            'config.connector.internalApiKey': 'k',
+            'config.connector.readTimeoutMs': 10,
+            'config.connector.remoteReadTimeoutMs': 500,
+            'config.connector.writeTimeoutMs': 30,
+          })[key],
+      } as any;
+      // Answers after 50 ms — past the catalog budget, within the remote one.
+      global.fetch = jest.fn(
+        (_url: string, init: RequestInit) =>
+          new Promise((resolve, reject) => {
+            const timer = setTimeout(
+              () => resolve({ ok: true, json: async () => ({ result: 'docs' }) }),
+              50,
+            );
+            init.signal?.addEventListener('abort', () => {
+              clearTimeout(timer);
+              reject(new Error('aborted'));
+            });
+          }),
+      ) as any;
+      const client = new McpConnectorClient(cfg);
+
+      await expect(
+        client.callTool('u', 'mcp__custom_6ae6136523f349a57f7a384d__search_repo_docs', {}),
+      ).resolves.toBe('docs');
+      await expect(client.callTool('u', 'mcp__linear__list_issues', {})).resolves.toBe('docs');
+      await expect(client.callTool('u', 'mcp__calendar__list_events', {})).resolves.toBe(
+        'Tool error: connector unavailable',
+      );
     });
 
     it('returns connector-unavailable message when fetch rejects', async () => {

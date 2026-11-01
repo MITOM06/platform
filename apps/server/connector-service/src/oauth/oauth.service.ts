@@ -2,6 +2,7 @@ import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Capability, JwtUser } from '@platform/database';
+import { googleAccountEmail } from '../adapters/google-account';
 import { CatalogEntry, findCatalogEntry } from '../catalog/catalog';
 import { TokenVaultService } from '../vault/token-vault.service';
 import { AuditService } from '../audit/audit.service';
@@ -262,7 +263,12 @@ export class OAuthService {
     if (typeof tokens.expires_in === 'number' && !tokens.expiry_date) {
       tokens.expiry_date = Date.now() + tokens.expires_in * 1000;
     }
-    const accountLabel = tokens.workspace_name ?? tokens.owner?.user?.name ?? undefined;
+    // Notion names its workspace on the token response; Google is asked for the
+    // account email, which the disconnect needs to spot a shared grant.
+    const accountLabel =
+      tokens.workspace_name ??
+      tokens.owner?.user?.name ??
+      (await googleAccountEmail(provider, tokens.access_token));
     await this.store.upsert({
       userId,
       provider,

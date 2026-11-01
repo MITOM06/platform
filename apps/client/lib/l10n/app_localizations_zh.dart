@@ -94,6 +94,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securitySetSuccess => '密码设置成功';
 
   @override
+  String get securityChangeDoneBody => '其他设备已退出登录。';
+
+  @override
+  String get securitySetDoneBody => '现在您也可以使用邮箱和此密码登录。';
+
+  @override
   String get securityTwoFaTitle => '双重验证';
 
   @override
@@ -2001,6 +2007,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get connectorStatusAvailable => '可用';
 
   @override
+  String get connectorStatusNotAllowed => '未获允许';
+
+  @override
+  String get connectorNotAllowedHint => '你的工作区不允许此连接器。请让管理员将其加入允许列表。';
+
+  @override
   String get connectorStatusComingSoon => '即将推出';
 
   @override
@@ -2111,6 +2123,14 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String skillNeeds(String requirements) {
     return '需要 $requirements';
+  }
+
+  @override
+  String get skillReady => '已就绪';
+
+  @override
+  String skillMissing(String connectors) {
+    return '未连接：$connectors';
   }
 
   @override
@@ -2419,6 +2439,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminMemberDepartments => '部门';
+
+  @override
+  String get adminMemberDepartmentsLockedOwner => '只有所有者才能更改所有者的部门。';
 
   @override
   String get adminRoleHint => '切换每个角色的权限。Owner 角色为只读。';
@@ -3349,6 +3372,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authErrInvitationEmailMismatch => '请使用与受邀邮箱一致的 Google 账号登录。';
 
   @override
+  String get authErrInviteGoogleFlowExpired => '此次 Google 登录已过期，请从邀请重新开始。';
+
+  @override
   String get authErrInvitationAlreadyPending => '此邮箱已有待处理的邀请。';
 
   @override
@@ -3716,6 +3742,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authErrSocialProviderUnsupported => '不支持此登录方式。';
 
   @override
+  String get authErrSocialLoginCancelled => '已取消 Google 登录。';
+
+  @override
+  String get authErrSocialLoginFailed => 'Google 登录未完成，请重试。';
+
+  @override
   String get aiActionConfirm => '确认';
 
   @override
@@ -3842,6 +3874,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiTraceToolNotRun => '未执行';
+
+  @override
+  String get aiTraceToolCancelled => '已取消';
+
+  @override
+  String get aiTraceToolExpired => '已过期';
 
   @override
   String aiTraceTokens(String input, String output) {
@@ -4108,6 +4146,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminAuditActionMemberUpdate => '更新了成员';
 
   @override
+  String get adminAuditActionMemberAiContextUpdate => '更改了成员的 AI 上下文';
+
+  @override
   String get adminAuditActionMemberSsoUpdate => '通过 SSO 更新了成员';
 
   @override
@@ -4337,6 +4378,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mfaSavedCheckbox => '我已保存备用码';
 
   @override
+  String get mfaCopyCodesFirst => '请先复制备用码';
+
+  @override
+  String get mfaCodesCopyFailed => '无法复制备用码，请重试。';
+
+  @override
   String get mfaContinue => '继续';
 
   @override
@@ -4397,6 +4444,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityMfaTurnedOff => '双重验证已关闭。';
 
   @override
+  String securityMfaBackupCodesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '还剩 $count 个备用码',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String securityMfaBackupCodesLow(String action) {
+    return '请趁身份验证器应用还可用时，使用下方的“$action”生成新的备用码。既没有该应用也没有备用码时，您将无法登录。';
+  }
+
+  @override
   String get authErrMfaRequiredByRole => '你的角色要求启用双重验证，因此无法关闭。';
 
   @override
@@ -4452,36 +4514,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get authErrMfaResetSelfForbidden => '你不能重置自己的双重验证。';
-
-  @override
-  String get callSelfWeakNetwork => '你的网络较差';
-
-  @override
-  String callPeerWeakNetwork(String name) {
-    return '$name 的网络较差';
-  }
-
-  @override
-  String get callUnstableNetwork => '连接不稳定';
-
-  @override
-  String get callReconnectingSelf => '连接中断，正在重新连接…';
-
-  @override
-  String callWaitingForPeer(String name) {
-    return '正在等待 $name 重新连接…';
-  }
-
-  @override
-  String callReconnectCountdown(int seconds) {
-    return '若无法重新连接，通话将在 $seconds 秒后结束';
-  }
-
-  @override
-  String get callSwitchToVideo => '切换到视频通话';
-
-  @override
-  String get callVideoUnavailable => '此通话无法开启视频——对方可能需要更新应用';
 
   @override
   String get adminCapHostMeeting => '主持会议';
@@ -5452,4 +5484,34 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get meetingLoading => '正在加载会议…';
+
+  @override
+  String get callSelfWeakNetwork => '你的网络较差';
+
+  @override
+  String callPeerWeakNetwork(String name) {
+    return '$name 的网络较差';
+  }
+
+  @override
+  String get callUnstableNetwork => '连接不稳定';
+
+  @override
+  String get callReconnectingSelf => '连接中断，正在重新连接…';
+
+  @override
+  String callWaitingForPeer(String name) {
+    return '正在等待 $name 重新连接…';
+  }
+
+  @override
+  String callReconnectCountdown(int seconds) {
+    return '若无法重新连接，通话将在 $seconds 秒后结束';
+  }
+
+  @override
+  String get callSwitchToVideo => '切换到视频通话';
+
+  @override
+  String get callVideoUnavailable => '此通话无法开启视频——对方可能需要更新应用';
 }

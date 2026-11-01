@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../integrations/state/integrations_provider.dart';
 import '../../utils/ai_tool_names.dart';
+import '../../domain/inline_latex.dart';
 
 // Re-exported so existing importers of `streaming_ai_bubble.dart` keep getting
 // [FinalizedAiBubble] without changing their imports (e.g. message_bubble.dart).
@@ -72,7 +73,7 @@ class _StreamingAiBubbleState extends State<StreamingAiBubble>
           _ThinkingDots(controller: _dotsController)
         else
           _StreamingText(
-            content: widget.content,
+            content: replaceInlineLatex(widget.content),
             cursorController: _cursorController,
           ),
       ],

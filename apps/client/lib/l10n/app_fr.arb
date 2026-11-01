@@ -29,6 +29,8 @@
   "securitySetButton": "Définir le mot de passe",
   "securityChangeButton": "Changer le mot de passe",
   "securitySetSuccess": "Mot de passe défini avec succès",
+  "securityChangeDoneBody": "Vos autres appareils ont été déconnectés.",
+  "securitySetDoneBody": "Vous pouvez désormais aussi vous connecter avec votre e-mail et ce mot de passe.",
   "securityTwoFaTitle": "Authentification à deux facteurs",
   "securityTwoFaSubtitle": "Ajoutez une couche de sécurité supplémentaire à votre compte.",
   "securityTwoFaComingSoon": "L'authentification à deux facteurs arrive bientôt.",
@@ -746,6 +748,8 @@
   "integrationsSettingsSubtitle": "Connectez des outils que votre assistant peut utiliser",
   "connectorStatusConnected": "Connecté",
   "connectorStatusAvailable": "Disponible",
+  "connectorStatusNotAllowed": "Non autorisé",
+  "connectorNotAllowedHint": "Votre espace de travail n'autorise pas ce connecteur. Demandez à un administrateur de l'ajouter à la liste autorisée.",
   "connectorStatusComingSoon": "Bientôt disponible",
   "connectorConnect": "Connecter",
   "connectorManage": "Gérer",
@@ -782,6 +786,8 @@
   "skillsRealActionNote": "Les compétences changent la façon dont votre assistant réfléchit et s'exprime. Pour qu'il agisse réellement (envoyer un e-mail, créer des événements, écrire dans Notion…), connectez l'application correspondante ci-dessous.",
   "skillsSettingsSubtitle": "Choisissez les points forts de votre assistant",
   "skillNeeds": "Nécessite {requirements}",
+  "skillReady": "Prête",
+  "skillMissing": "Non connecté : {connectors}",
   "skillSchedulerName": "Planificateur",
   "skillSchedulerDesc": "Propose des horaires de réunion et rédige des invitations — c'est à vous de les envoyer via votre agenda/messagerie (ou connectez Google Agenda/Gmail pour qu'il agisse directement).",
   "skillMailWriterName": "Rédacteur d'e-mails",
@@ -883,6 +889,7 @@
   "adminMemberRoleLockedSelf": "Vous ne pouvez pas modifier votre propre rôle.",
   "adminMemberRoleLockedOwner": "Seul un Propriétaire peut modifier le rôle d'un Propriétaire.",
   "adminMemberDepartments": "Départements",
+  "adminMemberDepartmentsLockedOwner": "Seul un Propriétaire peut modifier les départements d'un Propriétaire.",
   "adminRoleHint": "Activez les permissions de chaque rôle. Le rôle Owner est en lecture seule.",
   "adminRoleCapability": "Permission",
   "adminRolePreset": "Prédéfini",
@@ -1194,6 +1201,7 @@
   "authErrInvitationRevoked": "Cette invitation a été révoquée.",
   "authErrInvitationAlreadyAccepted": "Cette invitation a déjà été acceptée. Veuillez vous connecter.",
   "authErrInvitationEmailMismatch": "Connectez-vous avec le compte Google correspondant à l'e-mail invité.",
+  "authErrInviteGoogleFlowExpired": "Cette tentative de connexion avec Google a expiré. Réessayez depuis votre invitation.",
   "authErrInvitationAlreadyPending": "Cet e-mail a déjà une invitation en attente.",
   "authErrInvitationNotPending": "Cette invitation n'est plus en attente.",
   "authErrInvitationNotFound": "Invitation introuvable.",
@@ -1321,6 +1329,8 @@
   "authErrSocialAccountConflict": "Cet e-mail est déjà lié à un autre compte de connexion",
   "authErrTooManyOtpRequests": "Vous avez demandé trop de codes OTP. Veuillez réessayer dans 10 minutes.",
   "authErrSocialProviderUnsupported": "Ce mode de connexion n'est pas pris en charge.",
+  "authErrSocialLoginCancelled": "La connexion avec Google a été annulée.",
+  "authErrSocialLoginFailed": "La connexion avec Google n'a pas abouti. Veuillez réessayer.",
   "aiActionConfirm": "Confirmer",
   "aiActionCancel": "Annuler",
   "aiActionSendEmail": "Envoyer un e-mail",
@@ -1361,6 +1371,8 @@
   "aiTraceToolAwaiting": "En attente de confirmation",
   "aiTraceToolDone": "Terminé",
   "aiTraceToolNotRun": "Non exécuté",
+  "aiTraceToolCancelled": "Annulée",
+  "aiTraceToolExpired": "Expirée",
   "aiTraceTokens": "{input} entrée · {output} sortie",
   "aiTraceCacheTokens": "cache {read} lus · {written} écrits",
   "aiTraceThinkingTokens": "{count} de réflexion",
@@ -1439,6 +1451,7 @@
   "adminAuditActionDepartmentUpdate": "Service mis à jour",
   "adminAuditActionDepartmentDelete": "Service supprimé",
   "adminAuditActionMemberUpdate": "Membre mis à jour",
+  "adminAuditActionMemberAiContextUpdate": "Contexte IA d'un membre modifié",
   "adminAuditActionMemberSsoUpdate": "Membre mis à jour par SSO",
   "adminAuditActionMemberBlock": "Membre bloqué",
   "adminAuditActionMemberUnblock": "Membre débloqué",
@@ -1520,6 +1533,8 @@
   "mfaCopyCodes": "Copier les codes",
   "mfaCodesCopied": "Codes de secours copiés",
   "mfaSavedCheckbox": "J'ai enregistré mes codes de secours",
+  "mfaCopyCodesFirst": "Copiez d'abord les codes",
+  "mfaCodesCopyFailed": "Impossible de copier les codes. Veuillez réessayer.",
   "mfaContinue": "Continuer",
   "securityMfaOn": "Un code de votre application d'authentification est requis à chaque connexion.",
   "securityMfaPending": "Obligatoire pour votre rôle. Vous la configurerez à votre prochaine connexion.",
@@ -1540,6 +1555,8 @@
   "securityMfaTurnOffHint": "Saisissez un code actuel de votre application d'authentification pour confirmer. Aucun code ne vous sera plus demandé à la connexion.",
   "securityMfaTurnOffSubmit": "Désactiver",
   "securityMfaTurnedOff": "L'authentification à deux facteurs est désactivée.",
+  "securityMfaBackupCodesLeft": "{count, plural, =1{{count} code de secours restant} other{{count} codes de secours restants}}",
+  "securityMfaBackupCodesLow": "Générez-en de nouveaux avec « {action} » ci-dessous tant que vous avez encore votre application d'authentification. Sans l'application ni code de secours, vous ne pourrez plus vous connecter.",
   "authErrMfaRequiredByRole": "Votre rôle exige l'authentification à deux facteurs : elle ne peut pas être désactivée.",
   "authNoticeMfaSetupRequiredByRole": "Votre nouveau rôle exige l'authentification à deux facteurs. Reconnectez-vous pour la configurer.",
   "adminMfaBadge": "2FA activée",
@@ -1571,35 +1588,6 @@
   "authErrMfaAlreadyEnrolled": "L'authentification à deux facteurs est déjà configurée pour ce compte.",
   "authErrMfaResetForbidden": "Vous ne pouvez pas réinitialiser l'authentification à deux facteurs de ce membre.",
   "authErrMfaResetSelfForbidden": "Vous ne pouvez pas réinitialiser votre propre authentification à deux facteurs.",
-  "callSelfWeakNetwork": "Votre réseau est faible",
-  "callPeerWeakNetwork": "Le réseau de {name} est faible",
-  "@callPeerWeakNetwork": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "callUnstableNetwork": "Connexion instable",
-  "callReconnectingSelf": "Connexion perdue, reconnexion…",
-  "callWaitingForPeer": "En attente de la reconnexion de {name}…",
-  "@callWaitingForPeer": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "callReconnectCountdown": "L'appel prendra fin dans {seconds} s sans reconnexion",
-  "@callReconnectCountdown": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "callSwitchToVideo": "Passer en vidéo",
-  "callVideoUnavailable": "La vidéo n'est pas disponible pour cet appel — l'autre personne doit peut-être mettre à jour l'application",
   "adminCapHostMeeting": "Organiser des réunions",
   "meetingErrNotFound": "Cette réunion n'existe pas",
   "meetingErrForbidden": "Vous ne pouvez pas faire cela dans cette réunion",
@@ -2202,5 +2190,34 @@
   "meetingMediaBlocked": "L'accès au micro ou à la caméra est désactivé. Vous pouvez quand même participer et l'activer plus tard dans Réglages.",
   "meetingSwitchCamera": "Changer de caméra",
   "meetingSpeakerOn": "Utiliser le haut-parleur",
-  "meetingLoading": "Chargement de la réunion…"
+  "meetingLoading": "Chargement de la réunion…",
+  "callSelfWeakNetwork": "Votre réseau est faible",
+  "callPeerWeakNetwork": "Le réseau de {name} est faible",
+  "@callPeerWeakNetwork": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callUnstableNetwork": "Connexion instable",
+  "callReconnectingSelf": "Connexion perdue, reconnexion…",
+  "callWaitingForPeer": "En attente de la reconnexion de {name}…",
+  "@callWaitingForPeer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callReconnectCountdown": "L'appel prendra fin dans {seconds} s sans reconnexion",
+  "@callReconnectCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "callSwitchToVideo": "Passer en vidéo",
+  "callVideoUnavailable": "La vidéo n'est pas disponible pour cet appel — l'autre personne doit peut-être mettre à jour l'application"
 }

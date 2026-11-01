@@ -104,6 +104,8 @@ export function ConnectorCard({
   const [permsOpen, setPermsOpen] = useState(false)
   const state = connectionState(connection)
   const isConnected = state === 'connected'
+  // Left out of the workspace allow-list: the connect call would 403, so say so up front.
+  const notAllowed = entry.available && entry.allowedByWorkspace === false && state === 'none'
   const scopeKeys = scopeLabelKeys(entry.scopes)
 
   const metaLabel =
@@ -133,6 +135,8 @@ export function ConnectorCard({
           <StatusPill variant="on" label={t('statusConnected')} />
         ) : state === 'expired' ? (
           <StatusPill variant="warn" label={t('statusReconnect')} />
+        ) : notAllowed ? (
+          <StatusPill variant="warn" label={t('statusNotAllowed')} />
         ) : entry.available ? (
           <StatusPill variant="off" label={t('statusAvailable')} />
         ) : (
@@ -191,16 +195,28 @@ export function ConnectorCard({
         ) : (
           <Button
             size="sm"
-            disabled={!entry.available || connecting || !canConnect}
-            title={entry.available && !canConnect ? t('connectNeedsCap') : undefined}
+            disabled={!entry.available || notAllowed || connecting || !canConnect}
+            title={
+              notAllowed
+                ? t('connectNotAllowed')
+                : entry.available && !canConnect
+                  ? t('connectNeedsCap')
+                  : undefined
+            }
             onClick={() => onConnect(entry)}
           >
             {connecting ? <Loader2 className="size-4 animate-spin" /> : t('connect')}
           </Button>
         )}
       </div>
-      {entry.available && !canConnect && state === 'none' && (
-        <p className="mt-2 text-xs text-muted-foreground">{t('connectNeedsCap')}</p>
+      {notAllowed ? (
+        <p className="mt-2 text-xs text-muted-foreground">{t('connectNotAllowed')}</p>
+      ) : (
+        entry.available &&
+        !canConnect &&
+        state === 'none' && (
+          <p className="mt-2 text-xs text-muted-foreground">{t('connectNeedsCap')}</p>
+        )
       )}
 
       {isConnected && connection && permsOpen && (

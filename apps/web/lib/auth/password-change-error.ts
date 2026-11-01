@@ -3,7 +3,8 @@ import axios from 'axios'
 /**
  * `POST /api/users/me/change-password` failure → message key shared by the
  * security page and the change-password dialog (both namespaces define
- * `incorrectCurrent`, `currentRequired`, `tooShort`, `networkError`, `genericError`).
+ * `incorrectCurrent`, `currentRequired`, `tooShort`, `networkError`, `genericError` —
+ * pinned in every locale by `__tests__/password-change-error.test.ts`).
  *
  * Read by `code` (auth-service contract 2026-10-05): CURRENT_PASSWORD_REQUIRED,
  * CURRENT_PASSWORD_INCORRECT, VAL_PASSWORD_TOO_SHORT (`params.min`). The English

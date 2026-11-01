@@ -7,6 +7,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:app_links/app_links.dart';
+import 'core/config/dev_host_discovery.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/api/token_manager.dart';
@@ -134,6 +135,13 @@ void main() async {
   }
 
   final prefs = await SharedPreferences.getInstance();
+
+  // DEV-ONLY, and a no-op unless --dart-define=PON_DEV_DISCOVERY=true. Must run
+  // before runApp: every DioClient.create*Dio bakes its baseUrl at construction,
+  // and those live in lazy Riverpod providers that first resolve once the tree
+  // is up. Discovering afterwards would leave the clients pointing at the
+  // build-time host. See core/config/dev_host_discovery.dart.
+  await DevHostDiscovery.resolveAndApply(prefs: prefs);
 
   const sentryDsn = String.fromEnvironment('SENTRY_DSN', defaultValue: '');
 

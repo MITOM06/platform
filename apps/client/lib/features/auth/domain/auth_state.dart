@@ -52,6 +52,11 @@ class UserModel {
   final bool mfaRequired;
   final bool mfaAvailable;
 
+  /// Unused 2FA backup codes left. Only on the self response, only while 2FA
+  /// is on. `null` = unknown (an older server, a payload that doesn't carry it):
+  /// show nothing, never 0.
+  final int? backupCodesRemaining;
+
   /// Workspace role name (Owner/Admin/Member or custom). `null` = the
   /// user has no assigned role → UI renders the default "Member". Always public
   /// (no privacy gate); omitted on blocked-by-owner minimal profiles.
@@ -88,6 +93,7 @@ class UserModel {
     this.mfaEnabled = false,
     this.mfaRequired = false,
     this.mfaAvailable = false,
+    this.backupCodesRemaining,
     this.roleName,
     this.matchedBy,
     this.isBlockedByOwner = false,
@@ -124,6 +130,7 @@ class UserModel {
       // The Security screen re-syncs `/me` anyway.
       mfaAvailable:
           json['mfaAvailable'] as bool? ?? (mfaRequired || mfaEnabled),
+      backupCodesRemaining: (json['backupCodesRemaining'] as num?)?.toInt(),
       roleName: json['roleName'] as String?,
       matchedBy: json['matchedBy'] as String?,
       isBlockedByOwner: json['isBlockedByOwner'] as bool? ?? false,
@@ -151,6 +158,8 @@ class UserModel {
         'mfaEnabled': mfaEnabled,
         'mfaRequired': mfaRequired,
         'mfaAvailable': mfaAvailable,
+        if (backupCodesRemaining != null)
+          'backupCodesRemaining': backupCodesRemaining,
         if (roleName != null) 'roleName': roleName,
       };
 
@@ -162,13 +171,24 @@ class UserModel {
 
   /// Copy of this user after they turned their own 2FA on / off in Settings →
   /// Security, for when the follow-up `/me` refresh fails although the server
-  /// already made the change (see `AuthNotifier.resyncMfa`).
-  UserModel withMfaEnabled(bool enabled) => _copyWith(mfaEnabled: enabled);
+  /// already made the change (see `AuthNotifier.resyncMfa`). The old backup-code
+  /// count stops being true here, so it becomes unknown until the next `/me`.
+  UserModel withMfaEnabled(bool enabled) =>
+      _copyWith(mfaEnabled: enabled, clearBackupCodesRemaining: true);
+
+  /// Copy of this user after [count] new backup codes were issued, for when the
+  /// follow-up `/me` refresh fails (see `AuthNotifier.resyncBackupCodes`). An
+  /// older server reports no count, so an unknown count stays unknown.
+  UserModel withBackupCodesIssued(int count) => backupCodesRemaining == null
+      ? this
+      : _copyWith(backupCodesRemaining: count);
 
   UserModel _copyWith({
     bool? hasPassword,
     bool? mustSetPassword,
     bool? mfaEnabled,
+    int? backupCodesRemaining,
+    bool clearBackupCodesRemaining = false,
   }) =>
       UserModel(
         id: id,
@@ -191,6 +211,9 @@ class UserModel {
         mfaEnabled: mfaEnabled ?? this.mfaEnabled,
         mfaRequired: mfaRequired,
         mfaAvailable: mfaAvailable,
+        backupCodesRemaining: clearBackupCodesRemaining
+            ? null
+            : backupCodesRemaining ?? this.backupCodesRemaining,
         roleName: roleName,
         matchedBy: matchedBy,
         isBlockedByOwner: isBlockedByOwner,
@@ -235,6 +258,17 @@ const kSsoRequired = 'SSO_REQUIRED';
 /// The member's (new) role requires 2FA they have not set up yet.
 const kMfaRequiredByRole = 'MFA_REQUIRED_BY_ROLE';
 
+/// Google sign-in outcomes the invite screen shows in place, so the member can
+/// try again from the invitation (mirror of web `INVITE_RETRY_NOTICES`): a
+/// cancelled / refused sign-in, the wrong Google account, or a round trip
+/// that expired (10 minutes) or was already used.
+const kInviteRetryNotices = {
+  'SOCIAL_LOGIN_CANCELLED',
+  'SOCIAL_LOGIN_FAILED',
+  'INVITATION_EMAIL_MISMATCH',
+  'INVITE_GOOGLE_FLOW_EXPIRED',
+};
+
 /// Codes the login screen may show as a persistent notice: the forced-logout
 /// reasons plus every code a Google / SSO error deep link
 /// (`platform://auth?error=CODE`) can carry. Mirror of web `LOGIN_NOTICES`.
@@ -246,7 +280,7 @@ const kLoginNotices = {
   'INVITATION_EXPIRED',
   'INVITATION_REVOKED',
   'INVITATION_ALREADY_ACCEPTED',
-  'INVITATION_EMAIL_MISMATCH',
+  // INVITATION_EMAIL_MISMATCH comes in with kInviteRetryNotices below.
   'MEMBER_ALREADY_EXISTS',
   'SOCIAL_EMAIL_UNAVAILABLE',
   'SSO_DISABLED',
@@ -259,6 +293,8 @@ const kLoginNotices = {
   'OIDC_EMAIL_UNVERIFIED',
   'SOCIAL_ACCOUNT_CONFLICT',
   'SOCIAL_PROVIDER_UNSUPPORTED',
+  // Google came back without a user: cancelled on its page, or the code was refused.
+  ...kInviteRetryNotices,
   // The SSO round trip itself failed: state lost / forged, code exchange.
   'OIDC_NO_STATE',
   'OIDC_BAD_STATE',

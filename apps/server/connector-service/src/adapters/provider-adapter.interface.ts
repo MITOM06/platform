@@ -11,6 +11,8 @@ export interface ConnectionLike {
   provider: string;
   /** Owning member (built-in connections) — used e.g. to spot a shared Google grant. */
   userId?: string;
+  /** Catalog connections: the provider account (Notion workspace, Google account email). */
+  accountLabel?: string;
   mcpUrl?: string;
   encryptedTokens?: EncBlob;
   /** Directory connections: encrypted DCR client creds for token refresh. */

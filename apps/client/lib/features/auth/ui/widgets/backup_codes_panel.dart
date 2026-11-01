@@ -9,7 +9,9 @@ import '../../utils/mfa_code.dart';
 /// The 10 single-use backup codes, shown exactly once (after enrollment, or
 /// after "Regenerate backup codes" in Settings → Security): the codes, Copy,
 /// and a required "I saved my backup codes" checkbox before [onConfirm] is
-/// enabled. Copy uses Flutter's built-in [Clipboard] (no share package).
+/// enabled. The checkbox stays locked until a Copy succeeded: that does not
+/// prove the codes were stored, it only stops continuing by accident.
+/// Copy uses Flutter's built-in [Clipboard] (no share package).
 /// [isLoading] shows progress on the confirm button and freezes the checkbox
 /// while an async [onConfirm] (e.g. enroll complete) runs.
 ///
@@ -34,13 +36,21 @@ class BackupCodesPanel extends StatefulWidget {
 }
 
 class _BackupCodesPanelState extends State<BackupCodesPanel> {
+  bool _copied = false;
   bool _saved = false;
 
   Future<void> _copy() async {
-    final message = context.l10n.mfaCodesCopied;
-    await Clipboard.setData(
-        ClipboardData(text: backupCodesAsText(widget.codes)));
-    showInfoSnackBar(message);
+    final l10n = context.l10n;
+    try {
+      await Clipboard.setData(
+          ClipboardData(text: backupCodesAsText(widget.codes)));
+    } catch (_) {
+      // Nothing reached the clipboard, so the checkbox stays locked.
+      showErrorSnackBar(l10n.mfaCodesCopyFailed);
+      return;
+    }
+    if (mounted) setState(() => _copied = true);
+    showInfoSnackBar(l10n.mfaCodesCopied);
   }
 
   void _setSaved(bool value) {
@@ -52,6 +62,7 @@ class _BackupCodesPanelState extends State<BackupCodesPanel> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final onSurface = Theme.of(context).colorScheme.onSurface;
+    final muted = AppTheme.mutedText(context);
     final codes = widget.codes;
 
     return Column(
@@ -98,23 +109,35 @@ class _BackupCodesPanelState extends State<BackupCodesPanel> {
         const SizedBox(height: 4),
         InkWell(
           borderRadius: BorderRadius.circular(8),
-          onTap: () => _setSaved(!_saved),
+          onTap: _copied ? () => _setSaved(!_saved) : null,
           child: Row(
             children: [
               Checkbox(
                 key: const ValueKey('mfa-saved-checkbox'),
                 value: _saved,
-                onChanged: (v) => _setSaved(v ?? false),
+                onChanged: _copied ? (v) => _setSaved(v ?? false) : null,
               ),
               Expanded(
                 child: Text(
                   l10n.mfaSavedCheckbox,
-                  style: TextStyle(color: onSurface, fontSize: 14),
+                  style: TextStyle(
+                    color: _copied ? onSurface : muted,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ],
           ),
         ),
+        // Visible text, not a tooltip: it has to work on touch screens.
+        if (!_copied) ...[
+          const SizedBox(height: 4),
+          Text(
+            l10n.mfaCopyCodesFirst,
+            key: const ValueKey('mfa-saved-hint'),
+            style: TextStyle(color: muted, fontSize: 12, height: 1.4),
+          ),
+        ],
         const SizedBox(height: 16),
         PonButton(
           key: const ValueKey('mfa-codes-continue'),

@@ -16,6 +16,7 @@ import { ConnectionLike } from '../adapters/provider-adapter.interface';
 import { envInt, TimeoutError } from '../common/with-timeout';
 import { ConnectorPolicy, skillGateAllows } from '../governance/connector-policy';
 import { ConnectorPolicyService } from '../governance/connector-policy.service';
+import { CustomMcpEvents } from '../connections/custom-mcp-events';
 import { httpStatusOf, McpTool } from '../mcp/mcp-client.service';
 import { UnsafeUrlError } from '../security/url-guard';
 import {
@@ -88,6 +89,17 @@ interface Access {
 interface Verdict {
   cls: ToolClassification;
   denied?: string;
+  /** Denied because the member's ROLE lacks RUN_SENSITIVE_SKILL (the connection itself is fine). */
+  byRole?: boolean;
+}
+
+/**
+ * A tool of a connected app that the member's role may not run. Listed so the
+ * AI can say so, instead of guessing that the app is not connected.
+ */
+export interface WithheldTool {
+  name: string;
+  reason: 'role';
 }
 
 const fingerprint = (value: unknown): string =>
@@ -122,23 +134,54 @@ export class InternalService {
     private readonly audit: AuditService,
     private readonly adapters: AdapterRegistryService,
     private readonly policyService: ConnectorPolicyService,
-  ) {}
+    customEvents: CustomMcpEvents,
+  ) {
+    customEvents.onSaved(({ server, tools }) => this.primeCustomTools(server, tools));
+  }
+
+  /**
+   * A just-saved custom server: seed its tool list (discovered during the save),
+   * or start listing it in the background, so a slow server is not skipped by the
+   * first chat's listing timeout.
+   */
+  private primeCustomTools(server: unknown, tools: McpTool[]): void {
+    const source = this.customSource(server);
+    if (tools.length > 0) {
+      this.toolCache.prime(source.cacheKey, tools);
+      return;
+    }
+    this.fetchTools(source).catch((err) =>
+      this.logger.warn(`Background tool listing for ${source.provider} failed: ${(err as Error)?.message ?? err}`),
+    );
+  }
 
   // ── Listing ───────────────────────────────────────────────────────────────
 
-  async getTools(userId: string, channel: ToolChannel = 'ai'): Promise<{ tools: InternalToolDef[] }> {
+  async getTools(
+    userId: string,
+    channel: ToolChannel = 'ai',
+  ): Promise<{ tools: InternalToolDef[]; withheld: WithheldTool[] }> {
     const access = await this.loadAccess(userId, channel);
-    if (!access) return { tools: [] };
+    if (!access) return { tools: [], withheld: [] };
     const sources = await this.visibleSources(userId, access);
     // Parallel, each bounded: one slow server no longer empties the whole list.
     const lists = await Promise.all(sources.map((s) => this.listSource(s, userId)));
 
     const tools: InternalToolDef[] = [];
+    const withheld: WithheldTool[] = [];
     const seen = new Set<string>();
     sources.forEach((source, i) => {
       for (const t of lists[i]) {
         const verdict = this.permits(source, t.name, t.annotations, access);
-        if (verdict.denied) continue;
+        if (verdict.denied) {
+          // The AI channel hears which tools the role withholds, so the assistant can
+          // say why (only an admin can change it) rather than ask for a reconnect.
+          const withheldName = verdict.byRole && channel === 'ai' ? buildToolName(source.provider, t.name) : null;
+          if (withheldName && !withheld.some((w) => w.name === withheldName)) {
+            withheld.push({ name: withheldName, reason: 'role' });
+          }
+          continue;
+        }
         const sensitive = InternalService.needsConfirmation(verdict.cls);
         // Bot Factory cannot show PON's confirmation card: read-only tools only.
         if (sensitive && channel === 'bot') continue;
@@ -161,7 +204,7 @@ export class InternalService {
         });
       }
     });
-    return { tools };
+    return { tools, withheld };
   }
 
   private async visibleSources(userId: string, access: Access): Promise<ToolSource[]> {
@@ -361,7 +404,7 @@ export class InternalService {
       return { cls, denied: `${cls.group} access not granted for ${source.provider}` };
     }
     if (cls.sensitive && !access.member.perms.has(Capability.RUN_SENSITIVE_SKILL)) {
-      return { cls, denied: 'sensitive skill' };
+      return { cls, denied: 'sensitive skill', byRole: true };
     }
     return { cls };
   }

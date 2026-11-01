@@ -270,6 +270,18 @@ abstract class AppLocalizations {
   /// **'Password set successfully'**
   String get securitySetSuccess;
 
+  /// No description provided for @securityChangeDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your other devices have been signed out.'**
+  String get securityChangeDoneBody;
+
+  /// No description provided for @securitySetDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can now also sign in with your email and this password.'**
+  String get securitySetDoneBody;
+
   /// No description provided for @securityTwoFaTitle.
   ///
   /// In en, this message translates to:
@@ -3859,6 +3871,18 @@ abstract class AppLocalizations {
   /// **'Available'**
   String get connectorStatusAvailable;
 
+  /// No description provided for @connectorStatusNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not allowed'**
+  String get connectorStatusNotAllowed;
+
+  /// No description provided for @connectorNotAllowedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your workspace doesn\'t allow this connector. Ask an administrator to add it to the allow-list.'**
+  String get connectorNotAllowedHint;
+
   /// No description provided for @connectorStatusComingSoon.
   ///
   /// In en, this message translates to:
@@ -4074,6 +4098,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Needs {requirements}'**
   String skillNeeds(String requirements);
+
+  /// No description provided for @skillReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get skillReady;
+
+  /// No description provided for @skillMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected: {connectors}'**
+  String skillMissing(String connectors);
 
   /// No description provided for @skillSchedulerName.
   ///
@@ -4680,6 +4716,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Departments'**
   String get adminMemberDepartments;
+
+  /// No description provided for @adminMemberDepartmentsLockedOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an Owner can change an Owner\'s departments.'**
+  String get adminMemberDepartmentsLockedOwner;
 
   /// No description provided for @adminRoleHint.
   ///
@@ -6463,6 +6505,12 @@ abstract class AppLocalizations {
   /// **'Sign in with the Google account that matches the invited email.'**
   String get authErrInvitationEmailMismatch;
 
+  /// No description provided for @authErrInviteGoogleFlowExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This Google sign-in attempt expired. Please try again from your invitation.'**
+  String get authErrInviteGoogleFlowExpired;
+
   /// No description provided for @authErrInvitationAlreadyPending.
   ///
   /// In en, this message translates to:
@@ -7099,6 +7147,18 @@ abstract class AppLocalizations {
   /// **'This sign-in method isn\'t supported.'**
   String get authErrSocialProviderUnsupported;
 
+  /// No description provided for @authErrSocialLoginCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in was cancelled.'**
+  String get authErrSocialLoginCancelled;
+
+  /// No description provided for @authErrSocialLoginFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in didn\'t complete. Please try again.'**
+  String get authErrSocialLoginFailed;
+
   /// No description provided for @aiActionConfirm.
   ///
   /// In en, this message translates to:
@@ -7338,6 +7398,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not run'**
   String get aiTraceToolNotRun;
+
+  /// No description provided for @aiTraceToolCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get aiTraceToolCancelled;
+
+  /// No description provided for @aiTraceToolExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get aiTraceToolExpired;
 
   /// No description provided for @aiTraceTokens.
   ///
@@ -7807,6 +7879,12 @@ abstract class AppLocalizations {
   /// **'Member updated'**
   String get adminAuditActionMemberUpdate;
 
+  /// No description provided for @adminAuditActionMemberAiContextUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Member\'s AI context changed'**
+  String get adminAuditActionMemberAiContextUpdate;
+
   /// No description provided for @adminAuditActionMemberSsoUpdate.
   ///
   /// In en, this message translates to:
@@ -8251,6 +8329,18 @@ abstract class AppLocalizations {
   /// **'I saved my backup codes'**
   String get mfaSavedCheckbox;
 
+  /// No description provided for @mfaCopyCodesFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the codes first'**
+  String get mfaCopyCodesFirst;
+
+  /// No description provided for @mfaCodesCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t copy the codes. Please try again.'**
+  String get mfaCodesCopyFailed;
+
   /// No description provided for @mfaContinue.
   ///
   /// In en, this message translates to:
@@ -8371,6 +8461,18 @@ abstract class AppLocalizations {
   /// **'Two-factor authentication is off.'**
   String get securityMfaTurnedOff;
 
+  /// No description provided for @securityMfaBackupCodesLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} backup code left} other{{count} backup codes left}}'**
+  String securityMfaBackupCodesLeft(int count);
+
+  /// No description provided for @securityMfaBackupCodesLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate new ones with “{action}” below while you still have your authenticator app. Without the app or a backup code, you can\'t sign in.'**
+  String securityMfaBackupCodesLow(String action);
+
   /// No description provided for @authErrMfaRequiredByRole.
   ///
   /// In en, this message translates to:
@@ -8472,54 +8574,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can\'t reset your own two-factor authentication.'**
   String get authErrMfaResetSelfForbidden;
-
-  /// No description provided for @callSelfWeakNetwork.
-  ///
-  /// In en, this message translates to:
-  /// **'Your network is weak'**
-  String get callSelfWeakNetwork;
-
-  /// No description provided for @callPeerWeakNetwork.
-  ///
-  /// In en, this message translates to:
-  /// **'{name}\'s network is weak'**
-  String callPeerWeakNetwork(String name);
-
-  /// No description provided for @callUnstableNetwork.
-  ///
-  /// In en, this message translates to:
-  /// **'Unstable connection'**
-  String get callUnstableNetwork;
-
-  /// No description provided for @callReconnectingSelf.
-  ///
-  /// In en, this message translates to:
-  /// **'Connection lost — reconnecting…'**
-  String get callReconnectingSelf;
-
-  /// No description provided for @callWaitingForPeer.
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting for {name} to reconnect…'**
-  String callWaitingForPeer(String name);
-
-  /// No description provided for @callReconnectCountdown.
-  ///
-  /// In en, this message translates to:
-  /// **'The call ends in {seconds}s if it cannot reconnect'**
-  String callReconnectCountdown(int seconds);
-
-  /// No description provided for @callSwitchToVideo.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch to video'**
-  String get callSwitchToVideo;
-
-  /// No description provided for @callVideoUnavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Video isn\'t available in this call — the other person may need to update the app'**
-  String get callVideoUnavailable;
 
   /// No description provided for @adminCapHostMeeting.
   ///
@@ -10212,6 +10266,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading meeting…'**
   String get meetingLoading;
+
+  /// No description provided for @callSelfWeakNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Your network is weak'**
+  String get callSelfWeakNetwork;
+
+  /// No description provided for @callPeerWeakNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s network is weak'**
+  String callPeerWeakNetwork(String name);
+
+  /// No description provided for @callUnstableNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Unstable connection'**
+  String get callUnstableNetwork;
+
+  /// No description provided for @callReconnectingSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection lost — reconnecting…'**
+  String get callReconnectingSelf;
+
+  /// No description provided for @callWaitingForPeer.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for {name} to reconnect…'**
+  String callWaitingForPeer(String name);
+
+  /// No description provided for @callReconnectCountdown.
+  ///
+  /// In en, this message translates to:
+  /// **'The call ends in {seconds}s if it cannot reconnect'**
+  String callReconnectCountdown(int seconds);
+
+  /// No description provided for @callSwitchToVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to video'**
+  String get callSwitchToVideo;
+
+  /// No description provided for @callVideoUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Video isn\'t available in this call — the other person may need to update the app'**
+  String get callVideoUnavailable;
 }
 
 class _AppLocalizationsDelegate

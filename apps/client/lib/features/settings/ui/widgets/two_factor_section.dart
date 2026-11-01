@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/domain/auth_state.dart';
+import '../../../auth/domain/mfa_models.dart';
 import '../../domain/two_factor_settings_provider.dart';
 import '../../utils/two_factor_error.dart';
 import 'regenerate_backup_codes_dialog.dart';
@@ -21,6 +22,9 @@ import 'two_factor_setup_steps.dart';
 ///   change.
 /// - optional and on: the status, "Regenerate backup codes" and "Turn off
 ///   2FA" (asks for a current code or a backup code).
+///
+/// Whenever 2FA is on it also shows how many backup codes are left, with a
+/// warning when few are (only if the server reports the count).
 ///
 /// Re-syncs `/me` once when shown: the cached session may predate the 2FA
 /// flags (or a role change), and they only come from `/api/users/me`.
@@ -110,9 +114,16 @@ class _TwoFactorSectionState extends ConsumerState<TwoFactorSection> {
     if (step is TwoFactorSetupCodes) return TwoFactorCodesStep(codes: step.codes);
 
     if (user.mfaRequired) {
-      return user.mfaEnabled ? const _Actions() : const SizedBox.shrink();
+      return user.mfaEnabled
+          ? _Actions(backupCodesRemaining: user.backupCodesRemaining)
+          : const SizedBox.shrink();
     }
-    if (user.mfaEnabled) return const _Actions(canTurnOff: true);
+    if (user.mfaEnabled) {
+      return _Actions(
+        canTurnOff: true,
+        backupCodesRemaining: user.backupCodesRemaining,
+      );
+    }
 
     return setup.when(
       loading: () => _TurnOnPrompt(accent: accent, isLoading: true),
@@ -189,20 +200,82 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// Enrolled: "Regenerate backup codes", plus "Turn off 2FA" when 2FA is
-/// optional for the role ([canTurnOff]).
+/// "N backup codes left", plus a warning pointing at "Regenerate backup codes"
+/// when few are. Mirror of the web `BackupCodesStatus`.
+class _BackupCodesStatus extends StatelessWidget {
+  final int remaining;
+  const _BackupCodesStatus({required this.remaining});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l10n.securityMfaBackupCodesLeft(remaining),
+          key: const ValueKey('security-mfa-backup-codes-left'),
+          style: TextStyle(
+            color: onSurface,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        if (remaining <= kBackupCodesLowThreshold) ...[
+          const SizedBox(height: 8),
+          Container(
+            key: const ValueKey('security-mfa-backup-codes-low'),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppTheme.warning.withValues(alpha: 0.1),
+              border: Border.all(color: AppTheme.warning.withValues(alpha: 0.4)),
+              borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: AppTheme.warning,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.securityMfaBackupCodesLow(l10n.securityMfaRegenerate),
+                    style: TextStyle(color: onSurface, fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Enrolled: the backup codes left (when known), "Regenerate backup codes",
+/// plus "Turn off 2FA" when 2FA is optional for the role ([canTurnOff]).
 class _Actions extends StatelessWidget {
   final bool canTurnOff;
-  const _Actions({this.canTurnOff = false});
+  final int? backupCodesRemaining;
+  const _Actions({this.canTurnOff = false, this.backupCodesRemaining});
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final onSurface = Theme.of(context).colorScheme.onSurface;
     final hairline = BorderSide(color: AppTheme.hairline(context));
+    final remaining = backupCodesRemaining;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (remaining != null) ...[
+          const SizedBox(height: 16),
+          _BackupCodesStatus(remaining: remaining),
+        ],
         const SizedBox(height: 16),
         OutlinedButton.icon(
           key: const ValueKey('security-mfa-regenerate'),

@@ -81,6 +81,8 @@ void main() {
         containsAll({'ACCOUNT_NOT_PROVISIONED', 'INVITATION_PENDING'}));
     // Google redirect `?error=SSO_REQUIRED` (contract 13 §C).
     expect(kLoginNotices, contains('SSO_REQUIRED'));
+    // Google came back without a user: cancelled, or the code was refused.
+    expect(kLoginNotices, containsAll(kInviteRetryNotices));
     expect(kLoginNotices.contains('SESSION_REVOKED'), isFalse);
   });
 }

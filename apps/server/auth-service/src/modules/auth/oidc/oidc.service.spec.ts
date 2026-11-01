@@ -91,6 +91,63 @@ describe('OidcService', () => {
     });
   });
 
+  describe('re-authentication after a PON sign-out', () => {
+    const sentParams = () =>
+      (mockClient.authorizationUrl.mock.calls.at(-1) as unknown[])[0];
+
+    it('without the flag sends no prompt, so normal SSO stays silent', async () => {
+      await makeService({}).buildAuthorizeUrl('web');
+      expect(sentParams()).not.toHaveProperty('prompt');
+
+      await makeService({}).buildAuthorizeUrl('web', { reauth: false });
+      expect(sentParams()).not.toHaveProperty('prompt');
+    });
+
+    it('with the flag asks the IdP to authenticate again', async () => {
+      await makeService({}).buildAuthorizeUrl('mobile', { reauth: true });
+      expect(sentParams()).toMatchObject({
+        prompt: 'login',
+        state: 'state-abc',
+        nonce: 'nonce-xyz',
+        code_challenge: 'challenge',
+      });
+    });
+
+    describe('when the IdP is Google, which lists no prompt=login', () => {
+      it.each(['https://accounts.google.com', 'https://accounts.google.com/'])(
+        'with the flag asks %s for the account chooser',
+        async (issuer) => {
+          await makeService({}, { OIDC_ISSUER: issuer }).buildAuthorizeUrl(
+            'web',
+            { reauth: true },
+          );
+          expect(sentParams()).toMatchObject({ prompt: 'select_account' });
+        },
+      );
+
+      it('without the flag still sends no prompt', async () => {
+        await makeService(
+          {},
+          { OIDC_ISSUER: 'https://accounts.google.com' },
+        ).buildAuthorizeUrl('web');
+        expect(sentParams()).not.toHaveProperty('prompt');
+      });
+
+      it.each([
+        'https://accounts.google.com.evil.example',
+        'https://accounts.google.com/realms/pon',
+        'http://keycloak.localhost:8180/realms/pon',
+        'https://login.microsoftonline.com/tenant/v2.0',
+      ])('any other issuer keeps prompt=login (%s)', async (issuer) => {
+        await makeService({}, { OIDC_ISSUER: issuer }).buildAuthorizeUrl(
+          'web',
+          { reauth: true },
+        );
+        expect(sentParams()).toMatchObject({ prompt: 'login' });
+      });
+    });
+  });
+
   it('handleCallback validates and returns the normalized profile (with platform)', async () => {
     const store: Record<string, string> = {
       'oidc:flow:state-abc': JSON.stringify({

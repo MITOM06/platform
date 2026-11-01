@@ -47,4 +47,19 @@ describe('AiContextController', () => {
       { sub: 'u1', perms: user.perms }, 'target', { jobTitle: 'Dev' },
     );
   });
+
+  it("GET and PATCH /users/:id pass the caller's role: the Owner rule depends on it", async () => {
+    const owner = { sub: 'o1', role: 'Owner', perms: [], depts: [] } as any;
+    await ctrl.getUser(owner, 'target');
+    expect(svc.getUserContextFor).toHaveBeenLastCalledWith(
+      { sub: 'o1', role: 'Owner', perms: [] },
+      'target',
+    );
+    await ctrl.updateHard(owner, 'target', { jobTitle: 'Dev' });
+    expect(svc.updateHardContext).toHaveBeenLastCalledWith(
+      { sub: 'o1', role: 'Owner', perms: [] },
+      'target',
+      { jobTitle: 'Dev' },
+    );
+  });
 });

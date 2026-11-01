@@ -214,7 +214,7 @@ export default function ForgotPasswordPage() {
             <CardDescription>{t('stepEmail')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={submitEmail(onRequestOtp)} className="space-y-4">
+            <form method="post" onSubmit={submitEmail(onRequestOtp)} className="space-y-4">
               <div className="space-y-1">
                 <Label htmlFor="email">{tAuth('emailLabel')}</Label>
                 <Input
@@ -299,7 +299,7 @@ export default function ForgotPasswordPage() {
             <CardDescription>{t('newPasswordSubtitle')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={submitReset(onResetPassword)} className="space-y-4">
+            <form method="post" onSubmit={submitReset(onResetPassword)} className="space-y-4">
 
               {/* New password */}
               <div className="space-y-1">
