@@ -69,8 +69,8 @@ export class PasswordRecoveryService {
   }
 
   /**
-   * Check an emailed OTP. Does NOT consume it: the mobile forgot-password flow
-   * calls verify-otp and then reset-password with the same code. The code is
+   * Check an emailed OTP. Does NOT consume it: the forgot-password flow (web and
+   * mobile) calls verify-otp and then reset-password with the same code. The code is
    * consumed by a successful reset (updatePassword unsets it) or expires.
    */
   async verifyOtp(rawEmail: string, otp: string) {
