@@ -193,6 +193,18 @@ export default registerAs('config', () => ({
     blockMaxChars: Number(process.env.AI_CONTEXT_BLOCK_MAX_CHARS ?? 2000),
   },
   ai: {
+    // Chat replies: 'api' (Anthropic API, default) or 'claude-cli' — the owner's
+    // Claude Code subscription through the Agent SDK, API as the fallback
+    // (docs/superpowers/specs/2026-11-01-ai-claude-cli-provider-design.md).
+    provider: process.env.AI_PROVIDER === 'claude-cli' ? 'claude-cli' : 'api',
+    claudeCli: {
+      // From `claude setup-token`; unset = the credentials in <home>/.claude.
+      oauthToken: process.env.CLAUDE_CODE_OAUTH_TOKEN || undefined,
+      timeoutMs: parseInt(process.env.CLAUDE_CLI_TIMEOUT_MS ?? '120000', 10),
+      // HOME of the CLI subprocess (must be writable); unset = this process's home.
+      home: process.env.CLAUDE_CLI_HOME || undefined,
+      executablePath: process.env.CLAUDE_CLI_EXECUTABLE || undefined,
+    },
     // When true, enable adaptive thinking on the primary model.
     enableThinking: process.env.AI_ENABLE_THINKING === 'true',
     // IANA zone the assistant tells the time in, so "8pm tonight" becomes a real

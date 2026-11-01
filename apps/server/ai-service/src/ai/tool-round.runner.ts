@@ -85,16 +85,29 @@ export class ToolRoundRunner {
     const results: Anthropic.ToolResultBlockParam[] = [];
     try {
       for (const block of toolUses) {
-        results.push(await this.runOne(block, state, stream));
+        results.push(await this.runToolCall(block, state, stream));
       }
     } finally {
       for (const block of toolUses.slice(results.length)) {
         results.push(errorResult(block, 'Tool error: this tool was not executed (internal error).'));
       }
-      state.messages.push({ role: 'assistant', content: message.content });
-      state.messages.push({ role: 'user', content: results });
-      state.iteration++;
+      this.commitRound(message.content, results, state);
     }
+  }
+
+  /**
+   * Record a completed round in the loop state. Also used for rounds the
+   * Claude CLI provider ran (its tool calls come through `runToolCall` one by
+   * one), so a continuation on the API sees them and never re-runs a tool.
+   */
+  commitRound(
+    assistant: Anthropic.ContentBlockParam[],
+    results: Anthropic.ToolResultBlockParam[],
+    state: LoopState,
+  ): void {
+    state.messages.push({ role: 'assistant', content: assistant });
+    state.messages.push({ role: 'user', content: results });
+    state.iteration++;
   }
 
   /** Delete the pending actions of a reply that ended in an error (no card survives it). */
@@ -103,7 +116,8 @@ export class ToolRoundRunner {
     await this.pendingActionStore.discard(ids);
   }
 
-  private async runOne(
+  /** One tool call: refuse / hold for confirmation / execute, with the trace entry. */
+  async runToolCall(
     block: Anthropic.ToolUseBlock,
     state: LoopState,
     stream: AiReplyStream,

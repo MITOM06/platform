@@ -11,6 +11,7 @@ import { selectModel, RouteSignals, RouterConfig, modelSupportsEffort } from './
 import { ReplySettledTracker } from '../actions/reply-settled.tracker';
 import { LlmClientsService } from '../llm/llm-clients.service';
 import { LlmClient } from '../llm/openrouter-client';
+import { ClaudeCliClient } from '../llm/claude-cli.client';
 import { AiStreamErrorCode } from './ai-stream-error';
 import { FactExtractorService } from './fact-extractor.service';
 import { ContextBuilderService } from './context-builder.service';
@@ -85,6 +86,8 @@ export class AiService {
     @Optional() private readonly llm?: LlmClientsService,
     // Optional for unit tests; lets an early-confirmed action's follow-up wait for this reply.
     @Optional() private readonly replySettled?: ReplySettledTracker,
+    // Null unless AI_PROVIDER=claude-cli (LlmModule factory): chat replies on the subscription.
+    @Optional() private readonly claudeCli?: ClaudeCliClient | null,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -340,15 +343,21 @@ export class AiService {
     let trace: AiTrace | null = null;
     try {
       state = await this.agenticLoop.prepare(ctx, content, loopHistory);
+      // AI_PROVIDER=claude-cli: the reply runs on the Claude Code subscription
+      // (text turns only — the CLI prompt carries no images); the API is the fallback.
+      const cli = this.claudeCli && imageTurns.length === 0 ? this.claudeCli : null;
       trace = await this.agenticLoop.runWithFallback({
         // OpenRouter light tier for the fast-tier model; Claude for everything
         // else and always for the fallback (an OpenRouter failure lands on Claude).
         anthropic:
-          this.llm && LlmClientsService.isOpenRouterModel(selectedModel)
+          (cli as unknown as LlmClient | null) ??
+          (this.llm && LlmClientsService.isOpenRouterModel(selectedModel)
             ? this.llm.clientFor(selectedModel)
-            : (this.anthropic as unknown as LlmClient),
+            : (this.anthropic as unknown as LlmClient)),
         fallbackClient: this.anthropic as unknown as LlmClient,
-        primaryModel: selectedModel,
+        // The CLI only knows Claude ids: an OpenRouter-mapped tier runs on the Claude fallback model.
+        primaryModel:
+          cli && LlmClientsService.isOpenRouterModel(selectedModel) ? this.fallbackModel : selectedModel,
         fallbackModel: this.fallbackModel,
         ctx,
         state,

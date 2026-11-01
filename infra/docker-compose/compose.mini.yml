@@ -160,6 +160,13 @@ services:
       ANTHROPIC_MID_MODEL: ${ANTHROPIC_MID_MODEL:-nvidia/nemotron-3-super-120b-a12b:free}
       ANTHROPIC_COMPLEX_MODEL: ${ANTHROPIC_COMPLEX_MODEL:-claude-sonnet-4-5}
       # Light tier (fast-tier chat + small utility calls) via OpenRouter; blank = all Claude.
+      # 'claude-cli' = chat replies on the owner's Claude Code subscription (Agent SDK,
+      # CLAUDE_CODE_OAUTH_TOKEN from `claude setup-token`), the API key as the fallback.
+      # Blank/'api' = the API only. Utility calls (titles, memory, digests) always use the API.
+      AI_PROVIDER: ${AI_PROVIDER:-api}
+      CLAUDE_CODE_OAUTH_TOKEN: ${CLAUDE_CODE_OAUTH_TOKEN:-}
+      # The CLI subprocess needs a writable HOME inside the container.
+      CLAUDE_CLI_HOME: /tmp/pon-claude-home
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       # Free model (0 USD): 20 req/min and 50 req/day until 10 USD of credits were ever bought
       # (then 1000/day). Over the limit / unavailable ⇒ Claude Haiku for 10 minutes.
