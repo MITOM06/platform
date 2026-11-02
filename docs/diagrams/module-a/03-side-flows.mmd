@@ -1,0 +1,49 @@
+flowchart TB
+    subgraph REM["Reminder (TASK-11 phần tạo)"]
+        direction LR
+        R0["User: nhắc tôi 9h mai…"] --> R1["AI gọi tool create_reminder<br/>remindAt ISO + offset, phải ở tương lai<br/>TZ Asia/Ho_Chi_Minh"]
+        R1 --> R2[("Mongo reminders<br/>userId, conversationId, text, remindAt<br/>notified=false")]
+        R2 --> R3["chat-service ReminderSweepService<br/>@Scheduled 60s"]
+        R3 --> R4["claim atomic notified=true<br/>(chỉ 1 instance thắng)"]
+        R4 --> R5["saveAiMessage 🔔 text<br/>vào conversation"]
+        R4 --> R6["FCM push (lỗi thì chỉ log)"]
+    end
+
+    subgraph DIG["Daily digest"]
+        direction LR
+        D0["@Cron mỗi giờ<br/>ai-service DailyDigestCron"] --> D1{"workspace aiSettings<br/>dailyDigestEnabled = true<br/>và giờ local == dailyDigestHour ?"}
+        D1 -- no --> D9["return"]
+        D1 -- yes --> D2["distinct conversationId<br/>có tin text hôm qua (không phải bot)"]
+        D2 --> D3["claim digest_logs (unique conv+date)"]
+        D3 --> D4["transcript Speaker: text<br/>→ model theo modelTier (default Haiku)"]
+        D4 --> D5["publish AI_STREAM_DONE trực tiếp<br/>→ chat-service persist như tin AI"]
+    end
+
+    subgraph NOTE["AI notetaker (group call)"]
+        direction LR
+        N0["Client STT trong call<br/>web SpeechRecognition / Flutter speech_to_text"] --> N1["STOMP /app/call.transcript<br/>{callId, text, ts}"]
+        N1 --> N2[("Redis list<br/>call:transcript:{callId}")]
+        N3["Call kết thúc<br/>CallService publish call:summarize"] --> N4["ai-service CallSummaryService<br/>claim SETNX 1h"]
+        N2 --> N4
+        N4 --> N5["Claude: STRICT JSON<br/>overview, keyPoints, actionItems"]
+        N5 --> N6["Redis call:summary:result"]
+        N6 --> N7["chat-service CallSummaryListener<br/>persist tóm tắt vào conversation"]
+    end
+
+    subgraph VIS["Vision trong chat (TASK-10)"]
+        direction LR
+        V0["Ảnh trong 20 tin gần nhất<br/>(history chat-service gửi)"] --> V1["ChatImageService<br/>max 4 ảnh, ≤5MB, timeout 10s<br/>chỉ /api/uploads/*"]
+        V1 --> V2["base64 image block<br/>đặt trước caption"]
+        V2 --> V3["ép model = ANTHROPIC_MODEL<br/>(Haiku/Sonnet/OpenRouter không nhận ảnh)"]
+    end
+
+    subgraph ACT["Action card (tool nhạy cảm)"]
+        direction LR
+        A0["Model gọi mcp__gmail__send_email…<br/>(sensitive hoặc tên có send/create/delete…)"] --> A1["ToolRoundRunner: KHÔNG chạy<br/>Redis ai:pending-action:{id} TTL 600s<br/>tool_result = PENDING_USER_CONFIRMATION"]
+        A1 --> A2["AI_ACTION_PENDING → card trên bubble"]
+        A2 --> A3{"người hỏi bấm"}
+        A3 -- "Confirm" --> A4["POST /ai/actions/:id/confirm<br/>chỉ requester, single-use<br/>chạy với input đã lưu"]
+        A3 -- "Cancel" --> A5["POST /ai/actions/:id/cancel"]
+        A4 & A5 --> A6["Redis ai:action:resolved<br/>→ chat-service flip pendingActions[].status<br/>→ MESSAGE_UPDATED + follow-up reply"]
+    end
+
