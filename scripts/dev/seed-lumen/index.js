@@ -187,6 +187,20 @@ async function seedPeople(db, bucket) {
     ids[p.key] = insertedId;
     names[p.key] = p.name;
   }
+  // Pre-existing accounts (team Gmail / SSO logins, old test accounts): give
+  // each a department, role and title. Never created, never deleted; a missing
+  // account is skipped so conversations that mention it drop that member.
+  for (const p of org.EXISTING_ACCOUNTS) {
+    const existing = await db.collection('users').findOne({ email: p.email }, { projection: { _id: 1, displayName: 1 } });
+    if (!existing) { console.warn(`   (existing account ${p.email} not found — skipped)`); continue; }
+    await db.collection('users').updateOne({ _id: existing._id }, { $set: {
+      ...(p.rename ? { displayName: p.rename } : {}),
+      bio: `${p.title} @ Lumen Software`, gender: p.gender, status: 'active', hideInfo: false,
+      roleId: roles[p.role], departmentIds: p.depts.map((k) => dept[k]), updatedAt: new Date(),
+    } });
+    ids[p.key] = existing._id;
+    names[p.key] = p.rename || existing.displayName;
+  }
   for (const d of org.DEPARTMENTS) {
     await db.collection('departments').updateOne({ _id: dept[d.key] }, { $set: { leadUserId: ids[d.lead] } });
   }
@@ -248,8 +262,10 @@ async function seedConversations(db, bucket, redis, ctx) {
   const convIds = {};
   const aiMessages = [];
   let kbCount = 0;
-  for (const c of CONVERSATIONS) {
-    const members = c.members === 'ALL' ? allPeople : c.members;
+  for (let c of CONVERSATIONS) {
+    const known = (k) => k === 'ai' || k === 'system' || ids[k];
+    const members = (c.members === 'ALL' ? allPeople : c.members).filter(known);
+    if (c.messages.some((m) => !known(m.from))) c = { ...c, messages: c.messages.filter((m) => known(m.from)) };
     const participants = members.map(uid);
     const convId = new ObjectId();
     convIds[c.key] = convId;
@@ -445,7 +461,9 @@ async function seedAudit(db, { ids, names }) {
     await seedAiData(db, ctx, convs);
     const facts = await seedMemoryFacts(ctx, convs).catch((e) => { console.warn(`!! memory facts: ${e.message}`); return 0; });
     await seedAudit(db, ctx);
-    await writeManifest(db, Object.values(ctx.ids).map(String));
+    // Only Lumen-created people go in the manifest: pre-existing accounts must
+    // never be treated as fake (their own chats would be wiped, --reset would delete them).
+    await writeManifest(db, org.PEOPLE.map((p) => String(ctx.ids[p.key])));
 
     console.log(`\nLumen Software seeded:`);
     console.log(`  ${org.DEPARTMENTS.length} departments, ${org.PEOPLE.length} people, ${org.INVITATIONS.length} invitations`);
