@@ -9,7 +9,10 @@ diagram at `docs/diagrams/<name>/index.html` is reachable at
 | Folder | What it shows | Type |
 |---|---|---|
 | `pon-runtime/` | Whole platform at runtime on the Mac Mini: Cloudflare → Caddy → services, data stores, external APIs, trust boundary | archify `architecture` |
+| `auth-service/` | Sign-in (password / Google / OIDC), 2FA, Redis session + JWT with RBAC claims, how chat/ai/connector verify it, refresh rotation, claims-stale on role change | archify `workflow` |
+| `chat-service/` | One ordinary message: STOMP/REST → auth → rate limit → Mongo → Redis `stomp:broadcast` → STOMP topic; upload, notifications/FCM, presence, rejections | archify `workflow` |
 | `module-a-ai-request/` | One `@AI` request end to end: chat-service → RabbitMQ → ai-service pipeline, agentic loop, tools → Redis → STOMP → client, plus error branches | archify `workflow` |
+| `connector-service/` | OAuth connect + token vault, then ai-service listing and calling governed `mcp__*` tools through adapters, with RBAC gates, refresh and audit | archify `workflow` |
 | `module-a/` (Mermaid) | Earlier static Mermaid sources/SVGs for Module A, kept for reference | Mermaid |
 
 ## How they are made
