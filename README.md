@@ -97,6 +97,17 @@ A high-performance monorepo with four microservices, a Flutter mobile client, an
 2. **Knowledge Base (RAG) Flow**: User uploads a document → `chat-service` stores the file in GridFS and publishes metadata to Redis `kb:process` → `ai-service` downloads the file, extracts text, chunks it, requests Voyage AI embeddings (`voyage-4-lite`, 1024 dims by default — `KB_EMBEDDING_MODEL`), and upserts them to Qdrant (scanned PDFs / images go through Claude vision first) → `ai-service` updates the status to `done` and notifies the client over WebSocket.
 3. **Connector / Action Flow**: User connects an account on the **Integrations** screen → `connector-service` (:3003) runs OAuth and stores tokens in the encrypted vault → during an AI request, `ai-service` asks `connector-service`'s internal API for the user's permitted tools and merges them into the agent loop → when the model calls a tool, `ai-service` proxies it back through `connector-service`, which enforces RBAC (capability + allow-list + sensitive-action gates) and executes it against the third party (remote MCP for Notion/custom, REST adapter for Google).
 
+### Interactive diagrams
+
+Clickable, code-linked diagrams generated with [archify](https://github.com/tt-a1i/archify) from the real source. Every node opens the exact file and line range on GitHub; the toolbar lets you switch Views, trace a route and export PNG/SVG. They are plain self-contained HTML files, so they also work offline from a clone — open `docs/diagrams/<name>/index.html` in any browser.
+
+| Diagram | Interactive | Preview |
+|---|---|---|
+| **PON runtime architecture** — every service, data store and external API on the Mac Mini deployment, with the trust boundary | [Open ↗](https://mitom06.github.io/platform/diagrams/pon-runtime/) · [source](docs/diagrams/pon-runtime/index.html) | [![PON runtime architecture](docs/diagrams/pon-runtime/preview.png)](https://mitom06.github.io/platform/diagrams/pon-runtime/) |
+| **Module A — one `@AI` request** — chat-service → RabbitMQ → ai-service (5 gates, context, model router, agentic loop, tools) → Redis → STOMP → client, plus the error branches | [Open ↗](https://mitom06.github.io/platform/diagrams/module-a-ai-request/) · [source](docs/diagrams/module-a-ai-request/index.html) | [![Module A AI request flow](docs/diagrams/module-a-ai-request/preview.png)](https://mitom06.github.io/platform/diagrams/module-a-ai-request/) |
+
+The interactive links are served by GitHub Pages from the `docs/` folder of `main`. Each diagram is pinned to the commit it was drawn from (shown in its footer), so regenerate it when the flow it describes changes — see [docs/diagrams/README.md](docs/diagrams/README.md).
+
 ---
 
 ## 📁 Repository Structure

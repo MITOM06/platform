@@ -1,0 +1,49 @@
+flowchart LR
+    subgraph MEM["Trí nhớ dài hạn (per user, toàn workspace)"]
+        direction TB
+        T0["Sau mỗi reply: ai_memories.messageCount++"] --> T1{"count == 3<br/>hoặc count % 10 == 0 ?"}
+        T1 -- no --> T9["bỏ qua"]
+        T1 -- yes --> T2["FactExtractor (async)<br/>20 tin cuối → model nhẹ (Haiku / OpenRouter)<br/>prompt: summary 2-3 câu + FACTS: JSON ≤5"]
+        T2 --> T3["redactPii (secret) từng fact"]
+        T3 --> T4["embed Voyage voyage-4-lite 1024d<br/>retry 429: 21s, 42s"]
+        T4 --> T5{"nearest trong Qdrant ai_memory<br/>filter userId, cosine ≥ 0.92 ?"}
+        T5 -- "trùng" --> T6["upsert đè point cũ (cùng id)"]
+        T5 -- "mới" --> T7["upsert point mới<br/>payload: userId, conversationId, text, source, createdAt"]
+        T6 & T7 --> T8["Mongo ai_memories: summary + 50 keyFacts mới nhất"]
+        RF["Tool remember_fact<br/>user nói: nhớ giúp tôi…<br/>source = user-requested"] --> T3
+        RQ["Mỗi request: embed câu hỏi<br/>→ Qdrant top 12 (filter userId)<br/>→ score × 0.5^(tuổi/30 ngày)<br/>→ giữ top 6"] --> RP["chèn system prompt:<br/>Relevant memory about this user<br/>(sanitizeUntrusted, treat as remembered)"]
+        DEL["Màn AI Memory / lệnh /memory<br/>GET/DELETE /api/ai/memories (chat-service)<br/>→ Redis ai:memory:delete"] --> DQ["xoá Mongo + Qdrant theo userId+conversationId"]
+    end
+
+    subgraph KB["Knowledge Base (RAG)"]
+        direction TB
+        K0["Upload trên màn KB<br/>POST /api/kb/documents (chat-service)"] --> K1["GridFS /api/uploads/{id}<br/>kb_documents status uploaded<br/>+ departmentId nếu group phòng ban"]
+        K1 --> K2["Redis publish kb:process"]
+        K2 --> K3["ai-service KbProcessor<br/>fetch file (SSRF guard: chỉ /api/uploads/*)"]
+        K3 --> K4{"mime?"}
+        K4 -- "PDF" --> K5["pdf-parse text"]
+        K5 --> K6{"text < 64 ký tự<br/>(PDF scan)?"}
+        K6 -- yes --> K7["Claude vision: gửi cả PDF<br/>OCR + mô tả bảng/biểu đồ"]
+        K6 -- no --> K8
+        K4 -- "DOCX/DOC" --> K5b["mammoth extractRawText"] --> K8
+        K4 -- "text/*" --> K5c["utf-8"] --> K8
+        K4 -- "image jpeg/png/gif/webp" --> K7
+        K7 --> K8["TextChunker<br/>512 ký tự, overlap 80, cắt theo câu"]
+        K8 --> K9["Voyage embed (batch 100)"]
+        K9 --> K10["Qdrant knowledge<br/>payload: documentId, text, chunkIndex"]
+        K10 --> K11["kb_documents status done, chunkCount<br/>Redis kb:status:{docId} KB_DONE<br/>→ STOMP KB_STATUS_UPDATE"]
+        K3 -. "lỗi" .-> K12["status error + KB_ERROR"]
+
+        Q0["Mỗi request @AI<br/>ContextBuilder"] --> Q1{"docIds done<br/>theo conversation,<br/>hoặc cả department<br/>nếu group phòng ban"}
+        Q1 -- "0 doc" --> Q2["system: No documents uploaded. Do not cite."]
+        Q1 -- "có" --> Q3["Qdrant search 25 ứng viên<br/>filter documentId in docIds"]
+        Q3 --> Q4["gate score ≥ 0.2"]
+        Q4 --> Q5["Reranker.refine<br/>BM25 + vector → RRF (k=60)<br/>Cohere rerank-v3.5 nếu có COHERE_API_KEY<br/>(Mini prod: KHÔNG có)"]
+        Q5 --> Q6{"còn chunk?"}
+        Q6 -- "0" --> Q7["system: no relevant context, không bịa"]
+        Q6 -- "≥1" --> Q8["giữ top 4, đánh số [Source N] theo document<br/>fence UNTRUSTED_DATA + chỉ thị cite"]
+        Q8 --> Q9["router: có KB → Opus 4.8"]
+        Q8 --> Q10["AI_STREAM_DONE.sources → chip Sources<br/>(web MessageSources / Flutter) dedupe documentId"]
+        Q0 -. "model tự gọi thêm" .-> QT["tool search_knowledge_base<br/>cùng filter docIds, score ≥0.2, top 4"]
+    end
+

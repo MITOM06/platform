@@ -1,0 +1,53 @@
+flowchart TD
+    U["User gõ @AI / chat 1-1 với bot<br/>(web / Flutter, STOMP /app/chat.send)"] --> CC
+
+    subgraph CS["chat-service (Spring Boot :8080)"]
+        CC["ChatController<br/>regex @AI|@ponai hoặc isDirectAiConversation<br/>chỉ type text"]
+        CC --> H["getAiHistory: 50 tin Mongo → giữ 20<br/>+ role/perms/depts + departmentId"]
+        H --> PUB["AiRedisPublisher<br/>RabbitMQ exchange ai.direct → queue ai.requests<br/>TTL 30s, DLQ ai.requests.dlq"]
+        LIS["AiResponseListener<br/>subscribe ai:response:*"]
+        LIS --> CHUNK["AI_STREAM_CHUNK / AI_TOOL_CALL / AI_ACTION_PENDING<br/>→ STOMP /topic/conversation/{id}"]
+        LIS --> DONE["AI_STREAM_DONE: claim Redis ai:done:{conv}:{replyId}<br/>→ persist message type ai (trace, sources, pendingActions)<br/>→ STOMP + FCM"]
+    end
+
+    PUB --> MQ[("RabbitMQ<br/>ai.requests")]
+    MQ --> CONS
+
+    subgraph AIS["ai-service (NestJS :3002)"]
+        CONS["AiConsumer.handleAiRequest"] --> D1{"membership?<br/>ConversationAccess"}
+        D1 -- denied --> ERR1["AI_STREAM_ERROR FORBIDDEN"]
+        D1 -- ok --> D2{"/new hoặc /memory ?"}
+        D2 -- yes --> SYS["trả lời hệ thống, không tốn token"]
+        D2 -- no --> Q{"quota tháng ≥ limit?<br/>token_usage (default 500k)"}
+        Q -- yes --> ERR2["AI_STREAM_ERROR QUOTA_EXCEEDED"]
+        Q -- no --> RL{"rate limit Redis<br/>20 req/phút, 3 in-flight"}
+        RL -- hit --> ERR3["AI_STREAM_ERROR RATE_LIMITED"]
+        RL -- ok --> SES["AiSession (Mongo ai_sessions)<br/>per user+conversation<br/>compact khi >80k token: tóm tắt 80% cũ"]
+        SES --> EMB["embedOne(user message) — Voyage<br/>dùng chung cho RAG + memory"]
+        EMB --> RC{"response cache hit?<br/>opt-in, cosine ≥0.97"}
+        RC -- hit --> CACHED["stream câu trả lời cũ"]
+        RC -- miss --> CTX["ContextBuilder (volatile system)<br/>1. org context theo role/dept<br/>2. memory recall top 6 (decay 30d)<br/>3. KB RAG: filter docIds → 25 ứng viên → score ≥0.2<br/>→ hybrid BM25+vector RRF → Cohere nếu có key → top 4<br/>4. group context 20 tin (chỉ group)"]
+        CTX --> ROUTE{"model router"}
+        ROUTE -- "forcedTier workspace" --> M0["tier admin chọn"]
+        ROUTE -- "có KB context" --> M1["Opus 4.8"]
+        ROUTE -- "≤280 ký tự & ≤4 turn" --> M2["Haiku 4.5<br/>(→ OpenRouter nếu có key)"]
+        ROUTE -- "≤1200 & ≤20 turn" --> M3["Sonnet 4.6"]
+        ROUTE -- "còn lại / có ảnh" --> M1
+        M0 & M1 & M2 & M3 --> LOOP["AgenticLoop ≤5 vòng<br/>messages.stream → text_delta → AI_STREAM_CHUNK"]
+        LOOP --> TU{"stop_reason = tool_use?"}
+        TU -- "tool thường" --> EXEC["ToolRegistry.execute<br/>search_messages / get_user_info / search_knowledge_base<br/>summarize_conversation / create_reminder / remember_fact<br/>mcp__provider__tool (connector-service)<br/>kết quả bọc fence UNTRUSTED"]
+        TU -- "tool sensitive" --> HOLD["KHÔNG chạy: lưu ai:pending-action:{id} TTL 600s<br/>→ AI_ACTION_PENDING (card confirm/cancel)"]
+        EXEC --> LOOP
+        HOLD --> LOOP
+        TU -- "end_turn" --> FIN["finish: AI_STREAM_DONE<br/>fullContent + sources + trace<br/>(thinking, toolCalls, tokens, ms, model, iterations)"]
+        LOOP -. "model lỗi trước khi có chữ" .-> FB["fallback Haiku 4.5<br/>tiếp tục từ LoopState, không chạy lại tool"]
+        FB --> LOOP
+        LOOP -. "lỗi khi đã stream chữ" .-> INT["AI_STREAM_INTERRUPTED"]
+        FIN --> POST["persist user+assistant turn vào session<br/>recordUsage token_usage<br/>messageCount++ → trích fact ở turn 3, rồi mỗi 10 turn"]
+    end
+
+    ERR1 & ERR2 & ERR3 & SYS & CACHED & FIN & INT --> R[("Redis pub/sub<br/>ai:response:{conversationId}<br/>mỗi event có replyId + requesterId")]
+    R --> LIS
+    CHUNK --> UI["Client: AiStreamBubble / chat_ai_stream_handler<br/>ghép chunk theo replyId, hiện tool đang chạy, action card"]
+    DONE --> UI2["Client: bubble cuối + chip Sources [Source N]<br/>+ AiTraceModal (GET /api/messages/{id}/trace)"]
+
