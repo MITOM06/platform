@@ -1,4 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { existsSync, mkdtempSync } from 'fs';
+import os from 'os';
+import path from 'path';
 import { ConfigService } from '@nestjs/config';
 import {
   ClaudeCliClient,
@@ -223,5 +226,22 @@ describe('toZodShape', () => {
     expect(shape.limit.safeParse('no').success).toBe(false);
     expect(shape.tags.safeParse(['a']).success).toBe(true);
     expect(shape.mode.safeParse('c').success).toBe(false);
+  });
+});
+
+describe('ClaudeCliClient home directory', () => {
+  it('creates the CLI home (HOME + cwd) before the first query', async () => {
+    const home = path.join(mkdtempSync(path.join(os.tmpdir(), 'pon-cli-')), 'nested', 'home');
+    const { sdk, seen } = fakeSdk(async function* () {
+      yield success({ result: 'ok' });
+    });
+    expect(existsSync(home)).toBe(false);
+    await client(sdk, { home }).runLoop({
+      model: 'claude-haiku-4-5', system: '', messages: [{ role: 'user', content: 'hi' }], tools: [], thinking: false, maxTurns: 2,
+      onText: async () => undefined, onToolCall: async () => '', onRound: () => undefined,
+    });
+    expect(existsSync(home)).toBe(true);
+    expect((seen.options!.env as Record<string, string>).HOME).toBe(home);
+    expect(seen.options!.cwd).toBe(home);
   });
 });
