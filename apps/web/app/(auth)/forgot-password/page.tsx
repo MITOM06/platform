@@ -20,6 +20,8 @@ import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter'
 
 const OTP_LENGTH = 6
 const RESEND_COOLDOWN = 60
+/** The server refused the code itself; any other failure (offline, throttled) says nothing about it. */
+const OTP_REJECTED_CODES = ['OTP_INVALID', 'OTP_EXPIRED', 'OTP_ATTEMPTS_EXCEEDED', 'OTP_WRONG_WITH_REMAINING']
 
 type Step = 'request' | 'otp' | 'reset'
 
@@ -38,7 +40,7 @@ export default function ForgotPasswordPage() {
     router.replace(loginPath('SSO_REQUIRED'))
     return true
   }
-  // Collected on the OTP step; submitted together with the new password.
+  // Checked on the OTP step; submitted again together with the new password.
   const [collectedOtp, setCollectedOtp] = useState('')
 
   // ── Step: request ──────────────────────────────────────────────
@@ -56,6 +58,7 @@ export default function ForgotPasswordPage() {
     try {
       await authService.forgotPassword(e)
       setEmail(e)
+      setOtpError('')
       setStep('otp')
       // Start the 60s cooldown immediately so the user can't spam "Resend"
       // the moment they land on the OTP step.
@@ -72,6 +75,7 @@ export default function ForgotPasswordPage() {
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''))
   const [resendTimer, setResendTimer] = useState(0)
   const [otpError, setOtpError] = useState('')
+  const [otpChecking, setOtpChecking] = useState(false)
 
   const startResendTimer = () => {
     setResendTimer(RESEND_COOLDOWN)
@@ -88,6 +92,7 @@ export default function ForgotPasswordPage() {
     try {
       await authService.forgotPassword(email)
       toast.success(t('codeSent'))
+      setOtpError('')
       startResendTimer()
     } catch (err: unknown) {
       // Surface the specific backend code (e.g. per-email OTP rate limit)
@@ -98,15 +103,27 @@ export default function ForgotPasswordPage() {
     }
   }
 
-  const onOtpNext = () => {
-    const code = otp.join('')
-    if (code.length < OTP_LENGTH) {
+  // Checked here, as on mobile, so a wrong code is caught before a new password
+  // is typed. The check does not use the code up: the reset step sends it again.
+  const onOtpNext = async () => {
+    const entered = otp.join('')
+    if (entered.length < OTP_LENGTH) {
       setOtpError(t('otpMinLength'))
       return
     }
     setOtpError('')
-    setCollectedOtp(code)
-    setStep('reset')
+    setOtpChecking(true)
+    try {
+      await authService.verifyOtp(email, entered)
+      setCollectedOtp(entered)
+      setStep('reset')
+    } catch (err: unknown) {
+      const { code, params } = parseAuthError(err)
+      if (OTP_REJECTED_CODES.includes(code)) setOtp(Array(OTP_LENGTH).fill(''))
+      setOtpError(tAuth(authCodeToI18nKey(code), params))
+    } finally {
+      setOtpChecking(false)
+    }
   }
 
   // ── Step: reset password ───────────────────────────────────────
@@ -177,13 +194,8 @@ export default function ForgotPasswordPage() {
       if (redirectIfSsoRequired(code)) return
       const key = authCodeToI18nKey(code)
       toast.error(tAuth(key, params))
-      // If OTP is wrong/expired the backend will reject here — send user back to OTP step.
-      if (
-        code === 'OTP_INVALID' ||
-        code === 'OTP_EXPIRED' ||
-        code === 'OTP_ATTEMPTS_EXCEEDED' ||
-        code === 'OTP_WRONG_WITH_REMAINING'
-      ) {
+      // The code can still expire while the new password is typed — send user back to OTP step.
+      if (OTP_REJECTED_CODES.includes(code)) {
         setOtp(Array(OTP_LENGTH).fill(''))
         setCollectedOtp('')
         setStep('otp')
@@ -256,13 +268,13 @@ export default function ForgotPasswordPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <OtpInput value={otp} onChange={setOtp} length={OTP_LENGTH} />
+            <OtpInput value={otp} onChange={setOtp} length={OTP_LENGTH} disabled={otpChecking} />
             {otpError && (
               <p className="text-sm text-destructive text-center">{otpError}</p>
             )}
 
-            <Button onClick={onOtpNext} className="w-full font-bold tracking-wide">
-              {t('otpNext')}
+            <Button onClick={onOtpNext} className="w-full font-bold tracking-wide" disabled={otpChecking}>
+              {otpChecking ? tAuth('verifyOtp.submitting') : t('otpNext')}
             </Button>
 
             <div className="text-center text-sm text-muted-foreground">
