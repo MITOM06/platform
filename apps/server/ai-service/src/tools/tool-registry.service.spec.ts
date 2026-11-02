@@ -1,6 +1,7 @@
 import { ToolRegistryService } from './tool-registry.service';
 import { SearchMessagesTool } from './search-messages.tool';
 import { GetUserInfoTool } from './get-user-info.tool';
+import { SearchDirectoryTool } from './search-directory.tool';
 import { SearchKnowledgeBaseTool } from './search-knowledge-base.tool';
 import { SummarizeConversationTool } from './summarize-conversation.tool';
 import { CreateReminderTool } from './create-reminder.tool';
@@ -65,6 +66,7 @@ function makeRegistry(overrides: Partial<{
   const getUserInfo = {
     execute: overrides.userInfo ?? jest.fn().mockResolvedValue('user info'),
   } as unknown as GetUserInfoTool;
+  const searchDirectory = { execute: jest.fn().mockResolvedValue('directory') } as unknown as SearchDirectoryTool;
   const searchKb = {
     execute: overrides.kb ?? jest.fn().mockResolvedValue('kb result'),
   } as unknown as SearchKnowledgeBaseTool;
@@ -92,6 +94,7 @@ function makeRegistry(overrides: Partial<{
   return new ToolRegistryService(
     searchMessages,
     getUserInfo,
+    searchDirectory,
     searchKb,
     summarize,
     createReminder,
@@ -104,13 +107,14 @@ function makeRegistry(overrides: Partial<{
 }
 
 describe('ToolRegistryService', () => {
-  it('returns 6 static tool definitions when no dynamic tools', async () => {
+  it('returns 7 static tool definitions when no dynamic tools', async () => {
     const registry = makeRegistry();
     const defs = await registry.getDefinitions(ctx);
-    expect(defs).toHaveLength(6);
+    expect(defs).toHaveLength(7);
     const names = defs.map((d) => d.name);
     expect(names).toContain('search_messages');
     expect(names).toContain('get_user_info');
+    expect(names).toContain('search_directory');
     expect(names).toContain('search_knowledge_base');
     expect(names).toContain('summarize_conversation');
     expect(names).toContain('create_reminder');
@@ -121,14 +125,14 @@ describe('ToolRegistryService', () => {
     const registry = makeRegistry();
     const defs = await registry.getDefinitions(ctx);
     expect(defs.map((d) => d.name)).not.toContain('web_search');
-    expect(defs).toHaveLength(6);
+    expect(defs).toHaveLength(7);
   });
 
   it('registers web_search when the service reports available', async () => {
     const registry = makeRegistry({ webSearchAvailable: true });
     const defs = await registry.getDefinitions(ctx);
     expect(defs.map((d) => d.name)).toContain('web_search');
-    expect(defs).toHaveLength(7);
+    expect(defs).toHaveLength(8);
   });
 
   it('dispatches to web_search tool', async () => {
@@ -153,7 +157,7 @@ describe('ToolRegistryService', () => {
     // notion is gated by the projectKeeper skill — enable it so the tool passes.
     const defs = await registry.getDefinitions({ ...ctx, enabledSkillIds: ['projectKeeper'] });
     expect(getTools).toHaveBeenCalledWith('user-1', expect.any(Array));
-    expect(defs).toHaveLength(7);
+    expect(defs).toHaveLength(8);
     expect(defs.map((d) => d.name)).toContain('mcp__notion__create_page');
   });
 
@@ -323,7 +327,7 @@ describe('ToolRegistryService', () => {
     const registry = makeRegistry({ mcpGetTools: getTools });
     const defs = await registry.getDefinitions({ ...ctx, allowedConnectors: [] });
     expect(defs.map((d) => d.name)).not.toContain('mcp__notion__create_page');
-    expect(defs).toHaveLength(6); // 6 static tools, no MCP
+    expect(defs).toHaveLength(7); // 6 static tools, no MCP
   });
 
   it('allowedConnectors=null/undefined does NOT filter MCP tools (inherit)', async () => {
@@ -351,7 +355,7 @@ describe('ToolRegistryService', () => {
       enabledSkillIds: [],
     });
     expect(defs.map((d) => d.name)).not.toContain('mcp__calendar__create_event');
-    expect(defs).toHaveLength(6); // only static tools
+    expect(defs).toHaveLength(7); // only static tools
   });
 
   it('keeps a gated-provider MCP tool when BOTH the skill and connector are on', async () => {
@@ -374,7 +378,7 @@ describe('ToolRegistryService', () => {
     const registry = makeRegistry({ mcpGetTools: getTools });
     const defs = await registry.getDefinitions({ ...ctx, enabledSkillIds: ['scheduler'] });
     expect(defs.map((d) => d.name)).not.toContain('mcp__calendar__create_event');
-    expect(defs).toHaveLength(6);
+    expect(defs).toHaveLength(7);
   });
 });
 

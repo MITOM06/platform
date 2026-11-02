@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Reminder, ReminderSchema } from './reminder.schema';
 import { SearchMessagesTool } from './search-messages.tool';
 import { GetUserInfoTool } from './get-user-info.tool';
+import { SearchDirectoryTool } from './search-directory.tool';
 import { SearchKnowledgeBaseTool } from './search-knowledge-base.tool';
 import { SummarizeConversationTool } from './summarize-conversation.tool';
 import { CreateReminderTool } from './create-reminder.tool';
@@ -27,6 +28,7 @@ const reminderFeature = MongooseModule.forFeature([
   providers: [
     SearchMessagesTool,
     GetUserInfoTool,
+    SearchDirectoryTool,
     SearchKnowledgeBaseTool,
     SummarizeConversationTool,
     CreateReminderTool,

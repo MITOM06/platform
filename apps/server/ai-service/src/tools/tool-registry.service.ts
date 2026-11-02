@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SearchMessagesTool } from './search-messages.tool';
 import { GetUserInfoTool } from './get-user-info.tool';
+import { SearchDirectoryTool } from './search-directory.tool';
 import { SearchKnowledgeBaseTool } from './search-knowledge-base.tool';
 import { SummarizeConversationTool } from './summarize-conversation.tool';
 import { CreateReminderTool } from './create-reminder.tool';
@@ -148,6 +149,7 @@ export class ToolRegistryService {
   constructor(
     private readonly searchMessages: SearchMessagesTool,
     private readonly getUserInfo: GetUserInfoTool,
+    private readonly searchDirectory: SearchDirectoryTool,
     private readonly searchKnowledgeBase: SearchKnowledgeBaseTool,
     private readonly summarizeConversation: SummarizeConversationTool,
     private readonly createReminder: CreateReminderTool,
@@ -162,6 +164,7 @@ export class ToolRegistryService {
     const staticDefs: ToolDefinition[] = [
       SearchMessagesTool.definition,
       GetUserInfoTool.definition,
+      SearchDirectoryTool.definition,
       SearchKnowledgeBaseTool.definition,
       SummarizeConversationTool.definition,
       CreateReminderTool.definition,
@@ -244,6 +247,8 @@ export class ToolRegistryService {
           return await this.searchMessages.execute(input, ctx);
         case 'get_user_info':
           return await this.getUserInfo.execute(input, ctx);
+        case 'search_directory':
+          return await this.searchDirectory.execute(input, ctx);
         case 'search_knowledge_base':
           return await this.searchKnowledgeBase.execute(input, ctx);
         case 'summarize_conversation':
