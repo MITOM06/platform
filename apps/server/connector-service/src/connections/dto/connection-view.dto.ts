@@ -11,6 +11,8 @@ export interface ConnectionView {
   scopes: string[];
   /** Action groups the AI may use on this connection: view/create/edit/delete. */
   actionGroups: string[];
+  /** Permitted writes run without the in-chat confirmation card. */
+  autoRun: boolean;
   accountLabel?: string;
   lastUsedAt?: Date;
 }

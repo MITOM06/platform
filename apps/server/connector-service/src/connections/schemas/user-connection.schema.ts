@@ -59,6 +59,14 @@ export class UserConnection {
   @Prop({ type: [String], default: ['view', 'create', 'edit', 'delete'] })
   actionGroups: string[];
 
+  /**
+   * The owner gave the AI full authority on this connection: writes it is
+   * permitted to make (action groups + role) run at once, without the in-chat
+   * confirmation card. Off by default — every write is confirmed.
+   */
+  @Prop({ default: false })
+  autoRun: boolean;
+
   @Prop()
   mcpUrl: string;
 

@@ -781,6 +781,8 @@
   "permDeleteDesc": "Eliminar elementos de forma permanente.",
   "permManage": "Permisos",
   "permSaved": "Permisos actualizados.",
+  "permAutoRun": "Autoridad total",
+  "permAutoRunDesc": "La IA realiza las acciones permitidas de inmediato, sin pedirte confirmación cada vez. Solo para apps en las que confíes plenamente.",
   "skillsTitle": "Habilidades",
   "skillsSubtitle": "Las habilidades agrupan un conjunto de herramientas y una forma de trabajar. Activa solo lo que necesites — cada una indica lo que requiere.",
   "skillsRealActionNote": "Las habilidades cambian cómo piensa y se expresa tu asistente. Para que actúe de verdad (enviar correos, crear eventos, escribir en Notion…), conecta la app correspondiente que aparece abajo.",

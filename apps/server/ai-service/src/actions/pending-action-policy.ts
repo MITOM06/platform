@@ -40,5 +40,7 @@ export function isLowRiskConnectorTool(toolName: string): boolean {
 export function needsConfirmation(toolName: string, offered: ToolDefinition | undefined): boolean {
   if (!isConnectorTool(toolName)) return false;
   if (isLowRiskConnectorTool(toolName)) return false;
+  // Full authority on the connection (owner's explicit choice): never held.
+  if (offered?.autoRun === true) return false;
   return offered?.sensitive !== false;
 }

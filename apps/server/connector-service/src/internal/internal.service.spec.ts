@@ -99,6 +99,18 @@ describe('InternalService', () => {
     expect((await svc.getTools('u1')).withheld).toEqual([]);
   });
 
+  it('full authority (autoRun) on the connection clears `sensitive` for the AI channel, role gate intact', async () => {
+    connModel.find.mockReturnValue(lean([{ ...connDoc, autoRun: true }]));
+    // Without RUN_SENSITIVE_SKILL the write is still withheld by the role.
+    expect(await names()).toEqual(['mcp__notion__search']);
+    permSet.add(Capability.RUN_SENSITIVE_SKILL);
+    const { tools: list } = await svc.getTools('u1');
+    expect(list.map((t) => [t.name, t.sensitive, t.autoRun])).toEqual([
+      ['mcp__notion__create_page', false, true],
+      ['mcp__notion__search', false, true],
+    ]);
+  });
+
   it('a tool held back by the connection grant (not the role) is not reported as withheld', async () => {
     permSet.add(Capability.RUN_SENSITIVE_SKILL);
     connModel.find.mockReturnValue(lean([{ ...connDoc, actionGroups: ['view'] }]));
@@ -241,6 +253,16 @@ describe('InternalService', () => {
       { title: 'X' },
     );
     expect(audit.record).toHaveBeenCalledWith(expect.objectContaining({ action: 'sensitive_skill.run' }));
+  });
+
+  it('callTool with full authority runs the write and audits it as auto-run', async () => {
+    permSet.add(Capability.RUN_SENSITIVE_SKILL);
+    connModel.find.mockReturnValue(lean([{ ...connDoc, autoRun: true }]));
+    const out = await svc.callTool('u1', 'mcp__notion__create_page', { title: 'X' });
+    expect(out.result).toBe('page created');
+    expect(audit.record).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'sensitive_skill.run', meta: expect.objectContaining({ autoRun: true }) }),
+    );
   });
 
   it('resolves a workspace connection owned by ANOTHER member with the listing visibility', async () => {

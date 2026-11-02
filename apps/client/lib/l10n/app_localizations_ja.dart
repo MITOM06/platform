@@ -2119,6 +2119,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get permSaved => '権限を更新しました。';
 
   @override
+  String get permAutoRun => '全権限';
+
+  @override
+  String get permAutoRunDesc =>
+      'AI は許可された操作を確認なしで即座に実行します。完全に信頼できるアプリにのみ有効にしてください。';
+
+  @override
   String get skillsTitle => 'スキル';
 
   @override
