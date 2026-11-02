@@ -28,6 +28,8 @@ const CONVERSATIONS = [
       { from: 'oanh', type: 'file', file: 'handbook', ago: 180 * D - 1, id: 'handbook', pin: true },
       { from: 'khang', text: 'Tin vui: đã ký hợp đồng RetailOS với chuỗi siêu thị Minh Châu, 12 siêu thị, 3 năm. Cảm ơn team Kinh doanh và phòng RetailOS! 🥂', ago: 118 * D, react: { '🔥': ['minh', 'lananh', 'dat', 'tuan', 'vinh', 'han'], '👏': ['dung', 'huy', 'oanh', 'giang'] } },
       { from: 'dung', text: 'Nhắc lại chính sách WFH: tối đa 2 ngày/tuần, đăng ký trên kênh phòng ban trước 17:00 hôm trước. Core hours 10:00–16:00 bắt buộc online.', ago: 95 * D, pin: true, react: { '👍': ['vinh', 'tung', 'hai', 'tri', 'nam'] } },
+      { from: 'dung', text: 'Sơ đồ tổ chức và danh mục dự án bản cập nhật tháng 10: 7 phòng ban, ai phụ trách gì, dự án nào đang chạy. Đã nạp KB, người mới cứ hỏi @AI “phòng X có ai / dự án Y ai làm”.', ago: 30 * D },
+      { from: 'dung', type: 'file', file: 'orgChart', ago: 30 * D - 1, pin: true },
       { from: 'han', text: '@AI theo sổ tay thì phép năm chưa dùng hết có mất không?', ago: 60 * D, mention: ['ai'] },
       ai('Theo **Sổ tay nhân viên Lumen 2026** (mục 3 – Nghỉ phép):\n\n- Mỗi nhân viên có **12 ngày phép năm**, tính theo tỷ lệ từ ngày vào làm.\n- Phép chưa dùng **được chuyển sang quý 1 năm sau, tối đa 5 ngày**.\n\nNguồn: So-tay-nhan-vien-Lumen-2026.md', 60 * D, { tool: 'search_knowledge_base', input: 'phép năm chưa dùng', result: '2 đoạn từ So-tay-nhan-vien-Lumen-2026.md' }),
       { from: 'huy', text: 'FleetPro chính thức chạy pilot 50 xe Sao Đỏ từ hôm nay. Tuần đầu tiên anh em on-call theo lịch trên kênh phòng.', ago: 55 * D, react: { '🚚': ['tri', 'hai', 'khoi', 'khang'], '👏': ['minh', 'lananh'] } },

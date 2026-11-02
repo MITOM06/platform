@@ -4,6 +4,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { mod } = require('./lib');
+const org = require('./org');
 const sharp = mod('sharp');
 
 // Prefer a PNG rendered by prebuild.js (fonts!) over rendering here.
@@ -45,6 +46,33 @@ bán lẻ (RetailOS) và vận tải (FleetPro). Giá trị cốt lõi: làm th�
 ## 6. Liên hệ
 HR: Phùng Thị Kim Oanh (oanh.phung@lumensoft.vn). Vận hành: Nguyễn Hoàng Dũng.
 `;
+
+// Org chart + project portfolio, built from org.js so it matches the member
+// list and the AI context entries of the same name.
+function orgChartMd() {
+  const byKey = Object.fromEntries(org.PEOPLE.map((p) => [p.key, p]));
+  const sections = org.DEPARTMENTS.map((d) => {
+    const people = org.PEOPLE.filter((p) => p.depts.includes(d.key)).map((p) => `- ${p.name} — ${p.title}`);
+    // Existing accounts: the seed knows their title but not always their name
+    // (team members' Google logins) — strip the seed's own notes from the title.
+    const existing = org.EXISTING_ACCOUNTS.filter((p) => p.depts.includes(d.key));
+    const named = existing.filter((p) => p.rename).map((p) => `- ${p.rename} — ${p.title.replace(/\s*\(.*\)\s*$/, '')}`);
+    const unnamed = existing.length - named.length;
+    const extra = unnamed ? [`- cùng ${unnamed} thành viên khác đăng nhập bằng tài khoản Google`] : [];
+    return `## ${d.name} — ${people.length + existing.length} người\nTrưởng phòng: ${byKey[d.lead].name}. ${d.description}\n\n${[...people, ...named, ...extra].join('\n')}\n`;
+  });
+  return `# Sơ đồ tổ chức & danh mục dự án Lumen Software — 10/2026
+
+Tổng nhân sự: ${org.HEADCOUNT} người, 7 phòng ban. Mỗi người có thể thuộc nhiều phòng.
+
+## Ban Giám đốc & trưởng phòng
+${org.LEADERSHIP_TEXT}
+
+${sections.join('\n')}
+## Danh mục dự án
+${org.PROJECTS_TEXT}
+`;
+}
 
 const RETAIL_SPEC = `# RetailOS — Đặc tả hệ thống v1.3
 
@@ -355,6 +383,7 @@ async function buildFiles() {
   const txt = (s) => Buffer.from(s, 'utf8');
   return {
     handbook: { name: 'So-tay-nhan-vien-Lumen-2026.md', mime: 'text/markdown', buf: txt(HANDBOOK), kb: true },
+    orgChart: { name: 'So-do-to-chuc-Lumen-2026.md', mime: 'text/markdown', buf: txt(orgChartMd()), kb: true },
     retailSpec: { name: 'RetailOS-Dac-ta-he-thong-v1.3.md', mime: 'text/markdown', buf: txt(RETAIL_SPEC), kb: true },
     retailApi: { name: 'RetailOS-API-POS-v2.md', mime: 'text/markdown', buf: txt(RETAIL_API), kb: true },
     fleetSpec: { name: 'FleetPro-Dac-ta-he-thong-v1.1.md', mime: 'text/markdown', buf: txt(FLEET_SPEC), kb: true },

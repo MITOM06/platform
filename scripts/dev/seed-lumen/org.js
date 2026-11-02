@@ -100,10 +100,45 @@ const INVITATIONS = [
   { email: `intern.sales@${DOMAIN}`, role: 'Member', depts: ['sales'], invitedBy: 'lananh', status: 'revoked', daysAgo: 20 },
 ];
 
+// Org-chart facts derived from the lists above so the AI context, the KB
+// document and the member list can never disagree. Everyone on prod is a
+// member (PEOPLE are created, EXISTING_ACCOUNTS are matched by email), so both
+// count. A person in two departments is counted in each.
+const ALL_MEMBERS = [...PEOPLE, ...EXISTING_ACCOUNTS];
+const HEADCOUNT = ALL_MEMBERS.length;
+const byKey = Object.fromEntries(PEOPLE.map((p) => [p.key, p]));
+const deptHeadcount = (d) => ALL_MEMBERS.filter((p) => p.depts.includes(d.key)).length;
+const deptLine = (d) => `${d.name} (${deptHeadcount(d)} người, trưởng phòng: ${byKey[d.lead].name}): ${d.description}`;
+const ORG_CHART_TEXT = `Lumen Software có ${HEADCOUNT} nhân sự trong 7 phòng ban. ` +
+  DEPARTMENTS.map(deptLine).join(' ') +
+  ' Mỗi người có thể thuộc nhiều phòng (COO Nguyễn Hoàng Dũng thuộc Ban Giám đốc và Nhân sự).';
+
+const LEADERSHIP_TEXT = 'Ban Giám đốc gồm 3 người: Trần Phúc Khang — CEO & Founder (chiến lược, tài chính, gọi vốn, ' +
+  'duyệt hợp đồng và chiết khấu trên 15%); Nguyễn Hoàng Dũng — COO, Giám đốc vận hành (vận hành, nhân sự, hành chính, ' +
+  'chính sách WFH; kiêm phụ trách phòng Nhân sự); Hoàng Anh Tuấn — CTO (kiến trúc, hạ tầng, CI/CD, on-call, đồng thời ' +
+  'chủ trì nhóm Tech sync hai dự án). Kế toán trưởng Nguyễn Thị Hương Giang dự họp Ban Giám đốc hằng tháng. ' +
+  'Các trưởng phòng báo cáo trực tiếp cho Ban Giám đốc: Nguyễn Kim Minh (RetailOS), Đặng Quốc Huy (FleetPro), ' +
+  'Cao Thị Lan Anh (Kinh doanh), Mai Thanh Hà (Marketing), Phùng Thị Kim Oanh (Nhân sự), Nguyễn Thị Hương Giang (Kế toán). ' +
+  'Ban Giám đốc còn có một Cố vấn chiến lược bán thời gian và một thành viên HĐQT dự phòng, không điều hành hằng ngày.';
+
+const PROJECTS_TEXT = 'Dự án khách hàng đang chạy: (1) RetailOS cho chuỗi siêu thị Minh Châu — 12 siêu thị, hợp đồng ' +
+  '1,8 tỷ/3 năm, gói Enterprise, pilot Gò Vấp từ 15/9, go-live toàn chuỗi 28/10/2026, Jira RETAIL, phòng RetailOS. ' +
+  '(2) FleetPro cho Vận tải Sao Đỏ — pilot 50 xe từ 1/9/2026 (đội 180 xe), thiết bị Lumen-T1, Jira FLEET, phòng FleetPro. ' +
+  '(3) RetailOS gói Starter cho Tạp hóa Xanh — 2 cửa hàng, chạy từ tháng 9/2026, khách hàng thứ 3, do Kinh doanh theo dõi. ' +
+  'Pipeline Q4/2026 (chưa ký): chuỗi Bách Hóa Đồng Nai (8 cửa hàng, RetailOS, Nguyễn Văn Đạt phụ trách) và Vận tải Hòa Bình ' +
+  '(60 xe, FleetPro, Trịnh Hoài Thương phụ trách). ' +
+  'Dự án nội bộ: thiết bị GPS Lumen-T1 rev C (Võ Minh Khôi); thư viện lumen-logging dùng chung hai dự án (Lê Quang Vinh); ' +
+  'chuẩn hóa pipeline CI về một template (nhóm Tech sync, CTO chủ trì); nhận diện sản phẩm bằng AI cho POS (Huỳnh Kim Ngân); ' +
+  'tối ưu lộ trình giao hàng (Lâm Thị Bích Ngọc); tích hợp cân điện tử cho Minh Châu Bình Dương. ' +
+  'Công ty: gọi vốn seed (Khang gặp 2 quỹ tháng 11/2026), tuyển 2 backend FleetPro + 1 designer trong Q4, mở văn phòng Hà Nội Q1/2027.';
+
 // Role-aware AI context. cap = capability needed to see it; null = everyone.
 const AI_CONTEXT = [
   { scope: 'company', label: 'Giới thiệu công ty', cap: null,
-    text: 'Lumen Software thành lập tháng 4/2026 tại Quận 1, TP.HCM, 30 nhân sự. Công ty xây phần mềm vận hành cho bán lẻ và vận tải: RetailOS (quản lý chuỗi cửa hàng: POS, tồn kho, màn hình quảng cáo) và FleetPro (theo dõi xe GPS, điều phối giao hàng, app tài xế). Khách hàng đầu tiên: chuỗi siêu thị Minh Châu (RetailOS) và Vận tải Sao Đỏ (FleetPro). Sứ mệnh: "Phần mềm vận hành vừa túi cho doanh nghiệp Việt".' },
+    text: `Lumen Software thành lập tháng 4/2026 tại Quận 1, TP.HCM, ${HEADCOUNT} nhân sự, 7 phòng ban (xem mục Cơ cấu tổ chức). Công ty xây phần mềm vận hành cho bán lẻ và vận tải: RetailOS (quản lý chuỗi cửa hàng: POS, tồn kho, màn hình quảng cáo) và FleetPro (theo dõi xe GPS, điều phối giao hàng, app tài xế). Khách hàng đầu tiên: chuỗi siêu thị Minh Châu (RetailOS) và Vận tải Sao Đỏ (FleetPro). Sứ mệnh: "Phần mềm vận hành vừa túi cho doanh nghiệp Việt".` },
+  { scope: 'company', label: 'Cơ cấu tổ chức (phòng ban)', cap: null, text: ORG_CHART_TEXT },
+  { scope: 'company', label: 'Ban Giám đốc & trưởng phòng', cap: null, text: LEADERSHIP_TEXT },
+  { scope: 'company', label: 'Danh mục dự án', cap: null, text: PROJECTS_TEXT },
   { scope: 'company', label: 'Giờ làm việc & nghỉ phép', cap: null,
     text: 'Giờ làm 8:30–17:30 thứ 2–6, nghỉ trưa 12:00–13:00. WFH tối đa 2 ngày/tuần, đăng ký trên kênh phòng ban trước 17:00 hôm trước. Core hours 10:00–16:00. 12 ngày phép năm; xin nghỉ qua form HR trước 3 ngày làm việc, trưởng phòng duyệt.' },
   { scope: 'company', label: 'Công cụ nội bộ', cap: null,
@@ -140,4 +175,4 @@ const USER_CONTEXT = {
   lananh: { projects: ['Pipeline Q4', 'Gia hạn Minh Châu'], style: 'Thân thiện, có thể gửi thẳng cho khách.', preferences: 'Luôn kèm next step và deadline.' },
 };
 
-module.exports = { DOMAIN, FOUNDED, WORKSPACE, DEPARTMENTS, PEOPLE, EXISTING_ACCOUNTS, INVITATIONS, AI_CONTEXT, USER_CONTEXT };
+module.exports = { DOMAIN, FOUNDED, WORKSPACE, DEPARTMENTS, PEOPLE, EXISTING_ACCOUNTS, INVITATIONS, AI_CONTEXT, USER_CONTEXT, HEADCOUNT, ORG_CHART_TEXT, LEADERSHIP_TEXT, PROJECTS_TEXT };
