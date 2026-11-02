@@ -111,12 +111,13 @@ describe('ClaudeCliClient.runLoop', () => {
       model: 'claude-sonnet-4-5',
       tools: [],
       allowedTools: ['mcp__pon__search_knowledge_base'],
-      permissionMode: 'bypassPermissions',
+      permissionMode: 'default',
       settingSources: [],
       persistSession: false,
       includePartialMessages: true,
       thinking: { type: 'disabled' },
     });
+    expect(seen.options!.allowDangerouslySkipPermissions).toBeUndefined();
     const env = seen.options!.env as Record<string, string>;
     expect(env.CLAUDE_CODE_OAUTH_TOKEN).toBe('sk-ant-oat-test');
     expect(env.HOME).toBe('/tmp/pon-cli-home');

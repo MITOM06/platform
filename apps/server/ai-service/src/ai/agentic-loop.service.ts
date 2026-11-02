@@ -260,6 +260,7 @@ export class AgenticLoopService {
         onRound: (assistant, results) => this.toolRound.commitRound(assistant, results, state),
       });
     } catch (err) {
+      this.logger.warn(`Claude CLI failed for ${ctx.conversationId}: ${(err as Error).message}`);
       if (streamed) throw new StreamInterruptedError(err);
       throw err;
     }
