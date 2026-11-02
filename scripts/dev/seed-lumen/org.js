@@ -73,6 +73,26 @@ const PEOPLE = [
   { key: 'giang', email: `giang.nguyen@${DOMAIN}`, name: 'Nguyễn Thị Hương Giang', role: 'Member', depts: ['fin'], title: 'Kế toán trưởng', gender: 'female' },
 ];
 
+// Accounts that already existed on prod before Lumen (team members' Gmail / SSO
+// logins and the old test accounts). Matched by email, never created; the seed
+// gives each one a department, role and title so no member is anonymous.
+// `rename` = replace the display name (only for throwaway test accounts).
+const EXISTING_ACCOUNTS = [
+  { key: 'khanggm', email: 'tranphuckhangvllvl@gmail.com', role: 'Admin', depts: ['bod'], title: 'Cố vấn chiến lược (đăng nhập Google của Khang)', gender: 'male' },
+  { key: 'minhgm', email: 'nguyenkiminh1999@gmail.com', role: 'Member', depts: ['retail'], title: 'Integration Engineer (đăng nhập Google của Minh)', gender: 'male' },
+  { key: 'trigm', email: 'caoduc.tri2k6@gmail.com', role: 'Member', depts: ['fleet'], title: 'Mobile QA Engineer (đăng nhập Google của Trí)', gender: 'male' },
+  { key: 'bien', email: 'bienphan1306@gmail.com', role: 'Member', depts: ['sales'], title: 'Business Development Executive', gender: 'male' },
+  { key: 'hau', email: 'chunhau.py@gmail.com', role: 'Member', depts: ['mkt'], title: 'Growth Marketer', gender: 'male' },
+  { key: 'canglong', email: 'giadinhcanglonghoi@gmail.com', role: 'Member', depts: ['hr'], title: 'Hành chính tổng hợp', gender: 'female' },
+  { key: 'phongne', email: 'phong.th@newera.inc', role: 'Member', depts: ['fin'], title: 'Kiểm soát nội bộ (tài khoản đối tác)', gender: 'male' },
+  { key: 'tuananh', email: 'bytuam2@gmail.com', rename: 'Nguyễn Tuấn Anh', role: 'Member', depts: ['retail'], title: 'Thực tập sinh Frontend', gender: 'male' },
+  { key: 'probe', email: 'probe-19402@example.com', rename: 'Lê Văn Thử', role: 'Member', depts: ['fleet'], title: 'Thực tập sinh QA', gender: 'male' },
+  { key: 'towner', email: 'owner@example.com', rename: 'Phạm Quốc Bảo', role: 'Admin', depts: ['bod'], title: 'Thành viên HĐQT (tài khoản dự phòng)', gender: 'male' },
+  { key: 'tadmin', email: 'admin@example.com', rename: 'Ngô Thị Thanh Vân', role: 'Admin', depts: ['hr'], title: 'Trợ lý Giám đốc vận hành (dự phòng)', gender: 'female' },
+  { key: 'tmanager', email: 'manager@example.com', rename: 'Đỗ Minh Quân', role: 'Member', depts: ['sales'], title: 'Trưởng nhóm bán hàng (dự phòng)', gender: 'male' },
+  { key: 'tmember', email: 'member@example.com', rename: 'Trần Thị Mai Phương', role: 'Member', depts: ['mkt'], title: 'Nhân viên nội dung (dự phòng)', gender: 'female' },
+];
+
 // Invite-only onboarding: what the admin screen shows.
 const INVITATIONS = [
   { email: `backend.fleet@${DOMAIN}`, role: 'Member', depts: ['fleet'], invitedBy: 'oanh', status: 'pending', daysAgo: 2 },
@@ -120,4 +140,4 @@ const USER_CONTEXT = {
   lananh: { projects: ['Pipeline Q4', 'Gia hạn Minh Châu'], style: 'Thân thiện, có thể gửi thẳng cho khách.', preferences: 'Luôn kèm next step và deadline.' },
 };
 
-module.exports = { DOMAIN, FOUNDED, WORKSPACE, DEPARTMENTS, PEOPLE, INVITATIONS, AI_CONTEXT, USER_CONTEXT };
+module.exports = { DOMAIN, FOUNDED, WORKSPACE, DEPARTMENTS, PEOPLE, EXISTING_ACCOUNTS, INVITATIONS, AI_CONTEXT, USER_CONTEXT };
