@@ -233,8 +233,10 @@ export class ClaudeCliClient {
       tools: [],
       mcpServers: { [MCP_SERVER]: server },
       allowedTools: p.tools.map((t) => `mcp__${MCP_SERVER}__${toMcpToolName(t.name)}`),
-      permissionMode: 'bypassPermissions',
-      allowDangerouslySkipPermissions: true,
+      // Not `bypassPermissions`: Claude Code refuses --dangerously-skip-permissions
+      // when it runs as root, which it does in the container. Nothing needs it:
+      // the built-in tools are off and every PON tool is in `allowedTools`.
+      permissionMode: 'default',
       settingSources: [],
       strictMcpConfig: true,
       persistSession: false,
