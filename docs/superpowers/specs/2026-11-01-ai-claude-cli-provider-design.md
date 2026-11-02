@@ -47,7 +47,9 @@ continues on the Anthropic API exactly as today.
   `prompt` = the session history rendered as a transcript + the new message,
   `tools: []` (no built-in Claude Code tools), one in-process MCP server
   `pon` exposing PON's offered tools (JSON schema → zod), `allowedTools` =
-  those names, `permissionMode: 'bypassPermissions'`, `settingSources: []`,
+  those names, `permissionMode: 'default'` (not bypass: the CLI refuses it as root, and the
+  container runs as root; with built-in tools off and PON's tools allow-listed
+  nothing ever prompts), `settingSources: []`,
   `strictMcpConfig: true`, `persistSession: false`, `maxTurns` = 6 (PON's
   MAX_ITER + 1), abort after `CLAUDE_CLI_TIMEOUT_MS` (default 120 s).
 - Subprocess env is built from scratch: `PATH`, `HOME` (`CLAUDE_CLI_HOME`,

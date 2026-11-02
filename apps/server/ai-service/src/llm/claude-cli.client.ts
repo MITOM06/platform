@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
 import type { Options, SDKMessage } from '@anthropic-ai/claude-agent-sdk';
 import { randomUUID } from 'crypto';
+import { mkdirSync } from 'fs';
 import os from 'os';
 import { z, ZodRawShape, ZodTypeAny } from 'zod';
 
@@ -210,7 +211,21 @@ export class ClaudeCliClient {
     };
   }
 
+  /**
+   * The CLI runs with HOME and cwd at `options.home`. In the container that is
+   * a fresh path (CLAUDE_CLI_HOME): spawning into a missing cwd fails with
+   * ENOENT, which the SDK reports as "binary exists but failed to launch".
+   */
+  private ensureHome(): void {
+    try {
+      mkdirSync(this.options.home, { recursive: true });
+    } catch (err) {
+      throw new ClaudeCliError(`cannot create ${this.options.home}: ${(err as Error).message}`);
+    }
+  }
+
   async runLoop(p: CliLoopParams): Promise<CliLoopResult> {
+    this.ensureHome();
     const sdk = await this.loadSdk();
     const tools = p.tools.map((t) =>
       sdk.tool(toMcpToolName(t.name), t.description, toZodShape(t.input_schema), async (args) => {
@@ -233,8 +248,10 @@ export class ClaudeCliClient {
       tools: [],
       mcpServers: { [MCP_SERVER]: server },
       allowedTools: p.tools.map((t) => `mcp__${MCP_SERVER}__${toMcpToolName(t.name)}`),
-      permissionMode: 'bypassPermissions',
-      allowDangerouslySkipPermissions: true,
+      // Not `bypassPermissions`: Claude Code refuses --dangerously-skip-permissions
+      // when it runs as root, which it does in the container. Nothing needs it:
+      // the built-in tools are off and every PON tool is in `allowedTools`.
+      permissionMode: 'default',
       settingSources: [],
       strictMcpConfig: true,
       persistSession: false,
