@@ -107,6 +107,10 @@ class ConnectionView {
   /// `['view','create','edit','delete']`. Defaults to all four when absent.
   final List<String> actionGroups;
 
+  /// Full authority: permitted writes run at once, without the in-chat
+  /// confirmation card. Off unless the owner switched it on.
+  final bool autoRun;
+
   const ConnectionView({
     required this.id,
     required this.provider,
@@ -116,6 +120,7 @@ class ConnectionView {
     required this.accountLabel,
     required this.lastUsedAt,
     required this.actionGroups,
+    this.autoRun = false,
   });
 
   factory ConnectionView.fromJson(Map<String, dynamic> json) => ConnectionView(
@@ -135,6 +140,7 @@ class ConnectionView {
             : (json['actionGroups'] as List<dynamic>)
                 .map((e) => e as String)
                 .toList(),
+        autoRun: json['autoRun'] == true,
       );
 
   bool get isActive => status == ConnectionStatus.active;
@@ -176,6 +182,9 @@ class ConnectorItem {
   /// connected.
   List<String> get actionGroups =>
       connection?.actionGroups ?? List<String>.from(kAllActionGroups);
+
+  /// Whether the owner gave the AI full authority on the connected connection.
+  bool get autoRun => connection?.autoRun ?? false;
 }
 
 // ── MCP Directory (dynamic connector directory) ─────────────────────────────

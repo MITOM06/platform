@@ -33,6 +33,8 @@ class ConnectorPermissionsSheet extends ConsumerStatefulWidget {
 class _ConnectorPermissionsSheetState
     extends ConsumerState<ConnectorPermissionsSheet> {
   late final Set<String> _selected;
+  // Full authority: permitted writes run at once, no confirmation card.
+  late bool _autoRun;
   bool _saving = false;
   String? _error;
 
@@ -40,6 +42,7 @@ class _ConnectorPermissionsSheetState
   void initState() {
     super.initState();
     _selected = widget.item.actionGroups.toSet();
+    _autoRun = widget.item.autoRun;
   }
 
   void _toggle(String group, bool on) {
@@ -65,7 +68,7 @@ class _ConnectorPermissionsSheetState
           kAllActionGroups.where(_selected.contains).toList();
       await ref
           .read(integrationsProvider.notifier)
-          .updatePermissions(conn.id, ordered);
+          .updatePermissions(conn.id, ordered, autoRun: _autoRun);
       if (!mounted) return;
       final msg = context.l10n.permSaved;
       Navigator.of(context).pop();
@@ -136,6 +139,15 @@ class _ConnectorPermissionsSheetState
               description: l10n.permDeleteDesc,
               value: _selected.contains('delete'),
               onChanged: (v) => _toggle('delete', v),
+            ),
+            const SizedBox(height: 8),
+            PonCard(
+              child: _PermTile(
+                title: l10n.permAutoRun,
+                description: l10n.permAutoRunDesc,
+                value: _autoRun,
+                onChanged: (v) => setState(() => _autoRun = v),
+              ),
             ),
             const SizedBox(height: 16),
             if (_error != null) ...[

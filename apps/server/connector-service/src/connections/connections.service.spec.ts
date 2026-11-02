@@ -30,6 +30,7 @@ describe('ConnectionsService', () => {
         ]),
       ),
       findOne: jest.fn(),
+      findOneAndUpdate: jest.fn(),
       deleteOne: jest.fn().mockResolvedValue({ deletedCount: 1 }),
     };
     adapter = { revoke: jest.fn().mockResolvedValue('revoked') };
@@ -40,8 +41,41 @@ describe('ConnectionsService', () => {
   it('listConnections never returns encryptedTokens and exposes status', async () => {
     const views = await svc.listConnections('u1');
     expect(views).toHaveLength(1);
-    expect(views[0]).toMatchObject({ id: 'c1', provider: 'notion', status: 'expired' });
+    expect(views[0]).toMatchObject({ id: 'c1', provider: 'notion', status: 'expired', autoRun: false });
     expect(JSON.stringify(views)).not.toContain('encryptedTokens');
+  });
+
+  describe('connection permissions', () => {
+    it('getConnectionPermissions defaults to every group and autoRun off', async () => {
+      connModel.findOne.mockReturnValue(lean({ _id: ID, userId: 'u1' }));
+      expect(await svc.getConnectionPermissions('u1', ID)).toEqual({
+        actionGroups: ['view', 'create', 'edit', 'delete'],
+        autoRun: false,
+      });
+    });
+
+    it('updateConnectionPermissions leaves autoRun alone when the client omits it (older clients)', async () => {
+      connModel.findOneAndUpdate.mockReturnValue(lean({ _id: ID, userId: 'u1', actionGroups: ['view'], autoRun: true }));
+      const view = await svc.updateConnectionPermissions('u1', ID, ['view']);
+      expect(connModel.findOneAndUpdate).toHaveBeenCalledWith(
+        { _id: ID, userId: 'u1' },
+        { $set: { actionGroups: ['view'] } },
+        { new: true },
+      );
+      expect(view).toEqual({ actionGroups: ['view'], autoRun: true });
+    });
+
+    it('updateConnectionPermissions sets autoRun only for the owner and audits it', async () => {
+      connModel.findOneAndUpdate.mockReturnValue(lean({ _id: ID, userId: 'u1', actionGroups: ['view', 'create'], autoRun: true }));
+      const view = await svc.updateConnectionPermissions('u1', ID, ['view', 'create'], true);
+      expect(connModel.findOneAndUpdate.mock.calls[0][1]).toEqual({ $set: { actionGroups: ['view', 'create'], autoRun: true } });
+      expect(view).toEqual({ actionGroups: ['view', 'create'], autoRun: true });
+      expect(audit.record).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'connection.permissions.update', meta: { actionGroups: ['view', 'create'], autoRun: true } }),
+      );
+      connModel.findOneAndUpdate.mockReturnValue(lean(null));
+      await expect(svc.updateConnectionPermissions('u2', ID, ['view'], true)).rejects.toBeInstanceOf(NotFoundException);
+    });
   });
 
   it('listConnections returns the caller personal connections PLUS workspace-scoped ones', async () => {

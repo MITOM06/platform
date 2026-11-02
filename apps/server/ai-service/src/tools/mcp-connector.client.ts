@@ -36,6 +36,7 @@ interface ConnectorTool {
   input_schema: ToolDefinition['input_schema'];
   sensitive?: unknown;
   actionGroup?: unknown;
+  autoRun?: unknown;
 }
 
 export interface CallToolOptions {
@@ -160,6 +161,7 @@ export class McpConnectorClient {
         description: t.description,
         input_schema: t.input_schema,
         sensitive: typeof t.sensitive === 'boolean' ? t.sensitive : isSensitiveTool(t.name),
+        autoRun: t.autoRun === true,
       }));
     } catch (err) {
       this.logger.warn(

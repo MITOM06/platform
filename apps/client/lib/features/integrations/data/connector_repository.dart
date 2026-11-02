@@ -60,11 +60,15 @@ class ConnectorRepository {
   /// the persisted set echoed back by the server.
   Future<List<String>> updateConnectionPermissions(
     String connectionId,
-    List<String> actionGroups,
-  ) async {
+    List<String> actionGroups, {
+    bool? autoRun,
+  }) async {
     final response = await _dio.put(
       '/connections/$connectionId/permissions',
-      data: {'actionGroups': actionGroups},
+      data: {
+        'actionGroups': actionGroups,
+        if (autoRun != null) 'autoRun': autoRun,
+      },
     );
     final data = response.data as Map<String, dynamic>;
     return (data['actionGroups'] as List<dynamic>? ?? const [])

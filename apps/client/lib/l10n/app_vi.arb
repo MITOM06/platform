@@ -781,6 +781,8 @@
   "permDeleteDesc": "Xóa vĩnh viễn các mục.",
   "permManage": "Quyền",
   "permSaved": "Đã cập nhật quyền.",
+  "permAutoRun": "Toàn quyền",
+  "permAutoRunDesc": "AI thực hiện ngay các hành động được phép, không hỏi bạn xác nhận từng lần. Chỉ bật với ứng dụng bạn thật sự tin tưởng giao cho AI.",
   "skillsTitle": "Kỹ năng",
   "skillsSubtitle": "Kỹ năng gói gọn một bộ công cụ và cách làm việc. Chỉ bật những gì bạn cần — mỗi kỹ năng cho biết nó yêu cầu gì.",
   "skillsRealActionNote": "Skill thay đổi CÁCH assistant suy nghĩ và trả lời. Để AI thực sự hành động (gửi mail, tạo lịch, ghi vào Notion...), kết nối app tương ứng bên dưới.",

@@ -1084,6 +1084,8 @@
   "permDeleteDesc": "Remove items permanently.",
   "permManage": "Permissions",
   "permSaved": "Permissions updated.",
+  "permAutoRun": "Full authority",
+  "permAutoRunDesc": "The AI performs permitted actions right away, without asking you to confirm each one. Only for apps you fully trust it with.",
   "skillsTitle": "Skills",
   "skillsSubtitle": "Skills bundle a set of tools and a way of working. Turn on only what you need — each one tells you what it requires.",
   "skillsRealActionNote": "Skills change how your assistant thinks and talks. To let it actually act (send email, create events, write to Notion...), connect the matching app below.",

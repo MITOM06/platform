@@ -1,4 +1,4 @@
-import { buildSkillOffNote, buildToolNotes, buildWithheldNote } from './withheld-tools';
+import { buildAutoRunNote, buildSkillOffNote, buildToolNotes, buildWithheldNote } from './withheld-tools';
 
 describe('buildWithheldNote', () => {
   it('is empty when the role withholds nothing', () => {
@@ -51,5 +51,13 @@ describe('buildToolNotes', () => {
     const both = buildToolNotes(['mcp__gmail__send_email'], ['mcp__notion__create_page']);
     expect(both).toContain('role may not run');
     expect(both).toContain('Project keeper skill');
+  });
+
+  it('adds the full-authority note for the providers the owner switched confirmation off on', () => {
+    expect(buildAutoRunNote([])).toBe('');
+    const note = buildAutoRunNote(['gmail', 'gmail', 'calendar']);
+    expect(note).toContain('Full authority granted on: Gmail, Google Calendar.');
+    expect(note).toContain('Do not ask them to confirm first');
+    expect(buildToolNotes([], [], ['gmail'])).toBe(buildAutoRunNote(['gmail']));
   });
 });

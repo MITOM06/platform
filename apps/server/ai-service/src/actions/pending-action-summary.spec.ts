@@ -198,4 +198,9 @@ describe('needsConfirmation', () => {
     expect(needsConfirmation('mcp__x__do_thing', def('mcp__x__do_thing'))).toBe(true);
     expect(needsConfirmation('mcp__x__do_thing', undefined)).toBe(true);
   });
+
+  it('a connection with full authority (autoRun) is never held, even if flagged sensitive', () => {
+    expect(needsConfirmation('mcp__gmail__send_email', { ...def('mcp__gmail__send_email', true), autoRun: true })).toBe(false);
+    expect(needsConfirmation('mcp__gmail__send_email', { ...def('mcp__gmail__send_email', true), autoRun: false })).toBe(true);
+  });
 });

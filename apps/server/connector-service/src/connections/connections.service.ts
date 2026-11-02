@@ -43,6 +43,7 @@ export class ConnectionsService {
       scope: d.scope ?? 'personal',
       scopes: d.scopes ?? [],
       actionGroups: d.actionGroups ?? [...ALL_ACTION_GROUPS],
+      autoRun: d.autoRun === true,
       accountLabel: d.accountLabel,
       lastUsedAt: d.lastUsedAt,
     }));
@@ -56,7 +57,7 @@ export class ConnectionsService {
     if (!isValidObjectId(id)) throw new NotFoundException('Connection not found');
     const conn = await this.connModel.findOne({ _id: id, $or: [{ userId }, { scope: 'workspace' }] }).lean();
     if (!conn) throw new NotFoundException('Connection not found');
-    return { actionGroups: conn.actionGroups ?? [...ALL_ACTION_GROUPS] };
+    return { actionGroups: conn.actionGroups ?? [...ALL_ACTION_GROUPS], autoRun: conn.autoRun === true };
   }
 
   /**
@@ -67,18 +68,22 @@ export class ConnectionsService {
     userId: string,
     id: string,
     actionGroups: string[],
+    autoRun?: boolean,
   ): Promise<ConnectionPermissionsView> {
     if (!isValidObjectId(id)) throw new NotFoundException('Connection not found');
-    const res = await this.connModel.updateOne({ _id: id, userId }, { $set: { actionGroups } });
-    if (!res.matchedCount) throw new NotFoundException('Connection not found');
+    const set: Record<string, unknown> = { actionGroups };
+    if (autoRun !== undefined) set.autoRun = autoRun;
+    const res = await this.connModel.findOneAndUpdate({ _id: id, userId }, { $set: set }, { new: true }).lean();
+    if (!res) throw new NotFoundException('Connection not found');
+    const view = { actionGroups, autoRun: res.autoRun === true };
     await this.audit.record({
       actorId: userId,
       action: 'connection.permissions.update',
       targetType: 'connector',
       targetId: id,
-      meta: { actionGroups },
+      meta: view,
     });
-    return { actionGroups };
+    return view;
   }
 
   /**

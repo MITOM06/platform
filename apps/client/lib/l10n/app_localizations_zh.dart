@@ -2108,6 +2108,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get permSaved => '权限已更新。';
 
   @override
+  String get permAutoRun => '完全授权';
+
+  @override
+  String get permAutoRunDesc => 'AI 会立即执行被允许的操作，不再逐一请求你的确认。仅对你完全信任的应用开启。';
+
+  @override
   String get skillsTitle => '技能';
 
   @override

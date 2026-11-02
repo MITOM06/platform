@@ -43,11 +43,14 @@ export interface ConnectionView {
   lastUsedAt: string | null
   /** Which action classes the AI may perform through this connector. */
   actionGroups: ActionGroup[]
+  /** Full authority: permitted writes run without the in-chat confirmation card. */
+  autoRun: boolean
 }
 
 /** `GET /connections/:id/permissions` + `PUT` response shape. */
 export interface ConnectionPermissions {
   actionGroups: ActionGroup[]
+  autoRun: boolean
 }
 
 /** `GET /oauth/:provider/start?userId=` response. */

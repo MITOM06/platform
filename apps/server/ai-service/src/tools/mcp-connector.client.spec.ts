@@ -83,7 +83,8 @@ describe('McpConnectorClient', () => {
       const schema = { type: 'object', properties: {}, required: [] };
       const tools = [
         { name: 'mcp__gmail__send_email', description: 'Send', input_schema: schema, sensitive: true, actionGroup: 'create', extra: 1 },
-        { name: 'mcp__gmail__search_threads', description: 'Search', input_schema: schema, sensitive: false, actionGroup: 'view' },
+        // Full authority on the connection: connector-service clears `sensitive` and flags `autoRun`.
+        { name: 'mcp__gmail__search_threads', description: 'Search', input_schema: schema, sensitive: false, actionGroup: 'view', autoRun: true },
         // Older connector without the flag → local heuristic, never "not sensitive" for a write.
         { name: 'mcp__notion__create_page', description: 'Create', input_schema: schema },
         { name: 'mcp__notion__search', description: 'Search', input_schema: schema },
@@ -97,8 +98,9 @@ describe('McpConnectorClient', () => {
       const result = await makeClient().getTools('user-1');
 
       expect(result.map((t) => t.sensitive)).toEqual([true, false, true, false]);
+      expect(result.map((t) => t.autoRun)).toEqual([false, true, false, false]);
       for (const t of result) {
-        expect(Object.keys(t).sort()).toEqual(['description', 'input_schema', 'name', 'sensitive']);
+        expect(Object.keys(t).sort()).toEqual(['autoRun', 'description', 'input_schema', 'name', 'sensitive']);
       }
     });
 

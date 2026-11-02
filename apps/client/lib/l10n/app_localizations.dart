@@ -4069,6 +4069,18 @@ abstract class AppLocalizations {
   /// **'Permissions updated.'**
   String get permSaved;
 
+  /// No description provided for @permAutoRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Full authority'**
+  String get permAutoRun;
+
+  /// No description provided for @permAutoRunDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI performs permitted actions right away, without asking you to confirm each one. Only for apps you fully trust it with.'**
+  String get permAutoRunDesc;
+
   /// No description provided for @skillsTitle.
   ///
   /// In en, this message translates to:

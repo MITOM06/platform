@@ -52,6 +52,11 @@ export interface InternalToolDef {
   sensitive: boolean;
   /** Action group the tool needs on the connection: view | create | edit | delete. */
   actionGroup: ActionGroup;
+  /**
+   * The owner gave the AI full authority on this connection (`sensitive` is
+   * then false for its writes): the assistant may act without asking again.
+   */
+  autoRun: boolean;
 }
 
 /** Who is asking: ai-service's tool loop, or a Bot Factory assistant via `/mcp`. */
@@ -73,6 +78,8 @@ interface ToolSource {
   conn: ConnectionLike;
   /** Action groups granted on the connection (custom servers: all). */
   granted: readonly string[];
+  /** Writes run without the in-chat confirmation (owner's choice; custom servers: never). */
+  autoRun: boolean;
   cacheKey: string;
   docId: unknown;
 }
@@ -182,9 +189,12 @@ export class InternalService {
           }
           continue;
         }
-        const sensitive = InternalService.needsConfirmation(verdict.cls);
+        const confirm = InternalService.needsConfirmation(verdict.cls);
         // Bot Factory cannot show PON's confirmation card: read-only tools only.
-        if (sensitive && channel === 'bot') continue;
+        if (confirm && channel === 'bot') continue;
+        // Full authority on the connection: the AI channel runs the write at
+        // once. The role and the action-group grant were already applied above.
+        const sensitive = confirm && !source.autoRun;
         const name = buildToolName(source.provider, t.name);
         if (!name) {
           this.logger.warn(`Dropping a ${source.provider} tool: provider id leaves no room for a valid name`);
@@ -201,6 +211,7 @@ export class InternalService {
           input_schema: t.inputSchema,
           sensitive,
           actionGroup: verdict.cls.group,
+          autoRun: source.autoRun,
         });
       }
     });
@@ -305,13 +316,15 @@ export class InternalService {
     try {
       const out = await this.adapters.forProvider(source.provider).callTool(source.conn, tool.name, input ?? {});
       if (source.kind === 'builtin') await this.touch(source.docId);
-      if (verdict.cls.sensitive) {
+      // Sensitive runs are always audited; with full authority every write is,
+      // since nobody confirmed it in chat.
+      if (verdict.cls.sensitive || (source.autoRun && verdict.cls.group !== 'view')) {
         await this.audit.record({
           actorId: userId,
           action: 'sensitive_skill.run',
           targetType: 'tool',
           targetId: name,
-          meta: { provider, tool: tool.name, channel },
+          meta: { provider, tool: tool.name, channel, autoRun: source.autoRun },
         });
       }
       return { result: out };
@@ -425,6 +438,7 @@ export class InternalService {
         _id: c._id,
       },
       granted: c.actionGroups ?? ALL_ACTION_GROUPS,
+      autoRun: c.autoRun === true,
       cacheKey: `conn:${String(c._id)}:${fingerprint([c.mcpUrl, c.encryptedTokens?.data])}`,
       docId: c._id,
     };
@@ -443,6 +457,7 @@ export class InternalService {
         _id: s._id,
       },
       granted: ALL_ACTION_GROUPS,
+      autoRun: false,
       cacheKey: `custom:${String(s._id)}:${fingerprint([s.url, s.authType, s.encryptedCredential?.data])}`,
       docId: s._id,
     };

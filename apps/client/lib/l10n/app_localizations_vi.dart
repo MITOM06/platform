@@ -2154,6 +2154,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get permSaved => 'Đã cập nhật quyền.';
 
   @override
+  String get permAutoRun => 'Toàn quyền';
+
+  @override
+  String get permAutoRunDesc =>
+      'AI thực hiện ngay các hành động được phép, không hỏi bạn xác nhận từng lần. Chỉ bật với ứng dụng bạn thật sự tin tưởng giao cho AI.';
+
+  @override
   String get skillsTitle => 'Kỹ năng';
 
   @override

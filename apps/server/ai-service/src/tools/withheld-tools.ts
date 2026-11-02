@@ -96,6 +96,30 @@ export function buildSkillOffNote(names: readonly string[]): string {
 }
 
 /** Every per-member tool note for the volatile system block, joined; '' when none applies. */
-export function buildToolNotes(withheld: readonly string[], skillOff: readonly string[]): string {
-  return [buildWithheldNote(withheld), buildSkillOffNote(skillOff)].filter(Boolean).join('\n\n');
+/**
+ * System-prompt note for the connected apps whose owner gave the AI full
+ * authority (`autoRun` on the connection): their writes run at once, with no
+ * confirmation card. Without it the skill instructions ("never send without
+ * explicit confirmation") make the model ask again in chat, which is exactly
+ * what the owner switched off. '' when none.
+ */
+export function buildAutoRunNote(providers: readonly string[]): string {
+  const labels = [...new Set(providers.slice(0, MAX_LISTED).map(providerName))];
+  if (labels.length === 0) return '';
+  return (
+    `Full authority granted on: ${labels.join(', ')}. The user chose to let you act in these apps ` +
+    'without confirming each action, so when they ask for something there, do it right away with the ' +
+    'tools and report what you did. Do not ask them to confirm first and do not describe a draft ' +
+    'instead of acting; still ask when the request itself is unclear (missing recipient, time or content).'
+  );
+}
+
+export function buildToolNotes(
+  withheld: readonly string[],
+  skillOff: readonly string[],
+  autoRunProviders: readonly string[] = [],
+): string {
+  return [buildWithheldNote(withheld), buildSkillOffNote(skillOff), buildAutoRunNote(autoRunProviders)]
+    .filter(Boolean)
+    .join('\n\n');
 }

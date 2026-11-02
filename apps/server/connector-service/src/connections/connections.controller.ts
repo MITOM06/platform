@@ -54,7 +54,7 @@ export class ConnectionsController {
     @Param('id') id: string,
     @Body() dto: UpdateConnectionPermissionsDto,
   ) {
-    return this.service.updateConnectionPermissions(user.sub, id, dto.actionGroups);
+    return this.service.updateConnectionPermissions(user.sub, id, dto.actionGroups, dto.autoRun);
   }
 
   // ── Custom MCP servers ──────────────────────────────────────────────────

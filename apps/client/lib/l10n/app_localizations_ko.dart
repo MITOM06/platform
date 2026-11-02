@@ -2119,6 +2119,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get permSaved => '권한이 업데이트되었습니다.';
 
   @override
+  String get permAutoRun => '전체 권한';
+
+  @override
+  String get permAutoRunDesc =>
+      'AI가 허용된 작업을 매번 확인 없이 바로 실행합니다. 완전히 신뢰하는 앱에만 켜세요.';
+
+  @override
   String get skillsTitle => '스킬';
 
   @override

@@ -12,6 +12,13 @@ export interface ToolDefinition {
    * (`actions/pending-action-policy.ts`). Built-ins leave it unset.
    */
   sensitive?: boolean;
+  /**
+   * INTERNAL — never sent to Anthropic. Connector tools of a connection whose
+   * owner gave the AI full authority: connector-service already reports them
+   * as not sensitive, and the system prompt tells the model it may act without
+   * asking for another confirmation (`tools/withheld-tools.ts`).
+   */
+  autoRun?: boolean;
 }
 
 export interface ToolContext {

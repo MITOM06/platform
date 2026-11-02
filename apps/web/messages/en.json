@@ -1387,6 +1387,8 @@
     "permEditDesc": "Let the AI modify existing items.",
     "permDeleteDesc": "Let the AI delete items.",
     "permSaved": "Permissions updated.",
+    "permAutoRun": "Full authority",
+    "permAutoRunDesc": "The AI performs permitted actions right away, without asking you to confirm each one. Only for apps you fully trust it with.",
     "connectSuccessGeneric": "Connected.",
     "connectFailedNamed": "Couldn't connect {provider}: {reason}",
     "oauthErrAccessDenied": "You declined access.",

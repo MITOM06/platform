@@ -40,11 +40,12 @@ class ConnectionsNotifier extends AsyncNotifier<List<ConnectionView>> {
 
   Future<void> updatePermissions(
     String connectionId,
-    List<String> actionGroups,
-  ) async {
+    List<String> actionGroups, {
+    bool? autoRun,
+  }) async {
     await ref
         .read(connectorRepositoryProvider)
-        .updateConnectionPermissions(connectionId, actionGroups);
+        .updateConnectionPermissions(connectionId, actionGroups, autoRun: autoRun);
     await refresh();
   }
 }
@@ -129,11 +130,12 @@ class IntegrationsNotifier extends AsyncNotifier<List<ConnectorItem>> {
 
   Future<void> updatePermissions(
     String connectionId,
-    List<String> actionGroups,
-  ) =>
+    List<String> actionGroups, {
+    bool? autoRun,
+  }) =>
       ref
           .read(connectionsProvider.notifier)
-          .updatePermissions(connectionId, actionGroups);
+          .updatePermissions(connectionId, actionGroups, autoRun: autoRun);
 
   Future<List<McpToolPreview>> discoverCustom({
     required String url,

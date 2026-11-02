@@ -1387,6 +1387,8 @@
     "permEditDesc": "Cho phép AI sửa các mục hiện có.",
     "permDeleteDesc": "Cho phép AI xóa các mục.",
     "permSaved": "Đã cập nhật quyền.",
+    "permAutoRun": "Toàn quyền",
+    "permAutoRunDesc": "AI thực hiện ngay các hành động được phép, không hỏi bạn xác nhận từng lần. Chỉ bật với ứng dụng bạn thật sự tin tưởng giao cho AI.",
     "connectSuccessGeneric": "Đã kết nối.",
     "connectFailedNamed": "Không kết nối được {provider}: {reason}",
     "oauthErrAccessDenied": "Bạn đã từ chối cấp quyền.",

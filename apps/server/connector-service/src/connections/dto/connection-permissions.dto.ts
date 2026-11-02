@@ -1,4 +1,4 @@
-import { ArrayUnique, IsArray, IsIn } from 'class-validator';
+import { ArrayUnique, IsArray, IsBoolean, IsIn, IsOptional } from 'class-validator';
 
 /**
  * Set the action groups the AI may use on a connection. userId + connection id
@@ -10,8 +10,17 @@ export class UpdateConnectionPermissionsDto {
   @ArrayUnique()
   @IsIn(['view', 'create', 'edit', 'delete'], { each: true })
   actionGroups: string[];
+
+  /**
+   * Full authority: permitted writes run without the confirmation card.
+   * Omitted = unchanged (older clients only send the groups).
+   */
+  @IsOptional()
+  @IsBoolean()
+  autoRun?: boolean;
 }
 
 export interface ConnectionPermissionsView {
   actionGroups: string[];
+  autoRun: boolean;
 }

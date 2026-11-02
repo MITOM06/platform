@@ -19,6 +19,7 @@ import { addTokens, countTokens, zeroTokens } from '../usage/token-counts';
 import { LlmClient } from '../llm/openrouter-client';
 import { LlmClientsService } from '../llm/llm-clients.service';
 import { buildToolNotes } from '../tools/withheld-tools';
+import { providerOf } from '../tools/tool-names';
 import { ClaudeCliClient } from '../llm/claude-cli.client';
 
 const MAX_ITER = 5;
@@ -99,6 +100,7 @@ export class AgenticLoopService {
       skillOffSink: skillOff,
     };
     const defs = await this.toolRegistry.getDefinitions(toolCtx);
+    const autoRunProviders = defs.filter((d) => d.autoRun).map((d) => providerOf(d.name) ?? '');
     // Single chokepoint for the final messages array: normalizeMessages drops a
     // leading assistant turn and merges consecutive same-role PLAIN-TEXT turns
     // (no Anthropic 400); image turns are never merged.
@@ -107,7 +109,7 @@ export class AgenticLoopService {
       { role: 'user', content: userContent },
     ]);
     return {
-      system: this.buildSystemBlocks(ctx, buildToolNotes(withheld, skillOff)),
+      system: this.buildSystemBlocks(ctx, buildToolNotes(withheld, skillOff, autoRunProviders)),
       tools: this.toAnthropicTools(defs),
       offeredTools: new Map(defs.map((d) => [d.name, d])),
       toolCtx,
