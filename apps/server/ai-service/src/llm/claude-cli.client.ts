@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
 import type { Options, SDKMessage } from '@anthropic-ai/claude-agent-sdk';
 import { randomUUID } from 'crypto';
+import { mkdirSync } from 'fs';
 import os from 'os';
 import { z, ZodRawShape, ZodTypeAny } from 'zod';
 
@@ -210,7 +211,21 @@ export class ClaudeCliClient {
     };
   }
 
+  /**
+   * The CLI runs with HOME and cwd at `options.home`. In the container that is
+   * a fresh path (CLAUDE_CLI_HOME): spawning into a missing cwd fails with
+   * ENOENT, which the SDK reports as "binary exists but failed to launch".
+   */
+  private ensureHome(): void {
+    try {
+      mkdirSync(this.options.home, { recursive: true });
+    } catch (err) {
+      throw new ClaudeCliError(`cannot create ${this.options.home}: ${(err as Error).message}`);
+    }
+  }
+
   async runLoop(p: CliLoopParams): Promise<CliLoopResult> {
+    this.ensureHome();
     const sdk = await this.loadSdk();
     const tools = p.tools.map((t) =>
       sdk.tool(toMcpToolName(t.name), t.description, toZodShape(t.input_schema), async (args) => {
