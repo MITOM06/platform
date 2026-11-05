@@ -103,11 +103,13 @@ class AuthNotifier extends _$AuthNotifier {
     await _bootstrapMediaToken();
   }
 
-  /// Starts the media-token lifecycle for the session and waits (max 5s) for
+  /// Starts a clean media-token lifecycle for the session and waits (max 5s) for
   /// the first token, so uploads load right after sign-in. A failure or
   /// timeout never blocks routing and never shows an error.
   Future<void> _bootstrapMediaToken() async {
     final media = ref.read(mediaTokenControllerProvider);
+    // A previous account's token (still "fresh") must never serve this one.
+    media.clear();
     media.activate();
     await media.ensureBounded();
   }

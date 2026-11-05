@@ -127,7 +127,7 @@ void main() {
 
     final done = c.read(authNotifierProvider.notifier).login('a@b.c', 'pw');
     await Future<void>.delayed(Duration.zero);
-    expect(media.events, ['activate', 'ensureBounded']);
+    expect(media.events, ['clear', 'activate', 'ensureBounded']);
     expect(c.read(authNotifierProvider).isLoading, isTrue);
 
     media.gate!.complete();
@@ -143,7 +143,7 @@ void main() {
 
     final future = c.read(authNotifierProvider.future);
     await Future<void>.delayed(Duration.zero);
-    expect(media.events, ['activate', 'ensureBounded']);
+    expect(media.events, ['clear', 'activate', 'ensureBounded']);
     expect(c.read(authNotifierProvider).isLoading, isTrue);
 
     media.gate!.complete();
@@ -159,7 +159,7 @@ void main() {
     final done =
         c.read(authNotifierProvider.notifier).verifyMfa(code: '123456');
     await Future<void>.delayed(Duration.zero);
-    expect(media.events, ['activate', 'ensureBounded']);
+    expect(media.events, ['clear', 'activate', 'ensureBounded']);
     expect(c.read(authNotifierProvider).valueOrNull, isA<AuthMfaPending>());
 
     media.gate!.complete();
@@ -228,5 +228,25 @@ void main() {
     expect(await future, isA<AuthUnauthenticated>());
     expect(c.read(authNotifierProvider).valueOrNull,
         isA<AuthUnauthenticated>());
+  });
+
+  test('new_sign_in_does_not_reuse_previous_users_fresh_token', () async {
+    final fetches = <String>[];
+    final real = MediaTokenController(fetch: () async {
+      fetches.add('fetch');
+      return (
+        token: 'NEW',
+        expiresAt: DateTime.now().add(const Duration(hours: 6)),
+      );
+    });
+    addTearDown(real.clear);
+    // The previous account left a token with hours to go.
+    MediaTokenHolder.set('OLD', DateTime.now().add(const Duration(hours: 6)));
+    final c = _container(repo, real, notifier: _SignedOut.new);
+    await c.read(authNotifierProvider.future);
+
+    await c.read(authNotifierProvider.notifier).login('a@b.c', 'pw');
+    expect(fetches, ['fetch']);
+    expect(MediaTokenHolder.token, 'NEW');
   });
 }

@@ -5,6 +5,8 @@ vi.mock('@/lib/api/chat', () => ({ chatService: { getMediaToken: () => getMediaT
 
 import { ensureMediaToken, getMediaToken, clearMediaToken } from '@/lib/media-token'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { establishSession } from '@/lib/auth/sign-in'
+import type { LoginResponse } from '@/lib/api/auth'
 
 const user = { id: 'u', email: 'a@b.c', displayName: 'A' }
 const H = 3600_000
@@ -91,5 +93,21 @@ describe('media token', () => {
     const n = getMediaTokenApi.mock.calls.length
     await vi.advanceTimersByTimeAsync(15_000)
     expect(getMediaTokenApi).toHaveBeenCalledTimes(n + 1)
+  })
+
+  it('new_sign_in_does_not_reuse_previous_users_fresh_token', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })))
+    try {
+      getMediaTokenApi.mockResolvedValueOnce(resp('OLD', 5))
+      await ensureMediaToken()
+      expect(getMediaToken()).toBe('OLD')
+      getMediaTokenApi.mockResolvedValueOnce(resp('NEW', 5))
+      const next = { id: 'u2', email: 'b@b.c', displayName: 'B' }
+      await establishSession({ accessToken: 'jwt-b', refreshToken: 'r', sid: 's', user: next } as unknown as LoginResponse)
+      expect(getMediaTokenApi).toHaveBeenCalledTimes(2)
+      expect(getMediaToken()).toBe('NEW')
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 })

@@ -1,6 +1,6 @@
 import type { LoginResponse } from '@/lib/api/auth'
 import { useAuthStore } from '@/lib/store/auth.store'
-import { ensureMediaTokenBounded } from '@/lib/media-token'
+import { clearMediaToken, ensureMediaTokenBounded } from '@/lib/media-token'
 import { mustSetPassword, postSignInPath } from '@/lib/auth/set-password-gate'
 import { consumeReturnPath } from '@/lib/auth/return-path'
 
@@ -18,6 +18,8 @@ export async function establishSession(result: LoginResponse): Promise<string> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ accessToken, refreshToken, sid }),
   })
+  // A previous account's token (still "fresh") must never serve this one.
+  clearMediaToken()
   useAuthStore.getState().setAuth(user, accessToken)
   // Same bootstrap as a page reload: have the media token before the shell renders (max 5s).
   await ensureMediaTokenBounded()
