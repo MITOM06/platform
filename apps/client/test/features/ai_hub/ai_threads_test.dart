@@ -213,6 +213,18 @@ void main() {
       expect(ids(), ['a']);
     });
 
+    test('group containing the bot is not an AI thread update', () async {
+      await boot([_thread('a')]);
+      stomp.conv.add(ConversationUpdateEvent(
+          json: {
+            ..._json('g', participants: ['me', 'bob', kAiBotUserId]),
+            'type': 'group',
+          },
+          personal: true));
+      await _pump();
+      expect(ids(), ['a']);
+    });
+
     test('shared update (auto-title) merges the name', () async {
       await boot([_thread('a')]);
       stomp.conv.add(ConversationUpdateEvent(
@@ -269,6 +281,24 @@ void main() {
       await _pump();
       await _pump();
       expect(ids(), ['z', 'a']);
+    });
+  });
+
+  group('isAiConversation', () {
+    test('a group containing the bot is NOT an AI thread', () {
+      final g = ConversationModel.fromJson({
+        ..._json('g', participants: ['me', 'bob', kAiBotUserId]),
+        'type': 'group',
+      });
+      expect(g.isAiConversation, isFalse);
+      expect(isAiConversationJson({'type': 'group', 'participants': [kAiBotUserId]}),
+          isFalse);
+    });
+
+    test('missing type counts as direct', () {
+      final json = _json('x')..remove('type');
+      expect(ConversationModel.fromJson(json).isAiConversation, isTrue);
+      expect(isAiConversationJson(json), isTrue);
     });
   });
 

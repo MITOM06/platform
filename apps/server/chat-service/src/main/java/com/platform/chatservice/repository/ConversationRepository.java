@@ -38,6 +38,15 @@ public interface ConversationRepository extends MongoRepository<Conversation, St
       sort = "{ 'createdAt': 1, '_id': 1 }")
   List<Conversation> findOneOnOneConversations(List<String> participants);
 
+  /**
+   * Two-member non-group conversations, tolerating legacy documents with no {@code type} field
+   * (used for AI threads; mirrors the {@code type != 'group'} rule of the list exclusion).
+   */
+  @Query(
+      value = "{ 'participants': { $all: ?0, $size: 2 }, 'type': { $ne: 'group' } }",
+      sort = "{ 'createdAt': 1, '_id': 1 }")
+  List<Conversation> findTwoMemberNonGroupConversations(List<String> participants);
+
   /** Public group channels visible to all (Task 52). */
   @Query("{ 'publicChannel': true, 'type': 'group' }")
   Page<Conversation> findPublicGroups(Pageable pageable);

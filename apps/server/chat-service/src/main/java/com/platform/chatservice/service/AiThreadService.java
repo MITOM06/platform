@@ -127,7 +127,7 @@ public class AiThreadService {
   }
 
   private List<Conversation> threadsOf(String userId) {
-    return conversationRepository.findOneOnOneConversations(
+    return conversationRepository.findTwoMemberNonGroupConversations(
         List.of(userId, AiConstants.AI_BOT_USER_ID));
   }
 

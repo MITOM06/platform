@@ -65,7 +65,7 @@ class AiThreadServiceTest {
               c.setId("new-" + seq.incrementAndGet());
               return c;
             });
-    when(conversationRepository.findOneOnOneConversations(any())).thenReturn(List.of());
+    when(conversationRepository.findTwoMemberNonGroupConversations(any())).thenReturn(List.of());
   }
 
   private static Conversation thread(String id, Instant lastAt, Instant createdAt) {
@@ -81,7 +81,7 @@ class AiThreadServiceTest {
 
   @Test
   void create_makesNewConversationEvenWhenOneExists() {
-    when(conversationRepository.findOneOnOneConversations(List.of(ME, BOT)))
+    when(conversationRepository.findTwoMemberNonGroupConversations(List.of(ME, BOT)))
         .thenReturn(List.of(thread("old", null, Instant.now())));
 
     ConversationResponse a = service.create(ME);
@@ -99,7 +99,7 @@ class AiThreadServiceTest {
   @Test
   void create_copiesPersonaFromMostRecentThread() {
     Instant now = Instant.now();
-    when(conversationRepository.findOneOnOneConversations(List.of(ME, BOT)))
+    when(conversationRepository.findTwoMemberNonGroupConversations(List.of(ME, BOT)))
         .thenReturn(
             List.of(
                 thread("stale", now.minusSeconds(500), now.minusSeconds(900)),
@@ -132,7 +132,7 @@ class AiThreadServiceTest {
   @Test
   void create_withoutAnyThreadOrPersona_savesNoPersona() {
     service.create(ME);
-    when(conversationRepository.findOneOnOneConversations(List.of(ME, BOT)))
+    when(conversationRepository.findTwoMemberNonGroupConversations(List.of(ME, BOT)))
         .thenReturn(List.of(thread("t", null, Instant.now())));
     service.create(ME); // latest thread has no persona
     verify(personaRepository, never()).save(any(AiPersona.class));
@@ -150,7 +150,7 @@ class AiThreadServiceTest {
     blocked.setBlockedBy(new ArrayList<>(List.of(ME)));
     // The repository query is already scoped to [me, bot] direct chats, so another user's thread
     // and human DMs never come back; assert the exact query used.
-    when(conversationRepository.findOneOnOneConversations(List.of(ME, BOT)))
+    when(conversationRepository.findTwoMemberNonGroupConversations(List.of(ME, BOT)))
         .thenReturn(List.of(older, deleted, noMessages, newest, blocked));
 
     List<ConversationResponse> result = service.list(ME);
@@ -158,7 +158,18 @@ class AiThreadServiceTest {
     assertThat(result)
         .extracting(ConversationResponse::id)
         .containsExactly("newest", "fresh", "older");
-    verify(conversationRepository).findOneOnOneConversations(List.of(ME, BOT));
+    verify(conversationRepository).findTwoMemberNonGroupConversations(List.of(ME, BOT));
+  }
+
+  @Test
+  void list_includesLegacyAiConversationWithNoTypeField() {
+    Instant now = Instant.now();
+    Conversation legacy = thread("legacy", now, now);
+    legacy.setType(null);
+    when(conversationRepository.findTwoMemberNonGroupConversations(List.of(ME, BOT)))
+        .thenReturn(List.of(legacy));
+
+    assertThat(service.list(ME)).extracting(ConversationResponse::id).containsExactly("legacy");
   }
 
   private void updateReturns(Conversation c) {

@@ -83,8 +83,7 @@ class ConversationsNotifier extends _$ConversationsNotifier {
   /// full view) into the list — never replacing it wholesale.
   void _onConversationUpdate(ConversationUpdateEvent event) {
     // AI threads live in aiThreadsProvider only — never (re)insert them here.
-    final parts = event.json['participants'];
-    if (parts is List && parts.contains(kAiBotUserId)) return;
+    if (isAiConversationJson(event.json)) return;
     final current = state.valueOrNull;
     if (current == null) return;
     final result = ConversationListOps.merge(

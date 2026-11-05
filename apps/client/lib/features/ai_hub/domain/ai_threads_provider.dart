@@ -135,7 +135,7 @@ class AiThreadsNotifier extends AsyncNotifier<List<ConversationModel>> {
     final participants = event.json['participants'];
     if (id == null ||
         participants is! List ||
-        !participants.contains(kAiBotUserId)) {
+        !isAiConversationJson(event.json)) {
       return;
     }
     final me = _currentUserId;

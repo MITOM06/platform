@@ -12,6 +12,7 @@ import {
   applyIncomingPreview,
   applyOwnConversationUpdate,
   applySharedConversationUpdate,
+  isAiConversation,
   isConversationMuted,
   markPreviewRecalled,
   mergeSharedConversation,
@@ -213,5 +214,17 @@ describe('AI threads cache', () => {
     const list = qc.getQueryData<Conversation[]>(['ai-threads'])
     expect(list?.map((c) => c.id)).toEqual(['ai1', 'other'])
     expect(list?.[0].lastMessage?.content).toBe('yo')
+  })
+})
+
+describe('isAiConversation', () => {
+  const BOT = 'ai-bot-000000000000000000000001'
+  it('is true for a direct chat with the bot, and for a missing type', () => {
+    expect(isAiConversation({ participants: [ME, BOT], type: 'direct' })).toBe(true)
+    expect(isAiConversation({ participants: [ME, BOT] })).toBe(true)
+  })
+  it('is false for a group containing the bot, or without the bot', () => {
+    expect(isAiConversation({ participants: [ME, 'bob', BOT], type: 'group' })).toBe(false)
+    expect(isAiConversation({ participants: [ME, 'bob'], type: 'direct' })).toBe(false)
   })
 })

@@ -44,6 +44,8 @@ class MessageSendTest {
   @Mock private ConversationCacheService conversationCacheService;
   @Mock private UploadRefs uploadRefs;
 
+  @Mock private AiThreadService aiThreadService;
+
   private MessageService messageService;
 
   private static final String SENDER_ID = "user-001";
@@ -76,7 +78,7 @@ class MessageSendTest {
             aiMessageService,
             conversationCacheService,
             uploadRefs,
-            org.mockito.Mockito.mock(AiThreadService.class));
+            aiThreadService);
 
     conversation =
         Conversation.builder().id(CONV_ID).participants(List.of(SENDER_ID, OTHER_ID)).build();
@@ -152,6 +154,27 @@ class MessageSendTest {
             any(Query.class),
             argThat((Update u) -> setValue(u, "status") == null),
             eq(Conversation.class));
+  }
+
+  @Test
+  void sendMessage_SucceedsWhenAutoTitleThrows() {
+    Conversation aiThread =
+        Conversation.builder()
+            .id(CONV_ID)
+            .type(Conversation.TYPE_DIRECT)
+            .participants(List.of(SENDER_ID, AiConstants.AI_BOT_USER_ID))
+            .build();
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(aiThread));
+    when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
+    org.mockito.Mockito.doThrow(new IllegalStateException("boom"))
+        .when(aiThreadService)
+        .maybeAutoTitle(any(), any());
+
+    MessageResponse response =
+        messageService.sendMessage(SENDER_ID, new SendMessageRequest(CONV_ID, "Hello", "text"));
+
+    assertThat(response.id()).isEqualTo(MSG_ID);
+    verify(aiThreadService).maybeAutoTitle(any(), any());
   }
 
   @Test

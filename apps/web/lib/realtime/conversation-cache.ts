@@ -29,9 +29,14 @@ const LEGACY_BLOCKED_KEY = ['blocked-conversations'] as const
 /** The caller's AI threads (a plain `Conversation[]`, newest activity first). */
 export const AI_THREADS_KEY = ['ai-threads'] as const
 
-/** An AI conversation (thread): the AI bot is a participant. */
-export function isAiConversation(c: Pick<Conversation, 'participants'> | undefined): boolean {
-  return Array.isArray(c?.participants) && c.participants.includes(AI_BOT_ID)
+/**
+ * An AI conversation (thread): the AI bot is a participant of a non-group chat
+ * (a missing `type` counts as direct) — matches the server's `isAiThread`.
+ */
+export function isAiConversation(
+  c: (Pick<Conversation, 'participants'> & Partial<Pick<Conversation, 'type'>>) | undefined,
+): boolean {
+  return Array.isArray(c?.participants) && c.participants.includes(AI_BOT_ID) && c?.type !== 'group'
 }
 
 const LIST_KEYS = [CONVERSATIONS_KEY, ARCHIVED_CONVERSATIONS_KEY, BLOCKED_CONVERSATIONS_KEY] as const
