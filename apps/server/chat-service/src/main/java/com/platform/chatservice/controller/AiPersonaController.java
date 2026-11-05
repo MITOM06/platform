@@ -7,6 +7,7 @@ import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.repository.AiPersonaRepository;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.service.AiConstants;
+import com.platform.chatservice.service.upload.UploadRefs;
 import jakarta.validation.Valid;
 import java.security.Principal;
 import java.time.Instant;
@@ -23,6 +24,7 @@ public class AiPersonaController {
 
   private final AiPersonaRepository aiPersonaRepository;
   private final ConversationRepository conversationRepository;
+  private final UploadRefs uploadRefs;
 
   @GetMapping
   public ResponseEntity<AiPersonaResponse> getPersona(
@@ -77,6 +79,9 @@ public class AiPersonaController {
     persona.setUpdatedAt(Instant.now());
 
     AiPersona saved = aiPersonaRepository.save(persona);
+    if (request.avatarUrl() != null) {
+      uploadRefs.attachToConversation(request.avatarUrl(), conversationId, userId);
+    }
     return ResponseEntity.ok(toResponse(saved));
   }
 

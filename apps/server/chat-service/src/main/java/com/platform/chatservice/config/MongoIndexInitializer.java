@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.index.IndexResolver;
@@ -67,6 +69,16 @@ public class MongoIndexInitializer {
               ex.getMessage());
         }
       }
+    }
+    // GridFS lookups by public id (/api/uploads/{id}) filter on metadata.fileId.
+    try {
+      mongoTemplate
+          .indexOps("fs.files")
+          .ensureIndex(new Index().on("metadata.fileId", Sort.Direction.ASC));
+      created++;
+    } catch (RuntimeException ex) {
+      skipped++;
+      log.warn("Skipped index on fs.files (metadata.fileId): {}", ex.getMessage());
     }
     log.info("Mongo index initialization complete: {} ensured, {} skipped", created, skipped);
   }

@@ -26,8 +26,6 @@ Future<void> openExternally(String rawUrl) async {
 /// Opens the media file externally with a `download=true` hint so the browser
 /// saves it rather than rendering it inline.
 Future<void> downloadMedia(String rawUrl) async {
-  final base = absoluteMediaUrl(rawUrl);
-  final sep = base.contains('?') ? '&' : '?';
-  final uri = Uri.parse('$base${sep}download=true');
+  final uri = Uri.parse(downloadMediaUrl(rawUrl));
   await launchUrl(uri, mode: LaunchMode.externalApplication);
 }

@@ -16,6 +16,7 @@ import 'package:platform_client/features/chat/domain/chat_provider.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
 
 import 'mfa_test_data.dart';
+import '../../helpers/noop_media_token.dart';
 
 const _owner = UserModel(id: 'u1', email: 'olga@acme.com', displayName: 'Olga');
 
@@ -168,6 +169,7 @@ Future<_Harness> _pump(
   final fake = repo ?? _FakeRepo();
   final container = ProviderContainer(overrides: [
     authRepositoryProvider.overrideWithValue(fake),
+    noopMediaTokenOverride,
     authNotifierProvider.overrideWith(() => _TestAuth(initial)),
     userProfileProvider.overrideWith((ref, id) async => _owner),
   ]);

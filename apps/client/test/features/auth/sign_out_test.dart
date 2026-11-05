@@ -7,6 +7,7 @@ import 'package:platform_client/features/auth/data/auth_repository.dart';
 import 'package:platform_client/features/auth/domain/auth_provider.dart';
 import 'package:platform_client/features/auth/domain/auth_state.dart';
 import 'package:platform_client/features/chat/data/stomp_service.dart';
+import '../../helpers/noop_media_token.dart';
 
 /// W10 parity: "Sign out" (the forced set-password screen calls
 /// `AuthNotifier.logout`, see set_password_test) is a real logout — the
@@ -92,6 +93,7 @@ void main() {
     final stomp = _RecordingStomp();
     final container = ProviderContainer(overrides: [
       authRepositoryProvider.overrideWithValue(repo),
+      noopMediaTokenOverride,
       authNotifierProvider.overrideWith(_SignedIn.new),
       stompServiceProvider.overrideWith(() => stomp),
     ]);

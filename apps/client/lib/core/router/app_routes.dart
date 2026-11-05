@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import '../media/media_token_remount.dart';
 import '../../features/auth/ui/login_screen.dart';
 import '../../features/auth/ui/mfa_screen.dart';
 import '../../features/auth/ui/accept_invite_screen.dart';
@@ -126,14 +127,20 @@ List<RouteBase> buildAppRoutes() {
       path: '/',
       name: 'conversations',
       pageBuilder: (context, state) =>
-          slidePage(state, const ResponsiveHomeLayout()),
+          slidePage(
+            state,
+            const MediaTokenRemount(child: ResponsiveHomeLayout()),
+          ),
       routes: [
         GoRoute(
           path: 'chat/:id',
           name: 'chat',
           pageBuilder: (context, state) {
             final id = state.pathParameters['id']!;
-            return slidePage(state, ChatScreen(conversationId: id));
+            return slidePage(
+              state,
+              MediaTokenRemount(child: ChatScreen(conversationId: id)),
+            );
           },
         ),
       ],

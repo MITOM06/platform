@@ -15,6 +15,7 @@ import 'package:platform_client/features/settings/utils/two_factor_error.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
 
 import '../auth/mfa_test_data.dart';
+import '../../helpers/noop_media_token.dart';
 
 /// Contract 15: 2FA is optional for Members. Settings → Security lets them
 /// turn it on (in place: QR / key → code → backup codes once) and off (current
@@ -184,6 +185,7 @@ Future<_Harness> _pump(WidgetTester tester, UserModel user,
   await tester.pumpWidget(ProviderScope(
     overrides: [
       authRepositoryProvider.overrideWithValue(repo),
+      noopMediaTokenOverride,
       authNotifierProvider.overrideWith(() => _TestAuth(user)),
       userProfileProvider.overrideWith((ref, id) async => user),
     ],

@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/api/dio_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/media_url.dart';
 
 /// Circular avatar for a conversation or user. Shows a remote image when
 /// [avatarUrl] is set, otherwise a group icon (groups) or initial letter.
@@ -31,7 +31,8 @@ class ConversationAvatar extends StatelessWidget {
     if (hasImage) {
       inner = ClipOval(
         child: CachedNetworkImage(
-          imageUrl: _absoluteUrl(avatarUrl!),
+          imageUrl: absoluteMediaUrl(avatarUrl!),
+          cacheKey: mediaCacheKey(absoluteMediaUrl(avatarUrl!)),
           width: size,
           height: size,
           fit: BoxFit.cover,
@@ -82,12 +83,6 @@ class ConversationAvatar extends StatelessWidget {
           ),
       ],
     );
-  }
-
-  /// GridFS upload URLs are returned relative to the chat-service root.
-  String _absoluteUrl(String url) {
-    if (url.startsWith('http')) return url;
-    return '${DioClient.chatBaseUrl}$url';
   }
 }
 

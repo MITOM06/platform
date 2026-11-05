@@ -104,6 +104,10 @@ app:
     api-secret: ${LIVEKIT_API_SECRET:}
     # mesh (P2P, default) | sfu (through LiveKit). Rollback = set back to mesh.
     call-transport: ${CALL_TRANSPORT:mesh}
+  uploads:
+    # true = GET /api/uploads/{id} needs a media token (?t=), a JWT or X-Internal-Key.
+    require-auth: ${UPLOADS_REQUIRE_AUTH:false}
+    token-ttl: ${UPLOADS_TOKEN_TTL:PT24H}
   connector:
     # Internal connector-service (:3003) — issues/revokes the MCP session token a member's
     # Bot Factory assistant authenticates with. Leave blank to disable BotFather Zone provisioning.
