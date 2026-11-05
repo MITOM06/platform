@@ -113,6 +113,38 @@ class MeetingServiceSettingsPatchTest {
   }
 
   @Test
+  void patchTurningAiNotesOnMarksItUsed() {
+    Meeting on =
+        Meeting.builder()
+            .id("m1")
+            .hostId("host")
+            .settings(Meeting.Settings.builder().aiNotes(true).build())
+            .build();
+    when(store.update(eq("m1"), any())).thenReturn(Optional.of(on));
+
+    service.update(host, "m1", patch(new MeetingSettingsDto(null, null, null, null, null, true)));
+
+    assertThat(set()).containsExactlyEntriesOf(Map.of("settings.aiNotes", true));
+    verify(store).markAiNotesUsed("m1");
+  }
+
+  @Test
+  void patchTurningAiNotesOffDoesNotMarkIt() {
+    m.setSettings(Meeting.Settings.builder().aiNotes(true).build());
+    Meeting off =
+        Meeting.builder()
+            .id("m1")
+            .hostId("host")
+            .settings(Meeting.Settings.builder().aiNotes(false).build())
+            .build();
+    when(store.update(eq("m1"), any())).thenReturn(Optional.of(off));
+
+    service.update(host, "m1", patch(new MeetingSettingsDto(null, null, null, null, null, false)));
+
+    verify(store, never()).markAiNotesUsed(any());
+  }
+
+  @Test
   void aMeetingStoredWithoutSettingsGetsTheWholeObject() {
     m.setSettings(null);
     when(store.update(eq("m1"), any())).thenReturn(Optional.of(m));
