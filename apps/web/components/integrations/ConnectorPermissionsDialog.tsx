@@ -46,6 +46,8 @@ export function ConnectorPermissionsDialog({
   const [selected, setSelected] = useState<Set<ActionGroup>>(
     () => new Set(connection.actionGroups),
   )
+  // Full authority: permitted writes run at once, no confirmation card.
+  const [autoRun, setAutoRun] = useState(connection.autoRun === true)
 
   const toggle = (group: ActionGroup, on: boolean) => {
     setSelected((prev) => {
@@ -58,7 +60,7 @@ export function ConnectorPermissionsDialog({
 
   const handleSave = () => {
     updatePermissions.mutate(
-      { id: connection.id, actionGroups: ACTION_GROUPS.filter((g) => selected.has(g)) },
+      { id: connection.id, actionGroups: ACTION_GROUPS.filter((g) => selected.has(g)), autoRun },
       { onSuccess: () => onOpenChange(false) },
     )
   }
@@ -113,6 +115,19 @@ export function ConnectorPermissionsDialog({
               </div>
             )
           })}
+          <div className="flex items-start justify-between gap-4 rounded-lg border border-primary/40 bg-primary/5 px-3.5 py-3">
+            <div className="space-y-0.5">
+              <Label htmlFor="perm-auto-run" className="text-sm font-medium">
+                {t('permAutoRun')}
+              </Label>
+              <p className="text-xs text-muted-foreground">{t('permAutoRunDesc')}</p>
+            </div>
+            <Switch
+              id="perm-auto-run"
+              checked={autoRun}
+              onCheckedChange={setAutoRun}
+            />
+          </div>
       </div>
     </ResponsiveModal>
   )

@@ -2189,6 +2189,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get permSaved => 'Autorisations mises à jour.';
 
   @override
+  String get permAutoRun => 'Pleins pouvoirs';
+
+  @override
+  String get permAutoRunDesc =>
+      'L\'IA exécute immédiatement les actions autorisées, sans vous demander de confirmer à chaque fois. Uniquement pour les applications auxquelles vous faites entièrement confiance.';
+
+  @override
   String get skillsTitle => 'Compétences';
 
   @override

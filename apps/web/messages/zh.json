@@ -1387,6 +1387,8 @@
     "permEditDesc": "允许 AI 修改现有项目。",
     "permDeleteDesc": "允许 AI 删除项目。",
     "permSaved": "权限已更新。",
+    "permAutoRun": "完全授权",
+    "permAutoRunDesc": "AI 会立即执行被允许的操作，不再逐一请求你的确认。仅对你完全信任的应用开启。",
     "connectSuccessGeneric": "已连接。",
     "connectFailedNamed": "无法连接 {provider}：{reason}",
     "oauthErrAccessDenied": "您拒绝了授权。",

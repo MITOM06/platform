@@ -85,10 +85,12 @@ export function useConnectorActions() {
     mutationFn: ({
       id,
       actionGroups,
+      autoRun,
     }: {
       id: string
       actionGroups: ActionGroup[]
-    }) => connectorService.updateConnectionPermissions(id, actionGroups),
+      autoRun: boolean
+    }) => connectorService.updateConnectionPermissions(id, actionGroups, autoRun),
     onSuccess: () => {
       toast.success(t('permSaved'))
       invalidateConnections()
