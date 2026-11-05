@@ -41,6 +41,11 @@ class SpeechCapture {
     }
     if (token != _token) return false; // stopped / restarted meanwhile
     if (!available) return false;
+    // SpeechToText is a process-wide singleton and initialize() only binds
+    // the listeners on its FIRST success: rebind so the latest capture (group
+    // call vs meeting) gets the 'done' restarts and errors.
+    _speech.statusListener = _onStatus;
+    _speech.errorListener = _onError;
     _running = true;
     await _listen();
     return true;
