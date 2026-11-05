@@ -7,6 +7,7 @@ export * from './mongo/friendship.schema';
 export * from './mongo/user-block.schema';
 export * from './rbac/capabilities';
 export * from './rbac/preset-roles';
+export * from './rbac/context-visibility';
 export * from './auth/auth.index';
 export * from './mongo/workspace.schema';
 export * from './mongo/ai-digest-log.schema';

@@ -190,7 +190,10 @@ export default registerAs('config', () => ({
     // Per-user TTL (ms) for the cached role-aware org context read (P2a).
     cacheTtlMs: Number(process.env.AI_CONTEXT_CACHE_TTL_MS ?? 60000),
     // Hard cap (chars) on the injected "About the user & their organization" block.
-    blockMaxChars: Number(process.env.AI_CONTEXT_BLOCK_MAX_CHARS ?? 2000),
+    // 6000 ≈ 1.5–2k tokens: room for the company notes AND the department notes
+    // (2000 let a normal company section crowd every department note out), and
+    // for Owner/Admin, who now also get the other departments' notes.
+    blockMaxChars: Number(process.env.AI_CONTEXT_BLOCK_MAX_CHARS ?? 6000),
   },
   ai: {
     // Chat replies: 'api' (Anthropic API, default) or 'claude-cli' — the owner's

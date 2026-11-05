@@ -3,6 +3,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Reminder, ReminderSchema } from './reminder.schema';
 import { SearchMessagesTool } from './search-messages.tool';
 import { GetUserInfoTool } from './get-user-info.tool';
+import { GetDepartmentContextTool } from './get-department-context.tool';
+import { AiContextModule } from '../ai-context/ai-context.module';
 import { SearchDirectoryTool } from './search-directory.tool';
 import { SearchKnowledgeBaseTool } from './search-knowledge-base.tool';
 import { SummarizeConversationTool } from './summarize-conversation.tool';
@@ -24,10 +26,11 @@ const reminderFeature = MongooseModule.forFeature([
 ]) as unknown as DynamicModule;
 
 @Module({
-  imports: [reminderFeature, KbModule, MemoryModule, RedisModule],
+  imports: [reminderFeature, KbModule, MemoryModule, RedisModule, AiContextModule],
   providers: [
     SearchMessagesTool,
     GetUserInfoTool,
+    GetDepartmentContextTool,
     SearchDirectoryTool,
     SearchKnowledgeBaseTool,
     SummarizeConversationTool,

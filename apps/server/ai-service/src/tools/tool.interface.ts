@@ -27,6 +27,10 @@ export interface ToolContext {
   displayName: string;
   /** Owning department id (P6 group bot); scopes KB retrieval when present. */
   departmentId?: string;
+  /** Caller capabilities (JWT `perms`) — gates `get_department_context`. Absent ⇒ none. */
+  perms?: string[];
+  /** Caller department ids (JWT `depts`) — gates `get_department_context`. Absent ⇒ none. */
+  departmentIds?: string[];
   /**
    * The reply-wide, ordered citation list the agentic loop creates — seeded with
    * the KB sources already numbered in the system prompt. Tools that return
