@@ -59,8 +59,11 @@ export function AiThreadList() {
     const next = list[idx + 1] ?? list[idx - 1]
     try {
       await chatService.deleteConversation(target.id)
+      // Navigate away BEFORE dropping caches: the layout and conversation page still observe
+      // the open id, so dropping first flashes the normal list / refetches a deleted id (404).
+      // replace (not push) so Back never returns to the deleted thread.
+      if (openId === target.id) router.replace(next ? `/conversations/${next.id}` : '/ai-hub')
       dropConversation(queryClient, target.id)
-      if (openId === target.id) router.push(next ? `/conversations/${next.id}` : '/ai-hub')
     } catch {
       toast.error(t('deleteFailed'))
     }

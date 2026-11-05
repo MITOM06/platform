@@ -109,14 +109,13 @@ export function ConversationHeader({
   const nickname = useNickname(conversationId, otherUserId)
   const { data: extBotAssistant } = useAssistant()
 
-  const displayName =
-    nickname ??
-    conversation?.name ??
-    (isAI
-      ? tThreads('untitled')
-      : isExtBot
+  const displayName = isAI
+    ? conversation?.name?.trim() || tThreads('untitled')
+    : (nickname ??
+      conversation?.name ??
+      (isExtBot
         ? (extBotAssistant?.name ?? t('aiAssistant'))
-        : (otherUser?.displayName ?? t('conversationDefault')))
+        : (otherUser?.displayName ?? t('conversationDefault'))))
   const avatarUrl = conversation?.avatarUrl ?? otherUser?.avatarUrl
   const isTyping = typingUserIds.length > 0
   const pinnedMessages = conversation?.pinnedMessages ?? []

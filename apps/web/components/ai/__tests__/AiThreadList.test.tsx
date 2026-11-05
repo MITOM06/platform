@@ -5,11 +5,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import axios from 'axios'
 import { AiThreadList } from '@/components/ai/AiThreadList'
 import type { Conversation } from '@/lib/api/types'
+import * as cache from '@/lib/realtime/conversation-cache'
 
 const push = vi.fn()
+const replace = vi.fn()
+const order: string[] = []
 let pathname = '/conversations/t1'
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push }),
+  useRouter: () => ({ push, replace }),
   usePathname: () => pathname,
 }))
 vi.mock('next/link', () => ({
@@ -60,6 +63,7 @@ function renderList() {
 describe('AiThreadList', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    order.length = 0
     pathname = '/conversations/t1'
     threadsState.data = [thread('t1', 'Báo cáo Q3'), thread('t2', null)]
   })
@@ -125,7 +129,8 @@ describe('AiThreadList', () => {
     expect(deleteConversation).not.toHaveBeenCalled()
     fireEvent.click(screen.getByText(/^confirm:/))
     await waitFor(() => expect(deleteConversation).toHaveBeenCalledWith('t1'))
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/conversations/t2'))
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/conversations/t2'))
+    expect(push).not.toHaveBeenCalled()
   })
 
   it('goes to /ai-hub when the last open thread is deleted', async () => {
@@ -134,7 +139,18 @@ describe('AiThreadList', () => {
     renderList()
     fireEvent.click(screen.getByLabelText('delete'))
     fireEvent.click(screen.getByText(/^confirm:/))
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/ai-hub'))
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/ai-hub'))
+  })
+
+  it('navigates away before dropping the deleted thread from the cache', async () => {
+    deleteConversation.mockResolvedValue({})
+    replace.mockImplementation(() => order.push('replace'))
+    const spy = vi.spyOn(cache, 'dropConversation').mockImplementation(() => { order.push('drop') })
+    renderList()
+    fireEvent.click(screen.getAllByLabelText('delete')[0])
+    fireEvent.click(screen.getByText(/^confirm:/))
+    await waitFor(() => expect(order).toEqual(['replace', 'drop']))
+    spy.mockRestore()
   })
 
   it('does not navigate when a non-open thread is deleted', async () => {
@@ -144,5 +160,6 @@ describe('AiThreadList', () => {
     fireEvent.click(screen.getByText(/^confirm:/))
     await waitFor(() => expect(deleteConversation).toHaveBeenCalledWith('t2'))
     expect(push).not.toHaveBeenCalled()
+    expect(replace).not.toHaveBeenCalled()
   })
 })
