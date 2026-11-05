@@ -4994,6 +4994,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get meetingSettingLockedDesc => '招待された人だけが参加できます';
 
   @override
+  String get meetingSettingAiNotes => 'AI 議事メモ';
+
+  @override
+  String get meetingSettingAiNotesDesc =>
+      'AI が発言、チャット、メモ、ファイル、共有画面を記録し、会議後に要約します。ルーム内の全員に通知されます。';
+
+  @override
+  String get meetingAiNotesActive => 'AI がメモを取っています';
+
+  @override
+  String get meetingAiNotesStarted => 'AI が会議のメモを開始しました';
+
+  @override
+  String get meetingAiNotesPrejoin => 'この会議では AI がメモを取ります';
+
+  @override
   String get meetingSubmitCreate => '予約';
 
   @override

@@ -15,6 +15,8 @@ const kSwitchActions = {
   HostAction.waitingRoomOff,
   HostAction.attendeeScreenShareOn,
   HostAction.attendeeScreenShareOff,
+  HostAction.aiNotesOn,
+  HostAction.aiNotesOff,
 };
 
 /// `/app/meet.host` body — `targetId` only for the person actions.

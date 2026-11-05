@@ -9289,6 +9289,36 @@ abstract class AppLocalizations {
   /// **'Only invited people can join'**
   String get meetingSettingLockedDesc;
 
+  /// No description provided for @meetingSettingAiNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'AI meeting notes'**
+  String get meetingSettingAiNotes;
+
+  /// No description provided for @meetingSettingAiNotesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'AI captures speech, chat, notes, files and shared screens to summarize after the meeting. Everyone in the room is notified.'**
+  String get meetingSettingAiNotesDesc;
+
+  /// No description provided for @meetingAiNotesActive.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is taking notes'**
+  String get meetingAiNotesActive;
+
+  /// No description provided for @meetingAiNotesStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'AI started taking notes for this meeting'**
+  String get meetingAiNotesStarted;
+
+  /// No description provided for @meetingAiNotesPrejoin.
+  ///
+  /// In en, this message translates to:
+  /// **'This meeting has AI notes'**
+  String get meetingAiNotesPrejoin;
+
   /// No description provided for @meetingSubmitCreate.
   ///
   /// In en, this message translates to:

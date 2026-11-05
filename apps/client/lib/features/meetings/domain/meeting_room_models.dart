@@ -225,6 +225,8 @@ enum HostAction {
   waitingRoomOff('WAITING_ROOM_OFF'),
   attendeeScreenShareOn('ATTENDEE_SCREEN_SHARE_ON'),
   attendeeScreenShareOff('ATTENDEE_SCREEN_SHARE_OFF'),
+  aiNotesOn('AI_NOTES_ON'),
+  aiNotesOff('AI_NOTES_OFF'),
   makeCohost('MAKE_COHOST', targeted: true),
   revokeCohost('REVOKE_COHOST', targeted: true);
 

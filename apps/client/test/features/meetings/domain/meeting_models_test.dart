@@ -9,7 +9,7 @@ Map<String, dynamic> meetingJson([Map<String, dynamic> over = const {}]) => {
       'scheduledStart': '2026-10-08T02:00:00Z', 'scheduledEnd': '2026-10-08T03:00:00Z',
       'status': 'SCHEDULED',
       'settings': {'waitingRoom': true, 'muteOnEntry': false, 'allowAttendeeScreenShare': true,
-          'attendeesCanEditNotes': true, 'locked': false},
+          'attendeesCanEditNotes': true, 'locked': false, 'aiNotes': false},
       'attendance': [{'userId': 'h1', 'role': 'host', 'joinedAt': '2026-10-08T02:00:05Z'}],
       'viewerRole': 'host', 'createdAt': '2026-10-07T09:00:00Z',
       ...over,
@@ -56,16 +56,29 @@ void main() {
         'title': 'Sprint review', 'inviteeIds': ['a', 'b'],
         'scheduledStart': '2026-10-09T07:00:00.000Z', 'scheduledEnd': '2026-10-09T08:00:00.000Z',
         'settings': {'waitingRoom': true, 'muteOnEntry': false, 'allowAttendeeScreenShare': true,
-            'attendeesCanEditNotes': true, 'locked': false},
+            'attendeesCanEditNotes': true, 'locked': false, 'aiNotes': false},
       });
       expect(const MeetingInput().toJson(), isEmpty);
       expect(const MeetingInput(title: '', description: '').toJson(), {'title': '', 'description': ''});
+    });
+
+    test('settings without aiNotes parses with aiNotes=false', () {
+      final base = {'waitingRoom': true, 'muteOnEntry': false, 'allowAttendeeScreenShare': true,
+          'attendeesCanEditNotes': true, 'locked': false};
+      expect(MeetingSettings.fromJson(base)!.aiNotes, isFalse);
+      expect(MeetingSettings.fromJson({...base, 'aiNotes': true})!.aiNotes, isTrue);
+      expect(MeetingSettings.fromJson({'muteOnEntry': true, 'aiNotes': true}), isNull);
+      final m = Meeting.fromJson(meetingJson({'aiNotesEverEnabled': true}))!;
+      expect(m.aiNotesEverEnabled, isTrue);
+      expect(Meeting.fromJson(meetingJson())!.aiNotesEverEnabled, isFalse);
     });
 
     test('settings diff keeps only flipped switches', () {
       final next = MeetingSettings.defaults.copyWith(muteOnEntry: true);
       expect(next.changedFrom(MeetingSettings.defaults), {'muteOnEntry': true});
       expect(MeetingSettings.defaults.changedFrom(MeetingSettings.defaults), isEmpty);
+      expect(MeetingSettings.defaults.copyWith(aiNotes: true).changedFrom(MeetingSettings.defaults),
+          {'aiNotes': true});
     });
   });
 
@@ -78,7 +91,7 @@ void main() {
     });
 
     test('host actions round-trip their wire names and know which need a target', () {
-      expect(HostAction.values, hasLength(13));
+      expect(HostAction.values, hasLength(15));
       for (final a in HostAction.values) {
         expect(HostAction.fromWire(a.wire), a);
       }

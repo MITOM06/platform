@@ -5146,6 +5146,22 @@ class AppLocalizationsVi extends AppLocalizations {
   String get meetingSettingLockedDesc => 'Chỉ người được mời mới vào được';
 
   @override
+  String get meetingSettingAiNotes => 'AI ghi chú cuộc họp';
+
+  @override
+  String get meetingSettingAiNotesDesc =>
+      'AI ghi nhận lời nói, chat, ghi chú, file và màn hình được chia sẻ để tóm tắt sau buổi họp. Mọi người trong phòng đều được báo.';
+
+  @override
+  String get meetingAiNotesActive => 'AI đang ghi chú';
+
+  @override
+  String get meetingAiNotesStarted => 'AI bắt đầu ghi chú cuộc họp';
+
+  @override
+  String get meetingAiNotesPrejoin => 'Cuộc họp này có AI ghi chú';
+
+  @override
   String get meetingSubmitCreate => 'Lên lịch';
 
   @override

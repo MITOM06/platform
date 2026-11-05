@@ -4997,6 +4997,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get meetingSettingLockedDesc => '초대받은 사람만 참여할 수 있습니다';
 
   @override
+  String get meetingSettingAiNotes => 'AI 회의 노트';
+
+  @override
+  String get meetingSettingAiNotesDesc =>
+      'AI가 발언, 채팅, 노트, 파일, 공유 화면을 기록해 회의 후 요약합니다. 방에 있는 모든 사람에게 알림이 갑니다.';
+
+  @override
+  String get meetingAiNotesActive => 'AI가 노트 작성 중';
+
+  @override
+  String get meetingAiNotesStarted => 'AI가 회의 노트 작성을 시작했습니다';
+
+  @override
+  String get meetingAiNotesPrejoin => '이 회의는 AI 노트를 사용합니다';
+
+  @override
   String get meetingSubmitCreate => '예약';
 
   @override

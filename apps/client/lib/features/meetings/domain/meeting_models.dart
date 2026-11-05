@@ -132,6 +132,7 @@ class Meeting {
     this.removedIds = const [],
     required this.viewerRole,
     required this.createdAt,
+    this.aiNotesEverEnabled = false,
     this.startedAt,
     this.endedAt,
     this.cancelledAt,
@@ -155,6 +156,9 @@ class Meeting {
   final List<String> removedIds;
   final MeetingViewerRole viewerRole;
   final DateTime createdAt;
+
+  /// Sticky: AI notes were on at some point (gates the recap UI).
+  final bool aiNotesEverEnabled;
   final DateTime? startedAt;
   final DateTime? endedAt;
   final DateTime? cancelledAt;
@@ -200,6 +204,7 @@ class Meeting {
           : const [],
       viewerRole: viewerRole,
       createdAt: createdAt,
+      aiNotesEverEnabled: o['aiNotesEverEnabled'] == true,
       startedAt: dateOrNull(o['startedAt']),
       endedAt: dateOrNull(o['endedAt']),
       cancelledAt: dateOrNull(o['cancelledAt']),
@@ -229,6 +234,7 @@ class Meeting {
         removedIds: removedIds,
         viewerRole: viewerRole,
         createdAt: createdAt,
+        aiNotesEverEnabled: aiNotesEverEnabled,
         startedAt: startedAt,
         endedAt: endedAt ?? this.endedAt,
         cancelledAt: cancelledAt ?? this.cancelledAt,

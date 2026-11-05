@@ -5179,6 +5179,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meetingSettingLockedDesc => 'Only invited people can join';
 
   @override
+  String get meetingSettingAiNotes => 'AI meeting notes';
+
+  @override
+  String get meetingSettingAiNotesDesc =>
+      'AI captures speech, chat, notes, files and shared screens to summarize after the meeting. Everyone in the room is notified.';
+
+  @override
+  String get meetingAiNotesActive => 'AI is taking notes';
+
+  @override
+  String get meetingAiNotesStarted =>
+      'AI started taking notes for this meeting';
+
+  @override
+  String get meetingAiNotesPrejoin => 'This meeting has AI notes';
+
+  @override
   String get meetingSubmitCreate => 'Schedule';
 
   @override

@@ -5231,6 +5231,23 @@ class AppLocalizationsEs extends AppLocalizations {
       'Solo pueden unirse las personas invitadas';
 
   @override
+  String get meetingSettingAiNotes => 'Notas de reunión con IA';
+
+  @override
+  String get meetingSettingAiNotesDesc =>
+      'La IA registra voz, chat, notas, archivos y pantallas compartidas para resumir después de la reunión. Se avisa a todos en la sala.';
+
+  @override
+  String get meetingAiNotesActive => 'La IA está tomando notas';
+
+  @override
+  String get meetingAiNotesStarted =>
+      'La IA empezó a tomar notas de la reunión';
+
+  @override
+  String get meetingAiNotesPrejoin => 'Esta reunión tiene notas con IA';
+
+  @override
   String get meetingSubmitCreate => 'Programar';
 
   @override

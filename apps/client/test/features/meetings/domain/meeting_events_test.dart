@@ -18,7 +18,16 @@ void main() {
         [('a', MeetingRoomRole.cohost), ('b', MeetingRoomRole.attendee)]);
   });
 
-  test('settings need all five booleans', () {
+  test('meet.settings carries aiNotes; absent means false', () {
+    final base = {'waitingRoom': false, 'muteOnEntry': true, 'allowAttendeeScreenShare': false,
+        'attendeesCanEditNotes': true, 'locked': true};
+    final on = p({'event': 'meet.settings', 'meetingId': 'm1', 'settings': {...base, 'aiNotes': true}});
+    expect((on as SettingsEvent).settings.aiNotes, isTrue);
+    final off = p({'event': 'meet.settings', 'meetingId': 'm1', 'settings': base});
+    expect((off as SettingsEvent).settings.aiNotes, isFalse);
+  });
+
+  test('settings need the five original booleans', () {
     expect(p({'event': 'meet.settings', 'meetingId': 'm1', 'settings': {'locked': true}}), isNull);
     final ok = p({'event': 'meet.settings', 'meetingId': 'm1', 'settings': {'waitingRoom': false,
         'muteOnEntry': true, 'allowAttendeeScreenShare': false, 'attendeesCanEditNotes': true, 'locked': true}});

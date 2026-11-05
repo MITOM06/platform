@@ -4931,6 +4931,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get meetingSettingLockedDesc => '只有受邀者可以加入';
 
   @override
+  String get meetingSettingAiNotes => 'AI 会议纪要';
+
+  @override
+  String get meetingSettingAiNotesDesc =>
+      'AI 会记录发言、聊天、笔记、文件和共享屏幕，以便会后生成摘要。房间内所有人都会收到通知。';
+
+  @override
+  String get meetingAiNotesActive => 'AI 正在记录';
+
+  @override
+  String get meetingAiNotesStarted => 'AI 已开始记录本次会议';
+
+  @override
+  String get meetingAiNotesPrejoin => '本次会议启用了 AI 纪要';
+
+  @override
   String get meetingSubmitCreate => '安排';
 
   @override
