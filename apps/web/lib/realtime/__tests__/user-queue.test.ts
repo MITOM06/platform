@@ -249,3 +249,28 @@ describe('system-notice NEW_MESSAGE payload', () => {
     expect(humanizeLastMessage(row().lastMessage, t, { currentUserId: 'me' })).toBe('systemGroupCreated')
   })
 })
+
+describe('invalidation routing on a preview miss', () => {
+  const AI = 'ai-bot-000000000000000000000001'
+  const aiConv = { id: 'ai1', participants: ['me', AI], type: 'direct' } as Conversation
+  const aiEvent = { ...newMessage, conversationId: 'ai1', senderId: AI }
+
+  it('AI message with ai-threads loaded: no main-list invalidation', () => {
+    const qc = new QueryClient()
+    seedConversation(qc, {})
+    qc.setQueryData<Conversation[]>(['ai-threads'], [aiConv])
+    // no messageId/createdAt -> applyIncomingPreview misses
+    handleUserQueueEvent(aiEvent, ctx(qc))
+    expect(qc.getQueryState(CONVERSATIONS_KEY)?.isInvalidated).toBe(false)
+    expect(qc.getQueryState(['ai-threads'])?.isInvalidated).toBe(true)
+  })
+
+  it('known non-AI message miss: no ai-threads invalidation', () => {
+    const qc = new QueryClient()
+    seedConversation(qc, {})
+    qc.setQueryData<Conversation[]>(['ai-threads'], [aiConv])
+    handleUserQueueEvent(newMessage, ctx(qc))
+    expect(qc.getQueryState(['ai-threads'])?.isInvalidated).toBe(false)
+    expect(qc.getQueryState(CONVERSATIONS_KEY)?.isInvalidated).toBe(true)
+  })
+})
