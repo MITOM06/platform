@@ -4,6 +4,19 @@ part of 'chat_repository.dart';
 mixin ChatRepositoryUploadOps {
   Dio get _dio;
 
+  /// `GET /api/uploads/token` (Bearer) -> short-lived token the `/api/uploads`
+  /// URLs carry as `?t=`. Throws on a malformed response.
+  Future<({String token, DateTime expiresAt})> getMediaToken() async {
+    final response = await _dio.get('/api/uploads/token');
+    final data = response.data as Map<String, dynamic>;
+    final token = data['token'] as String?;
+    final expiresAt = DateTime.tryParse(data['expiresAt']?.toString() ?? '');
+    if (token == null || token.isEmpty || expiresAt == null) {
+      throw const FormatException('bad media token response');
+    }
+    return (token: token, expiresAt: expiresAt);
+  }
+
   Future<String> uploadFile(XFile file) async {
     // Đọc bytes thay vì fromFile(path) để hoạt động trên cả web (blob URL,
     // không có filesystem) lẫn mobile, hỗ trợ ảnh lẫn video.

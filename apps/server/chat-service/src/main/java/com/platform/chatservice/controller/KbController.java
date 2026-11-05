@@ -9,6 +9,7 @@ import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.KbDocument;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.KbDocumentRepository;
+import com.platform.chatservice.service.upload.UploadRefs;
 import java.security.Principal;
 import java.time.Instant;
 import java.util.HashMap;
@@ -34,6 +35,7 @@ public class KbController {
   private final ConversationRepository conversationRepository;
   private final StringRedisTemplate redisTemplate;
   private final ObjectMapper objectMapper;
+  private final UploadRefs uploadRefs;
 
   @PostMapping
   public ResponseEntity<KbDocumentResponse> uploadDocument(
@@ -58,6 +60,10 @@ public class KbController {
             .build();
 
     kbDocumentRepository.save(doc);
+    uploadRefs.attachToConversation(doc.getFileUrl(), doc.getConversationId(), doc.getUserId());
+    if (doc.getDepartmentId() != null) {
+      uploadRefs.attachToDepartment(doc.getFileUrl(), doc.getDepartmentId(), doc.getUserId());
+    }
 
     // departmentId may be null (personal chats) — build with a null-tolerant map.
     Map<String, String> payload = new HashMap<>();

@@ -76,16 +76,17 @@ class ExternalBotServiceTest {
   }
 
   @Test
-  void reply_persistsReturnedText_andNotifiesTheOwner() {
+  void bot_reply_uses_owner_as_actor() {
     MessageResponse saved =
         new MessageResponse(
             "msg-1", "conv-1", "extbot:bf-1", "hi back", "ai", List.of(), Instant.now());
     when(botFactoryClient.chat("bf-1", "hello", "pon:conv-1")).thenReturn("hi back");
-    when(aiMessageService.saveBotMessage("conv-1", "extbot:bf-1", "hi back")).thenReturn(saved);
+    when(aiMessageService.saveBotMessage("conv-1", "extbot:bf-1", "hi back", "user-1"))
+        .thenReturn(saved);
 
     service().reply(bot(), "conv-1", "hello");
 
-    verify(aiMessageService).saveBotMessage("conv-1", "extbot:bf-1", "hi back");
+    verify(aiMessageService).saveBotMessage("conv-1", "extbot:bf-1", "hi back", "user-1");
     // Bot Factory can take a while; the owner has often left the chat by the time it answers.
     verify(notificationService).notifyNewMessage("extbot:bf-1", saved);
   }
@@ -94,7 +95,7 @@ class ExternalBotServiceTest {
   void reply_noop_whenClientReturnsNull() {
     when(botFactoryClient.chat(any(), any(), any())).thenReturn(null);
     service().reply(bot(), "conv-1", "hello");
-    verify(aiMessageService, never()).saveBotMessage(eq("conv-1"), any(), any());
+    verify(aiMessageService, never()).saveBotMessage(eq("conv-1"), any(), any(), any());
     verify(notificationService, never()).notifyNewMessage(any(), any());
   }
 }

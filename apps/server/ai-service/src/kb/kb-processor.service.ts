@@ -9,6 +9,7 @@ import { EmbeddingService } from './embedding.service';
 import { VectorStoreService } from './vector-store.service';
 import { RedisPublisherService } from '../redis/redis-publisher.service';
 import { KbDocument, KbDocumentDocument } from './kb-document.schema';
+import { internalUploadHeaders } from '../common/upload-ref';
 import { KbProcessPayload } from './kb-process-payload.interface';
 
 @Injectable()
@@ -19,6 +20,7 @@ export class KbProcessorService {
   private readonly visionPdfEnabled: boolean;
   private readonly visionMinTextChars: number;
   private readonly chatBaseUrl: string;
+  private readonly internalApiKey?: string;
 
   constructor(
     @InjectModel(KbDocument.name) private readonly kbDocumentModel: Model<KbDocumentDocument>,
@@ -36,6 +38,7 @@ export class KbProcessorService {
     this.visionPdfEnabled = this.configService.get<boolean>('config.kb.visionPdfEnabled') ?? true;
     this.visionMinTextChars =
       this.configService.get<number>('config.kb.visionMinTextChars') ?? 64;
+    this.internalApiKey = this.configService.get<string>('config.connector.internalApiKey');
     this.chatBaseUrl = (
       this.configService.get<string>('config.chat.internalUrl') ?? 'http://localhost:8080'
     ).replace(/\/+$/, '');
@@ -68,7 +71,11 @@ export class KbProcessorService {
 
       // Fetch file content (SSRF guard runs first — see validateFileUrl).
       this.validateFileUrl(fileUrl);
-      const response = await fetch(this.toFetchUrl(fileUrl));
+      const fetchUrl = this.toFetchUrl(fileUrl);
+      const response = await fetch(fetchUrl, {
+        headers: this.uploadAuthHeaders(fetchUrl),
+        redirect: 'error',
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status} fetching ${fileUrl}`);
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
@@ -140,6 +147,19 @@ export class KbProcessorService {
    */
   private toFetchUrl(fileUrl: string): string {
     return fileUrl.startsWith('/') ? `${this.chatBaseUrl}${fileUrl}` : fileUrl;
+  }
+
+  /**
+   * X-Internal-Key only for URLs on the internal chat-service origin; an absolute
+   * fileUrl pointing anywhere else must never receive the key.
+   */
+  private uploadAuthHeaders(fetchUrl: string): Record<string, string> {
+    try {
+      if (new URL(fetchUrl).origin !== new URL(this.chatBaseUrl).origin) return {};
+    } catch {
+      return {};
+    }
+    return internalUploadHeaders({ internalApiKey: this.internalApiKey });
   }
 
   /**

@@ -20,6 +20,7 @@ import 'package:platform_client/features/auth/ui/login_screen.dart';
 import 'package:platform_client/features/auth/utils/auth_error.dart';
 import 'package:platform_client/features/profile/utils/phone_verify_error.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
+import '../../helpers/noop_media_token.dart';
 
 /// QC 2026-10-11 auth fixes: specific messages for rate limits and network
 /// failures on the auth screens (F12), phone verification (F13), two more
@@ -101,6 +102,7 @@ Future<_Harness> _pump(WidgetTester tester, _FakeRepo repo,
 
   final container = ProviderContainer(overrides: [
     authRepositoryProvider.overrideWithValue(repo),
+    noopMediaTokenOverride,
     authNotifierProvider.overrideWith(_TestAuth.new),
   ]);
   addTearDown(container.dispose);

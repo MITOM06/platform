@@ -1,9 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/api/dio_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/domain/auth_state.dart';
 import '../../../chat/ui/widgets/conversation_avatar.dart';
+import '../../../../core/utils/media_url.dart';
 
 /// Cover-photo + avatar header shown at the top of the Edit Profile screen.
 /// Extracted from edit_profile_screen.dart (clean-code file limit).
@@ -59,9 +59,9 @@ class EditProfileHeader extends StatelessWidget {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: CachedNetworkImage(
-                                imageUrl: user.coverPhoto!.startsWith('http')
-                                    ? user.coverPhoto!
-                                    : '${DioClient.chatBaseUrl}${user.coverPhoto}',
+                                imageUrl: absoluteMediaUrl(user.coverPhoto!),
+                                cacheKey: mediaCacheKey(
+                                    absoluteMediaUrl(user.coverPhoto!)),
                                 width: double.infinity,
                                 height: double.infinity,
                                 fit: BoxFit.cover,

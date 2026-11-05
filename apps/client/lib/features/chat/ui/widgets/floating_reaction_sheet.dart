@@ -54,8 +54,10 @@ class FloatingReactionSheet extends ConsumerWidget {
     final bytes = Uint8List.fromList(resp.data ?? const []);
     if (bytes.isEmpty) return;
     final contentType = resp.headers.value('content-type')?.toLowerCase() ?? '';
+    // Path only: the upload URL may carry `?t=<token>` or a `#fragment`.
+    final path = Uri.tryParse(abs)?.path ?? abs;
     final isPng =
-        contentType.contains('png') || abs.toLowerCase().endsWith('.png');
+        contentType.contains('png') || path.toLowerCase().endsWith('.png');
     final item = DataWriterItem();
     if (isPng) {
       item.add(Formats.png(bytes));

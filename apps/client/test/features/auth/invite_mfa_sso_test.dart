@@ -19,6 +19,7 @@ import 'package:platform_client/features/auth/ui/widgets/sso_sign_in_button.dart
 import 'package:platform_client/l10n/app_localizations.dart';
 
 import 'mfa_test_data.dart';
+import '../../helpers/noop_media_token.dart';
 
 /// Contract 15 (was 13): accepting an Owner / Admin-like invitation with a
 /// password starts a 2FA enrollment (`MFA_REQUIRED`) instead of signing in; a
@@ -120,6 +121,7 @@ Future<_Harness> _pump(
   final fake = repo ?? _FakeRepo();
   final container = ProviderContainer(overrides: [
     authRepositoryProvider.overrideWithValue(fake),
+    noopMediaTokenOverride,
     authNotifierProvider.overrideWith(() => _TestAuth(initial)),
   ]);
   addTearDown(container.dispose);

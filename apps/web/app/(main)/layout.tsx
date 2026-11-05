@@ -21,6 +21,7 @@ import { PonLogo } from '@/components/layout/PonLogo'
 import { useUiStore } from '@/lib/store/ui.store'
 import { useSidebarResize } from '@/lib/hooks/use-sidebar-resize'
 import { useRealtimeNotifications } from '@/lib/hooks/use-realtime-notifications'
+import { useMediaRemountKey, useMediaTokenResume } from '@/lib/hooks/use-media-token-session'
 import { SetPasswordGate } from '@/components/auth/SetPasswordGate'
 import { SignedOutCurtain } from '@/components/auth/SignedOutCurtain'
 import {
@@ -82,6 +83,11 @@ function MainShell({ children }: { children: React.ReactNode }) {
   // presence) — (dis)connects on the authed↔unauthed transition.
   useRealtimeNotifications()
 
+  // Media token: re-check on tab resume; remount the content (not the call overlay) when
+  // the token arrives late so already-rendered media picks up `?t=`. Frozen in a meeting room.
+  useMediaTokenResume()
+  const mediaKey = useMediaRemountKey(isMeetingRoom)
+
   const { openNewChat, openPublicChannels } = useUiStore()
 
   return (
@@ -91,6 +97,7 @@ function MainShell({ children }: { children: React.ReactNode }) {
           on md+; hidden on mobile when a conversation thread is open. */}
       {showSidebar && (
       <aside
+        key={`aside-${mediaKey}`}
         className={cn(
           'w-full border-r border-border/60 flex-col shrink-0 relative overflow-hidden @container',
           isConversationOpen ? 'hidden md:flex' : 'flex',
@@ -208,6 +215,7 @@ function MainShell({ children }: { children: React.ReactNode }) {
           LIST (sidebar visible, no thread open) it's hidden on mobile so the
           list owns the screen; everywhere else it's always visible. */}
       <PageTransition
+        key={`main-${mediaKey}`}
         as="main"
         className={cn(
           'flex-1 overflow-hidden flex-col',

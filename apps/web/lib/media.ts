@@ -1,26 +1,94 @@
 // Media URL + file helpers — mirror Flutter `image_content.dart` / `file_content.dart`.
 import { serviceUrl, isRelative } from '@/lib/config/env'
+import { getMediaToken } from '@/lib/media-token'
 
 // When CHAT_URL is the same-origin relative path there is no prefix to add: the
 // upload path is already absolute against the current origin.
 
-/** Resolve a possibly-relative media URL against the chat-service base. */
+const UPLOADS_PREFIX = '/api/uploads/'
+
+interface ChatBase {
+  /** Origin of the chat-service; a relative base means the page's own origin (none on the server). */
+  origin: string | null
+  /** Path of the chat base without a trailing slash, e.g. `/api/chat` behind Caddy; '' when none. */
+  path: string
+}
+
+function chatBase(): ChatBase {
+  const chat = serviceUrl('chat')
+  try {
+    if (isRelative(chat)) {
+      const origin = typeof window !== 'undefined' ? window.location.origin : null
+      return { origin, path: chat.replace(/\/+$/, '') }
+    }
+    const parsed = new URL(chat)
+    return { origin: parsed.origin, path: parsed.pathname.replace(/\/+$/, '') }
+  } catch {
+    return { origin: null, path: '' }
+  }
+}
+
+/** `/api/uploads/...`, or the same under the chat base path (`/api/chat/api/uploads/...`). */
+function isUploadPath(path: string, basePath: string): boolean {
+  return path.startsWith(UPLOADS_PREFIX) || (basePath !== '' && path.startsWith(`${basePath}${UPLOADS_PREFIX}`))
+}
+
+/**
+ * Set `t=<media token>` on an upload URL (before any `#fragment`), replacing an existing `t`.
+ * Only relative upload paths and absolute URLs whose ORIGIN equals the chat origin and whose
+ * path is an upload path (with or without the chat base path) get it; anything else is
+ * returned untouched.
+ */
+function withMediaToken(url: string): string {
+  const token = getMediaToken()
+  if (!token) return url
+  const hashAt = url.indexOf('#')
+  const beforeHash = hashAt === -1 ? url : url.slice(0, hashAt)
+  const fragment = hashAt === -1 ? '' : url.slice(hashAt)
+  const qAt = beforeHash.indexOf('?')
+  const pathPart = qAt === -1 ? beforeHash : beforeHash.slice(0, qAt)
+  const query = qAt === -1 ? '' : beforeHash.slice(qAt + 1)
+
+  const base = chatBase()
+  let origin = ''
+  let path = pathPart
+  if (/^https?:\/\//i.test(pathPart)) {
+    let parsed: URL
+    try {
+      parsed = new URL(pathPart)
+    } catch {
+      return url
+    }
+    if (!base.origin || parsed.origin !== base.origin) return url
+    origin = parsed.origin
+    path = parsed.pathname
+  }
+  if (!isUploadPath(path, base.path)) return url
+
+  const kept = query.split('&').filter((kv) => kv !== '' && kv.split('=')[0] !== 't')
+  kept.push(`t=${encodeURIComponent(token)}`)
+  return `${origin}${origin ? path : pathPart}?${kept.join('&')}${fragment}`
+}
+
+/** Resolve a possibly-relative media URL against the chat-service base (+ media token for uploads). */
 export function absoluteMediaUrl(url: string): string {
   if (!url) return ''
-  if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) {
-    return url
-  }
+  if (url.startsWith('blob:') || url.startsWith('data:')) return url
+  if (url.startsWith('http')) return withMediaToken(url)
   const chat = serviceUrl('chat')
   const base = isRelative(chat) ? '' : chat
   const sep = url.startsWith('/') ? '' : '/'
-  return `${base}${sep}${url}`
+  return withMediaToken(`${base}${sep}${url}`)
 }
 
 /** Build a download URL (adds `download=true` so the server serves as attachment). */
 export function downloadMediaUrl(url: string): string {
-  const base = absoluteMediaUrl(url)
-  const sep = base.includes('?') ? '&' : '?'
-  return `${base}${sep}download=true`
+  const abs = absoluteMediaUrl(url)
+  const hashAt = abs.indexOf('#')
+  const head = hashAt === -1 ? abs : abs.slice(0, hashAt)
+  const fragment = hashAt === -1 ? '' : abs.slice(hashAt)
+  const sep = head.includes('?') ? '&' : '?'
+  return `${head}${sep}download=true${fragment}`
 }
 
 /** Parse image-message content that may be a single URL or a JSON array of URLs. */

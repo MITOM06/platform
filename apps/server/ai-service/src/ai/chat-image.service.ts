@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
 import { SupportedImageMediaType, VisionDescribeService } from '../kb/vision-describe.service';
-import { resolveUploadUrl } from '../common/upload-ref';
+import { internalUploadHeaders, resolveUploadUrl } from '../common/upload-ref';
 
 /**
  * Resolves chat-message image refs into Anthropic image content blocks for the
@@ -26,12 +26,14 @@ export class ChatImageService {
   private readonly maxImages: number;
   private readonly maxImageBytes: number;
   private readonly fetchTimeoutMs: number;
+  private readonly internalApiKey?: string;
 
   constructor(private readonly configService: ConfigService) {
     this.enabled = this.configService.get<boolean>('config.chat.visionEnabled') ?? true;
     this.chatBaseUrl = (
       this.configService.get<string>('config.chat.internalUrl') ?? 'http://localhost:8080'
     ).replace(/\/+$/, '');
+    this.internalApiKey = this.configService.get<string>('config.connector.internalApiKey');
     this.maxImages = this.configService.get<number>('config.chat.visionMaxImages') ?? 4;
     this.maxImageBytes =
       this.configService.get<number>('config.chat.visionMaxImageBytes') ?? 5_000_000;
@@ -94,7 +96,12 @@ export class ChatImageService {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.fetchTimeoutMs);
     try {
-      const response = await fetch(url, { signal: controller.signal, redirect: 'error' });
+      const response = await fetch(url, {
+        signal: controller.signal,
+        redirect: 'error',
+        // `url` always comes from resolveUploadUrl → internal chat base only.
+        headers: internalUploadHeaders({ internalApiKey: this.internalApiKey }),
+      });
       if (!response.ok) {
         this.logger.warn(`Image fetch ${url} → HTTP ${response.status}`);
         await response.body?.cancel().catch(() => undefined);

@@ -12,6 +12,7 @@ import 'package:platform_client/features/settings/ui/widgets/two_factor_section.
 import 'package:platform_client/l10n/app_localizations.dart';
 
 import '../auth/mfa_test_data.dart';
+import '../../helpers/noop_media_token.dart';
 
 /// An Owner / Admin-like member: 2FA required by the role (contract 15).
 const _enrolled = UserModel(
@@ -76,6 +77,7 @@ Future<_FakeRepo> _pump(WidgetTester tester, UserModel user,
   await tester.pumpWidget(ProviderScope(
     overrides: [
       authRepositoryProvider.overrideWithValue(repo),
+      noopMediaTokenOverride,
       authNotifierProvider.overrideWith(() => _TestAuth(user)),
       userProfileProvider.overrideWith((ref, id) async => user),
     ],

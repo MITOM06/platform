@@ -17,6 +17,7 @@ import 'package:platform_client/features/auth/ui/forgot_password_screen.dart';
 import 'package:platform_client/features/auth/ui/login_screen.dart';
 import 'package:platform_client/features/auth/ui/widgets/sso_sign_in_button.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
+import '../../helpers/noop_media_token.dart';
 
 /// Contract 13 §C on the sign-in side: `SSO_REQUIRED` is a login notice (not
 /// a failed sign-in), the SSO button is emphasised, and a session revoked
@@ -103,6 +104,7 @@ Future<_Harness> _pump(
   final fake = repo ?? _FakeRepo();
   final container = ProviderContainer(overrides: [
     authRepositoryProvider.overrideWithValue(fake),
+    noopMediaTokenOverride,
     authNotifierProvider.overrideWith(() => _TestAuth(initial)),
   ]);
   addTearDown(container.dispose);

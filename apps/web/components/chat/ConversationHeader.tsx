@@ -4,14 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
-import { ArrowLeft, Bot, Settings, Phone, Video, Users, MoreVertical } from 'lucide-react'
+import { ArrowLeft, Bot, Settings, Phone, Video, Users } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { useConversation } from '@/lib/hooks/use-conversation'
 import { useUserStatus } from '@/lib/hooks/use-user-status'
 import { useRelationship } from '@/lib/hooks/use-relationship'
@@ -252,19 +246,18 @@ export function ConversationHeader({
             </Button>
           )}
 
-          {/* Desktop: video call inline — DM only */}
+          {/* Video call — always visible for DMs */}
           {otherUserId && (
-            <div className="hidden md:flex items-center gap-0.5">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => guardedCall(true)}
-                title={t('videoCall')}
-                className="tap"
-              >
-                <Video className="size-4" />
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => guardedCall(true)}
+              title={t('videoCall')}
+              aria-label={t('videoCall')}
+              className="tap"
+            >
+              <Video className="size-4" />
+            </Button>
           )}
 
           {/* Settings — always visible on all screen sizes */}
@@ -278,29 +271,6 @@ export function ConversationHeader({
             <Settings className="size-4" />
           </Button>
 
-          {/* Mobile: overflow menu — DM only (video call is the sole overflowed action) */}
-          {otherUserId && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="md:hidden tap"
-                  aria-label={t('moreActions')}
-                >
-                  <MoreVertical className="size-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => guardedCall(true)}
-                >
-                  <Video className="size-4 mr-2" />
-                  {t('videoCall')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
         </div>
       </header>
 

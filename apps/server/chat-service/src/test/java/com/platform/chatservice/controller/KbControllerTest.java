@@ -13,6 +13,7 @@ import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.KbDocument;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.KbDocumentRepository;
+import com.platform.chatservice.service.upload.UploadRefs;
 import java.security.Principal;
 import java.time.Instant;
 import java.util.List;
@@ -38,6 +39,7 @@ class KbControllerTest {
   @Mock private StringRedisTemplate redisTemplate;
   @Mock private ObjectMapper objectMapper;
   @Mock private Principal principal;
+  @Mock private UploadRefs uploadRefs;
 
   @InjectMocks private KbController controller;
 
@@ -91,6 +93,39 @@ class KbControllerTest {
     assertThat(response.getBody()).isNotNull();
     verify(kbDocumentRepository).save(any(KbDocument.class));
     verify(redisTemplate).convertAndSend(eq("kb:process"), anyString());
+  }
+
+  @Test
+  void uploadDocument_recordsConversationAndDepartmentUploadRefs() throws Exception {
+    conversation.setDepartmentId("dept-1");
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+    when(kbDocumentRepository.save(any())).thenReturn(document);
+    KbUploadRequest req = new KbUploadRequest();
+    req.setConversationId(CONV_ID);
+    req.setFileName("test.pdf");
+    req.setMimeType("application/pdf");
+    req.setFileUrl("/api/uploads/123e4567-e89b-12d3-a456-426614174000");
+
+    controller.uploadDocument(req, principal);
+
+    verify(uploadRefs).attachToConversation(req.getFileUrl(), CONV_ID, USER_ID);
+    verify(uploadRefs).attachToDepartment(req.getFileUrl(), "dept-1", USER_ID);
+  }
+
+  @Test
+  void uploadDocument_personalChat_recordsOnlyConversationRef() throws Exception {
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(conversation));
+    when(kbDocumentRepository.save(any())).thenReturn(document);
+    KbUploadRequest req = new KbUploadRequest();
+    req.setConversationId(CONV_ID);
+    req.setFileName("test.pdf");
+    req.setMimeType("application/pdf");
+    req.setFileUrl("/api/uploads/123e4567-e89b-12d3-a456-426614174000");
+
+    controller.uploadDocument(req, principal);
+
+    verify(uploadRefs).attachToConversation(req.getFileUrl(), CONV_ID, USER_ID);
+    verify(uploadRefs, never()).attachToDepartment(any(), any(), any());
   }
 
   @Test

@@ -51,7 +51,8 @@ public class ExternalBotService {
         botFactoryClient.chat(bot.getFactoryBotId(), content, "pon:" + conversationId);
     if (replyText != null && !replyText.isBlank()) {
       MessageResponse saved =
-          aiMessageService.saveBotMessage(conversationId, bot.getBotUserId(), replyText);
+          aiMessageService.saveBotMessage(
+              conversationId, bot.getBotUserId(), replyText, bot.getOwnerUserId());
       notificationService.notifyNewMessage(bot.getBotUserId(), saved);
     }
   }

@@ -474,6 +474,44 @@ describe('AiContextService — entries', () => {
     const visible = await svc.getVisibleEntriesForUser('u1', [Capability.VIEW_INTERNAL_CONTEXT], []);
     expect(visible.map((e) => e.text)).toEqual(['public']);
   });
+
+  describe('getVisibleEntriesForUser — departments (same rule as ai-service)', () => {
+    const DEPT_ENTRIES = [
+      { scope: 'department', scopeId: 'sales', requiredCapability: null, text: 'discounts' },
+      { scope: 'department', scopeId: 'sales', requiredCapability: Capability.VIEW_CONFIDENTIAL_CONTEXT, text: 'margins' },
+      { scope: 'department', scopeId: 'eng', requiredCapability: null, text: 'stack' },
+    ];
+    function svcWith(led: string[]) {
+      const { svc, entry, dept } = makeEntryService();
+      entry.find.mockImplementation((f: any) => ({
+        sort: () => ({ lean: () => ({ exec: () => Promise.resolve(
+          f.scope === 'company' ? [] : DEPT_ENTRIES.filter((e) => !f.scopeId || f.scopeId.$in.includes(e.scopeId)),
+        ) }) }),
+      }));
+      dept.find.mockReturnValue({ lean: () => ({ exec: () => Promise.resolve(led.map((_id) => ({ _id }))) }) });
+      return { svc, entry, dept };
+    }
+
+    it('a member sees only the open entries of their own department', async () => {
+      const { svc } = svcWith([]);
+      const visible = await svc.getVisibleEntriesForUser('u1', [], ['sales']);
+      expect(visible.map((e) => e.text)).toEqual(['discounts']);
+    });
+
+    it("the department's lead also sees its confidential entries", async () => {
+      const { svc, dept } = svcWith(['sales']);
+      const visible = await svc.getVisibleEntriesForUser('lead', [], ['sales']);
+      expect(dept.find).toHaveBeenCalledWith({ leadUserId: 'lead' });
+      expect(visible.map((e) => e.text)).toEqual(['discounts', 'margins']);
+    });
+
+    it('Owner/Admin see every department', async () => {
+      const { svc } = svcWith([]);
+      const admin = [Capability.MANAGE_AI_CONTEXT, Capability.VIEW_INTERNAL_CONTEXT, Capability.VIEW_CONFIDENTIAL_CONTEXT];
+      const visible = await svc.getVisibleEntriesForUser('ceo', admin, []);
+      expect(visible.map((e) => e.text)).toEqual(['discounts', 'margins', 'stack']);
+    });
+  });
 });
 
 describe('AiContextService — resolveDepartmentNames', () => {

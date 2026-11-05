@@ -465,7 +465,31 @@ Response 201: { "id": "string", "url": "/api/uploads/string", "filename": "strin
 ```http
 GET /api/uploads/{id}?download=true
 Response 200: Binary stream with Content-Disposition attachment if download=true
+Auth (only when chat-service runs with UPLOADS_REQUIRE_AUTH=true; default false = public):
+  one of  ?t=<media token>  |  Authorization: Bearer <JWT>  |  X-Internal-Key: <INTERNAL_API_KEY>
+Response 401 (empty body): none of the above is present and valid
+Response 403: authenticated (token/JWT) but no access to THIS file (not uploader, not in a referenced
+  conversation/department, not a public profile image)
+Response headers (flag on): Cache-Control: private, max-age=86400
 ```
+Notes (flag on):
+- `X-Internal-Key` (INTERNAL_API_KEY) bypasses the per-file check; for internal services only.
+- Even with the flag OFF, non-id paths under `/api/uploads/*` (other than the id route) return 401, not 404.
+- A media token is NOT revocable: access persists until `expiresAt` (up to ~30h) even after logout or
+  removal from the conversation.
+- ai-service attaches the internal key only to relative `/api/uploads/...` paths or the internal chat
+  origin. Legacy absolute `*.run.app` KB fileUrls are not fetched with the key, so reprocessing them
+  fails once the flag is on. KB/image fetches refuse redirects.
+
+### Get Media Token
+```http
+GET /api/uploads/token            (Authorization: Bearer <JWT> required)
+Response 200: { "token": "string", "expiresAt": "2026-11-06T12:00:00Z" }
+```
+Append `?t=<token>` to `/api/uploads/{id}` URLs so `<img>`/`<video>` can load media without headers.
+Tokens expire at a 6h boundary (>= UPLOADS_TOKEN_TTL, default 24h away); all tokens issued in the same
+window are identical, so URLs stay stable and cacheable. Re-fetch when `expiresAt` passes. A media
+token is not a JWT and is only accepted by `GET /api/uploads/{id}`.
 
 ---
 

@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/lib/store/auth.store'
 import type { AuthUser } from '@/lib/store/auth.store'
 import { isAuthFailure } from '@/lib/api/axios'
+import { ensureMediaTokenBounded } from '@/lib/media-token'
 import { loginPath, logoutReasonFromError } from '@/lib/auth/force-logout'
 
 const PUBLIC_PATHS = [
@@ -50,7 +51,12 @@ export function SessionInitializer({ children }: { children: React.ReactNode }) 
       for (let attempt = 0; !cancelled; attempt++) {
         try {
           const { data } = await axios.get<{ user: AuthUser; accessToken: string }>('/api/auth/session')
-          if (!cancelled) setAuth(data.user, data.accessToken)
+          if (!cancelled) {
+            setAuth(data.user, data.accessToken)
+            // Upload URLs need the media token: wait (max 5s) so images render
+            // with it on first paint; on failure it keeps retrying in background.
+            await ensureMediaTokenBounded()
+          }
           break
         } catch (err) {
           if (isAuthFailure(err)) {

@@ -7,7 +7,8 @@
  * NEXT_PUBLIC_CHAT_URL is read at call time from process.env, so we pin it here.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { useMediaTokenStore } from '@/lib/media-token'
 import {
   absoluteMediaUrl,
   downloadMediaUrl,
@@ -111,5 +112,106 @@ describe('firstUrl', () => {
 
   it('returns null when no URL is present', () => {
     expect(firstUrl('no links here')).toBeNull()
+  })
+})
+
+describe('media token on upload URLs', () => {
+  const setToken = (t: string | null) =>
+    useMediaTokenStore.setState({ token: t, expiresAt: t ? Date.now() + 6 * 3600_000 : null })
+  beforeEach(() => setToken('TOK'))
+  afterEach(() => setToken(null))
+
+  it('appends_t_for_upload_path', () => {
+    expect(absoluteMediaUrl('/api/uploads/abc')).toBe(`${BASE}/api/uploads/abc?t=TOK`)
+    expect(absoluteMediaUrl(`${BASE}/api/uploads/abc`)).toBe(`${BASE}/api/uploads/abc?t=TOK`)
+  })
+
+  it('inserts_t_before_fragment', () => {
+    expect(absoluteMediaUrl('/api/uploads/x#fit=cover&scale=120')).toBe(
+      `${BASE}/api/uploads/x?t=TOK#fit=cover&scale=120`,
+    )
+  })
+
+  it('keeps_existing_query_and_appends_with_ampersand', () => {
+    expect(absoluteMediaUrl('/api/uploads/x?w=100#a=1')).toBe(`${BASE}/api/uploads/x?w=100&t=TOK#a=1`)
+  })
+
+  it('does_not_touch_external_blob_data_urls', () => {
+    for (const u of ['https://cdn.example.com/api/uploads/a.jpg', 'blob:http://x/1', 'data:image/png;base64,AA', '/api/other/x']) {
+      expect(absoluteMediaUrl(u)).toBe(u.startsWith('/') ? `${BASE}${u}` : u)
+    }
+  })
+
+  it('no_token_yet_returns_plain_url', () => {
+    setToken(null)
+    expect(absoluteMediaUrl('/api/uploads/abc')).toBe(`${BASE}/api/uploads/abc`)
+  })
+
+  it('download_url_keeps_both_t_and_download', () => {
+    expect(downloadMediaUrl('/api/uploads/doc.pdf')).toBe(`${BASE}/api/uploads/doc.pdf?t=TOK&download=true`)
+  })
+
+  it('lookalike_host_prefix_gets_no_token', () => {
+    const u = 'http://localhost:8080.evil.com/api/uploads/x'
+    expect(absoluteMediaUrl(u)).toBe(u)
+  })
+
+  it('same_origin_absolute_url_gets_token_when_base_is_relative', () => {
+    process.env.NEXT_PUBLIC_CHAT_URL = '/api/chat'
+    const o = window.location.origin
+    expect(absoluteMediaUrl(`${o}/api/uploads/x`)).toBe(`${o}/api/uploads/x?t=TOK`)
+    expect(absoluteMediaUrl('https://other.example/api/uploads/x')).toBe('https://other.example/api/uploads/x')
+  })
+
+  it('existing_t_is_replaced', () => {
+    expect(absoluteMediaUrl('/api/uploads/x?a=1&t=OLD&b=2')).toBe(`${BASE}/api/uploads/x?a=1&b=2&t=TOK`)
+  })
+
+  it('download_url_with_fragment_keeps_order', () => {
+    expect(downloadMediaUrl('/api/uploads/x#frag')).toBe(`${BASE}/api/uploads/x?t=TOK&download=true#frag`)
+  })
+})
+
+describe('media token with a chat base path (Caddy /api/chat)', () => {
+  const D = 'https://d.example'
+  beforeEach(() => {
+    process.env.NEXT_PUBLIC_CHAT_URL = `${D}/api/chat`
+    useMediaTokenStore.setState({ token: 'T', expiresAt: Date.now() + 6 * 3600_000 })
+  })
+  afterEach(() => useMediaTokenStore.setState({ token: null, expiresAt: null }))
+
+  it('base_path_relative_upload_gets_token', () => {
+    expect(absoluteMediaUrl('/api/uploads/x')).toBe(`${D}/api/chat/api/uploads/x?t=T`)
+  })
+
+  it('base_path_trailing_slash_relative_upload_gets_token', () => {
+    process.env.NEXT_PUBLIC_CHAT_URL = `${D}/api/chat/`
+    expect(absoluteMediaUrl('/api/uploads/x')).toBe(`${D}/api/chat/api/uploads/x?t=T`)
+    expect(absoluteMediaUrl(`${D}/api/chat/api/uploads/x`)).toBe(`${D}/api/chat/api/uploads/x?t=T`)
+  })
+
+  it('base_path_absolute_with_prefix_gets_token', () => {
+    expect(absoluteMediaUrl(`${D}/api/chat/api/uploads/x`)).toBe(`${D}/api/chat/api/uploads/x?t=T`)
+  })
+
+  it('base_path_absolute_same_origin_without_prefix_gets_token', () => {
+    expect(absoluteMediaUrl(`${D}/api/uploads/x`)).toBe(`${D}/api/uploads/x?t=T`)
+  })
+
+  it('base_path_absolute_same_origin_other_path_gets_none', () => {
+    expect(absoluteMediaUrl(`${D}/api/chat/api/other`)).toBe(`${D}/api/chat/api/other`)
+  })
+
+  it('base_path_foreign_host_with_prefix_gets_none', () => {
+    const u = 'https://evil.example/api/chat/api/uploads/x'
+    expect(absoluteMediaUrl(u)).toBe(u)
+  })
+
+  it('base_path_download_with_fragment_keeps_order', () => {
+    expect(downloadMediaUrl('/api/uploads/x#frag')).toBe(`${D}/api/chat/api/uploads/x?t=T&download=true#frag`)
+  })
+
+  it('base_path_traversal_out_of_uploads_gets_none', () => {
+    expect(absoluteMediaUrl(`${D}/api/chat/api/uploads/../../x`)).toBe(`${D}/api/chat/api/uploads/../../x`)
   })
 })

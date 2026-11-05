@@ -15,6 +15,7 @@ import 'package:platform_client/features/auth/ui/widgets/sso_sign_in_button.dart
 import 'package:platform_client/features/chat/data/stomp_service.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../helpers/noop_media_token.dart';
 
 /// Web parity (`lib/auth/sso-reauth.ts`): after the user signs out on this
 /// device, the next "Sign in with SSO" asks the IdP to authenticate again
@@ -92,6 +93,7 @@ Future<ProviderContainer> _container(
   final container = ProviderContainer(overrides: [
     sharedPreferencesProvider.overrideWithValue(prefs),
     authRepositoryProvider.overrideWithValue(repo),
+    noopMediaTokenOverride,
     authNotifierProvider.overrideWith(() => _TestAuth(initial)),
     stompServiceProvider.overrideWith(_SilentStomp.new),
   ]);

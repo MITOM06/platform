@@ -194,6 +194,10 @@ if "$ROOT/scripts/mini/smoke.sh" "$BASE" >"$STATE_DIR/last-smoke.log" 2>&1; then
   log "✓ deployed $(git rev-parse --short "$NEW_SHA") — smoke passed"
   date '+%Y-%m-%dT%H:%M:%S' | tee "$STATE_DIR/last-check" > "$STATE_DIR/last-deploy"
   rm -f "$BAD"
+  # Each pull leaves the previous images untagged, about 5.7 GB per full set, and
+  # the mini's disk filled up from them. Only here, once smoke has passed:
+  # rollback() needs the previous images on disk until this point.
+  log "pruned old images: $(docker image prune -f 2>&1 | tail -1)"
   exit 0
 fi
 
