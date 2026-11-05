@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:platform_client/core/utils/global_messenger.dart';
 import 'package:platform_client/features/ai_hub/domain/ai_threads_provider.dart';
+import 'package:platform_client/features/ai_hub/ui/widgets/ai_new_chat_button.dart';
 import 'package:platform_client/features/ai_hub/ui/widgets/ai_thread_list.dart';
 import 'package:platform_client/features/chat/domain/chat_state.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
@@ -24,12 +27,14 @@ class _Fake extends AiThreadsNotifier {
   final GoRouter Function() router;
   Object? renameError;
   Object? deleteError;
+  Future<void>? createGate;
 
   @override
   Future<List<ConversationModel>> build() async => initial;
 
   @override
   Future<ConversationModel> create() async {
+    await createGate;
     final c = _t('new');
     state = AsyncData([c, ...state.value!]);
     log.add('create');
@@ -46,9 +51,14 @@ class _Fake extends AiThreadsNotifier {
   }
 
   @override
-  Future<void> delete(String id) async {
-    log.add('delete:$id@${router().routeInformationProvider.value.uri.path}');
+  Future<void> deleteOnServer(String id) async {
+    log.add('server-delete:$id@${router().routeInformationProvider.value.uri.path}');
     if (deleteError != null) throw deleteError!;
+  }
+
+  @override
+  void drop(String id) {
+    log.add('drop:$id@${router().routeInformationProvider.value.uri.path}');
     state = AsyncData(state.value!.where((c) => c.id != id).toList());
   }
 }
@@ -173,7 +183,7 @@ void main() {
     expect(find.text('Delete this conversation?'), findsOneWidget);
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
-    expect(log, ['delete:b@/']);
+    expect(log, ['server-delete:b@/', 'drop:b@/']);
     expect(find.text('Bravo'), findsNothing);
   });
 
@@ -187,7 +197,7 @@ void main() {
     expect(find.text('Alpha'), findsOneWidget);
   });
 
-  testWidgets('deleting the open thread navigates to next BEFORE deleting',
+  testWidgets('deleting the open thread server-deletes, navigates to next, then drops',
       (tester) async {
     await pumpList(
         tester, [_t('a', name: 'A'), _t('b', name: 'B'), _t('c', name: 'C')],
@@ -196,7 +206,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
-    expect(log, ['delete:b@/chat/c']);
+    expect(log, ['server-delete:b@/chat/b', 'drop:b@/chat/c']);
   });
 
   testWidgets('deleting the last open thread goes to previous',
@@ -207,7 +217,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
-    expect(log, ['delete:b@/chat/a']);
+    expect(log, ['server-delete:b@/chat/b', 'drop:b@/chat/a']);
   });
 
   testWidgets('deleting the only open thread goes to the AI hub',
@@ -218,19 +228,55 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
-    expect(log, ['delete:a@/ai-hub']);
+    expect(log, ['server-delete:a@/chat/a', 'drop:a@/ai-hub']);
   });
 
-  testWidgets('delete failure shows localized error', (tester) async {
-    await pumpList(tester, [_t('a', name: 'Alpha')]);
+  testWidgets('delete failure: error banner, stays on thread, still listed',
+      (tester) async {
+    await pumpList(tester, [_t('a', name: 'Alpha'), _t('b', name: 'Bravo')],
+        openId: 'a', start: '/chat/a');
     fake.deleteError = Exception('boom');
-    await tester.tap(find.byTooltip('Delete'));
+    await tester.tap(find.byTooltip('Delete').first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
     expect(find.textContaining('boom'), findsNothing);
     expect(find.text("Couldn't delete the conversation. Please try again."),
         findsOneWidget);
+    expect(path(), '/chat/a');
+    expect(log, ['server-delete:a@/chat/a']);
+    expect(find.text('Alpha'), findsOneWidget);
     await tester.pump(const Duration(seconds: 10));
+  });
+
+  testWidgets('header new-chat button disables while create is pending',
+      (tester) async {
+    final gate = Completer<void>();
+    log = [];
+    router = GoRouter(navigatorKey: rootNavigatorKey, routes: [
+      GoRoute(
+          path: '/',
+          builder: (_, __) => const Scaffold(body: AiNewChatButton())),
+      GoRoute(path: '/chat/:id', builder: (_, __) => const Scaffold()),
+    ]);
+    fake = _Fake([_t('a')], log, () => router)..createGate = gate.future;
+    await tester.pumpWidget(ProviderScope(
+      overrides: [aiThreadsProvider.overrideWith(() => fake)],
+      child: MaterialApp.router(
+        routerConfig: router,
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(IconButton));
+    await tester.pump();
+    await tester.tap(find.byType(IconButton), warnIfMissed: false);
+    await tester.pump();
+    gate.complete();
+    await tester.pumpAndSettle();
+    expect(log.where((e) => e == 'create'), hasLength(1));
+    expect(path(), '/chat/new');
   });
 }

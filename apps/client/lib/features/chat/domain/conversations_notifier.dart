@@ -145,15 +145,19 @@ class ConversationsNotifier extends _$ConversationsNotifier {
   }
 
   /// Hide a conversation locally + on the server.
-  Future<void> deleteConversation(String conversationId) async {
-    // AI threads live in aiThreadsProvider only: drop the row there too.
+  ///
+  /// AI threads (web parity): server delete FIRST (failure rethrows, the row
+  /// stays), then [onDeleted] (navigate away), then the row is dropped from
+  /// aiThreadsProvider. For other conversations [onDeleted] runs after the
+  /// optimistic delete attempt (failures are rolled back silently).
+  Future<void> deleteConversation(String conversationId,
+      {FutureOr<void> Function(bool isAi)? onDeleted}) async {
     if (ref.exists(aiThreadsProvider) &&
         ref.read(aiThreadsProvider.notifier).contains(conversationId)) {
-      try {
-        await ref.read(aiThreadsProvider.notifier).delete(conversationId);
-      } catch (_) {
-        // aiThreadsProvider already refetched (rolled back) on failure.
-      }
+      final ai = ref.read(aiThreadsProvider.notifier);
+      await ai.deleteOnServer(conversationId);
+      await onDeleted?.call(true);
+      ai.drop(conversationId);
       return;
     }
     final current = state.valueOrNull;
@@ -167,6 +171,7 @@ class ConversationsNotifier extends _$ConversationsNotifier {
       // Roll back the optimistic removal without flashing the list to a spinner.
       await _silentRefetch();
     }
+    await onDeleted?.call(false);
   }
 
   Future<void> toggleMuteConversation(String conversationId, bool isMuted,

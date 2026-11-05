@@ -10,6 +10,8 @@ import '../../../home/domain/home_providers.dart';
 import '../../domain/chat_provider.dart';
 import '../../domain/chat_state.dart';
 import '../../utils/duration_text.dart';
+import '../../../../core/utils/global_messenger.dart';
+import '../../utils/chat_error.dart';
 import '../chat_screen_helpers.dart';
 import 'chat_wallpaper_dialog.dart';
 import 'conversation_customisation_dialogs.dart';
@@ -339,14 +341,24 @@ class ConversationInfoSidebar extends ConsumerWidget {
       body: context.l10n.deleteConversationConfirm,
     );
     if (confirm != true) return;
-    await ref
-        .read(conversationsNotifierProvider.notifier)
-        .deleteConversation(conversationId);
-    if (!context.mounted) return;
-    if (MediaQuery.of(context).size.width >= kWebBreakpoint) {
-      ref.read(selectedConversationIdProvider.notifier).state = null;
-    } else {
-      context.go('/');
+    final wasAi =
+        ref.read(conversationProvider(conversationId))?.isAiConversation ??
+            false;
+    void leave(bool isAi) {
+      if (!context.mounted) return;
+      if (MediaQuery.of(context).size.width >= kWebBreakpoint) {
+        ref.read(selectedConversationIdProvider.notifier).state = null;
+      } else {
+        context.go(isAi || wasAi ? '/ai-hub' : '/');
+      }
+    }
+
+    try {
+      await ref
+          .read(conversationsNotifierProvider.notifier)
+          .deleteConversation(conversationId, onDeleted: leave);
+    } catch (e) {
+      if (context.mounted) showErrorSnackBar(chatErrorMessage(context.l10n, e));
     }
   }
 }

@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -68,19 +67,21 @@ class _AiThreadListState extends ConsumerState<AiThreadList> {
     final next = (idx >= 0 && idx + 1 < list.length)
         ? list[idx + 1]
         : (idx > 0 ? list[idx - 1] : null);
-    // Navigate away BEFORE removing the open thread (replace, so Back never
-    // returns to it); the chat screen still observes the open id otherwise.
-    if (widget.openId == target.id) {
+    final notifier = ref.read(aiThreadsProvider.notifier);
+    try {
+      // Server first (web parity): on failure stay on the thread.
+      await notifier.deleteOnServer(target.id);
+    } catch (_) {
+      showErrorSnackBar(l10n.aiThreadDeleteFailed);
+      return;
+    }
+    // Navigate away BEFORE dropping the row (replace, so Back never returns
+    // to it): the chat screen still observes the open id otherwise.
+    if (mounted && widget.openId == target.id) {
       widget.onNavigate?.call();
       context.go(next != null ? '/chat/${next.id}' : '/ai-hub');
     }
-    try {
-      await ref.read(aiThreadsProvider.notifier).delete(target.id);
-    } on DioException catch (_) {
-      showErrorSnackBar(l10n.aiThreadDeleteFailed);
-    } catch (_) {
-      showErrorSnackBar(l10n.aiThreadDeleteFailed);
-    }
+    notifier.drop(target.id);
   }
 
   @override

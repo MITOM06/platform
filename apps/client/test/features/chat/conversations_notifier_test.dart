@@ -158,32 +158,59 @@ void main() {
     verify(() => mockRepo.deleteConversation('conv-B')).called(1);
   });
 
-  test('deleteConversation() on an AI thread also drops it from aiThreadsProvider',
-      () async {
-    final ai = ConversationModel(
-      id: 'ai-1',
-      type: 'direct',
-      participants: const ['me', kAiBotUserId],
-      unreadCount: 0,
-      createdAt: DateTime(2024),
-    );
+  ConversationModel aiConv() => ConversationModel(
+        id: 'ai-1',
+        type: 'direct',
+        participants: const ['me', kAiBotUserId],
+        unreadCount: 0,
+        createdAt: DateTime(2024),
+      );
+
+  Future<ProviderContainer> aiContainer() async {
     when(() => mockRepo.listConversations()).thenAnswer((_) async => []);
-    when(() => mockRepo.deleteConversation(any())).thenAnswer((_) async {});
     final c = ProviderContainer(overrides: [
       chatRepositoryProvider.overrideWithValue(mockRepo),
       stompServiceProvider.overrideWith(() => FakeStompService()),
       conversationsNotifierProvider
           .overrideWith(() => _TestableConversationsNotifier(mockRepo)),
-      aiThreadsProvider.overrideWith(() => _FixedAiThreads([ai])),
+      aiThreadsProvider.overrideWith(() => _FixedAiThreads([aiConv()])),
     ]);
     addTearDown(c.dispose);
     await c.read(conversationsNotifierProvider.future);
     await c.read(aiThreadsProvider.future);
+    return c;
+  }
+
+  test('AI thread delete: server first, then onDeleted(isAi), then drop',
+      () async {
+    final c = await aiContainer();
+    final order = <String>[];
+    when(() => mockRepo.deleteConversation(any())).thenAnswer((_) async {
+      order.add('server');
+    });
     await c
         .read(conversationsNotifierProvider.notifier)
-        .deleteConversation('ai-1');
+        .deleteConversation('ai-1', onDeleted: (isAi) {
+      // Row must still be present while the caller navigates away.
+      order.add('leave:$isAi:${c.read(aiThreadsProvider).value!.length}');
+    });
+    expect(order, ['server', 'leave:true:1']);
     expect(c.read(aiThreadsProvider).value, isEmpty);
-    verify(() => mockRepo.deleteConversation('ai-1')).called(1);
+  });
+
+  test('AI thread delete failure rethrows, keeps the row, never leaves',
+      () async {
+    final c = await aiContainer();
+    var left = false;
+    when(() => mockRepo.deleteConversation(any()))
+        .thenAnswer((_) async => throw Exception('boom'));
+    await expectLater(
+        c.read(conversationsNotifierProvider.notifier).deleteConversation(
+            'ai-1',
+            onDeleted: (_) => left = true),
+        throwsException);
+    expect(left, isFalse);
+    expect(c.read(aiThreadsProvider).value!.map((x) => x.id), ['ai-1']);
   });
 
   // -------------------------------------------------------------------------

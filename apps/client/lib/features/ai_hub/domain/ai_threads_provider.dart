@@ -83,6 +83,14 @@ class AiThreadsNotifier extends AsyncNotifier<List<ConversationModel>> {
     }
   }
 
+  /// Server-side hide only; the list is untouched (rethrows on failure).
+  /// Pair with [drop] once the caller has navigated away from the thread.
+  Future<void> deleteOnServer(String id) =>
+      ref.read(chatRepositoryProvider).deleteConversation(id);
+
+  /// Removes a thread from the list (after [deleteOnServer] succeeded).
+  void drop(String id) => _setList((l) => l.where((c) => c.id != id).toList());
+
   /// Newest thread, creating the first one when there are none. Always asks
   /// the server (a stale cache must not hide a thread made elsewhere).
   Future<ConversationModel> newestOrCreate() async {

@@ -5,8 +5,7 @@ import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../ai_hub/ui/widgets/ai_thread_item.dart';
 import '../../../ai_hub/ui/widgets/ai_thread_list.dart';
-import '../../../ai_hub/domain/ai_threads_provider.dart';
-import '../../../../core/utils/global_messenger.dart';
+import '../../../ai_hub/ui/widgets/ai_new_chat_button.dart';
 import '../../../home/domain/home_providers.dart';
 import '../../../profile/ui/widgets/user_profile_dialog.dart';
 import '../../domain/chat_provider.dart';
@@ -179,20 +178,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
         ),
         actions: [
           if (isAiConversation) ...[
-            IconButton(
-              tooltip: context.l10n.aiThreadNew,
-              icon: const Icon(Icons.add_comment_outlined, size: 22),
-              onPressed: () async {
-                final router = GoRouter.of(context);
-                final failed = context.l10n.aiThreadCreateFailed;
-                try {
-                  final c = await ref.read(aiThreadsProvider.notifier).create();
-                  router.go('/chat/${c.id}');
-                } catch (_) {
-                  showErrorSnackBar(failed);
-                }
-              },
-            ),
+            const AiNewChatButton(),
             IconButton(
               tooltip: context.l10n.aiThreadsTitle,
               icon: const Icon(Icons.forum_outlined, size: 22),
