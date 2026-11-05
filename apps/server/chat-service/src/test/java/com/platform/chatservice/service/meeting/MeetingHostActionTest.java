@@ -23,7 +23,9 @@ class MeetingHostActionTest {
             "ATTENDEE_SCREEN_SHARE_ON",
             "ATTENDEE_SCREEN_SHARE_OFF",
             "MAKE_COHOST",
-            "REVOKE_COHOST");
+            "REVOKE_COHOST",
+            "AI_NOTES_ON",
+            "AI_NOTES_OFF");
   }
 
   @Test
@@ -43,5 +45,11 @@ class MeetingHostActionTest {
     assertThat(MeetingHostAction.parse("lock")).isEmpty();
     assertThat(MeetingHostAction.parse("DROP_TABLE")).isEmpty();
     assertThat(MeetingHostAction.parse(null)).isEmpty();
+  }
+
+  @Test
+  void aiNotesActionsParseAndNeedNoTarget() {
+    assertThat(MeetingHostAction.parse("AI_NOTES_ON").get().needsTarget()).isFalse();
+    assertThat(MeetingHostAction.parse("AI_NOTES_OFF").get().needsTarget()).isFalse();
   }
 }
