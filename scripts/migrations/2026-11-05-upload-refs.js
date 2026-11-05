@@ -42,7 +42,8 @@
  *   DRY_RUN=1 pnpm migrate:upload-refs
  *   # local: mongosh "mongodb://localhost:27018/platform" scripts/migrations/...
  */
-const DRY = (typeof DRY_RUN !== 'undefined' && !!DRY_RUN) || (typeof process !== 'undefined' && !!process.env.DRY_RUN);
+const isOn = (v) => v === true || ['1', 'true', 'yes'].includes(String(v).toLowerCase());
+const DRY = (typeof DRY_RUN !== 'undefined' && isOn(DRY_RUN)) || (typeof process !== 'undefined' && isOn(process.env.DRY_RUN));
 const BATCH = 500;
 const FILES = db.getCollection('fs.files');
 
@@ -107,7 +108,7 @@ function addRefs(src, text, t, id) {
   if (blank(id)) return;
   const ids = extractIds(text);
   if (!ids.size) return;
-  pending.push({ src, ids, t, id: String(id) });
+  pending.push({ src, ids, t, id: hex(id) });
   if (pending.length >= BATCH) flushPending();
 }
 
