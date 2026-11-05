@@ -9,6 +9,7 @@ import { QueryClient } from '@tanstack/react-query'
 import {
   ARCHIVED_CONVERSATIONS_KEY,
   CONVERSATIONS_KEY,
+  applyIncomingPreview,
   applyOwnConversationUpdate,
   applySharedConversationUpdate,
   isConversationMuted,
@@ -152,5 +153,65 @@ describe('conversation cache merge rules', () => {
     expect(isConversationMuted({ isMuted: true, muteExpiresAt: now - 1 }, now)).toBe(false)
     expect(isConversationMuted({ isMuted: false, muteExpiresAt: null }, now)).toBe(false)
     expect(isConversationMuted(undefined, now)).toBe(false)
+  })
+})
+
+describe('AI threads cache', () => {
+  const AI = 'ai-bot-000000000000000000000001'
+  const aiConv = (over: Partial<Conversation> = {}) =>
+    conv({ id: 'ai1', type: 'direct', participants: [ME, AI], name: null, ...over })
+  const mk = () => {
+    const qc = new QueryClient()
+    qc.setQueryData<ConversationsResponse>(CONVERSATIONS_KEY, {
+      content: [conv()], page: 0, size: 1, totalElements: 1, hasNext: false,
+    })
+    return qc
+  }
+
+  it('user-queue update inserts an unknown AI thread at top of ai-threads, not the main list', () => {
+    const qc = mk()
+    qc.setQueryData<Conversation[]>(['ai-threads'], [aiConv({ id: 'old' })])
+    applyOwnConversationUpdate(qc, aiConv(), ME)
+    expect(qc.getQueryData<Conversation[]>(['ai-threads'])?.map((c) => c.id)).toEqual(['ai1', 'old'])
+    expect(qc.getQueryData<ConversationsResponse>(CONVERSATIONS_KEY)?.content.map((c) => c.id)).toEqual(['c1'])
+    expect(qc.getQueryState(CONVERSATIONS_KEY)?.isInvalidated).toBe(false)
+  })
+
+  it('user-queue update replaces a known AI thread in place', () => {
+    const qc = mk()
+    qc.setQueryData<Conversation[]>(['ai-threads'], [aiConv({ id: 'x' }), aiConv({ name: 'a' })])
+    applyOwnConversationUpdate(qc, aiConv({ name: 'b' }), ME)
+    expect(qc.getQueryData<Conversation[]>(['ai-threads'])?.map((c) => c.name)).toEqual([null, 'b'])
+  })
+
+  it('shared update (auto-title) merges into the matching thread', () => {
+    const qc = mk()
+    qc.setQueryData<Conversation[]>(['ai-threads'], [aiConv({ name: null, unreadCount: 3 })])
+    applySharedConversationUpdate(qc, shared({ id: 'ai1', type: 'direct', participants: [ME, AI], name: 'Title' }), ME)
+    const t = qc.getQueryData<Conversation[]>(['ai-threads'])?.[0]
+    expect(t?.name).toBe('Title')
+    expect(t?.unreadCount).toBe(3)
+    expect(qc.getQueryState(CONVERSATIONS_KEY)?.isInvalidated).toBe(false)
+  })
+
+  it('removed participant drops thread from ai-threads', () => {
+    const qc = mk()
+    qc.setQueryData<Conversation[]>(['ai-threads'], [aiConv()])
+    applySharedConversationUpdate(qc, shared({ id: 'ai1', participants: [AI] }), ME)
+    expect(qc.getQueryData<Conversation[]>(['ai-threads'])).toEqual([])
+  })
+
+  it('incoming message moves the AI thread to top', () => {
+    const qc = mk()
+    qc.setQueryData<Conversation[]>(['ai-threads'], [aiConv({ id: 'other' }), aiConv({ lastMessageAt: '2026-10-05T10:00:00Z' })])
+    const ok = applyIncomingPreview(
+      qc,
+      { conversationId: 'ai1', messageId: 'm9', createdAt: '2026-10-06T10:00:00Z', senderId: AI, content: 'yo' },
+      false,
+    )
+    expect(ok).toBe(true)
+    const list = qc.getQueryData<Conversation[]>(['ai-threads'])
+    expect(list?.map((c) => c.id)).toEqual(['ai1', 'other'])
+    expect(list?.[0].lastMessage?.content).toBe('yo')
   })
 })

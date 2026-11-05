@@ -112,7 +112,9 @@ export const chatService = {
   // ── Conversations ──────────────────────────────────────────────────────────
 
   /** All of the caller's conversations; `archived=true` → only the archived ones. */
-  getConversations: (archived = false) => listAllConversations({ archived }),
+  getConversations: (archived = false) =>
+    // AI threads live in their own list (`['ai-threads']`), never in the main one.
+    listAllConversations(archived ? { archived } : { archived, excludeAi: true }),
 
   getConversation: (id: string) =>
     chatApi.get<Conversation>(`/api/conversations/${id}`).then((r) => r.data),

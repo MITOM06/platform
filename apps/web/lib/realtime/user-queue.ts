@@ -6,6 +6,7 @@ import { safeDisplayName } from '@/lib/chat/names'
 import { getNickname } from '@/lib/nicknames'
 import {
   CONVERSATIONS_KEY,
+  AI_THREADS_KEY,
   applyIncomingPreview,
   applyOwnConversationUpdate,
   findCachedConversation,
@@ -148,6 +149,7 @@ export function handleUserQueueEvent(event: UserQueueEvent, ctx: UserQueueContex
         )
       ) {
         ctx.queryClient.invalidateQueries({ queryKey: CONVERSATIONS_KEY })
+        ctx.queryClient.invalidateQueries({ queryKey: AI_THREADS_KEY })
       }
       if (!ctx.notificationsEnabled()) return
       if (ctx.isViewingConversation(event.conversationId)) return
