@@ -7,23 +7,37 @@ import { getMediaToken } from '@/lib/media-token'
 
 const UPLOADS_PREFIX = '/api/uploads/'
 
-/** Origin of the chat-service; a relative base means the page's own origin (none on the server). */
-function chatOrigin(): string | null {
+interface ChatBase {
+  /** Origin of the chat-service; a relative base means the page's own origin (none on the server). */
+  origin: string | null
+  /** Path of the chat base without a trailing slash, e.g. `/api/chat` behind Caddy; '' when none. */
+  path: string
+}
+
+function chatBase(): ChatBase {
   const chat = serviceUrl('chat')
   try {
     if (isRelative(chat)) {
-      return typeof window !== 'undefined' ? window.location.origin : null
+      const origin = typeof window !== 'undefined' ? window.location.origin : null
+      return { origin, path: chat.replace(/\/+$/, '') }
     }
-    return new URL(chat).origin
+    const parsed = new URL(chat)
+    return { origin: parsed.origin, path: parsed.pathname.replace(/\/+$/, '') }
   } catch {
-    return null
+    return { origin: null, path: '' }
   }
+}
+
+/** `/api/uploads/...`, or the same under the chat base path (`/api/chat/api/uploads/...`). */
+function isUploadPath(path: string, basePath: string): boolean {
+  return path.startsWith(UPLOADS_PREFIX) || (basePath !== '' && path.startsWith(`${basePath}${UPLOADS_PREFIX}`))
 }
 
 /**
  * Set `t=<media token>` on an upload URL (before any `#fragment`), replacing an existing `t`.
- * Only relative `/api/uploads/...` paths and absolute URLs whose ORIGIN equals the chat origin
- * get it; anything else is returned untouched.
+ * Only relative upload paths and absolute URLs whose ORIGIN equals the chat origin and whose
+ * path is an upload path (with or without the chat base path) get it; anything else is
+ * returned untouched.
  */
 function withMediaToken(url: string): string {
   const token = getMediaToken()
@@ -35,6 +49,7 @@ function withMediaToken(url: string): string {
   const pathPart = qAt === -1 ? beforeHash : beforeHash.slice(0, qAt)
   const query = qAt === -1 ? '' : beforeHash.slice(qAt + 1)
 
+  const base = chatBase()
   let origin = ''
   let path = pathPart
   if (/^https?:\/\//i.test(pathPart)) {
@@ -44,12 +59,11 @@ function withMediaToken(url: string): string {
     } catch {
       return url
     }
-    const expected = chatOrigin()
-    if (!expected || parsed.origin !== expected) return url
+    if (!base.origin || parsed.origin !== base.origin) return url
     origin = parsed.origin
     path = parsed.pathname
   }
-  if (!path.startsWith(UPLOADS_PREFIX)) return url
+  if (!isUploadPath(path, base.path)) return url
 
   const kept = query.split('&').filter((kv) => kv !== '' && kv.split('=')[0] !== 't')
   kept.push(`t=${encodeURIComponent(token)}`)

@@ -144,4 +144,59 @@ void main() {
       expect(mediaCacheKey('$base/api/uploads/x'), '$base/api/uploads/x');
     });
   });
+
+  group('chat base path (Caddy /api/chat)', () {
+    const d = 'https://d.example';
+    const b = '$d/api/chat';
+    String abs(String u, [String base = b]) => absoluteMediaUrlWithBase(u, base);
+    setUp(() => MediaTokenHolder.set(
+        'T', DateTime.now().add(const Duration(hours: 6))));
+    tearDown(MediaTokenHolder.clear);
+
+    test('base_path_relative_upload_gets_token', () {
+      expect(abs('/api/uploads/x'), '$d/api/chat/api/uploads/x?t=T');
+    });
+
+    test('base_path_trailing_slash_relative_upload_gets_token', () {
+      expect(abs('/api/uploads/x', '$b/'), '$d/api/chat/api/uploads/x?t=T');
+      expect(abs('$d/api/chat/api/uploads/x', '$b/'),
+          '$d/api/chat/api/uploads/x?t=T');
+    });
+
+    test('base_path_absolute_with_prefix_gets_token', () {
+      expect(abs('$d/api/chat/api/uploads/x'), '$d/api/chat/api/uploads/x?t=T');
+    });
+
+    test('base_path_absolute_same_origin_without_prefix_gets_token', () {
+      expect(abs('$d/api/uploads/x'), '$d/api/uploads/x?t=T');
+    });
+
+    test('base_path_absolute_same_origin_other_path_gets_none', () {
+      expect(abs('$d/api/chat/api/other'), '$d/api/chat/api/other');
+    });
+
+    test('base_path_foreign_host_with_prefix_gets_none', () {
+      const u = 'https://evil.example/api/chat/api/uploads/x';
+      expect(abs(u), u);
+    });
+
+    test('base_path_download_with_fragment_keeps_order', () {
+      expect(downloadMediaUrlWithBase('/api/uploads/x#frag', b),
+          '$d/api/chat/api/uploads/x?t=T&download=true#frag');
+    });
+
+    test('base_path_traversal_out_of_uploads_gets_none', () {
+      expect(abs('$d/api/chat/api/uploads/../../x'),
+          '$d/api/chat/api/uploads/../../x');
+    });
+
+    test('base_path_cache_key_strips_t', () {
+      expect(mediaCacheKeyWithBase('$d/api/chat/api/uploads/x?t=T', b),
+          '$d/api/chat/api/uploads/x');
+      expect(mediaCacheKeyWithBase('$d/api/uploads/x?w=1&t=T', b),
+          '$d/api/uploads/x?w=1');
+      expect(mediaCacheKeyWithBase('$d/api/chat/api/other?t=keep', b),
+          '$d/api/chat/api/other?t=keep');
+    });
+  });
 }

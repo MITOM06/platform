@@ -171,3 +171,47 @@ describe('media token on upload URLs', () => {
     expect(downloadMediaUrl('/api/uploads/x#frag')).toBe(`${BASE}/api/uploads/x?t=TOK&download=true#frag`)
   })
 })
+
+describe('media token with a chat base path (Caddy /api/chat)', () => {
+  const D = 'https://d.example'
+  beforeEach(() => {
+    process.env.NEXT_PUBLIC_CHAT_URL = `${D}/api/chat`
+    useMediaTokenStore.setState({ token: 'T', expiresAt: Date.now() + 6 * 3600_000 })
+  })
+  afterEach(() => useMediaTokenStore.setState({ token: null, expiresAt: null }))
+
+  it('base_path_relative_upload_gets_token', () => {
+    expect(absoluteMediaUrl('/api/uploads/x')).toBe(`${D}/api/chat/api/uploads/x?t=T`)
+  })
+
+  it('base_path_trailing_slash_relative_upload_gets_token', () => {
+    process.env.NEXT_PUBLIC_CHAT_URL = `${D}/api/chat/`
+    expect(absoluteMediaUrl('/api/uploads/x')).toBe(`${D}/api/chat/api/uploads/x?t=T`)
+    expect(absoluteMediaUrl(`${D}/api/chat/api/uploads/x`)).toBe(`${D}/api/chat/api/uploads/x?t=T`)
+  })
+
+  it('base_path_absolute_with_prefix_gets_token', () => {
+    expect(absoluteMediaUrl(`${D}/api/chat/api/uploads/x`)).toBe(`${D}/api/chat/api/uploads/x?t=T`)
+  })
+
+  it('base_path_absolute_same_origin_without_prefix_gets_token', () => {
+    expect(absoluteMediaUrl(`${D}/api/uploads/x`)).toBe(`${D}/api/uploads/x?t=T`)
+  })
+
+  it('base_path_absolute_same_origin_other_path_gets_none', () => {
+    expect(absoluteMediaUrl(`${D}/api/chat/api/other`)).toBe(`${D}/api/chat/api/other`)
+  })
+
+  it('base_path_foreign_host_with_prefix_gets_none', () => {
+    const u = 'https://evil.example/api/chat/api/uploads/x'
+    expect(absoluteMediaUrl(u)).toBe(u)
+  })
+
+  it('base_path_download_with_fragment_keeps_order', () => {
+    expect(downloadMediaUrl('/api/uploads/x#frag')).toBe(`${D}/api/chat/api/uploads/x?t=T&download=true#frag`)
+  })
+
+  it('base_path_traversal_out_of_uploads_gets_none', () => {
+    expect(absoluteMediaUrl(`${D}/api/chat/api/uploads/../../x`)).toBe(`${D}/api/chat/api/uploads/../../x`)
+  })
+})
