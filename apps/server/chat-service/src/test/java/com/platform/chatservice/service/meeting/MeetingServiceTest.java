@@ -180,7 +180,7 @@ class MeetingServiceTest {
             null,
             null,
             null,
-            new MeetingSettingsDto(false, null, null, null, true)));
+            new MeetingSettingsDto(false, null, null, null, true, null)));
     Meeting.Settings s = inserted().getSettings();
     assertThat(s.isWaitingRoom()).isFalse();
     assertThat(s.isLocked()).isTrue();
@@ -389,7 +389,7 @@ class MeetingServiceTest {
             null,
             start,
             null,
-            new MeetingSettingsDto(null, null, null, null, true)));
+            new MeetingSettingsDto(null, null, null, null, true, null)));
 
     Document set = (Document) update.getValue().getUpdateObject().get("$set");
     assertThat(set)
@@ -493,7 +493,7 @@ class MeetingServiceTest {
             null,
             null,
             null,
-            new MeetingSettingsDto(null, null, false, null, null)));
+            new MeetingSettingsDto(null, null, false, null, null, null)));
 
     verify(policy).afterSettingsChange(m, after);
   }

@@ -84,6 +84,9 @@ public class Meeting {
 
   private Instant cancelledAt;
 
+  /** Set once AI notes were on in a LIVE meeting; never cleared. */
+  private boolean aiNotesEverEnabled;
+
   @Data
   @Builder
   @NoArgsConstructor
@@ -99,6 +102,9 @@ public class Meeting {
     @Builder.Default private boolean attendeesCanEditNotes = true;
 
     private boolean locked;
+
+    /** AI meeting notes on; default off. */
+    private boolean aiNotes;
   }
 
   /** One session of one person in the room. */

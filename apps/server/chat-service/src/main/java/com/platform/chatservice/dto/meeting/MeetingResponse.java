@@ -28,4 +28,5 @@ public record MeetingResponse(
     Instant createdAt,
     Instant startedAt,
     Instant endedAt,
-    Instant cancelledAt) {}
+    Instant cancelledAt,
+    Boolean aiNotesEverEnabled) {}

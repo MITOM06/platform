@@ -87,7 +87,8 @@ public class MeetingMapper {
         m.getCreatedAt(),
         m.getStartedAt(),
         m.getEndedAt(),
-        m.getCancelledAt());
+        m.getCancelledAt(),
+        m.isAiNotesEverEnabled());
   }
 
   /** The resolved profile, or a nameless entry for an unknown user. */

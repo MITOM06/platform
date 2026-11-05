@@ -23,6 +23,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -79,6 +81,26 @@ class MeetingStoreTest {
 
   private Meeting reload(Meeting m) {
     return store.findById(m.getId()).orElseThrow();
+  }
+
+  @Test
+  void markAiNotesUsedOnlyWhenLiveAndOn() {
+    Meeting m = meeting("ccc-cccc-ccc", now);
+    template.updateFirst(
+        new Query(Criteria.where("_id").is(m.getId())),
+        new Update().set("settings.aiNotes", true),
+        Meeting.class);
+    assertThat(store.markAiNotesUsed(m.getId())).isFalse(); // SCHEDULED
+
+    Meeting off = meeting("ddd-dddd-ddd", now);
+    store.markLive(off.getId(), now);
+    assertThat(store.markAiNotesUsed(off.getId())).isFalse(); // LIVE but off
+    assertThat(reload(off).isAiNotesEverEnabled()).isFalse();
+
+    store.markLive(m.getId(), now);
+    assertThat(store.markAiNotesUsed(m.getId())).isTrue();
+    assertThat(reload(m).isAiNotesEverEnabled()).isTrue();
+    assertThat(store.markAiNotesUsed(m.getId())).isFalse();
   }
 
   @Test

@@ -68,6 +68,24 @@ public class MeetingStore {
   }
 
   /**
+   * Latches {@code aiNotesEverEnabled} once AI notes are on in a LIVE meeting; true only for the
+   * call that set it.
+   */
+  public boolean markAiNotesUsed(String id) {
+    Query query =
+        new Query(
+            byId(id)
+                .and("status")
+                .is(MeetingStatus.LIVE)
+                .and("settings.aiNotes")
+                .is(true)
+                .and("aiNotesEverEnabled")
+                .ne(true));
+    Update update = new Update().set("aiNotesEverEnabled", true);
+    return mongo.updateFirst(query, update, Meeting.class).getModifiedCount() > 0;
+  }
+
+  /**
    * Records a {@code participant_joined}. If the person already has an open row (a second device /
    * a reconnect, or the same webhook delivered twice) only its sid is replaced; otherwise a new row
    * is appended — conditionally, so two racing deliveries for the same person cannot open two rows.
