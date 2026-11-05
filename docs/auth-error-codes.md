@@ -534,6 +534,22 @@ never blocks you (an Owner may edit themself; a lead may edit themself whatever 
 - ai-service fences `jobTitle`, `projects`, `style` and `preferences` as data in the prompt, wherever
   they came from. Company/department entries, role names and department names stay trusted text.
 
+### Deleting a custom role (2026-11-06)
+
+`DELETE /admin/roles/:id` (`MANAGE_ROLES`) → `200 { "success": true }`. Checked in this order:
+
+| Code | HTTP status / context | English default text | params |
+|------|-----------------------|----------------------|--------|
+| `ROLE_NOT_FOUND` | 404 — malformed or unknown id, or the role vanished before the delete | Role not found. | — |
+| `PRESET_ROLE_DELETE_FORBIDDEN` | 400 — Owner, Admin or Member (any preset), whoever asks | Built-in roles can't be deleted. | — |
+| `CANNOT_EDIT_OWN_ROLE` | 403 — a non-Owner deleting the role they hold | You can't edit your own role. | — |
+| `ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS` | 403 — a non-Owner deleting a role with capabilities they don't hold | (see above) | `{ capabilities: string[] }` |
+| `ROLE_IN_USE` | 409 — the role is still used: members hold it, pending invitations offer it (expired ones too, a resend revives them), or the SSO group mapping / default role names it | This role is still in use. Members: {members} · Pending invitations: {invitations} · SSO mappings: {ssoMappings}. | `{ members: number, invitations: number, ssoMappings: number }` |
+
+- Audit action `role.delete`, `meta.name` = the deleted role's name (the audit list names the target from it).
+- Nobody holds a deleted role, so no session is marked claims-stale. A member assigned the role in the
+  instant before the delete falls back to the Member preset (least privilege), never to more.
+
 ## OAuth / SSO redirect errors
 
 `GET /auth/google/callback`, `GET /auth/oidc/callback` and
