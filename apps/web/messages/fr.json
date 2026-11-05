@@ -2259,5 +2259,23 @@
     "chatSending": "Envoi…",
     "chatOffline": "Reconnexion en cours : impossible d'envoyer des messages pour l'instant",
     "chatCounter": "{count}/{max}"
+  },
+  "aiThreads": {
+    "untitled": "Discussion avec l'IA",
+    "newThread": "Nouvelle discussion",
+    "backToMessages": "Retour aux messages",
+    "listLabel": "Discussions avec l'IA",
+    "rename": "Renommer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "deleteTitle": "Supprimer cette discussion ?",
+    "deleteDesc": "Tous les messages de cette discussion avec l'IA seront supprimés de votre compte. Cette action est irréversible.",
+    "empty": "Aucune discussion pour le moment. Commencez-en une.",
+    "loadFailed": "Impossible de charger les discussions. Réessayez.",
+    "createFailed": "Impossible de créer une nouvelle discussion. Réessayez.",
+    "renameFailed": "Impossible de renommer la discussion. Réessayez.",
+    "nameInvalid": "Le nom doit contenir entre 1 et 80 caractères.",
+    "deleteFailed": "Impossible de supprimer la discussion. Réessayez."
   }
 }

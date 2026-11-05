@@ -2259,5 +2259,23 @@
     "chatSending": "正在发送…",
     "chatOffline": "正在重新连接，暂时无法发送消息",
     "chatCounter": "{count}/{max}"
+  },
+  "aiThreads": {
+    "untitled": "与 AI 聊天",
+    "newThread": "新对话",
+    "backToMessages": "返回消息",
+    "listLabel": "AI 对话",
+    "rename": "重命名",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "deleteTitle": "删除此对话？",
+    "deleteDesc": "此 AI 对话中的所有消息将从你的账号中删除。此操作无法撤销。",
+    "empty": "还没有对话。开始一个新对话吧。",
+    "loadFailed": "无法加载对话列表，请重试。",
+    "createFailed": "无法创建新对话，请重试。",
+    "renameFailed": "无法重命名，请重试。",
+    "nameInvalid": "名称长度须为 1 到 80 个字符。",
+    "deleteFailed": "无法删除对话，请重试。"
   }
 }
