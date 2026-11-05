@@ -1387,6 +1387,8 @@
     "permEditDesc": "AI が既存の項目を変更できるようにします。",
     "permDeleteDesc": "AI が項目を削除できるようにします。",
     "permSaved": "権限を更新しました。",
+    "permAutoRun": "全権限",
+    "permAutoRunDesc": "AI は許可された操作を確認なしで即座に実行します。完全に信頼できるアプリにのみ有効にしてください。",
     "connectSuccessGeneric": "接続しました。",
     "connectFailedNamed": "{provider} に接続できませんでした: {reason}",
     "oauthErrAccessDenied": "アクセスが拒否されました。",

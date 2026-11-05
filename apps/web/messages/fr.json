@@ -1387,6 +1387,8 @@
     "permEditDesc": "Autoriser l'IA à modifier les éléments existants.",
     "permDeleteDesc": "Autoriser l'IA à supprimer des éléments.",
     "permSaved": "Autorisations mises à jour.",
+    "permAutoRun": "Pleins pouvoirs",
+    "permAutoRunDesc": "L'IA exécute immédiatement les actions autorisées, sans vous demander de confirmer à chaque fois. Uniquement pour les applications auxquelles vous faites entièrement confiance.",
     "connectSuccessGeneric": "Connecté.",
     "connectFailedNamed": "Impossible de connecter {provider} : {reason}",
     "oauthErrAccessDenied": "Vous avez refusé l'accès.",

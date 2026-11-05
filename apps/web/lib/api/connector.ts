@@ -49,10 +49,11 @@ export const connectorService = {
       .get<ConnectionPermissions>(`/connections/${id}/permissions`)
       .then((r) => r.data),
 
-  updateConnectionPermissions: (id: string, actionGroups: ActionGroup[]) =>
+  updateConnectionPermissions: (id: string, actionGroups: ActionGroup[], autoRun: boolean) =>
     connectorApi
       .put<ConnectionPermissions>(`/connections/${id}/permissions`, {
         actionGroups,
+        autoRun,
       })
       .then((r) => r.data),
 
