@@ -35,6 +35,8 @@ class AiPersonaControllerTest {
 
   @Mock private Principal principal;
 
+  @Mock private com.platform.chatservice.service.upload.UploadRefs uploadRefs;
+
   @InjectMocks private AiPersonaController controller;
 
   private static final String ADMIN_ID = "admin-001";
@@ -179,6 +181,29 @@ class AiPersonaControllerTest {
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     verify(aiPersonaRepository).save(any(AiPersona.class));
+  }
+
+  @Test
+  void upsertPersona_avatar_recordsConversationUploadRefAsTheActor() {
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(groupConv));
+    when(aiPersonaRepository.findByConversationId(CONV_ID)).thenReturn(Optional.empty());
+    when(aiPersonaRepository.save(any())).thenReturn(persona);
+
+    controller.upsertPersona(
+        CONV_ID, new AiPersonaRequest(null, "/api/uploads/p", null, null), principal);
+
+    verify(uploadRefs).attachToConversation("/api/uploads/p", CONV_ID, ADMIN_ID);
+  }
+
+  @Test
+  void upsertPersona_withoutAvatar_recordsNoUploadRef() {
+    when(conversationRepository.findById(CONV_ID)).thenReturn(Optional.of(groupConv));
+    when(aiPersonaRepository.findByConversationId(CONV_ID)).thenReturn(Optional.empty());
+    when(aiPersonaRepository.save(any())).thenReturn(persona);
+
+    controller.upsertPersona(CONV_ID, new AiPersonaRequest("X", null, null, null), principal);
+
+    verifyNoInteractions(uploadRefs);
   }
 
   @Test

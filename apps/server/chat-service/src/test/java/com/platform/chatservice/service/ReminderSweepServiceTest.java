@@ -80,7 +80,7 @@ class ReminderSweepServiceTest {
     verify(mongoTemplate).updateFirst(any(Query.class), any(Update.class), eq(Reminder.class));
     verify(reminderRepository, never()).save(any());
     // In-chat type:"ai" persist with the bell-prefixed text, null trace.
-    verify(aiMessageService).saveAiMessage(eq("conv-1"), eq("🔔 Standup"), isNull());
+    verify(aiMessageService).saveAiMessage(eq("conv-1"), eq("🔔 Standup"), isNull(), eq("user-1"));
     // FCM push kept (best-effort) with the RAW text.
     verify(fcmService).sendReminderPush("user-1", "Standup", "conv-1");
   }
@@ -96,7 +96,7 @@ class ReminderSweepServiceTest {
 
     service.sweepDueReminders();
 
-    verify(aiMessageService, never()).saveAiMessage(any(), any(), any());
+    verify(aiMessageService, never()).saveAiMessage(any(), any(), any(), any());
     verify(fcmService, never()).sendReminderPush(any(), any(), any());
   }
 
@@ -109,7 +109,7 @@ class ReminderSweepServiceTest {
         .thenReturn(claimResult(1));
     doThrow(new RuntimeException("mongo down"))
         .when(aiMessageService)
-        .saveAiMessage(any(), any(), any());
+        .saveAiMessage(any(), any(), any(), any());
 
     service.sweepDueReminders();
 
@@ -134,7 +134,7 @@ class ReminderSweepServiceTest {
 
     // In-chat delivery is the source of truth; a failed best-effort push must not undo the claim
     // or trigger the attempts-increment failure path.
-    verify(aiMessageService).saveAiMessage(eq("conv-1"), eq("🔔 Standup"), isNull());
+    verify(aiMessageService).saveAiMessage(eq("conv-1"), eq("🔔 Standup"), isNull(), eq("user-1"));
     verify(mongoTemplate).updateFirst(any(Query.class), any(Update.class), eq(Reminder.class));
   }
 }

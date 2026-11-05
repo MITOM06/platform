@@ -25,10 +25,10 @@ import org.springframework.stereotype.Component;
  * {@code metadata.refs}. Attaching never throws — a missed ref only hides a file, it must never
  * fail the save that triggered it.
  *
- * <p>A user-initiated write passes the acting user: only ids that user can already read ({@link
- * UploadAccessPolicy}) are attached, so pasting a known URL into another chat can never widen
- * access (e.g. after leaving the group it came from). Server-authored writes (AI replies, system
- * notices) use the actor-less overloads and attach every id.
+ * <p>Every write names the acting user: only ids that user can already read ({@link
+ * UploadAccessPolicy}) are attached, so pasting a known URL into another chat — or getting an AI
+ * reply, reminder or bot to echo it — can never widen access. AI-authored text uses the user whose
+ * text it echoes (prompting user, reminder owner, bot owner); no actor = nothing is attached.
  */
 @Component
 @RequiredArgsConstructor
@@ -63,37 +63,22 @@ public class UploadRefs {
     return ids;
   }
 
-  /** Trusted server write (AI reply, system notice): attaches every referenced upload. */
-  public void attachToConversation(String text, String conversationId) {
-    attach(text, REF_CONVERSATION, conversationId, null);
-  }
-
-  /** User write by {@code actorId}: attaches only uploads that user can read right now. */
+  /** Attaches only uploads {@code actorId} can read right now; a blank actor attaches nothing. */
   public void attachToConversation(String text, String conversationId, String actorId) {
-    attach(text, REF_CONVERSATION, conversationId, requireActor(actorId));
+    attach(text, REF_CONVERSATION, conversationId, actorId);
   }
 
-  /** Trusted server write: attaches every referenced upload to the department. */
-  public void attachToDepartment(String text, String departmentId) {
-    attach(text, REF_DEPARTMENT, departmentId, null);
-  }
-
-  /** User write by {@code actorId}: attaches only uploads that user can read right now. */
+  /** Attaches only uploads {@code actorId} can read right now; a blank actor attaches nothing. */
   public void attachToDepartment(String text, String departmentId, String actorId) {
-    attach(text, REF_DEPARTMENT, departmentId, requireActor(actorId));
+    attach(text, REF_DEPARTMENT, departmentId, actorId);
   }
 
-  /** A blank actor must not fall back to the trusted (unfiltered) path. */
-  private static String requireActor(String actorId) {
-    return actorId == null || actorId.isBlank() ? "" : actorId;
-  }
-
-  /** {@code actorId == null} = trusted; otherwise only files the actor can read are touched. */
   private void attach(String text, String type, String targetId, String actorId) {
     try {
+      if (actorId == null || actorId.isBlank()) return;
       Set<String> ids = extractIds(text);
       if (ids.isEmpty() || targetId == null || targetId.isBlank()) return;
-      Criteria files = actorId == null ? fileCriteria(ids) : readableBy(ids, actorId);
+      Criteria files = readableBy(ids, actorId);
       if (files == null) return;
       mongoTemplate.updateMulti(
           new Query(files),
@@ -106,7 +91,6 @@ public class UploadRefs {
 
   /** One GridFS query for all ids, then the policy per file; {@code null} when none is readable. */
   private Criteria readableBy(Set<String> ids, String actorId) {
-    if (actorId.isEmpty()) return null;
     List<Object> readable = new ArrayList<>();
     for (GridFSFile file : gridFsTemplate.find(new Query(fileCriteria(ids)))) {
       if (accessPolicy.canRead(file, actorId)) {

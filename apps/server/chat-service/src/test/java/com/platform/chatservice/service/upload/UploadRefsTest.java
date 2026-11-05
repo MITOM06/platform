@@ -52,7 +52,9 @@ class UploadRefsTest {
     mongoTemplate.getCollection("fs.chunks").deleteMany(new Document());
     gridFs =
         new GridFsTemplate(mongoTemplate.getMongoDatabaseFactory(), mongoTemplate.getConverter());
-    refs = new UploadRefs(mongoTemplate, gridFs, mock(UploadAccessPolicy.class));
+    UploadAccessPolicy allowAll = mock(UploadAccessPolicy.class);
+    when(allowAll.canRead(any(), anyString())).thenReturn(true);
+    refs = new UploadRefs(mongoTemplate, gridFs, allowAll);
   }
 
   private void storeUuidFile(String fileId) {
@@ -111,9 +113,9 @@ class UploadRefsTest {
     storeUuidFile(UUID_A);
     String text = "[\"/api/uploads/" + UUID_A + "\"]";
 
-    refs.attachToConversation(text, "conv-1");
-    refs.attachToConversation(text, "conv-1");
-    refs.attachToDepartment(text, "dept-1");
+    refs.attachToConversation(text, "conv-1", "u1");
+    refs.attachToConversation(text, "conv-1", "u1");
+    refs.attachToDepartment(text, "dept-1", "u1");
 
     assertThat(refsOf(UUID_A))
         .containsExactly(
@@ -130,7 +132,7 @@ class UploadRefsTest {
             "image/png",
             new Document("uploadedBy", "u1"));
 
-    refs.attachToConversation("/api/uploads/" + legacyId.toHexString(), "conv-9");
+    refs.attachToConversation("/api/uploads/" + legacyId.toHexString(), "conv-9", "u1");
 
     Document file =
         mongoTemplate.getCollection("fs.files").find(new Document("_id", legacyId)).first();
@@ -142,11 +144,22 @@ class UploadRefsTest {
   void attach_unknown_id_is_noop() {
     storeUuidFile(UUID_A);
 
-    assertThatCode(() -> refs.attachToConversation("/api/uploads/" + UUID_B + " " + HEX, "conv-1"))
+    assertThatCode(
+            () -> refs.attachToConversation("/api/uploads/" + UUID_B + " " + HEX, "conv-1", "u1"))
         .doesNotThrowAnyException();
 
     assertThat(refsOf(UUID_A)).isEmpty();
     assertThat(mongoTemplate.getCollection("fs.files").countDocuments()).isEqualTo(1);
+  }
+
+  @Test
+  void attach_without_actor_attaches_nothing() {
+    storeUuidFile(UUID_A);
+
+    refs.attachToConversation("/api/uploads/" + UUID_A, "conv-1", null);
+    refs.attachToConversation("/api/uploads/" + UUID_A, "conv-1", " ");
+
+    assertThat(refsOf(UUID_A)).isEmpty();
   }
 
   @Test
@@ -158,10 +171,6 @@ class UploadRefsTest {
     when(brokenFs.find(any(Query.class))).thenThrow(new RuntimeException("db down"));
     UploadRefs failing = new UploadRefs(broken, brokenFs, mock(UploadAccessPolicy.class));
 
-    assertThatCode(() -> failing.attachToConversation("/api/uploads/" + UUID_A, "conv-1"))
-        .doesNotThrowAnyException();
-    assertThatCode(() -> failing.attachToDepartment("/api/uploads/" + UUID_A, "dept-1"))
-        .doesNotThrowAnyException();
     assertThatCode(() -> failing.attachToConversation("/api/uploads/" + UUID_A, "conv-1", "u1"))
         .doesNotThrowAnyException();
     assertThatCode(() -> failing.attachToDepartment("/api/uploads/" + UUID_A, "dept-1", "u1"))

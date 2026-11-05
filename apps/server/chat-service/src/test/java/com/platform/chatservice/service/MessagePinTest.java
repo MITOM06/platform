@@ -351,7 +351,7 @@ class MessagePinTest {
     assertThat(notice.senderId()).isEqualTo(SENDER_ID);
     assertThat(notice.content()).isEqualTo("system.admin.promoted:" + OTHER_ID);
     assertThat(notice.readBy()).containsExactly(SENDER_ID);
-    verify(uploadRefs).attachToConversation("system.admin.promoted:" + OTHER_ID, CONV_ID);
+    verifyNoInteractions(uploadRefs);
   }
 
   @Test

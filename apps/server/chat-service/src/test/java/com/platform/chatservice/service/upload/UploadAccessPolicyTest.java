@@ -67,8 +67,13 @@ class UploadAccessPolicyTest {
     conversationRepository.deleteAll();
     gridFs =
         new GridFsTemplate(mongoTemplate.getMongoDatabaseFactory(), mongoTemplate.getConverter());
+    // Refs are set up by the uploader (who can always read the file).
     refs =
-        new UploadRefs(mongoTemplate, gridFs, org.mockito.Mockito.mock(UploadAccessPolicy.class));
+        new UploadRefs(
+            mongoTemplate,
+            gridFs,
+            new UploadAccessPolicy(
+                mongoTemplate, new ConversationCacheService(conversationRepository)));
     spyTemplate = spy(mongoTemplate);
     policy =
         new UploadAccessPolicy(spyTemplate, new ConversationCacheService(conversationRepository));
@@ -118,7 +123,7 @@ class UploadAccessPolicyTest {
   void participant_of_referenced_conversation_can_read() {
     String id = upload();
     Conversation c = conversation(UPLOADER, MEMBER);
-    refs.attachToConversation(url(id), c.getId());
+    refs.attachToConversation(url(id), c.getId(), UPLOADER);
 
     assertThat(policy.canRead(file(id), MEMBER)).isTrue();
   }
@@ -127,7 +132,7 @@ class UploadAccessPolicyTest {
   void non_participant_cannot_read() {
     String id = upload();
     Conversation c = conversation(UPLOADER, MEMBER);
-    refs.attachToConversation(url(id), c.getId());
+    refs.attachToConversation(url(id), c.getId(), UPLOADER);
 
     assertThat(policy.canRead(file(id), STRANGER)).isFalse();
   }
@@ -136,7 +141,7 @@ class UploadAccessPolicyTest {
   void user_who_left_conversation_cannot_read() {
     String id = upload();
     Conversation c = conversation(UPLOADER, MEMBER);
-    refs.attachToConversation(url(id), c.getId());
+    refs.attachToConversation(url(id), c.getId(), UPLOADER);
     assertThat(policy.canRead(file(id), MEMBER)).isTrue();
 
     c.setParticipants(new ArrayList<>(List.of(UPLOADER)));
@@ -148,7 +153,7 @@ class UploadAccessPolicyTest {
   @Test
   void department_member_can_read_department_kb_file() {
     String id = upload();
-    refs.attachToDepartment(url(id), DEPT.toHexString());
+    refs.attachToDepartment(url(id), DEPT.toHexString(), UPLOADER);
 
     assertThat(policy.canRead(file(id), MEMBER)).isTrue();
   }
@@ -156,19 +161,20 @@ class UploadAccessPolicyTest {
   @Test
   void other_department_cannot() {
     String id = upload();
-    refs.attachToDepartment(url(id), DEPT.toHexString());
+    refs.attachToDepartment(url(id), DEPT.toHexString(), UPLOADER);
 
     assertThat(policy.canRead(file(id), STRANGER)).isFalse();
   }
 
   @Test
-  void user_avatar_readable_by_any_authenticated_user() {
+  void own_avatar_readable_by_any_authenticated_user() {
+    mongoTemplate.getCollection("users").insertOne(user(UPLOADER, DEPT));
     String avatar = upload();
     String cover = upload();
     mongoTemplate
         .getCollection("users")
         .updateOne(
-            new Document("_id", new ObjectId(MEMBER)),
+            new Document("_id", new ObjectId(UPLOADER)),
             new Document(
                 "$set",
                 new Document("avatarUrl", url(avatar) + "#fit=cover&scale=120")
@@ -179,13 +185,41 @@ class UploadAccessPolicyTest {
   }
 
   @Test
+  void user_avatar_set_to_foreign_file_does_not_make_it_public() {
+    String id = upload(); // uploaded by UPLOADER
+    // MEMBER points their own avatar at UPLOADER's file: must not open it to everyone.
+    mongoTemplate
+        .getCollection("users")
+        .updateOne(
+            new Document("_id", new ObjectId(MEMBER)),
+            new Document("$set", new Document("avatarUrl", url(id))));
+
+    assertThat(policy.canRead(file(id), STRANGER)).isFalse();
+  }
+
+  @Test
+  void file_without_uploader_never_matches_user_profile() {
+    String id = UUID.randomUUID().toString();
+    gridFs.store(
+        new ByteArrayInputStream(new byte[] {1}), id, "image/png", new Document("fileId", id));
+    mongoTemplate
+        .getCollection("users")
+        .updateOne(
+            new Document("_id", new ObjectId(MEMBER)),
+            new Document("$set", new Document("avatarUrl", url(id))));
+
+    assertThat(policy.canRead(file(id), STRANGER)).isFalse();
+  }
+
+  @Test
   void profile_url_must_match_whole_id() {
+    mongoTemplate.getCollection("users").insertOne(user(UPLOADER, DEPT));
     String id = upload();
     // A stored URL that merely starts with the id (longer path) must not grant access.
     mongoTemplate
         .getCollection("users")
         .updateOne(
-            new Document("_id", new ObjectId(MEMBER)),
+            new Document("_id", new ObjectId(UPLOADER)),
             new Document("$set", new Document("avatarUrl", url(id) + "x")));
 
     assertThat(policy.canRead(file(id), STRANGER)).isFalse();
@@ -202,14 +236,19 @@ class UploadAccessPolicyTest {
   }
 
   @Test
-  void bot_and_persona_avatar_readable() {
+  void bot_avatar_readable() {
     String bot = upload();
-    String persona = upload();
     mongoTemplate.getCollection("external_bots").insertOne(new Document("avatarUrl", url(bot)));
-    mongoTemplate.getCollection("ai_personas").insertOne(new Document("avatarUrl", url(persona)));
 
     assertThat(policy.canRead(file(bot), STRANGER)).isTrue();
-    assertThat(policy.canRead(file(persona), STRANGER)).isTrue();
+  }
+
+  @Test
+  void persona_avatar_no_longer_matches_rule4() {
+    String persona = upload();
+    mongoTemplate.getCollection("ai_personas").insertOne(new Document("avatarUrl", url(persona)));
+
+    assertThat(policy.canRead(file(persona), STRANGER)).isFalse();
   }
 
   @Test
@@ -226,7 +265,7 @@ class UploadAccessPolicyTest {
   void profile_fallback_not_queried_when_conversation_rule_matches() {
     String id = upload();
     Conversation c = conversation(UPLOADER, MEMBER);
-    refs.attachToConversation(url(id), c.getId());
+    refs.attachToConversation(url(id), c.getId(), UPLOADER);
 
     assertThat(policy.canRead(file(id), MEMBER)).isTrue();
 

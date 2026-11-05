@@ -75,7 +75,10 @@ public class ReminderSweepService {
         // Load-bearing: persist + broadcast the reminder as an in-chat type:"ai"
         // message so web + history + mobile all render it via the existing pipeline.
         aiMessageService.saveAiMessage(
-            reminder.getConversationId(), formatReminderText(reminder.getText()), null);
+            reminder.getConversationId(),
+            formatReminderText(reminder.getText()),
+            null,
+            reminder.getUserId());
 
         // Best-effort out-of-app nudge for mobile; failure here must NOT undo the claim.
         try {

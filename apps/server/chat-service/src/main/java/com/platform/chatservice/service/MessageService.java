@@ -159,7 +159,6 @@ public class MessageService {
                 .type(MessageTypePolicy.SYSTEM)
                 .readBy(attributed ? new ArrayList<>(List.of(actorId)) : new ArrayList<>())
                 .build());
-    uploadRefs.attachToConversation(content, conversationId);
     Instant at = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
     bumpConversation(
         conversationId,
@@ -385,6 +384,19 @@ public class MessageService {
       List<com.platform.chatservice.model.AiSource> sources) {
     return aiMessageService.persistAiMessage(
         conversationId, content, trace, pendingActions, aiReplyId, sources);
+  }
+
+  /** Same, with the prompting user as the actor for upload refs. */
+  public MessageResponse persistAiMessage(
+      String conversationId,
+      String content,
+      AiTraceData trace,
+      List<PendingAction> pendingActions,
+      String aiReplyId,
+      List<com.platform.chatservice.model.AiSource> sources,
+      String actorId) {
+    return aiMessageService.persistAiMessage(
+        conversationId, content, trace, pendingActions, aiReplyId, sources, actorId);
   }
 
   /**

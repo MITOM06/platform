@@ -301,7 +301,7 @@ class MessageSendTest {
                         && "ai".equals(m.getType())
                         && content.equals(m.getContent())));
     verify(clusterBroker).convertAndSend("/topic/conversation/" + CONV_ID, response);
-    verify(uploadRefs).attachToConversation(content, CONV_ID);
+    verify(uploadRefs).attachToConversation(content, CONV_ID, null);
   }
 
   /** Block User only applies to direct chats — it used to silence the sender in every group. */

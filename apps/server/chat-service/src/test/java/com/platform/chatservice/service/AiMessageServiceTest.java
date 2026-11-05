@@ -66,7 +66,7 @@ class AiMessageServiceTest {
   @Test
   void saveBotMessage_persistsWithGivenSender_andBroadcastsClusterWide() {
     MessageResponse response =
-        service.saveBotMessage("conv-1", "extbot:bf-1", "Hello from the assistant");
+        service.saveBotMessage("conv-1", "extbot:bf-1", "Hello from the assistant", "owner-1");
 
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
     verify(messageRepository).save(captor.capture());
@@ -76,7 +76,7 @@ class AiMessageServiceTest {
     assertThat(saved.getType()).isEqualTo("ai");
     assertThat(saved.getContent()).isEqualTo("Hello from the assistant");
     verify(clusterBroker).convertAndSend("/topic/conversation/conv-1", response);
-    verify(uploadRefs).attachToConversation("Hello from the assistant", "conv-1");
+    verify(uploadRefs).attachToConversation("Hello from the assistant", "conv-1", "owner-1");
   }
 
   @Test

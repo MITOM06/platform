@@ -4,8 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
+import com.platform.chatservice.controller.AiPersonaController;
+import com.platform.chatservice.dto.AiPersonaRequest;
 import com.platform.chatservice.dto.SendMessageRequest;
 import com.platform.chatservice.model.Conversation;
+import com.platform.chatservice.repository.AiPersonaRepository;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.ExternalBotRepository;
 import com.platform.chatservice.repository.FriendshipRepository;
@@ -33,7 +36,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Ref laundering guard, end to end through the real services and MongoDB: a user-initiated write
- * only attaches upload ids the acting user can already read; AI-authored writes attach all.
+ * only attaches upload ids the acting user can already read — AI / bot / reminder messages use the
+ * user whose text they echo as the actor, and writes with no actor attach nothing.
  */
 @DataMongoTest
 @Testcontainers
@@ -55,9 +59,11 @@ class UploadRefsActorTest {
   @Autowired private MessageRepository messageRepository;
   @Autowired private FriendshipRepository friendshipRepository;
   @Autowired private ExternalBotRepository externalBotRepository;
+  @Autowired private AiPersonaRepository aiPersonaRepository;
 
   private GridFsTemplate gridFs;
   private UploadAccessPolicy policy;
+  private UploadRefs refs;
   private MessageService messageService;
   private AiMessageService aiMessageService;
   private ConversationService conversationService;
@@ -69,12 +75,13 @@ class UploadRefsActorTest {
     }
     conversationRepository.deleteAll();
     messageRepository.deleteAll();
+    aiPersonaRepository.deleteAll();
 
     gridFs =
         new GridFsTemplate(mongoTemplate.getMongoDatabaseFactory(), mongoTemplate.getConverter());
     ConversationCacheService cache = new ConversationCacheService(conversationRepository);
     policy = new UploadAccessPolicy(mongoTemplate, cache);
-    UploadRefs refs = new UploadRefs(mongoTemplate, gridFs, policy);
+    refs = new UploadRefs(mongoTemplate, gridFs, policy);
     MessageMapper mapper = new MessageMapper();
     aiMessageService =
         new AiMessageService(
@@ -191,13 +198,56 @@ class UploadRefsActorTest {
   }
 
   @Test
-  void ai_message_attaches_unconditionally() {
+  void ai_reply_attaches_only_files_prompting_user_can_read() {
+    Conversation c = group(FRIEND, LEAVER);
+    String foreign = upload(OWNER);
+    String own = upload(FRIEND);
+
+    aiMessageService.persistAiMessage(
+        c.getId(), "see " + url(foreign) + " and " + url(own), null, null, "r-1", null, FRIEND);
+
+    assertThat(refsOf(foreign)).isEmpty();
+    assertThat(refsOf(own)).containsExactly(conv(c.getId()));
+  }
+
+  @Test
+  void reminder_echoing_foreign_upload_does_not_attach() {
+    Conversation c = group(LEAVER, FRIEND);
+    String foreign = upload(OWNER);
+
+    // ReminderSweepService passes reminder.getUserId() as the actor.
+    aiMessageService.saveAiMessage(c.getId(), "🔔 " + url(foreign), null, LEAVER);
+
+    assertThat(refsOf(foreign)).isEmpty();
+    assertThat(policy.canRead(file(foreign), LEAVER)).isFalse();
+  }
+
+  @Test
+  void ai_write_without_actor_attaches_nothing() {
     Conversation c = group(FRIEND, LEAVER);
     String foreign = upload(OWNER);
 
-    aiMessageService.saveAiMessage(c.getId(), "![chart](" + url(foreign) + ")", null);
+    aiMessageService.saveMeetingSummary(c.getId(), "{\"t\":\"" + url(foreign) + "\"}");
+    aiMessageService.persistAiMessage(c.getId(), url(foreign), null);
 
-    assertThat(refsOf(foreign)).containsExactly(conv(c.getId()));
+    assertThat(refsOf(foreign)).isEmpty();
+  }
+
+  @Test
+  void persona_avatar_attaches_conversation_ref_only_if_actor_can_read() {
+    Conversation c = group(LEAVER, FRIEND); // LEAVER is admin
+    String foreign = upload(OWNER);
+    String own = upload(LEAVER);
+    var controller = new AiPersonaController(aiPersonaRepository, conversationRepository, refs);
+    java.security.Principal me = () -> LEAVER;
+
+    controller.upsertPersona(c.getId(), new AiPersonaRequest(null, url(foreign), null, null), me);
+    assertThat(refsOf(foreign)).isEmpty();
+    assertThat(policy.canRead(file(foreign), FRIEND)).isFalse();
+
+    controller.upsertPersona(c.getId(), new AiPersonaRequest(null, url(own), null, null), me);
+    assertThat(refsOf(own)).containsExactly(conv(c.getId()));
+    assertThat(policy.canRead(file(own), FRIEND)).isTrue();
   }
 
   @Test

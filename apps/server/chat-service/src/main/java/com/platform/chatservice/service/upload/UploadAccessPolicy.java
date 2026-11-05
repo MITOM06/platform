@@ -23,22 +23,19 @@ import org.springframework.stereotype.Component;
  *   <li>a current participant of a conversation in {@code metadata.refs} ({@code t:"c"});
  *   <li>a member of a department in {@code metadata.refs} ({@code t:"d"}, via {@code
  *       users.departmentIds});
- *   <li>anyone, when the file is a public profile image: its URL is a user avatar / cover photo,
- *       the workspace logo, or a bot / AI persona avatar — queried only when 1–3 fail.
+ *   <li>anyone, when the file is a public profile image — queried only when 1–3 fail: the avatar /
+ *       cover photo of the user who UPLOADED it (users can point their profile at any string, so a
+ *       foreign file there proves nothing), the workspace logo, or a bot avatar (both admin-only
+ *       writes). AI persona avatars are not here: they are recorded as a conversation ref.
  * </ol>
  */
 @Component
 @RequiredArgsConstructor
 public class UploadAccessPolicy {
 
-  /** collection → field holding a profile image URL readable by every signed-in user. */
-  private static final List<String[]> PROFILE_IMAGE_FIELDS =
-      List.of(
-          new String[] {"users", "avatarUrl"},
-          new String[] {"users", "coverPhoto"},
-          new String[] {"workspaces", "logoUrl"},
-          new String[] {"external_bots", "avatarUrl"},
-          new String[] {"ai_personas", "avatarUrl"});
+  /** collection → field holding an admin-set image URL readable by every signed-in user. */
+  private static final List<String[]> ADMIN_IMAGE_FIELDS =
+      List.of(new String[] {"workspaces", "logoUrl"}, new String[] {"external_bots", "avatarUrl"});
 
   private final MongoTemplate mongoTemplate;
   private final ConversationCacheService conversationCacheService;
@@ -53,7 +50,7 @@ public class UploadAccessPolicy {
     collectRefs(meta, conversations, departments);
     if (inAnyConversation(conversations, userId)) return true;
     if (!departments.isEmpty() && inAnyDepartment(departments, userId)) return true;
-    return isProfileImage(publicId(file, meta));
+    return isProfileImage(publicId(file, meta), meta.getString("uploadedBy"));
   }
 
   private static void collectRefs(Document meta, List<String> conversations, List<String> depts) {
@@ -90,11 +87,23 @@ public class UploadAccessPolicy {
     return departmentIds.stream().anyMatch(userDepts::contains);
   }
 
-  private boolean isProfileImage(String publicId) {
+  private boolean isProfileImage(String publicId, String uploadedBy) {
     if (publicId == null) return false;
     // Stored values may carry a "#fit=cover&scale=120" fragment or a "?v=" query.
     Pattern url = Pattern.compile("^" + Pattern.quote("/api/uploads/" + publicId) + "($|[#?])");
-    for (String[] field : PROFILE_IMAGE_FIELDS) {
+    if (uploadedBy != null && !uploadedBy.isBlank()) {
+      Object ownerId = ObjectId.isValid(uploadedBy) ? new ObjectId(uploadedBy) : uploadedBy;
+      Criteria ownProfile =
+          new Criteria()
+              .andOperator(
+                  Criteria.where("_id").is(ownerId),
+                  new Criteria()
+                      .orOperator(
+                          Criteria.where("avatarUrl").regex(url),
+                          Criteria.where("coverPhoto").regex(url)));
+      if (mongoTemplate.exists(new Query(ownProfile), "users")) return true;
+    }
+    for (String[] field : ADMIN_IMAGE_FIELDS) {
       if (mongoTemplate.exists(new Query(Criteria.where(field[1]).regex(url)), field[0])) {
         return true;
       }

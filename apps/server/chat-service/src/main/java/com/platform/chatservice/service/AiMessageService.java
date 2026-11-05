@@ -46,7 +46,17 @@ public class AiMessageService {
    * the message and its {@code AI_STREAM_DONE} in one ordered batch.
    */
   public MessageResponse saveAiMessage(String conversationId, String content, AiTraceData trace) {
-    return persistAndBroadcast(conversationId, AiConstants.AI_BOT_USER_ID, content, "ai", trace);
+    return saveAiMessage(conversationId, content, trace, null);
+  }
+
+  /**
+   * Same, with {@code actorId} = the user whose text the message echoes (e.g. a reminder's owner):
+   * upload refs are recorded only for files that user can read. {@code null} records none.
+   */
+  public MessageResponse saveAiMessage(
+      String conversationId, String content, AiTraceData trace, String actorId) {
+    return persistAndBroadcast(
+        conversationId, AiConstants.AI_BOT_USER_ID, content, "ai", trace, actorId);
   }
 
   /** Persist an AI message and bump the conversation WITHOUT broadcasting it. */
@@ -85,6 +95,23 @@ public class AiMessageService {
       List<PendingAction> pendingActions,
       String aiReplyId,
       List<AiSource> sources) {
+    return persistAiMessage(
+        conversationId, content, trace, pendingActions, aiReplyId, sources, null);
+  }
+
+  /**
+   * Same, with {@code actorId} = the user who prompted the reply: upload refs are recorded only for
+   * files that user can read ({@code null} records none), so asking the AI to echo a URL can never
+   * widen access.
+   */
+  public MessageResponse persistAiMessage(
+      String conversationId,
+      String content,
+      AiTraceData trace,
+      List<PendingAction> pendingActions,
+      String aiReplyId,
+      List<AiSource> sources,
+      String actorId) {
     return persist(
         conversationId,
         AiConstants.AI_BOT_USER_ID,
@@ -93,22 +120,30 @@ public class AiMessageService {
         trace,
         pendingActions,
         aiReplyId,
-        sources);
+        sources,
+        actorId);
   }
 
   /**
    * Save a message authored by an external bot (Bot Factory personal assistant) under its own
    * sender id and broadcast it to the conversation topic. Same wire shape as an AI message ({@code
-   * type:"ai"}) so the clients render it as an assistant bubble.
+   * type:"ai"}) so the clients render it as an assistant bubble. {@code actorId} = the bot's owner:
+   * upload refs are recorded only for files the owner can read.
    */
-  public MessageResponse saveBotMessage(String conversationId, String senderId, String content) {
-    return persistAndBroadcast(conversationId, senderId, content, "ai", null);
+  public MessageResponse saveBotMessage(
+      String conversationId, String senderId, String content, String actorId) {
+    return persistAndBroadcast(conversationId, senderId, content, "ai", null, actorId);
   }
 
   private MessageResponse persistAndBroadcast(
-      String conversationId, String senderId, String content, String type, AiTraceData trace) {
+      String conversationId,
+      String senderId,
+      String content,
+      String type,
+      AiTraceData trace,
+      String actorId) {
     MessageResponse response =
-        persist(conversationId, senderId, content, type, trace, null, null, null);
+        persist(conversationId, senderId, content, type, trace, null, null, null, actorId);
     clusterBroker.convertAndSend("/topic/conversation/" + conversationId, response);
     return response;
   }
@@ -121,7 +156,8 @@ public class AiMessageService {
       AiTraceData trace,
       List<PendingAction> pendingActions,
       String aiReplyId,
-      List<AiSource> sources) {
+      List<AiSource> sources,
+      String actorId) {
     Message message =
         messageRepository.save(
             Message.builder()
@@ -139,7 +175,7 @@ public class AiMessageService {
                 .sources(sources == null || sources.isEmpty() ? null : new ArrayList<>(sources))
                 .build());
 
-    uploadRefs.attachToConversation(content, conversationId);
+    uploadRefs.attachToConversation(content, conversationId, actorId);
     Instant savedAt = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
     bumpConversation(conversationId, message, savedAt);
     return messageMapper.toResponse(message);
@@ -168,8 +204,9 @@ public class AiMessageService {
    */
   public String saveMeetingSummary(String conversationId, String contentJson) {
     MessageResponse response =
+        // No single user authored a call summary → no actor → no upload refs.
         persistAndBroadcast(
-            conversationId, AiConstants.AI_BOT_USER_ID, contentJson, "meeting_summary", null);
+            conversationId, AiConstants.AI_BOT_USER_ID, contentJson, "meeting_summary", null, null);
     return response.id();
   }
 
