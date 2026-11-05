@@ -9334,7 +9334,7 @@ abstract class AppLocalizations {
   /// No description provided for @meetingAiNotesUnsupported.
   ///
   /// In en, this message translates to:
-  /// **'This browser can\'t capture speech for AI notes'**
+  /// **'This device can\'t capture speech for AI notes'**
   String get meetingAiNotesUnsupported;
 
   /// No description provided for @meetingSubmitCreate.

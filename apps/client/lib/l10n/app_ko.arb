@@ -1862,7 +1862,7 @@
   "meetingAiNotesPrejoin": "이 회의는 AI 노트를 사용합니다",
   "meetingAiNotesPauseMine": "내 음성 기록 일시중지",
   "meetingAiNotesResumeMine": "내 음성 기록 다시 시작",
-  "meetingAiNotesUnsupported": "이 브라우저는 AI 노트용 음성 기록을 지원하지 않습니다",
+  "meetingAiNotesUnsupported": "이 기기는 AI 노트용 음성 기록을 지원하지 않습니다",
   "meetingSubmitCreate": "예약",
   "meetingSubmitStartNow": "지금 시작",
   "meetingSubmitSave": "변경 사항 저장",

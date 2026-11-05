@@ -5203,7 +5203,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meetingAiNotesUnsupported =>
-      'This browser can\'t capture speech for AI notes';
+      'This device can\'t capture speech for AI notes';
 
   @override
   String get meetingSubmitCreate => 'Schedule';

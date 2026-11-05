@@ -5019,7 +5019,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get meetingAiNotesResumeMine => '내 음성 기록 다시 시작';
 
   @override
-  String get meetingAiNotesUnsupported => '이 브라우저는 AI 노트용 음성 기록을 지원하지 않습니다';
+  String get meetingAiNotesUnsupported => '이 기기는 AI 노트용 음성 기록을 지원하지 않습니다';
 
   @override
   String get meetingSubmitCreate => '예약';

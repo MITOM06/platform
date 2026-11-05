@@ -5286,7 +5286,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get meetingAiNotesUnsupported =>
-      'Ce navigateur ne prend pas en charge la capture vocale pour les notes IA';
+      'Cet appareil ne prend pas en charge la capture vocale pour les notes IA';
 
   @override
   String get meetingSubmitCreate => 'Planifier';

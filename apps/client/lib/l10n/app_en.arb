@@ -2628,7 +2628,7 @@
   "meetingAiNotesPrejoin": "This meeting has AI notes",
   "meetingAiNotesPauseMine": "Pause my speech capture",
   "meetingAiNotesResumeMine": "Resume my speech capture",
-  "meetingAiNotesUnsupported": "This browser can't capture speech for AI notes",
+  "meetingAiNotesUnsupported": "This device can't capture speech for AI notes",
   "meetingSubmitCreate": "Schedule",
   "meetingSubmitStartNow": "Start now",
   "meetingSubmitSave": "Save changes",

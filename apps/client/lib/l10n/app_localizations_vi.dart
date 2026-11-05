@@ -5169,7 +5169,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get meetingAiNotesUnsupported =>
-      'Trình duyệt này không hỗ trợ ghi lời cho AI';
+      'Thiết bị này không hỗ trợ ghi lời cho AI';
 
   @override
   String get meetingSubmitCreate => 'Lên lịch';

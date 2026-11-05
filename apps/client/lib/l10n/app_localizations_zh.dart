@@ -4953,7 +4953,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get meetingAiNotesResumeMine => '继续记录我的发言';
 
   @override
-  String get meetingAiNotesUnsupported => '此浏览器不支持为 AI 笔记记录语音';
+  String get meetingAiNotesUnsupported => '此设备不支持为 AI 笔记记录语音';
 
   @override
   String get meetingSubmitCreate => '安排';

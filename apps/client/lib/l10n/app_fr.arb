@@ -1862,7 +1862,7 @@
   "meetingAiNotesPrejoin": "Cette réunion a des notes par IA",
   "meetingAiNotesPauseMine": "Suspendre la capture de ma voix",
   "meetingAiNotesResumeMine": "Reprendre la capture de ma voix",
-  "meetingAiNotesUnsupported": "Ce navigateur ne prend pas en charge la capture vocale pour les notes IA",
+  "meetingAiNotesUnsupported": "Cet appareil ne prend pas en charge la capture vocale pour les notes IA",
   "meetingSubmitCreate": "Planifier",
   "meetingSubmitStartNow": "Commencer maintenant",
   "meetingSubmitSave": "Enregistrer",

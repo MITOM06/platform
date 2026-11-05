@@ -5255,7 +5255,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meetingAiNotesUnsupported =>
-      'Este navegador no admite la captura de voz para las notas de IA';
+      'Este dispositivo no admite la captura de voz para las notas de IA';
 
   @override
   String get meetingSubmitCreate => 'Programar';

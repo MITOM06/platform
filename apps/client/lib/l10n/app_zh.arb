@@ -1862,7 +1862,7 @@
   "meetingAiNotesPrejoin": "本次会议启用了 AI 纪要",
   "meetingAiNotesPauseMine": "暂停记录我的发言",
   "meetingAiNotesResumeMine": "继续记录我的发言",
-  "meetingAiNotesUnsupported": "此浏览器不支持为 AI 笔记记录语音",
+  "meetingAiNotesUnsupported": "此设备不支持为 AI 笔记记录语音",
   "meetingSubmitCreate": "安排",
   "meetingSubmitStartNow": "立即开始",
   "meetingSubmitSave": "保存更改",
