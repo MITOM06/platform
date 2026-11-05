@@ -9,6 +9,7 @@ import '../../../core/providers/theme_provider.dart';
 import 'app_routes.dart';
 import 'return_path.dart';
 import 'route_guard.dart';
+import 'unfocus_on_push_observer.dart';
 
 part 'app_router.g.dart';
 
@@ -48,7 +49,7 @@ GoRouter appRouter(AppRouterRef ref) {
     navigatorKey: rootNavigatorKey,
     initialLocation: '/login',
     refreshListenable: notifier,
-    observers: [NavDirectionObserver()],
+    observers: [NavDirectionObserver(), UnfocusOnPushObserver()],
     redirect: (context, state) {
       final authValue = ref.read(authNotifierProvider);
       final onboardingCompleted = ref.read(themeOnboardingNotifierProvider);
