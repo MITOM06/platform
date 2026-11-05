@@ -150,4 +150,24 @@ describe('media token on upload URLs', () => {
   it('download_url_keeps_both_t_and_download', () => {
     expect(downloadMediaUrl('/api/uploads/doc.pdf')).toBe(`${BASE}/api/uploads/doc.pdf?t=TOK&download=true`)
   })
+
+  it('lookalike_host_prefix_gets_no_token', () => {
+    const u = 'http://localhost:8080.evil.com/api/uploads/x'
+    expect(absoluteMediaUrl(u)).toBe(u)
+  })
+
+  it('same_origin_absolute_url_gets_token_when_base_is_relative', () => {
+    process.env.NEXT_PUBLIC_CHAT_URL = '/api/chat'
+    const o = window.location.origin
+    expect(absoluteMediaUrl(`${o}/api/uploads/x`)).toBe(`${o}/api/uploads/x?t=TOK`)
+    expect(absoluteMediaUrl('https://other.example/api/uploads/x')).toBe('https://other.example/api/uploads/x')
+  })
+
+  it('existing_t_is_replaced', () => {
+    expect(absoluteMediaUrl('/api/uploads/x?a=1&t=OLD&b=2')).toBe(`${BASE}/api/uploads/x?a=1&b=2&t=TOK`)
+  })
+
+  it('download_url_with_fragment_keeps_order', () => {
+    expect(downloadMediaUrl('/api/uploads/x#frag')).toBe(`${BASE}/api/uploads/x?t=TOK&download=true#frag`)
+  })
 })

@@ -5,19 +5,55 @@ import { getMediaToken } from '@/lib/media-token'
 // When CHAT_URL is the same-origin relative path there is no prefix to add: the
 // upload path is already absolute against the current origin.
 
-/** Add `t=<media token>` to an upload URL (before any `#fragment`). Other URLs untouched. */
+const UPLOADS_PREFIX = '/api/uploads/'
+
+/** Origin of the chat-service; a relative base means the page's own origin (none on the server). */
+function chatOrigin(): string | null {
+  const chat = serviceUrl('chat')
+  try {
+    if (isRelative(chat)) {
+      return typeof window !== 'undefined' ? window.location.origin : null
+    }
+    return new URL(chat).origin
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Set `t=<media token>` on an upload URL (before any `#fragment`), replacing an existing `t`.
+ * Only relative `/api/uploads/...` paths and absolute URLs whose ORIGIN equals the chat origin
+ * get it; anything else is returned untouched.
+ */
 function withMediaToken(url: string): string {
   const token = getMediaToken()
   if (!token) return url
   const hashAt = url.indexOf('#')
-  const head = hashAt === -1 ? url : url.slice(0, hashAt)
+  const beforeHash = hashAt === -1 ? url : url.slice(0, hashAt)
   const fragment = hashAt === -1 ? '' : url.slice(hashAt)
-  const path = head.split('?')[0]
-  const base = isRelative(serviceUrl('chat')) ? '' : serviceUrl('chat')
-  const rel = base && path.startsWith(base) ? path.slice(base.length) : path
-  if (!rel.startsWith('/api/uploads/')) return url
-  const sep = head.includes('?') ? '&' : '?'
-  return `${head}${sep}t=${encodeURIComponent(token)}${fragment}`
+  const qAt = beforeHash.indexOf('?')
+  const pathPart = qAt === -1 ? beforeHash : beforeHash.slice(0, qAt)
+  const query = qAt === -1 ? '' : beforeHash.slice(qAt + 1)
+
+  let origin = ''
+  let path = pathPart
+  if (/^https?:\/\//i.test(pathPart)) {
+    let parsed: URL
+    try {
+      parsed = new URL(pathPart)
+    } catch {
+      return url
+    }
+    const expected = chatOrigin()
+    if (!expected || parsed.origin !== expected) return url
+    origin = parsed.origin
+    path = parsed.pathname
+  }
+  if (!path.startsWith(UPLOADS_PREFIX)) return url
+
+  const kept = query.split('&').filter((kv) => kv !== '' && kv.split('=')[0] !== 't')
+  kept.push(`t=${encodeURIComponent(token)}`)
+  return `${origin}${origin ? path : pathPart}?${kept.join('&')}${fragment}`
 }
 
 /** Resolve a possibly-relative media URL against the chat-service base (+ media token for uploads). */

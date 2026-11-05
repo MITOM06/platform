@@ -57,4 +57,39 @@ describe('media token', () => {
     await vi.advanceTimersByTimeAsync(16_000)
     expect(getMediaToken()).toBe('T1')
   })
+
+  it('relogin_during_inflight_request_does_not_store_previous_users_token', async () => {
+    let resolveA!: (v: unknown) => void
+    getMediaTokenApi.mockReturnValueOnce(new Promise((r) => (resolveA = r)))
+    const pA = ensureMediaToken()
+    useAuthStore.getState().clearAuth()
+    useAuthStore.getState().setAuth(user, 'jwt-b')
+    getMediaTokenApi.mockResolvedValueOnce(resp('TB', 5))
+    await ensureMediaToken()
+    resolveA(resp('TA', 5))
+    await pA
+    expect(getMediaToken()).toBe('TB')
+    expect(getMediaTokenApi).toHaveBeenCalledTimes(2)
+  })
+
+  it('retry_backs_off_to_5_minutes_and_resets_after_success', async () => {
+    getMediaTokenApi.mockRejectedValue(new Error('boom'))
+    await ensureMediaToken()
+    expect(getMediaTokenApi).toHaveBeenCalledTimes(1)
+    for (const [wait, calls] of [[15_000, 2], [30_000, 3], [60_000, 4], [120_000, 5], [240_000, 6], [300_000, 7], [300_000, 8]] as const) {
+      await vi.advanceTimersByTimeAsync(wait - 1)
+      expect(getMediaTokenApi).toHaveBeenCalledTimes(calls - 1)
+      await vi.advanceTimersByTimeAsync(1)
+      expect(getMediaTokenApi).toHaveBeenCalledTimes(calls)
+    }
+    // success resets the delay
+    getMediaTokenApi.mockResolvedValueOnce(resp('T1', 0.5))
+    await vi.advanceTimersByTimeAsync(300_000)
+    expect(getMediaToken()).toBe('T1')
+    getMediaTokenApi.mockRejectedValue(new Error('boom'))
+    await vi.advanceTimersByTimeAsync(60_000) // refresh scheduled (min 60s) -> fails
+    const n = getMediaTokenApi.mock.calls.length
+    await vi.advanceTimersByTimeAsync(15_000)
+    expect(getMediaTokenApi).toHaveBeenCalledTimes(n + 1)
+  })
 })
