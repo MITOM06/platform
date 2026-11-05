@@ -268,6 +268,14 @@ class MeetingServiceTest {
   }
 
   @Test
+  void aiNotesEverEnabledIsHiddenFromGuestsButShownToMembers() {
+    stored().setAiNotesEverEnabled(true);
+
+    assertThat(service.get(stranger, "m1").aiNotesEverEnabled()).isNull();
+    assertThat(service.get(host, "m1").aiNotesEverEnabled()).isTrue();
+  }
+
+  @Test
   void aGuestSeesOnlyWhatTheLinkPageNeeds() {
     stored();
     MeetingResponse r = service.get(stranger, "m1");

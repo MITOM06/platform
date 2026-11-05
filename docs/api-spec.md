@@ -743,8 +743,8 @@ a still-valid token is kicked again on arrival and gets no attendance row.
 
 **AI notes capture (client rule).** Web and Android capture speech only while: in the room,
 `settings.aiNotes` is on, the user's **own** mic is on, and not paused ("pause my speech"). Each
-final STT result goes out as `/app/meet.transcript`. Permission denied ⇒ no retry; the AI-notes item
-shows "unsupported" (e.g. Firefox).
+final STT result goes out as `/app/meet.transcript`. No Web Speech API (e.g. Firefox) or permission
+denied ⇒ no retry; the item shows a disabled "unsupported" label.
 
 ### STOMP — server events
 
