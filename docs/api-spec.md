@@ -465,7 +465,20 @@ Response 201: { "id": "string", "url": "/api/uploads/string", "filename": "strin
 ```http
 GET /api/uploads/{id}?download=true
 Response 200: Binary stream with Content-Disposition attachment if download=true
+Auth (only when chat-service runs with UPLOADS_REQUIRE_AUTH=true; default false = public):
+  one of  ?t=<media token>  |  Authorization: Bearer <JWT>  |  X-Internal-Key: <INTERNAL_API_KEY>
+Response 401 (empty body): none of the above is present and valid
 ```
+
+### Get Media Token
+```http
+GET /api/uploads/token            (Authorization: Bearer <JWT> required)
+Response 200: { "token": "string", "expiresAt": "2026-11-06T12:00:00Z" }
+```
+Append `?t=<token>` to `/api/uploads/{id}` URLs so `<img>`/`<video>` can load media without headers.
+Tokens expire at a 6h boundary (>= UPLOADS_TOKEN_TTL, default 24h away); all tokens issued in the same
+window are identical, so URLs stay stable and cacheable. Re-fetch when `expiresAt` passes. A media
+token is not a JWT and is only accepted by `GET /api/uploads/{id}`.
 
 ---
 

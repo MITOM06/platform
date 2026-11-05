@@ -161,6 +161,7 @@ services:
       # Personal-assistant setup issues the bot's MCP token through connector-service.
       CONNECTOR_SERVICE_BASE_URL: http://connector-service:3003
       CONNECTOR_INTERNAL_KEY: ${INTERNAL_API_KEY}
+      UPLOADS_REQUIRE_AUTH: ${UPLOADS_REQUIRE_AUTH:-false}
       # See ProdEnvironmentGuard — the addresses below are container names, so the
       # guard passes; point one of them back at localhost and it refuses to boot.
       SPRING_PROFILES_ACTIVE: prod

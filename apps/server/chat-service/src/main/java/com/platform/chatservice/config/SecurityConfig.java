@@ -66,8 +66,11 @@ public class SecurityConfig {
                     // the endpoint itself is still guarded by the rules above.
                     .requestMatchers("/error")
                     .permitAll()
-                    .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/uploads/**")
+                    .requestMatchers(
+                        org.springframework.http.HttpMethod.GET,
+                        "/api/uploads/{id:[0-9a-fA-F-]{24,36}}")
                     .permitAll()
+                    // /api/uploads/token is NOT here: it needs a JWT.
                     // LiveKit webhook authenticates itself (token signed with the LiveKit API
                     // secret + body hash, see LiveKitWebhookVerifier); it carries no user JWT.
                     .requestMatchers(

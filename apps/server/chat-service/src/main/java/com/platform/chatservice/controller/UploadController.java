@@ -2,10 +2,13 @@ package com.platform.chatservice.controller;
 
 import com.platform.chatservice.exception.BadRequestException;
 import com.platform.chatservice.exception.UnauthorizedException;
+import com.platform.chatservice.security.MediaTokenService;
+import com.platform.chatservice.security.UploadReaderResolver;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.FileValidationService;
 import com.platform.chatservice.service.RateLimiterService;
 import com.platform.chatservice.service.VirusScanService;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.PushbackInputStream;
 import java.util.Map;
@@ -14,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -40,6 +44,12 @@ public class UploadController {
   private final RateLimiterService rateLimiterService;
   private final FileValidationService fileValidationService;
   private final VirusScanService virusScanService;
+  private final MediaTokenService mediaTokenService;
+  private final UploadReaderResolver uploadReaderResolver;
+
+  /** When true, {@code GET /{id}} needs a media token, a JWT or the internal key. */
+  @Value("${app.uploads.require-auth:false}")
+  private boolean requireAuth;
 
   /** Leading bytes read to confirm a stored type before serving a file inline. */
   private static final int SNIFF_BYTES = 16;
@@ -115,19 +125,35 @@ public class UploadController {
         || lower.startsWith("application/");
   }
 
+  /** Short-lived token for {@code ?t=} on media URLs ({@code <img>} cannot send headers). */
+  @GetMapping("/token")
+  public Map<String, String> mediaToken() {
+    var authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (!(authentication instanceof UserPrincipal principal)) {
+      throw new UnauthorizedException("User is not authenticated");
+    }
+    var issued = mediaTokenService.issue(principal.getUserId());
+    return Map.of("token", issued.token(), "expiresAt", issued.expiresAt().toString());
+  }
+
   /**
-   * Serve an upload. Public (no auth) so {@code <img src>} works — which is exactly why the
-   * response must be inert on the API origin: it is {@code inline} only for raster images, audio,
-   * video and PDF whose stored type is confirmed by the file's own magic bytes (never by the type
-   * the client declared at upload); everything else is an {@code attachment}, active types
-   * (HTML/XML/SVG/JS) are relabelled {@code application/octet-stream}, and every response carries
-   * {@code X-Content-Type-Options: nosniff} plus {@code Content-Security-Policy: sandbox} (except
-   * an inline PDF, where a sandboxed document would stop the browser's PDF viewer from loading).
+   * Serve an upload. Public (no auth) unless {@code app.uploads.require-auth} is on, so {@code <img
+   * src>} works — which is exactly why the response must be inert on the API origin: it is {@code
+   * inline} only for raster images, audio, video and PDF whose stored type is confirmed by the
+   * file's own magic bytes (never by the type the client declared at upload); everything else is an
+   * {@code attachment}, active types (HTML/XML/SVG/JS) are relabelled {@code
+   * application/octet-stream}, and every response carries {@code X-Content-Type-Options: nosniff}
+   * plus {@code Content-Security-Policy: sandbox} (except an inline PDF, where a sandboxed document
+   * would stop the browser's PDF viewer from loading).
    */
   @GetMapping("/{id}")
   public ResponseEntity<Resource> getFile(
       @PathVariable String id,
-      @RequestParam(name = "download", required = false) boolean download) {
+      @RequestParam(name = "download", required = false) boolean download,
+      HttpServletRequest request) {
+    if (requireAuth && uploadReaderResolver.resolve(request).isEmpty()) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
     com.mongodb.client.gridfs.model.GridFSFile gridFSFile = findFile(id);
     if (gridFSFile == null) {
       return ResponseEntity.notFound().build();
