@@ -2263,6 +2263,9 @@
     "settingAiNotesDesc": "AI ghi nhận lời nói, chat, ghi chú, file và màn hình được chia sẻ để tóm tắt sau buổi họp. Mọi người trong phòng đều được báo.",
     "aiNotesActive": "AI đang ghi chú",
     "aiNotesStarted": "AI bắt đầu ghi chú cuộc họp",
-    "aiNotesPrejoin": "Cuộc họp này có AI ghi chú"
+    "aiNotesPrejoin": "Cuộc họp này có AI ghi chú",
+    "aiNotesPauseMine": "Tạm dừng ghi lời của tôi",
+    "aiNotesResumeMine": "Tiếp tục ghi lời của tôi",
+    "aiNotesUnsupported": "Trình duyệt này không hỗ trợ ghi lời cho AI"
   }
 }

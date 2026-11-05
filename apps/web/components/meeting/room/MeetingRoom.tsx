@@ -11,6 +11,7 @@ import type { MeetingRoomController } from '@/lib/meetings/meeting-room-controll
 import { isManager } from '@/lib/meetings/permissions'
 import { useMeetingRoomStore } from '@/lib/store/meeting.store'
 import { useStompConnected } from '@/lib/stomp/use-stomp-connected'
+import { useMeetingTranscriber } from '@/lib/meetings/use-meeting-transcriber'
 import { AiNotesIndicator } from './AiNotesIndicator'
 import { ControlBar } from './ControlBar'
 import { MeetingStage } from './MeetingStage'
@@ -77,9 +78,10 @@ export function MeetingRoom({ meeting, controller, myId, myName, myAvatarUrl }: 
   useMeetingShortcuts(controller, raised)
   useLobbyToast(meeting.id)
 
+  const { supported, paused, setPaused } = useMeetingTranscriber(meeting.id, meeting.settings.aiNotes === true)
   const room = useMemo<RoomContextValue>(
-    () => ({ meeting, controller, myId, myName, myAvatarUrl, realtimeConnected }),
-    [meeting, controller, myId, myName, myAvatarUrl, realtimeConnected],
+    () => ({ meeting, controller, myId, myName, myAvatarUrl, realtimeConnected, speech: { supported, paused, setPaused } }),
+    [meeting, controller, myId, myName, myAvatarUrl, realtimeConnected, supported, paused, setPaused],
   )
   const title = meeting.title?.trim() || t('untitled')
 
