@@ -57,6 +57,9 @@ public final class ErrorCodes {
   public static final String PUBLIC_DEPARTMENT_CHANNEL_NOT_ALLOWED =
       "PUBLIC_DEPARTMENT_CHANNEL_NOT_ALLOWED";
 
+  /** 400 — an AI thread name is blank or longer than 80 characters after trimming. */
+  public static final String AI_THREAD_NAME_INVALID = "AI_THREAD_NAME_INVALID";
+
   // ── Meetings (/api/meetings) ──────────────────────────────────────────────
 
   /** 404 — no meeting with this id / code. */

@@ -53,6 +53,12 @@ public class ConversationQueryService {
    */
   public PageResponse<ConversationResponse> listConversations(
       String userId, Pageable pageable, boolean archived) {
+    return listConversations(userId, pageable, archived, false);
+  }
+
+  /** As above; {@code excludeAi} also drops direct chats with the AI bot (AI threads). */
+  public PageResponse<ConversationResponse> listConversations(
+      String userId, Pageable pageable, boolean archived, boolean excludeAi) {
     Criteria criteria =
         Criteria.where("participants")
             .is(userId)
@@ -64,6 +70,18 @@ public class ConversationQueryService {
       criteria = criteria.and("archivedBy").is(userId);
     } else {
       criteria = criteria.and("archivedBy").ne(userId);
+    }
+    if (excludeAi) {
+      criteria =
+          new Criteria()
+              .andOperator(
+                  criteria,
+                  new Criteria()
+                      .norOperator(
+                          Criteria.where("participants")
+                              .is(AiConstants.AI_BOT_USER_ID)
+                              .and("type")
+                              .ne(Conversation.TYPE_GROUP)));
     }
     Query query =
         new Query(criteria)

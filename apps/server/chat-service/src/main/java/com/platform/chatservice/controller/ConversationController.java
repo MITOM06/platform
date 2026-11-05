@@ -64,20 +64,22 @@ public class ConversationController {
 
   /**
    * The caller's conversations. {@code archived=true} → only archived ones (default: archived ones
-   * excluded); {@code blocked=true} → the Blocked section. {@code size} is capped at 100.
+   * excluded); {@code blocked=true} → the Blocked section. {@code excludeAi=true} drops 1-1 chats
+   * with the AI bot (they live in the AI-thread list). {@code size} is capped at 100.
    */
   @GetMapping
   public PageResponse<ConversationResponse> listConversations(
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int size,
       @RequestParam(defaultValue = "false") boolean archived,
-      @RequestParam(defaultValue = "false") boolean blocked) {
+      @RequestParam(defaultValue = "false") boolean blocked,
+      @RequestParam(defaultValue = "false") boolean excludeAi) {
     if (blocked) {
       return conversationQueryService.listBlockedConversations(
           currentUserId(), PageLimits.of(page, size, 20));
     }
     return conversationQueryService.listConversations(
-        currentUserId(), PageLimits.of(page, size, 20), archived);
+        currentUserId(), PageLimits.of(page, size, 20), archived, excludeAi);
   }
 
   @PostMapping

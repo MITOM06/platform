@@ -46,6 +46,7 @@ public class MessageService {
   private final AiMessageService aiMessageService;
   private final ConversationCacheService conversationCacheService;
   private final UploadRefs uploadRefs;
+  private final AiThreadService aiThreadService;
 
   /**
    * Outcome of a recall / edit: the updated message, and whether it was the conversation's newest
@@ -103,6 +104,10 @@ public class MessageService {
       update.set("status", Conversation.STATUS_ACCEPTED);
     }
     bumpConversation(request.conversationId(), update);
+    // First user text in an untitled AI thread becomes its title (shared by STOMP + REST sends).
+    if (MessageTypePolicy.triggersAssistant(type) && !AiConstants.AI_BOT_USER_ID.equals(senderId)) {
+      aiThreadService.maybeAutoTitle(conversation, request.content());
+    }
 
     return toResponse(message);
   }

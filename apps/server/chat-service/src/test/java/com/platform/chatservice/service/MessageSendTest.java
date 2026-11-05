@@ -75,7 +75,8 @@ class MessageSendTest {
             messageMapper,
             aiMessageService,
             conversationCacheService,
-            uploadRefs);
+            uploadRefs,
+            org.mockito.Mockito.mock(AiThreadService.class));
 
     conversation =
         Conversation.builder().id(CONV_ID).participants(List.of(SENDER_ID, OTHER_ID)).build();

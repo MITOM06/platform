@@ -101,7 +101,8 @@ class UploadRefsActorTest {
             mapper,
             aiMessageService,
             cache,
-            refs);
+            refs,
+            org.mockito.Mockito.mock(AiThreadService.class));
     ConversationWriteSupport support =
         new ConversationWriteSupport(
             cache, mongoTemplate, messageRepository, new ConversationMapper(messageRepository));
