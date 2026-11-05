@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -31,6 +32,11 @@ interface RolesPanelMobileProps {
   lockHint: (role: Role) => string | null
   /** False while saving would exceed the caller's own permissions. */
   canSave: (role: Role) => boolean
+  /** Custom role the caller may try to delete (see `canDeleteRole`). */
+  canDelete: (role: Role) => boolean
+  /** Opens the delete confirmation for this role. */
+  onDelete: (role: Role) => void
+  isDeleting?: boolean
 }
 
 const OWNER = 'Owner'
@@ -48,6 +54,9 @@ export function RolesPanelMobile({
   isLocked,
   lockHint,
   canSave,
+  canDelete,
+  onDelete,
+  isDeleting,
 }: RolesPanelMobileProps) {
   const t = useTranslations('admin')
   const [selectedId, setSelectedId] = useState(roles[0]?._id ?? '')
@@ -88,6 +97,19 @@ export function RolesPanelMobile({
             onClick={() => saveRole(role)}
           >
             {t('save')}
+          </Button>
+        )}
+        {!role.isPreset && (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="text-destructive disabled:opacity-40"
+            title={t('roleDelete')}
+            aria-label={t('roleDelete')}
+            disabled={!canDelete(role) || isDeleting}
+            onClick={() => onDelete(role)}
+          >
+            <Trash2 className="size-4" />
           </Button>
         )}
       </div>

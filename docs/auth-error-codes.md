@@ -544,7 +544,7 @@ never blocks you (an Owner may edit themself; a lead may edit themself whatever 
 | `PRESET_ROLE_DELETE_FORBIDDEN` | 400 — Owner, Admin or Member (any preset), whoever asks | Built-in roles can't be deleted. | — |
 | `CANNOT_EDIT_OWN_ROLE` | 403 — a non-Owner deleting the role they hold | You can't edit your own role. | — |
 | `ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS` | 403 — a non-Owner deleting a role with capabilities they don't hold | (see above) | `{ capabilities: string[] }` |
-| `ROLE_IN_USE` | 409 — the role is still used: members hold it, pending invitations offer it (expired ones too, a resend revives them), or the SSO group mapping / default role names it | This role is still in use. Members: {members} · Pending invitations: {invitations} · SSO mappings: {ssoMappings}. | `{ members: number, invitations: number, ssoMappings: number }` |
+| `ROLE_IN_USE` | 409 — the role is still used: members hold it, pending invitations offer it (expired ones too, a resend revives them), or the SSO group mapping / default role names it | This role is still in use (members: {members}, pending invitations: {invitations}, SSO mappings: {ssoMappings}). Move them to another role first. | `{ members: number, invitations: number, ssoMappings: number }` |
 
 - Audit action `role.delete`, `meta.name` = the deleted role's name (the audit list names the target from it).
 - Nobody holds a deleted role, so no session is marked claims-stale. A member assigned the role in the

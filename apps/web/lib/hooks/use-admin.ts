@@ -291,5 +291,15 @@ export function useRoleActions() {
     onError,
   })
 
-  return { create, update }
+  // ROLE_IN_USE names how many members / invitations / SSO mappings still use it.
+  const remove = useMutation({
+    mutationFn: (id: string) => adminService.deleteRole(id),
+    onSuccess: () => {
+      invalidate()
+      toast.success(t('toastDeleted'))
+    },
+    onError,
+  })
+
+  return { create, update, remove }
 }

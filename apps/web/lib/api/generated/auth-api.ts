@@ -1007,7 +1007,8 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete a custom role nothing uses (presets stay; non-Owners: not their own role, only roles inside their capabilities) */
+        delete: operations["AdminController_deleteRole"];
         options?: never;
         head?: never;
         /** Edit a role (Owner immutable; presets keep their name; non-Owners: not their own role, only capabilities they hold) */
@@ -3071,6 +3072,25 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_deleteRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import { Copy, Pencil, Save } from 'lucide-react'
+import { Copy, Pencil, Save, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -14,7 +14,7 @@ import { useRoles, useRoleActions } from '@/lib/hooks/use-admin'
 import { useCapabilities } from '@/lib/hooks/use-capabilities'
 import { CAPABILITIES } from '@/lib/api/admin-types'
 import type { Capability, PermissionMatrix, Role } from '@/lib/api/admin-types'
-import { OWNER_ROLE_NAME, grantBlockers, roleEditLock } from '@/lib/admin/role-guard'
+import { OWNER_ROLE_NAME, canDeleteRole, grantBlockers, roleEditLock } from '@/lib/admin/role-guard'
 import { capabilityList } from '@/lib/admin/admin-errors'
 import { RolesPanelMobile } from './RolesPanelMobile'
 
@@ -30,7 +30,7 @@ export function RolesPanel() {
   const locale = useLocale()
   const { data, isLoading, isError } = useRoles()
   const roles = data ?? NO_ROLES
-  const { create, update } = useRoleActions()
+  const { create, update, remove } = useRoleActions()
   const caps = useCapabilities().data
   const caller = {
     roleName: caps?.role,
@@ -47,6 +47,7 @@ export function RolesPanel() {
   const [cloneName, setCloneName] = useState('')
   const [renaming, setRenaming] = useState<Role | null>(null)
   const [newName, setNewName] = useState('')
+  const [deleting, setDeleting] = useState<Role | null>(null)
 
   // Reseed when server roles change (avoids synchronous setState-in-effect lint error).
   if (prevRoles !== roles) {
@@ -93,6 +94,13 @@ export function RolesPanel() {
       { onSuccess: () => setRenaming(null) },
     )
   }
+
+  // Closes either way: a refusal (ROLE_IN_USE…) is explained by the error toast.
+  const submitDelete = () => {
+    if (!deleting) return
+    remove.mutate(deleting._id, { onSettled: () => setDeleting(null) })
+  }
+  const deletable = (r: Role) => canDeleteRole(r, caller)
 
   if (isLoading) return <Skeleton className="h-80 rounded-xl" />
   if (isError) {
@@ -169,6 +177,19 @@ export function RolesPanel() {
                         <Save className="size-3.5" />
                       </Button>
                     )}
+                    {!r.isPreset && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7 text-destructive disabled:opacity-40"
+                        title={t('roleDelete')}
+                        aria-label={t('roleDelete')}
+                        disabled={!deletable(r) || remove.isPending}
+                        onClick={() => setDeleting(r)}
+                      >
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    )}
                   </div>
                   {lockHint(r) && (
                     <p className="mt-1 text-[11px] font-normal text-muted-foreground max-w-40 mx-auto">
@@ -213,6 +234,9 @@ export function RolesPanel() {
         isLocked={isLocked}
         lockHint={lockHint}
         canSave={(r) => blockersFor(r).length === 0}
+        canDelete={deletable}
+        onDelete={setDeleting}
+        isDeleting={remove.isPending}
       />
 
       <ResponsiveModal
@@ -268,6 +292,23 @@ export function RolesPanel() {
           <Input id="rename-role" value={newName} onChange={(e) => setNewName(e.target.value)} />
         </div>
       </ResponsiveModal>
+
+      <ResponsiveModal
+        open={!!deleting}
+        onOpenChange={(o) => !o && setDeleting(null)}
+        title={t('roleDeleteTitle', { name: deleting?.name ?? '' })}
+        description={t('roleDeleteDesc')}
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDeleting(null)}>
+              {t('cancel')}
+            </Button>
+            <Button variant="destructive" onClick={submitDelete} disabled={remove.isPending}>
+              {t('roleDelete')}
+            </Button>
+          </>
+        }
+      />
     </div>
   )
 }
