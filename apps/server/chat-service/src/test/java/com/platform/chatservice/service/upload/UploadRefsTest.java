@@ -52,7 +52,7 @@ class UploadRefsTest {
     mongoTemplate.getCollection("fs.chunks").deleteMany(new Document());
     gridFs =
         new GridFsTemplate(mongoTemplate.getMongoDatabaseFactory(), mongoTemplate.getConverter());
-    refs = new UploadRefs(mongoTemplate);
+    refs = new UploadRefs(mongoTemplate, gridFs, mock(UploadAccessPolicy.class));
   }
 
   private void storeUuidFile(String fileId) {
@@ -154,11 +154,17 @@ class UploadRefsTest {
     MongoTemplate broken = mock(MongoTemplate.class);
     when(broken.updateMulti(any(Query.class), any(UpdateDefinition.class), anyString()))
         .thenThrow(new RuntimeException("db down"));
-    UploadRefs failing = new UploadRefs(broken);
+    GridFsTemplate brokenFs = mock(GridFsTemplate.class);
+    when(brokenFs.find(any(Query.class))).thenThrow(new RuntimeException("db down"));
+    UploadRefs failing = new UploadRefs(broken, brokenFs, mock(UploadAccessPolicy.class));
 
     assertThatCode(() -> failing.attachToConversation("/api/uploads/" + UUID_A, "conv-1"))
         .doesNotThrowAnyException();
     assertThatCode(() -> failing.attachToDepartment("/api/uploads/" + UUID_A, "dept-1"))
+        .doesNotThrowAnyException();
+    assertThatCode(() -> failing.attachToConversation("/api/uploads/" + UUID_A, "conv-1", "u1"))
+        .doesNotThrowAnyException();
+    assertThatCode(() -> failing.attachToDepartment("/api/uploads/" + UUID_A, "dept-1", "u1"))
         .doesNotThrowAnyException();
   }
 }

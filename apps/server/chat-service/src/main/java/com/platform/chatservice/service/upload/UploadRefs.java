@@ -1,5 +1,6 @@
 package com.platform.chatservice.service.upload;
 
+import com.mongodb.client.gridfs.model.GridFSFile;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -15,6 +16,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Component;
 
 /**
@@ -22,6 +24,11 @@ import org.springframework.stereotype.Component;
  * {@code /api/uploads/<id>} found in saved text gets {@code {t:"c"|"d", id}} added to its GridFS
  * {@code metadata.refs}. Attaching never throws — a missed ref only hides a file, it must never
  * fail the save that triggered it.
+ *
+ * <p>A user-initiated write passes the acting user: only ids that user can already read ({@link
+ * UploadAccessPolicy}) are attached, so pasting a known URL into another chat can never widen
+ * access (e.g. after leaving the group it came from). Server-authored writes (AI replies, system
+ * notices) use the actor-less overloads and attach every id.
  */
 @Component
 @RequiredArgsConstructor
@@ -38,6 +45,8 @@ public class UploadRefs {
               + "|[0-9a-fA-F]{24})(?![0-9a-zA-Z_-])");
 
   private final MongoTemplate mongoTemplate;
+  private final GridFsTemplate gridFsTemplate;
+  private final UploadAccessPolicy accessPolicy;
 
   /**
    * Every upload id referenced in {@code text} (relative or absolute URLs, JSON image arrays and
@@ -54,25 +63,59 @@ public class UploadRefs {
     return ids;
   }
 
+  /** Trusted server write (AI reply, system notice): attaches every referenced upload. */
   public void attachToConversation(String text, String conversationId) {
-    attach(text, REF_CONVERSATION, conversationId);
+    attach(text, REF_CONVERSATION, conversationId, null);
   }
 
+  /** User write by {@code actorId}: attaches only uploads that user can read right now. */
+  public void attachToConversation(String text, String conversationId, String actorId) {
+    attach(text, REF_CONVERSATION, conversationId, requireActor(actorId));
+  }
+
+  /** Trusted server write: attaches every referenced upload to the department. */
   public void attachToDepartment(String text, String departmentId) {
-    attach(text, REF_DEPARTMENT, departmentId);
+    attach(text, REF_DEPARTMENT, departmentId, null);
   }
 
-  private void attach(String text, String type, String targetId) {
+  /** User write by {@code actorId}: attaches only uploads that user can read right now. */
+  public void attachToDepartment(String text, String departmentId, String actorId) {
+    attach(text, REF_DEPARTMENT, departmentId, requireActor(actorId));
+  }
+
+  /** A blank actor must not fall back to the trusted (unfiltered) path. */
+  private static String requireActor(String actorId) {
+    return actorId == null || actorId.isBlank() ? "" : actorId;
+  }
+
+  /** {@code actorId == null} = trusted; otherwise only files the actor can read are touched. */
+  private void attach(String text, String type, String targetId, String actorId) {
     try {
       Set<String> ids = extractIds(text);
       if (ids.isEmpty() || targetId == null || targetId.isBlank()) return;
+      Criteria files = actorId == null ? fileCriteria(ids) : readableBy(ids, actorId);
+      if (files == null) return;
       mongoTemplate.updateMulti(
-          new Query(fileCriteria(ids)),
+          new Query(files),
           new Update().addToSet("metadata.refs", new Document("t", type).append("id", targetId)),
           FILES_COLLECTION);
     } catch (RuntimeException e) {
       log.warn("Could not record upload refs ({}:{}): {}", type, targetId, e.toString());
     }
+  }
+
+  /** One GridFS query for all ids, then the policy per file; {@code null} when none is readable. */
+  private Criteria readableBy(Set<String> ids, String actorId) {
+    if (actorId.isEmpty()) return null;
+    List<Object> readable = new ArrayList<>();
+    for (GridFSFile file : gridFsTemplate.find(new Query(fileCriteria(ids)))) {
+      if (accessPolicy.canRead(file, actorId)) {
+        readable.add(file.getObjectId());
+      } else {
+        log.debug("Skipping upload ref: {} cannot read {}", actorId, file.getFilename());
+      }
+    }
+    return readable.isEmpty() ? null : Criteria.where("_id").in(readable);
   }
 
   /**

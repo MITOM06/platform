@@ -67,7 +67,8 @@ class UploadAccessPolicyTest {
     conversationRepository.deleteAll();
     gridFs =
         new GridFsTemplate(mongoTemplate.getMongoDatabaseFactory(), mongoTemplate.getConverter());
-    refs = new UploadRefs(mongoTemplate);
+    refs =
+        new UploadRefs(mongoTemplate, gridFs, org.mockito.Mockito.mock(UploadAccessPolicy.class));
     spyTemplate = spy(mongoTemplate);
     policy =
         new UploadAccessPolicy(spyTemplate, new ConversationCacheService(conversationRepository));

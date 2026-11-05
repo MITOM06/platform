@@ -109,7 +109,7 @@ public class ConversationService {
                 .lastMessageAt(Instant.now())
                 .pendingMembers(pendingMembers)
                 .build());
-    uploadRefs.attachToConversation(request.avatarUrl(), saved.getId());
+    uploadRefs.attachToConversation(request.avatarUrl(), saved.getId(), creatorId);
     return support.view(saved, creatorId, 0L);
   }
 
@@ -171,7 +171,7 @@ public class ConversationService {
     }
     Conversation result = touched ? support.update(conversationId, null, update) : conversation;
     if (avatarUrl != null && result != null) {
-      uploadRefs.attachToConversation(avatarUrl, conversationId);
+      uploadRefs.attachToConversation(avatarUrl, conversationId, userId);
     }
     return support.view(result != null ? result : conversation, userId);
   }
@@ -186,7 +186,7 @@ public class ConversationService {
             ? new Update().unset("wallpaper")
             : new Update().set("wallpaper", wallpaper);
     Conversation updated = support.updateAsParticipant(userId, conversationId, update);
-    uploadRefs.attachToConversation(wallpaper, conversationId);
+    uploadRefs.attachToConversation(wallpaper, conversationId, userId);
     return support.view(updated, userId);
   }
 

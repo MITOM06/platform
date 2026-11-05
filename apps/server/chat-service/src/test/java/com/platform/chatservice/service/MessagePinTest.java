@@ -114,7 +114,7 @@ class MessagePinTest {
     assertThat(change.message().editedAt()).isNotNull();
     assertThat(change.previewChanged()).isFalse(); // updateFirst unstubbed → preview untouched
     verify(messageRepository, never()).save(any(Message.class));
-    verify(uploadRefs).attachToConversation("Edited text", CONV_ID);
+    verify(uploadRefs).attachToConversation("Edited text", CONV_ID, SENDER_ID);
   }
 
   /** Only text can be edited — e.g. a client-sent system notice must not be rewritable. */
@@ -242,7 +242,7 @@ class MessagePinTest {
 
     assertThat(result.conversationId()).isEqualTo(targetConvId);
     assertThat(result.content()).isEqualTo(savedMessage.getContent());
-    verify(uploadRefs).attachToConversation(savedMessage.getContent(), targetConvId);
+    verify(uploadRefs).attachToConversation(savedMessage.getContent(), targetConvId, SENDER_ID);
   }
 
   @Test

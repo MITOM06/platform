@@ -106,7 +106,7 @@ class MessageSendTest {
     // Conversation bump is now a targeted atomic $set (not a whole-document save) + cache evict.
     verify(mongoTemplate).updateFirst(any(Query.class), any(Update.class), eq(Conversation.class));
     verify(conversationCacheService).evict(CONV_ID);
-    verify(uploadRefs).attachToConversation("Hello", CONV_ID);
+    verify(uploadRefs).attachToConversation("Hello", CONV_ID, SENDER_ID);
   }
 
   @Test

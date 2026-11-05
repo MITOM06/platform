@@ -85,7 +85,7 @@ public class MessageService {
                 .replyPreview(replyPreview)
                 .mentions(mentions)
                 .build());
-    uploadRefs.attachToConversation(request.content(), request.conversationId());
+    uploadRefs.attachToConversation(request.content(), request.conversationId(), senderId);
 
     Instant sentAt = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
     // Targeted atomic $set update instead of loading + saving the whole Conversation document:
@@ -271,7 +271,7 @@ public class MessageService {
       // Recalled (or deleted) between the read and the write.
       throw new IllegalArgumentException("Cannot edit a recalled message");
     }
-    uploadRefs.attachToConversation(content, message.getConversationId());
+    uploadRefs.attachToConversation(content, message.getConversationId(), userId);
     boolean previewChanged =
         refreshPreviewIfLatest(
             message,

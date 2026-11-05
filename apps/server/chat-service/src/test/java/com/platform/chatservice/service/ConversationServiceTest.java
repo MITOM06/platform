@@ -528,7 +528,7 @@ class ConversationServiceTest {
 
     conversationService.updateGroup(USER_ID, CONV_ID, null, "/api/uploads/x");
 
-    verify(uploadRefs).attachToConversation("/api/uploads/x", CONV_ID);
+    verify(uploadRefs).attachToConversation("/api/uploads/x", CONV_ID, USER_ID);
   }
 
   @Test
@@ -537,7 +537,7 @@ class ConversationServiceTest {
 
     conversationService.setWallpaper(OTHER_ID, CONV_ID, "/api/uploads/w");
 
-    verify(uploadRefs).attachToConversation("/api/uploads/w", CONV_ID);
+    verify(uploadRefs).attachToConversation("/api/uploads/w", CONV_ID, OTHER_ID);
   }
 
   @Test
@@ -550,7 +550,7 @@ class ConversationServiceTest {
         new com.platform.chatservice.dto.CreateGroupRequest(
             "Team", "/api/uploads/g", List.of(OTHER_ID), null));
 
-    verify(uploadRefs).attachToConversation("/api/uploads/g", "new-conv");
+    verify(uploadRefs).attachToConversation("/api/uploads/g", "new-conv", USER_ID);
   }
 
   @Test

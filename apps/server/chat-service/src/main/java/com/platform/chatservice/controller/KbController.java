@@ -60,9 +60,9 @@ public class KbController {
             .build();
 
     kbDocumentRepository.save(doc);
-    uploadRefs.attachToConversation(doc.getFileUrl(), doc.getConversationId());
+    uploadRefs.attachToConversation(doc.getFileUrl(), doc.getConversationId(), doc.getUserId());
     if (doc.getDepartmentId() != null) {
-      uploadRefs.attachToDepartment(doc.getFileUrl(), doc.getDepartmentId());
+      uploadRefs.attachToDepartment(doc.getFileUrl(), doc.getDepartmentId(), doc.getUserId());
     }
 
     // departmentId may be null (personal chats) — build with a null-tolerant map.

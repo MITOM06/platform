@@ -108,8 +108,8 @@ class KbControllerTest {
 
     controller.uploadDocument(req, principal);
 
-    verify(uploadRefs).attachToConversation(req.getFileUrl(), CONV_ID);
-    verify(uploadRefs).attachToDepartment(req.getFileUrl(), "dept-1");
+    verify(uploadRefs).attachToConversation(req.getFileUrl(), CONV_ID, USER_ID);
+    verify(uploadRefs).attachToDepartment(req.getFileUrl(), "dept-1", USER_ID);
   }
 
   @Test
@@ -124,8 +124,8 @@ class KbControllerTest {
 
     controller.uploadDocument(req, principal);
 
-    verify(uploadRefs).attachToConversation(req.getFileUrl(), CONV_ID);
-    verify(uploadRefs, never()).attachToDepartment(any(), any());
+    verify(uploadRefs).attachToConversation(req.getFileUrl(), CONV_ID, USER_ID);
+    verify(uploadRefs, never()).attachToDepartment(any(), any(), any());
   }
 
   @Test
