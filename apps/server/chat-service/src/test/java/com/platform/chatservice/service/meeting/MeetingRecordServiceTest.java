@@ -168,14 +168,14 @@ class MeetingRecordServiceTest {
   @Test
   void clampsAncientClientTimestampToLastMinute() {
     long old = Instant.now().minusSeconds(600).toEpochMilli();
-    Instant before = Instant.now();
+    Instant before = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
     assertThat(records.appendSpeech(an, "m1", "hi", old)).isTrue();
     assertThat(records.list("m1").get(0).getTs()).isAfterOrEqualTo(before.minusSeconds(60));
   }
 
   @Test
   void stampsCreatedAtWithServerNow() {
-    Instant before = Instant.now();
+    Instant before = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
     records.appendSpeech(an, "m1", "hi", Instant.now().minusSeconds(30).toEpochMilli());
     MeetingRecord r = records.list("m1").get(0);
     assertThat(r.getCreatedAt()).isNotNull().isAfterOrEqualTo(before.minusMillis(1));
