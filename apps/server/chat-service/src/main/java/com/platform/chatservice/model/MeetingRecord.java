@@ -40,4 +40,7 @@ public class MeetingRecord {
   private String text;
 
   private Instant ts;
+
+  /** Server time of insertion; {@code ts} is client-supplied (clamped) and may differ. */
+  private Instant createdAt;
 }

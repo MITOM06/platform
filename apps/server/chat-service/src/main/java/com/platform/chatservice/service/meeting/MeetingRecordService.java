@@ -7,6 +7,7 @@ import com.platform.chatservice.model.MeetingRecord;
 import com.platform.chatservice.security.UserPrincipal;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -28,6 +29,21 @@ public class MeetingRecordService {
   private final MeetingGuard guard;
   private final MeetingPeople people;
 
+  /** Per-user in-memory bucket: ~3 lines/s, burst 6. Over the limit => drop silently. */
+  private final SpeechRateLimiter limiter = new SpeechRateLimiter(3.0, 6);
+
+  /**
+   * (meetingId:userId) -> speaker name, so a chatty speaker costs one profile read, not one per
+   * line.
+   */
+  private final ConcurrentHashMap<String, CachedName> names = new ConcurrentHashMap<>();
+
+  private static final long NAME_TTL_MS = 5 * 60_000L;
+  private static final int NAME_CACHE_MAX = 5_000;
+  private static final long TS_PAST_WINDOW_MS = 60_000L;
+
+  private record CachedName(String name, long expiresAt) {}
+
   /**
    * @return true when the line was stored.
    */
@@ -41,6 +57,9 @@ public class MeetingRecordService {
     }
     if (clean.length() > SPEECH_MAX) {
       clean = clean.substring(0, SPEECH_MAX);
+    }
+    if (!limiter.tryAcquire(caller.getUserId())) {
+      return false;
     }
     Meeting meeting;
     try {
@@ -58,21 +77,40 @@ public class MeetingRecordService {
       return false;
     }
     Instant now = Instant.now();
-    Instant at = ts == null ? now : Instant.ofEpochMilli(Math.min(ts, now.toEpochMilli()));
-    PersonDto person = people.profiles(List.of(caller.getUserId())).get(caller.getUserId());
+    long nowMs = now.toEpochMilli();
+    Instant at =
+        ts == null
+            ? now
+            : Instant.ofEpochMilli(Math.max(nowMs - TS_PAST_WINDOW_MS, Math.min(ts, nowMs)));
     append(
         MeetingRecord.builder()
             .meetingId(meetingId)
             .kind(MeetingRecord.Kind.SPEECH)
             .userId(caller.getUserId())
-            .displayName(person == null ? null : person.displayName())
+            .displayName(speakerName(meetingId, caller.getUserId(), nowMs))
             .text(clean)
             .ts(at)
             .build());
     return true;
   }
 
+  private String speakerName(String meetingId, String userId, long nowMs) {
+    String key = meetingId + ":" + userId;
+    CachedName hit = names.get(key);
+    if (hit != null && hit.expiresAt() > nowMs) {
+      return hit.name();
+    }
+    PersonDto person = people.profiles(List.of(userId)).get(userId);
+    String name = person == null ? null : person.displayName();
+    if (names.size() >= NAME_CACHE_MAX) {
+      names.clear();
+    }
+    names.put(key, new CachedName(name, nowMs + NAME_TTL_MS));
+    return name;
+  }
+
   public MeetingRecord append(MeetingRecord r) {
+    r.setCreatedAt(Instant.now());
     return mongo.insert(r);
   }
 

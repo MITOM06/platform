@@ -164,4 +164,49 @@ class MeetingRecordServiceTest {
         .containsExactly("first", "second", "third");
     assertThat(records.list("other")).isEqualTo(List.of());
   }
+
+  @Test
+  void clampsAncientClientTimestampToLastMinute() {
+    long old = Instant.now().minusSeconds(600).toEpochMilli();
+    Instant before = Instant.now();
+    assertThat(records.appendSpeech(an, "m1", "hi", old)).isTrue();
+    assertThat(records.list("m1").get(0).getTs()).isAfterOrEqualTo(before.minusSeconds(60));
+  }
+
+  @Test
+  void stampsCreatedAtWithServerNow() {
+    Instant before = Instant.now();
+    records.appendSpeech(an, "m1", "hi", Instant.now().minusSeconds(30).toEpochMilli());
+    MeetingRecord r = records.list("m1").get(0);
+    assertThat(r.getCreatedAt()).isNotNull().isAfterOrEqualTo(before.minusMillis(1));
+    MeetingRecord f =
+        records.append(
+            MeetingRecord.builder()
+                .meetingId("m1")
+                .kind(MeetingRecord.Kind.FILE)
+                .text("f")
+                .ts(Instant.now())
+                .build());
+    assertThat(records.list("m1")).allSatisfy(x -> assertThat(x.getCreatedAt()).isNotNull());
+    assertThat(f.getCreatedAt()).isNotNull();
+  }
+
+  @Test
+  void dropsLinesOverTheBurstLimitAndKeepsUnderLimitOnes() {
+    int stored = 0;
+    for (int i = 0; i < 12; i++) {
+      if (records.appendSpeech(an, "m1", "line " + i, null)) {
+        stored++;
+      }
+    }
+    assertThat(stored).isBetween(6, 7); // burst 6 (+ at most one refill during the loop)
+    assertThat(count()).isEqualTo(stored);
+  }
+
+  @Test
+  void speakerNameIsReadOnceNotPerLine() {
+    records.appendSpeech(an, "m1", "one", null);
+    records.appendSpeech(an, "m1", "two", null);
+    org.mockito.Mockito.verify(people, org.mockito.Mockito.times(1)).profiles(anyCollection());
+  }
 }
