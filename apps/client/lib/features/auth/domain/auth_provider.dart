@@ -21,6 +21,10 @@ part 'auth_provider.g.dart';
 class AuthNotifier extends _$AuthNotifier {
   String? _lastProcessedOAuthCode;
   StreamSubscription<String>? _fcmRefreshSub;
+  // Set while build() awaits the media token on session restore; a forced
+  // logout in that window is recorded here (state writes are lost mid-build).
+  bool _restoring = false;
+  AuthState? _endedDuringRestore;
 
   @override
   Future<AuthState> build() async {
@@ -29,8 +33,16 @@ class AuthNotifier extends _$AuthNotifier {
       _registerFcmToken();
       // Bounded wait (5s) so the first screen already has upload tokens; the
       // router shows the splash while this state is loading. Never fails.
-      await _bootstrapMediaToken();
-      return AuthAuthenticated(user);
+      _restoring = true;
+      _endedDuringRestore = null;
+      try {
+        await _bootstrapMediaToken();
+      } finally {
+        _restoring = false;
+      }
+      // The token fetch can end the session meanwhile (401 -> refresh rejected
+      // -> forceLogout). Honour that instead of reporting a signed-in user.
+      return _endedDuringRestore ?? AuthAuthenticated(user);
     }
     return const AuthUnauthenticated();
   }
@@ -246,6 +258,7 @@ class AuthNotifier extends _$AuthNotifier {
         reason == null) {
       return;
     }
+    if (_restoring) _endedDuringRestore = AuthUnauthenticated(reason: reason);
     state = AsyncData(AuthUnauthenticated(reason: reason));
     if (wasSignedIn) resetSessionState(ref);
   }

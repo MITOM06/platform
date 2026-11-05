@@ -63,7 +63,8 @@ class MediaTokenController {
     if (running != null) return running;
     final gen = _generation;
     late final Future<void> request;
-    request = _fetch().then<void>((res) {
+    // Future.sync: a fetcher that throws synchronously must not escape ensure().
+    request = Future.sync(_fetch).then<void>((res) {
       if (res.token.isEmpty) throw StateError('bad media token response');
       // Signed out (or another user signed in) while in flight: drop it.
       if (gen != _generation || !_signedIn) return;

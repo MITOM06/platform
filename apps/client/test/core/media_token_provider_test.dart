@@ -174,4 +174,19 @@ void main() {
       expect(MediaTokenHolder.token, isNull);
     });
   });
+
+  test('fetcher_throwing_synchronously_never_throws_and_retries', () {
+    run(() {
+      next = () => throw StateError('sync boom');
+      Object? error;
+      c.ensure().catchError((Object e) => error = e);
+      c.ensureBounded().catchError((Object e) => error = e);
+      fake.flushMicrotasks();
+      expect(error, isNull);
+      expect(calls, 1);
+      next = () async => resp('T1', 5);
+      fake.elapse(const Duration(seconds: 16));
+      expect(MediaTokenHolder.token, 'T1');
+    });
+  });
 }
