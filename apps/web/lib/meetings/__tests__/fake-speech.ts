@@ -12,7 +12,7 @@ export class FakeRecognition {
   lang = ''
   onresult: ((e: { resultIndex: number; results: FakeResult[] }) => void) | null = null
   onend: (() => void) | null = null
-  onerror: (() => void) | null = null
+  onerror: ((e: { error?: string }) => void) | null = null
   start = vi.fn()
   stop = vi.fn()
   constructor() {

@@ -57,4 +57,45 @@ describe('useMeetingTranscriber', () => {
     const { result } = renderHook(() => useMeetingTranscriber('m1', true))
     expect(result.current.supported).toBe(false)
   })
+
+  it('permission denied: not-allowed then onend starts only once and reports unsupported', () => {
+    const { result } = renderHook(() => useMeetingTranscriber('m1', true))
+    const r = rec()
+    expect(r.start).toHaveBeenCalledTimes(1)
+    act(() => r.onerror?.({ error: 'not-allowed' }))
+    act(() => r.onend?.())
+    expect(r.start).toHaveBeenCalledTimes(1)
+    expect(result.current.supported).toBe(false)
+  })
+
+  it('transient error (no-speech) still restarts on end', () => {
+    renderHook(() => useMeetingTranscriber('m1', true))
+    const r = rec()
+    act(() => r.onerror?.({ error: 'no-speech' }))
+    act(() => r.onend?.())
+    expect(r.start).toHaveBeenCalledTimes(2)
+  })
+
+  it('onend while enabled restarts recognition', () => {
+    renderHook(() => useMeetingTranscriber('m1', true))
+    const r = rec()
+    act(() => r.onend?.())
+    expect(r.start).toHaveBeenCalledTimes(2)
+  })
+
+  it('onend after pause does not restart', () => {
+    const { result } = renderHook(() => useMeetingTranscriber('m1', true))
+    const r = rec()
+    act(() => result.current.setPaused(true))
+    act(() => r.onend?.())
+    expect(r.start).toHaveBeenCalledTimes(1)
+  })
+
+  it('onend after unmount does not restart', () => {
+    const { unmount } = renderHook(() => useMeetingTranscriber('m1', true))
+    const r = rec()
+    unmount()
+    act(() => r.onend?.())
+    expect(r.start).toHaveBeenCalledTimes(1)
+  })
 })

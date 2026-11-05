@@ -78,7 +78,9 @@ export function MeetingRoom({ meeting, controller, myId, myName, myAvatarUrl }: 
   useMeetingShortcuts(controller, raised)
   useLobbyToast(meeting.id)
 
-  const { supported, paused, setPaused } = useMeetingTranscriber(meeting.id, meeting.settings.aiNotes === true)
+  // Web Speech listens to the mic on its own, so a muted mic must also silence it.
+  const micOn = useMeetingRoomStore((s) => s.mic)
+  const { supported, paused, setPaused } = useMeetingTranscriber(meeting.id, meeting.settings.aiNotes === true && micOn)
   const room = useMemo<RoomContextValue>(
     () => ({ meeting, controller, myId, myName, myAvatarUrl, realtimeConnected, speech: { supported, paused, setPaused } }),
     [meeting, controller, myId, myName, myAvatarUrl, realtimeConnected, supported, paused, setPaused],

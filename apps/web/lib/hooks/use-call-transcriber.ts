@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { stompService } from '@/lib/stomp/client'
 
 // Minimal typings for the Web Speech API (not in lib.dom for all targets).
@@ -25,7 +25,7 @@ interface SpeechRecognitionLike {
   lang: string
   onresult: ((e: SpeechRecognitionEvent) => void) | null
   onend: (() => void) | null
-  onerror: (() => void) | null
+  onerror: ((e: { error?: string }) => void) | null
   start: () => void
   stop: () => void
 }
@@ -52,6 +52,7 @@ export function useSpeechTranscriber(
   lang?: string,
 ): { supported: boolean } {
   const onFinalRef = useRef(onFinal)
+  const [blocked, setBlocked] = useState(false)
   // Keep the latest callback available to the (long-lived) onresult handler
   // without re-creating the recognizer on every render.
   useEffect(() => {
@@ -88,8 +89,13 @@ export function useSpeechTranscriber(
         }
       }
     }
-    rec.onerror = () => {
-      // transient (e.g. no-speech) — onend handles the restart
+    rec.onerror = (e) => {
+      // Permission denied: restarting would loop forever, so stop for good.
+      if (e?.error === 'not-allowed' || e?.error === 'service-not-allowed') {
+        stopped = true
+        setBlocked(true)
+      }
+      // other errors are transient (e.g. no-speech) — onend handles the restart
     }
 
     try {
@@ -108,7 +114,7 @@ export function useSpeechTranscriber(
     }
   }, [enabled, lang])
 
-  return { supported: getRecognitionCtor() !== null }
+  return { supported: !blocked && getRecognitionCtor() !== null }
 }
 
 /**
