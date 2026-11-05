@@ -11,6 +11,7 @@ import '../../auth/domain/auth_state.dart';
 import '../../home/domain/home_providers.dart';
 import '../data/chat_repository.dart';
 import '../data/stomp_service.dart';
+import '../../ai_hub/domain/ai_threads_provider.dart';
 import '../../settings/ui/settings_screen.dart' show notificationsEnabledProvider;
 import 'active_call_provider.dart';
 import 'chat_misc_providers.dart';
@@ -81,6 +82,9 @@ class ConversationsNotifier extends _$ConversationsNotifier {
   /// Merges a CONVERSATION_UPDATED (shared topic payload or the actor's own
   /// full view) into the list — never replacing it wholesale.
   void _onConversationUpdate(ConversationUpdateEvent event) {
+    // AI threads live in aiThreadsProvider only — never (re)insert them here.
+    final parts = event.json['participants'];
+    if (parts is List && parts.contains(kAiBotUserId)) return;
     final current = state.valueOrNull;
     if (current == null) return;
     final result = ConversationListOps.merge(
@@ -129,6 +133,13 @@ class ConversationsNotifier extends _$ConversationsNotifier {
       if (latest == null) return;
       final me = _currentUserId;
       if (me != null && !conv.participants.contains(me)) return;
+      if (conv.isAiConversation) {
+        // Never in the main list: hand it to the AI threads list instead.
+        if (ref.exists(aiThreadsProvider)) {
+          ref.read(aiThreadsProvider.notifier).upsert(conv);
+        }
+        return;
+      }
       state = AsyncData(ConversationListOps.upsertSorted(latest, conv));
     } catch (_) {
       // Not accessible (removed / deleted) — nothing to add.
@@ -346,7 +357,11 @@ class ConversationsNotifier extends _$ConversationsNotifier {
       createdAt: notice.createdAt,
     );
     if (updated == null) {
-      unawaited(ensureLoaded(convId));
+      // A known AI thread is handled by aiThreadsProvider; don't refetch it
+      // just to drop it again.
+      final knownAi = ref.exists(aiThreadsProvider) &&
+          ref.read(aiThreadsProvider.notifier).contains(convId);
+      if (!knownAi) unawaited(ensureLoaded(convId));
       return;
     }
     state = AsyncData(updated);

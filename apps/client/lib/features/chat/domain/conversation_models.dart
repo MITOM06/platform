@@ -138,6 +138,10 @@ class ConversationModel {
   bool get isDirectAi =>
       !isGroup && participants.contains(kAiBotUserId);
 
+  /// Any conversation the AI bot takes part in — including every AI thread
+  /// (ChatGPT-style "new chat"). Mirrors web `isAiConversation`.
+  bool get isAiConversation => participants.contains(kAiBotUserId);
+
   /// Whether [userId] administers this group. Direct chats have no admins.
   bool isAdmin(String userId) => isGroup && admins.contains(userId);
 
