@@ -5162,6 +5162,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get meetingAiNotesPrejoin => 'Cuộc họp này có AI ghi chú';
 
   @override
+  String get meetingAiNotesPauseMine => 'Tạm dừng ghi lời của tôi';
+
+  @override
+  String get meetingAiNotesResumeMine => 'Tiếp tục ghi lời của tôi';
+
+  @override
+  String get meetingAiNotesUnsupported =>
+      'Trình duyệt này không hỗ trợ ghi lời cho AI';
+
+  @override
   String get meetingSubmitCreate => 'Lên lịch';
 
   @override

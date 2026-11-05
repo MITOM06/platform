@@ -14,8 +14,11 @@ import '../../domain/permissions.dart';
 import '../../domain/room_phase.dart';
 import '../../state/active_room.dart';
 import '../../state/meeting_room_controller.dart';
+import '../../state/meeting_room_state.dart';
 import '../../state/meeting_room_providers.dart';
 import '../../state/meeting_room_realtime.dart';
+import '../../state/meeting_transcriber.dart';
+import '../../state/room_session_wiring.dart';
 import 'leave_sheet.dart';
 import 'meeting_room_scope.dart';
 import 'meeting_room_view.dart';
@@ -41,6 +44,7 @@ class _MeetingSessionViewState extends ConsumerState<MeetingSessionView> {
   late final AppLifecycleListener _lifecycle;
   late final void Function(bool on) _keepAwake;
   late final String _myId;
+  late final MeetingTranscriber _transcriber;
   bool _endedHandled = false;
   bool _activated = false;
 
@@ -53,6 +57,7 @@ class _MeetingSessionViewState extends ConsumerState<MeetingSessionView> {
     final auth = ref.read(authNotifierProvider).valueOrNull;
     _myId = auth is AuthAuthenticated ? auth.user.id : '';
     _keepAwake = ref.read(meetingKeepAwakeProvider);
+    _transcriber = ref.read(meetingTranscriberProvider);
     _controller = MeetingRoomController(
       meeting: widget.meeting,
       myId: _myId,
@@ -105,7 +110,15 @@ class _MeetingSessionViewState extends ConsumerState<MeetingSessionView> {
     // being finalized: right after this frame instead (a room opened in the
     // same frame activates first and is left alone).
     scheduleMicrotask(_controller.dispose);
+    scheduleMicrotask(() => _transcriber.sync(meetingId: null, active: false));
     super.dispose();
+  }
+
+  /// Speech capture follows: in the room, AI notes on, my mic on.
+  void _syncTranscriber(MeetingRoomState s) {
+    if (!_isOpen) return;
+    final a = transcriberSyncArgs(s, widget.meeting.id);
+    _transcriber.sync(meetingId: a.meetingId, active: a.active);
   }
 
   void _onPhase(RoomPhase? prev, RoomPhase phase) {
@@ -151,6 +164,10 @@ class _MeetingSessionViewState extends ConsumerState<MeetingSessionView> {
   @override
   Widget build(BuildContext context) {
     ref.listen(meetingRoomStoreProvider.select((s) => s.phase), _onPhase);
+    ref.listen(
+        meetingRoomStoreProvider
+            .select((s) => transcriberSyncArgs(s, widget.meeting.id)),
+        (_, a) => _syncTranscriber(ref.read(meetingRoomStoreProvider)));
     final phase = ref.watch(meetingRoomStoreProvider.select((s) => s.phase));
     // Until activated (or once another room took the store) show nothing of
     // the shared store.

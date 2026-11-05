@@ -5196,6 +5196,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meetingAiNotesPrejoin => 'This meeting has AI notes';
 
   @override
+  String get meetingAiNotesPauseMine => 'Pause my speech capture';
+
+  @override
+  String get meetingAiNotesResumeMine => 'Resume my speech capture';
+
+  @override
+  String get meetingAiNotesUnsupported =>
+      'This browser can\'t capture speech for AI notes';
+
+  @override
   String get meetingSubmitCreate => 'Schedule';
 
   @override

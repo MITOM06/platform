@@ -5010,6 +5010,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get meetingAiNotesPrejoin => 'この会議では AI がメモを取ります';
 
   @override
+  String get meetingAiNotesPauseMine => '自分の発言の記録を一時停止';
+
+  @override
+  String get meetingAiNotesResumeMine => '自分の発言の記録を再開';
+
+  @override
+  String get meetingAiNotesUnsupported => 'このブラウザーはAIノート用の音声記録に対応していません';
+
+  @override
   String get meetingSubmitCreate => '予約';
 
   @override

@@ -2,6 +2,7 @@
 // `lib/meetings/room-session.ts` (`wireRoomSession`, `peersPatch`).
 
 import '../../../core/rtc/rtc_session.dart';
+import '../domain/room_phase.dart';
 import 'meeting_room_state.dart';
 
 /// Copies peers (the session mutates them in place) and keeps the last remote
@@ -66,4 +67,15 @@ void wireRoomSession(
     store.update((s) => s.copyWith(reconnecting: false, screen: false));
     onClosed(reason);
   };
+}
+
+/// What the transcriber syncs to: the room's meeting only while I am in it,
+/// capturing only with AI notes on AND my mic on (muting stops recognition).
+({String? meetingId, bool active}) transcriberSyncArgs(
+    MeetingRoomState s, String meetingId) {
+  if (s.phase != RoomPhase.inRoom) return (meetingId: null, active: false);
+  return (
+    meetingId: meetingId,
+    active: s.settings.aiNotes == true && s.mic,
+  );
 }

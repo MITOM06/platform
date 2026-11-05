@@ -9319,6 +9319,24 @@ abstract class AppLocalizations {
   /// **'This meeting has AI notes'**
   String get meetingAiNotesPrejoin;
 
+  /// No description provided for @meetingAiNotesPauseMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause my speech capture'**
+  String get meetingAiNotesPauseMine;
+
+  /// No description provided for @meetingAiNotesResumeMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume my speech capture'**
+  String get meetingAiNotesResumeMine;
+
+  /// No description provided for @meetingAiNotesUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This browser can\'t capture speech for AI notes'**
+  String get meetingAiNotesUnsupported;
+
   /// No description provided for @meetingSubmitCreate.
   ///
   /// In en, this message translates to:

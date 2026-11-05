@@ -5013,6 +5013,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get meetingAiNotesPrejoin => '이 회의는 AI 노트를 사용합니다';
 
   @override
+  String get meetingAiNotesPauseMine => '내 음성 기록 일시중지';
+
+  @override
+  String get meetingAiNotesResumeMine => '내 음성 기록 다시 시작';
+
+  @override
+  String get meetingAiNotesUnsupported => '이 브라우저는 AI 노트용 음성 기록을 지원하지 않습니다';
+
+  @override
   String get meetingSubmitCreate => '예약';
 
   @override
