@@ -2542,6 +2542,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get adminRoleName => 'Tên vai trò';
 
   @override
+  String get adminRoleDelete => 'Xóa vai trò';
+
+  @override
+  String adminRoleDeleteConfirm(String name) {
+    return 'Xóa vai trò $name? Chỉ xóa được vai trò không còn ai dùng: không thành viên nào giữ, không lời mời đang chờ nào dùng và không group SSO nào ánh xạ tới. Thao tác này không hoàn tác được.';
+  }
+
+  @override
   String get adminAuditTitle => 'Nhật ký kiểm toán';
 
   @override
@@ -4283,6 +4291,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get authErrRoleNameTaken => 'Đã có vai trò mang tên này.';
 
   @override
+  String get authErrPresetRoleDeleteForbidden =>
+      'Không thể xóa vai trò mặc định.';
+
+  @override
+  String authErrRoleInUse(int members, int invitations, int ssoMappings) {
+    return 'Vai trò này vẫn đang được dùng (thành viên: $members, lời mời đang chờ: $invitations, ánh xạ SSO: $ssoMappings). Hãy chuyển chúng sang vai trò khác trước.';
+  }
+
+  @override
   String get authErrOwnerRoleImmutable =>
       'Không thể sửa hoặc xoá vai trò Owner.';
 
@@ -4365,6 +4382,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get adminAuditActionInvitationCreate => 'Gửi lời mời';
+
+  @override
+  String get adminAuditActionRoleDelete => 'Xóa vai trò';
 
   @override
   String get adminAuditActionInvitationResend => 'Gửi lại lời mời';

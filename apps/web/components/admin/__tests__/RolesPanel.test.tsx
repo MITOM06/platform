@@ -19,6 +19,7 @@ vi.mock('@/lib/hooks/use-admin', () => ({
   useRoleActions: () => ({
     create: { mutate: vi.fn(), isPending: false },
     update: { mutate: vi.fn(), isPending: false },
+    remove: { mutate: vi.fn(), isPending: false },
   }),
 }))
 

@@ -8,14 +8,18 @@ import '../../../../core/utils/global_messenger.dart';
 import '../../../../core/widgets/pon_widgets.dart';
 import '../../data/models/admin_models.dart';
 import '../../state/admin_providers.dart';
+import '../../state/capabilities_provider.dart';
 import '../../utils/admin_error.dart';
+import '../../utils/role_guard.dart';
+import 'admin_confirm_dialog.dart';
 import 'cap_label.dart';
 
 const _capColWidth = 180.0;
 const _roleColWidth = 132.0;
 
 /// Roles & permissions matrix — Capability × role grid. Owner is read-only;
-/// presets can be cloned. Mirrors the web `RolesPanel`.
+/// presets can be cloned; a custom role nobody uses can be deleted. Mirrors the
+/// web `RolesPanel`.
 class RolesPanel extends ConsumerStatefulWidget {
   const RolesPanel({super.key});
 
@@ -27,6 +31,7 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
   /// roleId -> edited permission matrix. Seeded from the server roles.
   final Map<String, Map<String, bool>> _edited = {};
   String _seedSig = '';
+  bool _deleting = false;
 
   void _seed(List<Role> roles) {
     final sig = roles.map((r) => r.id).join(',');
@@ -96,6 +101,29 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
     }
   }
 
+  Future<void> _delete(Role r) async {
+    final l10n = context.l10n;
+    final ok = await confirmAdminAction(
+      context,
+      message: l10n.adminRoleDeleteConfirm(r.name),
+      confirmLabel: l10n.adminRoleDelete,
+      destructive: true,
+    );
+    if (!ok || !mounted) return;
+    setState(() => _deleting = true);
+    try {
+      await ref.read(rolesProvider.notifier).remove(r.id);
+      showInfoSnackBar(l10n.adminToastDeleted);
+    } catch (e) {
+      // ROLE_IN_USE (with counts) / PRESET_ROLE_DELETE_FORBIDDEN / … → their
+      // own localized message.
+      showErrorSnackBar(
+          mounted ? adminErrorMessage(context, e) : l10n.adminToastError);
+    } finally {
+      if (mounted) setState(() => _deleting = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -135,6 +163,10 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
   }
 
   Widget _headerRow(List<Role> roles, l10n) {
+    final caps = ref.watch(capabilitiesProvider).valueOrNull;
+    bool deletable(Role r) =>
+        caps != null &&
+        canDeleteRole(role: r, callerRole: caps.role, callerPerms: caps.perms);
     return Row(
       children: [
         SizedBox(
@@ -175,6 +207,19 @@ class _RolesPanelState extends ConsumerState<RolesPanel> {
                                   : AppTheme.hairline(context)),
                           tooltip: l10n.adminSave,
                           onPressed: _isDirty(r) ? () => _save(r) : null,
+                        ),
+                      if (!r.isPreset)
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          icon: Icon(Icons.delete_outline_rounded,
+                              size: 16,
+                              color: deletable(r) && !_deleting
+                                  ? Theme.of(context).colorScheme.error
+                                  : AppTheme.hairline(context)),
+                          tooltip: l10n.adminRoleDelete,
+                          onPressed: deletable(r) && !_deleting
+                              ? () => _delete(r)
+                              : null,
                         ),
                     ],
                   ),

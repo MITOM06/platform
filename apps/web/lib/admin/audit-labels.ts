@@ -26,6 +26,7 @@ export const AUDIT_ACTIONS = [
   'member.unblock',
   'role.create',
   'role.update',
+  'role.delete',
   // The retired Manager preset was removed (members moved to Member) at boot.
   'role.preset_removed',
   'sso.enforcement_changed',

@@ -80,6 +80,22 @@ export function roleEditLock(
 }
 
 /**
+ * Whether the caller sees "Delete" enabled on a role (mirror of `DELETE
+ * /admin/roles/:id` and of Flutter `canDeleteRole`): never on a preset
+ * (PRESET_ROLE_DELETE_FORBIDDEN); a non-Owner neither on the role they hold
+ * (CANNOT_EDIT_OWN_ROLE) nor on one granting capabilities they lack. Whether the
+ * role is still in use (ROLE_IN_USE) is only known to the server.
+ */
+export function canDeleteRole(
+  role: Pick<Role, 'name' | 'isPreset' | 'permissions'>,
+  caller: { roleName?: string; isOwner: boolean; perms?: readonly string[] },
+): boolean {
+  if (role.isPreset) return false
+  if (roleEditLock(role, caller) !== null) return false
+  return grantBlockers(caller, role.permissions).length === 0
+}
+
+/**
  * The ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS pre-check: a non-Owner may only save a
  * role whose every capability (current and edited) they hold themselves.
  */

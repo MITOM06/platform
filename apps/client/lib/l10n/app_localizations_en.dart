@@ -2541,6 +2541,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminRoleName => 'Role name';
 
   @override
+  String get adminRoleDelete => 'Delete role';
+
+  @override
+  String adminRoleDeleteConfirm(String name) {
+    return 'Delete $name? Only a role nobody uses can be deleted: no member holds it, no pending invitation offers it and no SSO group maps to it. This can\'t be undone.';
+  }
+
+  @override
   String get adminAuditTitle => 'Audit log';
 
   @override
@@ -4310,6 +4318,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authErrRoleNameTaken => 'A role with this name already exists.';
 
   @override
+  String get authErrPresetRoleDeleteForbidden =>
+      'Built-in roles can\'t be deleted.';
+
+  @override
+  String authErrRoleInUse(int members, int invitations, int ssoMappings) {
+    return 'This role is still in use (members: $members, pending invitations: $invitations, SSO mappings: $ssoMappings). Move them to another role first.';
+  }
+
+  @override
   String get authErrOwnerRoleImmutable =>
       'The Owner role can\'t be modified or deleted.';
 
@@ -4391,6 +4408,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminAuditActionInvitationCreate => 'Invitation sent';
+
+  @override
+  String get adminAuditActionRoleDelete => 'Role deleted';
 
   @override
   String get adminAuditActionInvitationResend => 'Invitation resent';
