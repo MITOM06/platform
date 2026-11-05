@@ -41,7 +41,7 @@ function RoomBanners({ realtimeConnected }: { realtimeConnected: boolean }) {
         ? { icon: <SignalLow className="size-4" aria-hidden />, text: t('poorConnection') }
         : null
   return (
-    <div role="status" className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center px-4">
+    <div role="status" className="flex justify-center">
       {notice ? (
         <p className="flex max-w-full items-center gap-2 rounded-full bg-black/55 px-3 py-1.5 text-xs font-medium text-white">
           {notice.icon}
@@ -92,8 +92,11 @@ export function MeetingRoom({ meeting, controller, myId, myName, myAvatarUrl }: 
       <div className="flex h-dvh w-full flex-col bg-background">
         <div className="flex min-h-0 flex-1">
           <main className="relative min-w-0 flex-1 bg-neutral-950" aria-label={title}>
-            <RoomBanners realtimeConnected={realtimeConnected} />
-            <AiNotesIndicator active={meeting.settings.aiNotes === true} />
+            {/* One column so the connection banner and the AI chip never overlap. */}
+            <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex flex-col gap-2 px-4">
+              <RoomBanners realtimeConnected={realtimeConnected} />
+              <AiNotesIndicator active={meeting.settings.aiNotes === true} />
+            </div>
             <MeetingStage />
             <ReactionOverlay />
           </main>

@@ -49,12 +49,21 @@ class MeetingRoomView extends ConsumerWidget {
             const Positioned.fill(child: MeetingStage()),
             const Positioned.fill(
                 child: IgnorePointer(child: ReactionOverlay())),
-            const Positioned(
-                top: 8, left: 16, right: 16, child: RoomBanners()),
+            // One column so the connection banner and the AI chip never overlap.
             Positioned(
               top: 8,
-              left: 12,
-              child: AiNotesIndicator(active: aiNotes),
+              left: 16,
+              right: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const RoomBanners(),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: AiNotesIndicator(active: aiNotes),
+                  ),
+                ],
+              ),
             ),
           ]),
         ),

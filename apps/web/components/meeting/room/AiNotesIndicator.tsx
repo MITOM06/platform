@@ -20,7 +20,7 @@ export function AiNotesIndicator({ active }: { active: boolean }) {
 
   if (!active) return null
   return (
-    <p className="absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-xs font-medium text-white">
+    <p role="status" className="flex w-fit items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-xs font-medium text-white">
       <Sparkles className="size-3.5" aria-hidden />
       <span>{t('aiNotesActive')}</span>
     </p>

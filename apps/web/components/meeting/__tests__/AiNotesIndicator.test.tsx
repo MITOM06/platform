@@ -17,6 +17,11 @@ describe('AiNotesIndicator', () => {
     expect(screen.getByText('aiNotesActive')).toBeTruthy()
   })
 
+  it('chip is a status live region', () => {
+    render(<AiNotesIndicator active />)
+    expect(screen.getByRole('status').textContent).toContain('aiNotesActive')
+  })
+
   it('shows nothing while aiNotes is off', () => {
     render(<AiNotesIndicator active={false} />)
     expect(screen.queryByText('aiNotesActive')).toBeNull()
