@@ -5,12 +5,13 @@ part of 'chat_repository.dart';
 mixin ChatRepositoryConversationOps {
   Dio get _dio;
 
-  /// The conversation list. One page of the server maximum (100) — a chat
+  /// The conversation list (AI threads excluded — they live in
+  /// `aiThreadsProvider`). One page of the server maximum (100) — a chat
   /// opened beyond it is fetched on demand (ConversationsNotifier.ensureLoaded).
   Future<List<ConversationModel>> listConversations() async {
     final response = await _dio.get(
       '/api/conversations',
-      queryParameters: {'size': 100},
+      queryParameters: {'size': 100, 'excludeAi': true},
     );
     final data = response.data as Map<String, dynamic>;
     final content = data['content'] as List;
@@ -23,7 +24,7 @@ mixin ChatRepositoryConversationOps {
   Future<List<ConversationModel>> listArchivedConversations() async {
     final response = await _dio.get(
       '/api/conversations',
-      queryParameters: {'archived': true, 'size': 100},
+      queryParameters: {'archived': true, 'size': 100, 'excludeAi': true},
     );
     final data = response.data as Map<String, dynamic>;
     final content = data['content'] as List;

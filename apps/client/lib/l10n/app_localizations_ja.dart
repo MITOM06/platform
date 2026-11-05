@@ -3089,25 +3089,49 @@ class AppLocalizationsJa extends AppLocalizations {
   String get leaveWithoutSaving => '保存せずに移動';
 
   @override
-  String get aiSessionHistory => '会話履歴';
+  String get aiThreadUntitled => 'AIとチャット';
 
   @override
-  String get aiNewSession => '新しい会話';
+  String get aiThreadNew => '新しい会話';
 
   @override
-  String get aiSessionActive => '使用中';
+  String get aiThreadsTitle => '会話';
 
   @override
-  String get aiSessionSummarized => '要約済み';
+  String get aiThreadRename => '名前を変更';
 
   @override
-  String get aiSessionEmpty => '過去の会話はありません';
+  String get aiThreadSave => '保存';
 
   @override
-  String get aiSessionResume => '再開';
+  String get aiThreadCancel => 'キャンセル';
 
   @override
-  String get aiSessionLoadError => '会話履歴を読み込めませんでした';
+  String get aiThreadDelete => '削除';
+
+  @override
+  String get aiThreadDeleteTitle => 'この会話を削除しますか？';
+
+  @override
+  String get aiThreadDeleteDesc => 'このAIとの会話のメッセージはすべてアカウントから削除されます。元に戻せません。';
+
+  @override
+  String get aiThreadEmpty => '会話はまだありません。新しく始めましょう。';
+
+  @override
+  String get aiThreadLoadFailed => '会話を読み込めませんでした。もう一度お試しください。';
+
+  @override
+  String get aiThreadCreateFailed => '新しい会話を作成できませんでした。もう一度お試しください。';
+
+  @override
+  String get aiThreadRenameFailed => '名前を変更できませんでした。もう一度お試しください。';
+
+  @override
+  String get aiThreadNameInvalid => '名前は1〜80文字で入力してください。';
+
+  @override
+  String get aiThreadDeleteFailed => '会話を削除できませんでした。もう一度お試しください。';
 
   @override
   String multiSelectCount(int count) {

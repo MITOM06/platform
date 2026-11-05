@@ -70,7 +70,8 @@ class MessagePinTest {
             messageMapper,
             aiMessageService,
             conversationCacheService,
-            uploadRefs);
+            uploadRefs,
+            org.mockito.Mockito.mock(AiThreadService.class));
     interactionService =
         new MessageInteractionService(
             messageRepository,

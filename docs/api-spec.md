@@ -25,7 +25,8 @@ Response 200: { "title": "string", "description": "string", "imageUrl": "string"
 
 ### List conversations (paginated)
 ```http
-GET /api/conversations
+GET /api/conversations?page=0&size=20&archived=false&blocked=false&excludeAi=false
+# excludeAi=true: drops direct chats with the AI bot (they are listed by /api/ai-threads)
 Response 200:
 {
   "content": [
@@ -187,6 +188,31 @@ Response 200: List of Message objects matching attachment category
 ```
 
 ---
+
+## 🤖 AI Threads (`/api/ai-threads`)
+
+Each "new chat" with the assistant is its own `direct` conversation `[me, ai-bot-000000000000000000000001]`
+(`POST /api/conversations` still answers 409 for a second DM with the bot — old clients rely on it).
+Delete a thread with `DELETE /api/conversations/{id}` (per-user hide). Untitled threads are auto-named
+from the user's first text message (first 60 chars, whitespace collapsed, `…` when cut) for both STOMP
+and REST sends; an existing name is never overwritten.
+
+```http
+POST /api/ai-threads
+Response 201: Conversation object (name = null, status = accepted, persona copied from the
+              caller's most recently active AI thread if any)
+# also pushes CONVERSATION_UPDATED to the caller's /user/queue/notifications
+
+GET /api/ai-threads
+Response 200: [Conversation]   # caller's AI threads, lastMessageAt desc (fallback createdAt), max 100,
+                               # excludes threads the caller deleted/blocked
+
+PATCH /api/ai-threads/{id}
+Body: { "name": "string" }     # trimmed, 1-80 chars
+Response 200: Conversation object (+ shared CONVERSATION_UPDATED on /topic/conversation/{id})
+Response 400: { "code": "AI_THREAD_NAME_INVALID" }
+Response 404: not one of the caller's AI threads
+```
 
 ## ✉️ Messages (`/api/messages`)
 

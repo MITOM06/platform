@@ -2259,5 +2259,23 @@
     "chatSending": "Sending…",
     "chatOffline": "Reconnecting — you can't send messages right now",
     "chatCounter": "{count}/{max}"
+  },
+  "aiThreads": {
+    "untitled": "Chat with AI",
+    "newThread": "New chat",
+    "backToMessages": "Back to messages",
+    "listLabel": "AI chats",
+    "rename": "Rename",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleteTitle": "Delete this chat?",
+    "deleteDesc": "All messages in this AI chat will be removed from your account. This cannot be undone.",
+    "empty": "No chats yet. Start a new one.",
+    "loadFailed": "Couldn't load your chats. Please try again.",
+    "createFailed": "Couldn't start a new chat. Please try again.",
+    "renameFailed": "Couldn't rename the chat. Please try again.",
+    "nameInvalid": "The name must be 1 to 80 characters.",
+    "deleteFailed": "Couldn't delete the chat. Please try again."
   }
 }

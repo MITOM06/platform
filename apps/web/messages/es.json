@@ -2259,5 +2259,23 @@
     "chatSending": "Enviando…",
     "chatOffline": "Reconectando: ahora mismo no puedes enviar mensajes",
     "chatCounter": "{count}/{max}"
+  },
+  "aiThreads": {
+    "untitled": "Chat con la IA",
+    "newThread": "Nuevo chat",
+    "backToMessages": "Volver a los mensajes",
+    "listLabel": "Chats con la IA",
+    "rename": "Renombrar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "deleteTitle": "¿Eliminar este chat?",
+    "deleteDesc": "Todos los mensajes de este chat con la IA se eliminarán de tu cuenta. Esta acción no se puede deshacer.",
+    "empty": "Aún no hay chats. Inicia uno nuevo.",
+    "loadFailed": "No se pudieron cargar los chats. Inténtalo de nuevo.",
+    "createFailed": "No se pudo crear un chat nuevo. Inténtalo de nuevo.",
+    "renameFailed": "No se pudo renombrar el chat. Inténtalo de nuevo.",
+    "nameInvalid": "El nombre debe tener entre 1 y 80 caracteres.",
+    "deleteFailed": "No se pudo eliminar el chat. Inténtalo de nuevo."
   }
 }

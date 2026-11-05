@@ -17,7 +17,7 @@ import {
   type InfiniteData,
 } from '@tanstack/react-query'
 import { reconcileThread, useMessageCache } from '@/lib/hooks/use-message-cache'
-import type { ConversationsResponse, Message, MessagesResponse } from '@/lib/api/types'
+import type { Conversation, ConversationsResponse, Message, MessagesResponse } from '@/lib/api/types'
 
 const CONV = 'conv-1'
 const KEY = ['messages', CONV] as const
@@ -227,5 +227,22 @@ describe('useMessageCache', () => {
     }
     const next = reconcileThread(old, [msg('a1', { type: 'ai', content: 'final' })])
     expect(next?.pages[0].content[0]).toMatchObject({ content: 'final', sources })
+  })
+
+  it('AI thread message bumps ai-threads preview without invalidating the main list', () => {
+    const AI = 'ai-bot-000000000000000000000001'
+    env.qc.setQueryData<ConversationsResponse>(['conversations'], {
+      content: [{ id: 'other' } as Conversation], page: 0, size: 1, totalElements: 1, hasNext: false,
+    })
+    env.qc.setQueryData<Conversation[]>(['ai-threads'], [
+      { id: 'x', participants: ['u', AI] } as Conversation,
+      { id: CONV, participants: ['u', AI], lastMessageAt: '2026-06-19T09:00:00.000Z' } as Conversation,
+    ])
+    seed(env.qc, [])
+    act(() => env.result.current.appendMessage(msg('m9', { content: 'yo' })))
+    const list = env.qc.getQueryData<Conversation[]>(['ai-threads'])
+    expect(list?.map((c) => c.id)).toEqual([CONV, 'x'])
+    expect(list?.[0]?.lastMessage?.content).toBe('yo')
+    expect(env.qc.getQueryState(['conversations'])?.isInvalidated).toBe(false)
   })
 })

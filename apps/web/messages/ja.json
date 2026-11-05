@@ -2259,5 +2259,23 @@
     "chatSending": "送信中…",
     "chatOffline": "再接続中のため、現在メッセージを送信できません",
     "chatCounter": "{count}/{max}"
+  },
+  "aiThreads": {
+    "untitled": "AIとのチャット",
+    "newThread": "新しいチャット",
+    "backToMessages": "メッセージに戻る",
+    "listLabel": "AIチャット",
+    "rename": "名前を変更",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "deleteTitle": "このチャットを削除しますか？",
+    "deleteDesc": "このAIチャットのメッセージはすべてアカウントから削除されます。この操作は元に戻せません。",
+    "empty": "チャットはまだありません。新しく始めましょう。",
+    "loadFailed": "チャットを読み込めませんでした。もう一度お試しください。",
+    "createFailed": "新しいチャットを作成できませんでした。もう一度お試しください。",
+    "renameFailed": "名前を変更できませんでした。もう一度お試しください。",
+    "nameInvalid": "名前は1〜80文字で入力してください。",
+    "deleteFailed": "チャットを削除できませんでした。もう一度お試しください。"
   }
 }

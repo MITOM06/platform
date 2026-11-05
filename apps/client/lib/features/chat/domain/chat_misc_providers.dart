@@ -1,3 +1,4 @@
+import '../../ai_hub/domain/ai_threads_provider.dart';
 import 'dart:async';
 
 import 'package:collection/collection.dart';
@@ -33,12 +34,17 @@ final userProfileProvider =
   return ref.read(authRepositoryProvider).getUserProfile(userId);
 });
 
-/// The conversation [id] from the loaded list (null until loaded / when not a
+/// The conversation [id] from the loaded main list or AI threads (null until loaded / when not a
 /// member). Screens call `ConversationsNotifier.ensureLoaded` so a
 /// conversation beyond the first page is fetched into the list too.
 final conversationProvider =
     Provider.autoDispose.family<ConversationModel?, String>((ref, id) {
-  return ref.watch(conversationsNotifierProvider.select(
+  final main = ref.watch(conversationsNotifierProvider.select(
+    (s) => s.valueOrNull?.firstWhereOrNull((c) => c.id == id),
+  ));
+  if (main != null) return main;
+  // AI threads never live in the main list (see aiThreadsProvider).
+  return ref.watch(aiThreadsProvider.select(
     (s) => s.valueOrNull?.firstWhereOrNull((c) => c.id == id),
   ));
 });

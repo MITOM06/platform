@@ -3153,25 +3153,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get leaveWithoutSaving => 'Leave without saving';
 
   @override
-  String get aiSessionHistory => 'Conversation history';
+  String get aiThreadUntitled => 'Chat with AI';
 
   @override
-  String get aiNewSession => 'New conversation';
+  String get aiThreadNew => 'New conversation';
 
   @override
-  String get aiSessionActive => 'Active';
+  String get aiThreadsTitle => 'Conversations';
 
   @override
-  String get aiSessionSummarized => 'Summarized';
+  String get aiThreadRename => 'Rename';
 
   @override
-  String get aiSessionEmpty => 'No previous conversations';
+  String get aiThreadSave => 'Save';
 
   @override
-  String get aiSessionResume => 'Resume';
+  String get aiThreadCancel => 'Cancel';
 
   @override
-  String get aiSessionLoadError => 'Couldn\'t load conversation history';
+  String get aiThreadDelete => 'Delete';
+
+  @override
+  String get aiThreadDeleteTitle => 'Delete this conversation?';
+
+  @override
+  String get aiThreadDeleteDesc =>
+      'All messages in this AI conversation will be removed from your account. This can\'t be undone.';
+
+  @override
+  String get aiThreadEmpty => 'No conversations yet. Start a new one.';
+
+  @override
+  String get aiThreadLoadFailed =>
+      'Couldn\'t load conversations. Please try again.';
+
+  @override
+  String get aiThreadCreateFailed =>
+      'Couldn\'t start a new conversation. Please try again.';
+
+  @override
+  String get aiThreadRenameFailed => 'Couldn\'t rename. Please try again.';
+
+  @override
+  String get aiThreadNameInvalid => 'Name must be 1 to 80 characters.';
+
+  @override
+  String get aiThreadDeleteFailed =>
+      'Couldn\'t delete the conversation. Please try again.';
 
   @override
   String multiSelectCount(int count) {

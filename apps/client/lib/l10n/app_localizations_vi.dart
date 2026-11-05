@@ -3157,25 +3157,54 @@ class AppLocalizationsVi extends AppLocalizations {
   String get leaveWithoutSaving => 'Thoát không lưu';
 
   @override
-  String get aiSessionHistory => 'Lịch sử cuộc trò chuyện';
+  String get aiThreadUntitled => 'Trò chuyện với AI';
 
   @override
-  String get aiNewSession => 'Cuộc trò chuyện mới';
+  String get aiThreadNew => 'Cuộc trò chuyện mới';
 
   @override
-  String get aiSessionActive => 'Đang hoạt động';
+  String get aiThreadsTitle => 'Cuộc trò chuyện';
 
   @override
-  String get aiSessionSummarized => 'Đã tóm tắt';
+  String get aiThreadRename => 'Đổi tên';
 
   @override
-  String get aiSessionEmpty => 'Chưa có cuộc trò chuyện nào trước đây';
+  String get aiThreadSave => 'Lưu';
 
   @override
-  String get aiSessionResume => 'Tiếp tục';
+  String get aiThreadCancel => 'Hủy';
 
   @override
-  String get aiSessionLoadError => 'Không thể tải lịch sử cuộc trò chuyện';
+  String get aiThreadDelete => 'Xóa';
+
+  @override
+  String get aiThreadDeleteTitle => 'Xóa cuộc trò chuyện này?';
+
+  @override
+  String get aiThreadDeleteDesc =>
+      'Toàn bộ tin nhắn trong cuộc trò chuyện với AI này sẽ bị xóa khỏi tài khoản của bạn. Hành động không thể hoàn tác.';
+
+  @override
+  String get aiThreadEmpty =>
+      'Chưa có cuộc trò chuyện nào. Bắt đầu một cuộc mới.';
+
+  @override
+  String get aiThreadLoadFailed =>
+      'Không tải được danh sách. Vui lòng thử lại.';
+
+  @override
+  String get aiThreadCreateFailed =>
+      'Không tạo được cuộc trò chuyện mới. Vui lòng thử lại.';
+
+  @override
+  String get aiThreadRenameFailed => 'Không đổi được tên. Vui lòng thử lại.';
+
+  @override
+  String get aiThreadNameInvalid => 'Tên phải từ 1 đến 80 ký tự.';
+
+  @override
+  String get aiThreadDeleteFailed =>
+      'Không xóa được cuộc trò chuyện. Vui lòng thử lại.';
 
   @override
   String multiSelectCount(int count) {
