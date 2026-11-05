@@ -1,5 +1,6 @@
-// Seed the demo company "Lumen Software" (30 people, 2 project departments,
-// six months of chat, files, knowledge base, meetings, AI memory, audit log).
+// Seed the demo company "Lumen Software" (31 people incl. one offboarded, 2 project departments,
+// six months of chat incl. background threads (filler.js), files, knowledge base,
+// meetings, calls, AI memory, connectors/skills/blocks, audit log).
 //
 //   node scripts/dev/seed-lumen/index.js            # (re)seed — idempotent; people are KEPT
 //                                                   # (2FA, passwords, connectors, sessions survive)
@@ -12,14 +13,15 @@
 // DEV-ONLY: never commit this to main (.claude/rules/dev-local-only.md).
 
 const crypto = require('node:crypto');
-const { mod } = require('./lib');
+const { mod, STORY_NOW, REAL_NOW } = require('./lib');
 const bcrypt = mod('bcrypt');
 const { MongoClient, ObjectId, GridFSBucket } = mod('mongodb');
 const Redis = mod('ioredis');
 
 const org = require('./org');
 const { CONVERSATIONS, FRIENDSHIPS, REMINDERS, MEMORIES, MEMORY_FACTS } = require('./conversations');
-const { MEETINGS } = require('./meetings');
+const { MEETINGS, RECURRING, PRIVATE_NOTES } = require('./meetings');
+const { withFiller } = require('./filler');
 const { buildFiles, avatarPng } = require('./files');
 const { buildMessages, AI_BOT_ID } = require('./messages');
 
@@ -35,8 +37,11 @@ const EMBED_MODEL = process.env.KB_EMBEDDING_MODEL || 'voyage-4-lite';
 const MEMORY_COLLECTION = process.env.QDRANT_MEMORY_COLLECTION || 'ai_memory';
 const RESET_ONLY = process.argv.includes('--reset');
 
-const now = Date.now();
+// Story time (scripted chat, files, meetings) vs real time (invitations,
+// upcoming meetings, open reminders, token meter) — see lib.js.
+const now = STORY_NOW;
 const minsAgo = (m) => new Date(now - m * 60000);
+const realMinsAgo = (m) => new Date(REAL_NOW - m * 60000);
 const tagged = (doc) => ({ ...doc, seedTag: TAG });
 
 // ------------------------------------------------------------------ helpers
@@ -84,6 +89,7 @@ const TRACKED = [
   'conversations', 'departments', 'friendships', 'invitations', 'ai_context_entries', 'ai_user_context',
   'reminders', 'ai_memories', 'token_usage', 'auditlogs', 'notifications', 'ai_personas', 'ai_feedback',
   'kb_documents', 'meetings', 'meeting_notes', 'meeting_messages',
+  'user_connections', 'user_skills', 'user_blocks', 'call_sessions', 'ai_digest_log',
 ];
 const MANIFEST = 'dev_seed_manifest';
 
@@ -166,7 +172,7 @@ async function seedPeople(db, bucket) {
     const avatarUrl = await storeFile(bucket, { name: `avatar-${p.key}.png`, mime: 'image/png', buf: await avatarPng(p.name, i, p.key) }, 'seed');
     const joined = new Date(org.FOUNDED.getTime() + Math.min(i * 4, 150) * 86400000);
     const profile = {
-      displayName: p.name, isVerified: true, status: 'active',
+      displayName: p.name, isVerified: true, status: p.status || 'active',
       avatarUrl, bio: `${p.title} @ Lumen Software`, gender: p.gender,
       ...(p.phone ? { phoneNumber: p.phone, phoneVerified: true } : {}),
       roleId: roles[p.role], departmentIds: p.depts.map((k) => dept[k]), hideInfo: false, updatedAt: new Date(),
@@ -206,7 +212,7 @@ async function seedPeople(db, bucket) {
   }
 
   for (const inv of org.INVITATIONS) {
-    const created = minsAgo(inv.daysAgo * 24 * 60);
+    const created = realMinsAgo(inv.daysAgo * 24 * 60);
     await db.collection('invitations').insertOne(tagged({
       email: inv.email, roleId: roles[inv.role], departmentIds: inv.depts.map((k) => dept[k]),
       invitedBy: String(ids[inv.invitedBy]), tokenHash: crypto.randomBytes(32).toString('hex'),
@@ -257,15 +263,22 @@ async function seedConversations(db, bucket, redis, ctx) {
   const files = await buildFiles();
   const fileUrls = {};
   const urlFor = async (key, uploader) => (fileUrls[key] ??= await storeFile(bucket, files[key], uploader));
-  const allPeople = org.PEOPLE.map((p) => p.key);
+  const allPeople = org.PEOPLE.filter((p) => p.status !== 'blocked').map((p) => p.key);
+  const leadOf = Object.fromEntries(org.DEPARTMENTS.map((d) => [d.key, d.lead]));
 
   const convIds = {};
   const aiMessages = [];
+  const callEnds = [];
+  const digestLogs = [];
   let kbCount = 0;
+  let messageCount = 0;
   for (let c of CONVERSATIONS) {
     const known = (k) => k === 'ai' || k === 'system' || ids[k];
     const members = (c.members === 'ALL' ? allPeople : c.members).filter(known);
     if (c.messages.some((m) => !known(m.from))) c = { ...c, messages: c.messages.filter((m) => known(m.from)) };
+    // Background chatter + AI daily digests (filler.js), slotted between the scripted lines.
+    const filled = withFiller(c, members, c.key === 'ann' ? 'dung' : leadOf[c.dept] || null);
+    c = filled.conv;
     const participants = members.map(uid);
     const convId = new ObjectId();
     convIds[c.key] = convId;
@@ -276,7 +289,16 @@ async function seedConversations(db, bucket, redis, ctx) {
       const f = files[key];
       kbFiles.push({ url: await urlFor(key, uid(c.kbBy || members[0])), name: f.name, mime: f.mime, userId: uid(c.kbBy || members[0]), createdAt: minsAgo(c.start - 60) });
     }
-    const last = docs[docs.length - 1];
+    const last = docs.reduce((a, b) => (b.createdAt > a.createdAt ? b : a));
+    messageCount += docs.length;
+    for (const d of filled.digestDates) digestLogs.push({ conversationId: String(convId), digestDate: d });
+    for (const [i, d] of docs.entries()) {
+      const m = d.type === 'system' && /^system\.call\.ended:(audio|video):(\d+)$/.exec(d.content);
+      if (!m) continue;
+      const next = docs[i + 1];
+      callEnds.push({ convId: String(convId), type: c.type, participants, endedAt: d.createdAt, media: m[1], secs: Number(m[2]),
+        summaryMessageId: next && next.type === 'meeting_summary' ? String(next._id) : null });
+    }
     await db.collection('conversations').insertOne(tagged({
       _id: convId, participants, type: c.type, ...(c.name ? { name: c.name } : {}),
       admins: (c.admins || []).map(uid), createdBy: uid(c.createdBy || members[0]),
@@ -313,15 +335,18 @@ async function seedConversations(db, bucket, redis, ctx) {
       kbCount++;
     }
   }
-  return { convIds, aiMessages, kbCount };
+  return { convIds, aiMessages, kbCount, callEnds, digestLogs, messageCount };
 }
 
 async function seedMeetings(db, { ids, names, dept }) {
   let count = 0;
-  for (const m of MEETINGS) {
+  const meetingIds = {};
+  for (let m of MEETINGS) {
     const start = minsAgo(m.start);
     const end = new Date(start.getTime() + m.duration * 60000);
-    const ended = m.start > 0;
+    // Ended once the REAL clock is past it (a story meeting "tomorrow" is long over by now).
+    const ended = end.getTime() < REAL_NOW;
+    if (ended && !m.attended) m = { ...m, attended: [m.host, ...m.invitees.filter((k) => k !== m.host)] };
     const id = new ObjectId();
     const roleOf = (k) => (k === m.host ? 'host' : (m.cohosts || []).includes(k) ? 'cohost' : 'attendee');
     const attendance = ended ? (m.attended || []).map((k, i) => ({
@@ -339,6 +364,7 @@ async function seedMeetings(db, { ids, names, dept }) {
       ...(ended ? { startedAt: new Date(start.getTime() + 30000), endedAt: end } : {}),
       _class: 'com.platform.chatservice.model.Meeting',
     }));
+    meetingIds[m.key] = String(id);
     if (m.notes) {
       await db.collection('meeting_notes').insertOne(tagged({
         meetingId: String(id), scope: 'shared', ownerId: null, content: m.notes, version: 7,
@@ -355,6 +381,39 @@ async function seedMeetings(db, { ids, names, dept }) {
     }
     count++;
   }
+
+  for (const n of PRIVATE_NOTES) {
+    if (!meetingIds[n.meeting]) continue;
+    await db.collection('meeting_notes').insertOne(tagged({
+      meetingId: meetingIds[n.meeting], scope: 'private', ownerId: String(ids[n.owner]), content: n.content, version: 3,
+      updatedBy: String(ids[n.owner]), updatedAt: minsAgo(2 * 24 * 60),
+      _class: 'com.platform.chatservice.model.MeetingNote',
+    }));
+  }
+
+  // Recurring meetings against the real clock: next occurrences of a weekday, from tomorrow.
+  const ICT = 7 * 3600 * 1000;
+  for (const r of RECURRING) {
+    const [hh, mm] = r.at.split(':').map(Number);
+    const local = new Date(REAL_NOW + ICT);
+    let day = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate()) + 86400000; // tomorrow 00:00 local, as UTC
+    for (let made = 0; made < r.count; day += 86400000) {
+      if (new Date(day).getUTCDay() !== r.weekday) continue;
+      const start = new Date(day + (hh * 60 + mm) * 60000 - ICT);
+      const end = new Date(start.getTime() + r.duration * 60000);
+      await db.collection('meetings').insertOne(tagged({
+        code: meetingCode(), title: r.title, description: r.description,
+        hostId: String(ids[r.host]), coHostIds: r.cohosts.map((k) => String(ids[k])),
+        inviteeIds: r.invitees.map((k) => String(ids[k])), departmentId: r.dept ? String(dept[r.dept]) : null,
+        scheduledStart: start, scheduledEnd: end, sortAt: start, status: 'SCHEDULED',
+        settings: { waitingRoom: true, muteOnEntry: false, allowAttendeeScreenShare: true, attendeesCanEditNotes: true, locked: false },
+        removedIds: [], attendance: [], reminded: false, createdAt: new Date(REAL_NOW - 3 * 86400000),
+        _class: 'com.platform.chatservice.model.Meeting',
+      }));
+      made++;
+      count++;
+    }
+  }
   return count;
 }
 
@@ -362,8 +421,12 @@ async function seedAiData(db, { ids }, { convIds, aiMessages }) {
   for (const r of REMINDERS) {
     await db.collection('reminders').insertOne(tagged({
       userId: String(ids[r.user]), conversationId: String(convIds[r.conv]), text: r.text,
-      remindAt: new Date(now + r.inMins * 60000), done: !!r.done, notified: !!r.done, attempts: 0,
-      createdAt: minsAgo(3 * 24 * 60), _class: 'com.platform.chatservice.model.Reminder',
+      ...(() => {
+        const at = (r.real ? REAL_NOW : now) + r.inMins * 60000;
+        const done = !!r.done || at < REAL_NOW; // never leave a past reminder for the scheduler to fire
+        return { remindAt: new Date(at), done, notified: done };
+      })(),
+      attempts: 0, createdAt: r.real ? realMinsAgo(24 * 60) : minsAgo(3 * 24 * 60), _class: 'com.platform.chatservice.model.Reminder',
     }));
   }
   for (const m of MEMORIES) {
@@ -377,7 +440,7 @@ async function seedAiData(db, { ids }, { convIds, aiMessages }) {
   const heavy = ['khang', 'minh', 'tri', 'huy', 'dung', 'lananh', 'nhung', 'trang', 'thinh', 'nam', 'tuan', 'dat'];
   for (const [i, key] of heavy.entries()) {
     for (let d = 0; d < 30; d++) {
-      const day = new Date(now - d * 86400000);
+      const day = new Date(REAL_NOW - d * 86400000); // the usage meter reads the real month
       if ([0, 6].includes(day.getDay()) && d % 3) continue;
       const base = 3000 + ((i * 7919 + d * 104729) % 22000);
       await db.collection('token_usage').updateOne(
@@ -442,6 +505,62 @@ async function seedAudit(db, { ids, names }) {
   })));
 }
 
+async function seedExtras(db, { ids, names }, { callEnds, digestLogs }) {
+  // Calls: one call_sessions row per "call ended" pill, linked to its AI summary card.
+  for (const [i, c] of callEnds.entries()) {
+    const people = c.participants.filter((p) => !p.startsWith('ai-bot') && p !== 'system');
+    const joined = c.type === 'direct' ? people : people.slice(0, Math.min(people.length, 4 + (i % 3)));
+    const startedAt = new Date(c.endedAt.getTime() - c.secs * 1000);
+    const starter = joined[i % joined.length];
+    const nameOf = (uid) => names[Object.keys(ids).find((k) => String(ids[k]) === uid)] || '';
+    await db.collection('call_sessions').insertOne(tagged({
+      callId: crypto.randomUUID(), conversationId: c.convId, startedBy: starter, startedByName: nameOf(starter),
+      startedAt, endedAt: c.endedAt, transport: 'sfu', kind: c.type === 'direct' ? 'direct' : 'group', media: c.media,
+      aiNotetaker: !!c.summaryMessageId,
+      participants: joined.map((u, j) => ({
+        userId: u, displayName: nameOf(u), sid: `PA_${crypto.randomBytes(6).toString('hex')}`,
+        joinedAt: new Date(startedAt.getTime() + j * 20000), acceptedAt: new Date(startedAt.getTime() + j * 20000),
+        leftAt: c.endedAt,
+      })),
+      ...(c.summaryMessageId ? { summaryMessageId: c.summaryMessageId } : {}), version: 0,
+      _class: 'com.platform.chatservice.model.CallSession',
+    }));
+  }
+
+  // Daily digests already posted (filler.js) — the cron's idempotency log.
+  for (const d of digestLogs) await db.collection('ai_digest_log').insertOne(tagged({ ...d, createdAt: new Date(`${d.digestDate}T01:00:00Z`) }));
+
+  // Connected tools: expired / revoked only (fake tokens are never used).
+  for (const c of org.CONNECTIONS) {
+    const junk = () => crypto.randomBytes(16).toString('hex');
+    const at = minsAgo(c.daysAgo * 24 * 60);
+    await db.collection('user_connections').insertOne(tagged({
+      userId: String(ids[c.user]), provider: c.provider, status: c.status, scope: c.scope, scopes: [],
+      actionGroups: ['view', 'create', 'edit', 'delete'], encryptedTokens: { iv: junk(), tag: junk(), data: junk() },
+      accountLabel: c.label, lastUsedAt: minsAgo((c.daysAgo - 30) * 24 * 60), createdAt: at, updatedAt: at,
+    }));
+  }
+
+  // Skills: upsert so a person's own toggles survive; only rows the seed created carry the tag.
+  for (const [key, skills] of Object.entries(org.SKILLS)) {
+    for (const skillId of skills) {
+      await db.collection('user_skills').updateOne(
+        { userId: String(ids[key]), skillId },
+        { $set: { enabled: true, updatedAt: minsAgo(40 * 24 * 60) }, $setOnInsert: { seedTag: TAG, createdAt: minsAgo(60 * 24 * 60) } },
+        { upsert: true },
+      );
+    }
+  }
+
+  for (const [a, b] of org.BLOCKS) {
+    if (!ids[a] || !ids[b]) continue;
+    await db.collection('user_blocks').insertOne(tagged({
+      blockerId: String(ids[a]), blockedId: String(ids[b]), createdAt: minsAgo(20 * 24 * 60),
+      _class: 'com.platform.chatservice.model.UserBlock',
+    }));
+  }
+}
+
 // -------------------------------------------------------------------- main
 
 (async () => {
@@ -461,12 +580,15 @@ async function seedAudit(db, { ids, names }) {
     await seedAiData(db, ctx, convs);
     const facts = await seedMemoryFacts(ctx, convs).catch((e) => { console.warn(`!! memory facts: ${e.message}`); return 0; });
     await seedAudit(db, ctx);
+    await seedExtras(db, ctx, convs);
     // Only Lumen-created people go in the manifest: pre-existing accounts must
     // never be treated as fake (their own chats would be wiped, --reset would delete them).
     await writeManifest(db, org.PEOPLE.map((p) => String(ctx.ids[p.key])));
 
     console.log(`\nLumen Software seeded:`);
     console.log(`  ${org.DEPARTMENTS.length} departments, ${org.PEOPLE.length} people, ${org.INVITATIONS.length} invitations`);
+    console.log(`  ${CONVERSATIONS.length} conversations, ${convs.messageCount} messages, ${convs.callEnds.length} call sessions, ${convs.digestLogs.length} digests`);
+    console.log(`  ${org.CONNECTIONS.length} connections (expired/revoked), ${Object.values(org.SKILLS).flat().length} skills on, ${org.BLOCKS.length} blocks`);
     console.log(`  ${CONVERSATIONS.length} conversations, ${convs.aiMessages.length} AI answers, ${convs.kbCount} KB documents ${redis ? 'queued for embedding' : '(pending)'}`);
     console.log(`  ${meetings} meetings, ${facts} memory facts`);
     console.log(`\n  login: <email> / ${PASSWORD}`);

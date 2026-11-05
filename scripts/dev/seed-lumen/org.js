@@ -49,6 +49,8 @@ const PEOPLE = [
   { key: 'thinh', email: `thinh.ngo@${DOMAIN}`, name: 'Ngô Đức Thịnh', role: 'Member', depts: ['retail'], title: 'QA Engineer', gender: 'male' },
   { key: 'bao', email: `bao.ly@${DOMAIN}`, name: 'Lý Gia Bảo', role: 'Member', depts: ['retail'], title: 'DevOps Engineer', gender: 'male' },
   { key: 'ngan', email: `ngan.huynh@${DOMAIN}`, name: 'Huỳnh Kim Ngân', role: 'Member', depts: ['retail'], title: 'AI Engineer (nhận diện sản phẩm)', gender: 'female' },
+  // Left the company on 30/09 — account blocked (offboarding), kept for history.
+  { key: 'quang', email: `quang.vo@${DOMAIN}`, name: 'Võ Đăng Quang', role: 'Member', depts: ['retail'], title: 'Frontend Engineer (đã nghỉ việc 30/09/2026)', gender: 'male', status: 'blocked' },
   // Phòng FleetPro (9)
   { key: 'huy', email: `huy.dang@${DOMAIN}`, name: 'Đặng Quốc Huy', role: 'Member', depts: ['fleet'], title: 'Trưởng phòng FleetPro', gender: 'male', phone: '+84901100015' },
   { key: 'tri', email: `tri.pham@${DOMAIN}`, name: 'Phạm Minh Trí', role: 'Member', depts: ['fleet'], title: 'Mobile Engineer (Flutter — app tài xế)', gender: 'male', phone: '+84901100014', team: 'Trí' },
@@ -93,18 +95,47 @@ const EXISTING_ACCOUNTS = [
   { key: 'tmember', email: 'member@example.com', rename: 'Trần Thị Mai Phương', role: 'Member', depts: ['mkt'], title: 'Nhân viên nội dung (dự phòng)', gender: 'female' },
 ];
 
-// Invite-only onboarding: what the admin screen shows.
+// Invite-only onboarding: what the admin screen shows. `daysAgo` counts from
+// the REAL clock (invitations expire after 7 days in real time, so story-dated
+// pending invites would all show as expired): 2 pending, 1 revoked, 1 expired.
 const INVITATIONS = [
   { email: `backend.fleet@${DOMAIN}`, role: 'Member', depts: ['fleet'], invitedBy: 'oanh', status: 'pending', daysAgo: 2 },
   { email: `designer.retail@${DOMAIN}`, role: 'Member', depts: ['retail'], invitedBy: 'minh', status: 'pending', daysAgo: 4 },
   { email: `intern.sales@${DOMAIN}`, role: 'Member', depts: ['sales'], invitedBy: 'lananh', status: 'revoked', daysAgo: 20 },
+  { email: `pm.fleet@${DOMAIN}`, role: 'Member', depts: ['fleet'], invitedBy: 'oanh', status: 'pending', daysAgo: 12 }, // past the 7-day TTL → expired
 ];
+
+// Connected tools (connector-service user_connections). Seeded as expired /
+// revoked only: tokens are fake, and the tool layer uses `active` ones only, so
+// the UI shows "reconnect" instead of the AI calling a provider with junk.
+const CONNECTIONS = [
+  { user: 'tuan', provider: 'calendar', scope: 'workspace', status: 'expired', label: 'lich@lumensoft.vn', daysAgo: 150 },
+  { user: 'khang', provider: 'gmail', scope: 'personal', status: 'expired', label: `khang.tran@${DOMAIN}`, daysAgo: 120 },
+  { user: 'minh', provider: 'notion', scope: 'personal', status: 'revoked', label: 'Lumen Wiki', daysAgo: 90 },
+  { user: 'lananh', provider: 'gmail', scope: 'personal', status: 'expired', label: `lananh.cao@${DOMAIN}`, daysAgo: 60 },
+];
+
+// AI skills each person switched on (ids from ai-service skills/skill-catalog.ts).
+const SKILLS = {
+  khang: ['scheduler', 'dataAnalyst', 'mailWriter', 'researcher'],
+  dung: ['scheduler', 'docDrafter', 'mailWriter'],
+  minh: ['projectKeeper', 'meetingNotes', 'docDrafter'],
+  tri: ['webSearch', 'translator'],
+  huy: ['projectKeeper', 'meetingNotes'],
+  lananh: ['mailWriter', 'inboxTriage', 'translator'],
+  giang: ['dataAnalyst'],
+  oanh: ['docDrafter', 'scheduler'],
+  ha: ['researcher', 'webSearch'],
+};
+
+// User blocks (chat-service user_blocks): blocker → blocked.
+const BLOCKS = [['dat', 'probe'], ['hang', 'quang']];
 
 // Org-chart facts derived from the lists above so the AI context, the KB
 // document and the member list can never disagree. Everyone on prod is a
 // member (PEOPLE are created, EXISTING_ACCOUNTS are matched by email), so both
 // count. A person in two departments is counted in each.
-const ALL_MEMBERS = [...PEOPLE, ...EXISTING_ACCOUNTS];
+const ALL_MEMBERS = [...PEOPLE.filter((p) => p.status !== 'blocked'), ...EXISTING_ACCOUNTS];
 const HEADCOUNT = ALL_MEMBERS.length;
 const byKey = Object.fromEntries(PEOPLE.map((p) => [p.key, p]));
 const deptHeadcount = (d) => ALL_MEMBERS.filter((p) => p.depts.includes(d.key)).length;
@@ -175,4 +206,4 @@ const USER_CONTEXT = {
   lananh: { projects: ['Pipeline Q4', 'Gia hạn Minh Châu'], style: 'Thân thiện, có thể gửi thẳng cho khách.', preferences: 'Luôn kèm next step và deadline.' },
 };
 
-module.exports = { DOMAIN, FOUNDED, WORKSPACE, DEPARTMENTS, PEOPLE, EXISTING_ACCOUNTS, INVITATIONS, AI_CONTEXT, USER_CONTEXT, HEADCOUNT, ORG_CHART_TEXT, LEADERSHIP_TEXT, PROJECTS_TEXT };
+module.exports = { DOMAIN, FOUNDED, WORKSPACE, DEPARTMENTS, PEOPLE, EXISTING_ACCOUNTS, INVITATIONS, CONNECTIONS, SKILLS, BLOCKS, AI_CONTEXT, USER_CONTEXT, HEADCOUNT, ORG_CHART_TEXT, LEADERSHIP_TEXT, PROJECTS_TEXT };

@@ -255,3 +255,26 @@ node scripts/dev/seed-company/index.js --reset   # remove the company only
 Log out and back in after seeding — role and department claims live in the JWT.
 Running `seed-chat.js` alone deletes every conversation `dev` is in, including
 the company's; re-run `seed-company` afterwards.
+
+## Demo company — Lumen Software (`--seed-lumen`)
+
+A larger, story-driven company for demos: `./scripts/dev/up.sh --seed-lumen`
+(replaces NovaTech — both rename the one workspace), or on its own:
+
+```bash
+node scripts/dev/seed-lumen/index.js           # (re)seed — idempotent, people are kept
+node scripts/dev/seed-lumen/index.js --reset   # remove the company incl. its 31 accounts
+```
+
+Login `<email>@lumensoft.vn` / `Lumen2026!` (e.g. `khang.tran@lumensoft.vn` = Owner).
+
+| What | Details |
+|---|---|
+| Clock | The story is pinned to **Mon 26/10/2026 17:30 (UTC+7)** — the eve of the RetailOS go-live — because the chat, notes and files name concrete dates. `SEED_NOW=<ISO>` moves it. Invitations, recurring meetings, open reminders and the token meter follow the **real** clock so they never look stale. |
+| People | 31 accounts in 7 departments (3 roles), one **offboarded** (`quang.vo`, blocked); pre-existing team accounts on prod are matched by email and given a department |
+| Chat | 25 conversations, ~2,500 messages over 6 months: scripted story + background work threads on weekdays (`filler.js`), all 7 departments have a channel, AI daily digests in #retailos / #fleetpro |
+| Knowledge | 13 documents (spec, API, contract PDF, price list, Q3 revenue CSV, handbook, marketing plan, spending policy …) queued for embedding |
+| Meetings | ended meetings with attendance, shared + private notes and chat; recurring meetings (weekly lead sync, 1-1, sprint planning, customer report, tech sync) scheduled from tomorrow |
+| Calls | `call_sessions` for every call pill, the BGĐ one linked to its AI summary |
+| Admin | invitations (pending / revoked / expired), audit log, user blocks, AI skills switched on, connected tools in **expired / revoked** state (tokens are fake, so the AI never calls a provider with them — the UI asks to reconnect) |
+| Not seeded | Bot Factory bots — an `external_bots` row needs a real bot on the read-only bot-factory side |
