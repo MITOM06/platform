@@ -167,8 +167,9 @@ flushPending();
 db.getCollection('kb_documents')
   .find({ fileUrl: { $exists: true, $ne: null } }, { fileUrl: 1, conversationId: 1, departmentId: 1 })
   .forEach((d) => {
+    // Live KbController sets both refs when both ids are present.
     if (!blank(d.conversationId)) addRefs('kb', d.fileUrl, 'c', d.conversationId);
-    else addRefs('kb', d.fileUrl, 'd', d.departmentId);
+    if (!blank(d.departmentId)) addRefs('kb', d.fileUrl, 'd', d.departmentId);
   });
 flushPending();
 
