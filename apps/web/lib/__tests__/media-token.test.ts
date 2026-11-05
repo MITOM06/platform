@@ -3,7 +3,13 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 const getMediaTokenApi = vi.fn()
 vi.mock('@/lib/api/chat', () => ({ chatService: { getMediaToken: () => getMediaTokenApi() } }))
 
-import { ensureMediaToken, getMediaToken, clearMediaToken } from '@/lib/media-token'
+import {
+  ensureMediaToken,
+  getMediaToken,
+  clearMediaToken,
+  useMediaTokenStore,
+  watchMediaTokenResume,
+} from '@/lib/media-token'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { establishSession } from '@/lib/auth/sign-in'
 import type { LoginResponse } from '@/lib/api/auth'
@@ -109,5 +115,49 @@ describe('media token', () => {
     } finally {
       vi.unstubAllGlobals()
     }
+  })
+
+  it('epoch_bumps_once_on_null_to_value_and_not_on_refresh', async () => {
+    const start = useMediaTokenStore.getState().epoch
+    getMediaTokenApi.mockResolvedValueOnce(resp('T1', 5))
+    await ensureMediaToken()
+    expect(useMediaTokenStore.getState().epoch).toBe(start + 1)
+    // scheduled refresh (non-null -> non-null): same epoch
+    getMediaTokenApi.mockResolvedValueOnce(resp('T2', 6))
+    await vi.advanceTimersByTimeAsync(4 * H + 1000)
+    expect(getMediaToken()).toBe('T2')
+    expect(useMediaTokenStore.getState().epoch).toBe(start + 1)
+  })
+
+  it('visibilitychange_with_stale_token_refetches', async () => {
+    getMediaTokenApi.mockResolvedValueOnce(resp('T1', 0.5)) // < 1h left: stale
+    await ensureMediaToken()
+    getMediaTokenApi.mockClear()
+    vi.useRealTimers() // the scheduled refresh must not be what fires
+    const stop = watchMediaTokenResume()
+    try {
+      getMediaTokenApi.mockResolvedValueOnce(resp('T2', 5))
+      Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' })
+      document.dispatchEvent(new Event('visibilitychange'))
+      await vi.waitFor(() => expect(getMediaToken()).toBe('T2'))
+      expect(getMediaTokenApi).toHaveBeenCalledTimes(1)
+    } finally {
+      stop()
+    }
+  })
+
+  it('focus_after_cleanup_does_not_refetch', async () => {
+    getMediaTokenApi.mockResolvedValue(resp('T1', 0.5))
+    const stop = watchMediaTokenResume()
+    window.dispatchEvent(new Event('focus'))
+    await vi.advanceTimersByTimeAsync(0)
+    expect(getMediaTokenApi).toHaveBeenCalledTimes(1)
+    stop()
+    getMediaTokenApi.mockClear()
+    clearMediaToken()
+    useAuthStore.getState().setAuth(user, 'jwt')
+    window.dispatchEvent(new Event('focus'))
+    await vi.advanceTimersByTimeAsync(0)
+    expect(getMediaTokenApi).not.toHaveBeenCalled()
   })
 })

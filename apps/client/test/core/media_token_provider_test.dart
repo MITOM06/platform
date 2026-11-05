@@ -189,4 +189,38 @@ void main() {
       expect(MediaTokenHolder.token, 'T1');
     });
   });
+
+  // The call didChangeAppLifecycleState(resumed) makes (main.dart): the widget
+  // hook itself needs the whole app (Firebase, router) and is not unit-tested.
+  test('resume_ensure_refetches_stale_token_and_skips_fresh', () {
+    run(() {
+      next = () async => resp('T1', 0.5); // < 1h left
+      c.ensure();
+      fake.flushMicrotasks();
+      expect(calls, 1);
+      next = () async => resp('T2', 5);
+      c.ensure(); // app resumed
+      fake.flushMicrotasks();
+      expect(calls, 2);
+      expect(MediaTokenHolder.token, 'T2');
+      c.ensure(); // resumed again, token fresh
+      fake.flushMicrotasks();
+      expect(calls, 2);
+    });
+  });
+
+  test('epoch_bumps_once_on_null_to_value_and_not_on_refresh', () {
+    run(() {
+      final start = MediaTokenHolder.epoch.value;
+      next = () async => resp('T1', 5);
+      c.ensure();
+      fake.flushMicrotasks();
+      expect(MediaTokenHolder.epoch.value, start + 1);
+      // scheduled refresh (value -> value): same epoch
+      next = () async => resp('T2', 6);
+      fake.elapse(const Duration(hours: 4, seconds: 1));
+      expect(MediaTokenHolder.token, 'T2');
+      expect(MediaTokenHolder.epoch.value, start + 1);
+    });
+  });
 }

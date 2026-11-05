@@ -13,9 +13,14 @@ export const BOOTSTRAP_WAIT_MS = 5000
 interface MediaTokenState {
   token: string | null
   expiresAt: number | null
+  /**
+   * Bumped each time the token goes from none to a value (a late arrival after the bounded
+   * bootstrap wait). Media already rendered without `t` remounts on it; refreshes don't bump.
+   */
+  epoch: number
 }
 
-export const useMediaTokenStore = create<MediaTokenState>(() => ({ token: null, expiresAt: null }))
+export const useMediaTokenStore = create<MediaTokenState>(() => ({ token: null, expiresAt: null, epoch: 0 }))
 
 let timer: ReturnType<typeof setTimeout> | null = null
 let inflight: Promise<void> | null = null
@@ -50,7 +55,11 @@ export function ensureMediaToken(): Promise<void> {
       // Signed out (or another user signed in) while in flight: drop it.
       if (gen !== generation || !useAuthStore.getState().accessToken) return
       retryDelay = RETRY_DELAY_MS
-      useMediaTokenStore.setState({ token: res.token, expiresAt })
+      useMediaTokenStore.setState((s) => ({
+        token: res.token,
+        expiresAt,
+        epoch: s.token ? s.epoch : s.epoch + 1,
+      }))
       schedule(Math.max(expiresAt - Date.now() - REFRESH_WHEN_LEFT_MS, MIN_REFRESH_DELAY_MS))
     })
     .catch(() => {
@@ -82,6 +91,26 @@ export function clearMediaToken(): void {
   inflight = null
   retryDelay = RETRY_DELAY_MS
   useMediaTokenStore.setState({ token: null, expiresAt: null })
+}
+
+/**
+ * Re-check the token when the tab comes back (visible again / window focus): timers are
+ * throttled or frozen in background tabs, so the scheduled refresh may not have run.
+ * `ensureMediaToken` is a no-op while the token is fresh or nobody is signed in.
+ * Returns the cleanup.
+ */
+export function watchMediaTokenResume(): () => void {
+  if (typeof window === 'undefined') return () => {}
+  const onVisible = () => {
+    if (document.visibilityState === 'visible') void ensureMediaToken()
+  }
+  const onFocus = () => void ensureMediaToken()
+  document.addEventListener('visibilitychange', onVisible)
+  window.addEventListener('focus', onFocus)
+  return () => {
+    document.removeEventListener('visibilitychange', onVisible)
+    window.removeEventListener('focus', onFocus)
+  }
 }
 
 /** Current token for URL building, or null (not fetched yet / signed out). */

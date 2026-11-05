@@ -119,3 +119,18 @@ final mediaTokenControllerProvider = Provider<MediaTokenController>((ref) {
   ref.onDispose(controller.clear);
   return controller;
 });
+
+/// The media-token epoch (see [MediaTokenHolder.epoch]): watch it to remount
+/// a subtree when the token arrives late.
+final mediaTokenEpochProvider =
+    NotifierProvider<MediaTokenEpochNotifier, int>(MediaTokenEpochNotifier.new);
+
+class MediaTokenEpochNotifier extends Notifier<int> {
+  @override
+  int build() {
+    void sync() => state = MediaTokenHolder.epoch.value;
+    MediaTokenHolder.epoch.addListener(sync);
+    ref.onDispose(() => MediaTokenHolder.epoch.removeListener(sync));
+    return MediaTokenHolder.epoch.value;
+  }
+}
