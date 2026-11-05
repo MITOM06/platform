@@ -210,6 +210,9 @@ void main() {
         isA<AuthUnauthenticated>());
   });
 
+  // Behavioral pin: a forceLogout during the restore token wait leaves the
+  // notifier unauthenticated (Riverpod: a mid-build state write wins over
+  // build()'s return). Guards against a Riverpod upgrade changing this.
   test('restore_returns_unauthenticated_if_session_cleared_during_token_wait',
       () async {
     repo.stored = _user;
