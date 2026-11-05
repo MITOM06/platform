@@ -68,17 +68,17 @@ describe('KbProcessorService X-Internal-Key on upload fetch', () => {
   it('sends the key for a relative upload path (internal chat base)', async () => {
     const f = await run('/api/uploads/abc123');
     expect(f.mock.calls[0][0]).toBe('http://chat-service:8080/api/uploads/abc123');
-    expect(f.mock.calls[0][1]).toEqual({ headers: { 'X-Internal-Key': 'test-key' } });
+    expect(f.mock.calls[0][1]).toEqual({ headers: { 'X-Internal-Key': 'test-key' }, redirect: 'error' });
   });
 
   it('sends the key for an absolute URL on the internal chat origin', async () => {
     const f = await run('http://chat-service:8080/api/uploads/abc123');
-    expect(f.mock.calls[0][1]).toEqual({ headers: { 'X-Internal-Key': 'test-key' } });
+    expect(f.mock.calls[0][1]).toEqual({ headers: { 'X-Internal-Key': 'test-key' }, redirect: 'error' });
   });
 
   it('NEVER sends the key to an external absolute URL', async () => {
     const f = await run('https://files.example.com/api/uploads/abc123');
     expect(f.mock.calls[0][0]).toBe('https://files.example.com/api/uploads/abc123');
-    expect(f.mock.calls[0][1]).toEqual({ headers: {} });
+    expect(f.mock.calls[0][1]).toEqual({ headers: {}, redirect: 'error' });
   });
 });

@@ -72,7 +72,10 @@ export class KbProcessorService {
       // Fetch file content (SSRF guard runs first — see validateFileUrl).
       this.validateFileUrl(fileUrl);
       const fetchUrl = this.toFetchUrl(fileUrl);
-      const response = await fetch(fetchUrl, { headers: this.uploadAuthHeaders(fetchUrl) });
+      const response = await fetch(fetchUrl, {
+        headers: this.uploadAuthHeaders(fetchUrl),
+        redirect: 'error',
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status} fetching ${fileUrl}`);
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
