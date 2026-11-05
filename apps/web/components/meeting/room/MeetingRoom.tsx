@@ -11,6 +11,7 @@ import type { MeetingRoomController } from '@/lib/meetings/meeting-room-controll
 import { isManager } from '@/lib/meetings/permissions'
 import { useMeetingRoomStore } from '@/lib/store/meeting.store'
 import { useStompConnected } from '@/lib/stomp/use-stomp-connected'
+import { AiNotesIndicator } from './AiNotesIndicator'
 import { ControlBar } from './ControlBar'
 import { MeetingStage } from './MeetingStage'
 import { ReactionOverlay } from './ReactionOverlay'
@@ -88,6 +89,7 @@ export function MeetingRoom({ meeting, controller, myId, myName, myAvatarUrl }: 
         <div className="flex min-h-0 flex-1">
           <main className="relative min-w-0 flex-1 bg-neutral-950" aria-label={title}>
             <RoomBanners realtimeConnected={realtimeConnected} />
+            <AiNotesIndicator active={meeting.settings.aiNotes === true} />
             <MeetingStage />
             <ReactionOverlay />
           </main>

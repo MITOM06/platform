@@ -2258,6 +2258,11 @@
     "chatDiscard": "Descartar",
     "chatSending": "Enviando…",
     "chatOffline": "Reconectando: ahora mismo no puedes enviar mensajes",
-    "chatCounter": "{count}/{max}"
+    "chatCounter": "{count}/{max}",
+    "settingAiNotes": "Notas de reunión con IA",
+    "settingAiNotesDesc": "La IA registra voz, chat, notas, archivos y pantallas compartidas para resumir después de la reunión. Se avisa a todos en la sala.",
+    "aiNotesActive": "La IA está tomando notas",
+    "aiNotesStarted": "La IA empezó a tomar notas de la reunión",
+    "aiNotesPrejoin": "Esta reunión tiene notas con IA"
   }
 }

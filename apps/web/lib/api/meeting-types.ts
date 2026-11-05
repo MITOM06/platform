@@ -22,6 +22,8 @@ export interface MeetingSettings {
   allowAttendeeScreenShare: boolean
   attendeesCanEditNotes: boolean
   locked: boolean
+  /** AI takes notes of the meeting; everyone in the room is told. */
+  aiNotes: boolean
 }
 
 export interface MeetingAttendance {
@@ -50,6 +52,8 @@ export interface Meeting {
   removedIds?: string[]
   viewerRole: MeetingViewerRole
   createdAt: string
+  /** Sticky: AI notes were on at some point (gates the recap UI). */
+  aiNotesEverEnabled?: boolean
   startedAt?: string
   endedAt?: string
   cancelledAt?: string
@@ -142,6 +146,8 @@ export const HOST_ACTIONS = [
   'WAITING_ROOM_OFF',
   'ATTENDEE_SCREEN_SHARE_ON',
   'ATTENDEE_SCREEN_SHARE_OFF',
+  'AI_NOTES_ON',
+  'AI_NOTES_OFF',
   'MAKE_COHOST',
   'REVOKE_COHOST',
 ] as const
@@ -177,6 +183,7 @@ export const DEFAULT_MEETING_SETTINGS: MeetingSettings = {
   allowAttendeeScreenShare: true,
   attendeesCanEditNotes: true,
   locked: false,
+  aiNotes: false,
 }
 
 /** Every STOMP meeting payload, after parseMeetingEvent (lib/meetings/meeting-events.ts). */

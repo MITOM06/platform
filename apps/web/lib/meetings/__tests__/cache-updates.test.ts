@@ -7,7 +7,7 @@ import {
 } from '@/lib/meetings/cache-updates'
 
 const SETTINGS = { waitingRoom: true, muteOnEntry: false, allowAttendeeScreenShare: true,
-  attendeesCanEditNotes: true, locked: false }
+  attendeesCanEditNotes: true, locked: false, aiNotes: false }
 
 function meeting(id: string, over: Partial<Meeting> = {}): Meeting {
   return { id, code: `${id}-code`, host: { userId: 'h', displayName: 'Host' }, status: 'SCHEDULED',

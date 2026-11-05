@@ -20,7 +20,7 @@ import { SectionTitle } from './SectionTitle'
 /** A switch command counts as in flight until `meet.settings` confirms it, at most this long. */
 const PENDING_MS = 8000
 
-type SwitchLabel = 'settingLocked' | 'settingWaitingRoom' | 'settingScreenShare' | 'settingNotes'
+type SwitchLabel = 'settingLocked' | 'settingWaitingRoom' | 'settingScreenShare' | 'settingNotes' | 'settingAiNotes'
 
 function SettingSwitch({ label, checked, busy, onToggle }: {
   label: SwitchLabel
@@ -83,6 +83,7 @@ export function RoomManageMenu({ anyHands }: { anyHands: boolean }) {
           </Button>
         ) : null}
       </div>
+      <SettingSwitch label="settingAiNotes" checked={s.aiNotes} busy={pending('AI_NOTES_ON', 'AI_NOTES_OFF')} onToggle={() => controller.hostCommand(rc.aiNotes)} />
       <SettingSwitch label="settingLocked" checked={s.locked} busy={pending('LOCK', 'UNLOCK')} onToggle={() => controller.hostCommand(rc.lock)} />
       <SettingSwitch label="settingWaitingRoom" checked={s.waitingRoom} busy={pending('WAITING_ROOM_ON', 'WAITING_ROOM_OFF')} onToggle={() => controller.hostCommand(rc.waitingRoom)} />
       <SettingSwitch label="settingScreenShare" checked={s.allowAttendeeScreenShare} busy={pending('ATTENDEE_SCREEN_SHARE_ON', 'ATTENDEE_SCREEN_SHARE_OFF')} onToggle={() => controller.hostCommand(rc.screenShare)} />

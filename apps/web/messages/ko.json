@@ -2258,6 +2258,11 @@
     "chatDiscard": "삭제",
     "chatSending": "보내는 중…",
     "chatOffline": "다시 연결하는 중이라 지금은 메시지를 보낼 수 없습니다",
-    "chatCounter": "{count}/{max}"
+    "chatCounter": "{count}/{max}",
+    "settingAiNotes": "AI 회의 노트",
+    "settingAiNotesDesc": "AI가 발언, 채팅, 노트, 파일, 공유 화면을 기록해 회의 후 요약합니다. 방에 있는 모든 사람에게 알림이 갑니다.",
+    "aiNotesActive": "AI가 노트 작성 중",
+    "aiNotesStarted": "AI가 회의 노트 작성을 시작했습니다",
+    "aiNotesPrejoin": "이 회의는 AI 노트를 사용합니다"
   }
 }

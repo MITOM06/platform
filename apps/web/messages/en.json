@@ -2258,6 +2258,11 @@
     "chatDiscard": "Discard",
     "chatSending": "Sending…",
     "chatOffline": "Reconnecting — you can't send messages right now",
-    "chatCounter": "{count}/{max}"
+    "chatCounter": "{count}/{max}",
+    "settingAiNotes": "AI meeting notes",
+    "settingAiNotesDesc": "AI captures speech, chat, notes, files and shared screens to summarize after the meeting. Everyone in the room is notified.",
+    "aiNotesActive": "AI is taking notes",
+    "aiNotesStarted": "AI started taking notes for this meeting",
+    "aiNotesPrejoin": "This meeting has AI notes"
   }
 }

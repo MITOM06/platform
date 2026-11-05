@@ -29,13 +29,27 @@ describe('parseMeetingEvent', () => {
     })
   })
 
-  it('needs all five settings', () => {
-    const settings = { waitingRoom: true, muteOnEntry: false, allowAttendeeScreenShare: false,
+  it('needs the five original settings; aiNotes defaults to false', () => {
+    const base = { waitingRoom: true, muteOnEntry: false, allowAttendeeScreenShare: false,
       attendeesCanEditNotes: true, locked: false }
-    expect(parseMeetingEvent(j({ event: 'meet.settings', meetingId: 'm1', settings })))
-      .toEqual({ event: 'meet.settings', meetingId: 'm1', settings })
+    expect(parseMeetingEvent(j({ event: 'meet.settings', meetingId: 'm1', settings: { ...base, aiNotes: false } })))
+      .toEqual({ event: 'meet.settings', meetingId: 'm1', settings: { ...base, aiNotes: false } })
     expect(parseMeetingEvent(j({ event: 'meet.settings', meetingId: 'm1', settings: { locked: true } })))
       .toBeNull()
+  })
+
+  it('meet.settings carries aiNotes', () => {
+    const settings = { waitingRoom: true, muteOnEntry: false, allowAttendeeScreenShare: false,
+      attendeesCanEditNotes: true, locked: false, aiNotes: true }
+    const e = parseMeetingEvent(j({ event: 'meet.settings', meetingId: 'm1', settings }))
+    expect(e?.event === 'meet.settings' && e.settings.aiNotes).toBe(true)
+  })
+
+  it('meet.settings without aiNotes parses with aiNotes=false', () => {
+    const settings = { waitingRoom: true, muteOnEntry: false, allowAttendeeScreenShare: false,
+      attendeesCanEditNotes: true, locked: false }
+    const e = parseMeetingEvent(j({ event: 'meet.settings', meetingId: 'm1', settings }))
+    expect(e?.event === 'meet.settings' && e.settings.aiNotes).toBe(false)
   })
 
   it('keeps hands in server order', () => {

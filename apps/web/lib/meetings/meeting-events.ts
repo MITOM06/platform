@@ -85,6 +85,8 @@ function settings(v: unknown): MeetingSettings | undefined {
     allowAttendeeScreenShare: v.allowAttendeeScreenShare as boolean,
     attendeesCanEditNotes: v.attendeesCanEditNotes as boolean,
     locked: v.locked as boolean,
+    // Older servers omit it: treat as off rather than dropping the whole event.
+    aiNotes: v.aiNotes === true,
   }
 }
 

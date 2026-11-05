@@ -2258,6 +2258,11 @@
     "chatDiscard": "Supprimer",
     "chatSending": "Envoi…",
     "chatOffline": "Reconnexion en cours : impossible d'envoyer des messages pour l'instant",
-    "chatCounter": "{count}/{max}"
+    "chatCounter": "{count}/{max}",
+    "settingAiNotes": "Notes de réunion par IA",
+    "settingAiNotesDesc": "L'IA capte la parole, le chat, les notes, les fichiers et les écrans partagés pour résumer après la réunion. Tout le monde dans la salle est prévenu.",
+    "aiNotesActive": "L'IA prend des notes",
+    "aiNotesStarted": "L'IA a commencé à prendre des notes de la réunion",
+    "aiNotesPrejoin": "Cette réunion a des notes par IA"
   }
 }
