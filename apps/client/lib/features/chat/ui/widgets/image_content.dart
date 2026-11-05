@@ -68,6 +68,7 @@ class _SingleImageTile extends StatelessWidget {
     final abs = absoluteMediaUrl(rawUrl);
     Widget image = CachedNetworkImage(
       imageUrl: abs,
+      cacheKey: mediaCacheKey(abs),
       width: width,
       height: height,
       fit: BoxFit.cover,
@@ -225,6 +226,7 @@ class _MultiImageGrid extends StatelessWidget {
           children: [
             CachedNetworkImage(
               imageUrl: absoluteMediaUrl(urls[index]),
+              cacheKey: mediaCacheKey(absoluteMediaUrl(urls[index])),
               width: width,
               height: height,
               fit: BoxFit.cover,

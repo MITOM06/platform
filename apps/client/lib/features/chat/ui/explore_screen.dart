@@ -157,6 +157,7 @@ class _ChannelTileState extends ConsumerState<_ChannelTile> {
         backgroundImage: hasAvatar
             ? CachedNetworkImageProvider(
                 absoluteMediaUrl(avatar),
+                cacheKey: mediaCacheKey(absoluteMediaUrl(avatar)),
                 maxWidth: 96,
                 maxHeight: 96,
               )

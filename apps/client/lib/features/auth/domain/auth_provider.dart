@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../../core/api/token_manager.dart';
+import '../../../core/media/media_token_provider.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../../chat/domain/chat_provider.dart';
 import '../data/auth_repository.dart';
@@ -26,6 +27,9 @@ class AuthNotifier extends _$AuthNotifier {
     final user = await ref.read(authRepositoryProvider).getStoredUser();
     if (user != null) {
       _registerFcmToken();
+      // Bounded wait (5s) so the first screen already has upload tokens; the
+      // router shows the splash while this state is loading. Never fails.
+      await _bootstrapMediaToken();
       return AuthAuthenticated(user);
     }
     return const AuthUnauthenticated();
@@ -58,10 +62,10 @@ class AuthNotifier extends _$AuthNotifier {
   /// A full session signs in; a pending second factor (an Owner / Admin-like
   /// member, or a Member who turned 2FA on — contract 15) parks on
   /// [AuthMfaPending] and the router sends the member to `/mfa`.
-  AuthState _afterFirstFactor(SignInResult result) {
+  Future<AuthState> _afterFirstFactor(SignInResult result) async {
     switch (result) {
       case SignInSuccess(:final user):
-        _beginSession();
+        await _beginSession();
         return AuthAuthenticated(user);
       case SignInMfaRequired(:final challenge):
         return AuthMfaPending(challenge);
@@ -87,15 +91,25 @@ class AuthNotifier extends _$AuthNotifier {
     final result = await ref
         .read(authRepositoryProvider)
         .acceptInvitationWithPassword(token, displayName, password);
-    state = AsyncData(_afterFirstFactor(result));
+    state = AsyncData(await _afterFirstFactor(result));
   }
 
   /// A fresh sign-in is about to commit: drop anything a previous account
   /// left in memory (process-wide providers, STOMP subscriptions), then
   /// register this device for pushes.
-  void _beginSession() {
+  Future<void> _beginSession() async {
     resetSessionState(ref);
     _registerFcmToken();
+    await _bootstrapMediaToken();
+  }
+
+  /// Starts the media-token lifecycle for the session and waits (max 5s) for
+  /// the first token, so uploads load right after sign-in. A failure or
+  /// timeout never blocks routing and never shows an error.
+  Future<void> _bootstrapMediaToken() async {
+    final media = ref.read(mediaTokenControllerProvider);
+    media.activate();
+    await media.ensureBounded();
   }
 
   Future<void> _registerFcmToken() async {
@@ -202,6 +216,7 @@ class AuthNotifier extends _$AuthNotifier {
     // Unregister the push token first — it needs the still-valid session.
     await _unregisterPushToken();
     await ref.read(authRepositoryProvider).logout();
+    ref.read(mediaTokenControllerProvider).clear();
     state = const AsyncData(AuthUnauthenticated());
     resetSessionState(ref);
   }
@@ -212,6 +227,7 @@ class AuthNotifier extends _$AuthNotifier {
   /// "Require SSO" was switched on), the reason rides on [AuthUnauthenticated]
   /// so the login screen can show the localized explanation.
   void forceLogout() {
+    ref.read(mediaTokenControllerProvider).clear();
     final code = TokenManager.shared.takeRejectionCode();
     final reason = kLogoutReasons.contains(code) ? code : null;
     final current = state.valueOrNull;
@@ -388,7 +404,7 @@ class AuthNotifier extends _$AuthNotifier {
             code: code,
             backupCode: backupCode,
           );
-      _beginSession();
+      await _beginSession();
       state = AsyncData(AuthAuthenticated(result.user));
       return result.backupCodesRemaining;
     } catch (e) {
@@ -439,7 +455,7 @@ class AuthNotifier extends _$AuthNotifier {
       final user = await ref
           .read(authRepositoryProvider)
           .mfaEnrollComplete(current.challenge.mfaToken);
-      _beginSession();
+      await _beginSession();
       state = AsyncData(AuthAuthenticated(user));
     } catch (e) {
       _onMfaError(e);

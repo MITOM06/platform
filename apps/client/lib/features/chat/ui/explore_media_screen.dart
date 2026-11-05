@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../core/api/dio_client.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/utils/app_error.dart';
 import '../../../core/theme/app_theme.dart';
@@ -10,6 +9,7 @@ import '../data/chat_repository.dart';
 import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
 import 'widgets/file_content.dart';
+import '../../../core/utils/media_url.dart';
 
 /// Fetches shared attachments for a given conversation + type.
 final _attachmentsProvider = FutureProvider.autoDispose
@@ -119,13 +119,12 @@ class _MediaThumb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rawUrl = message.isFile ? message.fileUrl : message.content;
-    final url = rawUrl.startsWith('http')
-        ? rawUrl
-        : '${DioClient.chatBaseUrl}$rawUrl';
+    final url = absoluteMediaUrl(rawUrl);
     return ClipRRect(
       borderRadius: BorderRadius.circular(6),
       child: CachedNetworkImage(
         imageUrl: url,
+        cacheKey: mediaCacheKey(url),
         fit: BoxFit.cover,
         placeholder: (_, __) => Container(color: AppTheme.mutedSurface(context)),
         errorWidget: (_, __, ___) => Container(

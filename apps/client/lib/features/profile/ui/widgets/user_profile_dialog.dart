@@ -252,7 +252,8 @@ class _ProfileDialogContent extends ConsumerWidget {
                   color: AppTheme.accent(context).withValues(alpha: 0.2),
                   image: coverUrl != null
                       ? DecorationImage(
-                          image: CachedNetworkImageProvider(coverUrl),
+                          image: CachedNetworkImageProvider(coverUrl,
+                              cacheKey: mediaCacheKey(coverUrl)),
                           fit: BoxFit.cover)
                       : null,
                 ),
@@ -267,7 +268,10 @@ class _ProfileDialogContent extends ConsumerWidget {
                       CircleAvatar(
                         radius: 40,
                         backgroundImage:
-                            avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null,
+                            avatarUrl != null
+                                ? CachedNetworkImageProvider(avatarUrl,
+                                    cacheKey: mediaCacheKey(avatarUrl))
+                                : null,
                         backgroundColor: AppTheme.accent(context).withValues(alpha: 0.3),
                         child: avatarUrl == null
                             ? Text(
