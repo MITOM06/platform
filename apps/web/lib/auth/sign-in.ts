@@ -1,5 +1,6 @@
 import type { LoginResponse } from '@/lib/api/auth'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { ensureMediaTokenBounded } from '@/lib/media-token'
 import { mustSetPassword, postSignInPath } from '@/lib/auth/set-password-gate'
 import { consumeReturnPath } from '@/lib/auth/return-path'
 
@@ -18,6 +19,8 @@ export async function establishSession(result: LoginResponse): Promise<string> {
     body: JSON.stringify({ accessToken, refreshToken, sid }),
   })
   useAuthStore.getState().setAuth(user, accessToken)
+  // Same bootstrap as a page reload: have the media token before the shell renders (max 5s).
+  await ensureMediaTokenBounded()
   // A meeting link opened while signed out (middleware cookie) wins over the default
   // landing — except for accounts that must create their password first.
   if (!mustSetPassword(user)) {

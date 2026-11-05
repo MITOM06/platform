@@ -99,7 +99,16 @@ function fetchMessagesSince(
     .then((r) => r.data)
 }
 
+export interface MediaToken {
+  token: string
+  /** ISO-8601 instant the token stops being accepted. */
+  expiresAt: string
+}
+
 export const chatService = {
+  /** Short-lived token appended as `?t=` to `/api/uploads/{id}` URLs (see lib/media-token.ts). */
+  getMediaToken: () => chatApi.get<MediaToken>('/api/uploads/token').then((r) => r.data),
+
   // ── Conversations ──────────────────────────────────────────────────────────
 
   /** All of the caller's conversations; `archived=true` → only the archived ones. */

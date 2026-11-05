@@ -7,7 +7,8 @@
  * NEXT_PUBLIC_CHAT_URL is read at call time from process.env, so we pin it here.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { useMediaTokenStore } from '@/lib/media-token'
 import {
   absoluteMediaUrl,
   downloadMediaUrl,
@@ -111,5 +112,42 @@ describe('firstUrl', () => {
 
   it('returns null when no URL is present', () => {
     expect(firstUrl('no links here')).toBeNull()
+  })
+})
+
+describe('media token on upload URLs', () => {
+  const setToken = (t: string | null) =>
+    useMediaTokenStore.setState({ token: t, expiresAt: t ? Date.now() + 6 * 3600_000 : null })
+  beforeEach(() => setToken('TOK'))
+  afterEach(() => setToken(null))
+
+  it('appends_t_for_upload_path', () => {
+    expect(absoluteMediaUrl('/api/uploads/abc')).toBe(`${BASE}/api/uploads/abc?t=TOK`)
+    expect(absoluteMediaUrl(`${BASE}/api/uploads/abc`)).toBe(`${BASE}/api/uploads/abc?t=TOK`)
+  })
+
+  it('inserts_t_before_fragment', () => {
+    expect(absoluteMediaUrl('/api/uploads/x#fit=cover&scale=120')).toBe(
+      `${BASE}/api/uploads/x?t=TOK#fit=cover&scale=120`,
+    )
+  })
+
+  it('keeps_existing_query_and_appends_with_ampersand', () => {
+    expect(absoluteMediaUrl('/api/uploads/x?w=100#a=1')).toBe(`${BASE}/api/uploads/x?w=100&t=TOK#a=1`)
+  })
+
+  it('does_not_touch_external_blob_data_urls', () => {
+    for (const u of ['https://cdn.example.com/api/uploads/a.jpg', 'blob:http://x/1', 'data:image/png;base64,AA', '/api/other/x']) {
+      expect(absoluteMediaUrl(u)).toBe(u.startsWith('/') ? `${BASE}${u}` : u)
+    }
+  })
+
+  it('no_token_yet_returns_plain_url', () => {
+    setToken(null)
+    expect(absoluteMediaUrl('/api/uploads/abc')).toBe(`${BASE}/api/uploads/abc`)
+  })
+
+  it('download_url_keeps_both_t_and_download', () => {
+    expect(downloadMediaUrl('/api/uploads/doc.pdf')).toBe(`${BASE}/api/uploads/doc.pdf?t=TOK&download=true`)
   })
 })

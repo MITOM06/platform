@@ -1,26 +1,44 @@
 // Media URL + file helpers — mirror Flutter `image_content.dart` / `file_content.dart`.
 import { serviceUrl, isRelative } from '@/lib/config/env'
+import { getMediaToken } from '@/lib/media-token'
 
 // When CHAT_URL is the same-origin relative path there is no prefix to add: the
 // upload path is already absolute against the current origin.
 
-/** Resolve a possibly-relative media URL against the chat-service base. */
+/** Add `t=<media token>` to an upload URL (before any `#fragment`). Other URLs untouched. */
+function withMediaToken(url: string): string {
+  const token = getMediaToken()
+  if (!token) return url
+  const hashAt = url.indexOf('#')
+  const head = hashAt === -1 ? url : url.slice(0, hashAt)
+  const fragment = hashAt === -1 ? '' : url.slice(hashAt)
+  const path = head.split('?')[0]
+  const base = isRelative(serviceUrl('chat')) ? '' : serviceUrl('chat')
+  const rel = base && path.startsWith(base) ? path.slice(base.length) : path
+  if (!rel.startsWith('/api/uploads/')) return url
+  const sep = head.includes('?') ? '&' : '?'
+  return `${head}${sep}t=${encodeURIComponent(token)}${fragment}`
+}
+
+/** Resolve a possibly-relative media URL against the chat-service base (+ media token for uploads). */
 export function absoluteMediaUrl(url: string): string {
   if (!url) return ''
-  if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) {
-    return url
-  }
+  if (url.startsWith('blob:') || url.startsWith('data:')) return url
+  if (url.startsWith('http')) return withMediaToken(url)
   const chat = serviceUrl('chat')
   const base = isRelative(chat) ? '' : chat
   const sep = url.startsWith('/') ? '' : '/'
-  return `${base}${sep}${url}`
+  return withMediaToken(`${base}${sep}${url}`)
 }
 
 /** Build a download URL (adds `download=true` so the server serves as attachment). */
 export function downloadMediaUrl(url: string): string {
-  const base = absoluteMediaUrl(url)
-  const sep = base.includes('?') ? '&' : '?'
-  return `${base}${sep}download=true`
+  const abs = absoluteMediaUrl(url)
+  const hashAt = abs.indexOf('#')
+  const head = hashAt === -1 ? abs : abs.slice(0, hashAt)
+  const fragment = hashAt === -1 ? '' : abs.slice(hashAt)
+  const sep = head.includes('?') ? '&' : '?'
+  return `${head}${sep}download=true${fragment}`
 }
 
 /** Parse image-message content that may be a single URL or a JSON array of URLs. */
