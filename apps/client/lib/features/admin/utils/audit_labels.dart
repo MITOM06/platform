@@ -35,6 +35,8 @@ String auditActionLabel(AppLocalizations l, String action) {
       return l.adminAuditActionRoleCreate;
     case 'role.update':
       return l.adminAuditActionRoleUpdate;
+    case 'role.delete':
+      return l.adminAuditActionRoleDelete;
     case 'invitation.create':
       return l.adminAuditActionInvitationCreate;
     case 'invitation.resend':

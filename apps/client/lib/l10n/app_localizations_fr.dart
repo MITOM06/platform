@@ -2582,6 +2582,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminRoleName => 'Nom du rôle';
 
   @override
+  String get adminRoleDelete => 'Supprimer le rôle';
+
+  @override
+  String adminRoleDeleteConfirm(String name) {
+    return 'Supprimer $name ? Seul un rôle que personne n\'utilise peut être supprimé : aucun membre ne l\'a, aucune invitation en attente ne le propose et aucun groupe SSO n\'y est associé. Cette action est irréversible.';
+  }
+
+  @override
   String get adminAuditTitle => 'Journal d\'audit';
 
   @override
@@ -4345,6 +4353,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authErrRoleNameTaken => 'Un rôle portant ce nom existe déjà.';
 
   @override
+  String get authErrPresetRoleDeleteForbidden =>
+      'Les rôles prédéfinis ne peuvent pas être supprimés.';
+
+  @override
+  String authErrRoleInUse(int members, int invitations, int ssoMappings) {
+    return 'Ce rôle est encore utilisé (membres : $members, invitations en attente : $invitations, associations SSO : $ssoMappings). Déplacez-les d\'abord vers un autre rôle.';
+  }
+
+  @override
   String get authErrOwnerRoleImmutable =>
       'Le rôle Owner ne peut être ni modifié ni supprimé.';
 
@@ -4426,6 +4443,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get adminAuditActionInvitationCreate => 'Invitation envoyée';
+
+  @override
+  String get adminAuditActionRoleDelete => 'Rôle supprimé';
 
   @override
   String get adminAuditActionInvitationResend => 'Invitation renvoyée';

@@ -2485,6 +2485,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get adminRoleName => '역할 이름';
 
   @override
+  String get adminRoleDelete => '역할 삭제';
+
+  @override
+  String adminRoleDeleteConfirm(String name) {
+    return '$name 역할을 삭제할까요? 아무도 사용하지 않는 역할만 삭제할 수 있습니다. 이 역할을 가진 멤버, 이 역할로 보낸 대기 중인 초대, 이 역할에 매핑된 SSO 그룹이 없어야 합니다. 이 작업은 되돌릴 수 없습니다.';
+  }
+
+  @override
   String get adminAuditTitle => '감사 로그';
 
   @override
@@ -4144,6 +4152,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authErrRoleNameTaken => '같은 이름의 역할이 이미 있습니다.';
 
   @override
+  String get authErrPresetRoleDeleteForbidden => '기본 역할은 삭제할 수 없습니다.';
+
+  @override
+  String authErrRoleInUse(int members, int invitations, int ssoMappings) {
+    return '이 역할은 아직 사용 중입니다(멤버: $members, 대기 중인 초대: $invitations, SSO 매핑: $ssoMappings). 먼저 다른 역할로 옮기세요.';
+  }
+
+  @override
   String get authErrOwnerRoleImmutable => 'Owner 역할은 수정하거나 삭제할 수 없습니다.';
 
   @override
@@ -4221,6 +4237,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get adminAuditActionInvitationCreate => '초대 보냄';
+
+  @override
+  String get adminAuditActionRoleDelete => '역할 삭제';
 
   @override
   String get adminAuditActionInvitationResend => '초대 다시 보냄';

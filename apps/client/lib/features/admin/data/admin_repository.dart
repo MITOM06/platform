@@ -131,6 +131,10 @@ class AdminRepository {
     await _dio.patch('/admin/roles/$id', data: body);
   }
 
+  Future<void> deleteRole(String id) async {
+    await _dio.delete('/admin/roles/$id');
+  }
+
   // ── audit ─────────────────────────────────────────────────────────────────
   Future<AuditListResult> listAudit({int page = 0, int limit = 20}) async {
     final res = await _dio.get(
