@@ -135,9 +135,7 @@ class ConversationsNotifier extends _$ConversationsNotifier {
       if (me != null && !conv.participants.contains(me)) return;
       if (conv.isAiConversation) {
         // Never in the main list: hand it to the AI threads list instead.
-        if (ref.exists(aiThreadsProvider)) {
-          ref.read(aiThreadsProvider.notifier).upsert(conv);
-        }
+        ref.read(aiThreadsProvider.notifier).upsert(conv);
         return;
       }
       state = AsyncData(ConversationListOps.upsertSorted(latest, conv));

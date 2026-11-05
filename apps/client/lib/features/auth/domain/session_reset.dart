@@ -6,6 +6,7 @@ import '../../admin/state/capabilities_provider.dart';
 import '../../admin/state/usage_dashboard_provider.dart';
 import '../../ai_context/domain/ai_context_providers.dart';
 import '../../assistant/state/assistant_provider.dart';
+import '../../ai_hub/domain/ai_threads_provider.dart';
 import '../../chat/data/stomp_service.dart';
 import '../../chat/domain/active_call_provider.dart';
 import '../../chat/domain/ai_actions_provider.dart';
@@ -40,6 +41,7 @@ void resetSessionState(Ref ref) {
   for (final invalidate in <void Function()>[
     // Chat & people.
     () => ref.invalidate(conversationsNotifierProvider),
+    () => ref.invalidate(aiThreadsProvider),
     () => ref.invalidate(archivedConversationsProvider),
     () => ref.invalidate(blockedConversationsProvider),
     () => ref.invalidate(chatNotifierProvider),

@@ -12,7 +12,9 @@ import 'package:platform_client/features/ai_hub/data/ai_thread_repository.dart';
 import 'package:platform_client/features/ai_hub/domain/ai_threads_provider.dart';
 import 'package:platform_client/features/chat/data/chat_repository.dart';
 import 'package:platform_client/features/chat/data/stomp_service.dart';
+import 'package:platform_client/features/chat/domain/chat_misc_providers.dart';
 import 'package:platform_client/features/chat/domain/chat_state.dart';
+import 'package:platform_client/features/chat/domain/conversations_notifier.dart';
 
 class _Adapter implements HttpClientAdapter {
   final requests = <RequestOptions>[];
@@ -49,6 +51,11 @@ ConversationModel _thread(String id, {String? lastAt, String? name}) =>
 class MockAiRepo extends Mock implements AiThreadRepository {}
 
 class MockChatRepo extends Mock implements ChatRepository {}
+
+class _EmptyConversations extends ConversationsNotifier {
+  @override
+  Future<List<ConversationModel>> build() async => [];
+}
 
 class FakeStomp extends StompService {
   final conv = StreamController<ConversationUpdateEvent>.broadcast();
@@ -121,6 +128,8 @@ void main() {
         aiThreadRepositoryProvider.overrideWithValue(aiRepo),
         chatRepositoryProvider.overrideWithValue(chatRepo),
         stompServiceProvider.overrideWith(() => stomp),
+        conversationsNotifierProvider
+            .overrideWith(() => _EmptyConversations()),
         aiThreadViewingProvider.overrideWithValue((id) => id == viewing),
       ]);
     });
@@ -131,6 +140,25 @@ void main() {
       when(() => aiRepo.create()).thenAnswer((_) async => _thread('n'));
       await container.read(aiThreadsProvider.notifier).create();
       expect(ids(), ['n', 'a']);
+    });
+
+    test('create while the list is still loading is not dropped', () async {
+      final gate = Completer<List<ConversationModel>>();
+      when(() => aiRepo.list()).thenAnswer((_) => gate.future);
+      when(() => aiRepo.create()).thenAnswer((_) async => _thread('n'));
+      container.listen(aiThreadsProvider, (_, __) {});
+      final created = container.read(aiThreadsProvider.notifier).create();
+      await _pump();
+      gate.complete([_thread('a')]);
+      await created;
+      expect(ids(), ['n', 'a']);
+    });
+
+    test('conversationProvider falls back to the AI thread', () async {
+      await boot([_thread('a', name: 'Chat A')]);
+      final c = container.read(conversationProvider('a'));
+      expect(c?.name, 'Chat A');
+      expect(container.read(conversationProvider('nope')), isNull);
     });
 
     test('rename keeps position', () async {

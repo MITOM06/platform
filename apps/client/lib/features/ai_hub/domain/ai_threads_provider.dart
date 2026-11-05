@@ -56,6 +56,10 @@ class AiThreadsNotifier extends AsyncNotifier<List<ConversationModel>> {
   /// Creates a thread and puts it on top.
   Future<ConversationModel> create() async {
     final conv = await ref.read(aiThreadRepositoryProvider).create();
+    // The initial load may still be running: wait so the thread isn't dropped.
+    try {
+      await future;
+    } catch (_) {}
     _setList((l) => ConversationListOps.upsertFront(l, conv));
     return conv;
   }
@@ -88,12 +92,19 @@ class AiThreadsNotifier extends AsyncNotifier<List<ConversationModel>> {
     return first ?? await create();
   }
 
-  /// Puts [conv] into the list if it is loaded (no-op while loading).
+  /// Puts [conv] into the list (once loaded).
   void upsert(ConversationModel conv) {
     if (!conv.isAiConversation) return;
-    _setList((l) => l.any((c) => c.id == conv.id)
+    void apply() => _setList((l) => l.any((c) => c.id == conv.id)
         ? [for (final c in l) c.id == conv.id ? conv : c]
         : ConversationListOps.upsertFront(l, conv));
+    if (state.hasValue) {
+      apply();
+    } else {
+      // Not loaded yet (e.g. opened from a push before the hub): apply once
+      // it is; replace-or-insert is idempotent if the fetch already has it.
+      future.then((_) => apply(), onError: (_) {});
+    }
   }
 
   bool contains(String id) =>
