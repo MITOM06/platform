@@ -538,8 +538,9 @@ Response 200: { "success": true }
   "status": "SCHEDULED",
   "settings": {
     "waitingRoom": true, "muteOnEntry": false, "allowAttendeeScreenShare": true,
-    "attendeesCanEditNotes": true, "locked": false
+    "attendeesCanEditNotes": true, "locked": false, "aiNotes": false
   },
+  "aiNotesEverEnabled": false,
   "attendance": [
     { "userId": "64b0…01", "displayName": "Lan Nguyen", "role": "host",
       "joinedAt": "2026-10-08T02:00:05Z", "leftAt": "2026-10-08T02:40:00Z" }
@@ -562,6 +563,12 @@ Response 200: { "success": true }
   (raw ids — for matching only, never displayed).
 - `attendance[]` is one row per session (rejoining = new row); `leftAt` absent = still inside;
   `role` ∈ `host | cohost | attendee` at join time.
+- `settings.aiNotes` (boolean, default `false`): AI meeting notes on. Clients treat a missing
+  `aiNotes` as `false`. In `PATCH`, a null `aiNotes` keeps the stored value.
+- `aiNotesEverEnabled` (boolean): latched `true` once AI notes were on while the meeting was LIVE —
+  set (atomically, only while LIVE and `aiNotes` on) when the meeting goes LIVE with `aiNotes` on,
+  when a host/co-host sends `AI_NOTES_ON`, or when a `PATCH` turns `aiNotes` on while LIVE. Never
+  reset by turning `aiNotes` off.
 - `displayName` / `avatarUrl` absent when unknown ⇒ show a generic localized label, never the id.
   `title` absent ⇒ the client shows its own localized default.
 
@@ -615,7 +622,7 @@ gives `MEETING_INVALID` without `params`. (Outside `/api/meetings` the same fail
 - `scheduledStart` absent ⇒ instant meeting; present ⇒ not earlier than now − 5 min.
   `scheduledEnd` only with a start, `> scheduledStart` and `≤ scheduledStart + 24h`.
 - `settings` partial; defaults `waitingRoom=true, muteOnEntry=false, allowAttendeeScreenShare=true,
-  attendeesCanEditNotes=true, locked=false`. `muteOnEntry` is a client hint only.
+  attendeesCanEditNotes=true, locked=false, aiNotes=false`. `muteOnEntry` is a client hint only.
 
 **`UpdateMeetingRequest`** — same fields, all optional; absent = unchanged; `inviteeIds` replaces
 the list (newcomers get `meet.invited`); `settings` merges field by field (a change emits
@@ -701,6 +708,7 @@ host/co-host whose STOMP reconnected calls `GET /lobby` to catch up on a missed 
 | `/app/meet.hand` | `{ "meetingId": "m1", "raised": true }` | Your own hand only. Raising again keeps your place (no event); lowering when not raised is a no-op. Room access ² |
 | `/app/meet.chat` | `{ "meetingId": "m1", "content": "…", "clientId": "c-7f3a" }` | `content` trimmed, 1..2000. Rate limit shared with normal chat (10 lines / 5 s). `clientId` optional, `[A-Za-z0-9_-]{1,64}` (otherwise dropped), echoed in `meet.chat` / `meet.error`. A valid `clientId` is stored with the line and makes the send **idempotent** per (meeting, sender, `clientId`) — see below |
 | `/app/meet.host` | `{ "meetingId": "m1", "action": "MUTE_MIC", "targetId": "64b0…03" }` | Host / co-host. An attendee's command is **ignored** (logged, no event, no error). `targetId` required for `MUTE_MIC`, `REMOVE`, `LOWER_HAND`, `MAKE_COHOST`, `REVOKE_COHOST` |
+| `/app/meet.transcript` | `{ "meetingId": "m1", "text": "…", "ts": 1730800000000 }` | One line of the sender's own speech (client speech-to-text). **Never answered with `meet.error`** (high frequency): dropped silently unless the sender is in the room (entitled **and** has an open attendance row), `settings.aiNotes` is true and `text` is non-blank. `text` trimmed and cut to 500 chars; `ts` (epoch ms) clamped to server now. Stored in Mongo `meeting_records` `{meetingId, kind: SPEECH\|FILE\|SCREEN, userId, displayName (null if unknown), text, ts, createdAt}`, index (meetingId, ts) |
 
 **Idempotent chat sends.** Re-sending `/app/meet.chat` with a `clientId` you already used in that
 meeting (a retry after a slow echo) stores nothing, is not counted against the rate limit, and
@@ -722,6 +730,7 @@ Host `action`s:
 | `LOCK` / `UNLOCK` | host, co-host | `settings.locked` | `meet.settings` (when it changed) |
 | `WAITING_ROOM_ON` / `WAITING_ROOM_OFF` | host, co-host | `settings.waitingRoom` | `meet.settings` (when it changed) |
 | `ATTENDEE_SCREEN_SHARE_ON` / `_OFF` | host, co-host | `settings.allowAttendeeScreenShare`; every attendee in the room is updated in LiveKit (OFF: camera + microphone only, a live share is stopped; ON: every source) | `meet.settings` (when it changed) |
+| `AI_NOTES_ON` / `AI_NOTES_OFF` | host, co-host (no `targetId`) | `settings.aiNotes`; ON also latches `aiNotesEverEnabled` while LIVE | `meet.settings` (when it changed; carries `aiNotes`) |
 | `MAKE_COHOST` | **host** | target must be in the room and not removed (else `MEETING_INVALID {field:"targetId"}`) | `meet.roster`; `meet.lobby` to the new co-host |
 | `REVOKE_COHOST` | **host** | target stays admitted | `meet.roster` |
 
@@ -732,6 +741,11 @@ it actually changes (one `settings.<field>` each), so it never reverts a concurr
 `WAITING_ROOM_*` / `ATTENDEE_SCREEN_SHARE_*` on another switch. Someone removed who reconnects to LiveKit with
 a still-valid token is kicked again on arrival and gets no attendance row.
 
+**AI notes capture (client rule).** Web and Android capture speech only while: in the room,
+`settings.aiNotes` is on, the user's **own** mic is on, and not paused ("pause my speech"). Each
+final STT result goes out as `/app/meet.transcript`. Permission denied ⇒ no retry; the AI-notes item
+shows "unsupported" (e.g. Firefox).
+
 ### STOMP — server events
 
 Every payload is `MeetingEventDto` `{event, meetingId, …}`; absent fields are omitted.
@@ -739,7 +753,7 @@ Every payload is `MeetingEventDto` `{event, meetingId, …}`; absent fields are 
 | Destination | `event` | Payload | When |
 |---|---|---|---|
 | `/topic/meeting/{id}` | `meet.roster` | `{participants:[{userId, displayName, role, joinedAt}]}` — one row per person inside; `role` is the **current** role (`attendance[].role` stays the role at join time) | LiveKit `participant_joined` / `participant_left`, `MAKE_COHOST` / `REVOKE_COHOST` |
-| `/topic/meeting/{id}` | `meet.settings` | `{settings:{…5 fields…}}` | `PATCH` or a host command changed settings |
+| `/topic/meeting/{id}` | `meet.settings` | `{settings:{…6 fields, incl. `aiNotes`…}}` | `PATCH` or a host command changed settings |
 | `/topic/meeting/{id}` | `meet.hands` | `{hands:[Hand…]}` in raise order (`[]` = none) | raise / lower / lower all / leaving the room / removed |
 | `/topic/meeting/{id}` | `meet.chat` | `{clientId?, message: MeetingMessage}` | `/app/meet.chat` succeeded |
 | `/topic/meeting/{id}` | `meet.notes.updated` | `{version, updatedBy:{userId, displayName?}}` — never the text (GET it when not editing) | `PUT /notes/shared` succeeded while the meeting is not ENDED (private notes and edits after the end announce nothing) |
