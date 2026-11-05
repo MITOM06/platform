@@ -11,11 +11,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.platform.chatservice.dto.meeting.MeetingChatCommand;
 import com.platform.chatservice.dto.meeting.MeetingHandCommand;
 import com.platform.chatservice.dto.meeting.MeetingHostCommand;
+import com.platform.chatservice.dto.meeting.MeetingTranscriptCommand;
 import com.platform.chatservice.exception.ApiException;
 import com.platform.chatservice.exception.RateLimitExceededException;
 import com.platform.chatservice.security.UserPrincipal;
@@ -23,6 +25,7 @@ import com.platform.chatservice.service.meeting.MeetingChatService;
 import com.platform.chatservice.service.meeting.MeetingEvents;
 import com.platform.chatservice.service.meeting.MeetingHandService;
 import com.platform.chatservice.service.meeting.MeetingHostService;
+import com.platform.chatservice.service.meeting.MeetingRecordService;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
@@ -43,12 +46,13 @@ class MeetingWsControllerTest {
   @Mock private MeetingChatService chat;
   @Mock private MeetingHostService host;
   @Mock private MeetingEvents events;
+  @Mock private MeetingRecordService records;
   private MeetingWsController controller;
   private final UserPrincipal an = new UserPrincipal("a", "Member", List.of(), List.of("dept-a"));
 
   @BeforeEach
   void setUp() {
-    controller = new MeetingWsController(hands, chat, host, events);
+    controller = new MeetingWsController(hands, chat, host, events, records);
   }
 
   @Test
@@ -146,5 +150,13 @@ class MeetingWsControllerTest {
     assertThatThrownBy(() -> controller.hand(new MeetingHandCommand("m1", true), an))
         .isInstanceOf(IllegalStateException.class);
     verify(events, never()).error(any(), any(), any(), any(), any(), any());
+  }
+
+  @Test
+  void transcriptDelegatesAndNeverRepliesMeetError() {
+    controller.transcript(new MeetingTranscriptCommand("m1", "hello", 123L), an);
+
+    verify(records).appendSpeech(an, "m1", "hello", 123L);
+    verifyNoInteractions(events);
   }
 }

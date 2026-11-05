@@ -3,6 +3,7 @@ package com.platform.chatservice.controller;
 import com.platform.chatservice.dto.meeting.MeetingChatCommand;
 import com.platform.chatservice.dto.meeting.MeetingHandCommand;
 import com.platform.chatservice.dto.meeting.MeetingHostCommand;
+import com.platform.chatservice.dto.meeting.MeetingTranscriptCommand;
 import com.platform.chatservice.exception.ApiException;
 import com.platform.chatservice.exception.ErrorCodes;
 import com.platform.chatservice.exception.RateLimitExceededException;
@@ -12,6 +13,7 @@ import com.platform.chatservice.service.meeting.MeetingEvents;
 import com.platform.chatservice.service.meeting.MeetingHandService;
 import com.platform.chatservice.service.meeting.MeetingHostAction;
 import com.platform.chatservice.service.meeting.MeetingHostService;
+import com.platform.chatservice.service.meeting.MeetingRecordService;
 import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -31,6 +33,7 @@ public class MeetingWsController {
   private final MeetingChatService chat;
   private final MeetingHostService host;
   private final MeetingEvents events;
+  private final MeetingRecordService records;
 
   /** Raise / lower the caller's own hand; a missing {@code raised} lowers. */
   @MessageMapping("/meet.hand")
@@ -58,6 +61,15 @@ public class MeetingWsController {
   public void host(@Payload MeetingHostCommand cmd, Principal principal) {
     String action = MeetingHostAction.parse(cmd.action()).map(Enum::name).orElse(null);
     reply(principal, cmd.meetingId(), action, null, () -> host.execute(caller(principal), cmd));
+  }
+
+  /**
+   * One final speech-recognition result. High-frequency: invalid input is dropped silently, never
+   * answered with {@code meet.error}.
+   */
+  @MessageMapping("/meet.transcript")
+  public void transcript(@Payload MeetingTranscriptCommand cmd, Principal principal) {
+    records.appendSpeech(caller(principal), cmd.meetingId(), cmd.text(), cmd.ts());
   }
 
   private void reply(
