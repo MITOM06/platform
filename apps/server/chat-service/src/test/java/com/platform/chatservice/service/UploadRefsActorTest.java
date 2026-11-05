@@ -80,7 +80,7 @@ class UploadRefsActorTest {
     gridFs =
         new GridFsTemplate(mongoTemplate.getMongoDatabaseFactory(), mongoTemplate.getConverter());
     ConversationCacheService cache = new ConversationCacheService(conversationRepository);
-    policy = new UploadAccessPolicy(mongoTemplate, cache);
+    policy = new UploadAccessPolicy(mongoTemplate);
     refs = new UploadRefs(mongoTemplate, gridFs, policy);
     MessageMapper mapper = new MessageMapper();
     aiMessageService =

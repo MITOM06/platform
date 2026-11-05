@@ -2,16 +2,15 @@ package com.platform.chatservice.service.upload;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.repository.ConversationRepository;
-import com.platform.chatservice.service.ConversationCacheService;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,15 +67,9 @@ class UploadAccessPolicyTest {
     gridFs =
         new GridFsTemplate(mongoTemplate.getMongoDatabaseFactory(), mongoTemplate.getConverter());
     // Refs are set up by the uploader (who can always read the file).
-    refs =
-        new UploadRefs(
-            mongoTemplate,
-            gridFs,
-            new UploadAccessPolicy(
-                mongoTemplate, new ConversationCacheService(conversationRepository)));
+    refs = new UploadRefs(mongoTemplate, gridFs, new UploadAccessPolicy(mongoTemplate));
     spyTemplate = spy(mongoTemplate);
-    policy =
-        new UploadAccessPolicy(spyTemplate, new ConversationCacheService(conversationRepository));
+    policy = new UploadAccessPolicy(spyTemplate);
 
     mongoTemplate.getCollection("users").insertOne(user(MEMBER, DEPT));
     mongoTemplate.getCollection("users").insertOne(user(STRANGER, OTHER_DEPT));
@@ -269,7 +262,25 @@ class UploadAccessPolicyTest {
 
     assertThat(policy.canRead(file(id), MEMBER)).isTrue();
 
-    verify(spyTemplate, never()).exists(any(Query.class), anyString());
+    verify(spyTemplate, never()).exists(any(Query.class), eq("users"));
+    verify(spyTemplate, never()).exists(any(Query.class), eq("workspaces"));
+    verify(spyTemplate, never()).exists(any(Query.class), eq("external_bots"));
     verify(spyTemplate, never()).findOne(any(Query.class), eq(Document.class), eq("users"));
+  }
+
+  @Test
+  void many_conversation_refs_use_a_single_conversations_query() {
+    String id = upload();
+    Conversation a = conversation(UPLOADER);
+    Conversation b = conversation(UPLOADER);
+    Conversation c = conversation(UPLOADER, MEMBER);
+    refs.attachToConversation(url(id), a.getId(), UPLOADER);
+    refs.attachToConversation(url(id), b.getId(), UPLOADER);
+    refs.attachToConversation(url(id), c.getId(), UPLOADER);
+
+    assertThat(policy.canRead(file(id), MEMBER)).isTrue();
+
+    verify(spyTemplate, times(1)).exists(any(Query.class), eq("conversations"));
+    verify(spyTemplate, never()).findOne(any(Query.class), eq(Document.class), eq("conversations"));
   }
 }

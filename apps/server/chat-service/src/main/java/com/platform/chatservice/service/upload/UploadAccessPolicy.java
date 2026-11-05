@@ -1,11 +1,8 @@
 package com.platform.chatservice.service.upload;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
-import com.platform.chatservice.service.ConversationCacheService;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
@@ -38,7 +35,6 @@ public class UploadAccessPolicy {
       List.of(new String[] {"workspaces", "logoUrl"}, new String[] {"external_bots", "avatarUrl"});
 
   private final MongoTemplate mongoTemplate;
-  private final ConversationCacheService conversationCacheService;
 
   public boolean canRead(GridFSFile file, String userId) {
     if (file == null || userId == null || userId.isBlank()) return false;
@@ -62,29 +58,27 @@ public class UploadAccessPolicy {
     }
   }
 
+  /** One uncached existence query, so leaving a conversation revokes access immediately. */
   private boolean inAnyConversation(List<String> conversationIds, String userId) {
-    for (String id : conversationIds) {
-      boolean member =
-          conversationCacheService
-              .findByIdOptional(id)
-              .map(c -> c.getParticipants() != null && c.getParticipants().contains(userId))
-              .orElse(false);
-      if (member) return true;
-    }
-    return false;
+    if (conversationIds.isEmpty()) return false;
+    // Conversation.id is a String @Id: Spring stores valid 24-hex values as ObjectId.
+    List<Object> ids = new ArrayList<>(conversationIds.size());
+    for (String id : conversationIds) ids.add(ObjectId.isValid(id) ? new ObjectId(id) : id);
+    Query query = new Query(Criteria.where("_id").in(ids).and("participants").is(userId));
+    return mongoTemplate.exists(query, "conversations");
   }
 
   private boolean inAnyDepartment(List<String> departmentIds, String userId) {
     if (!ObjectId.isValid(userId)) return false;
-    Query query = new Query(Criteria.where("_id").is(new ObjectId(userId)));
-    query.fields().include("departmentIds");
-    Document user = mongoTemplate.findOne(query, Document.class, "users");
-    if (user == null || !(user.get("departmentIds") instanceof List<?> mine)) return false;
-    Set<String> userDepts = new HashSet<>();
-    for (Object d : mine) {
-      if (d != null) userDepts.add(d.toString());
+    // users.departmentIds holds ObjectIds (strings tolerated for legacy rows).
+    List<Object> deptIds = new ArrayList<>(departmentIds.size() * 2);
+    for (String d : departmentIds) {
+      deptIds.add(d);
+      if (ObjectId.isValid(d)) deptIds.add(new ObjectId(d));
     }
-    return departmentIds.stream().anyMatch(userDepts::contains);
+    Query query =
+        new Query(Criteria.where("_id").is(new ObjectId(userId)).and("departmentIds").in(deptIds));
+    return mongoTemplate.exists(query, "users");
   }
 
   private boolean isProfileImage(String publicId, String uploadedBy) {
