@@ -56,6 +56,7 @@ class _GalleryViewerState extends State<GalleryViewer> {
             child: Center(
               child: CachedNetworkImage(
                 imageUrl: absoluteMediaUrl(widget.urls[i]),
+                cacheKey: mediaCacheKey(absoluteMediaUrl(widget.urls[i])),
                 fit: BoxFit.contain,
               ),
             ),

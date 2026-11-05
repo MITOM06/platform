@@ -13,6 +13,7 @@ import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.ExternalBotRepository;
 import com.platform.chatservice.repository.FriendshipRepository;
 import com.platform.chatservice.security.UserPrincipal;
+import com.platform.chatservice.service.upload.UploadRefs;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -41,6 +42,7 @@ public class ConversationService {
   private final ExternalBotRepository externalBotRepository;
   private final ConversationWriteSupport support;
   private final ConversationMembershipCache membershipCache;
+  private final UploadRefs uploadRefs;
 
   /** Result of {@link #setAutoDelete}: {@code changed} is false for a no-op (same setting). */
   public record AutoDeleteChange(ConversationResponse conversation, boolean changed, int seconds) {}
@@ -107,6 +109,7 @@ public class ConversationService {
                 .lastMessageAt(Instant.now())
                 .pendingMembers(pendingMembers)
                 .build());
+    uploadRefs.attachToConversation(request.avatarUrl(), saved.getId(), creatorId);
     return support.view(saved, creatorId, 0L);
   }
 
@@ -167,6 +170,9 @@ public class ConversationService {
       touched = true;
     }
     Conversation result = touched ? support.update(conversationId, null, update) : conversation;
+    if (avatarUrl != null && result != null) {
+      uploadRefs.attachToConversation(avatarUrl, conversationId, userId);
+    }
     return support.view(result != null ? result : conversation, userId);
   }
 
@@ -179,7 +185,9 @@ public class ConversationService {
         wallpaper == null || wallpaper.isBlank()
             ? new Update().unset("wallpaper")
             : new Update().set("wallpaper", wallpaper);
-    return support.view(support.updateAsParticipant(userId, conversationId, update), userId);
+    Conversation updated = support.updateAsParticipant(userId, conversationId, update);
+    uploadRefs.attachToConversation(wallpaper, conversationId, userId);
+    return support.view(updated, userId);
   }
 
   public ConversationResponse addMembers(

@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:app_links/app_links.dart';
 import 'core/config/dev_host_discovery.dart';
+import 'core/media/media_token_provider.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/api/token_manager.dart';
@@ -204,6 +205,11 @@ class _PlatformAppState extends ConsumerState<PlatformApp>
       if (!keepRealtimeOnPause(ref.read)) stomp.disconnect();
     } else if (state == AppLifecycleState.resumed) {
       _reconnectStomp();
+      // Timers don't run while suspended: the scheduled media-token refresh
+      // may have been missed. No-op while the token is fresh.
+      if (ref.read(authNotifierProvider).valueOrNull is AuthAuthenticated) {
+        unawaited(ref.read(mediaTokenControllerProvider).ensure());
+      }
       // Back from a connector's OAuth page in the browser: report the result.
       ref.read(oauthFlowProvider.notifier).onResume();
     }

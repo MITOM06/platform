@@ -10,6 +10,7 @@ import 'package:platform_client/features/auth/domain/auth_state.dart';
 import 'package:platform_client/features/auth/ui/set_password_screen.dart';
 import 'package:platform_client/features/chat/domain/chat_provider.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
+import '../../helpers/noop_media_token.dart';
 
 const _gatedUser = UserModel(
   id: 'u1',
@@ -105,6 +106,7 @@ Future<_Harness> _pump(
   final fake = repo ?? _FakeRepo();
   final container = ProviderContainer(overrides: [
     authRepositoryProvider.overrideWithValue(fake),
+    noopMediaTokenOverride,
     authNotifierProvider.overrideWith(() => _TestAuth(AuthAuthenticated(user))),
     // `refreshUser` invalidates the cached profile; keep it network/timer-free.
     userProfileProvider.overrideWith((ref, id) async => _readyUser),

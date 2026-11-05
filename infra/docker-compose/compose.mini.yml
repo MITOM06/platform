@@ -123,6 +123,7 @@ services:
       # connector-service's internal API. Unset, every setup answered 503.
       CONNECTOR_SERVICE_BASE_URL: http://connector-service:3003
       CONNECTOR_INTERNAL_KEY: ${INTERNAL_API_KEY:?required}
+      UPLOADS_REQUIRE_AUTH: ${UPLOADS_REQUIRE_AUTH:-false}
       MAIL_HOST: ${MAIL_HOST:-}
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USER: ${MAIL_USER:-}

@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/api/dio_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/media_url.dart';
 
 /// A single centered info row (icon + value), used for role/DOB-style details
 /// on the public profile screen. Extracted from user_profile_screen.dart
@@ -46,9 +46,7 @@ class ProfileCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasCover = coverPhoto != null && coverPhoto!.isNotEmpty;
-    final url = hasCover && coverPhoto!.startsWith('http')
-        ? coverPhoto!
-        : (hasCover ? '${DioClient.chatBaseUrl}$coverPhoto' : null);
+    final url = hasCover ? absoluteMediaUrl(coverPhoto!) : null;
     return Container(
       height: 160,
       decoration: BoxDecoration(
@@ -57,6 +55,7 @@ class ProfileCover extends StatelessWidget {
       child: url != null
           ? CachedNetworkImage(
               imageUrl: url,
+              cacheKey: mediaCacheKey(url),
               fit: BoxFit.cover,
               width: double.infinity,
               errorWidget: (_, __, ___) => const SizedBox.shrink(),

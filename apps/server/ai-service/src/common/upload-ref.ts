@@ -43,3 +43,12 @@ export function resolveUploadUrl(ref: unknown, internalBase: string): string | n
   if (!match || !UPLOAD_ID_RE.test(match[1])) return null;
   return `${internalBase.replace(/\/+$/, '')}/api/uploads/${match[1].toLowerCase()}`;
 }
+
+/**
+ * Auth header for fetching an upload from the INTERNAL chat-service. Attach it
+ * ONLY to a URL produced by `resolveUploadUrl` / re-anchored on the internal chat
+ * base — never to any other host. Empty when no internal key is configured.
+ */
+export function internalUploadHeaders(config: { internalApiKey?: string | null }): Record<string, string> {
+  return config.internalApiKey ? { 'X-Internal-Key': config.internalApiKey } : {};
+}

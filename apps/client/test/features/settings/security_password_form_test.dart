@@ -10,6 +10,7 @@ import 'package:platform_client/features/settings/ui/security_settings_screen.da
 import 'package:platform_client/features/settings/utils/change_password_error.dart';
 import 'package:platform_client/features/settings/utils/password_change_form.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
+import '../../helpers/noop_media_token.dart';
 
 /// Settings → Security password form (mirror of web
 /// `SecurityPasswordForm.test.tsx`): every problem shows under its input, the
@@ -102,6 +103,7 @@ Future<_Form> _pump(WidgetTester tester) async {
   await tester.pumpWidget(ProviderScope(
     overrides: [
       authRepositoryProvider.overrideWithValue(repo),
+      noopMediaTokenOverride,
       authNotifierProvider.overrideWith(_TestAuth.new),
       userProfileProvider.overrideWith((ref, id) async => _user),
     ],

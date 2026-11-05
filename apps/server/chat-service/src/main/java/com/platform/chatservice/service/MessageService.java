@@ -15,6 +15,7 @@ import com.platform.chatservice.model.Message;
 import com.platform.chatservice.model.PendingAction;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
+import com.platform.chatservice.service.upload.UploadRefs;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +45,7 @@ public class MessageService {
   private final MessageMapper messageMapper;
   private final AiMessageService aiMessageService;
   private final ConversationCacheService conversationCacheService;
+  private final UploadRefs uploadRefs;
 
   /**
    * Outcome of a recall / edit: the updated message, and whether it was the conversation's newest
@@ -83,6 +85,7 @@ public class MessageService {
                 .replyPreview(replyPreview)
                 .mentions(mentions)
                 .build());
+    uploadRefs.attachToConversation(request.content(), request.conversationId(), senderId);
 
     Instant sentAt = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
     // Targeted atomic $set update instead of loading + saving the whole Conversation document:
@@ -267,6 +270,7 @@ public class MessageService {
       // Recalled (or deleted) between the read and the write.
       throw new IllegalArgumentException("Cannot edit a recalled message");
     }
+    uploadRefs.attachToConversation(content, message.getConversationId(), userId);
     boolean previewChanged =
         refreshPreviewIfLatest(
             message,
@@ -380,6 +384,19 @@ public class MessageService {
       List<com.platform.chatservice.model.AiSource> sources) {
     return aiMessageService.persistAiMessage(
         conversationId, content, trace, pendingActions, aiReplyId, sources);
+  }
+
+  /** Same, with the prompting user as the actor for upload refs. */
+  public MessageResponse persistAiMessage(
+      String conversationId,
+      String content,
+      AiTraceData trace,
+      List<PendingAction> pendingActions,
+      String aiReplyId,
+      List<com.platform.chatservice.model.AiSource> sources,
+      String actorId) {
+    return aiMessageService.persistAiMessage(
+        conversationId, content, trace, pendingActions, aiReplyId, sources, actorId);
   }
 
   /**

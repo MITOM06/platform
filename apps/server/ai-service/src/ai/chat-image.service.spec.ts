@@ -74,6 +74,26 @@ describe('ChatImageService', () => {
     ]);
   });
 
+  it('sends X-Internal-Key on the internal chat upload fetch', async () => {
+    const svc = new ChatImageService(makeConfig({ 'config.connector.internalApiKey': 'test-key' }));
+    const fetchMock = respond(Buffer.from('abc'), { contentType: 'image/png' });
+    global.fetch = fetchMock as unknown as typeof fetch;
+    await svc.resolveImageBlocks([`https://public.example/api/uploads/${ID}`]);
+    expect(fetchMock.mock.calls[0][0]).toBe(`http://chat:8080/api/uploads/${ID}`);
+    expect(fetchMock.mock.calls[0][1].headers).toEqual({ 'X-Internal-Key': 'test-key' });
+  });
+
+  it('sends no key header when none is configured, and never fetches a non-upload ref', async () => {
+    const svc = new ChatImageService(makeConfig());
+    const fetchMock = respond(Buffer.from('abc'), { contentType: 'image/png' });
+    global.fetch = fetchMock as unknown as typeof fetch;
+    await svc.resolveImageBlocks([`/api/uploads/${ID}`]);
+    expect(fetchMock.mock.calls[0][1].headers).toEqual({});
+    fetchMock.mockClear();
+    await svc.resolveImageBlocks(['http://evil.example/cat.png']);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('never fetches a non-upload URL from history (blind SSRF)', async () => {
     const svc = new ChatImageService(makeConfig());
     const fetchMock = jest.fn();
