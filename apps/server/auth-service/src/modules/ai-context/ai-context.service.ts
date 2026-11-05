@@ -11,6 +11,9 @@ import {
   AiUserContext,
   AiUserContextDocument,
   Capability,
+  ContextViewer,
+  contextDepartmentScope,
+  isContextEntryVisible,
   Department,
   DepartmentDocument,
   User,
@@ -299,26 +302,37 @@ export class AiContextService {
     } | null) ?? null;
   }
 
+  /**
+   * The entries the AI receives for this user — same rule as ai-service
+   * (`isContextEntryVisible` in @platform/database): company by capability;
+   * department entries for members and the department's lead (every tier of
+   * their own department), and for Owner/Admin across every department.
+   */
   async getVisibleEntriesForUser(
-    _userId: string,
+    userId: string,
     perms: string[],
     departmentIds: string[],
   ): Promise<AiContextEntry[]> {
-    const gate = (cap: Capability | null | undefined) =>
-      cap == null || perms.includes(cap);
+    const led = (await this.deptModel.find({ leadUserId: userId }).lean().exec()) as { _id: unknown }[];
+    const viewer: ContextViewer = {
+      perms,
+      departmentIds: departmentIds.map(String),
+      ledDepartmentIds: led.map((d) => String(d._id)),
+    };
+    const scope = contextDepartmentScope(viewer);
     const company = (await this.entryModel
       .find({ scope: 'company' })
       .sort({ updatedAt: -1 })
       .lean()
       .exec()) as AiContextEntry[];
     let dept: AiContextEntry[] = [];
-    if (departmentIds.length > 0) {
+    if (scope === 'all' || scope.length > 0) {
       dept = (await this.entryModel
-        .find({ scope: 'department', scopeId: { $in: departmentIds } })
+        .find(scope === 'all' ? { scope: 'department' } : { scope: 'department', scopeId: { $in: scope } })
         .sort({ updatedAt: -1 })
         .lean()
         .exec()) as AiContextEntry[];
     }
-    return [...company, ...dept].filter((e) => gate(e.requiredCapability));
+    return [...company, ...dept].filter((e) => isContextEntryVisible(e, viewer));
   }
 }

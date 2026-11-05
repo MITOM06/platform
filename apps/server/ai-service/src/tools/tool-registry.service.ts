@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SearchMessagesTool } from './search-messages.tool';
 import { GetUserInfoTool } from './get-user-info.tool';
+import { GetDepartmentContextTool } from './get-department-context.tool';
 import { SearchDirectoryTool } from './search-directory.tool';
 import { SearchKnowledgeBaseTool } from './search-knowledge-base.tool';
 import { SummarizeConversationTool } from './summarize-conversation.tool';
@@ -158,12 +159,14 @@ export class ToolRegistryService {
     private readonly webSearchService: WebSearchService,
     private readonly mcpConnector: McpConnectorClient,
     private readonly resultCache: ToolResultCacheService,
+    private readonly getDepartmentContext: GetDepartmentContextTool,
   ) {}
 
   async getDefinitions(ctx: ToolContext): Promise<ToolDefinition[]> {
     const staticDefs: ToolDefinition[] = [
       SearchMessagesTool.definition,
       GetUserInfoTool.definition,
+      GetDepartmentContextTool.definition,
       SearchDirectoryTool.definition,
       SearchKnowledgeBaseTool.definition,
       SummarizeConversationTool.definition,
@@ -247,6 +250,8 @@ export class ToolRegistryService {
           return await this.searchMessages.execute(input, ctx);
         case 'get_user_info':
           return await this.getUserInfo.execute(input, ctx);
+        case 'get_department_context':
+          return await this.getDepartmentContext.execute(input, ctx);
         case 'search_directory':
           return await this.searchDirectory.execute(input, ctx);
         case 'search_knowledge_base':

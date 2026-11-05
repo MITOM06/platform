@@ -103,14 +103,15 @@ function makeRegistry(overrides: Partial<{
     webSearchService,
     mcpConnector,
     overrides.cache ?? makeCache(false),
+    { execute: jest.fn().mockResolvedValue('dept notes') } as any,
   );
 }
 
 describe('ToolRegistryService', () => {
-  it('returns 7 static tool definitions when no dynamic tools', async () => {
+  it('returns 8 static tool definitions when no dynamic tools', async () => {
     const registry = makeRegistry();
     const defs = await registry.getDefinitions(ctx);
-    expect(defs).toHaveLength(7);
+    expect(defs).toHaveLength(8);
     const names = defs.map((d) => d.name);
     expect(names).toContain('search_messages');
     expect(names).toContain('get_user_info');
@@ -125,14 +126,14 @@ describe('ToolRegistryService', () => {
     const registry = makeRegistry();
     const defs = await registry.getDefinitions(ctx);
     expect(defs.map((d) => d.name)).not.toContain('web_search');
-    expect(defs).toHaveLength(7);
+    expect(defs).toHaveLength(8);
   });
 
   it('registers web_search when the service reports available', async () => {
     const registry = makeRegistry({ webSearchAvailable: true });
     const defs = await registry.getDefinitions(ctx);
     expect(defs.map((d) => d.name)).toContain('web_search');
-    expect(defs).toHaveLength(8);
+    expect(defs).toHaveLength(9);
   });
 
   it('dispatches to web_search tool', async () => {
@@ -157,7 +158,7 @@ describe('ToolRegistryService', () => {
     // notion is gated by the projectKeeper skill — enable it so the tool passes.
     const defs = await registry.getDefinitions({ ...ctx, enabledSkillIds: ['projectKeeper'] });
     expect(getTools).toHaveBeenCalledWith('user-1', expect.any(Array));
-    expect(defs).toHaveLength(8);
+    expect(defs).toHaveLength(9);
     expect(defs.map((d) => d.name)).toContain('mcp__notion__create_page');
   });
 
@@ -327,7 +328,7 @@ describe('ToolRegistryService', () => {
     const registry = makeRegistry({ mcpGetTools: getTools });
     const defs = await registry.getDefinitions({ ...ctx, allowedConnectors: [] });
     expect(defs.map((d) => d.name)).not.toContain('mcp__notion__create_page');
-    expect(defs).toHaveLength(7); // 6 static tools, no MCP
+    expect(defs).toHaveLength(8); // 8 static tools, no MCP
   });
 
   it('allowedConnectors=null/undefined does NOT filter MCP tools (inherit)', async () => {
@@ -355,7 +356,7 @@ describe('ToolRegistryService', () => {
       enabledSkillIds: [],
     });
     expect(defs.map((d) => d.name)).not.toContain('mcp__calendar__create_event');
-    expect(defs).toHaveLength(7); // only static tools
+    expect(defs).toHaveLength(8); // only static tools
   });
 
   it('keeps a gated-provider MCP tool when BOTH the skill and connector are on', async () => {
@@ -378,7 +379,7 @@ describe('ToolRegistryService', () => {
     const registry = makeRegistry({ mcpGetTools: getTools });
     const defs = await registry.getDefinitions({ ...ctx, enabledSkillIds: ['scheduler'] });
     expect(defs.map((d) => d.name)).not.toContain('mcp__calendar__create_event');
-    expect(defs).toHaveLength(7);
+    expect(defs).toHaveLength(8);
   });
 });
 

@@ -91,6 +91,8 @@ export class AgenticLoopService {
       userId: ctx.userId,
       displayName: ctx.displayName,
       departmentId: ctx.departmentId,
+      perms: ctx.perms,
+      departmentIds: ctx.departmentIds,
       sourceSink: citations,
       // Workspace tool governance (TASK-12) + skill consent gate (Approach A).
       webSearchEnabled: ctx.settings.webSearchEnabled,
