@@ -6,7 +6,8 @@
 #   - a build that fails smoke is rolled back AND not redeployed every 5 minutes;
 #   - a later commit on main is deployed normally;
 #   - an up.sh failure (e.g. a new required variable missing from .env.mini) is a
-#     failed deploy that rolls back, not a warning followed by "✓ deployed".
+#     failed deploy that rolls back, not a warning followed by "✓ deployed";
+#   - old images are pruned after a good deploy, and never before a rollback.
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
@@ -25,6 +26,7 @@ case "$*" in
   *"config --services"*)       echo "auth" ;;
   *"ps --services"*)           echo "auth" ;;
   "image inspect"*)            echo "sha256:img-$(cat "$QC_T/image_rev" 2>/dev/null || echo 0)" ;;
+  "image prune"*)              echo x >> "$QC_T/prunes" ;;
   *)                           exit 0 ;;   # pull, tag, exec, compose up …
 esac
 SH
@@ -65,12 +67,14 @@ fails=0
 check() { if eval "$2"; then echo "  ok: $1"; else echo "  FAIL: $1"; fails=$((fails + 1)); fi; }
 calls() { if [ -f "$T/calls" ]; then wc -l < "$T/calls" | tr -d ' '; else echo 0; fi; }
 run() { ./scripts/mini/redeploy.sh "$@" >"$T/out" 2>&1; echo $?; }
+prunes() { if [ -f "$T/prunes" ]; then wc -l < "$T/prunes" | tr -d ' '; else echo 0; fi; }
 
 # 1. main moves to a build that fails smoke → rolled back.
 C2="$(push_commit broken)"; echo "$C2" > "$T/smoke_fails_at"
 rc="$(run)"
 check "a build that fails smoke is rolled back (exit 1, back on c1)" \
   '[ "$rc" = 1 ] && [ "$(git rev-parse HEAD)" = "$C1" ]'
+check "a rollback does not prune the images it needs" '[ "$(prunes)" = 0 ]'
 
 # 2. Nothing new on main: the same broken build must not be redeployed.
 before="$(calls)"
@@ -83,6 +87,7 @@ C3="$(push_commit fixed)"
 rc="$(run)"
 check "a new commit after the broken one is deployed" \
   '[ "$rc" = 0 ] && [ "$(git rev-parse HEAD)" = "$C3" ]'
+check "a good deploy prunes old images" '[ "$(prunes)" = 1 ]'
 
 # 4. up.sh fails (compose refused to start) → that is a failed deploy.
 C4="$(push_commit needs-new-var)"; echo "$C4" > "$T/up_fails_at"
