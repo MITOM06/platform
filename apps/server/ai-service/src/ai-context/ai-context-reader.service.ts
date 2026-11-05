@@ -7,14 +7,18 @@ import {
   AiContextEntryDocument,
   AiUserContext,
   AiUserContextDocument,
-  Capability,
+  ContextViewer,
+  contextDepartmentScope,
   Department,
   DepartmentDocument,
+  isContextEntryVisible,
 } from '@platform/database';
 
 export interface OrgEntry {
   label: string;
   text: string;
+  /** Department name, for department-scoped entries. */
+  department?: string;
 }
 export interface OrgProfile {
   jobTitle: string;
@@ -27,7 +31,10 @@ export interface OrgContext {
   departmentNames: string[];
   profile: OrgProfile | null;
   companyEntries: OrgEntry[];
+  /** Entries of the departments the user belongs to or leads. */
   departmentEntries: OrgEntry[];
+  /** Entries of other departments — only Owner/Admin (MANAGE_AI_CONTEXT) get these. */
+  otherDepartmentEntries?: OrgEntry[];
 }
 
 const EMPTY: OrgContext = {
@@ -90,10 +97,12 @@ export class AiContextReaderService {
     return `${input.userId}|${input.role ?? ''}|${[...input.perms].sort().join(',')}|${[...input.departmentIds].sort().join(',')}`;
   }
 
-  private gate(perms: string[], cap: Capability | null | undefined): boolean {
-    return cap == null || perms.includes(cap);
-  }
-
+  /**
+   * Visibility is the shared rule in `@platform/database` (context-visibility):
+   * company entries by capability; department entries for members and the
+   * department's lead (who sees every tier of it), and for Owner/Admin across
+   * every department.
+   */
   private async load(input: {
     userId: string;
     perms: string[];
@@ -101,31 +110,41 @@ export class AiContextReaderService {
     role?: string;
   }): Promise<OrgContext> {
     try {
-      const [profileDoc, companyDocs, deptDocs, deptNameDocs] = await Promise.all([
+      // Every department (name + lead) — a workspace has a handful, and the lead
+      // rule needs them before the department entries can be scoped.
+      const allDepts = (await this.deptModel.find({}).lean().exec()) as any[];
+      const nameOf = new Map(allDepts.map((d) => [String(d._id), String(d.name ?? '')]));
+      const viewer: ContextViewer = {
+        perms: input.perms,
+        departmentIds: input.departmentIds.map(String),
+        ledDepartmentIds: allDepts
+          .filter((d) => d.leadUserId != null && String(d.leadUserId) === input.userId)
+          .map((d) => String(d._id)),
+      };
+      const scope = contextDepartmentScope(viewer);
+      const [profileDoc, companyDocs, deptDocs] = await Promise.all([
         this.userCtxModel.findOne({ userId: input.userId }).lean().exec(),
         this.entryModel.find({ scope: 'company' }).sort({ updatedAt: -1 }).lean().exec(),
-        input.departmentIds.length
+        scope === 'all' || scope.length
           ? this.entryModel
-              .find({ scope: 'department', scopeId: { $in: input.departmentIds } })
+              .find(scope === 'all' ? { scope: 'department' } : { scope: 'department', scopeId: { $in: scope } })
               .sort({ updatedAt: -1 })
               .lean()
               .exec()
           : Promise.resolve([] as AiContextEntry[]),
-        input.departmentIds.length
-          ? this.deptModel.find({ _id: { $in: input.departmentIds } }).lean().exec()
-          : Promise.resolve([] as Department[]),
       ]);
 
       const toEntry = (e: any): OrgEntry => ({
         label: String(e.label ?? ''),
         text: String(e.text ?? ''),
+        ...(e.scope === 'department' ? { department: nameOf.get(String(e.scopeId)) ?? '' } : {}),
       });
+      const mine = new Set([...viewer.departmentIds, ...viewer.ledDepartmentIds]);
+      const visibleDept = (deptDocs as any[]).filter((e) => isContextEntryVisible(e, viewer));
       const p = profileDoc as any;
       return {
         role: input.role,
-        departmentNames: (deptNameDocs as any[])
-          .map((d) => String(d.name ?? ''))
-          .filter(Boolean),
+        departmentNames: viewer.departmentIds.map((id) => nameOf.get(id) ?? '').filter(Boolean),
         profile: p
           ? {
               jobTitle: String(p.jobTitle ?? ''),
@@ -134,12 +153,9 @@ export class AiContextReaderService {
               preferences: String(p.preferences ?? ''),
             }
           : null,
-        companyEntries: (companyDocs as any[])
-          .filter((e) => this.gate(input.perms, e.requiredCapability))
-          .map(toEntry),
-        departmentEntries: (deptDocs as any[])
-          .filter((e) => this.gate(input.perms, e.requiredCapability))
-          .map(toEntry),
+        companyEntries: (companyDocs as any[]).filter((e) => isContextEntryVisible(e, viewer)).map(toEntry),
+        departmentEntries: visibleDept.filter((e) => mine.has(String(e.scopeId))).map(toEntry),
+        otherDepartmentEntries: visibleDept.filter((e) => !mine.has(String(e.scopeId))).map(toEntry),
       };
     } catch (err) {
       this.logger.warn(`Org-context read failed for ${input.userId}: ${(err as Error).message}`);

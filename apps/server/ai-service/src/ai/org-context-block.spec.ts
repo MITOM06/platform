@@ -1,5 +1,7 @@
 import { formatOrgContextBlock } from './org-context-block';
 
+const MIN_STUB = 100;
+
 const base = {
   role: 'Manager',
   departmentNames: ['Engineering'],
@@ -33,6 +35,44 @@ describe('formatOrgContextBlock', () => {
     const huge = { ...base, companyEntries: [{ label: 'X', text: 'y'.repeat(10000) }] };
     const out = formatOrgContextBlock(huge, 500);
     expect(out.length).toBeLessThanOrEqual(500);
+  });
+
+  describe('department notes vs a long company section', () => {
+    const long = (n: number) => Array.from({ length: n }, (_, i) => ({ label: `C${i}`, text: 'z'.repeat(400) }));
+
+    it("puts the user's own department before the company context", () => {
+      const out = formatOrgContextBlock({ ...base, profile: null }, 4000);
+      expect(out.indexOf('Ship P2 this week.')).toBeLessThan(out.indexOf('Build the best assistant.'));
+    });
+
+    it("labels department entries; other departments' notes are titles only, read via the tool", () => {
+      const out = formatOrgContextBlock(
+        {
+          ...base, profile: null,
+          departmentEntries: [{ label: 'Sprint', text: 'Ship P2 this week.', department: 'Engineering' }],
+          otherDepartmentEntries: [{ label: 'Discounts', text: 'max 15%', department: 'Sales' }],
+        },
+        4000,
+      );
+      expect(out).toContain('- [Engineering] Sprint: Ship P2 this week.');
+      expect(out).toContain('- [Sales] Discounts');
+      expect(out).not.toContain('max 15%');
+      expect(out).toContain('get_department_context');
+    });
+
+    it('a long company section no longer pushes the department notes out', () => {
+      const out = formatOrgContextBlock({ ...base, profile: null, companyEntries: long(20) }, 2000);
+      expect(out.length).toBeLessThanOrEqual(2000);
+      expect(out).toContain('Ship P2 this week.');
+      expect(out).toMatch(/\(\d+ more context note\(s\) omitted for length\.\)/);
+    });
+
+    it('keeps whole entries: no entry is cut to a tiny stub', () => {
+      const out = formatOrgContextBlock({ ...base, profile: null, companyEntries: long(20) }, 2000);
+      for (const line of out.split('\n').filter((l) => l.startsWith('- C'))) {
+        expect(line.length).toBeGreaterThanOrEqual(MIN_STUB);
+      }
+    });
   });
 
   describe('profile fields are data, not instructions', () => {

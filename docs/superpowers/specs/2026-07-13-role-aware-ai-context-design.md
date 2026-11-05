@@ -113,7 +113,19 @@ preset-roles note that Manager's "own dept" authority is not a workspace-wide ca
 
 ### 4.2 Read/visibility (which entries feed user U's prompt)
 - Company entry: include iff `requiredCapability == null` OR U's `perms` contains it.
-- Department entry: include iff U ∈ that department AND (`requiredCapability == null` OR U holds it).
+- Department entry (revised 2026-11-05 — leaders were locked out, see below): in scope iff U ∈ that
+  department, OR U leads it (`Department.leadUserId`), OR U holds `MANAGE_AI_CONTEXT` (Owner/Admin —
+  leadership sees every department). Tier: `requiredCapability == null` OR U holds it OR U leads
+  that department (a lead sees every tier of their own department, never of another).
+  - Prompt: U's own/led departments' entries in full; other departments' entries (Owner/Admin) as
+    **titles only** — the text is read on demand with the `get_department_context` tool, which applies
+    the same rule. Order inside the capped block: identity → own department → company → other titles;
+    whole entries, the rest counted in an "omitted" note. Cap `AI_CONTEXT_BLOCK_MAX_CHARS`, default 6000.
+  - Single source of the rule: `packages/database/src/rbac/context-visibility.ts`, used by ai-service
+    (prompt + tool) and auth-service (`GET /ai-context/me` viewer).
+  - Why: with the Manager preset gone, department leads are Members, so a department's confidential
+    note was visible to nobody; and an Owner outside a department got none of its notes. The old 2000
+    char cap also let a normal company section crowd every department note out of the prompt.
 - User context: U's own doc is always included for U.
 
 ## 5. Service Ownership (Approach A — split by authority)
