@@ -4,7 +4,8 @@
 #
 #   ./scripts/dev/up.sh                 # start everything (build only if image missing)
 #   ./scripts/dev/up.sh --build         # force-rebuild the 4 backend images first
-#   ./scripts/dev/up.sh --seed          # (re)seed the fake test data
+#   ./scripts/dev/up.sh --seed          # (re)seed the fake test data (company NovaTech)
+#   ./scripts/dev/up.sh --seed-lumen    # (re)seed the demo company Lumen Software instead
 #   ./scripts/dev/up.sh --no-web        # backends only, don't start the Next.js dev server
 #   ./scripts/dev/up.sh --phone         # run the Flutter app on a real phone over the LAN
 #   ./scripts/dev/up.sh --flutter       # ...or on an iOS simulator (heavier on the Mac)
@@ -23,11 +24,12 @@ for arg in "$@"; do
   case "$arg" in
     --build)   DO_BUILD=1 ;;
     --seed)    DO_SEED=1 ;;
+    --seed-lumen) DO_SEED=2 ;;
     --no-web)  DO_WEB=0 ;;
     --flutter) DO_FLUTTER=1 ;;
     --phone)   DO_PHONE=1 ;;
     --sso)     DO_SSO=1 ;;
-    -h|--help) sed -n '3,13p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '3,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown flag: $arg (try --help)" >&2; exit 2 ;;
   esac
 done
@@ -270,7 +272,7 @@ if [ "$DO_SSO" = 1 ]; then
 fi
 
 # ------------------------------------------------------------------- seed
-if [ "$DO_SEED" = 1 ]; then
+if [ "$DO_SEED" != 0 ]; then
   step "Seeding fake test data"
   node "$ROOT/scripts/dev/seed-users.js"
   # --eval with the whole file, NOT `< file`: piping into stdin puts mongosh in
@@ -281,7 +283,16 @@ if [ "$DO_SEED" = 1 ]; then
     --eval "$(cat "$ROOT/scripts/dev/seed-chat.js")"
   # After seed-chat: its clean slate deletes every conversation dev is in,
   # including the company's — this re-creates them.
-  node "$ROOT/scripts/dev/seed-company/index.js"
+  if [ "$DO_SEED" = 2 ]; then
+    # Lumen Software (demo company, 6 months of history). Not together with
+    # NovaTech: both rename the single workspace. Remove NovaTech first so the
+    # workspace holds one company only.
+    node "$ROOT/scripts/dev/seed-company/index.js" --reset
+    node "$ROOT/scripts/dev/seed-lumen/index.js"
+  else
+    node "$ROOT/scripts/dev/seed-lumen/index.js" --reset   # no-op if Lumen was never seeded
+    node "$ROOT/scripts/dev/seed-company/index.js"
+  fi
   ok "seeded"
 fi
 

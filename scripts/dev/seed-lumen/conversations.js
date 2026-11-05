@@ -36,8 +36,8 @@ const CONVERSATIONS = [
       { from: 'minh', text: 'RetailOS pilot tại Minh Châu Gò Vấp đã lên từ sáng nay. Ca đầu tiên bán 212 đơn, không sự cố 🙌', ago: 41 * D, react: { '🔥': ['khang', 'dung', 'tuan', 'lananh', 'huy', 'phuoc', 'vinh'] } },
       { from: 'khang', text: 'Kết quả Q3: doanh thu 1,52 tỷ, vượt kế hoạch 9%. Thưởng dự án sẽ chi cùng lương tháng 10. Cảm ơn tất cả mọi người! 👏', ago: 4 * D, react: { '🔥': ['minh', 'huy', 'lananh', 'giang', 'tuan', 'dung', 'tri'], '👏': ['oanh', 'ha', 'uyen', 'nhung', 'trang'] } },
       { from: 'khang', type: 'image', file: 'revenueChart', ago: 4 * D - 1 },
-      { from: 'oanh', text: 'Team building cuối năm: Vũng Tàu 6–7/12. Điền form đăng ký phòng trước thứ 6 tuần này nhé 🏖️', ago: 26 * H, react: { '😍': ['duyen', 'uyen', 'hang', 'linh'] } },
-      { from: 'dung', text: 'Thứ 3 28/10 là ngày go-live Minh Châu. Phòng RetailOS được ưu tiên, các phòng khác hạn chế đặt họp với team RetailOS trong ngày đó.', ago: 3 * H, pin: true },
+      { from: 'oanh', text: 'Team building cuối năm: Vũng Tàu 5–6/12. Điền form đăng ký phòng trước thứ 6 tuần này nhé 🏖️', ago: 26 * H, react: { '😍': ['duyen', 'uyen', 'hang', 'linh'] } },
+      { from: 'dung', text: 'Thứ 4 28/10 là ngày go-live Minh Châu. Phòng RetailOS được ưu tiên, các phòng khác hạn chế đặt họp với team RetailOS trong ngày đó.', ago: 3 * H, pin: true },
     ],
   },
 
@@ -66,7 +66,7 @@ const CONVERSATIONS = [
       { from: 'system', type: 'system', text: 'system.call.ended:video:3720', ago: 6 * D + 2 * H },
       { from: 'minh', text: 'Kế hoạch go-live 28/10: cài POS đợt 1 (6 siêu thị) ngày 26, đợt 2 ngày 27. Mình và Bảo trực tại Gò Vấp. Hotline P1 gọi mình.', ago: 2 * D, pin: true },
       { from: 'vinh', text: 'Báo cáo tồn kho theo ca đã tối ưu, từ 6 giây xuống 1,2 giây. Deploy staging rồi.', ago: 20 * H },
-      { from: 'phuoc', text: 'Hóa đơn 58mm đã căn lại lề, in thử ở Gò Vấp ok.', ago: 18 * H },
+      { from: 'phuoc', text: 'Hóa đơn 58mm đã căn lại lề, in thử ở Gò Vấp ok.', ago: 6 * H },
       { from: 'khang', text: 'Tốt lắm team. Ngày mai demo go-live với Minh Châu lúc 14:00, Minh chuẩn bị kịch bản 15 phút nhé.', ago: 4 * H, react: { '👍': ['minh', 'nhung'] } },
     ],
   },
@@ -107,9 +107,9 @@ const CONVERSATIONS = [
     messages: [
       { from: 'khang', text: 'Báo cáo doanh thu Q3 từ Giang, mình nạp vào KB nhóm để hỏi nhanh khi cần.', ago: 5 * D },
       { from: 'khang', type: 'file', file: 'revenueCsv', ago: 5 * D - 1, pin: true },
-      { from: 'khang', text: 'Họp BGĐ tháng 10 sáng thứ 5, gọi video nhé.', ago: 4 * D },
-      { from: 'system', type: 'system', text: 'system.call.ended:video:3480', ago: 3 * D + 5 * H },
-      { from: 'ai', type: 'meeting_summary', ago: 3 * D + 5 * H - 1, text: meeting({
+      { from: 'khang', text: 'Họp BGĐ tháng 10 sáng mai (thứ 6) 9:00, gọi video nhé.', ago: 4 * D },
+      { from: 'system', type: 'system', text: 'system.call.ended:video:3480', ago: 3 * D + 8 * H + 30 - 58 },
+      { from: 'ai', type: 'meeting_summary', ago: 3 * D + 8 * H + 30 - 59, text: meeting({
         attendees: ['Trần Phúc Khang', 'Nguyễn Hoàng Dũng', 'Hoàng Anh Tuấn', 'Nguyễn Thị Hương Giang'], durationSec: 3480,
         overview: 'Họp BGĐ tháng 10: chốt kết quả Q3 (1,52 tỷ, +9%), kế hoạch go-live Minh Châu 28/10, ngân sách tuyển dụng Q4 và chuẩn bị gọi vốn seed.',
         keyPoints: ['Doanh thu Q3 1,52 tỷ, vượt kế hoạch 9%', 'UAT Minh Châu pass 118/120, còn 2 lỗi P2 đã có fix', 'Tuyển 2 backend FleetPro + 1 designer trong Q4', 'Gặp 2 quỹ đầu tư trong tháng 11'],
@@ -150,6 +150,39 @@ const CONVERSATIONS = [
   },
 
   // -------------------------------------------------------------- cross-dept
+  // -------------------------------------------------------------- Marketing
+  {
+    key: 'mkt', type: 'group', name: '#marketing', dept: 'mkt',
+    members: ['ha', 'uyen', 'hau', 'tmember', 'khang', 'lananh'], admins: ['ha'], createdBy: 'ha', start: 175 * D, unread: 1,
+    messages: [
+      { from: 'system', type: 'system', text: 'system.group.created', ago: 175 * D },
+      { from: 'ha', text: 'Kênh của phòng Marketing. Lịch nội dung, số liệu kênh và tài liệu thương hiệu để ở đây. Kế hoạch Q4 mình nạp vào KB, hỏi @AI khi cần.', ago: 175 * D - 2, pin: true },
+      { from: 'ha', type: 'file', file: 'mktPlan', ago: 33 * D, pin: true },
+      { from: 'uyen', text: 'Bài case study RetailOS × Minh Châu bản nháp 2 xong rồi chị, chờ anh Phát duyệt trích dẫn.', ago: 9 * D, id: 'cs' },
+      { from: 'ha', text: 'Ok em. Có duyệt thì đăng ngay sau go-live, đừng đăng trước 28/10.', ago: 9 * D - 6, reply: 'cs' },
+      { from: 'hau', text: 'Chạy thử quảng cáo LinkedIn nhắm chủ chuỗi bán lẻ: 3 ngày, CPC 9.800đ, 6 lead điền form.', ago: 4 * D, react: { '🔥': ['ha', 'lananh'] } },
+      { from: 'lananh', text: '6 lead đó Kinh doanh nhận nhé, Đạt gọi trong tuần.', ago: 4 * D - 20 },
+      { from: 'ha', text: '@AI ngân sách quảng cáo Q4 còn bao nhiêu sau đợt LinkedIn?', ago: 3 * D, mention: ['ai'] },
+      ai('Theo **Ke-hoach-Marketing-Q4-2026.md**: ngân sách quảng cáo Q4 là **60 triệu**, đã chi **18 triệu** (Facebook 12 triệu, LinkedIn 6 triệu) → **còn 42 triệu**. Kế hoạch giữ 25 triệu cho Vietnam Retail Expo tháng 12.\n\nNguồn: Ke-hoach-Marketing-Q4-2026.md', 3 * D, { tool: 'search_knowledge_base', input: 'ngân sách quảng cáo Q4 còn lại', result: '1 đoạn từ Ke-hoach-Marketing-Q4-2026.md' }),
+      { from: 'uyen', text: 'Ảnh chụp tại Gò Vấp hôm go-live em xin phép chụp quầy thu ngân, đã hỏi chị Thảo bên Minh Châu.', ago: 5 * H },
+    ],
+  },
+
+  // -------------------------------------------------------------- Kế toán
+  {
+    key: 'fin', type: 'group', name: '#ke-toan', dept: 'fin',
+    members: ['giang', 'phongne', 'dung', 'khang'], admins: ['giang'], createdBy: 'giang', start: 180 * D,
+    messages: [
+      { from: 'system', type: 'system', text: 'system.group.created', ago: 180 * D },
+      { from: 'giang', text: 'Kênh Kế toán: chứng từ, thanh toán, lương và thuế. Quy chế chi tiêu mình nạp KB, các phòng hỏi @AI trước khi hỏi mình nhé.', ago: 180 * D - 3, pin: true },
+      { from: 'giang', type: 'file', file: 'finPolicy', ago: 120 * D, pin: true },
+      { from: 'dung', text: 'Chi phí thiết bị T1 cho đợt mở rộng 180 xe ghi vào giá vốn dự án FleetPro hay tài sản công ty?', ago: 12 * D, id: 'capex' },
+      { from: 'giang', text: 'Thiết bị lắp cho khách, khách trả tiền theo hợp đồng → giá vốn dự án FleetPro. Thiết bị mẫu ở lab mới ghi tài sản.', ago: 12 * D - 25, reply: 'capex' },
+      { from: 'phongne', text: 'Đối chiếu công nợ Q3 xong: Minh Châu đã thanh toán đủ đợt 2, Sao Đỏ còn 95 triệu chưa đến hạn.', ago: 6 * D },
+      { from: 'giang', text: 'Chốt chi phí tháng 10 ngày 25 đã xong, lương trả ngày 5/11 như thường lệ.', ago: 23 * H, react: { '👍': ['dung', 'khang'] } },
+    ],
+  },
+
   {
     key: 'minhchau', type: 'group', name: 'Dự án Minh Châu — go-live',
     members: ['minh', 'nhung', 'bao', 'phuoc', 'lananh', 'dat', 'khang', 'tuan'], admins: ['minh', 'lananh'], createdBy: 'minh', start: 10 * D, unread: 2,
@@ -167,9 +200,9 @@ const CONVERSATIONS = [
     key: 'lunch', type: 'group', name: 'Hội ăn trưa 🍜',
     members: ['han', 'duyen', 'tung', 'tri', 'linh', 'uyen', 'hang', 'nam', 'minh'], admins: ['han'], createdBy: 'han', start: 100 * D, mutedFor: ['minh'], unread: 3,
     messages: [
-      { from: 'han', text: 'Trưa nay ăn gì mọi người?', ago: 3 * H },
-      { from: 'tung', text: 'Cơm tấm Phúc Lộc Thọ!', ago: 3 * H - 2, react: { '😋': ['duyen', 'nam'] } },
-      { from: 'tri', text: 'Bún bò đi, hôm qua cơm tấm rồi 😂', ago: 3 * H - 4 },
+      { from: 'han', text: 'Trưa nay ăn gì mọi người?', ago: 6 * H + 15 },
+      { from: 'tung', text: 'Cơm tấm Phúc Lộc Thọ!', ago: 6 * H + 13, react: { '😋': ['duyen', 'nam'] } },
+      { from: 'tri', text: 'Bún bò đi, hôm qua cơm tấm rồi 😂', ago: 6 * H + 11 },
       { from: 'uyen', text: 'Mình đặt trà sữa, ai lấy thì reply nha 🧋', ago: 2 * H },
       { from: 'linh', text: '1 trà sữa ít đường!', ago: 2 * H - 1 },
       { from: 'hang', text: '+1 ít đá', ago: 2 * H - 2 },
@@ -333,8 +366,8 @@ const CONVERSATIONS = [
   {
     key: 'dm-khang-ai', type: 'direct', members: ['khang', 'ai'], start: 120 * D, kb: ['revenueCsv', 'pricing', 'handbook', 'contract'], kbBy: 'khang',
     messages: [
-      { from: 'khang', text: 'Nhắc mình 8:30 sáng thứ 3 qua Minh Châu Gò Vấp cùng Tuấn.', ago: 3 * D },
-      ai('Đã tạo nhắc nhở: **Qua Minh Châu Gò Vấp cùng Tuấn** — 8:30 sáng thứ 3 (28/10). Mình sẽ báo bạn đúng giờ. ⏰', 3 * D, { tool: 'create_reminder', input: 'Qua Minh Châu Gò Vấp cùng Tuấn @ thứ 3 8:30', result: 'reminder created' }),
+      { from: 'khang', text: 'Nhắc mình 8:30 sáng thứ 4 qua Minh Châu Gò Vấp cùng Tuấn.', ago: 3 * D },
+      ai('Đã tạo nhắc nhở: **Qua Minh Châu Gò Vấp cùng Tuấn** — 8:30 sáng thứ 4 (28/10). Mình sẽ báo bạn đúng giờ. ⏰', 3 * D, { tool: 'create_reminder', input: 'Qua Minh Châu Gò Vấp cùng Tuấn @ thứ 4 8:30', result: 'reminder created' }),
       { from: 'khang', text: 'Tóm tắt giúp mình doanh thu Q3 theo khách hàng.', ago: 2 * D },
       ai('Theo **Bao-cao-doanh-thu-Q3-2026.csv**:\n\n- **Minh Châu (RetailOS):** 1.210 triệu — phí triển khai 2 đợt + pilot Gò Vấp.\n- **Sao Đỏ (FleetPro):** 285 triệu — thiết bị T1 cho 50 xe + pilot tháng 9.\n- **Tạp hóa Xanh (Starter):** 27 triệu — 2 cửa hàng.\n\n**Tổng Q3: 1.522 triệu**, trong đó RetailOS chiếm 79%.', 2 * D, { tool: 'search_knowledge_base', input: 'doanh thu Q3 theo khách hàng', result: '7 dòng từ Bao-cao-doanh-thu-Q3-2026.csv' }),
     ],
@@ -368,15 +401,20 @@ const FRIENDSHIPS = [
   ['uyen', 'khang', 'pending'], ['thuong', 'minh', 'pending'],
 ];
 
-// Reminders (inMins from now; negative = past).
+// Reminders (inMins from the story's now; negative = past). Story reminders the
+// real clock has already passed are stored as done. `real: true` = relative to
+// the REAL clock, so there are always a few open reminders.
 const REMINDERS = [
-  { user: 'khang', conv: 'dm-khang-ai', text: 'Qua Minh Châu Gò Vấp cùng Tuấn', inMins: D + 10 * H },
-  { user: 'khang', conv: 'dm-khang-ai', text: 'Gửi lịch gặp quỹ cho Giang', inMins: 5 * H },
+  { user: 'khang', conv: 'dm-khang-ai', text: 'Duyệt bảng lương tháng', inMins: 20 * H, real: true },
+  { user: 'minh', conv: 'dm-minh-ai', text: 'Gửi báo cáo tuần RetailOS cho anh Khang', inMins: D + 2 * H, real: true },
+  { user: 'tri', conv: 'dm-tri-ai', text: 'Đẩy bản app tài xế mới lên kênh phân phối nội bộ', inMins: 2 * D, real: true },
+  { user: 'khang', conv: 'dm-khang-ai', text: 'Qua Minh Châu Gò Vấp cùng Tuấn', inMins: 39 * H },
+  { user: 'khang', conv: 'dm-khang-ai', text: 'Gửi lịch gặp quỹ cho Giang', inMins: 16 * H },
   { user: 'khang', conv: 'dm-khang-ai', text: 'Duyệt ngân sách tuyển dụng Q4', inMins: -2 * D, done: true },
-  { user: 'minh', conv: 'dm-minh-ai', text: 'Mở phòng họp demo go-live', inMins: D + 3 * H },
+  { user: 'minh', conv: 'dm-minh-ai', text: 'Mở phòng họp demo go-live', inMins: 20 * H },
   { user: 'minh', conv: 'dm-minh-ai', text: 'Kiểm tra POS đợt 2 (6 siêu thị)', inMins: 20 * H },
-  { user: 'tri', conv: 'dm-tri-ai', text: 'Build app tài xế v0.9 cho review thứ 4', inMins: 2 * D + 2 * H },
-  { user: 'huy', conv: 'fleet', text: 'Gửi anh Tài báo cáo tuần pilot', inMins: 8 * H },
+  { user: 'tri', conv: 'dm-tri-ai', text: 'Build app tài xế v0.9 cho review thứ 4', inMins: 41 * H + 30 },
+  { user: 'huy', conv: 'fleet', text: 'Gửi anh Tài báo cáo tuần pilot', inMins: 16 * H },
 ];
 
 // Per-conversation AI memory summaries (ai_memories, shown on the memory screen).

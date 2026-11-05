@@ -52,7 +52,7 @@ HR: Phùng Thị Kim Oanh (oanh.phung@lumensoft.vn). Vận hành: Nguyễn Hoàn
 function orgChartMd() {
   const byKey = Object.fromEntries(org.PEOPLE.map((p) => [p.key, p]));
   const sections = org.DEPARTMENTS.map((d) => {
-    const people = org.PEOPLE.filter((p) => p.depts.includes(d.key)).map((p) => `- ${p.name} — ${p.title}`);
+    const people = org.PEOPLE.filter((p) => p.status !== 'blocked' && p.depts.includes(d.key)).map((p) => `- ${p.name} — ${p.title}`);
     // Existing accounts: the seed knows their title but not always their name
     // (team members' Google logins) — strip the seed's own notes from the title.
     const existing = org.EXISTING_ACCOUNTS.filter((p) => p.depts.includes(d.key));
@@ -200,6 +200,57 @@ Tham dự: Trần Phúc Khang (CEO), Hoàng Anh Tuấn (CTO), Đặng Quốc Huy
 - Hải: ingest MQTT + TimescaleDB trước 30/06.
 - Trí: app tài xế bản alpha (nhận chuyến, chấm công) trước 31/07.
 - Trang: tài liệu yêu cầu chi tiết và danh sách 50 xe pilot trước 25/05.
+`;
+
+const MKT_PLAN = `# Kế hoạch Marketing Q4/2026 — Lumen Software
+
+## Mục tiêu
+- 40 lead đủ điều kiện cho Kinh doanh (chủ chuỗi bán lẻ 5+ cửa hàng, doanh nghiệp vận tải 30+ xe).
+- Đăng case study RetailOS × Minh Châu sau go-live 28/10.
+- Gian hàng tại Vietnam Retail Expo (tháng 12).
+
+## Ngân sách
+| Hạng mục | Ngân sách | Đã chi (đến 23/10) |
+|---|---|---|
+| Quảng cáo Facebook | 25 triệu | 12 triệu |
+| Quảng cáo LinkedIn | 10 triệu | 6 triệu |
+| Vietnam Retail Expo | 25 triệu | 0 |
+| **Tổng quảng cáo & sự kiện** | **60 triệu** | **18 triệu** |
+
+## Lịch nội dung
+- Thứ 3: case study / câu chuyện khách hàng.
+- Thứ 5: video demo tính năng (RetailOS, FleetPro).
+- Thứ 7: bài tuyển dụng, văn hóa công ty.
+
+## Phân công
+- Mai Thanh Hà: chiến lược, ngân sách, sự kiện.
+- Lê Phương Uyên: nội dung blog, case study, fanpage.
+- Growth Marketer: quảng cáo trả phí, đo lường lead.
+`;
+
+const FIN_POLICY = `# Quy chế chi tiêu nội bộ — Lumen Software 2026
+
+## Thẩm quyền duyệt chi
+- Dưới 5 triệu: trưởng phòng duyệt.
+- 5–50 triệu: COO (Nguyễn Hoàng Dũng) duyệt.
+- Trên 50 triệu: CEO (Trần Phúc Khang) duyệt.
+
+## Chứng từ
+- Mọi khoản chi phải có hóa đơn VAT hợp lệ ghi tên Công ty TNHH Lumen Software.
+- Hóa đơn đầu vào gửi Kế toán trước ngày 28 hằng tháng; chốt chi phí ngày 25.
+- Tạm ứng công tác hoàn ứng trong 7 ngày làm việc sau chuyến đi.
+
+## Công tác phí
+- Trong TP.HCM: taxi/Grab theo thực tế, giữ hóa đơn điện tử.
+- Ngoại tỉnh: khách sạn tối đa 1.200.000đ/đêm, phụ cấp ăn 300.000đ/ngày.
+
+## Thiết bị
+- Thiết bị lắp cho khách theo hợp đồng ghi vào giá vốn dự án.
+- Laptop, thiết bị mẫu, thiết bị lab ghi tài sản công ty, khấu hao 3 năm.
+
+## Lương & thuế
+- Trả lương ngày 5 hằng tháng.
+- Báo cáo thuế quý nộp trước ngày 30 tháng đầu quý sau.
 `;
 
 const REVENUE_CSV = `Thang,Khach hang,San pham,Doanh thu (trieu VND),Ghi chu
@@ -392,6 +443,8 @@ async function buildFiles() {
     contract: { name: 'Hop-dong-LM-MC-2026-001-RetailOS-Minh-Chau.pdf', mime: 'application/pdf', buf: CONTRACT, kb: true },
     kickoff: { name: 'Bien-ban-kickoff-FleetPro-2026-05-12.md', mime: 'text/markdown', buf: txt(KICKOFF), kb: true },
     revenueCsv: { name: 'Bao-cao-doanh-thu-Q3-2026.csv', mime: 'text/csv', buf: txt(REVENUE_CSV), kb: true },
+    mktPlan: { name: 'Ke-hoach-Marketing-Q4-2026.md', mime: 'text/markdown', buf: txt(MKT_PLAN), kb: true },
+    finPolicy: { name: 'Quy-che-chi-tieu-noi-bo-2026.md', mime: 'text/markdown', buf: txt(FIN_POLICY), kb: true },
     onboarding: { name: 'Quy-trinh-onboarding.txt', mime: 'text/plain', buf: txt(ONBOARDING), kb: true },
     revenueChart: { name: 'doanh-thu-q3-2026.png', mime: 'image/png', buf: await prebuilt('revenueChart', revenueChartPng), image: true },
     posScreen: { name: 'retailos-pos-v2-go-vap.png', mime: 'image/png', buf: await prebuilt('posScreen', posScreenPng), image: true },
