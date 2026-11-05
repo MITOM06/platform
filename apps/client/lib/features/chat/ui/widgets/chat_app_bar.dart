@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../ai_hub/ui/widgets/ai_thread_item.dart';
+import '../../../ai_hub/ui/widgets/ai_thread_list.dart';
+import '../../../ai_hub/domain/ai_threads_provider.dart';
+import '../../../../core/utils/global_messenger.dart';
 import '../../../home/domain/home_providers.dart';
 import '../../../profile/ui/widgets/user_profile_dialog.dart';
 import '../../domain/chat_provider.dart';
@@ -61,7 +65,7 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
     final displayName = isGroup
         ? (conv?.name ?? context.l10n.conversationDefault)
         : isAiConversation
-            ? context.l10n.aiAssistant
+            ? (conv != null ? aiThreadTitle(context, conv) : context.l10n.aiAssistant)
             : (dmNickname != null && dmNickname.isNotEmpty
                 ? dmNickname
                 : (resolvedName ?? context.l10n.chatDefaultTitle));
@@ -90,6 +94,9 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
           onPressed: () {
             if (MediaQuery.of(context).size.width >= kWebBreakpoint) {
               ref.read(selectedConversationIdProvider.notifier).state = null;
+            } else if (isAiConversation) {
+              // AI threads are opened with go() (replace): back = the AI hub.
+              context.go('/ai-hub');
             } else {
               context.pop();
             }
@@ -172,6 +179,39 @@ class ChatScreenAppBar extends ConsumerWidget implements PreferredSizeWidget {
         ),
         actions: [
           if (isAiConversation) ...[
+            IconButton(
+              tooltip: context.l10n.aiThreadNew,
+              icon: const Icon(Icons.add_comment_outlined, size: 22),
+              onPressed: () async {
+                final router = GoRouter.of(context);
+                final failed = context.l10n.aiThreadCreateFailed;
+                try {
+                  final c = await ref.read(aiThreadsProvider.notifier).create();
+                  router.go('/chat/${c.id}');
+                } catch (_) {
+                  showErrorSnackBar(failed);
+                }
+              },
+            ),
+            IconButton(
+              tooltip: context.l10n.aiThreadsTitle,
+              icon: const Icon(Icons.forum_outlined, size: 22),
+              onPressed: () => showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                showDragHandle: true,
+                builder: (sheetCtx) => SafeArea(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                        maxHeight: MediaQuery.of(sheetCtx).size.height * 0.7),
+                    child: AiThreadList(
+                      openId: conversationId,
+                      onNavigate: () => Navigator.of(sheetCtx).pop(),
+                    ),
+                  ),
+                ),
+              ),
+            ),
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert_rounded, size: 22),
               onSelected: (value) {

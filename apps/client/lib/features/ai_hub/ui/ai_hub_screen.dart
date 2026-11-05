@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../domain/ai_threads_provider.dart';
 import 'widgets/ai_hub_tile.dart';
+import 'widgets/ai_thread_list.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../../chat/utils/chat_error.dart';
 
@@ -58,7 +59,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
         title: Text(l10n.aiHubTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => context.pop(),
+          onPressed: () => context.canPop() ? context.pop() : context.go('/'),
         ),
       ),
       body: SafeArea(
@@ -79,6 +80,14 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
               _HeroCard(loading: _startingChat, onTap: _onStartChat),
               const SizedBox(height: 20),
               _HubGrid(),
+              const SizedBox(height: 20),
+              Text(
+                l10n.aiThreadsTitle,
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 4),
+              const AiThreadList(),
             ],
           ),
         ),

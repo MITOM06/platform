@@ -5899,47 +5899,95 @@ abstract class AppLocalizations {
   /// **'Leave without saving'**
   String get leaveWithoutSaving;
 
-  /// No description provided for @aiSessionHistory.
+  /// No description provided for @aiThreadUntitled.
   ///
   /// In en, this message translates to:
-  /// **'Conversation history'**
-  String get aiSessionHistory;
+  /// **'Chat with AI'**
+  String get aiThreadUntitled;
 
-  /// No description provided for @aiNewSession.
+  /// No description provided for @aiThreadNew.
   ///
   /// In en, this message translates to:
   /// **'New conversation'**
-  String get aiNewSession;
+  String get aiThreadNew;
 
-  /// No description provided for @aiSessionActive.
+  /// No description provided for @aiThreadsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Active'**
-  String get aiSessionActive;
+  /// **'Conversations'**
+  String get aiThreadsTitle;
 
-  /// No description provided for @aiSessionSummarized.
+  /// No description provided for @aiThreadRename.
   ///
   /// In en, this message translates to:
-  /// **'Summarized'**
-  String get aiSessionSummarized;
+  /// **'Rename'**
+  String get aiThreadRename;
 
-  /// No description provided for @aiSessionEmpty.
+  /// No description provided for @aiThreadSave.
   ///
   /// In en, this message translates to:
-  /// **'No previous conversations'**
-  String get aiSessionEmpty;
+  /// **'Save'**
+  String get aiThreadSave;
 
-  /// No description provided for @aiSessionResume.
+  /// No description provided for @aiThreadCancel.
   ///
   /// In en, this message translates to:
-  /// **'Resume'**
-  String get aiSessionResume;
+  /// **'Cancel'**
+  String get aiThreadCancel;
 
-  /// No description provided for @aiSessionLoadError.
+  /// No description provided for @aiThreadDelete.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t load conversation history'**
-  String get aiSessionLoadError;
+  /// **'Delete'**
+  String get aiThreadDelete;
+
+  /// No description provided for @aiThreadDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this conversation?'**
+  String get aiThreadDeleteTitle;
+
+  /// No description provided for @aiThreadDeleteDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'All messages in this AI conversation will be removed from your account. This can\'t be undone.'**
+  String get aiThreadDeleteDesc;
+
+  /// No description provided for @aiThreadEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations yet. Start a new one.'**
+  String get aiThreadEmpty;
+
+  /// No description provided for @aiThreadLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load conversations. Please try again.'**
+  String get aiThreadLoadFailed;
+
+  /// No description provided for @aiThreadCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start a new conversation. Please try again.'**
+  String get aiThreadCreateFailed;
+
+  /// No description provided for @aiThreadRenameFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t rename. Please try again.'**
+  String get aiThreadRenameFailed;
+
+  /// No description provided for @aiThreadNameInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Name must be 1 to 80 characters.'**
+  String get aiThreadNameInvalid;
+
+  /// No description provided for @aiThreadDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the conversation. Please try again.'**
+  String get aiThreadDeleteFailed;
 
   /// No description provided for @multiSelectCount.
   ///

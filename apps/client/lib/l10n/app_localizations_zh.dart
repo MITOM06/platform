@@ -3054,25 +3054,49 @@ class AppLocalizationsZh extends AppLocalizations {
   String get leaveWithoutSaving => '不保存离开';
 
   @override
-  String get aiSessionHistory => '对话历史';
+  String get aiThreadUntitled => '与 AI 聊天';
 
   @override
-  String get aiNewSession => '新对话';
+  String get aiThreadNew => '新对话';
 
   @override
-  String get aiSessionActive => '使用中';
+  String get aiThreadsTitle => '对话';
 
   @override
-  String get aiSessionSummarized => '已摘要';
+  String get aiThreadRename => '重命名';
 
   @override
-  String get aiSessionEmpty => '暂无历史对话';
+  String get aiThreadSave => '保存';
 
   @override
-  String get aiSessionResume => '恢复';
+  String get aiThreadCancel => '取消';
 
   @override
-  String get aiSessionLoadError => '无法加载对话历史';
+  String get aiThreadDelete => '删除';
+
+  @override
+  String get aiThreadDeleteTitle => '删除此对话？';
+
+  @override
+  String get aiThreadDeleteDesc => '此 AI 对话中的所有消息都将从你的账户中移除，且无法撤销。';
+
+  @override
+  String get aiThreadEmpty => '还没有对话。开始一个新的吧。';
+
+  @override
+  String get aiThreadLoadFailed => '无法加载对话，请重试。';
+
+  @override
+  String get aiThreadCreateFailed => '无法创建新对话，请重试。';
+
+  @override
+  String get aiThreadRenameFailed => '无法重命名，请重试。';
+
+  @override
+  String get aiThreadNameInvalid => '名称需为 1 到 80 个字符。';
+
+  @override
+  String get aiThreadDeleteFailed => '无法删除对话，请重试。';
 
   @override
   String multiSelectCount(int count) {

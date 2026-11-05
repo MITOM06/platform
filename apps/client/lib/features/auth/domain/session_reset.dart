@@ -12,7 +12,6 @@ import '../../chat/domain/active_call_provider.dart';
 import '../../chat/domain/ai_actions_provider.dart';
 import '../../chat/domain/ai_memory_provider.dart';
 import '../../chat/domain/ai_persona_provider.dart';
-import '../../chat/domain/ai_session_provider.dart';
 import '../../chat/domain/chat_provider.dart';
 import '../../chat/domain/group_call_signaling.dart';
 import '../../chat/domain/kb_provider.dart';
@@ -71,7 +70,6 @@ void resetSessionState(Ref ref) {
     () => ref.invalidate(assistantProvidersProvider),
     () => ref.invalidate(aiMemoriesProvider),
     () => ref.invalidate(aiPersonaProvider),
-    () => ref.invalidate(aiSessionsProvider),
     () => ref.invalidate(myAiContextProvider),
     () => ref.invalidate(kbDocumentsProvider),
     () => ref.invalidate(aiActionsProvider),

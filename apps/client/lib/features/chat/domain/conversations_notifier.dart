@@ -146,6 +146,16 @@ class ConversationsNotifier extends _$ConversationsNotifier {
 
   /// Hide a conversation locally + on the server.
   Future<void> deleteConversation(String conversationId) async {
+    // AI threads live in aiThreadsProvider only: drop the row there too.
+    if (ref.exists(aiThreadsProvider) &&
+        ref.read(aiThreadsProvider.notifier).contains(conversationId)) {
+      try {
+        await ref.read(aiThreadsProvider.notifier).delete(conversationId);
+      } catch (_) {
+        // aiThreadsProvider already refetched (rolled back) on failure.
+      }
+      return;
+    }
     final current = state.valueOrNull;
     if (current != null) {
       state = AsyncData(

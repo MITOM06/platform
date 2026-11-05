@@ -3201,26 +3201,56 @@ class AppLocalizationsFr extends AppLocalizations {
   String get leaveWithoutSaving => 'Quitter sans enregistrer';
 
   @override
-  String get aiSessionHistory => 'Historique des conversations';
+  String get aiThreadUntitled => 'Discuter avec l\'IA';
 
   @override
-  String get aiNewSession => 'Nouvelle conversation';
+  String get aiThreadNew => 'Nouvelle conversation';
 
   @override
-  String get aiSessionActive => 'Active';
+  String get aiThreadsTitle => 'Conversations';
 
   @override
-  String get aiSessionSummarized => 'Résumée';
+  String get aiThreadRename => 'Renommer';
 
   @override
-  String get aiSessionEmpty => 'Aucune conversation précédente';
+  String get aiThreadSave => 'Enregistrer';
 
   @override
-  String get aiSessionResume => 'Reprendre';
+  String get aiThreadCancel => 'Annuler';
 
   @override
-  String get aiSessionLoadError =>
-      'Impossible de charger l\'historique des conversations';
+  String get aiThreadDelete => 'Supprimer';
+
+  @override
+  String get aiThreadDeleteTitle => 'Supprimer cette conversation ?';
+
+  @override
+  String get aiThreadDeleteDesc =>
+      'Tous les messages de cette conversation avec l\'IA seront supprimés de votre compte. Action irréversible.';
+
+  @override
+  String get aiThreadEmpty =>
+      'Aucune conversation pour le moment. Commencez-en une.';
+
+  @override
+  String get aiThreadLoadFailed =>
+      'Impossible de charger les conversations. Veuillez réessayer.';
+
+  @override
+  String get aiThreadCreateFailed =>
+      'Impossible de créer la conversation. Veuillez réessayer.';
+
+  @override
+  String get aiThreadRenameFailed =>
+      'Impossible de renommer. Veuillez réessayer.';
+
+  @override
+  String get aiThreadNameInvalid =>
+      'Le nom doit comporter entre 1 et 80 caractères.';
+
+  @override
+  String get aiThreadDeleteFailed =>
+      'Impossible de supprimer la conversation. Veuillez réessayer.';
 
   @override
   String multiSelectCount(int count) {

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:platform_client/features/ai_hub/domain/ai_threads_provider.dart';
 import 'package:platform_client/features/chat/data/chat_repository.dart';
 import 'package:platform_client/features/chat/data/stomp_service.dart';
 import 'package:platform_client/features/chat/domain/chat_state.dart';
@@ -71,6 +72,13 @@ ConversationModel _fakeConversation(String id) => ConversationModel(
       unreadCount: 0,
       createdAt: DateTime(2024),
     );
+
+class _FixedAiThreads extends AiThreadsNotifier {
+  _FixedAiThreads(this.initial);
+  final List<ConversationModel> initial;
+  @override
+  Future<List<ConversationModel>> build() async => initial;
+}
 
 void main() {
   late MockChatRepository mockRepo;
@@ -148,6 +156,34 @@ void main() {
     expect(afterDelete!.map((c) => c.id), isNot(contains('conv-B')));
     expect(afterDelete, hasLength(2));
     verify(() => mockRepo.deleteConversation('conv-B')).called(1);
+  });
+
+  test('deleteConversation() on an AI thread also drops it from aiThreadsProvider',
+      () async {
+    final ai = ConversationModel(
+      id: 'ai-1',
+      type: 'direct',
+      participants: const ['me', kAiBotUserId],
+      unreadCount: 0,
+      createdAt: DateTime(2024),
+    );
+    when(() => mockRepo.listConversations()).thenAnswer((_) async => []);
+    when(() => mockRepo.deleteConversation(any())).thenAnswer((_) async {});
+    final c = ProviderContainer(overrides: [
+      chatRepositoryProvider.overrideWithValue(mockRepo),
+      stompServiceProvider.overrideWith(() => FakeStompService()),
+      conversationsNotifierProvider
+          .overrideWith(() => _TestableConversationsNotifier(mockRepo)),
+      aiThreadsProvider.overrideWith(() => _FixedAiThreads([ai])),
+    ]);
+    addTearDown(c.dispose);
+    await c.read(conversationsNotifierProvider.future);
+    await c.read(aiThreadsProvider.future);
+    await c
+        .read(conversationsNotifierProvider.notifier)
+        .deleteConversation('ai-1');
+    expect(c.read(aiThreadsProvider).value, isEmpty);
+    verify(() => mockRepo.deleteConversation('ai-1')).called(1);
   });
 
   // -------------------------------------------------------------------------

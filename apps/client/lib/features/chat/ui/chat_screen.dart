@@ -143,6 +143,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _closeChat() {
     if (MediaQuery.of(context).size.width >= kWebBreakpoint) {
       ref.read(selectedConversationIdProvider.notifier).state = null;
+    } else if (ref
+            .read(conversationProvider(widget.conversationId))
+            ?.isAiConversation ??
+        false) {
+      context.go('/ai-hub');
     } else {
       context.pop();
     }
