@@ -15,6 +15,7 @@ import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.ExternalBotRepository;
 import com.platform.chatservice.repository.FriendshipRepository;
 import com.platform.chatservice.repository.MessageRepository;
+import com.platform.chatservice.service.upload.UploadRefs;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +49,7 @@ class ConversationServiceTest {
   @Mock private MongoTemplate mongoTemplate;
   @Mock private ExternalBotRepository externalBotRepository;
   @Mock private ConversationMembershipCache membershipCache;
+  @Mock private UploadRefs uploadRefs;
 
   private ConversationService conversationService;
 
@@ -71,7 +73,8 @@ class ConversationServiceTest {
             friendshipRepository,
             externalBotRepository,
             support,
-            membershipCache);
+            membershipCache,
+            uploadRefs);
 
     conversation =
         Conversation.builder()
@@ -515,6 +518,39 @@ class ConversationServiceTest {
 
     assertThat(op(updates.getAllValues().get(0), "$set").get("wallpaper")).isEqualTo("preset:x");
     assertThat(op(updates.getAllValues().get(1), "$unset")).containsKey("wallpaper");
+  }
+
+  @Test
+  void updateGroup_avatar_recordsUploadRefOnTheConversation() {
+    Conversation g = group(USER_ID);
+    found(g);
+    updatesReturning(g.toBuilder().avatarUrl("/api/uploads/x").build());
+
+    conversationService.updateGroup(USER_ID, CONV_ID, null, "/api/uploads/x");
+
+    verify(uploadRefs).attachToConversation("/api/uploads/x", CONV_ID);
+  }
+
+  @Test
+  void setWallpaper_recordsUploadRefOnTheConversation() {
+    updatesReturning(conversation.toBuilder().wallpaper("/api/uploads/w").build());
+
+    conversationService.setWallpaper(OTHER_ID, CONV_ID, "/api/uploads/w");
+
+    verify(uploadRefs).attachToConversation("/api/uploads/w", CONV_ID);
+  }
+
+  @Test
+  void createGroup_avatar_recordsUploadRefOnTheNewConversation() {
+    when(conversationCacheService.save(any(Conversation.class)))
+        .thenAnswer(inv -> ((Conversation) inv.getArgument(0)).toBuilder().id("new-conv").build());
+
+    conversationService.createGroup(
+        creator(),
+        new com.platform.chatservice.dto.CreateGroupRequest(
+            "Team", "/api/uploads/g", List.of(OTHER_ID), null));
+
+    verify(uploadRefs).attachToConversation("/api/uploads/g", "new-conv");
   }
 
   @Test

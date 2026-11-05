@@ -8,10 +8,12 @@ import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.FileValidationService;
 import com.platform.chatservice.service.RateLimiterService;
 import com.platform.chatservice.service.VirusScanService;
+import com.platform.chatservice.service.upload.UploadAccessPolicy;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.PushbackInputStream;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +48,7 @@ public class UploadController {
   private final VirusScanService virusScanService;
   private final MediaTokenService mediaTokenService;
   private final UploadReaderResolver uploadReaderResolver;
+  private final UploadAccessPolicy uploadAccessPolicy;
 
   /** When true, {@code GET /{id}} needs a media token, a JWT or the internal key. */
   @Value("${app.uploads.require-auth:false}")
@@ -145,18 +148,29 @@ public class UploadController {
    * application/octet-stream}, and every response carries {@code X-Content-Type-Options: nosniff}
    * plus {@code Content-Security-Policy: sandbox} (except an inline PDF, where a sandboxed document
    * would stop the browser's PDF viewer from loading).
+   *
+   * <p>With {@code app.uploads.require-auth} on: no credential → 401; the internal service key may
+   * read anything; a user must pass {@link UploadAccessPolicy} (else 403), and the response is
+   * {@code Cache-Control: private} so shared caches never keep a per-user answer.
    */
   @GetMapping("/{id}")
   public ResponseEntity<Resource> getFile(
       @PathVariable String id,
       @RequestParam(name = "download", required = false) boolean download,
       HttpServletRequest request) {
-    if (requireAuth && uploadReaderResolver.resolve(request).isEmpty()) {
+    Optional<String> reader =
+        requireAuth ? uploadReaderResolver.resolve(request) : Optional.empty();
+    if (requireAuth && reader.isEmpty()) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
     com.mongodb.client.gridfs.model.GridFSFile gridFSFile = findFile(id);
     if (gridFSFile == null) {
       return ResponseEntity.notFound().build();
+    }
+    if (requireAuth
+        && !UploadReaderResolver.INTERNAL_READER.equals(reader.get())
+        && !uploadAccessPolicy.canRead(gridFSFile, reader.get())) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
     GridFsResource resource = gridFsOperations.getResource(gridFSFile);
@@ -197,6 +211,9 @@ public class UploadController {
               .header("X-Content-Type-Options", "nosniff");
       if (!(inline && "application/pdf".equals(storedType))) {
         response.header("Content-Security-Policy", "sandbox");
+      }
+      if (requireAuth) {
+        response.header(HttpHeaders.CACHE_CONTROL, "private, max-age=86400");
       }
       if (gridFSFile.getLength() >= 0) {
         response.contentLength(gridFSFile.getLength());

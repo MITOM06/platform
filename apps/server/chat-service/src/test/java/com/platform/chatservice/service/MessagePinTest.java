@@ -11,6 +11,7 @@ import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.Message;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
+import com.platform.chatservice.service.upload.UploadRefs;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +36,7 @@ class MessagePinTest {
   @Mock private ClusterMessageBroker clusterBroker;
   @Mock private MessageServiceHelper messageServiceHelper;
   @Mock private ConversationCacheService conversationCacheService;
+  @Mock private UploadRefs uploadRefs;
 
   private MessageService messageService;
   private MessageInteractionService interactionService;
@@ -57,7 +59,8 @@ class MessagePinTest {
             clusterBroker,
             messageMapper,
             mongoTemplate,
-            conversationCacheService);
+            conversationCacheService,
+            uploadRefs);
     messageService =
         new MessageService(
             messageRepository,
@@ -66,7 +69,8 @@ class MessagePinTest {
             messageServiceHelper,
             messageMapper,
             aiMessageService,
-            conversationCacheService);
+            conversationCacheService,
+            uploadRefs);
     interactionService =
         new MessageInteractionService(
             messageRepository,
@@ -110,6 +114,7 @@ class MessagePinTest {
     assertThat(change.message().editedAt()).isNotNull();
     assertThat(change.previewChanged()).isFalse(); // updateFirst unstubbed → preview untouched
     verify(messageRepository, never()).save(any(Message.class));
+    verify(uploadRefs).attachToConversation("Edited text", CONV_ID);
   }
 
   /** Only text can be edited — e.g. a client-sent system notice must not be rewritable. */
@@ -237,6 +242,7 @@ class MessagePinTest {
 
     assertThat(result.conversationId()).isEqualTo(targetConvId);
     assertThat(result.content()).isEqualTo(savedMessage.getContent());
+    verify(uploadRefs).attachToConversation(savedMessage.getContent(), targetConvId);
   }
 
   @Test
@@ -345,6 +351,7 @@ class MessagePinTest {
     assertThat(notice.senderId()).isEqualTo(SENDER_ID);
     assertThat(notice.content()).isEqualTo("system.admin.promoted:" + OTHER_ID);
     assertThat(notice.readBy()).containsExactly(SENDER_ID);
+    verify(uploadRefs).attachToConversation("system.admin.promoted:" + OTHER_ID, CONV_ID);
   }
 
   @Test

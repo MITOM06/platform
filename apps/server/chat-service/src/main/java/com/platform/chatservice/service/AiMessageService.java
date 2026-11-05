@@ -11,6 +11,7 @@ import com.platform.chatservice.model.Message;
 import com.platform.chatservice.model.PendingAction;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
+import com.platform.chatservice.service.upload.UploadRefs;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,7 @@ public class AiMessageService {
   private final MessageMapper messageMapper;
   private final MongoTemplate mongoTemplate;
   private final ConversationCacheService conversationCacheService;
+  private final UploadRefs uploadRefs;
 
   /**
    * Save an AI-generated message (with optional trace) and broadcast it to the conversation topic.
@@ -137,6 +139,7 @@ public class AiMessageService {
                 .sources(sources == null || sources.isEmpty() ? null : new ArrayList<>(sources))
                 .build());
 
+    uploadRefs.attachToConversation(content, conversationId);
     Instant savedAt = message.getCreatedAt() != null ? message.getCreatedAt() : Instant.now();
     bumpConversation(conversationId, message, savedAt);
     return messageMapper.toResponse(message);

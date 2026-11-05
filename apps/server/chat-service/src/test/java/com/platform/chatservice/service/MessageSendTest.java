@@ -14,6 +14,7 @@ import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.Message;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
+import com.platform.chatservice.service.upload.UploadRefs;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -41,6 +42,7 @@ class MessageSendTest {
   @Mock private ClusterMessageBroker clusterBroker;
   @Mock private MessageServiceHelper messageServiceHelper;
   @Mock private ConversationCacheService conversationCacheService;
+  @Mock private UploadRefs uploadRefs;
 
   private MessageService messageService;
 
@@ -62,7 +64,8 @@ class MessageSendTest {
             clusterBroker,
             messageMapper,
             mongoTemplate,
-            conversationCacheService);
+            conversationCacheService,
+            uploadRefs);
     messageService =
         new MessageService(
             messageRepository,
@@ -71,7 +74,8 @@ class MessageSendTest {
             messageServiceHelper,
             messageMapper,
             aiMessageService,
-            conversationCacheService);
+            conversationCacheService,
+            uploadRefs);
 
     conversation =
         Conversation.builder().id(CONV_ID).participants(List.of(SENDER_ID, OTHER_ID)).build();
@@ -102,6 +106,7 @@ class MessageSendTest {
     // Conversation bump is now a targeted atomic $set (not a whole-document save) + cache evict.
     verify(mongoTemplate).updateFirst(any(Query.class), any(Update.class), eq(Conversation.class));
     verify(conversationCacheService).evict(CONV_ID);
+    verify(uploadRefs).attachToConversation("Hello", CONV_ID);
   }
 
   @Test
@@ -296,6 +301,7 @@ class MessageSendTest {
                         && "ai".equals(m.getType())
                         && content.equals(m.getContent())));
     verify(clusterBroker).convertAndSend("/topic/conversation/" + CONV_ID, response);
+    verify(uploadRefs).attachToConversation(content, CONV_ID);
   }
 
   /** Block User only applies to direct chats — it used to silence the sender in every group. */

@@ -1,9 +1,13 @@
 package com.platform.chatservice.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -18,6 +22,7 @@ import com.platform.chatservice.security.UploadReaderResolver;
 import com.platform.chatservice.service.FileValidationService;
 import com.platform.chatservice.service.RateLimiterService;
 import com.platform.chatservice.service.VirusScanService;
+import com.platform.chatservice.service.upload.UploadAccessPolicy;
 import java.io.ByteArrayInputStream;
 import java.time.Clock;
 import java.time.Duration;
@@ -105,6 +110,7 @@ class UploadControllerAuthTest {
   @MockBean private RateLimiterService rateLimiterService;
   @MockBean private FileValidationService fileValidationService;
   @MockBean private VirusScanService virusScanService;
+  @MockBean private UploadAccessPolicy uploadAccessPolicy;
 
   @BeforeEach
   void setUp() throws Exception {
@@ -120,6 +126,8 @@ class UploadControllerAuthTest {
     when(resource.getFilename()).thenReturn("a.png");
     when(resource.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[] {1, 2, 3}));
     when(gridFsTemplate.findOne(any(Query.class))).thenReturn(file);
+    // The requesting user may read the file (e.g. its uploader / a participant).
+    when(uploadAccessPolicy.canRead(file, USER)).thenReturn(true);
     when(gridFsTemplate.getResource(file)).thenReturn(resource);
 
     when(jwtUtil.isValid("good-jwt")).thenReturn(true);
@@ -176,6 +184,54 @@ class UploadControllerAuthTest {
     ReflectionTestUtils.setField(resolver, "internalKey", "");
     mvc.perform(get(path()).header("X-Internal-Key", "")).andExpect(status().isUnauthorized());
     mvc.perform(get(path()).header("X-Internal-Key", " ")).andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void flag_on_participant_200() throws Exception {
+    mvc.perform(get(path()).param("t", tokens.issue(USER).token())).andExpect(status().isOk());
+  }
+
+  @Test
+  void flag_on_stranger_with_valid_token_403() throws Exception {
+    mvc.perform(get(path()).param("t", tokens.issue("stranger").token()))
+        .andExpect(status().isForbidden())
+        .andExpect(content().string(""));
+  }
+
+  @Test
+  void flag_on_stranger_with_jwt_403() throws Exception {
+    when(jwtUtil.isValid("stranger-jwt")).thenReturn(true);
+    when(jwtUtil.extractUserId("stranger-jwt")).thenReturn("stranger");
+    when(jwtUtil.extractPerms("stranger-jwt")).thenReturn(List.of());
+    when(jwtUtil.extractDepts("stranger-jwt")).thenReturn(List.of());
+    mvc.perform(get(path()).header("Authorization", "Bearer stranger-jwt"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void flag_on_internal_key_bypasses_policy_200() throws Exception {
+    mvc.perform(get(path()).header("X-Internal-Key", INTERNAL)).andExpect(status().isOk());
+    verify(uploadAccessPolicy, never()).canRead(any(), anyString());
+  }
+
+  @Test
+  void flag_on_response_cache_control_private() throws Exception {
+    mvc.perform(get(path()).param("t", tokens.issue(USER).token()))
+        .andExpect(status().isOk())
+        .andExpect(header().string("Cache-Control", "private, max-age=86400"));
+  }
+
+  @Test
+  void flag_off_skips_policy() throws Exception {
+    ReflectionTestUtils.setField(controller, "requireAuth", false);
+    mvc.perform(get(path())).andExpect(status().isOk());
+    verify(uploadAccessPolicy, never()).canRead(any(), any());
+  }
+
+  @Test
+  void flag_on_anonymous_non_id_paths_401() throws Exception {
+    mvc.perform(get("/api/uploads/not-an-id")).andExpect(status().isUnauthorized());
+    mvc.perform(get("/api/uploads/a/b")).andExpect(status().isUnauthorized());
   }
 
   @Test

@@ -9,6 +9,7 @@ import com.platform.chatservice.model.Conversation;
 import com.platform.chatservice.model.Message;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.MessageRepository;
+import com.platform.chatservice.service.upload.UploadRefs;
 import java.time.Instant;
 import java.util.List;
 import org.bson.Document;
@@ -37,6 +38,7 @@ class AiMessageServiceTest {
   @Mock private ClusterMessageBroker clusterBroker;
   @Mock private MongoTemplate mongoTemplate;
   @Mock private ConversationCacheService conversationCacheService;
+  @Mock private UploadRefs uploadRefs;
 
   private AiMessageService service;
 
@@ -49,7 +51,8 @@ class AiMessageServiceTest {
             clusterBroker,
             new MessageMapper(),
             mongoTemplate,
-            conversationCacheService);
+            conversationCacheService,
+            uploadRefs);
     when(messageRepository.save(any(Message.class)))
         .thenAnswer(
             inv -> {
@@ -73,6 +76,7 @@ class AiMessageServiceTest {
     assertThat(saved.getType()).isEqualTo("ai");
     assertThat(saved.getContent()).isEqualTo("Hello from the assistant");
     verify(clusterBroker).convertAndSend("/topic/conversation/conv-1", response);
+    verify(uploadRefs).attachToConversation("Hello from the assistant", "conv-1");
   }
 
   @Test
