@@ -48,6 +48,12 @@ public class MeetingRecordService {
     } catch (ApiException e) {
       return false;
     }
+    // Must be inside NOW (open attendance row): inRoom only checks entitlement, and STT may still
+    // run a few seconds after someone left. Known limit: attendance is opened by the LiveKit
+    // participant_joined webhook, so speech in the first seconds before it lands is dropped too.
+    if (!MeetingAccess.isInside(meeting, caller.getUserId())) {
+      return false;
+    }
     if (meeting.getSettings() == null || !meeting.getSettings().isAiNotes()) {
       return false;
     }

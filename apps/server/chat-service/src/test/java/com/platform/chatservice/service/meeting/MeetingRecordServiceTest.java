@@ -63,7 +63,16 @@ class MeetingRecordServiceTest {
   }
 
   private static Meeting meeting(boolean aiNotes) {
-    return Meeting.builder().settings(Meeting.Settings.builder().aiNotes(aiNotes).build()).build();
+    return meeting(aiNotes, null);
+  }
+
+  private static Meeting meeting(boolean aiNotes, Instant leftAt) {
+    return Meeting.builder()
+        .settings(Meeting.Settings.builder().aiNotes(aiNotes).build())
+        .attendance(
+            new java.util.ArrayList<>(
+                List.of(Meeting.Attendance.builder().userId("a").leftAt(leftAt).build())))
+        .build();
   }
 
   private long count() {
@@ -109,6 +118,21 @@ class MeetingRecordServiceTest {
     when(guard.inRoom(an, "m1")).thenReturn(meeting(false));
     assertThat(records.appendSpeech(an, "m1", "hi", null)).isFalse();
     assertThat(count()).isZero();
+  }
+
+  @Test
+  void dropsWhenSpeakerAlreadyLeft() {
+    when(guard.inRoom(an, "m1")).thenReturn(meeting(true, Instant.now()));
+    assertThat(records.appendSpeech(an, "m1", "hi", null)).isFalse();
+    assertThat(count()).isZero();
+  }
+
+  @Test
+  void dropsWhenSpeakerHasNoAttendanceRow() {
+    Meeting m = meeting(true);
+    m.setAttendance(new java.util.ArrayList<>());
+    when(guard.inRoom(an, "m1")).thenReturn(m);
+    assertThat(records.appendSpeech(an, "m1", "hi", null)).isFalse();
   }
 
   @Test
