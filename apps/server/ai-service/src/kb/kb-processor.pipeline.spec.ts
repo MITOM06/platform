@@ -209,23 +209,62 @@ describe('KbProcessorService.processDocument', () => {
       });
     });
 
-    // BUG: `localhost` is not in `privateRanges`, so the "allow localhost only
-    // outside production" branch is dead and http://localhost:<any port>/api/uploads/*
-    // is fetched in production too. Fix: add /^localhost$/ to privateRanges.
-    it.skip('blocks localhost in production', async () => {
+    it.each([
+      ['localhost', 'http://localhost:3001/api/uploads/x'],
+      ['localhost with trailing root dot', 'http://localhost.:3001/api/uploads/x'],
+      ['a *.localhost name', 'http://api.localhost/api/uploads/x'],
+    ])('blocks %s in production', async (_label, fileUrl) => {
       process.env.NODE_ENV = 'production';
       const m = make();
-      await expectError(m, payload({ fileUrl: 'http://localhost:3001/api/uploads/x' }), 'private IP');
+      await expectError(m, payload({ fileUrl }), 'private IP');
       expect(m.fetchMock).not.toHaveBeenCalled();
     });
 
-    // BUG: WHATWG URL keeps the brackets in an IPv6 hostname ("[::1]"), so the
-    // /^::1$/ and /^fd/ patterns never match and IPv6 loopback / ULA hosts pass.
-    // Fix: strip brackets first — `const host = hostname.replace(/^\[|\]$/g, '')`.
-    it.skip('blocks the IPv6 loopback', async () => {
+    it('allows localhost outside production (local dev) but still enforces the path', async () => {
+      process.env.NODE_ENV = 'development';
+      const ok = make();
+      await ok.svc.processDocument(payload({ fileUrl: 'http://localhost:8080/api/uploads/x' }));
+      expect(ok.fetchMock).toHaveBeenCalledWith('http://localhost:8080/api/uploads/x', expect.anything());
+
+      const bad = make();
+      await expectError(bad, payload({ fileUrl: 'http://localhost:8080/admin' }), 'path must be /api/uploads/*');
+      expect(bad.fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('a trailing root dot does not bypass the metadata host list', async () => {
       const m = make();
-      await expectError(m, payload({ fileUrl: 'http://[::1]:8080/api/uploads/x' }), 'private IP');
+      await expectError(m, payload({ fileUrl: 'http://metadata.google.internal./api/uploads/x' }), 'restricted host');
       expect(m.fetchMock).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['IPv6 loopback', 'http://[::1]:8080/api/uploads/x'],
+      ['IPv6 unspecified', 'http://[::]/api/uploads/x'],
+      ['IPv6 ULA fd00::/8', 'http://[fd12::1]/api/uploads/x'],
+      ['IPv6 ULA fc00::/8', 'http://[fc00::1]/api/uploads/x'],
+      ['IPv6 link-local', 'http://[fe80::1]/api/uploads/x'],
+      ['IPv4-mapped loopback', 'http://[::ffff:127.0.0.1]/api/uploads/x'],
+      ['IPv4-mapped RFC1918', 'http://[::ffff:10.0.0.5]/api/uploads/x'],
+      ['IPv4 0.0.0.0', 'http://0.0.0.0/api/uploads/x'],
+    ])('blocks %s', async (_label, fileUrl) => {
+      const m = make();
+      await expectError(m, payload({ fileUrl }), 'private IP');
+      expect(m.fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('IPv4-mapped cloud metadata IP is blocked too', async () => {
+      const m = make();
+      await expectError(m, payload({ fileUrl: 'http://[::ffff:169.254.169.254]/api/uploads/x' }), 'private IP');
+      expect(m.fetchMock).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['a public IPv6 host', 'http://[2001:db8::1]/api/uploads/x'],
+      ['a domain that merely starts with "fd"', 'https://fdroid.example.com/api/uploads/x'],
+    ])('allows %s', async (_label, fileUrl) => {
+      const m = make();
+      await m.svc.processDocument(payload({ fileUrl }));
+      expect(m.fetchMock).toHaveBeenCalledWith(fileUrl, expect.anything());
     });
   });
 });
