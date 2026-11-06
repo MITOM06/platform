@@ -126,7 +126,9 @@ class PonCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
-        child: child,
+        // A transparent Material so ListTile / InkWell children paint their
+        // ink here instead of on an ancestor hidden under this coloured box.
+        child: Material(type: MaterialType.transparency, child: child),
       ),
     );
   }

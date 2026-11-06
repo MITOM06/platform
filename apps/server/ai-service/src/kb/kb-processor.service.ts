@@ -181,7 +181,10 @@ export class KbProcessorService {
       throw new Error(`Invalid fileUrl: ${fileUrl}`);
     }
 
-    const { hostname } = parsed;
+    // WHATWG URL keeps IPv6 brackets ("[::1]") and a trailing root dot
+    // ("localhost.") in `hostname` — normalise both before matching.
+    const isIpv6 = parsed.hostname.startsWith('[');
+    const host = parsed.hostname.replace(/^\[|\]$/g, '').replace(/\.$/, '');
 
     // Known cloud metadata hosts.
     const blockedHosts = [
@@ -189,24 +192,16 @@ export class KbProcessorService {
       'metadata.google.internal',
       '100.100.100.200', // Alibaba metadata
     ];
-    if (blockedHosts.includes(hostname)) {
-      throw new Error(`SSRF blocked: fileUrl points to restricted host ${hostname}`);
+    if (blockedHosts.includes(host)) {
+      throw new Error(`SSRF blocked: fileUrl points to restricted host ${host}`);
     }
 
-    // Private / loopback IP ranges.
-    const privateRanges = [
-      /^127\./, // loopback
-      /^10\./, // RFC 1918
-      /^172\.(1[6-9]|2\d|3[01])\./, // RFC 1918
-      /^192\.168\./, // RFC 1918
-      /^169\.254\./, // link-local
-      /^::1$/, // IPv6 loopback
-      /^fd/, // IPv6 ULA
-    ];
-    if (privateRanges.some((re) => re.test(hostname))) {
+    if (isPrivateHost(host, isIpv6)) {
       // Allow localhost only outside production (local dev fetches from :8080).
-      if (process.env.NODE_ENV !== 'production' && hostname === 'localhost') return;
-      throw new Error(`SSRF blocked: fileUrl points to private IP ${hostname}`);
+      const devLocalhost = process.env.NODE_ENV !== 'production' && host === 'localhost';
+      if (!devLocalhost) {
+        throw new Error(`SSRF blocked: fileUrl points to private IP ${host}`);
+      }
     }
 
     if (!['http:', 'https:'].includes(parsed.protocol)) {
@@ -359,4 +354,46 @@ export class KbProcessorService {
     }
     return deleted;
   }
+}
+
+/** Private / loopback IPv4 ranges (dotted quad, as WHATWG URL normalises it). */
+const PRIVATE_IPV4 = [
+  /^127\./, // loopback
+  /^0\./, // "this network" — 0.0.0.0 reaches the local host on Linux
+  /^10\./, // RFC 1918
+  /^172\.(1[6-9]|2\d|3[01])\./, // RFC 1918
+  /^192\.168\./, // RFC 1918
+  /^169\.254\./, // link-local
+  /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./, // CGNAT 100.64.0.0/10 — gồm IP Tailscale (tailnet nội bộ)
+  /^192\.0\.0\./, // IETF protocol assignments 192.0.0.0/24
+  /^198\.1[89]\./, // benchmark 198.18.0.0/15
+  /^(22[4-9]|23\d)\./, // multicast 224.0.0.0/4
+  /^(24\d|25[0-5])\./, // reserved 240.0.0.0/4 + broadcast
+];
+
+/** Private / loopback IPv6 ranges (bracket-less, lower-case). */
+const PRIVATE_IPV6 = [
+  /^::1?$/, // loopback + unspecified
+  /^f[cd]/, // ULA fc00::/7
+  /^fe[89ab]/, // link-local fe80::/10
+];
+
+/** `::ffff:7f00:1` (WHATWG form of `::ffff:127.0.0.1`) → `127.0.0.1`. */
+function ipv4FromMapped(ipv6: string): string | null {
+  const m = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(ipv6);
+  if (!m) return null;
+  const hi = parseInt(m[1], 16);
+  const lo = parseInt(m[2], 16);
+  return [hi >> 8, hi & 0xff, lo >> 8, lo & 0xff].join('.');
+}
+
+/** `host` is already bracket-less and without a trailing root dot. */
+function isPrivateHost(host: string, isIpv6: boolean): boolean {
+  if (isIpv6) {
+    const mapped = ipv4FromMapped(host);
+    if (mapped) return PRIVATE_IPV4.some((re) => re.test(mapped));
+    return PRIVATE_IPV6.some((re) => re.test(host));
+  }
+  if (host === 'localhost' || host.endsWith('.localhost')) return true;
+  return PRIVATE_IPV4.some((re) => re.test(host));
 }

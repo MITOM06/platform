@@ -49,7 +49,9 @@ class ProviderLogo extends StatelessWidget {
   }
 
   Widget _monogram() => Text(
-        name.isNotEmpty ? name[0].toUpperCase() : '?',
+        // `characters` = grapheme clusters: `name[0]` would split an emoji
+        // into a lone UTF-16 surrogate and crash text layout.
+        name.isNotEmpty ? name.characters.first.toUpperCase() : '?',
         style: TextStyle(
           color: monogramColor,
           fontSize: 18,
