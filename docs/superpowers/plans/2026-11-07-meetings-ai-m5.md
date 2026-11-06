@@ -132,3 +132,33 @@
 - [ ] Share video ⇒ tối đa 1 ảnh/15 s.
 - [ ] Android share ⇒ có dòng SCREEN, hoặc tự tắt nếu `captureFrame` không chạy.
 - [ ] GridFS không còn ảnh frame sau khi xử lý.
+
+---
+
+## Kết quả (2026-11-07)
+
+Task 1–4 DONE trên `feat/meetings-ai` (`ed07d016..672c7453`). Đã qua review từng task, review cuối toàn nhánh và một đợt sửa (F1–F4).
+
+F1 là lỗi **nghiêm trọng** giữa hai service: kết quả từ ai-service thiếu `kind`, nên chat-service không ghi được SCREEN. Đã sửa, kèm fixture hợp đồng dùng chung `apps/server/contracts/meet-material-result.screen.json` để hai bên test cùng một định dạng.
+
+Task 5 (thử tay trên `dev`) **chưa chạy**: cần owner đồng ý merge.
+
+Quyết định thêm khi thực thi:
+- Dòng SCREEN trong prompt không ghi giờ, vì giờ đang là UTC và lệch giờ Việt Nam.
+- Dòng báo hết trần là dòng hệ thống `[SCREEN] {text}`.
+- Upload web có timeout 15 s.
+- Chip "AI đang đọc màn hình" trên web chỉ hiện khi thật sự đọc được khung hình. Nếu không đọc được sau 20 lần thử thì dừng.
+
+Việc để sau (không chặn merge):
+- Thử tay trên `dev` (bắt buộc):
+  - Share slide trên Chrome và trên Android ⇒ có dòng `[SCREEN]`.
+  - Vài phút sau, số file `screenFrame` trong GridFS về 0.
+  - Màn hình đứng yên ⇒ không gửi thêm.
+  - Share video ⇒ tối đa 1 ảnh / 15 s.
+  - Thử `captureFrame` trên máy Android thật.
+  - Thử Safari / Firefox.
+- Chip trên Flutter bật ngay khi bắt đầu, chưa đợi khung hình đầu. Nếu `captureFrame` liên tục trả null thì chip không tự tắt. Nên làm giống web.
+- Giới hạn multipart chung là 100 MB, nên ảnh quá cỡ vẫn bị ghi tạm ra đĩa rồi mới bị chặn ở 2 MB.
+- Sweep quét `fs.files` vì chưa có index `metadata.screenFrame`.
+- Lỗi xảy ra sau khi đã giữ suất thì vẫn tốn suất đó.
+- Khi `UPLOADS_REQUIRE_AUTH=false`, ảnh frame mở được bằng URL trong ≤ 1 h. UUID không rời server.
