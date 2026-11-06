@@ -117,6 +117,28 @@ void main() {
     expect(l10n.authErrSsoRequired, isNot(contains('SSO_REQUIRED')));
   });
 
+  testWidgets('deleting a role: preset and in-use codes, with the counts',
+      (tester) async {
+    final ctx = await _context(tester);
+    final l10n = AppLocalizations.of(ctx);
+    expect(
+        authErrorMessage(
+            ctx, _dio(400, {'code': 'PRESET_ROLE_DELETE_FORBIDDEN'})),
+        l10n.authErrPresetRoleDeleteForbidden);
+    final msg = authErrorMessage(
+        ctx,
+        _dio(409, {
+          'code': 'ROLE_IN_USE',
+          'params': {'members': 2, 'invitations': 1, 'ssoMappings': 3},
+        }));
+    expect(msg, l10n.authErrRoleInUse(2, 1, 3));
+    expect(msg, allOf(contains('2'), contains('1'), contains('3')));
+    expect(msg, isNot(contains('ROLE_IN_USE')));
+    // Missing params never crash and never show the raw code.
+    expect(authErrorMessage(ctx, _dio(409, {'code': 'ROLE_IN_USE'})),
+        l10n.authErrRoleInUse(0, 0, 0));
+  });
+
   testWidgets('SESSION_CHECK_UNAVAILABLE reads as a transient server error',
       (tester) async {
     final ctx = await _context(tester);
