@@ -15,20 +15,13 @@ void main() {
     expect(find.text('A'), findsOneWidget);
   });
 
-  // BUG (medium, UI crash): provider_logo.dart:52 builds the monogram with
-  // `name[0]` — the first UTF-16 code unit. For a name that starts with an
-  // emoji / astral character it is a lone surrogate, and layout throws
-  // "string is not well-formed UTF-16" (the card fails to paint). It is hit
-  // by connector_card.dart:138, which passes `name: icon`, whenever `/catalog`
-  // omits `icon` (CatalogEntry defaults it to '🔌'), and by any directory
-  // entry whose name starts with an emoji. Fix (1 line):
-  // `name.isNotEmpty ? name.characters.first.toUpperCase() : '?'`
-  // (+ pass `entry.name` instead of `icon` in connector_card.dart).
+  // `name[0]` would be a lone UTF-16 surrogate for an emoji-led name and
+  // crash text layout — the monogram must use the whole first grapheme.
   testWidgets('an emoji name renders its whole first character', (tester) async {
     await tester.pumpWidget(const MaterialApp(
       home: ProviderLogo(icon: '🔌', name: '🔌', monogramColor: Colors.red),
     ));
     expect(tester.takeException(), isNull);
     expect(find.text('🔌'), findsOneWidget);
-  }, skip: true);
+  });
 }
