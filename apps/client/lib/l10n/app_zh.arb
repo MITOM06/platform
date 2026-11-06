@@ -316,6 +316,7 @@
     }
   },
   "meetingSummaryTitle": "会议摘要",
+  "meetingSummaryUnavailable": "摘要不可用",
   "meetingSummaryDuration": "时长 {duration}",
   "@meetingSummaryDuration": {
     "placeholders": {

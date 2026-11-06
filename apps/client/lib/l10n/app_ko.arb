@@ -316,6 +316,7 @@
     }
   },
   "meetingSummaryTitle": "회의 요약",
+  "meetingSummaryUnavailable": "요약을 사용할 수 없습니다",
   "meetingSummaryDuration": "통화 시간 {duration}",
   "@meetingSummaryDuration": {
     "placeholders": {

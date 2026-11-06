@@ -64,6 +64,10 @@ void main() {
           [('ok', 'Lan')]);
     });
 
+    test('overview is kept raw (not trimmed), like web', () {
+      expect(normalizeSummary({'overview': '  hi \n'})!.overview, '  hi \n');
+    });
+
     test('wrong-typed fields get empty defaults', () {
       final s = normalizeSummary({
         'overview': 3,

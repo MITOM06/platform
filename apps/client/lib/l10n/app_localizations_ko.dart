@@ -939,6 +939,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get meetingSummaryTitle => '회의 요약';
 
   @override
+  String get meetingSummaryUnavailable => '요약을 사용할 수 없습니다';
+
+  @override
   String meetingSummaryDuration(String duration) {
     return '통화 시간 $duration';
   }

@@ -69,11 +69,12 @@ class MeetingSummaryCard extends StatelessWidget {
   final String content;
   const MeetingSummaryCard({super.key, required this.content});
 
-  NormalizedSummary _parse() {
+  /// null when `content` is not a JSON object (same as web `parsePayload`).
+  NormalizedSummary? _parse() {
     try {
-      return normalizeSummary(jsonDecode(content)) ?? NormalizedSummary.empty;
+      return normalizeSummary(jsonDecode(content));
     } catch (_) {
-      return NormalizedSummary.empty;
+      return null;
     }
   }
 
@@ -91,8 +92,19 @@ class MeetingSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = _parse();
-    final title = data.title;
     final muted = TextStyle(color: AppTheme.mutedText(context), fontSize: 12);
+    if (data == null) {
+      return Container(
+        constraints: const BoxConstraints(maxWidth: 360),
+        decoration: BoxDecoration(
+          color: AppTheme.accentTint(context),
+          borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Text(context.l10n.meetingSummaryUnavailable, style: muted),
+      );
+    }
+    final title = data.title;
     return Container(
       constraints: const BoxConstraints(maxWidth: 360),
       decoration: BoxDecoration(

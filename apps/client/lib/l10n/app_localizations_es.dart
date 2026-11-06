@@ -960,6 +960,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meetingSummaryTitle => 'Resumen de la reunión';
 
   @override
+  String get meetingSummaryUnavailable => 'Resumen no disponible';
+
+  @override
   String meetingSummaryDuration(String duration) {
     return 'Duración $duration';
   }

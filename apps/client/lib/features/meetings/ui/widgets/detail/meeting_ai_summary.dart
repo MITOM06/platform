@@ -101,7 +101,8 @@ class _MeetingAiSummaryState extends ConsumerState<MeetingAiSummary> {
             Wrap(spacing: 8, runSpacing: 8, children: [
               if (groupId != null)
                 OutlinedButton.icon(
-                  onPressed: () => context.push('/chat/$groupId'),
+                  onPressed: () =>
+                      context.push('/chat/${Uri.encodeComponent(groupId)}'),
                   icon: const Icon(Icons.forum_outlined, size: 16),
                   label: Text(l.meetingAiSummaryOpenGroup),
                 ),

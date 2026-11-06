@@ -939,6 +939,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get meetingSummaryTitle => '議事録';
 
   @override
+  String get meetingSummaryUnavailable => '要約は利用できません';
+
+  @override
   String meetingSummaryDuration(String duration) {
     return '通話時間 $duration';
   }

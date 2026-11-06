@@ -65,8 +65,10 @@ void main() {
     expect(find.text(l.meetingSummaryDuration('1:30')), findsOneWidget);
   });
 
-  testWidgets('malformed content does not throw', (tester) async {
-    await pump(tester, 'garbage');
+  testWidgets('malformed content shows "summary unavailable"', (tester) async {
+    final l = await pump(tester, 'garbage');
     expect(tester.takeException(), isNull);
+    expect(find.text(l.meetingSummaryUnavailable), findsOneWidget);
+    expect(find.text(l.meetingSummaryTitle), findsNothing);
   });
 }

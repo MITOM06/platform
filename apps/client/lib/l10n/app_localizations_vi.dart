@@ -950,6 +950,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get meetingSummaryTitle => 'Tóm tắt cuộc họp';
 
   @override
+  String get meetingSummaryUnavailable => 'Không có bản tóm tắt';
+
+  @override
   String meetingSummaryDuration(String duration) {
     return 'Thời lượng $duration';
   }

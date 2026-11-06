@@ -316,6 +316,7 @@
     }
   },
   "meetingSummaryTitle": "議事録",
+  "meetingSummaryUnavailable": "要約は利用できません",
   "meetingSummaryDuration": "通話時間 {duration}",
   "@meetingSummaryDuration": {
     "placeholders": {

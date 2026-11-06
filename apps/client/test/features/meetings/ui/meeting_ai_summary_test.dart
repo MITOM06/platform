@@ -155,6 +155,16 @@ void main() {
     expect(find.text('/chat/c9'), findsOneWidget);
   });
 
+  testWidgets('open-group encodes the conversation id in the route',
+      (tester) async {
+    api.next = resp(MeetingSummaryState.done,
+        inGroup: true, group: 'a b/c', summary: done);
+    final l = await pump(tester, meeting());
+    await tester.tap(find.text(l.meetingAiSummaryOpenGroup));
+    await settle(tester);
+    expect(find.text('/chat/a%20b%2Fc'), findsOneWidget);
+  });
+
   testWidgets('co-host may regenerate; invited viewer may not', (tester) async {
     api.next = resp(MeetingSummaryState.done, summary: done);
     var l = await pump(tester, meeting(viewerRole: MeetingViewerRole.cohost));

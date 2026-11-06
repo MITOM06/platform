@@ -964,6 +964,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meetingSummaryTitle => 'Résumé de la réunion';
 
   @override
+  String get meetingSummaryUnavailable => 'Résumé indisponible';
+
+  @override
   String meetingSummaryDuration(String duration) {
     return 'Durée $duration';
   }

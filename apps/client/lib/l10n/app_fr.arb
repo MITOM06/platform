@@ -316,6 +316,7 @@
     }
   },
   "meetingSummaryTitle": "Résumé de la réunion",
+  "meetingSummaryUnavailable": "Résumé indisponible",
   "meetingSummaryDuration": "Durée {duration}",
   "@meetingSummaryDuration": {
     "placeholders": {

@@ -936,6 +936,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get meetingSummaryTitle => '会议摘要';
 
   @override
+  String get meetingSummaryUnavailable => '摘要不可用';
+
+  @override
   String meetingSummaryDuration(String duration) {
     return '时长 $duration';
   }

@@ -316,6 +316,7 @@
     }
   },
   "meetingSummaryTitle": "Tóm tắt cuộc họp",
+  "meetingSummaryUnavailable": "Không có bản tóm tắt",
   "meetingSummaryDuration": "Thời lượng {duration}",
   "@meetingSummaryDuration": {
     "placeholders": {

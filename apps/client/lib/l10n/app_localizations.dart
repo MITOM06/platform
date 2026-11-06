@@ -1866,6 +1866,12 @@ abstract class AppLocalizations {
   /// **'Meeting summary'**
   String get meetingSummaryTitle;
 
+  /// No description provided for @meetingSummaryUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary unavailable'**
+  String get meetingSummaryUnavailable;
+
   /// No description provided for @meetingSummaryDuration.
   ///
   /// In en, this message translates to:

@@ -460,6 +460,7 @@
     }
   },
   "meetingSummaryTitle": "Meeting summary",
+  "meetingSummaryUnavailable": "Summary unavailable",
   "meetingSummaryDuration": "Duration {duration}",
   "@meetingSummaryDuration": {
     "placeholders": {

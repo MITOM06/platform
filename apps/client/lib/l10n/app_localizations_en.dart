@@ -951,6 +951,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meetingSummaryTitle => 'Meeting summary';
 
   @override
+  String get meetingSummaryUnavailable => 'Summary unavailable';
+
+  @override
   String meetingSummaryDuration(String duration) {
     return 'Duration $duration';
   }

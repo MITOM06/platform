@@ -7,7 +7,8 @@
 //                      fromMaterials, title
 //
 // Rules (identical on web): non-object ⇒ null. Strings trimmed, blanks
-// dropped. Wrong-typed list elements dropped. Blank assignee / title ⇒ null.
+// dropped (`overview` is kept raw, like web). Wrong-typed list elements dropped.
+// Blank assignee / title ⇒ null.
 // `durationSec` must be a finite number ≥ 0, else 0.
 
 import 'json_read.dart';
@@ -88,7 +89,7 @@ NormalizedSummary? normalizeSummary(Object? raw) {
   if (o == null) return null;
   final d = o['durationSec'];
   return NormalizedSummary(
-    overview: o['overview'] is String ? (o['overview'] as String).trim() : '',
+    overview: o['overview'] is String ? o['overview'] as String : '',
     keyPoints: _strings(o['keyPoints']),
     decisions: _strings(o['decisions']),
     actionItems: _actions(o['actionItems']),
