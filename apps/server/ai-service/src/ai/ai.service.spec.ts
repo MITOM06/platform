@@ -1405,6 +1405,8 @@ describe('AiService', () => {
     expect(systemText(params)).toContain('Lan: earlier line');
     expect(toolRegistryGetDefinitions).not.toHaveBeenCalled();
     expect(params.tools ?? []).toEqual([]);
+    expect(params).not.toHaveProperty('tool_choice');
+    expect(params).not.toHaveProperty('tools');
     expect(lookup).not.toHaveBeenCalled();
     expect(store).not.toHaveBeenCalled();
   });
@@ -1436,6 +1438,20 @@ describe('AiService', () => {
 
     expect(lookup).toHaveBeenCalled();
     expect(mockStream.mock.calls[0][0].tools.length).toBe(SAMPLE_TOOLS.length);
+    expect(mockStream.mock.calls[0][0].tool_choice).toEqual({ type: 'auto' });
+  });
+
+  it('does not extract key facts from a meeting turn', async () => {
+    directAi.mockReturnValue(false);
+    convMeetingId = 'm1';
+    meetingBlockFor.mockResolvedValue('MEETING-BLOCK-TEXT');
+    incrementMessageCount.mockResolvedValue(3); // would trigger the first extraction
+    mockStream.mockReturnValue(makeStream(['answer']));
+
+    await service.handleRequest({ ...basePayload, conversationId: 'meeting:m1' });
+
+    expect(incrementMessageCount).toHaveBeenCalled();
+    expect(extractFacts).not.toHaveBeenCalled();
   });
 
   // ─── Thinking on any capable routed model (14) ────────────────────────────

@@ -302,8 +302,8 @@ export class AgenticLoopService {
       max_tokens: 4096,
       system: state.system,
       messages: state.messages,
-      tools: state.tools,
-      tool_choice: { type: 'auto' },
+      // tool_choice without tools is a 400: send both only when tools are offered.
+      ...(state.tools.length > 0 ? { tools: state.tools, tool_choice: { type: 'auto' } } : {}),
       // `output_config.effort` is only accepted by effort-capable models
       // (Opus 4.5+, Sonnet 4.6+, Sonnet 5, Fable/Mythos 5). Sending it to
       // Sonnet 4.5 / Haiku 4.5 returns a 400 and takes the whole turn down.

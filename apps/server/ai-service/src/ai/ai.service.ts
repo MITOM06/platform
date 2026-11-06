@@ -397,7 +397,9 @@ export class AiService {
       const isFirstExtraction = count === 3;
       const isPeriodicExtraction =
         this.extractEveryTurns > 0 && count > 3 && count % this.extractEveryTurns === 0;
-      if (isFirstExtraction || isPeriodicExtraction) {
+      // Meeting content must not leak into the user's cross-conversation key facts.
+      const meetingTurn = !!meetingBlock || !!conversation.meetingId;
+      if (!meetingTurn && (isFirstExtraction || isPeriodicExtraction)) {
         this.factExtractor.extractFacts(conversationId, userId, loopHistory, count).catch((err) => {
           this.logger.error(`Fact extraction failed for ${conversationId}`, err);
         });
