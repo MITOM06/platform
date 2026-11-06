@@ -53,7 +53,13 @@ public class MeetingWsController {
         cmd.meetingId(),
         null,
         MeetingChatService.clientIdOrNull(cmd.clientId()),
-        () -> chat.send(caller(principal), cmd.meetingId(), cmd.content(), cmd.clientId()));
+        () ->
+            chat.send(
+                caller(principal),
+                cmd.meetingId(),
+                cmd.content(),
+                cmd.clientId(),
+                cmd.attachment()));
   }
 
   /** {@code meet.error.action} is the parsed action, or null — never the client's raw string. */

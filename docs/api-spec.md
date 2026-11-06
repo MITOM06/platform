@@ -613,7 +613,7 @@ Someone who once entered the room is remembered as admitted, so turning the wait
 locking the room later never shuts them out (`LOCK` only stops newcomers).
 
 `MEETING_INVALID` carries `params.field` ∈ `title | description | inviteeIds | departmentId |
-scheduledStart | scheduledEnd | settings | scope | size | content | version` and `params.max` when a limit applies, e.g.
+scheduledStart | scheduledEnd | settings | scope | size | content | attachment | version` and `params.max` when a limit applies, e.g.
 `{"error":"Bad Request","code":"MEETING_INVALID","statusCode":400,"params":{"field":"title","max":120}}`.
 A body or query value that cannot be parsed is also 400 `MEETING_INVALID` (never 500), with
 `params.field` when the field is known — notably a datetime **without an offset**
@@ -668,13 +668,19 @@ meeting 48h past its start (or creation) is retired to ENDED by the sweep.
   `meet.denied` / `meet.ended`. Calling `join` again while waiting stays `waiting` (no duplicate);
   leaving the waiting page ⇒ `DELETE /lobby`.
 
-**`MeetingMessage`** (in-meeting chat — text only, no files, no system lines)
+**`MeetingMessage`** (in-meeting chat — text and/or one file, no system lines)
 
 ```json
 { "id": "6710aa01b9e4d21f0c3a9e55",
   "sender": { "userId": "64b0…03", "displayName": "Hoa Le", "avatarUrl": "/api/uploads/…" },
-  "content": "Slide 3 có số liệu mới", "createdAt": "2026-10-08T02:05:11.120Z" }
+  "content": "Slide 3 có số liệu mới", "createdAt": "2026-10-08T02:05:11.120Z",
+  "attachment": { "url": "/api/uploads/9f1c…", "name": "plan.pdf", "size": 48213, "contentType": "application/pdf" } }
 ```
+
+`attachment` is absent on text-only lines; `content` may be `""` when a file is attached. `GET
+/api/meetings/{id}/messages` returns it too. `size` and `contentType` are read from the stored upload
+(never the client's values). Everyone who can read the meeting's records (`MeetingAccess.canReadRecords`)
+may `GET` that `/api/uploads/{id}` (GridFS `metadata.refs` entry `{t:"m", id: meetingId}`).
 
 History: `before` = `id` of the oldest line the client already has (absent = newest page; unknown /
 other meeting's id ⇒ empty page); `size` default 50, max 100.
@@ -716,9 +722,17 @@ host/co-host whose STOMP reconnected calls `GET /lobby` to catch up on a missed 
 | Destination | Payload | Notes |
 |---|---|---|
 | `/app/meet.hand` | `{ "meetingId": "m1", "raised": true }` | Your own hand only. Raising again keeps your place (no event); lowering when not raised is a no-op. Room access ² |
-| `/app/meet.chat` | `{ "meetingId": "m1", "content": "…", "clientId": "c-7f3a" }` | `content` trimmed, 1..2000. Rate limit shared with normal chat (10 lines / 5 s). `clientId` optional, `[A-Za-z0-9_-]{1,64}` (otherwise dropped), echoed in `meet.chat` / `meet.error`. A valid `clientId` is stored with the line and makes the send **idempotent** per (meeting, sender, `clientId`) — see below |
+| `/app/meet.chat` | `{ "meetingId": "m1", "content": "…", "clientId": "c-7f3a", "attachment": { "url": "/api/uploads/<id>", "name": "plan.pdf" } }` | `content` trimmed, 1..2000 — may be empty when `attachment` is present. `attachment` optional: `url` must be exactly `/api/uploads/{uuid\|24-hex}` (no host / query), `name` 1..200 after trim, the upload must exist and be **uploaded by the sender**, else `meet.error MEETING_INVALID {field:"attachment"}`; `size` / `contentType` sent by the client are ignored. Rate limit shared with normal chat (10 lines / 5 s). `clientId` optional, `[A-Za-z0-9_-]{1,64}` (otherwise dropped), echoed in `meet.chat` / `meet.error`. A valid `clientId` is stored with the line and makes the send **idempotent** per (meeting, sender, `clientId`) — see below |
 | `/app/meet.host` | `{ "meetingId": "m1", "action": "MUTE_MIC", "targetId": "64b0…03" }` | Host / co-host. An attendee's command is **ignored** (logged, no event, no error). `targetId` required for `MUTE_MIC`, `REMOVE`, `LOWER_HAND`, `MAKE_COHOST`, `REVOKE_COHOST` |
 | `/app/meet.transcript` | `{ "meetingId": "m1", "text": "…", "ts": 1730800000000 }` | One line of the sender's own speech (client speech-to-text). **Never answered with `meet.error`** (high frequency): dropped silently unless the sender is in the room (entitled **and** has an open attendance row), `settings.aiNotes` is true and `text` is non-blank. `text` trimmed and cut to 500 chars; `ts` (epoch ms) clamped into [server now − 60 s, server now]. Per-user limit ~3 lines/s (burst 6); over the limit is dropped silently. Stored in Mongo `meeting_records` `{meetingId, kind: SPEECH\|FILE\|SCREEN, userId, displayName (null if unknown), text, ts, createdAt}`, index (meetingId, ts) |
+
+**Files and AI notes (Redis, service to service).** When `settings.aiNotes` is on at send time, a line with
+a file publishes `meet:material` `{meetingId, messageId, uploadId, fileName, mimeType, userId}` (chat-service →
+ai-service; at most `meetings.ai.file-cap`, default 20, files per meeting — the first file over the cap adds one
+record line "Đã đạt giới hạn file AI đọc."). ai-service answers on `meet:material:result` `{meetingId,
+messageId, fileName, status: "ok"|"unsupported"|"failed", text?}`; chat-service writes one `FILE` record
+(text capped at 6000 chars, or "Không đọc được file này.") attributed to the sender, deduplicated by
+`messageId` (`meet:material:done:{messageId}`, 1 h). Clients see none of this.
 
 **Idempotent chat sends.** Re-sending `/app/meet.chat` with a `clientId` you already used in that
 meeting (a retry after a slow echo) stores nothing, is not counted against the rate limit, and

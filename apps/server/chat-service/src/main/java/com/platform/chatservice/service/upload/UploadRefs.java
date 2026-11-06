@@ -45,6 +45,11 @@ public class UploadRefs {
           "/api/uploads/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
               + "|[0-9a-fA-F]{24})(?![0-9a-zA-Z_-])");
 
+  private static final Pattern UPLOAD_ID =
+      Pattern.compile(
+          "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+              + "|[0-9a-fA-F]{24}");
+
   private final MongoTemplate mongoTemplate;
   private final GridFsTemplate gridFsTemplate;
   private final UploadAccessPolicy accessPolicy;
@@ -84,6 +89,7 @@ public class UploadRefs {
       if (actorId == null || actorId.isBlank() || meetingId == null || meetingId.isBlank()) {
         return false;
       }
+      if (uploadId == null || !UPLOAD_ID.matcher(uploadId).matches()) return false;
       Set<String> ids = extractIds("/api/uploads/" + uploadId);
       if (ids.isEmpty()) return false;
       Criteria files = readableBy(ids, actorId);
@@ -137,7 +143,7 @@ public class UploadRefs {
    * a UUID by {@code metadata.fileId}; a 24-hex id only as a LEGACY file ({@code _id}, no {@code
    * metadata.fileId}).
    */
-  static Criteria fileCriteria(Set<String> ids) {
+  public static Criteria fileCriteria(Set<String> ids) {
     List<String> uuids = new ArrayList<>();
     List<ObjectId> legacy = new ArrayList<>();
     for (String id : ids) {

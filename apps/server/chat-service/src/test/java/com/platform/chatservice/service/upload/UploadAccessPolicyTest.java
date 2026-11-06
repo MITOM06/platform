@@ -260,7 +260,39 @@ class UploadAccessPolicyTest {
   }
 
   @Test
-  void departments_not_loaded_when_no_meeting_ref() {
+  void lobby_not_consulted_when_the_meeting_already_grants_access() {
+    String invitee = new ObjectId().toHexString();
+    Meeting m = meeting(Meeting.builder().inviteeIds(new ArrayList<>(List.of(invitee))));
+    String id = upload();
+    refs.attachToMeeting(id, m.getId(), UPLOADER);
+
+    assertThat(policy.canRead(file(id), invitee)).isTrue();
+    verify(lobby, never()).isAdmitted(any(), any());
+  }
+
+  @Test
+  void lobby_failure_denies_instead_of_throwing() {
+    Meeting m = meeting(Meeting.builder());
+    String id = upload();
+    refs.attachToMeeting(id, m.getId(), UPLOADER);
+    when(lobby.isAdmitted(m.getId(), STRANGER)).thenThrow(new IllegalStateException("redis down"));
+
+    assertThat(policy.canRead(file(id), STRANGER)).isFalse();
+  }
+
+  @Test
+  void attach_to_meeting_rejects_ids_that_only_contain_an_upload_id() {
+    Meeting m = meeting(Meeting.builder());
+    String id = upload();
+
+    assertThat(refs.attachToMeeting(id + "#x", m.getId(), UPLOADER)).isFalse();
+    assertThat(refs.attachToMeeting(id + "?t=1", m.getId(), UPLOADER)).isFalse();
+    assertThat(refs.attachToMeeting("a/" + "api/uploads/" + id, m.getId(), UPLOADER)).isFalse();
+    assertThat(file(id).getMetadata().get("refs")).isNull();
+  }
+
+  @Test
+  void lobby_not_consulted_when_no_meeting_ref() {
     String id = upload();
     Conversation c = conversation(UPLOADER, MEMBER);
     refs.attachToConversation(url(id), c.getId(), UPLOADER);

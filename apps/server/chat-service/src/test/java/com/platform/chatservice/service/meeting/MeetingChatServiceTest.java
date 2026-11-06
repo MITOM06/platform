@@ -16,22 +16,28 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.platform.chatservice.dto.PageResponse;
+import com.platform.chatservice.dto.meeting.MeetingChatCommand;
 import com.platform.chatservice.dto.meeting.MeetingMessageDto;
 import com.platform.chatservice.dto.meeting.PersonDto;
 import com.platform.chatservice.exception.ApiException;
 import com.platform.chatservice.exception.RateLimitExceededException;
+import com.platform.chatservice.model.MeetingAttachment;
 import com.platform.chatservice.model.MeetingMessage;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.RateLimiterService;
+import com.platform.chatservice.service.upload.UploadRefs;
+import java.io.ByteArrayInputStream;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +47,7 @@ import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -73,6 +80,9 @@ class MeetingChatServiceTest {
   private RateLimiterService rateLimiter;
   private MeetingChatService chat;
   private MeetingAiBridge aiBridge;
+  private GridFsTemplate gridFs;
+  private UploadRefs uploadRefs;
+  private MeetingMaterialTrigger materials;
   private final UserPrincipal an = new UserPrincipal("a");
 
   @BeforeEach
@@ -89,7 +99,19 @@ class MeetingChatServiceTest {
     rateLimiter = mock(RateLimiterService.class);
     when(people.profiles(anyCollection())).thenReturn(Map.of("a", new PersonDto("a", "An", null)));
     aiBridge = mock(MeetingAiBridge.class);
-    chat = new MeetingChatService(template, guard, people, events, rateLimiter, aiBridge);
+    gridFs = new GridFsTemplate(template.getMongoDatabaseFactory(), template.getConverter());
+    uploadRefs = mock(UploadRefs.class);
+    materials = mock(MeetingMaterialTrigger.class);
+    chat =
+        new MeetingChatService(
+            template,
+            guard,
+            people,
+            events,
+            rateLimiter,
+            aiBridge,
+            new MeetingAttachments(gridFs, uploadRefs),
+            materials);
   }
 
   private void stored(String id, String meetingId, Instant at) {
@@ -325,5 +347,107 @@ class MeetingChatServiceTest {
     chat.send(an, "m1", "just talking", null);
 
     verifyNoInteractions(aiBridge);
+  }
+
+  /** Stores a GridFS upload like UploadController does; returns its id. */
+  private String upload(String uploadedBy, byte[] bytes, String contentType) {
+    String id = UUID.randomUUID().toString();
+    gridFs.store(
+        new ByteArrayInputStream(bytes),
+        id,
+        contentType,
+        new Document("fileId", id).append("uploadedBy", uploadedBy));
+    return id;
+  }
+
+  private static MeetingChatCommand.Attachment att(String id, String name) {
+    return new MeetingChatCommand.Attachment("/api/uploads/" + id, name, 999L, "text/evil");
+  }
+
+  private static void assertInvalidAttachment(ApiException e) {
+    assertThat(e.status()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(e.code()).isEqualTo("MEETING_INVALID");
+    assertThat(e.getParams()).isEqualTo(Map.of("field", "attachment"));
+  }
+
+  @Test
+  void aValidAttachmentIsStoredWithTheRealSizeAndTypeAndOpenedToTheMeeting() {
+    String id = upload("a", new byte[] {1, 2, 3, 4, 5}, "application/pdf");
+
+    MeetingMessageDto dto = chat.send(an, "m1", "see this", "c-1", att(id, "  plan.pdf "));
+
+    assertThat(dto.attachment().url()).isEqualTo("/api/uploads/" + id);
+    assertThat(dto.attachment().name()).isEqualTo("plan.pdf");
+    assertThat(dto.attachment().size()).isEqualTo(5);
+    assertThat(dto.attachment().contentType()).isEqualTo("application/pdf");
+    MeetingAttachment saved = template.findById(dto.id(), MeetingMessage.class).getAttachment();
+    assertThat(saved.getUploadId()).isEqualTo(id);
+    assertThat(saved.getSize()).isEqualTo(5);
+    verify(guard).inRoom(an, "m1");
+    verify(uploadRefs).attachToMeeting(id, "m1", "a");
+    verify(events).chat("m1", dto, "c-1");
+    verify(materials).onFileSent("m1", dto.id(), saved, "a");
+  }
+
+  @Test
+  void anotherUsersFileABadUrlOrAMissingFileIsInvalid() {
+    String theirs = upload("someone-else", new byte[] {1}, "text/plain");
+    String missing = UUID.randomUUID().toString();
+    List<MeetingChatCommand.Attachment> bad =
+        List.of(
+            att(theirs, "x.txt"),
+            att(missing, "x.txt"),
+            new MeetingChatCommand.Attachment("https://evil.example/a.txt", "x", null, null),
+            new MeetingChatCommand.Attachment("/api/uploads/" + theirs + "?t=1", "x", null, null),
+            new MeetingChatCommand.Attachment("/api/uploads/../" + theirs, "x", null, null),
+            new MeetingChatCommand.Attachment(null, "x", null, null),
+            att(upload("a", new byte[] {1}, "text/plain"), " "),
+            att(upload("a", new byte[] {1}, "text/plain"), "n".repeat(201)));
+
+    for (MeetingChatCommand.Attachment a : bad) {
+      assertInvalidAttachment(apiError(() -> chat.send(an, "m1", "hi", null, a)));
+    }
+    assertThat(count()).isZero();
+    verify(uploadRefs, never()).attachToMeeting(any(), any(), any());
+    verify(materials, never()).onFileSent(any(), any(), any(), any());
+  }
+
+  @Test
+  void emptyTextWithAFileIsFineButEmptyTextAloneStillFails() {
+    String id = upload("a", new byte[] {1}, "text/plain");
+
+    MeetingMessageDto dto = chat.send(an, "m1", "   ", null, att(id, "n.txt"));
+
+    assertThat(dto.content()).isEmpty();
+    assertThat(dto.attachment()).isNotNull();
+    assertThat(apiError(() -> chat.send(an, "m1", "  ", null, null)).getParams())
+        .isEqualTo(Map.of("field", "content"));
+  }
+
+  @Test
+  void replayingAFileLineDoesNotAttachOrTriggerTwice() {
+    String id = upload("a", new byte[] {1}, "text/plain");
+    MeetingMessageDto first = chat.send(an, "m1", "x", "c-1", att(id, "n.txt"));
+    MeetingMessageDto again = chat.send(an, "m1", "x", "c-1", att(id, "n.txt"));
+
+    assertThat(again.id()).isEqualTo(first.id());
+    assertThat(again.attachment()).isEqualTo(first.attachment());
+    assertThat(count()).isEqualTo(1);
+    verify(uploadRefs, times(1)).attachToMeeting(any(), any(), any());
+    verify(materials, times(1)).onFileSent(any(), any(), any(), any());
+    verify(events, times(1)).chat(any(), any(), any());
+  }
+
+  @Test
+  void historyCarriesTheAttachment() {
+    String id = upload("a", new byte[] {1, 2}, "image/png");
+    chat.send(an, "m1", "pic", null, att(id, "p.png"));
+    when(guard.records(any(), any())).thenReturn(null);
+
+    PageResponse<MeetingMessageDto> page = chat.history(an, "m1", null, 10);
+
+    assertThat(page.content()).hasSize(1);
+    assertThat(page.content().get(0).attachment().name()).isEqualTo("p.png");
+    assertThat(page.content().get(0).attachment().size()).isEqualTo(2);
   }
 }

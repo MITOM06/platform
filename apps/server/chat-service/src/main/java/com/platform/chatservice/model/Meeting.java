@@ -99,6 +99,12 @@ public class Meeting {
 
   private Instant summaryRequestedAt;
 
+  /** Files already handed to the AI reader; capped by {@code meetings.ai.file-cap}. */
+  private int aiFileCount;
+
+  /** The "file limit reached" record line was written; only ever set once. */
+  private boolean aiFileCapNoted;
+
   /** The group conversation created from this meeting; set at most once. */
   private String groupConversationId;
 

@@ -39,6 +39,12 @@ public class MeetingRecord {
 
   private String text;
 
+  /** FILE records: the upload id of the file the text was read from. */
+  private String ref;
+
+  /** FILE records: the file's name. */
+  private String fileName;
+
   private Instant ts;
 
   /** Server time of insertion; {@code ts} is client-supplied (clamped) and may differ. */

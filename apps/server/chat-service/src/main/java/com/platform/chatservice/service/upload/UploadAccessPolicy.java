@@ -87,12 +87,22 @@ public class UploadAccessPolicy {
       Meeting meeting = mongoTemplate.findById(meetingId, Meeting.class);
       if (meeting == null) continue;
       if (departmentIds == null) departmentIds = people.departmentIdsOf(userId);
-      if (MeetingAccess.canReadRecords(
-          meeting, userId, departmentIds, lobby.isAdmitted(meetingId, userId))) {
+      if (MeetingAccess.canReadRecords(meeting, userId, departmentIds, false)) return true;
+      // Admission is a Redis lookup: only when the cheap checks fail, and a Redis error denies.
+      if (admitted(meetingId, userId)
+          && MeetingAccess.canReadRecords(meeting, userId, departmentIds, true)) {
         return true;
       }
     }
     return false;
+  }
+
+  private boolean admitted(String meetingId, String userId) {
+    try {
+      return lobby.isAdmitted(meetingId, userId);
+    } catch (RuntimeException e) {
+      return false;
+    }
   }
 
   private boolean inAnyDepartment(List<String> departmentIds, String userId) {

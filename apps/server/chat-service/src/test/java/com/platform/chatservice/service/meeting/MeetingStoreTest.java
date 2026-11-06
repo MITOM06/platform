@@ -105,6 +105,43 @@ class MeetingStoreTest {
   }
 
   @Test
+  void claimAiFileSlotStopsAtTheCapAndNotesItOnce() {
+    Meeting m = meeting("fc1-aaaa-aaa", now);
+
+    for (int i = 0; i < 3; i++) {
+      assertThat(store.claimAiFileSlot(m.getId(), 3)).isEqualTo(MeetingStore.ClaimResult.CLAIMED);
+    }
+    assertThat(store.claimAiFileSlot(m.getId(), 3))
+        .isEqualTo(MeetingStore.ClaimResult.CAP_REACHED_FIRST);
+    assertThat(store.claimAiFileSlot(m.getId(), 3)).isEqualTo(MeetingStore.ClaimResult.CAP_REACHED);
+    assertThat(reload(m).getAiFileCount()).isEqualTo(3);
+    assertThat(store.claimAiFileSlot("missing", 3)).isEqualTo(MeetingStore.ClaimResult.CAP_REACHED);
+  }
+
+  @Test
+  void claimAiFileSlotNeverExceedsTheCapUnderConcurrency() throws Exception {
+    Meeting m = meeting("fc2-aaaa-aaa", now);
+    java.util.concurrent.ExecutorService pool =
+        java.util.concurrent.Executors.newFixedThreadPool(8);
+    List<java.util.concurrent.Future<MeetingStore.ClaimResult>> results = new ArrayList<>();
+    for (int i = 0; i < 40; i++) {
+      results.add(pool.submit(() -> store.claimAiFileSlot(m.getId(), 20)));
+    }
+    int claimed = 0;
+    int first = 0;
+    for (java.util.concurrent.Future<MeetingStore.ClaimResult> f : results) {
+      MeetingStore.ClaimResult r = f.get();
+      if (r == MeetingStore.ClaimResult.CLAIMED) claimed++;
+      if (r == MeetingStore.ClaimResult.CAP_REACHED_FIRST) first++;
+    }
+    pool.shutdown();
+
+    assertThat(claimed).isEqualTo(20);
+    assertThat(first).isEqualTo(1);
+    assertThat(reload(m).getAiFileCount()).isEqualTo(20);
+  }
+
+  @Test
   void codesAreUnique() {
     meeting("abc-defg-hjk", now);
     assertThatThrownBy(() -> meeting("abc-defg-hjk", now))

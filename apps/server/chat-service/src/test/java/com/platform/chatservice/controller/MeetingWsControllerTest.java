@@ -73,7 +73,7 @@ class MeetingWsControllerTest {
                 null,
                 Map.of("field", "content", "max", 2000)))
         .when(chat)
-        .send(any(), eq("m1"), anyString(), eq("c-1"));
+        .send(any(), eq("m1"), anyString(), eq("c-1"), isNull());
 
     controller.chat(new MeetingChatCommand("m1", "x", "c-1"), an);
 
@@ -82,10 +82,19 @@ class MeetingWsControllerTest {
   }
 
   @Test
+  void theAttachmentOfTheCommandReachesTheService() {
+    var file = new MeetingChatCommand.Attachment("/api/uploads/x", "a.pdf", 1L, "application/pdf");
+
+    controller.chat(new MeetingChatCommand("m1", "", "c-1", file), an);
+
+    verify(chat).send(any(), eq("m1"), eq(""), eq("c-1"), eq(file));
+  }
+
+  @Test
   void aJunkClientIdIsNeverEchoedBack() {
     doThrow(new ApiException(HttpStatus.FORBIDDEN, "MEETING_FORBIDDEN"))
         .when(chat)
-        .send(any(), any(), any(), any());
+        .send(any(), any(), any(), any(), any());
 
     controller.chat(new MeetingChatCommand("m1", "x", "<script>"), an);
 
@@ -94,7 +103,7 @@ class MeetingWsControllerTest {
 
   @Test
   void aRateLimitedChatIsReportedAsRateLimited() {
-    doThrow(new RateLimitExceededException()).when(chat).send(any(), any(), any(), any());
+    doThrow(new RateLimitExceededException()).when(chat).send(any(), any(), any(), any(), any());
 
     controller.chat(new MeetingChatCommand("m1", "x", null), an);
 

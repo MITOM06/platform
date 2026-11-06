@@ -375,6 +375,42 @@ public class MeetingStore {
     return mongo.find(query, Meeting.class);
   }
 
+  /** Outcome of {@link #claimAiFileSlot}. */
+  public enum ClaimResult {
+    /** A slot was taken; the file may be sent to the AI. */
+    CLAIMED,
+    /** The cap is reached and this call is the first to notice — it must write the notice line. */
+    CAP_REACHED_FIRST,
+    /** The cap is reached (or the meeting is gone). */
+    CAP_REACHED
+  }
+
+  /**
+   * Takes one of the meeting's {@code cap} AI file slots, atomically (a single {@code $inc} guarded
+   * by the count). Once full, exactly one caller gets {@link ClaimResult#CAP_REACHED_FIRST}.
+   */
+  public ClaimResult claimAiFileSlot(String id, int cap) {
+    Query open =
+        new Query(
+            byId(id)
+                .orOperator(
+                    Criteria.where("aiFileCount").exists(false),
+                    Criteria.where("aiFileCount").lt(cap)));
+    if (mongo
+            .updateFirst(open, new Update().inc("aiFileCount", 1), Meeting.class)
+            .getModifiedCount()
+        > 0) {
+      return ClaimResult.CLAIMED;
+    }
+    Query unnoted = new Query(byId(id).and("aiFileCapNoted").ne(true));
+    return mongo
+                .updateFirst(unnoted, new Update().set("aiFileCapNoted", true), Meeting.class)
+                .getModifiedCount()
+            > 0
+        ? ClaimResult.CAP_REACHED_FIRST
+        : ClaimResult.CAP_REACHED;
+  }
+
   private static Criteria byId(String id) {
     return Criteria.where("_id").is(id);
   }

@@ -80,7 +80,9 @@ contract in `docs/api-spec.md` § Meetings.
 
 ### MeetingMessage (`meeting_messages`) / MeetingNote (`meeting_notes`)
 ```
-meeting_messages: id, meetingId, senderId, content (text ≤ 2000), createdAt  — cursor (createdAt, _id)
+meeting_messages: id, meetingId, senderId, content (text ≤ 2000, may be "" with a file), clientId?,
+                  attachment? {uploadId, url, name ≤ 200, size, contentType — size/type read from GridFS,
+                  uploader must be the sender; `MeetingAttachments`}, createdAt  — cursor (createdAt, _id)
 meeting_notes:    id, meetingId, scope ("SHARED" | "PRIVATE"), ownerId (PRIVATE only), content (Markdown
                   ≤ 50 000), version (optimistic lock), updatedBy, updatedAt
                   — unique {meetingId, scope, ownerId} (MongoIndexInitializer)
@@ -90,7 +92,8 @@ Written with `MongoTemplate` only (`insert` / conditional `findAndModify` on `ve
 
 ### MeetingRecord (`meeting_records`) / MeetingSummaryDoc (`meeting_summaries`)
 ```
-meeting_records:   transcript lines of the meeting (MeetingRecordService), read by the internal endpoint
+meeting_records:   transcript lines of the meeting (MeetingRecordService), read by the internal endpoint;
+                   kind SPEECH | FILE | SCREEN, FILE rows also carry ref (uploadId) + fileName
 meeting_summaries: id, meetingId, attempt, status, summary (object MeetingSummary), createdAt
                    — index (meetingId, createdAt); only successful (DONE) summaries; a regenerate adds a row
 ```
@@ -101,6 +104,15 @@ PENDING atomically → `MeetingSummaryTrigger` publishes Redis `meet:summarize`
 replies on `meet:summary:result` `{meetingId, attempt, status: ok|empty|failed, summary?}` →
 `MeetingSummaryResultListener` stores it, posts the `meeting_summary` card in the group and sends
 `meet.summary.ready`. `MeetingSummaryService` serves `GET /{id}/summary` + `POST /{id}/summary/regenerate`.
+
+Files in the meeting chat: `MeetingChatService.send` (inRoom → shape → replay → rate limit → file loaded from
+GridFS, must be the sender's → insert → `UploadRefs.attachToMeeting` ref `{t:"m"}` → `meet.chat`) →
+`MeetingMaterialTrigger` (only when `settings.aiNotes`; `MeetingStore.claimAiFileSlot` atomic cap
+`meetings.ai.file-cap`, default 20; first file over the cap writes one FILE notice line) publishes Redis
+`meet:material` `{meetingId, messageId, uploadId, fileName, mimeType, userId}` → ai-service reads the file and
+replies on `meet:material:result` `{meetingId, messageId, fileName, status: ok|unsupported|failed, text?}` →
+`MeetingMaterialResultListener` (SETNX `meet:material:done:{messageId}` 1 h) appends one FILE `MeetingRecord`
+for the sender (text ≤ 6000 or "Không đọc được file này."). Never fails the send.
 
 `@AI` in the meeting chat: `MeetingChatService.send` → `MeetingAiBridge.ask` (async; `meet.ai thinking`) →
 RabbitMQ `AiRequestPayload{conversationId: "meeting:{id}", meetingId, history: 20 newest lines}` via
