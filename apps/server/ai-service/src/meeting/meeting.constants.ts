@@ -26,6 +26,8 @@ export interface MeetingRecordView {
   records: { kind: 'SPEECH' | 'FILE' | 'SCREEN'; displayName: string | null; text: string; ts: string }[];
   chat: { senderName: string; content: string; createdAt: string }[];
   sharedNote: string | null;
+  /** Newest AI summary of the meeting; absent/null when none exists yet. */
+  summary?: MeetingSummary | null;
 }
 
 export interface MeetingActionItem {

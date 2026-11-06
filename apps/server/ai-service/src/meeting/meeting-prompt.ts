@@ -25,7 +25,7 @@ export const MEETING_SYSTEM_PROMPT =
 const RECORD_LABEL = 'Meeting record';
 
 /** Cut the middle of `text` to fit `budget`, never splitting a UTF-16 surrogate pair. */
-function cutMiddle(text: string, budget: number): string {
+export function cutMiddle(text: string, budget: number): string {
   if (text.length <= budget) return text;
   const keep = Math.max(0, budget - CUT_MARKER.length);
   let head = Math.ceil(keep / 2);
@@ -37,11 +37,8 @@ function cutMiddle(text: string, budget: number): string {
 const isHigh = (c: number): boolean => c >= 0xd800 && c <= 0xdbff;
 const isLow = (c: number): boolean => c >= 0xdc00 && c <= 0xdfff;
 
-/**
- * Render the record as the user prompt, fenced as untrusted data (injection guard).
- * Over `maxChars` the middle is cut (head + tail kept); the result never exceeds it.
- */
-export function renderMeetingPrompt(view: MeetingRecordView, maxChars = MEETING_PROMPT_MAX_CHARS): string {
+/** The plain-text record (header, speech/files, chat, shared note) before fencing. */
+export function renderRecordBody(view: MeetingRecordView): string {
   const m = view.meeting;
   const lines: string[] = [`Meeting: ${oneLine(m.title) || oneLine(m.code)}`];
   if (m.hostName) lines.push(`Host: ${oneLine(m.hostName)}`);
@@ -62,7 +59,15 @@ export function renderMeetingPrompt(view: MeetingRecordView, maxChars = MEETING_
   }
   if (view.sharedNote?.trim()) lines.push('', '## Shared note', view.sharedNote.trim());
 
-  const body = lines.join('\n');
+  return lines.join('\n');
+}
+
+/**
+ * Render the record as the user prompt, fenced as untrusted data (injection guard).
+ * Over `maxChars` the middle is cut (head + tail kept); the result never exceeds it.
+ */
+export function renderMeetingPrompt(view: MeetingRecordView, maxChars = MEETING_PROMPT_MAX_CHARS): string {
+  const body = renderRecordBody(view);
   // wrapUntrusted sanitizes (may lengthen) and adds a preamble: shrink the budget until it fits.
   let budget = maxChars - (wrapUntrusted(RECORD_LABEL, 'x').length - 1);
   for (let i = 0; i < 20; i++) {
@@ -73,7 +78,7 @@ export function renderMeetingPrompt(view: MeetingRecordView, maxChars = MEETING_
   return wrapUntrusted(RECORD_LABEL, '[…]').slice(0, maxChars);
 }
 
-const oneLine = (v: string | null | undefined): string => (v ?? '').replace(/\s+/g, ' ').trim();
+export const oneLine = (v: string | null | undefined): string => (v ?? '').replace(/\s+/g, ' ').trim();
 
 function strings(v: unknown): string[] {
   if (!Array.isArray(v)) return [];

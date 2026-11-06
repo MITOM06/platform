@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { RedisModule } from '../redis/redis.module';
 import { UsageModule } from '../usage/usage.module';
+import { MeetingContextService } from './meeting-context.service';
 import { MeetingRecordClient } from './meeting-record.client';
 import { MeetingSummaryService } from './meeting-summary.service';
 import { MeetingSubscriberService } from './meeting-subscriber.service';
@@ -30,9 +31,10 @@ const redisLogger = new Logger('MeetingRedisSubscriber');
       inject: [ConfigService],
     },
     MeetingRecordClient,
+    MeetingContextService,
     MeetingSummaryService,
     MeetingSubscriberService,
   ],
-  exports: [MeetingRecordClient],
+  exports: [MeetingRecordClient, MeetingContextService],
 })
 export class MeetingModule {}

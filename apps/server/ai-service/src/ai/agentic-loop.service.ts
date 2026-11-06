@@ -101,7 +101,7 @@ export class AgenticLoopService {
       withheldSink: withheld,
       skillOffSink: skillOff,
     };
-    const defs = await this.toolRegistry.getDefinitions(toolCtx);
+    const defs = ctx.noTools ? [] : await this.toolRegistry.getDefinitions(toolCtx);
     const autoRunProviders = defs.filter((d) => d.autoRun).map((d) => providerOf(d.name) ?? '');
     // Single chokepoint for the final messages array: normalizeMessages drops a
     // leading assistant turn and merges consecutive same-role PLAIN-TEXT turns

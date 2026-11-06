@@ -38,6 +38,8 @@ export interface AiRequestPayload {
   perms?: string[];
   /** Department ids the caller belongs to (JWT `depts` claim); absent ⇒ no departments. */
   departmentIds?: string[];
+  /** Meeting this request is about (set by chat-service for @AI in the meeting chat). */
+  meetingId?: string | null;
 }
 
 export interface ToolTraceEntry {
@@ -87,6 +89,8 @@ export interface RequestContext {
    * it depends on more than the question (e.g. the recent group conversation).
    */
   responseCacheable?: boolean;
+  /** Offer the model no tools at all (answer is visible to a whole room, e.g. the meeting chat). */
+  noTools?: boolean;
   /** Resolved workspace AI settings (TASK-12) threaded into the loop. */
   settings: ResolvedAiSettings;
   /** Skill ids enabled for this user; gates action-skill MCP tools in the registry. */

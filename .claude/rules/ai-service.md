@@ -141,6 +141,12 @@ for await (const chunk of stream) {
 await this.publisher.publish(convId, { type: 'AI_STREAM_DONE', fullContent: fullText });
 ```
 
+## Meeting context (M3)
+
+- A request with `payload.meetingId` (chat-service, `@AI` in the meeting chat, `conversationId = "meeting:{id}"`) or a post-meeting group chat (`conversations.meetingId`) gets a meeting block from `MeetingContextService.blockFor` (record fetched AS the asker): trusted instruction + summary then record inside `wrapUntrusted('Meeting record')`, <= 60 000 chars (`meeting/meeting-context.ts`). No access -> trusted "no access" line; fetch error -> "temporarily unavailable" line; neither carries content.
+- Any request with a meeting block skips the response cache (lookup and store).
+- `meeting:` conversations get NO tools (`RequestContext.noTools`): the reply is shown to the whole room but tools would run with the asker's permissions. Post-meeting groups keep normal group-chat tools.
+
 ## Testing
 
 - Run: `pnpm test` (Jest)

@@ -15,6 +15,15 @@ export interface ConversationContext {
    * null  = unknown (lookup failed / not found) — callers keep direct-chat behavior.
    */
   directAi: boolean | null;
+  /** Meeting this conversation belongs to (`meeting:{id}` chat or a post-meeting group); else null/absent. */
+  meetingId?: string | null;
+}
+
+const MEETING_CHAT_PREFIX = 'meeting:';
+
+/** The in-meeting chat uses the synthetic conversation id `meeting:{meetingId}`. */
+export function isMeetingChatId(conversationId: string): boolean {
+  return conversationId.startsWith(MEETING_CHAT_PREFIX) && conversationId.length > MEETING_CHAT_PREFIX.length;
 }
 
 const UNKNOWN: ConversationContext = { access: 'unknown', directAi: null };
@@ -46,11 +55,20 @@ export class ConversationAccessService {
     conversationId: string,
     userId: string,
   ): Promise<ConversationContext> {
+    // The meeting room is a shared room that chat-service already gated (guard.inRoom);
+    // there is no `conversations` document, so answer without a lookup.
+    if (isMeetingChatId(conversationId)) {
+      return {
+        access: 'allowed',
+        directAi: false,
+        meetingId: conversationId.slice(MEETING_CHAT_PREFIX.length),
+      };
+    }
     if (!Types.ObjectId.isValid(conversationId)) return UNKNOWN;
     try {
       const convo = await this.conversationModel
         .findById(conversationId)
-        .select('participants')
+        .select('participants meetingId')
         .lean()
         .exec();
       if (!convo) return UNKNOWN;
@@ -60,6 +78,7 @@ export class ConversationAccessService {
       return {
         access: participants.includes(userId) ? 'allowed' : 'denied',
         directAi: participants.length === 2 && participants.includes(this.botUserId),
+        meetingId: convo.meetingId || null,
       };
     } catch (err) {
       this.logger.warn(`Conversation access check failed for ${conversationId}: ${(err as Error).message}`);
