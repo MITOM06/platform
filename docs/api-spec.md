@@ -728,12 +728,20 @@ host/co-host whose STOMP reconnected calls `GET /lobby` to catch up on a missed 
 | `/app/meet.transcript` | `{ "meetingId": "m1", "text": "…", "ts": 1730800000000 }` | One line of the sender's own speech (client speech-to-text). **Never answered with `meet.error`** (high frequency): dropped silently unless the sender is in the room (entitled **and** has an open attendance row), `settings.aiNotes` is true and `text` is non-blank. `text` trimmed and cut to 500 chars; `ts` (epoch ms) clamped into [server now − 60 s, server now]. Per-user limit ~3 lines/s (burst 6); over the limit is dropped silently. Stored in Mongo `meeting_records` `{meetingId, kind: SPEECH\|FILE\|SCREEN, userId, displayName (null if unknown), text, ts, createdAt}`, index (meetingId, ts) |
 
 **Files and AI notes (Redis, service to service).** When `settings.aiNotes` is on at send time, a line with
-a file publishes `meet:material` `{meetingId, messageId, uploadId, fileName, mimeType, userId}` (chat-service →
+a file publishes `meet:material` `{kind: "file", meetingId, messageId, uploadId, fileName, mimeType, userId}` (chat-service →
 ai-service; at most `meetings.ai.file-cap`, default 20, files per meeting — the first file over the cap adds one
 record line "Đã đạt giới hạn file AI đọc."). ai-service answers on `meet:material:result` `{meetingId,
 messageId, fileName, kind: "file"|"screen", status: "ok"|"unsupported"|"failed", text?}` (`kind` echoes the request, absent = file; chat-service routes `screen` results — a frame id in `messageId` — to a `SCREEN` record, see screen frames); chat-service writes one `FILE` record
 (text capped at 6000 chars, or "Không đọc được file này.") attributed to the sender, deduplicated by
 `messageId` (`meet:material:done:{messageId}`, 1 h). Clients see none of this.
+
+**Shared contract fixtures.** `apps/server/contracts/` holds example payloads that tests on BOTH sides
+assert against (chat-service JUnit loads them by `Path.of("..", "contracts", …)`, ai-service Jest by
+`__dirname/../../../contracts`): `meet-material-result.screen.json` (`meet:material:result`, kind screen),
+`meet-summary-result.ok.json` (`meet:summary:result` ok + summary) and `meeting-record.internal.json`
+(`GET /internal/meetings/{id}/record`, as chat-service writes it: Jackson `non_null`, so a null field —
+including a null inside the stored summary — is **omitted**, never sent as `null`; instants are ISO-8601
+strings). Change a fixture only together with both sides.
 
 **Idempotent chat sends.** Re-sending `/app/meet.chat` with a `clientId` you already used in that
 meeting (a retry after a slow echo) stores nothing, is not counted against the rate limit, and
