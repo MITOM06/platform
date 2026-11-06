@@ -1,6 +1,10 @@
 package com.platform.chatservice.service.upload;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
+import com.platform.chatservice.model.Meeting;
+import com.platform.chatservice.service.meeting.MeetingAccess;
+import com.platform.chatservice.service.meeting.MeetingLobby;
+import com.platform.chatservice.service.meeting.MeetingPeople;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -20,7 +24,9 @@ import org.springframework.stereotype.Component;
  *   <li>a current participant of a conversation in {@code metadata.refs} ({@code t:"c"});
  *   <li>a member of a department in {@code metadata.refs} ({@code t:"d"}, via {@code
  *       users.departmentIds});
- *   <li>anyone, when the file is a public profile image — queried only when 1–3 fail: the avatar /
+ *   <li>anyone who can read the records of a meeting in {@code metadata.refs} ({@code t:"m"}, via
+ *       {@link MeetingAccess#canReadRecords}; a missing meeting grants nothing);
+ *   <li>anyone, when the file is a public profile image — queried only when 1–4 fail: the avatar /
  *       cover photo of the user who UPLOADED it (users can point their profile at any string, so a
  *       foreign file there proves nothing), the workspace logo, or a bot avatar (both admin-only
  *       writes). AI persona avatars are not here: they are recorded as a conversation ref.
@@ -35,6 +41,8 @@ public class UploadAccessPolicy {
       List.of(new String[] {"workspaces", "logoUrl"}, new String[] {"external_bots", "avatarUrl"});
 
   private final MongoTemplate mongoTemplate;
+  private final MeetingPeople people;
+  private final MeetingLobby lobby;
 
   public boolean canRead(GridFSFile file, String userId) {
     if (file == null || userId == null || userId.isBlank()) return false;
@@ -43,18 +51,22 @@ public class UploadAccessPolicy {
 
     List<String> conversations = new ArrayList<>();
     List<String> departments = new ArrayList<>();
-    collectRefs(meta, conversations, departments);
+    List<String> meetings = new ArrayList<>();
+    collectRefs(meta, conversations, departments, meetings);
     if (inAnyConversation(conversations, userId)) return true;
     if (!departments.isEmpty() && inAnyDepartment(departments, userId)) return true;
+    if (!meetings.isEmpty() && inAnyMeeting(meetings, userId)) return true;
     return isProfileImage(publicId(file, meta), meta.getString("uploadedBy"));
   }
 
-  private static void collectRefs(Document meta, List<String> conversations, List<String> depts) {
+  private static void collectRefs(
+      Document meta, List<String> conversations, List<String> depts, List<String> meetings) {
     if (!(meta.get("refs") instanceof List<?> refs)) return;
     for (Object r : refs) {
       if (!(r instanceof Document ref) || !(ref.get("id") instanceof String id)) continue;
       if (UploadRefs.REF_CONVERSATION.equals(ref.getString("t"))) conversations.add(id);
       else if (UploadRefs.REF_DEPARTMENT.equals(ref.getString("t"))) depts.add(id);
+      else if (UploadRefs.REF_MEETING.equals(ref.getString("t"))) meetings.add(id);
     }
   }
 
@@ -66,6 +78,21 @@ public class UploadAccessPolicy {
     for (String id : conversationIds) ids.add(ObjectId.isValid(id) ? new ObjectId(id) : id);
     Query query = new Query(Criteria.where("_id").in(ids).and("participants").is(userId));
     return mongoTemplate.exists(query, "conversations");
+  }
+
+  /** Live lookup, so being removed from a meeting revokes access at once. */
+  private boolean inAnyMeeting(List<String> meetingIds, String userId) {
+    List<String> departmentIds = null; // loaded once, only if a meeting is found
+    for (String meetingId : meetingIds) {
+      Meeting meeting = mongoTemplate.findById(meetingId, Meeting.class);
+      if (meeting == null) continue;
+      if (departmentIds == null) departmentIds = people.departmentIdsOf(userId);
+      if (MeetingAccess.canReadRecords(
+          meeting, userId, departmentIds, lobby.isAdmitted(meetingId, userId))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private boolean inAnyDepartment(List<String> departmentIds, String userId) {

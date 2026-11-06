@@ -3,14 +3,19 @@ package com.platform.chatservice.service.upload;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.platform.chatservice.model.Conversation;
+import com.platform.chatservice.model.Meeting;
 import com.platform.chatservice.repository.ConversationRepository;
+import com.platform.chatservice.service.meeting.MeetingLobby;
+import com.platform.chatservice.service.meeting.MeetingPeople;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,20 +61,33 @@ class UploadAccessPolicyTest {
   private GridFsTemplate gridFs;
   private UploadRefs refs;
   private UploadAccessPolicy policy;
+  private MeetingLobby lobby;
 
   @BeforeEach
   void setUp() {
+    lobby = mock(MeetingLobby.class);
     for (String c :
-        List.of("fs.files", "fs.chunks", "users", "workspaces", "external_bots", "ai_personas")) {
+        List.of(
+            "fs.files",
+            "fs.chunks",
+            "users",
+            "workspaces",
+            "external_bots",
+            "ai_personas",
+            "meetings")) {
       mongoTemplate.getCollection(c).deleteMany(new Document());
     }
     conversationRepository.deleteAll();
     gridFs =
         new GridFsTemplate(mongoTemplate.getMongoDatabaseFactory(), mongoTemplate.getConverter());
     // Refs are set up by the uploader (who can always read the file).
-    refs = new UploadRefs(mongoTemplate, gridFs, new UploadAccessPolicy(mongoTemplate));
+    refs =
+        new UploadRefs(
+            mongoTemplate,
+            gridFs,
+            new UploadAccessPolicy(mongoTemplate, new MeetingPeople(mongoTemplate), lobby));
     spyTemplate = spy(mongoTemplate);
-    policy = new UploadAccessPolicy(spyTemplate);
+    policy = new UploadAccessPolicy(spyTemplate, new MeetingPeople(mongoTemplate), lobby);
 
     mongoTemplate.getCollection("users").insertOne(user(MEMBER, DEPT));
     mongoTemplate.getCollection("users").insertOne(user(STRANGER, OTHER_DEPT));
@@ -157,6 +175,98 @@ class UploadAccessPolicyTest {
     refs.attachToDepartment(url(id), DEPT.toHexString(), UPLOADER);
 
     assertThat(policy.canRead(file(id), STRANGER)).isFalse();
+  }
+
+  private Meeting meeting(Meeting.MeetingBuilder b) {
+    return mongoTemplate.save(b.hostId(UPLOADER).build());
+  }
+
+  @Test
+  void meeting_ref_opens_file_to_invitee_attendee_and_department_member() {
+    String attendee = new ObjectId().toHexString();
+    String invitee = new ObjectId().toHexString();
+    Meeting byInvite = meeting(Meeting.builder().inviteeIds(new ArrayList<>(List.of(invitee))));
+    Meeting byDept = meeting(Meeting.builder().departmentId(DEPT.toHexString()));
+    Meeting byAttend =
+        meeting(
+            Meeting.builder()
+                .attendance(
+                    new ArrayList<>(
+                        List.of(Meeting.Attendance.builder().userId(attendee).build()))));
+    String a = upload();
+    String b = upload();
+    String c = upload();
+    assertThat(refs.attachToMeeting(a, byInvite.getId(), UPLOADER)).isTrue();
+    assertThat(refs.attachToMeeting(b, byDept.getId(), UPLOADER)).isTrue();
+    assertThat(refs.attachToMeeting(c, byAttend.getId(), UPLOADER)).isTrue();
+
+    assertThat(policy.canRead(file(a), invitee)).isTrue();
+    assertThat(policy.canRead(file(b), MEMBER)).isTrue();
+    assertThat(policy.canRead(file(c), attendee)).isTrue();
+  }
+
+  @Test
+  void meeting_ref_admitted_guest_can_read() {
+    Meeting m = meeting(Meeting.builder());
+    String id = upload();
+    refs.attachToMeeting(id, m.getId(), UPLOADER);
+    when(lobby.isAdmitted(m.getId(), STRANGER)).thenReturn(true);
+
+    assertThat(policy.canRead(file(id), STRANGER)).isTrue();
+  }
+
+  @Test
+  void meeting_ref_outsider_and_removed_person_cannot_read() {
+    Meeting m =
+        meeting(
+            Meeting.builder()
+                .inviteeIds(new ArrayList<>(List.of(MEMBER)))
+                .removedIds(new ArrayList<>(List.of(MEMBER))));
+    String id = upload();
+    refs.attachToMeeting(id, m.getId(), UPLOADER);
+
+    assertThat(policy.canRead(file(id), STRANGER)).isFalse();
+    assertThat(policy.canRead(file(id), MEMBER)).isFalse();
+  }
+
+  @Test
+  void meeting_ref_to_missing_meeting_grants_nothing() {
+    String id = upload();
+    assertThat(refs.attachToMeeting(id, new ObjectId().toHexString(), UPLOADER)).isTrue();
+
+    assertThat(policy.canRead(file(id), MEMBER)).isFalse();
+  }
+
+  @Test
+  void non_uploader_cannot_attach_to_meeting() {
+    Meeting m = meeting(Meeting.builder().inviteeIds(new ArrayList<>(List.of(STRANGER))));
+    String id = upload();
+
+    assertThat(refs.attachToMeeting(id, m.getId(), STRANGER)).isFalse();
+    assertThat(policy.canRead(file(id), STRANGER)).isFalse();
+  }
+
+  @Test
+  void attach_to_meeting_is_idempotent_and_ignores_blank_input() {
+    Meeting m = meeting(Meeting.builder());
+    String id = upload();
+    assertThat(refs.attachToMeeting(id, m.getId(), UPLOADER)).isTrue();
+    assertThat(refs.attachToMeeting(id, m.getId(), UPLOADER)).isTrue();
+    assertThat(refs.attachToMeeting(id, "", UPLOADER)).isFalse();
+    assertThat(refs.attachToMeeting("not-an-id", m.getId(), UPLOADER)).isFalse();
+
+    List<?> list = (List<?>) file(id).getMetadata().get("refs");
+    assertThat(list).hasSize(1);
+  }
+
+  @Test
+  void departments_not_loaded_when_no_meeting_ref() {
+    String id = upload();
+    Conversation c = conversation(UPLOADER, MEMBER);
+    refs.attachToConversation(url(id), c.getId(), UPLOADER);
+
+    assertThat(policy.canRead(file(id), STRANGER)).isFalse();
+    verify(lobby, never()).isAdmitted(any(), any());
   }
 
   @Test
