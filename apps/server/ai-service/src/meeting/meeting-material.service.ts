@@ -15,6 +15,7 @@ import { REDIS_PUBLISHER } from '../redis/redis.constants';
 import {
   MEETING_MATERIAL_RESULT_CHANNEL,
   MeetingMaterialMessage,
+  MeetingMaterialResult,
   MeetingMaterialStatus,
 } from './meeting.constants';
 
@@ -104,15 +105,17 @@ export class MeetingMaterialService {
       outcome = { status: 'failed' };
     }
     try {
-      await this.publisher.publishToChannel(MEETING_MATERIAL_RESULT_CHANNEL, {
+      const result: MeetingMaterialResult = {
         meetingId: msg.meetingId,
         messageId: msg.messageId,
         fileName: msg.fileName,
+        kind: msg.kind ?? 'file',
         status: outcome.status as MeetingMaterialStatus,
         ...(outcome.status === 'ok'
           ? { text: capText(outcome.text, msg.kind === 'screen' ? SCREEN_TEXT_MAX_CHARS : MATERIAL_TEXT_MAX_CHARS) }
           : {}),
-      });
+      };
+      await this.publisher.publishToChannel(MEETING_MATERIAL_RESULT_CHANNEL, result);
       this.logger.log(`Published meeting material ${msg.meetingId}/${msg.messageId}: ${outcome.status}`);
     } catch (err) {
       this.logger.error(`Publishing material result ${msg.messageId} failed: ${(err as Error).message}`);

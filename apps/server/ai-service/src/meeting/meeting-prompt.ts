@@ -56,9 +56,10 @@ export function renderRecordBody(view: MeetingRecordView): string {
         const who = oneLine(r.displayName);
         lines.push(`[FILE] ${file}${who ? ` (shared by ${who})` : ''}: ${r.text}`);
       } else if (r.kind === 'SCREEN') {
-        const who = oneLine(r.displayName) || GENERIC_SPEAKER;
+        const who = oneLine(r.displayName);
         // No time: records are already in order and the prompt has no timezone.
-        lines.push(`[SCREEN] (shared by ${who}): ${r.text}`);
+        // No name = a system notice (e.g. the cap), not something a person shared.
+        lines.push(who ? `[SCREEN] (shared by ${who}): ${r.text}` : `[SCREEN] ${r.text}`);
       } else {
         lines.push(`[${r.kind}] ${oneLine(r.displayName) || GENERIC_SPEAKER}: ${r.text}`);
       }

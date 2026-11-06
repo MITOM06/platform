@@ -77,3 +77,13 @@ export interface MeetingMaterialMessage {
 export type MeetingMaterialKind = 'file' | 'screen';
 
 export type MeetingMaterialStatus = 'ok' | 'unsupported' | 'failed';
+
+/** Outbound `meet:material:result`; `kind` echoes the request so chat-service can route it. */
+export interface MeetingMaterialResult {
+  meetingId: string;
+  messageId: string;
+  fileName: string;
+  kind: MeetingMaterialKind;
+  status: MeetingMaterialStatus;
+  text?: string;
+}

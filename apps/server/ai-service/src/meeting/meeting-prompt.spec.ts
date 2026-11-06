@@ -131,10 +131,16 @@ describe('SCREEN records', () => {
     expect(p.indexOf(line)).toBeGreaterThan(p.indexOf('<<<UNTRUSTED_DATA>>>'));
     expect(p.indexOf(line)).toBeLessThan(p.indexOf('<<<END_UNTRUSTED_DATA>>>'));
   });
-  it('falls back to Speaker on a missing name', () => {
-    const p = renderMeetingPrompt(view({
-      records: [{ kind: 'SCREEN', displayName: null, text: 'a', ts: 'nope', fileName: null }],
-    }));
-    expect(p).toContain('[SCREEN] (shared by Speaker): a');
+});
+
+describe('SCREEN notice without a name', () => {
+  it('renders a system line "[SCREEN] text" with no shared-by', () => {
+    const p = renderMeetingPrompt(
+      view({
+        records: [{ kind: 'SCREEN', displayName: null, text: 'Đã đạt giới hạn.', ts: '2026-11-07T08:05:09Z', fileName: null }],
+      }),
+    );
+    expect(p).toContain('[SCREEN] Đã đạt giới hạn.');
+    expect(p).not.toContain('shared by Speaker');
   });
 });

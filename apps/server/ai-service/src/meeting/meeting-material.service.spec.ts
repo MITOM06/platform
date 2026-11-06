@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { MeetingMaterialService, SCREEN_PROMPT, capText } from './meeting-material.service';
 import { MEETING_MATERIAL_RESULT_CHANNEL } from './meeting.constants';
 import { UnsupportedFileTypeException } from '../kb/document-extractor.service';
@@ -64,7 +66,7 @@ describe('MeetingMaterialService', () => {
     expect(init.headers).toEqual({ 'X-Internal-Key': 'k3y' });
     expect(s.extractor.extractText).toHaveBeenCalledWith(expect.any(Buffer), 'application/pdf');
     expect(s.publisher.publishToChannel).toHaveBeenCalledWith(MEETING_MATERIAL_RESULT_CHANNEL, {
-      meetingId: 'm1', messageId: 'x1', fileName: 'a.pdf', status: 'ok', text: 'hello world',
+      meetingId: 'm1', messageId: 'x1', fileName: 'a.pdf', status: 'ok', text: 'hello world', kind: 'file',
     });
   });
 
@@ -257,6 +259,32 @@ describe('MeetingMaterialService', () => {
       expect(opts).toEqual({ prompt: SCREEN_PROMPT, maxTokens: 800, usageLabel: 'meeting-screen' });
       expect(s.published()[0]).toMatchObject({ status: 'ok', messageId: 'x1' });
       expect(s.published()[0].text).toHaveLength(1500);
+    });
+
+    it('publishes kind screen on every status, matching the shared contract fixture', async () => {
+      fetchMock.mockImplementation(async () => res(JPEG));
+      const s = setup();
+      s.vision.describeImage.mockResolvedValue('Slide: Q3 plan');
+      await s.svc.process({ ...screen, messageId: 'fr1' });
+      const fixture = JSON.parse(
+        readFileSync(join(__dirname, '../../../contracts/meet-material-result.screen.json'), 'utf8'),
+      );
+      expect(s.published()[0]).toEqual(fixture);
+      const f = setup();
+      f.vision.describeImage.mockRejectedValue(new Error('boom'));
+      await f.svc.process(screen);
+      expect(f.published()[0]).toMatchObject({ kind: 'screen', status: 'failed' });
+    });
+
+    it('claim failure path (thrown) still carries kind', async () => {
+      const s = setup();
+      s.redis.set.mockRejectedValue(new Error('redis down'));
+      await s.svc.process(screen);
+      expect(s.published()[0]).toMatchObject({ kind: 'screen', status: 'failed' });
+      const t = setup();
+      t.redis.set.mockRejectedValue(new Error('redis down'));
+      await t.svc.process(msg);
+      expect(t.published()[0]).toMatchObject({ kind: 'file', status: 'failed' });
     });
 
     it('bytes that are not an image -> unsupported, no vision call', async () => {
