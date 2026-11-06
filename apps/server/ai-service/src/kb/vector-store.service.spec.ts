@@ -83,3 +83,71 @@ describe('VectorStoreService', () => {
     );
   });
 });
+
+describe('VectorStoreService — scope filter, defaults and orphan scan', () => {
+  function make(client: Record<string, jest.Mock>, cfg: Record<string, unknown> = {}) {
+    const service = new VectorStoreService({ get: jest.fn((k: string) => cfg[k]) } as unknown as ConfigService);
+    (service as any).client = client;
+    return service;
+  }
+
+  it('restricts the search to exactly the given document ids and maps missing payload fields', async () => {
+    const search = jest.fn().mockResolvedValue([{ score: 0.4, payload: null }]);
+    const out = await make({ search }).search('knowledge', [0.1], 7, ['d1', 'd2']);
+    expect(search).toHaveBeenCalledWith('knowledge', {
+      vector: [0.1],
+      limit: 7,
+      filter: { must: [{ key: 'documentId', match: { any: ['d1', 'd2'] } }] },
+      with_payload: true,
+    });
+    expect(out).toEqual([{ text: '', documentId: '', score: 0.4 }]);
+  });
+
+  it('an empty id list still filters (matches nothing) instead of searching every document', async () => {
+    const search = jest.fn().mockResolvedValue([]);
+    await make({ search }).search('knowledge', [0.1], 4, []);
+    expect(search.mock.calls[0][1].filter).toEqual({ must: [{ key: 'documentId', match: { any: [] } }] });
+  });
+
+  it('deleteDocument deletes only that document’s chunks', async () => {
+    const del = jest.fn().mockResolvedValue({});
+    await make({ delete: del }).deleteDocument('knowledge', 'doc1');
+    expect(del).toHaveBeenCalledWith('knowledge', {
+      filter: { must: [{ key: 'documentId', match: { value: 'doc1' } }] },
+    });
+  });
+
+  it('creates a collection with the configured default dimension', async () => {
+    const createCollection = jest.fn().mockResolvedValue(true);
+    const svc = make(
+      { getCollection: jest.fn().mockRejectedValue(new Error('404')), createCollection },
+      { 'config.kb.embeddingDimensions': 512 },
+    );
+    await svc.ensureCollection('knowledge');
+    expect(createCollection).toHaveBeenCalledWith('knowledge', { vectors: { size: 512, distance: 'Cosine' } });
+  });
+
+  it('listDocumentIds pages through the collection and dedupes ids', async () => {
+    const scroll = jest
+      .fn()
+      .mockResolvedValueOnce({
+        points: [{ payload: { documentId: 'a' } }, { payload: { documentId: 'b' } }, { payload: {} }],
+        next_page_offset: 'p2',
+      })
+      .mockResolvedValueOnce({ points: [{ payload: { documentId: 'a' } }, { payload: null }], next_page_offset: null });
+    await expect(make({ scroll }).listDocumentIds('knowledge')).resolves.toEqual(['a', 'b']);
+    expect(scroll).toHaveBeenCalledTimes(2);
+    expect(scroll.mock.calls[1][1]).toMatchObject({ offset: 'p2', with_vector: false, limit: 256 });
+    expect(scroll.mock.calls[0][1].offset).toBeUndefined();
+  });
+
+  it('listDocumentIds returns [] for a missing collection', async () => {
+    const scroll = jest.fn().mockRejectedValue(new Error('Not found'));
+    await expect(make({ scroll }).listDocumentIds('knowledge')).resolves.toEqual([]);
+  });
+
+  it('listDocumentIds tolerates a page without points', async () => {
+    const scroll = jest.fn().mockResolvedValue({});
+    await expect(make({ scroll }).listDocumentIds('knowledge')).resolves.toEqual([]);
+  });
+});

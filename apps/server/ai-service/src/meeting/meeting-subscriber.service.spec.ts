@@ -43,3 +43,49 @@ describe('MeetingSubscriberService', () => {
     expect(t.material.process).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('MeetingSubscriberService — meet:summarize validation and resilience', () => {
+  it.each([
+    ['bad json', '{nope'],
+    ['JSON null', 'null'],
+    ['missing meetingId', { attempt: 'a', requesterId: 'r' }],
+    ['empty attempt', { meetingId: 'm', attempt: '', requesterId: 'r' }],
+    ['numeric attempt', { meetingId: 'm', attempt: 1, requesterId: 'r' }],
+    ['missing requesterId', { meetingId: 'm', attempt: 'a' }],
+  ])('drops malformed summarize: %s', async (_n, p) => {
+    const t = await boot();
+    t.emit('meet:summarize', p);
+    expect(t.summary.summarize).not.toHaveBeenCalled();
+  });
+
+  it('passes the summarize payload through unchanged', async () => {
+    const t = await boot();
+    const p = { meetingId: 'm', attempt: 'a', requesterId: 'host' };
+    t.emit('meet:summarize', p);
+    expect(t.summary.summarize).toHaveBeenCalledWith(p);
+  });
+
+  it('ignores other channels', async () => {
+    const t = await boot();
+    t.emit('kb:process', { meetingId: 'm', attempt: 'a', requesterId: 'r' });
+    expect(t.summary.summarize).not.toHaveBeenCalled();
+    expect(t.material.process).not.toHaveBeenCalled();
+  });
+
+  it('keeps listening when SUBSCRIBE fails and a job rejects', async () => {
+    let handler: (c: string, m: string) => void = () => undefined;
+    const client = {
+      subscribe: jest.fn().mockRejectedValue(new Error('NOAUTH')),
+      on: jest.fn((_e: string, h: typeof handler) => { handler = h; }),
+    };
+    const summary = { summarize: jest.fn().mockRejectedValue(new Error('x')) };
+    const material = { process: jest.fn().mockRejectedValue(new Error('y')) };
+    const svc = new MeetingSubscriberService(client as never, summary as never, material as never);
+    await expect(svc.onApplicationBootstrap()).resolves.toBeUndefined();
+    handler('meet:summarize', JSON.stringify({ meetingId: 'm', attempt: 'a', requesterId: 'r' }));
+    handler('meet:material', JSON.stringify(good));
+    await new Promise((r) => setImmediate(r));
+    expect(summary.summarize).toHaveBeenCalledTimes(1);
+    expect(material.process).toHaveBeenCalledTimes(1);
+  });
+});
