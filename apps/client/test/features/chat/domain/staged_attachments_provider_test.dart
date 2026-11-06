@@ -134,12 +134,9 @@ void main() {
       expect(h.container.read(isAllHDProvider(kConv)), isTrue);
     });
 
-    test('SD upload keeps a .jpg filename on mobile (io)',
-        skip: 'BUG: staged_attachments_provider.dart flush() builds the SD file '
-            'with XFile.fromData(name: …) only; on io XFile.name comes from '
-            '`path`, so uploadFile() sends filename "" and no image/* content '
-            'type. Fix: also pass `path: <same name>` to XFile.fromData.',
-        () async {
+    // On io XFile.name comes from `path`, so the SD file must carry one or the
+    // upload has an empty filename and no image/* content type.
+    test('SD upload keeps a .jpg filename on mobile (io)', () async {
       final png = img.encodePng(img.Image(width: 4, height: 4));
       when(() => h.repo.uploadFile(any())).thenAnswer((_) async => '/u/sd');
       h.container.read(isAllHDProvider(kConv).notifier).state = false;
