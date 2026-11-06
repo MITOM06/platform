@@ -100,6 +100,38 @@ class MeetingAiReplyHandlerTest {
   }
 
   @Test
+  void aSystemNoticeDoneIsNeverStoredNorShown() {
+    handler.handle(
+        event(
+            "AI_STREAM_DONE",
+            "fullContent",
+            "Context compacted.",
+            "replyId",
+            "r9",
+            "trace",
+            Map.of("model", "system")));
+
+    assertThat(lines()).isZero();
+    verify(events, never()).chat(anyString(), any(), any());
+    verify(events, never()).ai(anyString(), anyString(), any(), anyString());
+  }
+
+  @Test
+  void aModelAnswerWithATraceIsStillStored() {
+    handler.handle(
+        event(
+            "AI_STREAM_DONE",
+            "fullContent",
+            "Real answer",
+            "replyId",
+            "r8",
+            "trace",
+            Map.of("model", "claude-x")));
+
+    assertThat(lines()).isEqualTo(1);
+  }
+
+  @Test
   void aSecondDoneWithTheSameReplyIdStoresNothing() {
     when(ops.setIfAbsent(anyString(), anyString(), any(Duration.class))).thenReturn(true, false);
     Map<String, Object> done = event("AI_STREAM_DONE", "fullContent", "once", "replyId", "r1");

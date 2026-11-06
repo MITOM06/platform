@@ -5,6 +5,7 @@ import com.platform.chatservice.dto.meeting.MeetingResponse;
 import com.platform.chatservice.dto.meeting.MeetingSettingsDto;
 import com.platform.chatservice.dto.meeting.PersonDto;
 import com.platform.chatservice.model.Meeting;
+import com.platform.chatservice.service.AiConstants;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -96,7 +97,13 @@ public class MeetingMapper {
   /** The resolved profile, or a nameless entry for an unknown user. */
   public static PersonDto person(String userId, Map<String, PersonDto> profiles) {
     PersonDto known = profiles == null ? null : profiles.get(userId);
-    return known != null ? known : new PersonDto(userId, null, null);
+    if (known != null) {
+      return known;
+    }
+    if (AiConstants.AI_BOT_USER_ID.equals(userId)) {
+      return new PersonDto(userId, MeetingAiReplyHandler.BOT_NAME, null);
+    }
+    return new PersonDto(userId, null, null);
   }
 
   /**

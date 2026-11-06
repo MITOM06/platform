@@ -59,6 +59,9 @@ public class MeetingAiReplyHandler {
       }
       return;
     }
+    if (isSystemNotice(event)) {
+      return; // ai-service's own notice (/new, compaction...): never a line in the room
+    }
     String full = event.get("fullContent") instanceof String s ? s : null;
     if (!claim(convId, "", replyId, full)) {
       return;
@@ -84,6 +87,11 @@ public class MeetingAiReplyHandler {
             saved.getContent(),
             saved.getCreatedAt()),
         null);
+  }
+
+  /** ai-service marks its non-model notices with a zeroed trace whose model is "system". */
+  private static boolean isSystemNotice(Map<String, Object> event) {
+    return event.get("trace") instanceof Map<?, ?> trace && "system".equals(trace.get("model"));
   }
 
   /** True for the one instance that wins the claim of this reply's outcome. */
