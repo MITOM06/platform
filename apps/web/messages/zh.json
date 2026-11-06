@@ -2270,6 +2270,8 @@
     "chatUploading": "正在上传文件…",
     "chatFileTooLarge": "文件太大",
     "chatUploadFailed": "无法上传文件，请重试",
+    "chatNotSent": "文件未能发送。已保留在此，点击发送重试",
+    "chatRemoveFile": "移除文件",
     "chatOffline": "正在重新连接，暂时无法发送消息",
     "chatCounter": "{count}/{max}",
     "settingAiNotes": "AI 会议纪要",

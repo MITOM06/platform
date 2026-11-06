@@ -2270,6 +2270,8 @@
     "chatUploading": "Uploading file…",
     "chatFileTooLarge": "File is too large",
     "chatUploadFailed": "Couldn't upload the file, try again",
+    "chatNotSent": "Couldn't send the file. It is kept here, press Send to retry",
+    "chatRemoveFile": "Remove file",
     "chatOffline": "Reconnecting — you can't send messages right now",
     "chatCounter": "{count}/{max}",
     "settingAiNotes": "AI meeting notes",

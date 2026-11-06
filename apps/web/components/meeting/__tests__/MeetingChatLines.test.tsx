@@ -59,6 +59,12 @@ describe('ChatLine attachment', () => {
     expect(container.textContent).toContain('look')
   })
 
+  it('hides the size when it is 0', () => {
+    render(<ul><ChatLine message={{ ...line('u2', 'Bob', ''), attachment: { ...att, size: 0 } }} showName={false} timeFormat={fmt} /></ul>)
+    expect(screen.getByText('plan.pdf')).toBeTruthy()
+    expect(screen.queryByText(/\bB$/)).toBeNull()
+  })
+
   it('a file-only line has no empty text bubble', () => {
     const { container } = render(
       <ul><ChatLine message={{ ...line('u2', 'Bob', ''), attachment: att }} showName={false} timeFormat={fmt} /></ul>,

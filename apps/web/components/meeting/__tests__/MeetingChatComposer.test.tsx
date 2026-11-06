@@ -66,4 +66,42 @@ describe('MeetingChatComposer attach', () => {
     await act(async () => { done({ url: '/api/uploads/a', filename: 'plan.pdf', size: '1' }) })
     await waitFor(() => expect(screen.queryByText('chatUploading')).not.toBeInTheDocument())
   })
+
+  it('keeps the uploaded file staged when the controller refuses, and sends it on the next Send without re-uploading', async () => {
+    h.upload.mockResolvedValue({ url: '/api/uploads/abc', filename: 'plan.pdf', size: '5' })
+    h.sendChat.mockReturnValueOnce(null as unknown as string)
+    render(<MeetingChatComposer />)
+    await pick()
+    await waitFor(() => expect(h.toastError).toHaveBeenCalledWith('chatNotSent'))
+    expect(screen.getByText('plan.pdf')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'chatSend' }))
+    expect(h.sendChat).toHaveBeenLastCalledWith('', { url: '/api/uploads/abc', name: 'plan.pdf', size: 5 })
+    expect(h.upload).toHaveBeenCalledTimes(1)
+    expect(screen.queryByText('plan.pdf')).not.toBeInTheDocument()
+  })
+
+  it('the staged file can be removed', async () => {
+    h.upload.mockResolvedValue({ url: '/api/uploads/abc', filename: 'plan.pdf', size: '5' })
+    h.sendChat.mockReturnValueOnce(null as unknown as string)
+    render(<MeetingChatComposer />)
+    await pick()
+    await userEvent.click(await screen.findByRole('button', { name: 'chatRemoveFile' }))
+    expect(screen.queryByText('plan.pdf')).not.toBeInTheDocument()
+  })
+
+  it('attaching with a too-long draft shows the too-long toast and uploads nothing', async () => {
+    render(<MeetingChatComposer />)
+    await userEvent.click(screen.getByRole('textbox'))
+    await userEvent.paste('x'.repeat(2001))
+    await pick()
+    expect(h.toastError).toHaveBeenCalledWith('errChatTooLong')
+    expect(h.upload).not.toHaveBeenCalled()
+  })
+
+  it('normalizes an absolute upload url to its path', async () => {
+    h.upload.mockResolvedValue({ url: 'https://api.example.com/api/uploads/abc', filename: 'plan.pdf', size: '5' })
+    render(<MeetingChatComposer />)
+    await pick()
+    await waitFor(() => expect(h.sendChat).toHaveBeenCalledWith('', expect.objectContaining({ url: '/api/uploads/abc' })))
+  })
 })

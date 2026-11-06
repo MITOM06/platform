@@ -2,15 +2,26 @@
 
 import { useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
 import { useTranslations } from 'next-intl'
-import { Loader2, Paperclip, SendHorizontal } from 'lucide-react'
+import { FileText, Loader2, Paperclip, SendHorizontal, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { chatService, FILE_TOO_LARGE } from '@/lib/api/chat'
 import { MEETING_LIMITS } from '@/lib/api/meeting-types'
+import type { OutgoingAttachment } from '@/lib/meetings/meeting-room-chat'
 import { useRoom } from './room-context'
 
 const MAX = MEETING_LIMITS.chat
+
+/** chat-service answers `/api/uploads/<id>`; if a gateway ever returns it absolute, keep only the path. */
+function uploadPath(url: string): string {
+  if (!/^https?:\/\//i.test(url)) return url
+  try {
+    return new URL(url).pathname
+  } catch {
+    return url
+  }
+}
 /** The counter shows up from here on. */
 const COUNTER_FROM = 1800
 
@@ -22,20 +33,39 @@ export function MeetingChatComposer() {
   const tooLong = text.length > MAX
   const [uploading, setUploading] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
-  const canSend = realtimeConnected && !tooLong && !uploading && text.trim().length > 0
+  /** Uploaded but not yet sent (offline / left the room): kept so the file is never re-uploaded or lost. */
+  const [staged, setStaged] = useState<OutgoingAttachment | null>(null)
+  const canSend = realtimeConnected && !tooLong && !uploading && (text.trim().length > 0 || staged !== null)
+
+  /** Sends text + the staged file; clears them only once the controller accepted the line. */
+  const deliver = (file: OutgoingAttachment | null): boolean => {
+    const sent = file ? controller.sendChat(text, file) : controller.sendChat(text)
+    if (sent === null) return false
+    setText('')
+    setStaged(null)
+    return true
+  }
 
   /** Upload first, then send the file with the typed text as one line. Failures never publish. */
   const attach = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     e.target.value = ''
-    if (!file || uploading || tooLong || !realtimeConnected) return
+    if (!file || uploading || !realtimeConnected) return
+    if (tooLong) {
+      toast.error(t('errChatTooLong', { max: MAX }))
+      return
+    }
     setUploading(true)
     try {
       const up = await chatService.uploadFile(file)
-      const name = up.filename || file.name
       const size = Number(up.size)
-      const sent = controller.sendChat(text, { url: up.url, name, size: Number.isFinite(size) ? size : file.size })
-      if (sent !== null) setText('')
+      const ready: OutgoingAttachment = {
+        url: uploadPath(up.url),
+        name: up.filename || file.name,
+        size: Number.isFinite(size) ? size : file.size,
+      }
+      setStaged(ready)
+      if (!deliver(ready)) toast.error(t('chatNotSent'))
     } catch (err) {
       toast.error(err instanceof Error && err.message === FILE_TOO_LARGE ? t('chatFileTooLarge') : t('chatUploadFailed'))
     } finally {
@@ -45,7 +75,7 @@ export function MeetingChatComposer() {
 
   const send = () => {
     if (!canSend) return
-    if (controller.sendChat(text) !== null) setText('')
+    if (!deliver(staged) && staged) toast.error(t('chatNotSent'))
   }
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) return
@@ -56,6 +86,15 @@ export function MeetingChatComposer() {
   return (
     <div className="shrink-0 space-y-1.5 border-t border-border/60 p-3">
       {!realtimeConnected ? <p className="text-xs text-muted-foreground">{t('chatOffline')}</p> : null}
+      {staged ? (
+        <p className="flex items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs">
+          <FileText className="size-3.5 shrink-0" aria-hidden />
+          <span className="min-w-0 flex-1 truncate">{staged.name}</span>
+          <button type="button" className="shrink-0" aria-label={t('chatRemoveFile')} title={t('chatRemoveFile')} onClick={() => setStaged(null)}>
+            <X className="size-3.5" aria-hidden />
+          </button>
+        </p>
+      ) : null}
       {uploading ? (
         <p role="status" className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Loader2 className="size-3 animate-spin" aria-hidden />

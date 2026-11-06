@@ -2270,6 +2270,8 @@
     "chatUploading": "ファイルをアップロード中…",
     "chatFileTooLarge": "ファイルが大きすぎます",
     "chatUploadFailed": "ファイルをアップロードできませんでした。もう一度お試しください",
+    "chatNotSent": "ファイルを送信できませんでした。ここに保持されています。送信を押して再試行してください",
+    "chatRemoveFile": "ファイルを削除",
     "chatOffline": "再接続中のため、現在メッセージを送信できません",
     "chatCounter": "{count}/{max}",
     "settingAiNotes": "AI 議事メモ",
