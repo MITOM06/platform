@@ -21,6 +21,7 @@ import com.platform.chatservice.dto.meeting.UpdateMeetingRequest;
 import com.platform.chatservice.exception.ApiException;
 import com.platform.chatservice.model.Meeting;
 import com.platform.chatservice.model.MeetingStatus;
+import com.platform.chatservice.model.MeetingSummaryState;
 import com.platform.chatservice.security.UserPrincipal;
 import java.time.Duration;
 import java.time.Instant;
@@ -278,7 +279,7 @@ class MeetingServiceTest {
   @Test
   void summaryStateAndGroupAreHiddenFromGuestsButShownToMembers() {
     Meeting m = stored();
-    m.setSummaryState(com.platform.chatservice.model.MeetingSummaryState.DONE);
+    m.setSummaryState(MeetingSummaryState.DONE);
     m.setGroupConversationId("c1");
 
     assertThat(service.get(stranger, "m1").summaryState()).isNull();
