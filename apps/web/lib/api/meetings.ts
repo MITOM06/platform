@@ -108,6 +108,8 @@ export const meetingsApi = {
     // Clear the JSON default so the browser sets multipart/form-data with its boundary.
     return chatApi.post(`${base(id)}/screen-frames`, form, {
       headers: { 'Content-Type': undefined },
+      // A stalled upload must not block the next frame (the hook skips ticks while one is in flight).
+      timeout: 15_000,
       validateStatus: () => true,
     })
   },

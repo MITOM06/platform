@@ -15,6 +15,14 @@ beforeEach(() => {
 })
 
 describe('meetingsApi', () => {
+  it('uploads a screen frame as multipart with a 15 s timeout', async () => {
+    await meetingsApi.uploadScreenFrame('m 1', new Blob(['x']), 5)
+    const [url, form, cfg] = http.post.mock.calls.at(-1)!
+    expect(url).toBe('/api/meetings/m%201/screen-frames')
+    expect((form as FormData).get('ts')).toBe('5')
+    expect(cfg).toMatchObject({ timeout: 15_000, validateStatus: expect.any(Function) })
+  })
+
   it('lists a scope with the cursor only when there is one', async () => {
     http.get.mockResolvedValue({ data: { content: [], page: 0, size: 20, totalElements: 0, hasNext: false } })
     await meetingsApi.list('upcoming')

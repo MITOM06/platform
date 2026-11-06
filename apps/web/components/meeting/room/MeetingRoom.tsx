@@ -85,7 +85,7 @@ export function MeetingRoom({ meeting, controller, myId, myName, myAvatarUrl }: 
   // Frames of my shared screen feed the AI record (aiNotes on + I'm presenting).
   const screenOn = useMeetingRoomStore((s) => s.screen)
   const aiReadsScreen = meeting.settings.aiNotes === true && screenOn
-  useMeetingScreenFrames(meeting.id, aiReadsScreen)
+  const reading = useMeetingScreenFrames(meeting.id, aiReadsScreen)
   const room = useMemo<RoomContextValue>(
     () => ({ meeting, controller, myId, myName, myAvatarUrl, realtimeConnected, speech: { supported, paused, setPaused } }),
     [meeting, controller, myId, myName, myAvatarUrl, realtimeConnected, supported, paused, setPaused],
@@ -100,7 +100,7 @@ export function MeetingRoom({ meeting, controller, myId, myName, myAvatarUrl }: 
             {/* One column so the connection banner and the AI chip never overlap. */}
             <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex flex-col gap-2 px-4">
               <RoomBanners realtimeConnected={realtimeConnected} />
-              <AiNotesIndicator active={meeting.settings.aiNotes === true} sharing={aiReadsScreen} />
+              <AiNotesIndicator active={meeting.settings.aiNotes === true} sharing={reading} />
             </div>
             <MeetingStage />
             <ReactionOverlay />

@@ -13,7 +13,7 @@ const stream = { active: true } as unknown as MediaStream;
 function setup(
   upload: ScreenFrameDeps["upload"] = vi.fn().mockResolvedValue(undefined),
 ) {
-  let thumb: Uint8Array = px(10);
+  let thumb: Uint8Array | null = px(10);
   const dispose = vi.fn();
   const deps: ScreenFrameDeps = {
     createCapture: vi.fn(() => ({
@@ -24,7 +24,7 @@ function setup(
     upload,
     now: () => Date.now(),
   };
-  return { deps, upload, dispose, setThumb: (t: Uint8Array) => (thumb = t) };
+  return { deps, upload, dispose, setThumb: (t: Uint8Array | null) => (thumb = t) };
 }
 
 beforeEach(() => {
@@ -163,5 +163,94 @@ describe("useMeetingScreenFrames", () => {
     (stream as { active: boolean }).active = true;
     expect(s.upload).toHaveBeenCalledTimes(1);
     expect(s.dispose).toHaveBeenCalled();
+  });
+
+  it("a timed-out upload releases inFlight so the next tick can send", async () => {
+    // Stands in for axios rejecting after its 15 s timeout.
+    const upload = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 15000)),
+      )
+      .mockResolvedValue(undefined);
+    const s = setup(upload);
+    renderHook(() => useMeetingScreenFrames("m1", true, s.deps));
+    await flush();
+    s.setThumb(px(200));
+    await tick(14000);
+    expect(upload).toHaveBeenCalledTimes(1);
+    await tick(6000);
+    expect(upload).toHaveBeenCalledTimes(2);
+  });
+
+  describe("reading state", () => {
+    it("is false until the first frame is readable, then true", async () => {
+      const s = setup();
+      s.setThumb(null);
+      const { result } = renderHook(() =>
+        useMeetingScreenFrames("m1", true, s.deps),
+      );
+      await flush();
+      expect(result.current).toBe(false);
+      s.setThumb(px(10));
+      await tick(500);
+      expect(result.current).toBe(true);
+    });
+
+    it("is false when inactive and after turning off", async () => {
+      const s = setup();
+      const { result, rerender } = renderHook(
+        ({ on }) => useMeetingScreenFrames("m1", on, s.deps),
+        { initialProps: { on: true } },
+      );
+      await flush();
+      expect(result.current).toBe(true);
+      rerender({ on: false });
+      expect(result.current).toBe(false);
+    });
+
+    it("gives up after 20 warm-up retries: stops capture, reading stays false", async () => {
+      const s = setup();
+      s.setThumb(null);
+      const { result } = renderHook(() =>
+        useMeetingScreenFrames("m1", true, s.deps),
+      );
+      await flush();
+      await tick(500 * 25);
+      expect(result.current).toBe(false);
+      expect(s.dispose).toHaveBeenCalled();
+      expect(vi.getTimerCount()).toBe(0);
+      s.setThumb(px(10)); // too late for this share
+      await tick(30000);
+      expect(s.upload).not.toHaveBeenCalled();
+    });
+
+    it("a thumbnail arriving within the cap still works", async () => {
+      const s = setup();
+      s.setThumb(null);
+      const { result } = renderHook(() =>
+        useMeetingScreenFrames("m1", true, s.deps),
+      );
+      await flush();
+      await tick(500 * 19);
+      s.setThumb(px(10));
+      await tick(500);
+      expect(result.current).toBe(true);
+      expect(s.upload).toHaveBeenCalledTimes(1);
+    });
+
+    it("is false once the stream ends", async () => {
+      const s = setup();
+      const { result } = renderHook(() =>
+        useMeetingScreenFrames("m1", true, s.deps),
+      );
+      await flush();
+      expect(result.current).toBe(true);
+      (stream as { active: boolean }).active = false;
+      await tick(6000);
+      (stream as { active: boolean }).active = true;
+      expect(result.current).toBe(false);
+    });
   });
 });
