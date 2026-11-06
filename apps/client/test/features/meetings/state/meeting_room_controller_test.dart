@@ -7,6 +7,7 @@ import 'package:platform_client/features/meetings/domain/meeting_events.dart';
 import 'package:platform_client/features/meetings/domain/meeting_models.dart';
 import 'package:platform_client/features/meetings/domain/meeting_room_models.dart';
 import 'package:platform_client/features/meetings/domain/meeting_text.dart';
+import 'package:platform_client/features/meetings/domain/pending_ai.dart';
 import 'package:platform_client/features/meetings/domain/reactions.dart';
 import 'package:platform_client/features/meetings/domain/room_phase.dart';
 import 'package:platform_client/features/meetings/state/active_room.dart';
@@ -277,6 +278,65 @@ void main() {
       expect(s.unreadChat, 0);
       c.onTopicEvent(line('ann'));
       expect(s.unreadChat, 0);
+    });
+
+    group('AI answers', () {
+      const bot = 'ai-bot-000000000000000000000001';
+      AiEvent ai(String state, String who, [String? code]) =>
+          AiEvent(meetingId: 'm1', state: state == 'error' ? AiState.error : AiState.thinking, requesterId: who, code: code);
+      var n = 0;
+      ChatEvent botLine() => ChatEvent(
+          meetingId: 'm1',
+          message: MeetingChatMessage(
+              id: 'b${n++}',
+              sender: const MeetingPerson(userId: bot),
+              content: 'hi',
+              createdAt: clock));
+
+      test('thinking adds, the bot line removes the oldest, and counts as unread', () async {
+        await inRoom();
+        c.onTopicEvent(ai('thinking', 'bob'));
+        c.onTopicEvent(ai('thinking', 'ann'));
+        expect(s.pendingAi.map((x) => x.requesterId), ['bob', 'ann']);
+        c.onTopicEvent(botLine());
+        expect(s.pendingAi.map((x) => x.requesterId), ['ann']);
+        expect(s.unreadChat, 1);
+      });
+
+      test('a bot line on my personal queue does not settle anything', () async {
+        await inRoom();
+        c.onTopicEvent(ai('thinking', 'bob'));
+        c.handle(botLine());
+        expect(s.pendingAi, hasLength(1));
+      });
+
+      test('an error removes the requester entry; only the requester gets a notice', () async {
+        await inRoom();
+        c.onTopicEvent(ai('thinking', 'bob'));
+        c.onTopicEvent(ai('thinking', 'me'));
+        c.onTopicEvent(ai('error', 'bob', 'AI_UNAVAILABLE'));
+        expect(s.pendingAi.map((x) => x.requesterId), ['me']);
+        expect(s.aiNotices, isEmpty);
+        c.onTopicEvent(ai('error', 'me', 'AI_EMPTY'));
+        expect(s.pendingAi, isEmpty);
+        expect(s.aiNotices.single.kind, AiErrorKind.failed);
+      });
+
+      test('notices are capped at 5', () async {
+        await inRoom();
+        for (var i = 0; i < 7; i++) {
+          c.onTopicEvent(ai('error', 'me', 'AI_UNAVAILABLE'));
+        }
+        expect(s.aiNotices, hasLength(5));
+      });
+
+      test('pending entries expire after 60 s', () async {
+        await inRoom();
+        c.onTopicEvent(ai('thinking', 'bob'));
+        clock = clock.add(const Duration(seconds: 61));
+        c.onTopicEvent(ai('thinking', 'ann'));
+        expect(s.pendingAi.map((x) => x.requesterId), ['ann']);
+      });
     });
 
     test('loads older lines before the oldest one', () async {

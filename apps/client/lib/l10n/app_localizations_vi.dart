@@ -5736,6 +5736,21 @@ class AppLocalizationsVi extends AppLocalizations {
   String get meetingChatEmpty => 'Mọi người trong cuộc họp đều thấy tin nhắn';
 
   @override
+  String get meetingAiName => 'PON AI';
+
+  @override
+  String get meetingAiThinking => 'PON AI đang trả lời…';
+
+  @override
+  String get meetingAiUnavailable => 'AI hiện không khả dụng';
+
+  @override
+  String get meetingAiFailed => 'AI chưa trả lời được, hãy thử lại';
+
+  @override
+  String get meetingChatAiHint => 'Gõ @AI trước câu hỏi để hỏi trợ lý';
+
+  @override
   String get meetingChatFailed => 'Chưa gửi được';
 
   @override

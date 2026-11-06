@@ -5575,6 +5575,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get meetingChatEmpty => '메시지는 회의 참가자 모두에게 표시됩니다';
 
   @override
+  String get meetingAiName => 'PON AI';
+
+  @override
+  String get meetingAiThinking => 'PON AI가 답변하는 중…';
+
+  @override
+  String get meetingAiUnavailable => '현재 AI를 사용할 수 없습니다';
+
+  @override
+  String get meetingAiFailed => 'AI가 답변하지 못했습니다. 다시 시도해 주세요';
+
+  @override
+  String get meetingChatAiHint => '질문 앞에 @AI를 입력하면 어시스턴트에게 물어볼 수 있습니다';
+
+  @override
   String get meetingChatFailed => '전송되지 않음';
 
   @override

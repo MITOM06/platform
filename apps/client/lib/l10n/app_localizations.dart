@@ -10327,6 +10327,36 @@ abstract class AppLocalizations {
   /// **'Messages are visible to everyone in the meeting'**
   String get meetingChatEmpty;
 
+  /// No description provided for @meetingAiName.
+  ///
+  /// In en, this message translates to:
+  /// **'PON AI'**
+  String get meetingAiName;
+
+  /// No description provided for @meetingAiThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'PON AI is answering…'**
+  String get meetingAiThinking;
+
+  /// No description provided for @meetingAiUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is unavailable right now'**
+  String get meetingAiUnavailable;
+
+  /// No description provided for @meetingAiFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'AI couldn\'t answer, try again'**
+  String get meetingAiFailed;
+
+  /// No description provided for @meetingChatAiHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type @AI before a question to ask the assistant'**
+  String get meetingChatAiHint;
+
   /// No description provided for @meetingChatFailed.
   ///
   /// In en, this message translates to:

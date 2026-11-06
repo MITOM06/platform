@@ -50,6 +50,21 @@ final class ChatEvent extends MeetingScopedEvent {
   final MeetingChatMessage message;
 }
 
+enum AiState { thinking, error }
+
+/// `meet.ai`: the assistant started on (or failed) a `@AI` question. Its
+/// `code` is an AI error code here — not the meeting code of other events.
+final class AiEvent extends MeetingScopedEvent {
+  const AiEvent(
+      {required super.meetingId,
+      required this.state,
+      required this.requesterId,
+      this.code});
+  final AiState state;
+  final String requesterId;
+  final String? code;
+}
+
 final class NotesUpdatedEvent extends MeetingScopedEvent {
   const NotesUpdatedEvent(
       {required super.meetingId, required this.version, this.updatedBy});
@@ -198,6 +213,19 @@ MeetingEvent? _parseForMeeting(String event, String id, Json o) {
       return m == null
           ? null
           : ChatEvent(meetingId: id, clientId: str(o['clientId']), message: m);
+    case 'meet.ai':
+      final requesterId = str(o['requesterId']);
+      final state = switch (o['state']) {
+        'thinking' => AiState.thinking,
+        'error' => AiState.error,
+        _ => null,
+      };
+      if (state == null || requesterId == null) return null;
+      return AiEvent(
+          meetingId: id,
+          state: state,
+          requesterId: requesterId,
+          code: str(o['code']));
     case 'meet.notes.updated':
       final version = o['version'];
       if (version is! num) return null;

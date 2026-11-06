@@ -5508,6 +5508,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get meetingChatEmpty => '会议中的所有人都能看到消息';
 
   @override
+  String get meetingAiName => 'PON AI';
+
+  @override
+  String get meetingAiThinking => 'PON AI 正在回答…';
+
+  @override
+  String get meetingAiUnavailable => 'AI 暂时不可用';
+
+  @override
+  String get meetingAiFailed => 'AI 无法回答，请重试';
+
+  @override
+  String get meetingChatAiHint => '在问题前输入 @AI 即可向助手提问';
+
+  @override
   String get meetingChatFailed => '未发送';
 
   @override

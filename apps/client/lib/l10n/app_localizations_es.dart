@@ -5836,6 +5836,22 @@ class AppLocalizationsEs extends AppLocalizations {
       'Todos los participantes de la reunión pueden ver los mensajes';
 
   @override
+  String get meetingAiName => 'PON AI';
+
+  @override
+  String get meetingAiThinking => 'PON AI está respondiendo…';
+
+  @override
+  String get meetingAiUnavailable => 'La IA no está disponible en este momento';
+
+  @override
+  String get meetingAiFailed => 'La IA no pudo responder, inténtalo de nuevo';
+
+  @override
+  String get meetingChatAiHint =>
+      'Escribe @AI antes de una pregunta para consultar al asistente';
+
+  @override
   String get meetingChatFailed => 'No enviado';
 
   @override

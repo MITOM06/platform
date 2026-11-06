@@ -184,7 +184,11 @@ void handleMeetingQueueEvent(MeetingEvent e, MeetingQueueContext ctx) {
           ChatEvent():
       _forward(e, ctx);
     // Topic events (roster/settings/hands/notes) on the wrong channel.
-    case RosterEvent() || SettingsEvent() || HandsEvent() || NotesUpdatedEvent():
+    case RosterEvent() ||
+          SettingsEvent() ||
+          HandsEvent() ||
+          NotesUpdatedEvent() ||
+          AiEvent():
       return;
   }
 }

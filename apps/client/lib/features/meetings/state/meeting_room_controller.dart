@@ -301,7 +301,9 @@ class MeetingRoomController extends RoomMedia
         deps.cache.updateCache((c) => c.withSettings(meetingId, e.settings));
         onSettings(e.settings);
       case ChatEvent():
-        onChat(e);
+        _chat.onTopicChat(e);
+      case AiEvent():
+        _chat.onAi(e);
       case NotesUpdatedEvent():
         onSharedNoteUpdated(e.version, e.updatedBy);
       case EndedEvent():
@@ -330,8 +332,6 @@ class MeetingRoomController extends RoomMedia
     final s = store.value;
     if (s.screen && !canShareScreen(s.myRole, settings)) revokeScreenShare();
   }
-
-  void onChat(ChatEvent e) => _chat.onEcho(e);
 
   void onSharedNoteUpdated(int version, MeetingPerson? by) =>
       set((s) => s.copyWith(sharedNoteRemote: RemoteNewer(version, by)));

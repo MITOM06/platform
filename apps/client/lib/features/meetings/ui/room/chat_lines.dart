@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../chat/domain/ai_models.dart';
 import '../../domain/meeting_room_models.dart';
 import '../../domain/meeting_text.dart';
+import '../../domain/pending_ai.dart';
 import '../../state/meeting_room_state.dart';
 import '../meeting_text_l10n.dart';
 
@@ -26,10 +29,17 @@ MeetingNotice? pendingError(PendingChat p, DateTime now) =>
         : null);
 
 class _Bubble extends StatelessWidget {
-  const _Bubble({required this.text, required this.mine, this.border});
+  const _Bubble(
+      {required this.text,
+      required this.mine,
+      this.border,
+      this.markdown = false});
 
   final String text;
   final bool mine;
+
+  /// The assistant's lines only: Markdown, with images and links inert.
+  final bool markdown;
   final Color? border;
 
   @override
@@ -48,10 +58,24 @@ class _Bubble extends StatelessWidget {
           border: b == null ? null : Border.all(color: b),
         ),
         // Plain text only — chat from other people is untrusted.
-        child: SelectableText(text,
-            style: TextStyle(
-                fontSize: 14,
-                color: mine ? AppTheme.accentTintFg(context) : null)),
+        child: markdown
+            ? MarkdownBody(
+                data: text,
+                selectable: true,
+                // No network image loading in chat; no onTapLink: links
+                // stay non-tappable.
+                sizedImageBuilder: (config) => Text(config.alt ?? ''),
+                styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
+                    .copyWith(
+                        p: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(fontSize: 14)),
+              )
+            : SelectableText(text,
+                style: TextStyle(
+                    fontSize: 14,
+                    color: mine ? AppTheme.accentTintFg(context) : null)),
       ),
     );
   }
@@ -96,7 +120,10 @@ class ChatLineTile extends StatelessWidget {
                           fontSize: 12, color: AppTheme.mutedText(context))),
                 ])),
               ),
-            _Bubble(text: message.content, mine: mine),
+            _Bubble(
+                text: message.content,
+                mine: mine,
+                markdown: message.sender.userId == kAiBotUserId),
           ],
         ),
       );
@@ -155,4 +182,50 @@ class PendingLineTile extends StatelessWidget {
       ]),
     );
   }
+}
+
+/// The requester's error line for an `@AI` question — translated, never a
+/// code (web `AiNoticeLine`).
+class AiNoticeTile extends StatelessWidget {
+  const AiNoticeTile({super.key, required this.notice});
+
+  final AiNotice notice;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Text(
+          notice.kind == AiErrorKind.unavailable
+              ? l.meetingAiUnavailable
+              : l.meetingAiFailed,
+          style: TextStyle(
+              fontSize: 12, color: Theme.of(context).colorScheme.error)),
+    );
+  }
+}
+
+/// "PON AI is answering…" while any `@AI` question is open (web
+/// `MeetingChatPanel` status line).
+class AiThinkingLine extends StatelessWidget {
+  const AiThinkingLine({super.key});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        liveRegion: true,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+          child: Row(children: [
+            const SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(strokeWidth: 2)),
+            const SizedBox(width: 6),
+            Text(context.l10n.meetingAiThinking,
+                style: TextStyle(
+                    fontSize: 12, color: AppTheme.mutedText(context))),
+          ]),
+        ),
+      );
 }

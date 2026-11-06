@@ -8,6 +8,16 @@ import 'package:platform_client/features/meetings/domain/meeting_room_models.dar
 MeetingEvent? p(Map<String, dynamic> m) => parseMeetingEvent(jsonEncode(m));
 
 void main() {
+  test('meet.ai needs a state and a requester; code is read for this event', () {
+    final e = p({'event': 'meet.ai', 'meetingId': 'm1', 'state': 'error', 'requesterId': 'u1', 'code': 'AI_UNAVAILABLE'}) as AiEvent;
+    expect((e.state, e.requesterId, e.code), (AiState.error, 'u1', 'AI_UNAVAILABLE'));
+    final t = p({'event': 'meet.ai', 'meetingId': 'm1', 'state': 'thinking', 'requesterId': 'u1', 'code': 'ABC'}) as AiEvent;
+    expect(t.state, AiState.thinking);
+    expect(p({'event': 'meet.ai', 'meetingId': 'm1', 'state': 'done', 'requesterId': 'u1'}), isNull);
+    expect(p({'event': 'meet.ai', 'meetingId': 'm1', 'state': 'thinking'}), isNull);
+    expect(p({'event': 'meet.ai', 'meetingId': 'm1', 'state': 'thinking', 'requesterId': ''}), isNull);
+  });
+
   test('roster keeps good rows, drops broken ones, defaults unknown roles to attendee', () {
     final e = p({'event': 'meet.roster', 'meetingId': 'm1', 'participants': [
       {'userId': 'a', 'displayName': 'An', 'role': 'cohost', 'joinedAt': '2026-10-08T02:00:00Z'},
