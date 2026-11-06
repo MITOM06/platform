@@ -90,3 +90,110 @@ describe('InvitationMailerService.sendWelcome', () => {
     expect(mail.sendWelcomeEmail).not.toHaveBeenCalled();
   });
 });
+
+describe('InvitationMailerService.send (invite email)', () => {
+  let roleModel: { findById: jest.Mock };
+  let workspaceModel: { findOne: jest.Mock };
+  let usersService: { findById: jest.Mock };
+  let mail: { sendInviteEmail: jest.Mock };
+  let service: InvitationMailerService;
+  let logError: jest.SpyInstance;
+
+  const TOKEN = 'tok_abcdefghijklmnopqrstuvwxyz';
+  const inv = {
+    email: 'jane@acme.com',
+    roleId: 'role-1',
+    invitedBy: 'u-admin',
+    locale: 'en',
+  } as any;
+
+  beforeEach(() => {
+    roleModel = { findById: jest.fn().mockReturnValue(ex({ name: 'Admin' })) };
+    workspaceModel = { findOne: jest.fn().mockReturnValue(ex({ name: 'Acme' })) };
+    usersService = { findById: jest.fn().mockResolvedValue({ displayName: 'Alice' }) };
+    mail = { sendInviteEmail: jest.fn().mockResolvedValue(undefined) };
+    const config = {
+      get: (k: string) =>
+        k === 'WEB_REDIRECT_URL' ? 'https://pon.acme.com/oauth-callback' : undefined,
+    };
+    service = new InvitationMailerService(
+      roleModel as any,
+      workspaceModel as any,
+      usersService as any,
+      mail as any,
+      config as any,
+    );
+    logError = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => logError.mockRestore());
+
+  it('sends the web-origin /invite/<token> link with workspace, inviter and role → true', async () => {
+    await expect(service.send(inv, TOKEN)).resolves.toBe(true);
+    expect(roleModel.findById).toHaveBeenCalledWith('role-1');
+    expect(usersService.findById).toHaveBeenCalledWith('u-admin');
+    expect(mail.sendInviteEmail).toHaveBeenCalledWith(
+      'jane@acme.com',
+      {
+        inviteUrl: `https://pon.acme.com/invite/${TOKEN}`,
+        workspaceName: 'Acme',
+        inviterName: 'Alice',
+        roleName: 'Admin',
+      },
+      'en',
+    );
+  });
+
+  it('system inviter → workspace name, without a user lookup', async () => {
+    await service.send({ ...inv, invitedBy: 'system' }, TOKEN);
+    expect(usersService.findById).not.toHaveBeenCalled();
+    expect(mail.sendInviteEmail.mock.calls[0][1].inviterName).toBe('Acme');
+  });
+
+  it('deleted inviter / no workspace / deleted role → fallbacks "PON" + "Member"', async () => {
+    usersService.findById.mockResolvedValue(null);
+    workspaceModel.findOne.mockReturnValue(ex(null));
+    roleModel.findById.mockReturnValue(ex(null));
+    await service.send(inv, TOKEN);
+    expect(mail.sendInviteEmail.mock.calls[0][1]).toMatchObject({
+      workspaceName: 'PON',
+      inviterName: 'PON',
+      roleName: 'Member',
+    });
+  });
+
+  it('no WEB_REDIRECT_URL → falls back to the local web origin', async () => {
+    service = new InvitationMailerService(
+      roleModel as any,
+      workspaceModel as any,
+      usersService as any,
+      mail as any,
+      { get: () => undefined } as any,
+    );
+    await service.send(inv, TOKEN);
+    expect(mail.sendInviteEmail.mock.calls[0][1].inviteUrl).toBe(
+      `http://localhost:3000/invite/${TOKEN}`,
+    );
+  });
+
+  it('SMTP failure → false, logged with masked recipient + provider code, never the token or address', async () => {
+    mail.sendInviteEmail.mockRejectedValue(
+      Object.assign(new Error('535 bad creds for jane@acme.com'), { code: 'EAUTH' }),
+    );
+    await expect(service.send(inv, TOKEN)).resolves.toBe(false);
+    expect(logError).toHaveBeenCalledWith('INVITE_SEND_FAILED recipient=***@acme.com symptom=EAUTH');
+    const logged = logError.mock.calls.flat().join(' ');
+    expect(logged).not.toContain('jane@');
+    expect(logged).not.toContain(TOKEN);
+  });
+
+  it('non-Error rejection without code → symptom is its typeof; Error without code → its name', async () => {
+    mail.sendInviteEmail.mockRejectedValueOnce('boom');
+    await expect(service.send(inv, TOKEN)).resolves.toBe(false);
+    expect(logError).toHaveBeenLastCalledWith('INVITE_SEND_FAILED recipient=***@acme.com symptom=string');
+
+    roleModel.findById.mockReturnValue({ exec: jest.fn().mockRejectedValue(new TypeError('x')) });
+    await expect(service.send(inv, TOKEN)).resolves.toBe(false);
+    expect(logError).toHaveBeenLastCalledWith('INVITE_SEND_FAILED recipient=***@acme.com symptom=TypeError');
+  });
+});

@@ -242,6 +242,27 @@ describe('UsersController.findManyByIds (batch profiles)', () => {
     // Public profile of someone else: never the email.
     expect(out[0]).not.toHaveProperty('email');
   });
+
+  // BUG: the batch route never checks blocks — findManyByIds calls
+  // toPublicProfile without `isBlockedByOwner`, so a caller the owner BLOCKED
+  // gets the full profile (bio, phone / DOB / gender per toggles, createdAt,
+  // real friendsCount) via `GET /api/users?ids=<owner>`, bypassing the minimal
+  // view `GET /api/users/:id` returns. Fix in users.controller.ts findManyByIds:
+  // load the set of ids that blocked req.user.sub and pass isBlockedByOwner.
+  it.skip('BUG: owner blocked the caller → batch lookup must return the same minimal view as GET /:id', async () => {
+    const { ctrl, usersService, friendsService } = make();
+    usersService.findManyByIds.mockResolvedValue([
+      docOf({ _id: 'u2', displayName: 'Bob', bio: 'secret', phoneNumber: '+84' }),
+    ]);
+    friendsService.countAcceptedForMany.mockResolvedValue(new Map([['u2', 9]]));
+    usersService.getRoleNameMap.mockResolvedValue(new Map());
+    usersService.isBlockedBy.mockResolvedValue(true);
+
+    const [out] = await ctrl.findManyByIds(req, 'u2');
+
+    expect(out).toMatchObject({ isBlockedByOwner: true, friendsCount: 0, bio: '' });
+    expect(out).not.toHaveProperty('phoneNumber');
+  });
 });
 
 describe('UsersController.findById (single profile)', () => {
