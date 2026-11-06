@@ -10,7 +10,6 @@ import 'package:platform_client/features/profile/ui/user_profile_screen.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
 
 import '../../helpers/noop_media_token.dart';
-import '../integrations/list_tile_ink_bug.dart';
 import '../integrations/route_adapter.dart';
 
 const _me = UserModel(id: 'me', email: 'me@acme.com', displayName: 'Me');
@@ -71,153 +70,156 @@ void main() {
   setUp(() => _api = RouteAdapter());
 
   testWidgets('block asks to confirm, then calls block and flips to Unblock',
-      (tester) => toleratingListTileInkBug(() async {
-            _relationship({'friendStatus': 'none'});
-            _api.routes['POST /api/users/block/$_other'] =
-                (RecordedRequest _) {
-              _relationship({'friendStatus': 'none', 'iBlocked': true});
-              return const Reply(200, {});
-            };
-            await _pump(tester);
-            final l10n = _l10n(tester);
+      (tester) async {
+    _relationship({'friendStatus': 'none'});
+    _api.routes['POST /api/users/block/$_other'] =
+        (RecordedRequest _) {
+      _relationship({'friendStatus': 'none', 'iBlocked': true});
+      return const Reply(200, {});
+    };
+    await _pump(tester);
+    final l10n = _l10n(tester);
 
-            await tester.tap(find.text(l10n.blockUser));
-            await _settle(tester);
-            expect(find.text(l10n.blockUserConfirm), findsOneWidget);
-            await tester.tap(find.text(l10n.actionCancel));
-            await _settle(tester);
-            expect(_api.calls('POST', '/api/users/block/$_other'), isEmpty);
+    await tester.tap(find.text(l10n.blockUser));
+    await _settle(tester);
+    expect(find.text(l10n.blockUserConfirm), findsOneWidget);
+    await tester.tap(find.text(l10n.actionCancel));
+    await _settle(tester);
+    expect(_api.calls('POST', '/api/users/block/$_other'), isEmpty);
 
-            await tester.tap(find.text(l10n.blockUser));
-            await _settle(tester);
-            await tester.tap(find.text(l10n.actionConfirm));
-            await _settle(tester);
-            expect(_api.calls('POST', '/api/users/block/$_other'), hasLength(1));
-            expect(find.text(l10n.userBlocked), findsOneWidget);
-            expect(find.text(l10n.unblockUser), findsOneWidget);
-          }));
+    await tester.tap(find.text(l10n.blockUser));
+    await _settle(tester);
+    await tester.tap(find.text(l10n.actionConfirm));
+    await _settle(tester);
+    expect(_api.calls('POST', '/api/users/block/$_other'), hasLength(1));
+    expect(find.text(l10n.userBlocked), findsOneWidget);
+    expect(find.text(l10n.unblockUser), findsOneWidget);
+  });
 
   testWidgets('unblock runs without a confirm and flips back to Block',
-      (tester) => toleratingListTileInkBug(() async {
-            _relationship({'friendStatus': 'none', 'iBlocked': true});
-            _api.routes['POST /api/users/unblock/$_other'] =
-                (RecordedRequest _) {
-              _relationship({'friendStatus': 'none'});
-              return const Reply(200, {});
-            };
-            await _pump(tester);
-            final l10n = _l10n(tester);
-            await tester.tap(find.text(l10n.unblockUser));
-            await _settle(tester);
-            expect(_api.calls('POST', '/api/users/unblock/$_other'),
-                hasLength(1));
-            expect(find.text(l10n.userUnblocked), findsOneWidget);
-            expect(find.text(l10n.blockUser), findsOneWidget);
-          }));
+      (tester) async {
+    _relationship({'friendStatus': 'none', 'iBlocked': true});
+    _api.routes['POST /api/users/unblock/$_other'] =
+        (RecordedRequest _) {
+      _relationship({'friendStatus': 'none'});
+      return const Reply(200, {});
+    };
+    await _pump(tester);
+    final l10n = _l10n(tester);
+    await tester.tap(find.text(l10n.unblockUser));
+    await _settle(tester);
+    expect(_api.calls('POST', '/api/users/unblock/$_other'),
+        hasLength(1));
+    expect(find.text(l10n.userUnblocked), findsOneWidget);
+    expect(find.text(l10n.blockUser), findsOneWidget);
+  });
 
   testWidgets('friend button follows the relationship state',
-      (tester) => toleratingListTileInkBug(() async {
-            _relationship({'friendStatus': 'none'});
-            _api.routes['POST /api/friends/request'] = (RecordedRequest _) {
-              _relationship({'friendStatus': 'outgoing'});
-              return const Reply(201, {});
-            };
-            _api.routes['DELETE /api/friends/$_other'] = (RecordedRequest _) {
-              _relationship({'friendStatus': 'none'});
-              return const Reply(200, {});
-            };
-            await _pump(tester);
-            final l10n = _l10n(tester);
+      (tester) async {
+    _relationship({'friendStatus': 'none'});
+    _api.routes['POST /api/friends/request'] = (RecordedRequest _) {
+      _relationship({'friendStatus': 'outgoing'});
+      return const Reply(201, {});
+    };
+    _api.routes['DELETE /api/friends/$_other'] = (RecordedRequest _) {
+      _relationship({'friendStatus': 'none'});
+      return const Reply(200, {});
+    };
+    await _pump(tester);
+    final l10n = _l10n(tester);
 
-            await tester.tap(find.text(l10n.addFriend));
-            await _settle(tester);
-            expect(_api.calls('POST', '/api/friends/request').single.data,
-                {'recipientId': _other});
-            expect(find.text(l10n.friendRequestSent), findsOneWidget);
-            expect(find.text(l10n.friendRequestPending), findsOneWidget);
+    await tester.tap(find.text(l10n.addFriend));
+    await _settle(tester);
+    expect(_api.calls('POST', '/api/friends/request').single.data,
+        {'recipientId': _other});
+    expect(find.text(l10n.friendRequestSent), findsOneWidget);
+    expect(find.text(l10n.friendRequestPending), findsOneWidget);
 
-            // Tapping "pending" cancels the outgoing request.
-            await tester.tap(find.text(l10n.friendRequestPending));
-            await _settle(tester);
-            expect(_api.calls('DELETE', '/api/friends/$_other'), hasLength(1));
-            expect(find.text(l10n.addFriend), findsOneWidget);
-          }));
+    // Tapping "pending" cancels the outgoing request.
+    await tester.tap(find.text(l10n.friendRequestPending));
+    await _settle(tester);
+    expect(_api.calls('DELETE', '/api/friends/$_other'), hasLength(1));
+    expect(find.text(l10n.addFriend), findsOneWidget);
+  });
 
   testWidgets('incoming request → accept; friend → unfriend needs confirm',
-      (tester) => toleratingListTileInkBug(() async {
-            _relationship({'friendStatus': 'incoming'});
-            _api.routes['PUT /api/friends/accept'] = (RecordedRequest _) {
-              _relationship({'friendStatus': 'accepted'});
-              return const Reply(200, {});
-            };
-            _api.routes['DELETE /api/friends/$_other'] =
-                const Reply(200, {});
-            await _pump(tester);
-            final l10n = _l10n(tester);
+      (tester) async {
+    _relationship({'friendStatus': 'incoming'});
+    _api.routes['PUT /api/friends/accept'] = (RecordedRequest _) {
+      _relationship({'friendStatus': 'accepted'});
+      return const Reply(200, {});
+    };
+    _api.routes['DELETE /api/friends/$_other'] =
+        const Reply(200, {});
+    await _pump(tester);
+    final l10n = _l10n(tester);
 
-            await tester.tap(find.text(l10n.acceptFriend));
-            await _settle(tester);
-            expect(_api.calls('PUT', '/api/friends/accept').single.data,
-                {'requesterId': _other});
-            expect(find.text(l10n.unfriend), findsOneWidget);
+    await tester.tap(find.text(l10n.acceptFriend));
+    await _settle(tester);
+    expect(_api.calls('PUT', '/api/friends/accept').single.data,
+        {'requesterId': _other});
+    expect(find.text(l10n.unfriend), findsOneWidget);
 
-            await tester.tap(find.text(l10n.unfriend));
-            await _settle(tester);
-            await tester.tap(find.text(l10n.actionCancel));
-            await _settle(tester);
-            expect(_api.calls('DELETE', '/api/friends/$_other'), isEmpty);
-          }));
+    await tester.tap(find.text(l10n.unfriend));
+    await _settle(tester);
+    await tester.tap(find.text(l10n.actionCancel));
+    await _settle(tester);
+    expect(_api.calls('DELETE', '/api/friends/$_other'), isEmpty);
+  });
 
   testWidgets('a refused block shows a localized error, never the raw body',
-      (tester) => toleratingListTileInkBug(() async {
-            _relationship({'friendStatus': 'none'});
-            _api.routes['POST /api/users/block/$_other'] = const Reply(400, {
-              'code': 'CANNOT_BLOCK_SELF',
-              'message': 'Bad Request: user 6e3f00aa11bb22cc33dd44ee'
-            });
-            await _pump(tester);
-            final l10n = _l10n(tester);
-            await tester.tap(find.text(l10n.blockUser));
-            await _settle(tester);
-            await tester.tap(find.text(l10n.actionConfirm));
-            await _settle(tester);
-            expect(find.byType(SnackBar), findsOneWidget);
-            expect(find.textContaining('6e3f00aa'), findsNothing);
-            expect(find.textContaining('Bad Request'), findsNothing);
-            expect(find.text(l10n.blockUser), findsOneWidget);
-          }));
+      (tester) async {
+    _relationship({'friendStatus': 'none'});
+    _api.routes['POST /api/users/block/$_other'] = const Reply(400, {
+      'code': 'CANNOT_BLOCK_SELF',
+      'message': 'Bad Request: user 6e3f00aa11bb22cc33dd44ee'
+    });
+    await _pump(tester);
+    final l10n = _l10n(tester);
+    await tester.tap(find.text(l10n.blockUser));
+    await _settle(tester);
+    await tester.tap(find.text(l10n.actionConfirm));
+    await _settle(tester);
+    expect(find.byType(SnackBar), findsOneWidget);
+    expect(find.textContaining('6e3f00aa'), findsNothing);
+    expect(find.textContaining('Bad Request'), findsNothing);
+    expect(find.text(l10n.blockUser), findsOneWidget);
+  });
 
   testWidgets('own profile: no friend / block buttons, an Edit profile button',
-      (tester) => toleratingListTileInkBug(() async {
-            await _pump(tester,
-                userId: 'me', profile: _me);
-            final l10n = _l10n(tester);
-            expect(find.text(l10n.editProfile), findsOneWidget);
-            expect(find.text(l10n.blockUser), findsNothing);
-            expect(find.text(l10n.addFriend), findsNothing);
-          }));
+      (tester) async {
+    await _pump(tester,
+        userId: 'me', profile: _me);
+    final l10n = _l10n(tester);
+    expect(find.text(l10n.editProfile), findsOneWidget);
+    expect(find.text(l10n.blockUser), findsNothing);
+    expect(find.text(l10n.addFriend), findsNothing);
+  });
 
-  testWidgets('a viewer blocked by the owner sees no actions and no bio',
-      (tester) => toleratingListTileInkBug(() async {
-            _relationship({'friendStatus': 'none', 'blockedMe': true});
-            await _pump(tester,
-                profile: const UserModel(
-                    id: _other,
-                    email: 'b@acme.com',
-                    displayName: 'Bob',
-                    bio: 'secret bio',
-                    isBlockedByOwner: true));
-            final l10n = _l10n(tester);
-            expect(find.text('Bob'), findsOneWidget);
-            expect(find.text('secret bio'), findsNothing);
-            expect(find.text(l10n.addFriend), findsNothing);
-            expect(find.text(l10n.messageAction), findsNothing);
-          }));
+  testWidgets('a viewer blocked by the owner sees no actions, bio or email',
+      (tester) async {
+    _relationship({'friendStatus': 'none', 'blockedMe': true});
+    await _pump(tester,
+        profile: const UserModel(
+            id: _other,
+            email: 'b@acme.com',
+            displayName: 'Bob',
+            bio: 'secret bio',
+            isBlockedByOwner: true));
+    final l10n = _l10n(tester);
+    expect(find.text('Bob'), findsOneWidget);
+    expect(find.text('secret bio'), findsNothing);
+    // The server drops `email` for a blocked viewer — no email line at all.
+    expect(find.text('b@acme.com'), findsNothing);
+    expect(find.text(''), findsNothing);
+    expect(find.text(l10n.addFriend), findsNothing);
+    expect(find.text(l10n.messageAction), findsNothing);
+  });
 
   testWidgets('profile load error is localized (no raw exception)',
-      (tester) => toleratingListTileInkBug(() async {
-            await _pump(tester, profileError: StateError('Mongo E11000 boom'));
-            expect(find.textContaining('E11000'), findsNothing);
-            expect(find.textContaining('StateError'), findsNothing);
-          }));
+      (tester) async {
+    await _pump(tester, profileError: StateError('Mongo E11000 boom'));
+    expect(find.textContaining('E11000'), findsNothing);
+    expect(find.textContaining('StateError'), findsNothing);
+  });
 }

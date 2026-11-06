@@ -7,7 +7,6 @@ import 'package:platform_client/features/assistant/state/assistant_provider.dart
 import 'package:platform_client/features/assistant/ui/assistant_setup_screen.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
 
-import '../integrations/list_tile_ink_bug.dart';
 import '../integrations/route_adapter.dart';
 
 late RouteAdapter _api;
@@ -57,73 +56,73 @@ void main() {
   });
 
   testWidgets('name and model are required before moving on',
-      (tester) => toleratingListTileInkBug(() async {
-            await _pump(tester);
-            final l10n = _l10n(tester);
-            expect(find.text(l10n.assistantSetupStepName), findsOneWidget);
-            // Empty / blank name → cannot advance.
-            await tester.enterText(find.byType(TextField).first, '   ');
-            await _next(tester);
-            expect(find.text(l10n.assistantSetupStepName), findsOneWidget);
+      (tester) async {
+    await _pump(tester);
+    final l10n = _l10n(tester);
+    expect(find.text(l10n.assistantSetupStepName), findsOneWidget);
+    // Empty / blank name → cannot advance.
+    await tester.enterText(find.byType(TextField).first, '   ');
+    await _next(tester);
+    expect(find.text(l10n.assistantSetupStepName), findsOneWidget);
 
-            await tester.enterText(find.byType(TextField).first, 'Max');
-            await _next(tester);
-            expect(find.text(l10n.assistantSetupStepPersona), findsOneWidget);
-            await _next(tester);
-            expect(find.text(l10n.assistantSetupStepModel), findsOneWidget);
-            // No model picked → stuck on the model step.
-            await _next(tester);
-            expect(find.text(l10n.assistantSetupStepModel), findsOneWidget);
-            await tester.tap(find.text('GPT'));
-            await tester.pumpAndSettle();
-            await _next(tester);
-            expect(find.text(l10n.assistantSetupStepConfirm), findsOneWidget);
-            expect(find.text(l10n.assistantSetupCreateButton), findsOneWidget);
-          }));
+    await tester.enterText(find.byType(TextField).first, 'Max');
+    await _next(tester);
+    expect(find.text(l10n.assistantSetupStepPersona), findsOneWidget);
+    await _next(tester);
+    expect(find.text(l10n.assistantSetupStepModel), findsOneWidget);
+    // No model picked → stuck on the model step.
+    await _next(tester);
+    expect(find.text(l10n.assistantSetupStepModel), findsOneWidget);
+    await tester.tap(find.text('GPT'));
+    await tester.pumpAndSettle();
+    await _next(tester);
+    expect(find.text(l10n.assistantSetupStepConfirm), findsOneWidget);
+    expect(find.text(l10n.assistantSetupCreateButton), findsOneWidget);
+  });
 
   testWidgets('re-running over an existing assistant pre-fills it',
-      (tester) => toleratingListTileInkBug(() async {
-            _api.routes['GET /api/assistant/me'] = const Reply(200, {
-              'botUserId': 'b1',
-              'name': 'Jarvis',
-              'systemPrompt': 'Be brief',
-              'providerId': 'p1',
-            });
-            await _pump(tester);
-            expect(find.text('Jarvis'), findsOneWidget);
-            await _next(tester);
-            expect(find.text('Be brief'), findsOneWidget);
-            await _next(tester);
-            // The stored model is already selected → can continue.
-            await _next(tester);
-            expect(find.text(_l10n(tester).assistantSetupStepConfirm),
-                findsOneWidget);
-          }));
+      (tester) async {
+    _api.routes['GET /api/assistant/me'] = const Reply(200, {
+      'botUserId': 'b1',
+      'name': 'Jarvis',
+      'systemPrompt': 'Be brief',
+      'providerId': 'p1',
+    });
+    await _pump(tester);
+    expect(find.text('Jarvis'), findsOneWidget);
+    await _next(tester);
+    expect(find.text('Be brief'), findsOneWidget);
+    await _next(tester);
+    // The stored model is already selected → can continue.
+    await _next(tester);
+    expect(find.text(_l10n(tester).assistantSetupStepConfirm),
+        findsOneWidget);
+  });
 
   testWidgets('a refused setup shows the localized reason and stays put',
-      (tester) => toleratingListTileInkBug(() async {
-            _api.routes['POST /api/assistant/setup'] = const Reply(400, {
-              'code': 'ASSISTANT_SETUP_INCOMPLETE',
-              'message': 'systemPrompt must not be empty'
-            });
-            await _pump(tester);
-            final l10n = _l10n(tester);
-            await tester.enterText(find.byType(TextField).first, ' Max ');
-            await _next(tester);
-            await _next(tester);
-            await tester.tap(find.text('Claude Sonnet'));
-            await tester.pumpAndSettle();
-            await _next(tester);
-            await tester.tap(find.text(l10n.assistantSetupCreateButton));
-            await tester.pumpAndSettle();
+      (tester) async {
+    _api.routes['POST /api/assistant/setup'] = const Reply(400, {
+      'code': 'ASSISTANT_SETUP_INCOMPLETE',
+      'message': 'systemPrompt must not be empty'
+    });
+    await _pump(tester);
+    final l10n = _l10n(tester);
+    await tester.enterText(find.byType(TextField).first, ' Max ');
+    await _next(tester);
+    await _next(tester);
+    await tester.tap(find.text('Claude Sonnet'));
+    await tester.pumpAndSettle();
+    await _next(tester);
+    await tester.tap(find.text(l10n.assistantSetupCreateButton));
+    await tester.pumpAndSettle();
 
-            expect(_api.calls('POST', '/api/assistant/setup').single.data,
-                {'name': 'Max', 'providerId': 'p1'});
-            expect(find.text(l10n.errAssistantSetupIncomplete), findsOneWidget);
-            expect(find.textContaining('must not be empty'), findsNothing);
-            // Button usable again for a retry.
-            expect(find.text(l10n.assistantSetupCreateButton), findsOneWidget);
-            await tester.pump(const Duration(seconds: 4));
-            await tester.pumpAndSettle();
-          }));
+    expect(_api.calls('POST', '/api/assistant/setup').single.data,
+        {'name': 'Max', 'providerId': 'p1'});
+    expect(find.text(l10n.errAssistantSetupIncomplete), findsOneWidget);
+    expect(find.textContaining('must not be empty'), findsNothing);
+    // Button usable again for a retry.
+    expect(find.text(l10n.assistantSetupCreateButton), findsOneWidget);
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpAndSettle();
+  });
 }

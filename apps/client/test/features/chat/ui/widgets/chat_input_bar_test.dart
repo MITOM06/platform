@@ -129,27 +129,9 @@ void main() {
   });
 
   group('MentionList', () {
-    // MentionList paints a coloured Container around its ListTiles, which
-    // trips Flutter's debug-only "ink splashes may be invisible" assertion
-    // (cosmetic, reported separately). Swallow only that one so the
-    // behaviour under test is still asserted.
-    late FlutterExceptionHandler? original;
-    void muteInkAssertion() {
-      original = FlutterError.onError;
-      FlutterError.onError = (details) {
-        if (details.exceptionAsString().contains('ink splashes may be invisible')) {
-          return;
-        }
-        original?.call(details);
-      };
-    }
-
-    void restore() => FlutterError.onError = original;
-
     Future<List<String>> pumpList(WidgetTester tester, String query,
         {List<String> ids = const [kBob, kCarol]}) async {
       final picked = <String>[];
-      muteInkAssertion();
       final overrides =
           await baseOverrides(names: const {kBob: 'Bob', kCarol: 'Carol'});
       await tester.pumpWidget(wrapWidget(
@@ -158,7 +140,6 @@ void main() {
         overrides: overrides,
       ));
       await tester.pumpAndSettle();
-      restore();
       return picked;
     }
 

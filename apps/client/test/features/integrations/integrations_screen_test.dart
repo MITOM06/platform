@@ -10,7 +10,6 @@ import 'package:platform_client/features/integrations/data/connector_repository.
 import 'package:platform_client/features/integrations/ui/integrations_screen.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
 
-import 'list_tile_ink_bug.dart';
 import 'route_adapter.dart';
 
 class _Auth extends AuthNotifier {
@@ -88,78 +87,77 @@ void main() {
 
   testWidgets(
       'a workspace connection can only be managed with CONNECT_WORKSPACE_CONNECTOR',
-      (tester) => toleratingListTileInkBug(() async {
-            await _pump(tester);
-            final l10n = _l10n(tester);
-            // Only the personal Notion connection is manageable.
-            expect(find.text(l10n.connectorManage), findsOneWidget);
-            expect(find.byTooltip(l10n.permManage), findsOneWidget);
-            // No custom-MCP entry without ADD_CUSTOM_MCP.
-            expect(find.byTooltip(l10n.customMcpTitle), findsNothing);
-          }));
+      (tester) async {
+    await _pump(tester);
+    final l10n = _l10n(tester);
+    // Only the personal Notion connection is manageable.
+    expect(find.text(l10n.connectorManage), findsOneWidget);
+    expect(find.byTooltip(l10n.permManage), findsOneWidget);
+    // No custom-MCP entry without ADD_CUSTOM_MCP.
+    expect(find.byTooltip(l10n.customMcpTitle), findsNothing);
+  });
 
   testWidgets('with the workspace capability both connections are manageable',
-      (tester) => toleratingListTileInkBug(() async {
-            await _pump(tester,
-                perms: const [Cap.connectWorkspaceConnector, Cap.addCustomMcp]);
-            final l10n = _l10n(tester);
-            expect(find.text(l10n.connectorManage), findsNWidgets(2));
-            expect(find.byTooltip(l10n.permManage), findsNWidgets(2));
-            expect(find.byTooltip(l10n.customMcpTitle), findsOneWidget);
-          }));
+      (tester) async {
+    await _pump(tester,
+        perms: const [Cap.connectWorkspaceConnector, Cap.addCustomMcp]);
+    final l10n = _l10n(tester);
+    expect(find.text(l10n.connectorManage), findsNWidgets(2));
+    expect(find.byTooltip(l10n.permManage), findsNWidgets(2));
+    expect(find.byTooltip(l10n.customMcpTitle), findsOneWidget);
+  });
 
   testWidgets('disconnect asks, then DELETEs and reports with the brand name',
-      (tester) => toleratingListTileInkBug(() async {
-            _api.routes['DELETE /connections/p1'] = const Reply(200, {});
-            await _pump(tester);
-            final l10n = _l10n(tester);
-            await tester.tap(find.text(l10n.connectorManage));
-            await tester.pumpAndSettle();
-            expect(find.text(l10n.connectorDisconnectConfirm), findsOneWidget);
-            await tester.tap(find.text(l10n.actionCancel));
-            await tester.pumpAndSettle();
-            expect(_api.calls('DELETE', '/connections/p1'), isEmpty);
+      (tester) async {
+    _api.routes['DELETE /connections/p1'] = const Reply(200, {});
+    await _pump(tester);
+    final l10n = _l10n(tester);
+    await tester.tap(find.text(l10n.connectorManage));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.connectorDisconnectConfirm), findsOneWidget);
+    await tester.tap(find.text(l10n.actionCancel));
+    await tester.pumpAndSettle();
+    expect(_api.calls('DELETE', '/connections/p1'), isEmpty);
 
-            await tester.tap(find.text(l10n.connectorManage));
-            await tester.pumpAndSettle();
-            await tester.tap(find.text(l10n.connectorDisconnect));
-            await tester.pumpAndSettle();
-            expect(_api.calls('DELETE', '/connections/p1'), hasLength(1));
-            expect(find.text(l10n.connectorDisconnected('Notion')),
-                findsOneWidget);
-            await tester.pump(const Duration(seconds: 4));
-            await tester.pumpAndSettle();
-          }));
+    await tester.tap(find.text(l10n.connectorManage));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.connectorDisconnect));
+    await tester.pumpAndSettle();
+    expect(_api.calls('DELETE', '/connections/p1'), hasLength(1));
+    expect(find.text(l10n.connectorDisconnected('Notion')),
+        findsOneWidget);
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpAndSettle();
+  });
 
   testWidgets('a refused connect shows the localized code message, not raw text',
-      (tester) => toleratingListTileInkBug(() async {
-            _api.routes['GET /connections'] = const Reply(200, []);
-            _api.routes['GET /oauth/gmail/start'] = const Reply(403, {
-              'code': 'CONNECTOR_NOT_ALLOWED',
-              'message': 'connector gmail not in allow list'
-            });
-            await _pump(tester);
-            final l10n = _l10n(tester);
-            await tester.tap(find.text(l10n.connectorConnect).first);
-            await tester.pumpAndSettle();
-            expect(find.text(l10n.connErrNotAllowed), findsOneWidget);
-            expect(find.textContaining('allow list'), findsNothing);
-            await tester.pump(const Duration(seconds: 4));
-            await tester.pumpAndSettle();
-          }));
+      (tester) async {
+    _api.routes['GET /connections'] = const Reply(200, []);
+    _api.routes['GET /oauth/gmail/start'] = const Reply(403, {
+      'code': 'CONNECTOR_NOT_ALLOWED',
+      'message': 'connector gmail not in allow list'
+    });
+    await _pump(tester);
+    final l10n = _l10n(tester);
+    await tester.tap(find.text(l10n.connectorConnect).first);
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.connErrNotAllowed), findsOneWidget);
+    expect(find.textContaining('allow list'), findsNothing);
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpAndSettle();
+  });
 
-  testWidgets('load failure → localized error with retry', (tester) =>
-      toleratingListTileInkBug(() async {
-        _api.routes['GET /catalog'] =
-            const Reply(500, {'message': 'ECONNREFUSED 10.0.0.5:3003'});
-        await _pump(tester);
-        expect(find.textContaining('ECONNREFUSED'), findsNothing);
-        expect(find.textContaining('10.0.0.5'), findsNothing);
-        _api.routes['GET /catalog'] = const Reply(200, []);
-        await tester.tap(find.text(_l10n(tester).actionRetry));
-        await tester.pumpAndSettle();
-        await tester.pump(const Duration(milliseconds: 50));
-        await tester.pumpAndSettle();
-        expect(_api.calls('GET', '/catalog').length, greaterThan(1));
-      }));
+  testWidgets('load failure → localized error with retry', (tester) async {
+    _api.routes['GET /catalog'] =
+        const Reply(500, {'message': 'ECONNREFUSED 10.0.0.5:3003'});
+    await _pump(tester);
+    expect(find.textContaining('ECONNREFUSED'), findsNothing);
+    expect(find.textContaining('10.0.0.5'), findsNothing);
+    _api.routes['GET /catalog'] = const Reply(200, []);
+    await tester.tap(find.text(_l10n(tester).actionRetry));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.pumpAndSettle();
+    expect(_api.calls('GET', '/catalog').length, greaterThan(1));
+  });
 }

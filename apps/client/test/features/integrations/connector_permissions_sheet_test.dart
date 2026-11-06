@@ -9,7 +9,6 @@ import 'package:platform_client/features/integrations/data/models/connector_mode
 import 'package:platform_client/features/integrations/ui/widgets/connector_permissions_sheet.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
 
-import 'list_tile_ink_bug.dart';
 import 'route_adapter.dart';
 
 class _Authed extends AuthNotifier {
@@ -75,17 +74,17 @@ bool _switchValue(WidgetTester tester, String title) => tester
 
 void main() {
   testWidgets('initial switches mirror the connection; Full authority off by default',
-      (tester) => toleratingListTileInkBug(() async {
+      (tester) async {
     await _open(tester, _item(groups: ['view', 'edit']));
     expect(_switchValue(tester, _en.permView), isTrue);
     expect(_switchValue(tester, _en.permCreate), isFalse);
     expect(_switchValue(tester, _en.permEdit), isTrue);
     expect(_switchValue(tester, _en.permDelete), isFalse);
     expect(_switchValue(tester, _en.permAutoRun), isFalse);
-  }));
+  });
 
   testWidgets('save sends groups in canonical order + the Full authority flag',
-      (tester) => toleratingListTileInkBug(() async {
+      (tester) async {
     final adapter = await _open(tester, _item(groups: ['view']));
     await tester.tap(find.widgetWithText(SwitchListTile, _en.permDelete));
     await tester.tap(find.widgetWithText(SwitchListTile, _en.permCreate));
@@ -104,10 +103,10 @@ void main() {
     expect(find.text(_en.permSaved), findsOneWidget);
     await tester.pump(const Duration(seconds: 4));
     await tester.pumpAndSettle();
-  }));
+  });
 
   testWidgets('a rejected save (not the owner) stays open with a localized error',
-      (tester) => toleratingListTileInkBug(() async {
+      (tester) async {
     await _open(tester, _item(autoRun: true),
         putReply: const Reply(403, {
           'code': 'INSUFFICIENT_PERMISSION',
@@ -121,5 +120,5 @@ void main() {
     expect(find.textContaining('Forbidden resource'), findsNothing);
     expect(find.textContaining('DioException'), findsNothing);
     expect(find.textContaining('/connections'), findsNothing);
-  }));
+  });
 }
