@@ -248,6 +248,7 @@ void main() {
         'DELETE /admin/invitations/i1': const Reply(200, {}),
         'POST /admin/roles': const Reply(201, {}),
         'PATCH /admin/roles/r1': const Reply(200, {}),
+        'DELETE /admin/roles/r1': const Reply(200, {'success': true}),
         'GET /admin/audit': const Reply(200, {'items': [], 'total': 0}),
       });
       final repo = AdminRepository(dioWith(a));
@@ -283,6 +284,8 @@ void main() {
       await repo.revokeInvitation('i1');
       await repo.createRole({'name': 'QA'});
       await repo.updateRole('r1', {'name': 'QA2'});
+      await repo.deleteRole('r1');
+      expect(a.calls('DELETE', '/admin/roles/r1'), hasLength(1));
       await repo.listAudit(page: 2);
       expect(a.requests.last.query, {'page': 2, 'limit': 20});
     });
@@ -410,6 +413,7 @@ void main() {
         'GET /admin/roles': const Reply(200, []),
         'POST /admin/roles': const Reply(201, {}),
         'PATCH /admin/roles/r1': const Reply(200, {}),
+        'DELETE /admin/roles/r1': const Reply(200, {'success': true}),
       });
       final c = _container(a);
       await c.read(departmentsProvider.future);
@@ -423,7 +427,9 @@ void main() {
       final r = c.read(rolesProvider.notifier);
       await r.create({'name': 'QA'});
       await r.edit('r1', {'name': 'QA2'});
-      expect(a.calls('GET', '/admin/roles'), hasLength(3));
+      await r.remove('r1');
+      expect(a.calls('DELETE', '/admin/roles/r1'), hasLength(1));
+      expect(a.calls('GET', '/admin/roles'), hasLength(4));
     });
 
     test('invitations: mutations return the server result and reload',
