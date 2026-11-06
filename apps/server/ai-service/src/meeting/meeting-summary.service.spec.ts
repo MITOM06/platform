@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { MeetingSummaryService } from './meeting-summary.service';
 import { MEETING_SUMMARY_RESULT_CHANNEL, MeetingRecordView } from './meeting.constants';
 
@@ -67,5 +69,17 @@ describe('MeetingSummaryService.summarize', () => {
     expect(s.usage.recordModelCall).toHaveBeenCalled();
     expect(s.create.mock.calls[0][0].model).toBe('m-x');
     expect(s.create.mock.calls[0][1]).toEqual({ timeout: 180_000, maxRetries: 1 });
+  });
+  it('an ok result matches the shared contract fixture (consumed by chat-service)', async () => {
+    const fixture = JSON.parse(
+      readFileSync(join(__dirname, '../../../contracts/meet-summary-result.ok.json'), 'utf8'),
+    );
+    // The model's answer is the fixture's summary; the publisher adds only _traceparent on the wire.
+    const s = setup({ model: JSON.stringify(fixture.summary) });
+    await s.svc.summarize(msg);
+    const [channel, published] = s.publisher.publishToChannel.mock.calls[0];
+    expect(channel).toBe(MEETING_SUMMARY_RESULT_CHANNEL);
+    expect(published).toEqual(fixture);
+    expect(Object.keys(published.summary).sort()).toEqual(Object.keys(fixture.summary).sort());
   });
 });

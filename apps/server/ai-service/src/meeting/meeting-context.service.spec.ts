@@ -1,4 +1,8 @@
+import { ConfigService } from '@nestjs/config';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { MeetingContextService } from './meeting-context.service';
+import { MeetingRecordClient } from './meeting-record.client';
 import { AiRequestPayload } from '../ai/ai.types';
 import { MeetingRecordView } from './meeting.constants';
 
@@ -59,5 +63,55 @@ describe('MeetingContextService.blockFor', () => {
     const block = await svc.blockFor(payload({ conversationId: 'meeting:m1' }), null);
     expect(block).toContain('The meeting record is temporarily unavailable; do not reveal or guess its content.');
     expect(block).not.toContain('boom');
+  });
+});
+
+describe('shared contract: GET /internal/meetings/{id}/record (contracts/meeting-record.internal.json)', () => {
+  // chat-service writes null fields as ABSENT (Jackson non_null), never as null:
+  // InternalMeetingControllerTest pins the same fixture on the producer side.
+  const fixture = JSON.parse(
+    readFileSync(join(__dirname, '../../../contracts/meeting-record.internal.json'), 'utf8'),
+  ) as MeetingRecordView;
+  const orig = global.fetch;
+  afterEach(() => {
+    global.fetch = orig;
+  });
+
+  it('the fixture omits nulls instead of sending them', () => {
+    expect('sharedNote' in fixture).toBe(false);
+    expect('displayName' in fixture.records[3]).toBe(false);
+    expect('fileName' in fixture.records[0]).toBe(false);
+    expect('attachmentName' in fixture.chat[1]).toBe(false);
+    expect('assigneeName' in fixture.summary!.actionItems[1]).toBe(false);
+  });
+
+  it('flows through MeetingRecordClient into a correct meeting block', async () => {
+    global.fetch = jest
+      .fn()
+      .mockResolvedValue({ ok: true, status: 200, json: async () => fixture }) as unknown as typeof fetch;
+    const client = new MeetingRecordClient({
+      get: (k: string) =>
+        k === 'config.chat.internalUrl' ? 'http://chat:8080' : k === 'config.connector.internalApiKey' ? 'k' : undefined,
+    } as unknown as ConfigService);
+    const block = await new MeetingContextService(client).blockFor(payload({ conversationId: 'meeting:m1' }));
+
+    expect(block).not.toBeNull();
+    const b = block as string;
+    expect(b).toContain('Meeting: Q3 planning');
+    expect(b).toContain('Host: Lan');
+    expect(b).toContain('Ended: 2026-11-06T02:00:00Z');
+    expect(b).toContain('Attendees: Lan, Binh');
+    expect(b).toContain('[SPEECH] Lan: Let us ship in December.');
+    expect(b).toContain('[FILE] budget.xlsx (shared by Binh): Budget: 120k');
+    expect(b).toContain('[SCREEN] (shared by Lan): Slide: Q3 plan');
+    // Absent displayName = a system notice, not "undefined" or a person.
+    expect(b).toContain('[SCREEN] Screen reading limit reached for this meeting.');
+    expect(b).toContain('Binh: [file: budget.xlsx] see the budget');
+    // Absent attachmentName = no file prefix.
+    expect(b).toContain('Lan: @AI what did we decide?');
+    expect(b).not.toContain('## Shared note');
+    expect(b).toContain('- Prepare the release notes (assignee: Binh)');
+    expect(b).toMatch(/- Book the launch room\n/);
+    expect(b).not.toMatch(/undefined|null/);
   });
 });

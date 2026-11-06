@@ -236,6 +236,37 @@ class MeetingSummaryResultListenerTest {
     assertThat(to.getValue()).containsExactlyInAnyOrder("host", "inv1", "u1");
   }
 
+  /**
+   * Shared contract with ai-service ({@code contracts/meet-summary-result.ok.json}, the producer's
+   * spec pins the same file): an ok result is consumed and its summary stored as sent. Only the
+   * meetingId is swapped for the real meeting's id.
+   */
+  @Test
+  void theSharedOkFixtureIsConsumedAndItsSummaryStored() throws Exception {
+    Meeting m = pending("ml9-aaaa-aaa", "Q3 planning", "a1", "inv1");
+    com.fasterxml.jackson.databind.node.ObjectNode fixture =
+        (com.fasterxml.jackson.databind.node.ObjectNode)
+            json.readTree(
+                java.nio.file.Files.readString(
+                    java.nio.file.Path.of("..", "contracts", "meet-summary-result.ok.json")));
+    assertThat(fixture.get("attempt").asText()).isEqualTo("a1");
+    fixture.put("meetingId", m.getId());
+    var msg = mock(org.springframework.data.redis.connection.Message.class);
+    when(msg.getBody()).thenReturn(json.writeValueAsBytes(fixture));
+
+    listener.onMessage(msg, null);
+
+    assertThat(store.findById(m.getId()).orElseThrow().getSummaryState())
+        .isEqualTo(MeetingSummaryState.DONE);
+    Map<String, Object> stored = summaries.latest(m.getId()).orElseThrow().getSummary();
+    assertThat(stored)
+        .containsOnlyKeys(
+            "overview", "keyPoints", "decisions", "actionItems", "fromMaterials", "language");
+    JsonNode storedJson = json.valueToTree(stored);
+    assertThat(storedJson).isEqualTo(fixture.get("summary"));
+    verify(events).summaryReady(any(Meeting.class), any());
+  }
+
   @Test
   void sameResultTwiceMakesOneGroupOneMessage() throws Exception {
     Meeting m = pending("ml2-aaaa-aaa", "T", "a1", "inv1");

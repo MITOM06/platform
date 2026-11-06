@@ -12,20 +12,25 @@ export interface MeetingSummarizeMessage {
   requesterId: string;
 }
 
-/** Shape of the chat-service internal meeting record (Java record via Jackson). */
+/**
+ * Shape of the chat-service internal meeting record (Java record via Jackson).
+ * chat-service runs Jackson `non_null`: a null field is OMITTED (arrives as
+ * undefined), never sent as null — hence the optional fields. Pinned by the
+ * shared fixture `apps/server/contracts/meeting-record.internal.json`.
+ */
 export interface MeetingRecordView {
   meeting: {
     id: string;
-    title: string | null;
+    title?: string | null;
     code: string;
-    startedAt: string | null;
-    endedAt: string | null;
-    hostName: string | null;
+    startedAt?: string | null;
+    endedAt?: string | null;
+    hostName?: string | null;
   };
   attendees: { displayName: string }[];
-  records: { kind: 'SPEECH' | 'FILE' | 'SCREEN'; displayName: string | null; text: string; ts: string; fileName?: string | null }[];
+  records: { kind: 'SPEECH' | 'FILE' | 'SCREEN'; displayName?: string | null; text: string; ts: string; fileName?: string | null }[];
   chat: { senderName: string; content: string; createdAt: string; attachmentName?: string | null }[];
-  sharedNote: string | null;
+  sharedNote?: string | null;
   /** Newest AI summary of the meeting; absent/null when none exists yet. */
   summary?: MeetingSummary | null;
 }
@@ -42,7 +47,8 @@ export interface MeetingListItem {
 
 export interface MeetingActionItem {
   text: string;
-  assigneeName: string | null;
+  /** null when produced here; absent when read back through chat-service (non_null). */
+  assigneeName?: string | null;
 }
 
 /** Structured summary produced by the model. */

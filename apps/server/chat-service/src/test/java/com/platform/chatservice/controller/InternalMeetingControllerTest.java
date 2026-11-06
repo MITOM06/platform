@@ -18,8 +18,12 @@ import com.platform.chatservice.security.SessionStatus;
 import com.platform.chatservice.security.SessionValidator;
 import com.platform.chatservice.service.meeting.MeetingDirectory;
 import com.platform.chatservice.service.meeting.MeetingRecordReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -130,6 +134,72 @@ class InternalMeetingControllerTest {
     org.assertj.core.api.Assertions.assertThat(a.getResponse().getContentAsString())
         .isEqualTo(b.getResponse().getContentAsString())
         .isNotEmpty();
+  }
+
+  /**
+   * Shared contract with ai-service ({@code contracts/meeting-record.internal.json}): the record as
+   * this app's Jackson config writes it. {@code non_null} OMITS null fields (sharedNote, a system
+   * SCREEN line's displayName, fileName, attachmentName) — and a null VALUE inside the stored
+   * summary map too (an unassigned action item has no {@code assigneeName} key at all).
+   */
+  @Test
+  void recordMatchesTheSharedContractFixture() throws Exception {
+    Map<String, Object> summary = new LinkedHashMap<>();
+    summary.put("overview", "The team agreed to ship in December.");
+    summary.put("keyPoints", List.of("Budget is 120k"));
+    summary.put("decisions", List.of("Ship in December"));
+    Map<String, Object> unassigned = new LinkedHashMap<>();
+    unassigned.put("text", "Book the launch room");
+    unassigned.put("assigneeName", null);
+    summary.put(
+        "actionItems",
+        List.of(Map.of("text", "Prepare the release notes", "assigneeName", "Binh"), unassigned));
+    summary.put("fromMaterials", List.of("Budget: 120k"));
+    summary.put("language", "en");
+    MeetingRecordView view =
+        new MeetingRecordView(
+            new MeetingRecordView.Meeting(
+                "m1",
+                "Q3 planning",
+                "abc-defg-hij",
+                Instant.parse("2026-11-06T01:00:00Z"),
+                Instant.parse("2026-11-06T02:00:00Z"),
+                "Lan"),
+            List.of(new MeetingRecordView.Attendee("Lan"), new MeetingRecordView.Attendee("Binh")),
+            List.of(
+                new MeetingRecordView.Rec(
+                    "SPEECH",
+                    "Lan",
+                    "Let us ship in December.",
+                    Instant.parse("2026-11-06T01:05:00Z"),
+                    null),
+                new MeetingRecordView.Rec(
+                    "FILE",
+                    "Binh",
+                    "Budget: 120k",
+                    Instant.parse("2026-11-06T01:10:00Z"),
+                    "budget.xlsx"),
+                new MeetingRecordView.Rec(
+                    "SCREEN", "Lan", "Slide: Q3 plan", Instant.parse("2026-11-06T01:15:00Z"), null),
+                new MeetingRecordView.Rec(
+                    "SCREEN",
+                    null,
+                    "Screen reading limit reached for this meeting.",
+                    Instant.parse("2026-11-06T01:20:00Z"),
+                    null)),
+            List.of(
+                new MeetingRecordView.Chat(
+                    "Binh", "see the budget", Instant.parse("2026-11-06T01:09:00Z"), "budget.xlsx"),
+                new MeetingRecordView.Chat(
+                    "Lan", "@AI what did we decide?", Instant.parse("2026-11-06T01:30:00Z"), null)),
+            null,
+            summary);
+    when(reader.read("m1", "u1")).thenReturn(Optional.of(view));
+    String fixture = Files.readString(Path.of("..", "contracts", "meeting-record.internal.json"));
+
+    mvc.perform(get(URL).param("userId", "u1").header("X-Internal-Key", KEY))
+        .andExpect(status().isOk())
+        .andExpect(content().json(fixture, true));
   }
 
   @Test
