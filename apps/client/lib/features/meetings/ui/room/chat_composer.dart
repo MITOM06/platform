@@ -63,7 +63,8 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
 
   Future<void> _attach() async {
     final l = context.l10n;
-    if (_text.text.trim().length > MeetingLimits.chat) {
+    // Raw length, like the counter and web's check.
+    if (_text.text.length > MeetingLimits.chat) {
       _toast(l.meetingErrChatTooLong(MeetingLimits.chat));
       return;
     }
@@ -80,7 +81,9 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
       if (!mounted) return;
       setState(() => _staged = MeetingAttachment(
           url: up.url, name: up.name, size: up.size, contentType: null));
-      _deliver();
+      // Typed past the limit during the upload: keep the file staged, no
+      // toast — the inline too-long error already shows (web `attach`).
+      if (_text.text.length <= MeetingLimits.chat) _deliver();
     } catch (e) {
       if (mounted) {
         final big = e is DioException && e.response?.statusCode == 413;

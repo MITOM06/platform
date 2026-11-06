@@ -158,13 +158,14 @@ class _Line extends StatelessWidget {
                 ),
               ],
             )),
-          if (message.content.isNotEmpty)
-            SelectableText(message.content,
-                style: const TextStyle(fontSize: 14)),
+          // Card first, then text (web `ChatHistory`).
           if (message.attachment case final file?)
+            MeetingFileCard(attachment: file),
+          if (message.content.isNotEmpty)
             Padding(
-              padding: EdgeInsets.only(top: message.content.isNotEmpty ? 4 : 0),
-              child: MeetingFileCard(attachment: file),
+              padding: EdgeInsets.only(top: message.attachment != null ? 4 : 0),
+              child: SelectableText(message.content,
+                  style: const TextStyle(fontSize: 14)),
             ),
         ],
       ),

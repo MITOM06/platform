@@ -157,15 +157,33 @@ void main() {
     expect(find.text(l10nOf(tester).meetingErrChatTooLong(2000)), findsWidgets);
   });
 
-  testWidgets('the length check ignores surrounding spaces, like send',
+  testWidgets('the pre-upload check uses the raw length, like web',
       (tester) async {
     final h = await pumpChat(tester);
     await tester.enterText(find.byType(TextField), '${'a' * 2000}   ');
     await tester.pump();
     await attach(tester);
+    expect(pickCalls, 0);
+    expect(uploads, isEmpty);
+    expect(h.rt.sent, isEmpty);
+  });
+
+  testWidgets(
+      'text made too long during the upload keeps the file staged, no toast',
+      (tester) async {
+    final h = await pumpChat(tester);
+    gate = Completer<_Up>();
+    await attach(tester);
+    await tester.enterText(find.byType(TextField), 'a' * 2001);
+    gate!.complete((url: '/api/uploads/f1', name: 'plan.pdf', size: 5));
     await tester.pump();
-    expect(pickCalls, 1);
-    expect(h.rt.sent.last.$2['content'], 'a' * 2000);
+    await tester.pump();
+    final l = l10nOf(tester);
+    expect(h.rt.sent, isEmpty);
+    expect(find.byType(SnackBar), findsNothing);
+    expect(find.text(l.meetingChatNotSent), findsNothing);
+    expect(find.text('plan.pdf'), findsOneWidget); // still staged
+    expect(find.byTooltip(l.meetingChatRemoveFile), findsOneWidget);
   });
 
   testWidgets('cancelling the picker does nothing', (tester) async {
@@ -252,5 +270,25 @@ void main() {
     expect(find.text('here'), findsOneWidget);
     expect(find.text('a.pdf'), findsOneWidget);
     expect(find.textContaining(' B'), findsNothing);
+  });
+
+  testWidgets('a line with a file and text shows the card above the text',
+      (tester) async {
+    final h = await pumpChat(tester);
+    h.controller.onTopicEvent(ChatEvent(
+        meetingId: 'm1',
+        message: MeetingChatMessage(
+            id: 'x1',
+            sender: const MeetingPerson(userId: 'bob', displayName: 'Bob'),
+            content: 'here',
+            createdAt: DateTime.utc(2026, 10, 8, 9),
+            attachment: const MeetingAttachment(
+                url: '/api/uploads/f9',
+                name: 'a.pdf',
+                size: 10,
+                contentType: null))));
+    await tester.pump();
+    expect(tester.getTopLeft(find.text('a.pdf')).dy,
+        lessThan(tester.getTopLeft(find.text('here')).dy));
   });
 }

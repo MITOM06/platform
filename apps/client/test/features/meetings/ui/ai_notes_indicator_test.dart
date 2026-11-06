@@ -52,6 +52,9 @@ void main() {
     expect(find.text(reading), findsNothing);
     await tester.pumpWidget(host(true, [], sharing: true));
     expect(find.text(reading), findsOneWidget);
+    // Told apart by a screen icon, like web's MonitorUp.
+    expect(find.byIcon(Icons.screen_share_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.auto_awesome_rounded), findsOneWidget);
     await tester.pumpWidget(host(false, [], sharing: true));
     expect(find.text(reading), findsNothing);
   });

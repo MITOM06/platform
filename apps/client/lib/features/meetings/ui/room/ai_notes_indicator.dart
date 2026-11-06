@@ -42,10 +42,11 @@ class _AiNotesIndicatorState extends State<AiNotesIndicator> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _Chip(l.meetingAiNotesActive),
+          _Chip(l.meetingAiNotesActive, icon: Icons.auto_awesome_rounded),
           if (widget.sharing) ...[
             const SizedBox(height: 6),
-            _Chip(l.meetingAiReadingScreen),
+            // A screen icon, like web's MonitorUp.
+            _Chip(l.meetingAiReadingScreen, icon: Icons.screen_share_rounded),
           ],
         ],
       ),
@@ -54,9 +55,10 @@ class _AiNotesIndicatorState extends State<AiNotesIndicator> {
 }
 
 class _Chip extends StatelessWidget {
-  const _Chip(this.text);
+  const _Chip(this.text, {required this.icon});
 
   final String text;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +67,7 @@ class _Chip extends StatelessWidget {
       decoration: BoxDecoration(
           color: kStagePill, borderRadius: BorderRadius.circular(999)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        const Icon(Icons.auto_awesome_rounded, size: 14, color: Colors.white),
+        Icon(icon, size: 14, color: Colors.white),
         const SizedBox(width: 6),
         Flexible(
           child: Text(text,

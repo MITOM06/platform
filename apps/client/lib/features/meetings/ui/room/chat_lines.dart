@@ -46,6 +46,7 @@ class _Bubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final b = border;
+    final body = Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14);
     return ConstrainedBox(
       constraints:
           BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.8),
@@ -66,12 +67,10 @@ class _Bubble extends StatelessWidget {
                 // No network image loading in chat; no onTapLink: links
                 // stay non-tappable.
                 sizedImageBuilder: (config) => Text(config.alt ?? ''),
+                // Links look like the text around them (web renders a
+                // plain span): nothing suggests they can be tapped.
                 styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
-                    .copyWith(
-                        p: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(fontSize: 14)),
+                    .copyWith(p: body, a: body),
               )
             : SelectableText(text,
                 style: TextStyle(
@@ -121,16 +120,17 @@ class ChatLineTile extends StatelessWidget {
                           fontSize: 12, color: AppTheme.mutedText(context))),
                 ])),
               ),
-            if (message.content.isNotEmpty)
-              _Bubble(
-                  text: message.content,
-                  mine: mine,
-                  markdown: message.sender.userId == kAiBotUserId),
+            // The file card comes first, then the text (web `ChatLine`).
             if (message.attachment case final file?)
+              MeetingFileCard(attachment: file, mine: mine),
+            if (message.content.isNotEmpty)
               Padding(
                 padding:
-                    EdgeInsets.only(top: message.content.isNotEmpty ? 4 : 0),
-                child: MeetingFileCard(attachment: file),
+                    EdgeInsets.only(top: message.attachment != null ? 4 : 0),
+                child: _Bubble(
+                    text: message.content,
+                    mine: mine,
+                    markdown: message.sender.userId == kAiBotUserId),
               ),
           ],
         ),
@@ -164,15 +164,20 @@ class PendingLineTile extends StatelessWidget {
         Opacity(
           opacity: e == null ? 0.6 : 1,
           child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            if (line.content.isNotEmpty)
-              _Bubble(
-                  text: line.content,
+            // Card first, then text; both outlined red once failed (web
+            // `PendingLine`).
+            if (line.attachment case final file?)
+              MeetingFileCard(
+                  attachment: file,
                   mine: true,
                   border: e == null ? null : cs.error),
-            if (line.attachment case final file?)
+            if (line.content.isNotEmpty)
               Padding(
-                padding: EdgeInsets.only(top: line.content.isNotEmpty ? 4 : 0),
-                child: MeetingFileCard(attachment: file),
+                padding: EdgeInsets.only(top: line.attachment != null ? 4 : 0),
+                child: _Bubble(
+                    text: line.content,
+                    mine: true,
+                    border: e == null ? null : cs.error),
               ),
           ]),
         ),
@@ -210,17 +215,21 @@ class AiNoticeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    // A system-style note, centred and muted (web `AiNoticeLine`).
     return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Text(
-          switch (notice.kind) {
-            AiErrorKind.unavailable => l.meetingAiUnavailable,
-            AiErrorKind.quotaExceeded => l.meetingAiQuotaExceeded,
-            AiErrorKind.rateLimited => l.meetingAiRateLimited,
-            AiErrorKind.failed => l.meetingAiFailed,
-          },
-          style: TextStyle(
-              fontSize: 12, color: Theme.of(context).colorScheme.error)),
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+      child: SizedBox(
+        width: double.infinity,
+        child: Text(
+            switch (notice.kind) {
+              AiErrorKind.unavailable => l.meetingAiUnavailable,
+              AiErrorKind.quotaExceeded => l.meetingAiQuotaExceeded,
+              AiErrorKind.rateLimited => l.meetingAiRateLimited,
+              AiErrorKind.failed => l.meetingAiFailed,
+            },
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: AppTheme.mutedText(context))),
+      ),
     );
   }
 }
