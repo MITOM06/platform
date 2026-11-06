@@ -42,9 +42,18 @@ public class MeetingAiBridge {
   private final MessageQueryService queries;
   private final MeetingPeople people;
 
-  /** True when the chat line addresses the AI ({@code @AI} / {@code @ponai}). */
+  /**
+   * True when the chat line asks the AI something: it mentions {@code @AI} / {@code @ponai} AND
+   * leaves a question once the mention is stripped. A bare {@code @AI} is just a chat line — no
+   * request with empty content is ever sent to ai-service.
+   */
   public static boolean mentionsAi(String text) {
-    return text != null && MENTION.matcher(text).find();
+    return text != null && MENTION.matcher(text).find() && !question(text).isEmpty();
+  }
+
+  /** The line with every mention removed, trimmed. */
+  static String question(String text) {
+    return MENTION.matcher(text).replaceAll("").trim();
   }
 
   /** Asks the AI on behalf of {@code caller}; returns at once. Never throws. */
@@ -54,9 +63,12 @@ public class MeetingAiBridge {
 
   void run(UserPrincipal caller, String meetingId, String text) {
     String uid = caller.getUserId();
+    String content = text == null ? "" : question(text);
+    if (content.isEmpty()) {
+      return; // a bare mention: nothing to ask
+    }
     try {
       events.ai(meetingId, "thinking", uid, null);
-      String content = MENTION.matcher(text).replaceAll("").trim();
       publisher.publishMeetingAiRequest(
           meetingId,
           uid,

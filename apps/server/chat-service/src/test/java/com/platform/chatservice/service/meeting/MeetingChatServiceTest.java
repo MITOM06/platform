@@ -343,6 +343,14 @@ class MeetingChatServiceTest {
   }
 
   @Test
+  void aBareMentionIsANormalLineThatNeverAsksTheAi() {
+    chat.send(an, "m1", " @AI ", null);
+
+    verify(events).chat(eq("m1"), any(), isNull());
+    verifyNoInteractions(aiBridge);
+  }
+
+  @Test
   void aLineWithoutAMentionNeverAsksTheAi() {
     chat.send(an, "m1", "just talking", null);
 

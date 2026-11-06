@@ -126,14 +126,21 @@ class MeetingAiBridgeTest {
   }
 
   @Test
-  void aMentionAloneIsStillSent() {
-    bridge.run(an, "m1", "@AI");
+  void aBareMentionIsNotAQuestion() {
+    assertThat(MeetingAiBridge.mentionsAi("@AI")).isFalse();
+    assertThat(MeetingAiBridge.mentionsAi("  @ponai  @AI ")).isFalse();
+    assertThat(MeetingAiBridge.mentionsAi("@AI ?")).isTrue();
+  }
 
-    ArgumentCaptor<String> content = ArgumentCaptor.forClass(String.class);
-    verify(publisher)
+  @Test
+  void aMentionAloneSendsNoAiRequestAndNoThinking() {
+    bridge.run(an, "m1", "@AI");
+    bridge.run(an, "m1", "  @PonAI ");
+
+    verify(publisher, never())
         .publishMeetingAiRequest(
-            eq("m1"), eq("a"), eq("An"), content.capture(), anyList(), any(), any(), any());
-    assertThat(content.getValue()).isEmpty();
+            anyString(), anyString(), anyString(), anyString(), anyList(), any(), any(), any());
+    verify(events, never()).ai(anyString(), anyString(), anyString(), any());
   }
 
   @Test
