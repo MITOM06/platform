@@ -6,6 +6,7 @@ import 'dart:async';
 
 import '../../../core/rtc/rtc_session.dart';
 import '../domain/display.dart';
+import '../domain/meeting_attachment.dart';
 import '../domain/meeting_events.dart';
 import '../../chat/domain/ai_models.dart';
 import '../domain/meeting_text.dart';
@@ -43,18 +44,31 @@ class MeetingRoomChat {
   void _setPending(List<PendingChat> Function(List<PendingChat>) fn) =>
       _store.update((s) => s.copyWith(pendingChat: fn(s.pendingChat)));
 
-  /// The clientId, or null when the line cannot be sent (empty, too long,
-  /// offline).
-  String? send(String content, int max) {
+  Map<String, Object?> _body(
+          String content, String clientId, MeetingAttachment? attachment) =>
+      {
+        'meetingId': meetingId,
+        'content': content,
+        'clientId': clientId,
+        if (attachment != null) 'attachment': attachment.toWire(),
+      };
+
+  /// The clientId, or null when the line cannot be sent (empty without a
+  /// file, too long, offline).
+  String? send(String content, int max, {MeetingAttachment? attachment}) {
     final text = content.trim();
-    if (text.isEmpty || text.length > max || !_deps.realtime.isConnected) {
+    if ((text.isEmpty && attachment == null) ||
+        text.length > max ||
+        !_deps.realtime.isConnected) {
       return null;
     }
     final clientId = _deps.newClientId();
-    _deps.realtime.publish('/app/meet.chat',
-        {'meetingId': meetingId, 'content': text, 'clientId': clientId});
-    final line =
-        PendingChat(clientId: clientId, content: text, sentAt: _deps.now());
+    _deps.realtime.publish('/app/meet.chat', _body(text, clientId, attachment));
+    final line = PendingChat(
+        clientId: clientId,
+        content: text,
+        sentAt: _deps.now(),
+        attachment: attachment);
     _setPending((list) => [...list, line]);
     return clientId;
   }
@@ -72,11 +86,8 @@ class MeetingRoomChat {
           NoticeLevel.error, const MeetingNotice(MeetingText.realtimeOffline));
       return;
     }
-    _deps.realtime.publish('/app/meet.chat', {
-      'meetingId': meetingId,
-      'content': line.content,
-      'clientId': clientId
-    });
+    _deps.realtime.publish(
+        '/app/meet.chat', _body(line.content, clientId, line.attachment));
     final now = _deps.now();
     _setPending((list) => [
           for (final p in list)

@@ -5770,6 +5770,25 @@ class AppLocalizationsVi extends AppLocalizations {
   String get meetingChatSending => 'Đang gửi…';
 
   @override
+  String get meetingChatAttach => 'Đính kèm tệp';
+
+  @override
+  String get meetingChatUploading => 'Đang tải tệp lên…';
+
+  @override
+  String get meetingChatFileTooLarge => 'Tệp quá lớn';
+
+  @override
+  String get meetingChatUploadFailed => 'Không tải được tệp lên, hãy thử lại';
+
+  @override
+  String get meetingChatNotSent =>
+      'Chưa gửi được tệp. Tệp vẫn được giữ ở đây, nhấn Gửi để thử lại';
+
+  @override
+  String get meetingChatRemoveFile => 'Bỏ tệp';
+
+  @override
   String get meetingChatOffline => 'Đang kết nối lại — tạm chưa gửi được tin';
 
   @override

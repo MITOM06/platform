@@ -5605,6 +5605,25 @@ class AppLocalizationsJa extends AppLocalizations {
   String get meetingChatSending => '送信中…';
 
   @override
+  String get meetingChatAttach => 'ファイルを添付';
+
+  @override
+  String get meetingChatUploading => 'ファイルをアップロード中…';
+
+  @override
+  String get meetingChatFileTooLarge => 'ファイルが大きすぎます';
+
+  @override
+  String get meetingChatUploadFailed => 'ファイルをアップロードできませんでした。もう一度お試しください';
+
+  @override
+  String get meetingChatNotSent =>
+      'ファイルを送信できませんでした。ここに保持されています。送信を押して再試行してください';
+
+  @override
+  String get meetingChatRemoveFile => 'ファイルを削除';
+
+  @override
   String get meetingChatOffline => '再接続中のため、現在メッセージを送信できません';
 
   @override

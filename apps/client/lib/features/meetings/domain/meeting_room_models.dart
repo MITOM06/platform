@@ -2,6 +2,7 @@
 // actions) — mirror of web `lib/api/meeting-types.ts`.
 
 import 'json_read.dart';
+import 'meeting_attachment.dart';
 import 'meeting_models.dart';
 
 /// Placeholder time for a row whose timestamp is missing (web keeps `''`,
@@ -51,24 +52,32 @@ class MeetingChatMessage {
     required this.sender,
     required this.content,
     required this.createdAt,
+    this.attachment,
   });
 
   final String id;
   final MeetingPerson sender;
   final String content;
   final DateTime createdAt;
+  final MeetingAttachment? attachment;
 
   static MeetingChatMessage? fromJson(Object? v) {
     final o = asJson(v);
     if (o == null) return null;
     final sender = MeetingPerson.fromJson(o['sender']);
     final id = o['id'];
-    final content = o['content'];
+    final attachment = parseAttachment(o['attachment']);
+    // A file-only line may come without text.
+    final content = o['content'] ?? (attachment == null ? null : '');
     final createdAt = dateOrNull(o['createdAt']);
     if (sender == null || id is! String || content is! String) return null;
     if (createdAt == null) return null;
     return MeetingChatMessage(
-        id: id, sender: sender, content: content, createdAt: createdAt);
+        id: id,
+        sender: sender,
+        content: content,
+        createdAt: createdAt,
+        attachment: attachment);
   }
 }
 

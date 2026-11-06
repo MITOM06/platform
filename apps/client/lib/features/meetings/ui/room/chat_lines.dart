@@ -9,6 +9,7 @@ import '../../domain/meeting_text.dart';
 import '../../domain/pending_ai.dart';
 import '../../state/meeting_room_state.dart';
 import '../meeting_text_l10n.dart';
+import 'meeting_file_card.dart';
 
 /// Consecutive lines of one person within this window share one name.
 const _groupWindow = Duration(minutes: 2);
@@ -120,10 +121,17 @@ class ChatLineTile extends StatelessWidget {
                           fontSize: 12, color: AppTheme.mutedText(context))),
                 ])),
               ),
-            _Bubble(
-                text: message.content,
-                mine: mine,
-                markdown: message.sender.userId == kAiBotUserId),
+            if (message.content.isNotEmpty)
+              _Bubble(
+                  text: message.content,
+                  mine: mine,
+                  markdown: message.sender.userId == kAiBotUserId),
+            if (message.attachment case final file?)
+              Padding(
+                padding:
+                    EdgeInsets.only(top: message.content.isNotEmpty ? 4 : 0),
+                child: MeetingFileCard(attachment: file),
+              ),
           ],
         ),
       );
@@ -155,10 +163,18 @@ class PendingLineTile extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
         Opacity(
           opacity: e == null ? 0.6 : 1,
-          child: _Bubble(
-              text: line.content,
-              mine: true,
-              border: e == null ? null : cs.error),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            if (line.content.isNotEmpty)
+              _Bubble(
+                  text: line.content,
+                  mine: true,
+                  border: e == null ? null : cs.error),
+            if (line.attachment case final file?)
+              Padding(
+                padding: EdgeInsets.only(top: line.content.isNotEmpty ? 4 : 0),
+                child: MeetingFileCard(attachment: file),
+              ),
+          ]),
         ),
         if (e == null)
           Padding(

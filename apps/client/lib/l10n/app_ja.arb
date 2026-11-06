@@ -2195,6 +2195,12 @@
   "meetingChatRetry": "再送信",
   "meetingChatDiscard": "破棄",
   "meetingChatSending": "送信中…",
+  "meetingChatAttach": "ファイルを添付",
+  "meetingChatUploading": "ファイルをアップロード中…",
+  "meetingChatFileTooLarge": "ファイルが大きすぎます",
+  "meetingChatUploadFailed": "ファイルをアップロードできませんでした。もう一度お試しください",
+  "meetingChatNotSent": "ファイルを送信できませんでした。ここに保持されています。送信を押して再試行してください",
+  "meetingChatRemoveFile": "ファイルを削除",
   "meetingChatOffline": "再接続中のため、現在メッセージを送信できません",
   "meetingChatCounter": "{count}/{max}",
   "@meetingChatCounter": {

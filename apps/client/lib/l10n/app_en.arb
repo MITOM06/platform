@@ -2961,6 +2961,12 @@
   "meetingChatRetry": "Retry",
   "meetingChatDiscard": "Discard",
   "meetingChatSending": "Sending…",
+  "meetingChatAttach": "Attach a file",
+  "meetingChatUploading": "Uploading file…",
+  "meetingChatFileTooLarge": "File is too large",
+  "meetingChatUploadFailed": "Couldn't upload the file, try again",
+  "meetingChatNotSent": "Couldn't send the file. It is kept here, press Send to retry",
+  "meetingChatRemoveFile": "Remove file",
   "meetingChatOffline": "Reconnecting — you can't send messages right now",
   "meetingChatCounter": "{count}/{max}",
   "@meetingChatCounter": {

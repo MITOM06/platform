@@ -2195,6 +2195,12 @@
   "meetingChatRetry": "Gửi lại",
   "meetingChatDiscard": "Bỏ",
   "meetingChatSending": "Đang gửi…",
+  "meetingChatAttach": "Đính kèm tệp",
+  "meetingChatUploading": "Đang tải tệp lên…",
+  "meetingChatFileTooLarge": "Tệp quá lớn",
+  "meetingChatUploadFailed": "Không tải được tệp lên, hãy thử lại",
+  "meetingChatNotSent": "Chưa gửi được tệp. Tệp vẫn được giữ ở đây, nhấn Gửi để thử lại",
+  "meetingChatRemoveFile": "Bỏ tệp",
   "meetingChatOffline": "Đang kết nối lại — tạm chưa gửi được tin",
   "meetingChatCounter": "{count}/{max}",
   "@meetingChatCounter": {

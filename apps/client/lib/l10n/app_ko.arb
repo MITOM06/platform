@@ -2195,6 +2195,12 @@
   "meetingChatRetry": "다시 보내기",
   "meetingChatDiscard": "삭제",
   "meetingChatSending": "보내는 중…",
+  "meetingChatAttach": "파일 첨부",
+  "meetingChatUploading": "파일 업로드 중…",
+  "meetingChatFileTooLarge": "파일이 너무 큽니다",
+  "meetingChatUploadFailed": "파일을 업로드하지 못했습니다. 다시 시도해 주세요",
+  "meetingChatNotSent": "파일을 보내지 못했습니다. 여기에 보관되어 있으니 보내기를 눌러 다시 시도하세요",
+  "meetingChatRemoveFile": "파일 제거",
   "meetingChatOffline": "다시 연결하는 중이라 지금은 메시지를 보낼 수 없습니다",
   "meetingChatCounter": "{count}/{max}",
   "@meetingChatCounter": {

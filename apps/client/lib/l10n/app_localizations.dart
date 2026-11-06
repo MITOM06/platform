@@ -10393,6 +10393,42 @@ abstract class AppLocalizations {
   /// **'Sending…'**
   String get meetingChatSending;
 
+  /// No description provided for @meetingChatAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach a file'**
+  String get meetingChatAttach;
+
+  /// No description provided for @meetingChatUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading file…'**
+  String get meetingChatUploading;
+
+  /// No description provided for @meetingChatFileTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'File is too large'**
+  String get meetingChatFileTooLarge;
+
+  /// No description provided for @meetingChatUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t upload the file, try again'**
+  String get meetingChatUploadFailed;
+
+  /// No description provided for @meetingChatNotSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send the file. It is kept here, press Send to retry'**
+  String get meetingChatNotSent;
+
+  /// No description provided for @meetingChatRemoveFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove file'**
+  String get meetingChatRemoveFile;
+
   /// No description provided for @meetingChatOffline.
   ///
   /// In en, this message translates to:

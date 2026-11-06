@@ -5608,6 +5608,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get meetingChatSending => '보내는 중…';
 
   @override
+  String get meetingChatAttach => '파일 첨부';
+
+  @override
+  String get meetingChatUploading => '파일 업로드 중…';
+
+  @override
+  String get meetingChatFileTooLarge => '파일이 너무 큽니다';
+
+  @override
+  String get meetingChatUploadFailed => '파일을 업로드하지 못했습니다. 다시 시도해 주세요';
+
+  @override
+  String get meetingChatNotSent =>
+      '파일을 보내지 못했습니다. 여기에 보관되어 있으니 보내기를 눌러 다시 시도하세요';
+
+  @override
+  String get meetingChatRemoveFile => '파일 제거';
+
+  @override
   String get meetingChatOffline => '다시 연결하는 중이라 지금은 메시지를 보낼 수 없습니다';
 
   @override

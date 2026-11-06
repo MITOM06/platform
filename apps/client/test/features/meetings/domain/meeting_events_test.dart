@@ -61,6 +61,14 @@ void main() {
     expect(p({'event': 'meet.chat', 'meetingId': 'm1', 'message': {'id': 'x'}}), isNull);
   });
 
+  test('meet.chat parses the attachment, dropping an invalid one', () {
+    Object? att(Object? a) => (p({'event': 'meet.chat', 'meetingId': 'm1', 'message': {
+          'id': 'x', 'sender': {'userId': 'u'}, 'content': '', 'createdAt': '2026-10-08T02:05:11.120Z',
+          'attachment': a}}) as ChatEvent).message.attachment?.url;
+    expect(att({'url': '/api/uploads/abc', 'name': 'a.pdf', 'size': 3}), '/api/uploads/abc');
+    expect(att({'url': 'https://x/a', 'name': 'a.pdf'}), isNull);
+  });
+
   test('meet.error keeps only known host actions and scalar params', () {
     final e = p({'event': 'meet.error', 'meetingId': 'm1', 'action': 'LOCK', 'errorCode': 'MEETINGS_UNAVAILABLE',
       'params': {'field': 'content', 'max': 2000, 'nested': {'x': 1}}}) as MeetErrorEvent;

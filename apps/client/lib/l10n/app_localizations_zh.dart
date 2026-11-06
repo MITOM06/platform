@@ -5541,6 +5541,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get meetingChatSending => '正在发送…';
 
   @override
+  String get meetingChatAttach => '添加附件';
+
+  @override
+  String get meetingChatUploading => '正在上传文件…';
+
+  @override
+  String get meetingChatFileTooLarge => '文件太大';
+
+  @override
+  String get meetingChatUploadFailed => '无法上传文件，请重试';
+
+  @override
+  String get meetingChatNotSent => '文件未能发送。已保留在此，点击发送重试';
+
+  @override
+  String get meetingChatRemoveFile => '移除文件';
+
+  @override
   String get meetingChatOffline => '正在重新连接，暂时无法发送消息';
 
   @override

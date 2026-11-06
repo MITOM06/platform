@@ -2195,6 +2195,12 @@
   "meetingChatRetry": "Reintentar",
   "meetingChatDiscard": "Descartar",
   "meetingChatSending": "Enviando…",
+  "meetingChatAttach": "Adjuntar un archivo",
+  "meetingChatUploading": "Subiendo archivo…",
+  "meetingChatFileTooLarge": "El archivo es demasiado grande",
+  "meetingChatUploadFailed": "No se pudo subir el archivo, inténtalo de nuevo",
+  "meetingChatNotSent": "No se pudo enviar el archivo. Se conserva aquí, pulsa Enviar para reintentar",
+  "meetingChatRemoveFile": "Quitar archivo",
   "meetingChatOffline": "Reconectando: ahora mismo no puedes enviar mensajes",
   "meetingChatCounter": "{count}/{max}",
   "@meetingChatCounter": {

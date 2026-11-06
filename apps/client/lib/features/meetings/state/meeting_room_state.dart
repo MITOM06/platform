@@ -7,6 +7,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 import '../../../core/rtc/rtc_session.dart';
 import '../domain/cache_updates.dart';
+import '../domain/meeting_attachment.dart';
 import '../domain/meeting_models.dart';
 import '../domain/meeting_room_models.dart';
 import '../domain/meeting_text.dart';
@@ -24,19 +25,22 @@ class PendingChat {
     required this.content,
     required this.sentAt,
     this.error,
+    this.attachment,
   });
 
   final String clientId;
   final String content;
   final DateTime sentAt;
   final MeetingNotice? error;
+  final MeetingAttachment? attachment;
 
   /// [error] is always replaced (null clears it).
   PendingChat copyWith({DateTime? sentAt, MeetingNotice? error}) => PendingChat(
       clientId: clientId,
       content: content,
       sentAt: sentAt ?? this.sentAt,
-      error: error);
+      error: error,
+      attachment: attachment);
 
   @override
   bool operator ==(Object other) =>
@@ -44,10 +48,11 @@ class PendingChat {
       other.clientId == clientId &&
       other.content == content &&
       other.sentAt == sentAt &&
-      other.error == error;
+      other.error == error &&
+      other.attachment == attachment;
 
   @override
-  int get hashCode => Object.hash(clientId, content, sentAt, error);
+  int get hashCode => Object.hash(clientId, content, sentAt, error, attachment);
 
   @override
   String toString() => 'PendingChat($clientId, $content, $sentAt, $error)';

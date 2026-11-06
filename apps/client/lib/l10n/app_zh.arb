@@ -2195,6 +2195,12 @@
   "meetingChatRetry": "重试",
   "meetingChatDiscard": "删除",
   "meetingChatSending": "正在发送…",
+  "meetingChatAttach": "添加附件",
+  "meetingChatUploading": "正在上传文件…",
+  "meetingChatFileTooLarge": "文件太大",
+  "meetingChatUploadFailed": "无法上传文件，请重试",
+  "meetingChatNotSent": "文件未能发送。已保留在此，点击发送重试",
+  "meetingChatRemoveFile": "移除文件",
   "meetingChatOffline": "正在重新连接，暂时无法发送消息",
   "meetingChatCounter": "{count}/{max}",
   "@meetingChatCounter": {

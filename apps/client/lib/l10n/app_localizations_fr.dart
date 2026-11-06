@@ -5905,6 +5905,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meetingChatSending => 'Envoi…';
 
   @override
+  String get meetingChatAttach => 'Joindre un fichier';
+
+  @override
+  String get meetingChatUploading => 'Envoi du fichier…';
+
+  @override
+  String get meetingChatFileTooLarge => 'Le fichier est trop volumineux';
+
+  @override
+  String get meetingChatUploadFailed =>
+      'Impossible d\'envoyer le fichier, réessayez';
+
+  @override
+  String get meetingChatNotSent =>
+      'Impossible d\'envoyer le fichier. Il est conservé ici, appuyez sur Envoyer pour réessayer';
+
+  @override
+  String get meetingChatRemoveFile => 'Retirer le fichier';
+
+  @override
   String get meetingChatOffline =>
       'Reconnexion en cours : impossible d\'envoyer des messages pour l\'instant';
 

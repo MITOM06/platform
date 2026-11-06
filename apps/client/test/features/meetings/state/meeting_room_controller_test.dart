@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:platform_client/core/rtc/rtc_session.dart';
+import 'package:platform_client/features/meetings/domain/meeting_attachment.dart';
 import 'package:platform_client/features/meetings/domain/meeting_events.dart';
 import 'package:platform_client/features/meetings/domain/meeting_models.dart';
 import 'package:platform_client/features/meetings/domain/meeting_room_models.dart';
@@ -240,6 +241,21 @@ void main() {
       expect(s.pendingChat, isEmpty);
       expect(s.chat.lines.single.id, 'x');
       expect(s.unreadChat, 0);
+    });
+
+    test('sends a file with the line; the attachment key exists only then', () async {
+      await inRoom();
+      const file = MeetingAttachment(url: '/api/uploads/f1', name: 'a.pdf', size: 12, contentType: null);
+      expect(c.sendChat('', attachment: file), 'c-abc');
+      expect(rt.sent.last.$2, {
+        'meetingId': 'm1', 'content': '', 'clientId': 'c-abc',
+        'attachment': {'url': '/api/uploads/f1', 'name': 'a.pdf'}});
+      expect(s.pendingChat.single.attachment, file);
+      c.retryChat('c-abc');
+      expect(rt.sent.last.$2['attachment'], {'url': '/api/uploads/f1', 'name': 'a.pdf'});
+      c.discardChat('c-abc');
+      c.sendChat('plain');
+      expect(rt.sent.last.$2.containsKey('attachment'), isFalse);
     });
 
     test('marks a refused line and lets me retry (same clientId) or discard it', () async {

@@ -5810,6 +5810,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meetingChatSending => 'Sending…';
 
   @override
+  String get meetingChatAttach => 'Attach a file';
+
+  @override
+  String get meetingChatUploading => 'Uploading file…';
+
+  @override
+  String get meetingChatFileTooLarge => 'File is too large';
+
+  @override
+  String get meetingChatUploadFailed => 'Couldn\'t upload the file, try again';
+
+  @override
+  String get meetingChatNotSent =>
+      'Couldn\'t send the file. It is kept here, press Send to retry';
+
+  @override
+  String get meetingChatRemoveFile => 'Remove file';
+
+  @override
   String get meetingChatOffline =>
       'Reconnecting — you can\'t send messages right now';
 
