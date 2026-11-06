@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:platform_client/features/meetings/domain/meeting_events.dart';
 import 'package:platform_client/features/meetings/domain/meeting_models.dart';
@@ -115,5 +116,75 @@ void main() {
         child: const Scaffold(body: MeetingChatSheet()));
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(find.text(l10nOf(tester).meetingChatEmpty), findsNothing);
+  });
+
+  group('AI answers', () {
+    const bot = 'ai-bot-000000000000000000000001';
+    ChatEvent line(String sender, String text, {String name = 'Someone'}) =>
+        ChatEvent(
+            meetingId: 'm1',
+            message: MeetingChatMessage(
+                id: 'x-$sender-${text.hashCode}',
+                sender: MeetingPerson(userId: sender, displayName: name),
+                content: text,
+                createdAt: clock));
+
+    testWidgets('the AI line is Markdown under a localized name; others stay plain',
+        (tester) async {
+      final h = await pumpChat(tester);
+      h.controller.onTopicEvent(line(bot, 'a **bold** word', name: 'raw-bot-name'));
+      h.controller.onTopicEvent(line('bob', 'a **plain** word', name: 'Bob'));
+      await tester.pump();
+      expect(find.textContaining(l10nOf(tester).meetingAiName, findRichText: true),
+          findsOneWidget);
+      expect(find.text('raw-bot-name'), findsNothing);
+      expect(find.byType(MarkdownBody), findsOneWidget);
+      expect(find.text('a **plain** word'), findsOneWidget);
+    });
+
+    testWidgets('images in an AI line are never loaded', (tester) async {
+      final h = await pumpChat(tester);
+      h.controller.onTopicEvent(
+          line(bot, 'see ![pic](https://evil.example/x.png) here'));
+      await tester.pump();
+      expect(find.byType(Image), findsNothing);
+    });
+
+    testWidgets('"answering" shows for everyone until the AI line arrives',
+        (tester) async {
+      final h = await pumpChat(tester);
+      final l = l10nOf(tester);
+      h.controller.onTopicEvent(const AiEvent(
+          meetingId: 'm1', state: AiState.thinking, requesterId: 'bob'));
+      await tester.pump();
+      expect(find.text(l.meetingAiThinking), findsOneWidget);
+      h.controller.onTopicEvent(line(bot, 'done'));
+      await tester.pump();
+      expect(find.text(l.meetingAiThinking), findsNothing);
+      await tester.pump(const Duration(seconds: 61)); // the expiry timer
+    });
+
+    testWidgets('an error is a translated line for the requester only, never the code',
+        (tester) async {
+      final h = await pumpChat(tester);
+      final l = l10nOf(tester);
+      h.controller.onTopicEvent(const AiEvent(
+          meetingId: 'm1', state: AiState.error, requesterId: 'bob', code: 'AI_UNAVAILABLE'));
+      await tester.pump();
+      expect(find.text(l.meetingAiUnavailable), findsNothing);
+      h.controller.onTopicEvent(const AiEvent(
+          meetingId: 'm1', state: AiState.error, requesterId: 'me', code: 'AI_UNAVAILABLE'));
+      h.controller.onTopicEvent(const AiEvent(
+          meetingId: 'm1', state: AiState.error, requesterId: 'me', code: 'AI_EMPTY'));
+      await tester.pump();
+      expect(find.text(l.meetingAiUnavailable), findsOneWidget);
+      expect(find.text(l.meetingAiFailed), findsOneWidget);
+      expect(find.textContaining('AI_'), findsNothing);
+    });
+
+    testWidgets('the empty chat hints at @AI', (tester) async {
+      await pumpChat(tester);
+      expect(find.text(l10nOf(tester).meetingChatAiHint), findsOneWidget);
+    });
   });
 }

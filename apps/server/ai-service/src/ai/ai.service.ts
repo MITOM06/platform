@@ -21,7 +21,9 @@ import { buildSkillInstructions } from '../skills/skill-catalog';
 import {
   ConversationAccessService,
   ConversationContext,
+  isMeetingChatId,
 } from '../conversation/conversation-access.service';
+import { MeetingContextService } from '../meeting/meeting-context.service';
 import { EmbeddingService } from '../kb/embedding.service';
 import { SettingsService } from '../settings/settings.service';
 import { ResolvedAiSettings } from '../settings/resolved-ai-settings';
@@ -88,6 +90,8 @@ export class AiService {
     @Optional() private readonly replySettled?: ReplySettledTracker,
     // Null unless AI_PROVIDER=claude-cli (LlmModule factory): chat replies on the subscription.
     @Optional() private readonly claudeCli?: ClaudeCliClient | null,
+    // Optional for unit tests; loads the meeting record when the request is about a meeting.
+    @Optional() private readonly meetingContext?: MeetingContextService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('config.anthropic.apiKey'),
@@ -168,7 +172,10 @@ export class AiService {
 
     // Explicit context reset (`/new`): deactivate the current session, start a
     // fresh one, confirm, and return WITHOUT calling Claude (not quota-gated).
-    if (payload.content.trim() === '/new') {
+    // In the in-meeting chat the reply is posted to the whole room: slash commands are
+    // plain question text there (no system notice, no session reset, no memory dump).
+    const meetingChat = isMeetingChatId(conversationId);
+    if (!meetingChat && payload.content.trim() === '/new') {
       await this.aiSessionService.createNewSession(userId, conversationId);
       await this.publishSystemResponse(stream, NEW_SESSION_NOTICE);
       return;
@@ -176,7 +183,7 @@ export class AiService {
 
     // Memory inspection (`/memory`, `/ai-memory`): the REAL stored memory of the
     // REQUESTER (never another member's), not a model guess. Costs no tokens.
-    if (isMemoryCommand(payload.content)) {
+    if (!meetingChat && isMemoryCommand(payload.content)) {
       const memory = await this.memoryService.getMemory(conversationId, userId);
       await this.publishSystemResponse(stream, formatMemoryNotice(memory));
       return;
@@ -236,7 +243,7 @@ export class AiService {
     const { session: compactedSession, compacted } =
       await this.compactService.maybeCompact(session);
     session = compactedSession;
-    if (compacted) {
+    if (compacted && !isMeetingChatId(conversationId)) {
       // Its own replyId: chat-service dedupes DONE per replyId, so sharing the
       // answer's id would make it drop the answer.
       await this.publishSystemResponse(
@@ -261,8 +268,10 @@ export class AiService {
             maxMessages: this.groupContextMessages,
           })
         : '';
-    // An answer grounded on the evolving group conversation is not reusable.
-    const responseCacheable = !groupContext;
+    // Meeting record (as the asker). Grounded on per-user, per-meeting data: never cached.
+    const meetingBlock = (await this.meetingContext?.blockFor(payload, conversation.meetingId)) ?? '';
+    // An answer grounded on the evolving group conversation or a meeting is not reusable.
+    const responseCacheable = !groupContext && !meetingBlock;
 
     // Embed the user message ONCE — reused for both RAG and memory retrieval.
     let queryVector: number[] | null = null;
@@ -319,12 +328,16 @@ export class AiService {
         skillInstructions,
         volatileContext.text,
         groupContext,
+        meetingBlock,
       ]
         .filter((s) => s && s.trim())
         .join('\n\n'),
       ragSources: volatileContext.ragSources,
       queryVector,
       responseCacheable,
+      // The in-meeting chat answer is shown to the whole room: no tools run as the asker.
+      noTools: isMeetingChatId(conversationId),
+      directAi: conversation.directAi === true,
       settings,
       enabledSkillIds,
     };
@@ -388,7 +401,10 @@ export class AiService {
       const isFirstExtraction = count === 3;
       const isPeriodicExtraction =
         this.extractEveryTurns > 0 && count > 3 && count % this.extractEveryTurns === 0;
-      if (isFirstExtraction || isPeriodicExtraction) {
+      // Meeting content must not leak into the user's cross-conversation key facts.
+      const meetingTurn =
+        !!meetingBlock || !!conversation.meetingId || state?.toolCtx.meetingContentRead === true;
+      if (!meetingTurn && (isFirstExtraction || isPeriodicExtraction)) {
         this.factExtractor.extractFacts(conversationId, userId, loopHistory, count).catch((err) => {
           this.logger.error(`Fact extraction failed for ${conversationId}`, err);
         });

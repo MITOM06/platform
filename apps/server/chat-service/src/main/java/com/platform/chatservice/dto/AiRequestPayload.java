@@ -15,4 +15,6 @@ public record AiRequestPayload(
     /** Caller capability keys from the JWT {@code perms} claim (P2a). */
     List<String> perms,
     /** Caller department ids from the JWT {@code depts} claim (P2a). */
-    List<String> departmentIds) {}
+    List<String> departmentIds,
+    /** Set only for an {@code @AI} in a meeting chat (conversationId is {@code meeting:{id}}). */
+    String meetingId) {}

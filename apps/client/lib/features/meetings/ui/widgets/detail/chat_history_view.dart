@@ -9,6 +9,7 @@ import '../../../domain/meeting_room_models.dart';
 import '../../../domain/schedule.dart';
 import '../../../state/meetings_providers.dart';
 import '../../meeting_text_l10n.dart';
+import '../../room/meeting_file_card.dart';
 
 /// Read-only history of the in-meeting chat, oldest → newest — mirror of web
 /// `ChatHistory`. Plain text only: chat from other people is untrusted.
@@ -157,7 +158,15 @@ class _Line extends StatelessWidget {
                 ),
               ],
             )),
-          SelectableText(message.content, style: const TextStyle(fontSize: 14)),
+          // Card first, then text (web `ChatHistory`).
+          if (message.attachment case final file?)
+            MeetingFileCard(attachment: file),
+          if (message.content.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.only(top: message.attachment != null ? 4 : 0),
+              child: SelectableText(message.content,
+                  style: const TextStyle(fontSize: 14)),
+            ),
         ],
       ),
     );

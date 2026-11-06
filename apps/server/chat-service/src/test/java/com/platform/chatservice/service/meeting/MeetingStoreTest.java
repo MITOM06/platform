@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.platform.chatservice.model.Meeting;
 import com.platform.chatservice.model.MeetingStatus;
+import com.platform.chatservice.model.MeetingSummaryState;
 import com.platform.chatservice.repository.MeetingRepository;
 import java.time.Duration;
 import java.time.Instant;
@@ -23,6 +24,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -79,6 +82,110 @@ class MeetingStoreTest {
 
   private Meeting reload(Meeting m) {
     return store.findById(m.getId()).orElseThrow();
+  }
+
+  @Test
+  void markAiNotesUsedOnlyWhenLiveAndOn() {
+    Meeting m = meeting("ccc-cccc-ccc", now);
+    template.updateFirst(
+        new Query(Criteria.where("_id").is(m.getId())),
+        new Update().set("settings.aiNotes", true),
+        Meeting.class);
+    assertThat(store.markAiNotesUsed(m.getId())).isFalse(); // SCHEDULED
+
+    Meeting off = meeting("ddd-dddd-ddd", now);
+    store.markLive(off.getId(), now);
+    assertThat(store.markAiNotesUsed(off.getId())).isFalse(); // LIVE but off
+    assertThat(reload(off).isAiNotesEverEnabled()).isFalse();
+
+    store.markLive(m.getId(), now);
+    assertThat(store.markAiNotesUsed(m.getId())).isTrue();
+    assertThat(reload(m).isAiNotesEverEnabled()).isTrue();
+    assertThat(store.markAiNotesUsed(m.getId())).isFalse();
+  }
+
+  @Test
+  void claimAiFileSlotStopsAtTheCapAndNotesItOnce() {
+    Meeting m = meeting("fc1-aaaa-aaa", now);
+
+    for (int i = 0; i < 3; i++) {
+      assertThat(store.claimAiFileSlot(m.getId(), 3, "up" + i))
+          .isEqualTo(MeetingStore.ClaimResult.CLAIMED);
+    }
+    assertThat(store.claimAiFileSlot(m.getId(), 3, "up3"))
+        .isEqualTo(MeetingStore.ClaimResult.CAP_REACHED_FIRST);
+    assertThat(store.claimAiFileSlot(m.getId(), 3, "up4"))
+        .isEqualTo(MeetingStore.ClaimResult.CAP_REACHED);
+    assertThat(reload(m).getAiFileCount()).isEqualTo(3);
+    assertThat(store.claimAiFileSlot("missing", 3, "up0"))
+        .isEqualTo(MeetingStore.ClaimResult.CAP_REACHED);
+  }
+
+  @Test
+  void claimAiScreenSlotStopsAtTheCapAndNotesItOnce() {
+    Meeting m = meeting("sc1-aaaa-aaa", now);
+
+    for (int i = 0; i < 3; i++) {
+      assertThat(store.claimAiScreenSlot(m.getId(), 3)).isEqualTo(MeetingStore.ClaimResult.CLAIMED);
+    }
+    assertThat(store.claimAiScreenSlot(m.getId(), 3))
+        .isEqualTo(MeetingStore.ClaimResult.CAP_REACHED_FIRST);
+    assertThat(store.claimAiScreenSlot(m.getId(), 3))
+        .isEqualTo(MeetingStore.ClaimResult.CAP_REACHED);
+    assertThat(reload(m).getAiScreenCount()).isEqualTo(3);
+    assertThat(reload(m).isAiScreenCapNoted()).isTrue();
+    assertThat(store.claimAiScreenSlot("missing", 3))
+        .isEqualTo(MeetingStore.ClaimResult.CAP_REACHED);
+  }
+
+  @Test
+  void claimingTheSameUploadAgainTakesNoSlot() {
+    Meeting m = meeting("fc3-aaaa-aaa", now);
+
+    assertThat(store.claimAiFileSlot(m.getId(), 3, "same"))
+        .isEqualTo(MeetingStore.ClaimResult.CLAIMED);
+    assertThat(store.claimAiFileSlot(m.getId(), 3, "same"))
+        .isEqualTo(MeetingStore.ClaimResult.ALREADY_CLAIMED);
+    assertThat(store.claimAiFileSlot(m.getId(), 3, "other"))
+        .isEqualTo(MeetingStore.ClaimResult.CLAIMED);
+
+    assertThat(reload(m).getAiFileCount()).isEqualTo(2);
+    assertThat(reload(m).getAiFileUploadIds()).containsExactly("same", "other");
+  }
+
+  @Test
+  void aRepeatedUploadStaysAlreadyClaimedEvenWhenTheCapIsFull() {
+    Meeting m = meeting("fc4-aaaa-aaa", now);
+    store.claimAiFileSlot(m.getId(), 1, "a");
+
+    assertThat(store.claimAiFileSlot(m.getId(), 1, "a"))
+        .isEqualTo(MeetingStore.ClaimResult.ALREADY_CLAIMED);
+    assertThat(store.claimAiFileSlot(m.getId(), 1, "b"))
+        .isEqualTo(MeetingStore.ClaimResult.CAP_REACHED_FIRST);
+  }
+
+  @Test
+  void claimAiFileSlotNeverExceedsTheCapUnderConcurrency() throws Exception {
+    Meeting m = meeting("fc2-aaaa-aaa", now);
+    java.util.concurrent.ExecutorService pool =
+        java.util.concurrent.Executors.newFixedThreadPool(8);
+    List<java.util.concurrent.Future<MeetingStore.ClaimResult>> results = new ArrayList<>();
+    for (int i = 0; i < 40; i++) {
+      String upload = "up" + i;
+      results.add(pool.submit(() -> store.claimAiFileSlot(m.getId(), 20, upload)));
+    }
+    int claimed = 0;
+    int first = 0;
+    for (java.util.concurrent.Future<MeetingStore.ClaimResult> f : results) {
+      MeetingStore.ClaimResult r = f.get();
+      if (r == MeetingStore.ClaimResult.CLAIMED) claimed++;
+      if (r == MeetingStore.ClaimResult.CAP_REACHED_FIRST) first++;
+    }
+    pool.shutdown();
+
+    assertThat(claimed).isEqualTo(20);
+    assertThat(first).isEqualTo(1);
+    assertThat(reload(m).getAiFileCount()).isEqualTo(20);
   }
 
   @Test
@@ -293,5 +400,111 @@ class MeetingStoreTest {
 
     // Attending only widens the past list: an open walk-in to a LIVE meeting is not "upcoming".
     assertThat(store.page("me", List.of(), true, null, 10)).isEmpty();
+  }
+
+  private Meeting aiMeeting(String code) {
+    Meeting m = meeting(code, now);
+    template.updateFirst(
+        new Query(Criteria.where("_id").is(m.getId())),
+        new Update().set("aiNotesEverEnabled", true),
+        Meeting.class);
+    return reload(m);
+  }
+
+  private void setStatus(Meeting m, MeetingStatus s) {
+    template.updateFirst(
+        new Query(Criteria.where("_id").is(m.getId())),
+        new Update().set("status", s),
+        Meeting.class);
+  }
+
+  @Test
+  void claimSummaryOnlyOnce() {
+    Meeting m = aiMeeting("sa1-aaaa-aaa");
+
+    assertThat(store.claimSummary(m.getId(), "a", now)).isTrue();
+    assertThat(store.claimSummary(m.getId(), "b", now)).isFalse();
+
+    Meeting after = reload(m);
+    assertThat(after.getSummaryState()).isEqualTo(MeetingSummaryState.PENDING);
+    assertThat(after.getSummaryAttempt()).isEqualTo("a");
+    assertThat(after.getSummaryRequestedAt()).isEqualTo(now);
+  }
+
+  @Test
+  void claimSummaryRefusedWhenAiNeverEnabled() {
+    Meeting m = meeting("sb1-bbbb-bbb", now);
+
+    assertThat(store.claimSummary(m.getId(), "a", now)).isFalse();
+    assertThat(reload(m).getSummaryState()).isNull();
+  }
+
+  @Test
+  void finishSummaryIgnoresStaleAttempt() {
+    Meeting m = aiMeeting("sc1-cccc-ccc");
+    store.claimSummary(m.getId(), "a", now);
+    setStatus(m, MeetingStatus.ENDED);
+
+    assertThat(store.claimRegenerate(m.getId(), "b", now)).isFalse();
+    assertThat(store.finishSummary(m.getId(), "b", MeetingSummaryState.DONE)).isEmpty();
+    assertThat(store.finishSummary(m.getId(), "a", MeetingSummaryState.DONE))
+        .get()
+        .extracting(Meeting::getSummaryState)
+        .isEqualTo(MeetingSummaryState.DONE);
+  }
+
+  @Test
+  void claimRegenerateAfterFailed() {
+    Meeting m = aiMeeting("sd1-dddd-ddd");
+    store.claimSummary(m.getId(), "a", now);
+    store.finishSummary(m.getId(), "a", MeetingSummaryState.FAILED);
+
+    assertThat(store.claimRegenerate(m.getId(), "b", now)).isFalse(); // not ENDED yet
+    setStatus(m, MeetingStatus.ENDED);
+    assertThat(store.claimRegenerate(m.getId(), "b", now)).isTrue();
+    assertThat(reload(m).getSummaryAttempt()).isEqualTo("b");
+    assertThat(reload(m).getSummaryState()).isEqualTo(MeetingSummaryState.PENDING);
+  }
+
+  @Test
+  void claimRegenerateWhenNoSummaryWasEverRequested() {
+    Meeting m = aiMeeting("sg1-gggg-ggg"); // aiNotesEverEnabled, summaryState null
+    assertThat(store.claimRegenerate(m.getId(), "r", now)).isFalse(); // not ENDED yet
+    setStatus(m, MeetingStatus.ENDED);
+
+    assertThat(store.claimRegenerate(m.getId(), "r", now)).isTrue();
+    assertThat(store.claimRegenerate(m.getId(), "r2", now)).isFalse(); // now PENDING
+    assertThat(reload(m).getSummaryState()).isEqualTo(MeetingSummaryState.PENDING);
+    assertThat(reload(m).getSummaryAttempt()).isEqualTo("r");
+  }
+
+  @Test
+  void setGroupConversationOnlyOnce() {
+    Meeting m = meeting("se1-eeee-eee", now);
+
+    assertThat(store.setGroupConversation(m.getId(), "c1")).isTrue();
+    assertThat(store.setGroupConversation(m.getId(), "c2")).isFalse();
+    assertThat(reload(m).getGroupConversationId()).isEqualTo("c1");
+  }
+
+  @Test
+  void failStaleSummariesFlipsOnlyOldPending() {
+    Meeting old = aiMeeting("sf1-ffff-fff");
+    Meeting fresh = aiMeeting("sf2-ffff-fff");
+    Meeting done = aiMeeting("sf3-ffff-fff");
+    store.claimSummary(old.getId(), "a", now.minus(11, ChronoUnit.MINUTES));
+    store.claimSummary(fresh.getId(), "a", now.minus(1, ChronoUnit.MINUTES));
+    store.claimSummary(done.getId(), "a", now.minus(30, ChronoUnit.MINUTES));
+    store.finishSummary(done.getId(), "a", MeetingSummaryState.DONE);
+
+    assertThat(store.failStaleSummaries(now.minus(10, ChronoUnit.MINUTES)))
+        .extracting(Meeting::getId)
+        .containsExactly(old.getId());
+    // a second sweep finds nothing left to flip
+    assertThat(store.failStaleSummaries(now.minus(10, ChronoUnit.MINUTES))).isEmpty();
+
+    assertThat(reload(old).getSummaryState()).isEqualTo(MeetingSummaryState.FAILED);
+    assertThat(reload(fresh).getSummaryState()).isEqualTo(MeetingSummaryState.PENDING);
+    assertThat(reload(done).getSummaryState()).isEqualTo(MeetingSummaryState.DONE);
   }
 }

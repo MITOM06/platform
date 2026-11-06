@@ -57,6 +57,9 @@ public final class ErrorCodes {
   public static final String PUBLIC_DEPARTMENT_CHANNEL_NOT_ALLOWED =
       "PUBLIC_DEPARTMENT_CHANNEL_NOT_ALLOWED";
 
+  /** 400 — an AI thread name is blank or longer than 80 characters after trimming. */
+  public static final String AI_THREAD_NAME_INVALID = "AI_THREAD_NAME_INVALID";
+
   // ── Meetings (/api/meetings) ──────────────────────────────────────────────
 
   /** 404 — no meeting with this id / code. */
@@ -107,6 +110,12 @@ public final class ErrorCodes {
 
   /** 403 — an attendee edits the shared note while {@code attendeesCanEditNotes} is off. */
   public static final String MEETING_NOTES_READ_ONLY = "MEETING_NOTES_READ_ONLY";
+
+  /** 409 — regenerate on a meeting that has not ended or never had AI notes on. */
+  public static final String MEETING_SUMMARY_UNAVAILABLE = "MEETING_SUMMARY_UNAVAILABLE";
+
+  /** 409 — regenerate while a summary is already being generated. */
+  public static final String MEETING_SUMMARY_PENDING = "MEETING_SUMMARY_PENDING";
 
   // ── Rate limiting ─────────────────────────────────────────────────────────
 

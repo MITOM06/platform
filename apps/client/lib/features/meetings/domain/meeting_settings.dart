@@ -1,4 +1,4 @@
-// The five per-meeting switches (web `MeetingSettings`). Re-exported by
+// The six per-meeting switches (web `MeetingSettings`). Re-exported by
 // meeting_models.dart.
 
 import 'json_read.dart';
@@ -10,6 +10,7 @@ class MeetingSettings {
     this.allowAttendeeScreenShare = true,
     this.attendeesCanEditNotes = true,
     this.locked = false,
+    this.aiNotes = false,
   });
 
   /// Server defaults (api-spec CreateMeetingRequest).
@@ -21,7 +22,11 @@ class MeetingSettings {
   final bool attendeesCanEditNotes;
   final bool locked;
 
-  /// null unless all 5 fields are booleans (web `settings()` in meeting-events).
+  /// AI takes notes of the meeting; everyone in the room is told.
+  final bool aiNotes;
+
+  /// null unless the 5 original fields are booleans; `aiNotes` absent (older
+  /// servers) reads as false (web `settings()` in meeting-events).
   static MeetingSettings? fromJson(Object? v) {
     final o = asJson(v);
     if (o == null) return null;
@@ -39,6 +44,7 @@ class MeetingSettings {
       allowAttendeeScreenShare: s,
       attendeesCanEditNotes: n,
       locked: l,
+      aiNotes: o['aiNotes'] == true,
     );
   }
 
@@ -48,6 +54,7 @@ class MeetingSettings {
         'allowAttendeeScreenShare': allowAttendeeScreenShare,
         'attendeesCanEditNotes': attendeesCanEditNotes,
         'locked': locked,
+        'aiNotes': aiNotes,
       };
 
   MeetingSettings copyWith({
@@ -56,6 +63,7 @@ class MeetingSettings {
     bool? allowAttendeeScreenShare,
     bool? attendeesCanEditNotes,
     bool? locked,
+    bool? aiNotes,
   }) =>
       MeetingSettings(
         waitingRoom: waitingRoom ?? this.waitingRoom,
@@ -65,6 +73,7 @@ class MeetingSettings {
         attendeesCanEditNotes:
             attendeesCanEditNotes ?? this.attendeesCanEditNotes,
         locked: locked ?? this.locked,
+        aiNotes: aiNotes ?? this.aiNotes,
       );
 
   /// Only the fields that differ from [initial] (edit form — never a stale copy
@@ -82,9 +91,10 @@ class MeetingSettings {
       other.muteOnEntry == muteOnEntry &&
       other.allowAttendeeScreenShare == allowAttendeeScreenShare &&
       other.attendeesCanEditNotes == attendeesCanEditNotes &&
-      other.locked == locked;
+      other.locked == locked &&
+      other.aiNotes == aiNotes;
 
   @override
   int get hashCode => Object.hash(waitingRoom, muteOnEntry,
-      allowAttendeeScreenShare, attendeesCanEditNotes, locked);
+      allowAttendeeScreenShare, attendeesCanEditNotes, locked, aiNotes);
 }

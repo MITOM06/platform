@@ -95,10 +95,16 @@ describe('room roles and host menus', () => {
   it('room controls send the opposite of the current setting', () => {
     expect(roomControls('attendee', S, true)).toBeNull()
     expect(roomControls('cohost', S, false)).toEqual({ muteAll: true, lowerAllHands: false, lock: 'LOCK',
-      waitingRoom: 'WAITING_ROOM_OFF', screenShare: 'ATTENDEE_SCREEN_SHARE_OFF' })
+      waitingRoom: 'WAITING_ROOM_OFF', screenShare: 'ATTENDEE_SCREEN_SHARE_OFF', aiNotes: 'AI_NOTES_ON' })
     expect(roomControls('host', { ...S, locked: true, waitingRoom: false, allowAttendeeScreenShare: false }, true))
       .toEqual({ muteAll: true, lowerAllHands: true, lock: 'UNLOCK', waitingRoom: 'WAITING_ROOM_ON',
-        screenShare: 'ATTENDEE_SCREEN_SHARE_ON' })
+        screenShare: 'ATTENDEE_SCREEN_SHARE_ON', aiNotes: 'AI_NOTES_ON' })
+  })
+
+  it('host and co-host can toggle aiNotes, attendee cannot', () => {
+    expect(roomControls('host', S, false)?.aiNotes).toBe('AI_NOTES_ON')
+    expect(roomControls('cohost', { ...S, aiNotes: true }, false)?.aiNotes).toBe('AI_NOTES_OFF')
+    expect(roomControls('attendee', { ...S, aiNotes: true }, false)).toBeNull()
   })
 
   it('attendees present only when allowed', () => {
@@ -114,13 +120,14 @@ describe('room roles and host menus', () => {
       { userId: 't', role: 'cohost' as const, handRaised: false, micOn: true },
     ]
     for (const tg of targets) personActions('host', 'me', tg).forEach((a) => reachable.add(a))
-    for (const s of [S, { ...S, locked: true, waitingRoom: false, allowAttendeeScreenShare: false }]) {
+    for (const s of [S, { ...S, locked: true, waitingRoom: false, allowAttendeeScreenShare: false, aiNotes: true }]) {
       const rc = roomControls('host', s, true)!
       reachable.add('MUTE_ALL')
       if (rc.lowerAllHands) reachable.add('LOWER_ALL_HANDS')
       reachable.add(rc.lock)
       reachable.add(rc.waitingRoom)
       reachable.add(rc.screenShare)
+      reachable.add(rc.aiNotes)
     }
     expect([...reachable].sort()).toEqual([...HOST_ACTIONS].sort())
   })

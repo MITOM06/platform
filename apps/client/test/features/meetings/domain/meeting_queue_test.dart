@@ -44,6 +44,9 @@ class QueueCtx implements MeetingQueueContext {
   void info(MeetingNotice n) => infos.add(n);
   @override
   ActiveMeetingRoom? activeRoom() => room;
+  final summaryReady = <String>[];
+  @override
+  void summaryChanged(String meetingId) => summaryReady.add(meetingId);
 }
 
 List<String> upcomingIds(QueueCtx c) => c.cache.cache.upcoming?.rows.map((m) => m.id).toList() ?? const [];
@@ -132,6 +135,36 @@ void main() {
     test('an end marks the past list stale without refetching it', () {
       handleMeetingQueueEvent(const EndedEvent(meetingId: 'm1'), ctx);
       expect(ctx.cache.cache.pastStale, isTrue);
+    });
+  });
+
+  group('summary ready', () {
+    test('patches the meeting row and asks for a summary refetch; no banner', () {
+      ctx.cache.updateCache((s) => s.put(meeting('m1')));
+      handleMeetingQueueEvent(
+          const SummaryReadyEvent(
+              meetingId: 'm1', summaryState: MeetingSummaryState.done, groupConversationId: 'g1'),
+          ctx);
+      final m = ctx.cache.cache.byId['m1']!;
+      expect((m.summaryState, m.groupConversationId), (MeetingSummaryState.done, 'g1'));
+      expect(ctx.summaryReady, ['m1']);
+      expect(ctx.notices, isEmpty);
+      expect(ctx.infos, isEmpty);
+    });
+
+    test('unknown meeting: still refetches; keeps an existing group id when none comes', () {
+      handleMeetingQueueEvent(
+          const SummaryReadyEvent(meetingId: 'zz', summaryState: MeetingSummaryState.empty), ctx);
+      expect(ctx.summaryReady, ['zz']);
+      ctx.cache.updateCache((s) => s.put(meeting('m1')));
+      handleMeetingQueueEvent(
+          const SummaryReadyEvent(
+              meetingId: 'm1', summaryState: MeetingSummaryState.done, groupConversationId: 'g1'),
+          ctx);
+      handleMeetingQueueEvent(
+          const SummaryReadyEvent(meetingId: 'm1', summaryState: MeetingSummaryState.failed), ctx);
+      final m = ctx.cache.cache.byId['m1']!;
+      expect((m.summaryState, m.groupConversationId), (MeetingSummaryState.failed, 'g1'));
     });
   });
 

@@ -95,6 +95,7 @@ export function PreJoinLobby({ meeting, controller, busy, myName, myAvatarUrl }:
           </div>
           {inCall ? <Notice>{t('prejoinInCall')}</Notice> : null}
           {intent === 'locked' ? <Notice>{t('prejoinLockedHint')}</Notice> : null}
+          {meeting.settings.aiNotes ? <Notice>{t('aiNotesPrejoin')}</Notice> : null}
           {muteOnEntry ? <Notice>{t('prejoinMuteOnEntry')}</Notice> : null}
           {preview.error ? <Notice>{t(preview.error === 'blocked' ? 'mediaBlocked' : 'mediaUnavailable')}</Notice> : null}
           <Button className="w-full" size="lg" disabled={busy || inCall} onClick={join}>

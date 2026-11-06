@@ -136,6 +136,13 @@ class ConversationListOps {
     return [...rest.sublist(0, pos), conv, ...rest.sublist(pos)];
   }
 
+  /// [conv] on top (replacing a copy with the same id).
+  static List<ConversationModel> upsertFront(
+    List<ConversationModel> list,
+    ConversationModel conv,
+  ) =>
+      [conv, ...list.where((c) => c.id != conv.id)];
+
   static DateTime _activity(ConversationModel c) =>
       c.lastMessageAt ?? c.lastMessage?.createdAt ?? c.createdAt;
 

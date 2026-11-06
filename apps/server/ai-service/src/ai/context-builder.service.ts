@@ -9,6 +9,7 @@ import { wrapUntrusted, sanitizeUntrusted } from './injection-guard';
 import { RagSource } from './rag-source.type';
 import { AiContextReaderService } from '../ai-context/ai-context-reader.service';
 import { formatOrgContextBlock } from './org-context-block';
+import { isMeetingChatId } from '../conversation/conversation-access.service';
 
 // Re-exported for backward compatibility — `RagSource` now lives in a shared
 // type module (so the tools layer can depend on it without a circular import).
@@ -68,7 +69,10 @@ export class ContextBuilderService {
     // Placed first. Admin-authored org text is trusted; the member's profile is
     // fenced as data inside the block.
     // Fail-soft: any read error is swallowed by the reader (returns empty).
-    if (org) {
+    // Skipped for the in-meeting chat: its answer is posted to the whole room, so the
+    // asker's private profile / role-gated notes / memory must not be in the prompt.
+    const sharedRoom = isMeetingChatId(conversationId);
+    if (org && !sharedRoom) {
       try {
         const orgCtx = await this.orgReader.getUserOrgContext({
           userId,
@@ -84,7 +88,7 @@ export class ContextBuilderService {
     }
 
     // --- Retrieved memory facts (most relevant only) ---
-    if (queryVector) {
+    if (queryVector && !sharedRoom) {
       try {
         const facts = await this.memoryService.retrieveRelevantFacts(userId, queryVector);
         if (facts.length > 0) {

@@ -46,5 +46,8 @@ public class MeetingMessage {
    */
   private String clientId;
 
+  /** The file on this line, if any; absent on text-only lines. */
+  private MeetingAttachment attachment;
+
   private Instant createdAt;
 }

@@ -207,3 +207,121 @@ describe('CallSummaryService — one summary per call across instances', () => {
     expect(redis.lrange).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('CallSummaryService.summarize — end to end', () => {
+  const U1 = '507f1f77bcf86cd799439011';
+  const U2 = '507f1f77bcf86cd799439012';
+
+  function make(opts: {
+    segments?: unknown[];
+    session?: unknown;
+    users?: unknown[];
+    usersError?: Error;
+    reply?: string | Error;
+  }) {
+    const redis = {
+      set: jest.fn().mockResolvedValue('OK'),
+      lrange: jest.fn().mockResolvedValue((opts.segments ?? []).map((s) => JSON.stringify(s))),
+    };
+    const sessionModel = {
+      findOne: jest.fn().mockReturnValue({
+        lean: () => ({ exec: () => Promise.resolve(opts.session ?? null) }),
+      }),
+    };
+    const usersExec = opts.usersError
+      ? jest.fn().mockRejectedValue(opts.usersError)
+      : jest.fn().mockResolvedValue(opts.users ?? []);
+    const userModel = { find: jest.fn().mockReturnValue({ lean: () => ({ exec: usersExec }) }) };
+    const publisher = { publishToChannel: jest.fn().mockResolvedValue(undefined) };
+    const usage = { recordModelCall: jest.fn() };
+    const config = { get: jest.fn().mockReturnValue(undefined) };
+    const svc = new CallSummaryService(
+      redis as never,
+      sessionModel as never,
+      userModel as never,
+      publisher as never,
+      config as never,
+      usage as never,
+    );
+    const create =
+      opts.reply instanceof Error
+        ? jest.fn().mockRejectedValue(opts.reply)
+        : jest.fn().mockResolvedValue({
+            content: [{ type: 'text', text: opts.reply ?? '{"overview":"o","keyPoints":["k"],"actionItems":[]}' }],
+            usage: { input_tokens: 5, output_tokens: 7 },
+          });
+    (svc as unknown as { anthropic: unknown }).anthropic = { messages: { create } };
+    return { svc, redis, sessionModel, userModel, publisher, usage, create };
+  }
+
+  const segs = [
+    { userId: U2, displayName: U2, text: 'second', ts: 2 },
+    { userId: U1, displayName: U1, text: 'first', ts: 1 },
+  ];
+
+  it('publishes nothing and skips the model when the transcript is empty', async () => {
+    const m = make({ segments: [] });
+    await m.svc.summarize({ callId: 'c1', conversationId: 'conv' });
+    expect(m.create).not.toHaveBeenCalled();
+    expect(m.publisher.publishToChannel).not.toHaveBeenCalled();
+  });
+
+  it('resolves speaker names, bills the bot user and publishes the structured summary', async () => {
+    const m = make({
+      segments: segs,
+      session: {
+        participants: [
+          { userId: U1, joinedAt: new Date() },
+          { userId: U2, joinedAt: new Date() },
+          { userId: 'never-joined', joinedAt: null },
+        ],
+        startedAt: new Date('2026-01-01T10:00:00Z'),
+        endedAt: new Date('2026-01-01T10:05:00Z'),
+      },
+      users: [
+        { _id: U1, displayName: ' Alice ' },
+        { _id: U2, displayName: 'Bob' },
+      ],
+    });
+
+    await m.svc.summarize({ callId: 'c1', conversationId: 'conv' });
+
+    expect(m.create.mock.calls[0][0].messages[0].content).toBe('Transcript:\n\nAlice: first\nBob: second');
+    expect(m.usage.recordModelCall).toHaveBeenCalledWith(
+      'ai-bot-000000000000000000000001',
+      { input_tokens: 5, output_tokens: 7 },
+      'call-summary',
+    );
+    expect(m.publisher.publishToChannel).toHaveBeenCalledWith('call:summary:result', {
+      conversationId: 'conv',
+      callId: 'c1',
+      payload: {
+        attendees: ['Alice', 'Bob'],
+        durationSec: 300,
+        overview: 'o',
+        keyPoints: ['k'],
+        actionItems: [],
+      },
+    });
+  });
+
+  it('skips the user lookup when no id is an ObjectId', async () => {
+    const m = make({ segments: [{ userId: 'extbot:1', displayName: 'Bot', text: 'hi', ts: 1 }] });
+    await m.svc.summarize({ callId: 'c1', conversationId: 'conv' });
+    expect(m.userModel.find).not.toHaveBeenCalled();
+    expect(m.publisher.publishToChannel).toHaveBeenCalledTimes(1);
+  });
+
+  it('still publishes when the name lookup fails', async () => {
+    const m = make({ segments: segs, usersError: new Error('mongo down') });
+    await m.svc.summarize({ callId: 'c1', conversationId: 'conv' });
+    expect(m.publisher.publishToChannel).toHaveBeenCalledTimes(1);
+  });
+
+  it('publishes a "Summary unavailable." placeholder when the model call fails', async () => {
+    const m = make({ segments: segs, reply: new Error('529') });
+    await m.svc.summarize({ callId: 'c1', conversationId: 'conv' });
+    const payload = m.publisher.publishToChannel.mock.calls[0][1].payload;
+    expect(payload).toMatchObject({ overview: 'Summary unavailable.', keyPoints: [], actionItems: [] });
+  });
+});

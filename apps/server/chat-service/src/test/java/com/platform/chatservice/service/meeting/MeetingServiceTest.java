@@ -21,6 +21,7 @@ import com.platform.chatservice.dto.meeting.UpdateMeetingRequest;
 import com.platform.chatservice.exception.ApiException;
 import com.platform.chatservice.model.Meeting;
 import com.platform.chatservice.model.MeetingStatus;
+import com.platform.chatservice.model.MeetingSummaryState;
 import com.platform.chatservice.security.UserPrincipal;
 import java.time.Duration;
 import java.time.Instant;
@@ -180,7 +181,7 @@ class MeetingServiceTest {
             null,
             null,
             null,
-            new MeetingSettingsDto(false, null, null, null, true)));
+            new MeetingSettingsDto(false, null, null, null, true, null)));
     Meeting.Settings s = inserted().getSettings();
     assertThat(s.isWaitingRoom()).isFalse();
     assertThat(s.isLocked()).isTrue();
@@ -265,6 +266,26 @@ class MeetingServiceTest {
     when(store.findById("m1")).thenReturn(Optional.of(m));
     when(store.findByCode("abc-defg-hjk")).thenReturn(Optional.of(m));
     return m;
+  }
+
+  @Test
+  void aiNotesEverEnabledIsHiddenFromGuestsButShownToMembers() {
+    stored().setAiNotesEverEnabled(true);
+
+    assertThat(service.get(stranger, "m1").aiNotesEverEnabled()).isNull();
+    assertThat(service.get(host, "m1").aiNotesEverEnabled()).isTrue();
+  }
+
+  @Test
+  void summaryStateAndGroupAreHiddenFromGuestsButShownToMembers() {
+    Meeting m = stored();
+    m.setSummaryState(MeetingSummaryState.DONE);
+    m.setGroupConversationId("c1");
+
+    assertThat(service.get(stranger, "m1").summaryState()).isNull();
+    assertThat(service.get(stranger, "m1").groupConversationId()).isNull();
+    assertThat(service.get(host, "m1").summaryState()).isEqualTo("DONE");
+    assertThat(service.get(host, "m1").groupConversationId()).isEqualTo("c1");
   }
 
   @Test
@@ -389,7 +410,7 @@ class MeetingServiceTest {
             null,
             start,
             null,
-            new MeetingSettingsDto(null, null, null, null, true)));
+            new MeetingSettingsDto(null, null, null, null, true, null)));
 
     Document set = (Document) update.getValue().getUpdateObject().get("$set");
     assertThat(set)
@@ -493,7 +514,7 @@ class MeetingServiceTest {
             null,
             null,
             null,
-            new MeetingSettingsDto(null, null, false, null, null)));
+            new MeetingSettingsDto(null, null, false, null, null, null)));
 
     verify(policy).afterSettingsChange(m, after);
   }

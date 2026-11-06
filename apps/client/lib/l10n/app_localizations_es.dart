@@ -960,6 +960,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meetingSummaryTitle => 'Resumen de la reunión';
 
   @override
+  String get meetingSummaryUnavailable => 'Resumen no disponible';
+
+  @override
   String meetingSummaryDuration(String duration) {
     return 'Duración $duration';
   }
@@ -977,6 +980,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meetingSummaryActionItems => 'Tareas pendientes';
+
+  @override
+  String get meetingSummaryDecisions => 'Decisiones';
+
+  @override
+  String get meetingSummaryFromMaterials => 'De los materiales';
 
   @override
   String get profileTitle => 'Perfil';
@@ -3187,26 +3196,55 @@ class AppLocalizationsEs extends AppLocalizations {
   String get leaveWithoutSaving => 'Salir sin guardar';
 
   @override
-  String get aiSessionHistory => 'Historial de conversaciones';
+  String get aiThreadUntitled => 'Chatear con la IA';
 
   @override
-  String get aiNewSession => 'Nueva conversación';
+  String get aiThreadNew => 'Nueva conversación';
 
   @override
-  String get aiSessionActive => 'Activa';
+  String get aiThreadsTitle => 'Conversaciones';
 
   @override
-  String get aiSessionSummarized => 'Resumida';
+  String get aiThreadRename => 'Renombrar';
 
   @override
-  String get aiSessionEmpty => 'No hay conversaciones anteriores';
+  String get aiThreadSave => 'Guardar';
 
   @override
-  String get aiSessionResume => 'Reanudar';
+  String get aiThreadCancel => 'Cancelar';
 
   @override
-  String get aiSessionLoadError =>
-      'No se pudo cargar el historial de conversaciones';
+  String get aiThreadDelete => 'Eliminar';
+
+  @override
+  String get aiThreadDeleteTitle => '¿Eliminar esta conversación?';
+
+  @override
+  String get aiThreadDeleteDesc =>
+      'Todos los mensajes de esta conversación con la IA se eliminarán de tu cuenta. No se puede deshacer.';
+
+  @override
+  String get aiThreadEmpty => 'Aún no hay conversaciones. Empieza una nueva.';
+
+  @override
+  String get aiThreadLoadFailed =>
+      'No se pudieron cargar las conversaciones. Inténtalo de nuevo.';
+
+  @override
+  String get aiThreadCreateFailed =>
+      'No se pudo crear la conversación. Inténtalo de nuevo.';
+
+  @override
+  String get aiThreadRenameFailed =>
+      'No se pudo renombrar. Inténtalo de nuevo.';
+
+  @override
+  String get aiThreadNameInvalid =>
+      'El nombre debe tener entre 1 y 80 caracteres.';
+
+  @override
+  String get aiThreadDeleteFailed =>
+      'No se pudo eliminar la conversación. Inténtalo de nuevo.';
 
   @override
   String multiSelectCount(int count) {
@@ -4862,6 +4900,32 @@ class AppLocalizationsEs extends AppLocalizations {
       'Alguien guardó una versión más reciente';
 
   @override
+  String get meetingErrSummaryPending => 'Ya se está generando un resumen';
+
+  @override
+  String get meetingErrSummaryUnavailable =>
+      'No hay resumen disponible para esta reunión';
+
+  @override
+  String get meetingAiSummaryTitle => 'Resumen de IA';
+
+  @override
+  String get meetingAiSummaryPending => 'La IA está resumiendo…';
+
+  @override
+  String get meetingAiSummaryEmpty =>
+      'La reunión no tiene contenido para resumir';
+
+  @override
+  String get meetingAiSummaryFailed => 'No se pudo crear el resumen';
+
+  @override
+  String get meetingAiSummaryOpenGroup => 'Abrir el grupo de la reunión';
+
+  @override
+  String get meetingAiSummaryRegenerate => 'Regenerar';
+
+  @override
   String get meetingErrRateLimited =>
       'Estás enviando demasiado rápido. Espera un momento.';
 
@@ -5249,6 +5313,37 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get meetingSettingLockedDesc =>
       'Solo pueden unirse las personas invitadas';
+
+  @override
+  String get meetingSettingAiNotes => 'Notas de reunión con IA';
+
+  @override
+  String get meetingSettingAiNotesDesc =>
+      'La IA registra voz, chat, notas, archivos y pantallas compartidas para resumir después de la reunión. Se avisa a todos en la sala.';
+
+  @override
+  String get meetingAiNotesActive => 'La IA está tomando notas';
+
+  @override
+  String get meetingAiReadingScreen =>
+      'La IA está leyendo la pantalla que compartes';
+
+  @override
+  String get meetingAiNotesStarted =>
+      'La IA empezó a tomar notas de la reunión';
+
+  @override
+  String get meetingAiNotesPrejoin => 'Esta reunión tiene notas con IA';
+
+  @override
+  String get meetingAiNotesPauseMine => 'Pausar la captura de mi voz';
+
+  @override
+  String get meetingAiNotesResumeMine => 'Reanudar la captura de mi voz';
+
+  @override
+  String get meetingAiNotesUnsupported =>
+      'Este dispositivo no admite la captura de voz para las notas de IA';
 
   @override
   String get meetingSubmitCreate => 'Programar';
@@ -5794,6 +5889,29 @@ class AppLocalizationsEs extends AppLocalizations {
       'Todos los participantes de la reunión pueden ver los mensajes';
 
   @override
+  String get meetingAiName => 'PON AI';
+
+  @override
+  String get meetingAiThinking => 'PON AI está respondiendo…';
+
+  @override
+  String get meetingAiUnavailable => 'La IA no está disponible en este momento';
+
+  @override
+  String get meetingAiFailed => 'La IA no pudo responder, inténtalo de nuevo';
+
+  @override
+  String get meetingAiQuotaExceeded => 'Se alcanzó el límite de uso de la IA';
+
+  @override
+  String get meetingAiRateLimited =>
+      'Demasiadas solicitudes, inténtalo de nuevo en breve';
+
+  @override
+  String get meetingChatAiHint =>
+      'Escribe @AI antes de una pregunta para consultar al asistente';
+
+  @override
   String get meetingChatFailed => 'No enviado';
 
   @override
@@ -5804,6 +5922,26 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meetingChatSending => 'Enviando…';
+
+  @override
+  String get meetingChatAttach => 'Adjuntar un archivo';
+
+  @override
+  String get meetingChatUploading => 'Subiendo archivo…';
+
+  @override
+  String get meetingChatFileTooLarge => 'El archivo es demasiado grande';
+
+  @override
+  String get meetingChatUploadFailed =>
+      'No se pudo subir el archivo, inténtalo de nuevo';
+
+  @override
+  String get meetingChatNotSent =>
+      'No se pudo enviar el archivo. Se conserva aquí, pulsa Enviar para reintentar';
+
+  @override
+  String get meetingChatRemoveFile => 'Quitar archivo';
 
   @override
   String get meetingChatOffline =>

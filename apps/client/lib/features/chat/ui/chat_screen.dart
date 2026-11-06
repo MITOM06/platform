@@ -10,6 +10,7 @@ import '../data/chat_repository.dart';
 import '../domain/chat_provider.dart';
 import '../domain/chat_state.dart';
 import '../domain/staged_attachments_provider.dart';
+import '../../../core/utils/global_messenger.dart';
 import '../utils/chat_error.dart';
 import 'chat_screen_helpers.dart';
 import 'widgets/active_call_banner.dart';
@@ -140,13 +141,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   /// Closes the current chat. On the web/tablet split layout the chat is the
   /// right detail pane (not a pushed route), so we clear the selection rather
   /// than popping — popping would tear down the whole ResponsiveHomeLayout.
-  void _closeChat() {
+  ///
+  /// [isAi]: the closed chat was an AI thread, so leaving lands on the AI hub
+  /// (AI threads are opened with go(), there is nothing to pop to). Callers
+  /// that delete the thread must capture it BEFORE the row is dropped.
+  void _closeChat({bool isAi = false}) {
     if (MediaQuery.of(context).size.width >= kWebBreakpoint) {
       ref.read(selectedConversationIdProvider.notifier).state = null;
+    } else if (isAi) {
+      context.go('/ai-hub');
     } else {
       context.pop();
     }
   }
+
+  bool get _isAiThread =>
+      ref.read(conversationProvider(widget.conversationId))?.isAiConversation ??
+      false;
 
   Future<void> _jumpToSearchResult(String messageId) async {
     setState(() => _isSearching = false);
@@ -206,8 +217,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     try {
       await ref
           .read(conversationsNotifierProvider.notifier)
-          .deleteConversation(widget.conversationId);
-      if (mounted) _closeChat();
+          .deleteConversation(widget.conversationId,
+              onDeleted: (_) => mounted ? _closeChat() : null);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -255,10 +266,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       body: context.l10n.deleteConversationConfirm,
     );
     if (confirm != true) return;
-    await ref
-        .read(conversationsNotifierProvider.notifier)
-        .deleteConversation(widget.conversationId);
-    if (mounted) _closeChat();
+    final wasAi = _isAiThread;
+    try {
+      await ref
+          .read(conversationsNotifierProvider.notifier)
+          .deleteConversation(widget.conversationId, onDeleted: (isAi) {
+        if (mounted) _closeChat(isAi: isAi || wasAi);
+      });
+    } catch (e) {
+      // Failed: stay on the chat and say why.
+      if (mounted) showErrorSnackBar(chatErrorMessage(context.l10n, e));
+    }
   }
 
   @override

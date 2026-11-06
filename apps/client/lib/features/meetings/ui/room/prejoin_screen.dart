@@ -204,6 +204,7 @@ class _PrejoinInfo extends StatelessWidget {
         const SizedBox(height: 12),
         if (inCall) _Notice(l.meetingPrejoinInCall),
         if (intent == PrejoinIntent.locked) _Notice(l.meetingPrejoinLockedHint),
+        if (m.settings.aiNotes == true) _Notice(l.meetingAiNotesPrejoin),
         if (muteOnEntry) _Notice(l.meetingPrejoinMuteOnEntry),
         if (error != null)
           _Notice(error == MediaPreviewError.blocked

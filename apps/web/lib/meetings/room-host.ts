@@ -23,6 +23,8 @@ export const SWITCH_ACTIONS: ReadonlySet<HostAction> = new Set<HostAction>([
   'WAITING_ROOM_OFF',
   'ATTENDEE_SCREEN_SHARE_ON',
   'ATTENDEE_SCREEN_SHARE_OFF',
+  'AI_NOTES_ON',
+  'AI_NOTES_OFF',
 ])
 
 /** `/app/meet.host` body — `targetId` only for the person actions. */

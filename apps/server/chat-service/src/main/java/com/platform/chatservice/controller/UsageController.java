@@ -1,12 +1,15 @@
 package com.platform.chatservice.controller;
 
 import com.platform.chatservice.dto.TokenUsageDayResponse;
+import com.platform.chatservice.exception.BadRequestException;
+import com.platform.chatservice.exception.ErrorCodes;
 import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.model.TokenUsage;
 import com.platform.chatservice.repository.TokenUsageRepository;
 import com.platform.chatservice.security.UserPrincipal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -18,6 +21,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/usage")
 @RequiredArgsConstructor
 public class UsageController {
+
+  /** Longest window one request may span — bounds the zero-filled list built in memory. */
+  private static final int MAX_DAYS = 366;
 
   private final TokenUsageRepository tokenUsageRepository;
 
@@ -34,19 +40,23 @@ public class UsageController {
     LocalDate fromDate;
 
     if (startDate != null && endDate != null) {
-      // Custom range mode. Clamp to today and guard against inverted ranges.
-      fromDate = LocalDate.parse(startDate, fmt);
-      toDate = LocalDate.parse(endDate, fmt);
+      // Custom range mode. Clamp to today, guard against inverted ranges, cap the span.
+      fromDate = parseDate("startDate", startDate, fmt);
+      toDate = parseDate("endDate", endDate, fmt);
       if (toDate.isAfter(today)) {
         toDate = today;
       }
       if (fromDate.isAfter(toDate)) {
         fromDate = toDate.minusDays(6);
       }
+      LocalDate earliest = toDate.minusDays(MAX_DAYS - 1L);
+      if (fromDate.isBefore(earliest)) {
+        fromDate = earliest;
+      }
     } else {
-      // Backward-compatible "last N days" mode.
+      // Backward-compatible "last N days" mode. Negative days still fail in datesUntil (400).
       toDate = today;
-      fromDate = today.minusDays(days - 1L);
+      fromDate = today.minusDays(Math.min(days, MAX_DAYS) - 1L);
     }
 
     List<TokenUsage> rows =
@@ -67,6 +77,15 @@ public class UsageController {
               return new TokenUsageDayResponse(date, input, output, count, input + output);
             })
         .collect(Collectors.toList());
+  }
+
+  private static LocalDate parseDate(String name, String value, DateTimeFormatter fmt) {
+    try {
+      return LocalDate.parse(value, fmt);
+    } catch (DateTimeParseException e) {
+      throw new BadRequestException(
+          ErrorCodes.INVALID_PARAMETER, "'" + name + "' must be an ISO-8601 date (yyyy-MM-dd)");
+    }
   }
 
   private String currentUserId() {

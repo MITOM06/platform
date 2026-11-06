@@ -126,13 +126,12 @@ mixin _ChatActionsMixin on _$ChatNotifier {
   }
 
   Future<void> recallMessage(String messageId) async {
-    final current = state.valueOrNull;
     try {
       await ref.read(chatRepositoryProvider).recallMessage(messageId);
     } catch (e) {
-      // Re-assert the pre-recall state (no local change was applied yet, but
-      // guard against any in-flight optimistic edit) and tell the user.
-      if (current != null && state.hasValue) state = AsyncData(current);
+      // Recall applies no optimistic change (MESSAGE_RECALLED does), so there
+      // is nothing to roll back — restoring a snapshot would drop realtime
+      // messages that arrived meanwhile. Just tell the user.
       _showActionError(e);
     }
   }
@@ -283,6 +282,8 @@ mixin _ChatActionsMixin on _$ChatNotifier {
   Future<void> deleteForMe(String messageId) async {
     final current = state.valueOrNull;
     if (current == null) return;
+    final removed =
+        current.messages.where((m) => m.id == messageId).firstOrNull;
     // Optimistically remove from this device.
     state = AsyncData(current.copyWith(
       messages: current.messages.where((m) => m.id != messageId).toList(),
@@ -290,9 +291,28 @@ mixin _ChatActionsMixin on _$ChatNotifier {
     try {
       await ref.read(chatRepositoryProvider).deleteMessageForMe(messageId);
     } catch (e) {
-      // Restore the message we optimistically removed and tell the user.
-      if (state.hasValue) state = AsyncData(current);
+      // Re-insert ONLY the removed message into the LATEST state (not the
+      // pre-request snapshot, which would drop realtime messages received
+      // meanwhile) and tell the user.
+      final latest = state.valueOrNull;
+      if (removed != null &&
+          latest != null &&
+          !latest.messages.any((m) => m.id == messageId)) {
+        state = AsyncData(latest.copyWith(
+          messages: _insertByTime(latest.messages, removed),
+        ));
+      }
       _showActionError(e);
     }
+  }
+
+  /// [messages] is newest-first: put [message] before the first strictly
+  /// older one (after any same-time messages), else at the end.
+  static List<MessageModel> _insertByTime(
+      List<MessageModel> messages, MessageModel message) {
+    final i =
+        messages.indexWhere((m) => m.createdAt.isBefore(message.createdAt));
+    final at = i == -1 ? messages.length : i;
+    return [...messages.sublist(0, at), message, ...messages.sublist(at)];
   }
 }

@@ -3,6 +3,105 @@
 All notable changes to PON. One version per promotion to `main`; web, mobile and the
 NestJS services share the product version (`apps/client/pubspec.yaml`, `apps/*/package.json`).
 
+## 1.6.1 — 2026-11-06
+
+Quality release: one branch tested on `dev` (`fix/test-gate-bugs`, which contains `chore/test-gate`)
+with deeper tests, a coverage gate in CI and the 15 bugs those tests found. No dev-only commits,
+no new features.
+
+### Security
+
+- **Knowledge-base downloads cannot reach internal addresses** (ai-service `kb-processor`):
+  localhost, IPv6 loopback / ULA / link-local, IPv4-mapped IPv6, CGNAT `100.64.0.0/10` (tailnet)
+  and the remaining non-public IPv4 ranges are refused.
+- **Blocking hides your email** from the person you blocked, and the batch user lookup respects
+  blocks too (auth-service).
+
+### Fixes
+
+- Mobile: a pinned message without a type no longer shows a raw system code, internal URL or JSON
+  (matches web).
+- Mobile: a failed recall / delete-for-me no longer drops realtime messages that arrived meanwhile.
+- Mobile: photos uploaded in SD mode carry a file name and `image/jpeg`.
+- Mobile: a connector whose name starts with an emoji no longer crashes its logo.
+- Mobile: leaving a group call no longer throws when the screen is already gone; list rows in cards
+  and the mention list render correctly; a blocked profile no longer shows an empty email row.
+- chat-service: token-usage ranges are capped at 366 days; a malformed date answers 400.
+
+### Tests and CI
+
+- New tests across all six parts (auth, AI, connector, chat, web, Flutter); coverage is measured
+  for chat-service (JaCoCo) and web (vitest v8), and CI fails when coverage drops below the
+  per-part thresholds in `scripts/ci/coverage-thresholds.txt`. `scripts/test-all.sh` runs the same
+  checks locally.
+
+### Known issue
+
+- iPhone app: the 1-on-1 call screen turns black (calls still connect, audio and video flow).
+  Not fixed in this release; being investigated on a cabled device.
+
+## 1.6.0 — 2026-11-06
+
+Three branches tested on `dev` — Meetings AI, AI chat threads and a web @AI fix — plus everything
+merged into `main` since 1.5.1 without its own version (connectors, AI tools, upload access control,
+AI context for leaders and web/mobile fixes). No dev-only commits.
+
+### Meetings: AI notes
+
+- **AI takes notes in a meeting.** The host turns on "AI ghi chú cuộc họp" when scheduling or
+  mid-meeting; everyone in the room sees an indicator, and each person can pause recording of their
+  own voice. Speech (web Chrome/Edge, Android, iPhone), the meeting chat, shared notes, files sent in
+  the chat and the shared screen go into the meeting record.
+- **Summary after the meeting.** When it ends, the AI writes a summary (decisions, action items,
+  "from documents"), shows it on the meeting page, creates a meeting group with the host, co-hosts,
+  invitees and attendees, and posts the summary there. The host can regenerate a failed summary.
+- **Ask the AI about a meeting.** `@AI` in the meeting chat answers the whole room from the meeting
+  record; `@AI` in the meeting group does too; in a 1-1 AI chat, a member can ask about any meeting
+  they were part of. People outside the meeting get "not found".
+- **Files and shared screen.** PDFs, Word files and images sent in the meeting chat are read into
+  the record (up to 20 per meeting). While AI notes are on, the sharer's screen is read when it
+  changes (at most one frame per 15 s, 60 per meeting; web, and Android); frames are deleted right
+  after reading. iPhone does not send screen frames.
+
+### AI chat threads
+
+- **"New chat" with the AI starts a separate conversation** with its own history, title and files,
+  listed in a ChatGPT-style sidebar on web and a thread list on mobile. Titles come from the first
+  message and can be renamed; threads can be deleted. The old AI chat becomes the first thread, and
+  AI chats no longer appear in the main chat list.
+
+### Chat and AI
+
+- **Web: a 1-1 AI chat no longer adds "@AI" to every message**, and a group that contains the AI
+  bot no longer answers messages without an `@AI` mention (mobile already behaved this way).
+- **Connectors: "full authority" per connection** — the AI can act without the confirmation card
+  on connections the member marks so.
+- **AI tool `search_directory`** looks up departments and people.
+- **AI context:** Owner/Admin see every department's notes; a department lead sees every tier of
+  their own department (`get_department_context`, 6000-character cap).
+
+### Security and fixes
+
+- **Upload access control behind `UPLOADS_REQUIRE_AUTH`** (off by default; run
+  `pnpm migrate:upload-refs` before turning it on). Web and mobile send the media token.
+- Web: forgot-password checks the code on the OTP step; the video call button shows in the mobile
+  chat header. Mobile: the keyboard no longer comes back after leaving a chat.
+- ai-service: Claude CLI provider fixes. Mac mini: old images are pruned after a deploy passes smoke.
+
+### Deploy notes
+
+- **Required on the Mac mini:** `INTERNAL_API_KEY` (shared by chat-service, ai-service and the
+  connector) and `ANTHROPIC_API_KEY` — `scripts/mini/up.sh` refuses to deploy without them.
+  Without the internal key every meeting summary ends as "failed".
+- **Order:** the web (Vercel) goes live at merge, the Mac mini 15–25 minutes later. Until then the
+  web's AI threads sidebar and meeting AI screens call endpoints the old backend does not have.
+- **Old mobile builds** join AI-notes meetings normally but show no AI indicator; install 1.6.0+9.
+- **Known open decisions:** image reading (meeting files and screen frames) is billed to the sender's
+  AI quota; `UPLOADS_REQUIRE_AUTH` stays off; people removed from a meeting still appear in the
+  summary's attendee list.
+
+Versions: 1.6.0 (web, NestJS services), 1.6.0+9 (mobile).
+
 ## 1.5.1 — 2026-10-26
 
 One fix, `fix/mini-up-rabbitmq-host`: the Mac mini can deploy again.

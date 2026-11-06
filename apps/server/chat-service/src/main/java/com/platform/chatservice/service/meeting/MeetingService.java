@@ -192,6 +192,10 @@ public class MeetingService {
     if (settingsChanged) {
       events.settings(updated);
       policy.afterSettingsChange(m, updated);
+      if (updated.getSettings() != null && updated.getSettings().isAiNotes()) {
+        // Conditional on LIVE in the store: a SCHEDULED meeting is marked later by markLive.
+        store.markAiNotesUsed(id);
+      }
     }
     if (!newcomers.isEmpty()) {
       events.invited(updated, hostName(updated), newcomers);

@@ -939,6 +939,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get meetingSummaryTitle => '회의 요약';
 
   @override
+  String get meetingSummaryUnavailable => '요약을 사용할 수 없습니다';
+
+  @override
   String meetingSummaryDuration(String duration) {
     return '통화 시간 $duration';
   }
@@ -956,6 +959,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get meetingSummaryActionItems => '할 일';
+
+  @override
+  String get meetingSummaryDecisions => '결정 사항';
+
+  @override
+  String get meetingSummaryFromMaterials => '자료에서';
 
   @override
   String get profileTitle => '프로필';
@@ -3097,25 +3106,49 @@ class AppLocalizationsKo extends AppLocalizations {
   String get leaveWithoutSaving => '저장하지 않고 나가기';
 
   @override
-  String get aiSessionHistory => '대화 기록';
+  String get aiThreadUntitled => 'AI와 채팅';
 
   @override
-  String get aiNewSession => '새 대화';
+  String get aiThreadNew => '새 대화';
 
   @override
-  String get aiSessionActive => '사용 중';
+  String get aiThreadsTitle => '대화';
 
   @override
-  String get aiSessionSummarized => '요약됨';
+  String get aiThreadRename => '이름 변경';
 
   @override
-  String get aiSessionEmpty => '이전 대화가 없습니다';
+  String get aiThreadSave => '저장';
 
   @override
-  String get aiSessionResume => '다시 시작';
+  String get aiThreadCancel => '취소';
 
   @override
-  String get aiSessionLoadError => '대화 기록을 불러올 수 없습니다';
+  String get aiThreadDelete => '삭제';
+
+  @override
+  String get aiThreadDeleteTitle => '이 대화를 삭제할까요?';
+
+  @override
+  String get aiThreadDeleteDesc => '이 AI 대화의 모든 메시지가 계정에서 삭제됩니다. 되돌릴 수 없습니다.';
+
+  @override
+  String get aiThreadEmpty => '아직 대화가 없습니다. 새로 시작하세요.';
+
+  @override
+  String get aiThreadLoadFailed => '대화를 불러오지 못했습니다. 다시 시도해 주세요.';
+
+  @override
+  String get aiThreadCreateFailed => '새 대화를 만들지 못했습니다. 다시 시도해 주세요.';
+
+  @override
+  String get aiThreadRenameFailed => '이름을 변경하지 못했습니다. 다시 시도해 주세요.';
+
+  @override
+  String get aiThreadNameInvalid => '이름은 1~80자여야 합니다.';
+
+  @override
+  String get aiThreadDeleteFailed => '대화를 삭제하지 못했습니다. 다시 시도해 주세요.';
 
   @override
   String multiSelectCount(int count) {
@@ -4646,6 +4679,30 @@ class AppLocalizationsKo extends AppLocalizations {
   String get meetingErrNoteConflict => '다른 사람이 더 최신 버전을 저장했습니다';
 
   @override
+  String get meetingErrSummaryPending => '요약이 이미 생성 중입니다';
+
+  @override
+  String get meetingErrSummaryUnavailable => '이 회의에는 요약을 사용할 수 없습니다';
+
+  @override
+  String get meetingAiSummaryTitle => 'AI 요약';
+
+  @override
+  String get meetingAiSummaryPending => 'AI가 요약하는 중…';
+
+  @override
+  String get meetingAiSummaryEmpty => '요약할 내용이 없는 회의입니다';
+
+  @override
+  String get meetingAiSummaryFailed => '요약을 만들지 못했습니다';
+
+  @override
+  String get meetingAiSummaryOpenGroup => '회의 그룹 열기';
+
+  @override
+  String get meetingAiSummaryRegenerate => '다시 생성';
+
+  @override
   String get meetingErrRateLimited => '너무 빠르게 보내고 있습니다. 잠시 기다려 주세요.';
 
   @override
@@ -5014,6 +5071,34 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get meetingSettingLockedDesc => '초대받은 사람만 참여할 수 있습니다';
+
+  @override
+  String get meetingSettingAiNotes => 'AI 회의 노트';
+
+  @override
+  String get meetingSettingAiNotesDesc =>
+      'AI가 발언, 채팅, 노트, 파일, 공유 화면을 기록해 회의 후 요약합니다. 방에 있는 모든 사람에게 알림이 갑니다.';
+
+  @override
+  String get meetingAiNotesActive => 'AI가 노트 작성 중';
+
+  @override
+  String get meetingAiReadingScreen => 'AI가 공유 중인 화면을 읽고 있습니다';
+
+  @override
+  String get meetingAiNotesStarted => 'AI가 회의 노트 작성을 시작했습니다';
+
+  @override
+  String get meetingAiNotesPrejoin => '이 회의는 AI 노트를 사용합니다';
+
+  @override
+  String get meetingAiNotesPauseMine => '내 음성 기록 일시중지';
+
+  @override
+  String get meetingAiNotesResumeMine => '내 음성 기록 다시 시작';
+
+  @override
+  String get meetingAiNotesUnsupported => '이 기기는 AI 노트용 음성 기록을 지원하지 않습니다';
 
   @override
   String get meetingSubmitCreate => '예약';
@@ -5536,6 +5621,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get meetingChatEmpty => '메시지는 회의 참가자 모두에게 표시됩니다';
 
   @override
+  String get meetingAiName => 'PON AI';
+
+  @override
+  String get meetingAiThinking => 'PON AI가 답변하는 중…';
+
+  @override
+  String get meetingAiUnavailable => '현재 AI를 사용할 수 없습니다';
+
+  @override
+  String get meetingAiFailed => 'AI가 답변하지 못했습니다. 다시 시도해 주세요';
+
+  @override
+  String get meetingAiQuotaExceeded => 'AI 사용 한도에 도달했습니다';
+
+  @override
+  String get meetingAiRateLimited => '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요';
+
+  @override
+  String get meetingChatAiHint => '질문 앞에 @AI를 입력하면 어시스턴트에게 물어볼 수 있습니다';
+
+  @override
   String get meetingChatFailed => '전송되지 않음';
 
   @override
@@ -5546,6 +5652,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get meetingChatSending => '보내는 중…';
+
+  @override
+  String get meetingChatAttach => '파일 첨부';
+
+  @override
+  String get meetingChatUploading => '파일 업로드 중…';
+
+  @override
+  String get meetingChatFileTooLarge => '파일이 너무 큽니다';
+
+  @override
+  String get meetingChatUploadFailed => '파일을 업로드하지 못했습니다. 다시 시도해 주세요';
+
+  @override
+  String get meetingChatNotSent =>
+      '파일을 보내지 못했습니다. 여기에 보관되어 있으니 보내기를 눌러 다시 시도하세요';
+
+  @override
+  String get meetingChatRemoveFile => '파일 제거';
 
   @override
   String get meetingChatOffline => '다시 연결하는 중이라 지금은 메시지를 보낼 수 없습니다';

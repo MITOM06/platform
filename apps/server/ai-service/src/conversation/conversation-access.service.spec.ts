@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { ConversationAccessService } from './conversation-access.service';
 
-function makeModel(doc: { participants: string[] } | null, throws = false) {
+function makeModel(doc: { participants: string[]; meetingId?: string } | null, throws = false) {
   return {
     findById: jest.fn().mockReturnValue({
       select: jest.fn().mockReturnValue({
@@ -46,5 +46,29 @@ describe('ConversationAccessService.checkAccess', () => {
   it('is unknown (fail-open) on a DB error', async () => {
     const svc = new ConversationAccessService(makeModel(null, true));
     expect(await svc.checkAccess(VALID_ID, 'u1')).toBe('unknown');
+  });
+});
+
+describe('ConversationAccessService meeting conversations', () => {
+  it('meeting: chat is a shared room with the meeting id, without touching Mongo', async () => {
+    const model = makeModel(null);
+    const svc = new ConversationAccessService(model);
+    const ctx = await svc.getConversationContext('meeting:abc123', 'u1');
+    expect(ctx).toEqual({ access: 'allowed', directAi: false, meetingId: 'abc123' });
+    expect((model as unknown as { findById: jest.Mock }).findById).not.toHaveBeenCalled();
+  });
+
+  it('exposes the meetingId of a post-meeting group chat', async () => {
+    const svc = new ConversationAccessService(makeModel({ participants: ['u1', 'u2', 'u3'], meetingId: 'm7' }));
+    expect(await svc.getConversationContext(VALID_ID, 'u1')).toEqual({
+      access: 'allowed',
+      directAi: false,
+      meetingId: 'm7',
+    });
+  });
+
+  it('meetingId is null for a normal conversation', async () => {
+    const svc = new ConversationAccessService(makeModel({ participants: ['u1', 'u2', 'u3'] }));
+    expect((await svc.getConversationContext(VALID_ID, 'u1')).meetingId).toBeNull();
   });
 });

@@ -12,7 +12,6 @@ import { authService } from '@/lib/api/auth'
 import { WallpaperPickerModal } from './WallpaperPickerModal'
 import { SettingsHeader } from './group/SettingsHeader'
 import { AiAssistantSection } from './group/AiAssistantSection'
-import { AiSessionPanel } from './AiSessionPanel'
 import { ActionOptionsSection } from './group/ActionOptionsSection'
 import { CustomizeChatSection } from './group/CustomizeChatSection'
 import { FilesMediaSection } from './group/FilesMediaSection'
@@ -105,11 +104,6 @@ export function ConversationSettingsDrawer({
               {/* AI Assistant — bot-specific controls (replaces person-only items) */}
               {s.isAI && (
                 <AiAssistantSection conversationId={conversation.id} onClose={onClose} />
-              )}
-
-              {/* AI session history — view / resume / start new session */}
-              {s.isAI && (
-                <AiSessionPanel conversationId={conversation.id} />
               )}
 
               {/* Pinned Messages */}

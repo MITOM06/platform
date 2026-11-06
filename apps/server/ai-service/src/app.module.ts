@@ -16,6 +16,7 @@ import { PersonaModule } from './persona/persona.module';
 import { SessionModule } from './session/session.module';
 import { RetentionModule } from './retention/retention.module';
 import { CallModule } from './call/call.module';
+import { MeetingModule } from './meeting/meeting.module';
 import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
 import { SettingsModule } from './settings/settings.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
@@ -58,6 +59,7 @@ const mongooseModule: DynamicModule = MongooseModule.forRootAsync({
     SessionModule,
     RetentionModule,
     CallModule,
+    MeetingModule,
     ActionsModule,
     AiModule,
     RabbitmqModule,

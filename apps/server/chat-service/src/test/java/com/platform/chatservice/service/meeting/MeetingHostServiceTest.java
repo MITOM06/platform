@@ -299,6 +299,55 @@ class MeetingHostServiceTest {
   }
 
   @Test
+  void aiNotesOnSetsTheFieldBroadcastsAndMarksUsed() {
+    host.execute(minh, cmd("AI_NOTES_ON", null));
+
+    Document set = (Document) lastUpdate().getUpdateObject().get("$set");
+    assertThat(set).containsExactlyEntriesOf(Map.of("settings.aiNotes", true));
+    verify(events).settings(after);
+    verify(store).markAiNotesUsed("m1");
+    verify(policy, never()).applyScreenShare(any());
+  }
+
+  @Test
+  void aiNotesOffDoesNotMarkUsed() {
+    m.getSettings().setAiNotes(true);
+    host.execute(lan, cmd("AI_NOTES_OFF", null));
+
+    Document set = (Document) lastUpdate().getUpdateObject().get("$set");
+    assertThat(set).containsExactlyEntriesOf(Map.of("settings.aiNotes", false));
+    verify(events).settings(after);
+    verify(store, never()).markAiNotesUsed(any());
+  }
+
+  @Test
+  void aiNotesOnWhenAlreadyOnIsANoOp() {
+    m.getSettings().setAiNotes(true);
+    host.execute(lan, cmd("AI_NOTES_ON", null));
+
+    verify(store, never()).update(anyString(), any());
+    verify(store, never()).markAiNotesUsed(any());
+    verifyNoInteractions(events);
+  }
+
+  @Test
+  void aiNotesOffWhenAlreadyOffIsANoOp() {
+    host.execute(lan, cmd("AI_NOTES_OFF", null));
+
+    verify(store, never()).update(anyString(), any());
+    verifyNoInteractions(events);
+  }
+
+  @Test
+  void attendeeCannotToggleAiNotes() {
+    host.execute(hoa, cmd("AI_NOTES_ON", null)); // ignored like every host command
+
+    verify(store, never()).update(anyString(), any());
+    verify(store, never()).markAiNotesUsed(any());
+    verifyNoInteractions(events);
+  }
+
+  @Test
   void onlyTheHostAppointsCoHostsAndOnlyFromPeopleInTheRoom() {
     assertThat(apiError(() -> host.execute(minh, cmd("MAKE_COHOST", "inv"))).code())
         .isEqualTo("MEETING_FORBIDDEN");

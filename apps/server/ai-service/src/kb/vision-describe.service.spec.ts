@@ -78,6 +78,28 @@ describe('VisionDescribeService', () => {
       expect(content[1].type).toBe('text');
     });
 
+    it('keeps the KB prompt, 4096 tokens and kb-vision label by default', async () => {
+      const usage = { recordModelCall: jest.fn() };
+      (svc as any)['usageService'] = usage;
+      create.mockResolvedValue({ content: [{ type: 'text', text: 'x' }], usage: { input_tokens: 1 } });
+      await svc.describeImage(Buffer.from('i'), 'image/png', 'u1');
+      const params = create.mock.calls[0][0];
+      expect(params.max_tokens).toBe(4096);
+      expect(params.messages[0].content[1].text).toMatch(/^You are an OCR \+ visual-description engine/);
+      expect(usage.recordModelCall).toHaveBeenCalledWith('u1', expect.anything(), 'kb-vision');
+    });
+
+    it('honours prompt / maxTokens / usageLabel overrides', async () => {
+      const usage = { recordModelCall: jest.fn() };
+      (svc as any)['usageService'] = usage;
+      create.mockResolvedValue({ content: [{ type: 'text', text: 'x' }], usage: { input_tokens: 1 } });
+      await svc.describeImage(Buffer.from('i'), 'image/png', 'u1', { prompt: 'P', maxTokens: 800, usageLabel: 'meeting-screen' });
+      const params = create.mock.calls[0][0];
+      expect(params.max_tokens).toBe(800);
+      expect(params.messages[0].content[1].text).toBe('P');
+      expect(usage.recordModelCall).toHaveBeenCalledWith('u1', expect.anything(), 'meeting-screen');
+    });
+
     it('throws VisionUnsupportedException for unsupported mime (no API call)', async () => {
       await expect(svc.describeImage(Buffer.from('x'), 'image/heic')).rejects.toThrow(
         VisionUnsupportedException,

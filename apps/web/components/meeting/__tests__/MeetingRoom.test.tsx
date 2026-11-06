@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
@@ -24,6 +24,7 @@ import { meetingKeys } from '@/lib/meetings/cache-updates'
 import type { MeetingRoomController } from '@/lib/meetings/meeting-room-controller'
 import type { RemotePeer } from '@/lib/rtc/livekit-session'
 import { useMeetingRoomStore } from '@/lib/store/meeting.store'
+import { FakeRecognition, installFakeSpeech, removeFakeSpeech } from '@/lib/meetings/__tests__/fake-speech'
 
 const MEETING: Meeting = { id: 'm1', code: 'abc-defg-hjk', title: 'Weekly', host: { userId: 'me' }, status: 'LIVE',
   settings: DEFAULT_MEETING_SETTINGS, viewerRole: 'host', createdAt: '2026-10-08T00:00:00Z' }
@@ -33,7 +34,7 @@ const PEER: RemotePeer = { identity: 'u2', name: 'Minh', stream: fakeStream, spe
 
 let controller: { [K in keyof MeetingRoomController]?: ReturnType<typeof vi.fn> }
 
-function renderRoom(role: 'host' | 'attendee') {
+function renderRoom(role: 'host' | 'attendee', meeting: Meeting = MEETING, mic = true) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   qc.setQueryData(meetingKeys.roster('m1'), [
     { userId: 'me', displayName: 'Lan', role, joinedAt: '2026-10-08T01:00:00Z' },
@@ -41,10 +42,10 @@ function renderRoom(role: 'host' | 'attendee') {
   ])
   qc.setQueryData(meetingKeys.hands('m1'), [])
   qc.setQueryData(meetingKeys.lobby('m1'), [{ userId: 'g1', displayName: 'Guest Ha' }])
-  useMeetingRoomStore.setState({ phase: 'inRoom', myRole: role, mic: true, camera: false, peers: [PEER] })
+  useMeetingRoomStore.setState({ phase: 'inRoom', myRole: role, mic, camera: false, peers: [PEER] })
   render(
     <QueryClientProvider client={qc}>
-      <MeetingRoom meeting={MEETING} controller={controller as unknown as MeetingRoomController} myId="me" myName="Lan" />
+      <MeetingRoom meeting={meeting} controller={controller as unknown as MeetingRoomController} myId="me" myName="Lan" />
     </QueryClientProvider>,
   )
 }
@@ -135,5 +136,21 @@ describe('MeetingRoom', () => {
     await user.type(box, 'hello{Enter}')
     expect(controller.sendChat).toHaveBeenCalledWith('hello')
     expect(box).toHaveValue('')
+  })
+})
+
+describe('AI notes speech capture follows the local mic', () => {
+  const AI = { ...MEETING, settings: { ...DEFAULT_MEETING_SETTINGS, aiNotes: true } }
+  beforeEach(installFakeSpeech)
+  afterEach(removeFakeSpeech)
+
+  it('does not start recognition while the mic is muted, starts on unmute, stops on mute', () => {
+    renderRoom('attendee', AI, false)
+    expect(FakeRecognition.instances).toHaveLength(0)
+    act(() => useMeetingRoomStore.setState({ mic: true }))
+    expect(FakeRecognition.instances).toHaveLength(1)
+    const rec = FakeRecognition.instances[0]
+    act(() => useMeetingRoomStore.setState({ mic: false }))
+    expect(rec.stop).toHaveBeenCalled()
   })
 })

@@ -96,7 +96,8 @@ final class MeetingRequests {
             from.isMuteOnEntry(),
             from.isAllowAttendeeScreenShare(),
             from.isAttendeesCanEditNotes(),
-            from.isLocked());
+            from.isLocked(),
+            from.isAiNotes());
     if (patch == null) {
       return out;
     }
@@ -114,6 +115,9 @@ final class MeetingRequests {
     }
     if (patch.locked() != null) {
       out.setLocked(patch.locked());
+    }
+    if (patch.aiNotes() != null) {
+      out.setAiNotes(patch.aiNotes());
     }
     return out;
   }
@@ -144,6 +148,7 @@ final class MeetingRequests {
         base.isAttendeesCanEditNotes(),
         merged.isAttendeesCanEditNotes());
     putIfChanged(out, "locked", base.isLocked(), merged.isLocked());
+    putIfChanged(out, "aiNotes", base.isAiNotes(), merged.isAiNotes());
     return out;
   }
 

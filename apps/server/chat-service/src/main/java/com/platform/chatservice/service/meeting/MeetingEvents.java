@@ -169,6 +169,17 @@ public class MeetingEvents {
   }
 
   /**
+   * {@code meet.ai} to the room: {@code state} {@code thinking} (the AI is answering {@code
+   * requesterId}) or {@code error} with a stable {@code code}. The answer itself is a {@code
+   * meet.chat} from the AI bot.
+   */
+  public void ai(String meetingId, String state, String requesterId, String code) {
+    toTopic(
+        meetingId,
+        base("meet.ai", meetingId).state(state).requesterId(requesterId).code(code).build());
+  }
+
+  /**
    * {@code meet.chat} to the sender only ({@code /user/queue/meeting}): the stored line of a
    * re-sent {@code clientId}, so the sender's retry settles while the room never sees it twice.
    */
@@ -187,6 +198,21 @@ public class MeetingEvents {
   /** {@code meet.removed} to the person the host / co-host removed. */
   public void removed(String meetingId, String userId) {
     toUser(userId, base("meet.removed", meetingId).build());
+  }
+
+  /**
+   * {@code meet.summary.ready}: the AI summary finished ({@code summaryState}) and, when a group
+   * chat holds it, where ({@code groupConversationId}).
+   */
+  public void summaryReady(Meeting m, Collection<String> userIds) {
+    for (String userId : distinct(userIds)) {
+      toUser(
+          userId,
+          base("meet.summary.ready", m.getId())
+              .summaryState(m.getSummaryState())
+              .groupConversationId(m.getGroupConversationId())
+              .build());
+    }
   }
 
   /** {@code meet.muted} to the person whose microphone {@code actor} muted. */

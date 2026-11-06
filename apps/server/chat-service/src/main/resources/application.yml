@@ -128,3 +128,12 @@ app:
     cache-ttl-ms: ${SESSION_CACHE_TTL_MS:5000}
     # Interval (ms) for re-validating every open WebSocket's auth session (closes revoked ones).
     ws-sweep-interval-ms: ${SESSION_WS_SWEEP_INTERVAL_MS:30000}
+
+meetings:
+  ai:
+    # Max files per meeting handed to the AI reader (meet:material).
+    file-cap: ${MEETINGS_AI_FILE_CAP:20}
+    # Max shared-screen frames per meeting handed to the AI reader (meet:material kind=screen).
+    screen-cap: ${MEETINGS_AI_SCREEN_CAP:60}
+    # How often (ms) screen frames older than 1 h that nobody consumed are deleted.
+    screen-sweep-ms: ${MEETINGS_AI_SCREEN_SWEEP_MS:600000}

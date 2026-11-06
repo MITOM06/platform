@@ -49,6 +49,7 @@ typedef _MoreState = ({
   bool screen,
   bool camera,
   bool speakerOn,
+  bool aiNotes,
   LayoutMode layout,
   int waiting,
   int unread,
@@ -67,6 +68,7 @@ class _MoreList extends ConsumerWidget {
           screen: x.screen,
           camera: x.camera,
           speakerOn: x.speakerOn,
+          aiNotes: x.settings.aiNotes == true,
           layout: x.layout,
           waiting: x.lobby.length,
           unread: x.unreadChat,
@@ -119,6 +121,7 @@ class _MoreList extends ConsumerWidget {
         value: s.speakerOn,
         onChanged: (on) => unawaited(controller.setSpeaker(on)),
       ),
+      if (s.aiNotes) const _PauseSpeechTile(),
       _LayoutRow(layout: s.layout, onChanged: controller.setLayout),
       if (s.manager)
         ListTile(
@@ -164,6 +167,35 @@ class _LayoutRow extends StatelessWidget {
           title: Text(l.meetingLayoutSpotlight),
         ),
       ]),
+    );
+  }
+}
+
+/// "Pause my speech capture" — only while AI notes are on; stays open so the
+/// label flips in place. Disabled when the device cannot capture speech.
+class _PauseSpeechTile extends ConsumerWidget {
+  const _PauseSpeechTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
+    final t = ref.read(meetingTranscriberProvider);
+    return ListenableBuilder(
+      listenable: Listenable.merge([t.paused, t.supported]),
+      builder: (context, _) {
+        final unsupported = t.supported.value == false;
+        final paused = t.paused.value;
+        return ListTile(
+          leading: Icon(paused ? Icons.mic_rounded : Icons.mic_off_rounded),
+          title: Text(unsupported
+              ? l.meetingAiNotesUnsupported
+              : paused
+                  ? l.meetingAiNotesResumeMine
+                  : l.meetingAiNotesPauseMine),
+          enabled: !unsupported,
+          onTap: unsupported ? null : () => t.setPaused(!paused),
+        );
+      },
     );
   }
 }

@@ -13,6 +13,8 @@ import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.repository.ExternalBotRepository;
 import com.platform.chatservice.repository.FriendshipRepository;
 import com.platform.chatservice.repository.MessageRepository;
+import com.platform.chatservice.service.meeting.MeetingLobby;
+import com.platform.chatservice.service.meeting.MeetingPeople;
 import com.platform.chatservice.service.upload.UploadAccessPolicy;
 import com.platform.chatservice.service.upload.UploadRefs;
 import java.io.ByteArrayInputStream;
@@ -80,7 +82,9 @@ class UploadRefsActorTest {
     gridFs =
         new GridFsTemplate(mongoTemplate.getMongoDatabaseFactory(), mongoTemplate.getConverter());
     ConversationCacheService cache = new ConversationCacheService(conversationRepository);
-    policy = new UploadAccessPolicy(mongoTemplate);
+    policy =
+        new UploadAccessPolicy(
+            mongoTemplate, new MeetingPeople(mongoTemplate), mock(MeetingLobby.class));
     refs = new UploadRefs(mongoTemplate, gridFs, policy);
     MessageMapper mapper = new MessageMapper();
     aiMessageService =
@@ -101,7 +105,8 @@ class UploadRefsActorTest {
             mapper,
             aiMessageService,
             cache,
-            refs);
+            refs,
+            org.mockito.Mockito.mock(AiThreadService.class));
     ConversationWriteSupport support =
         new ConversationWriteSupport(
             cache, mongoTemplate, messageRepository, new ConversationMapper(messageRepository));

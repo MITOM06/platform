@@ -72,7 +72,8 @@ class MeetingServiceSettingsPatchTest {
     // locked=false), so re-sending locked=false must not touch "settings.locked".
     when(store.update(eq("m1"), any())).thenReturn(Optional.of(m));
 
-    service.update(host, "m1", patch(new MeetingSettingsDto(true, false, true, false, false)));
+    service.update(
+        host, "m1", patch(new MeetingSettingsDto(true, false, true, false, false, null)));
 
     assertThat(set()).containsExactlyEntriesOf(Map.of("settings.attendeesCanEditNotes", false));
     verify(events).settings(m);
@@ -80,10 +81,67 @@ class MeetingServiceSettingsPatchTest {
 
   @Test
   void aPatchThatChangesNoSwitchWritesNothing() {
-    service.update(host, "m1", patch(new MeetingSettingsDto(true, false, true, true, false)));
+    service.update(host, "m1", patch(new MeetingSettingsDto(true, false, true, true, false, null)));
 
     verify(store, never()).update(anyString(), any());
     verify(events, never()).settings(any());
+  }
+
+  @Test
+  void createWithAiNotesStoresIt() {
+    Meeting.Settings s =
+        MeetingRequests.settings(new MeetingSettingsDto(null, null, null, null, null, true), null);
+    assertThat(s.isAiNotes()).isTrue();
+  }
+
+  @Test
+  void patchWithoutAiNotesKeepsIt() {
+    Meeting.Settings base = Meeting.Settings.builder().aiNotes(true).build();
+    Meeting.Settings s =
+        MeetingRequests.settings(new MeetingSettingsDto(false, null, null, null, null, null), base);
+    assertThat(s.isAiNotes()).isTrue();
+  }
+
+  @Test
+  void patchCanTurnAiNotesOff() {
+    m.setSettings(Meeting.Settings.builder().aiNotes(true).build());
+    when(store.update(eq("m1"), any())).thenReturn(Optional.of(m));
+
+    service.update(host, "m1", patch(new MeetingSettingsDto(null, null, null, null, null, false)));
+
+    assertThat(set()).containsExactlyEntriesOf(Map.of("settings.aiNotes", false));
+  }
+
+  @Test
+  void patchTurningAiNotesOnMarksItUsed() {
+    Meeting on =
+        Meeting.builder()
+            .id("m1")
+            .hostId("host")
+            .settings(Meeting.Settings.builder().aiNotes(true).build())
+            .build();
+    when(store.update(eq("m1"), any())).thenReturn(Optional.of(on));
+
+    service.update(host, "m1", patch(new MeetingSettingsDto(null, null, null, null, null, true)));
+
+    assertThat(set()).containsExactlyEntriesOf(Map.of("settings.aiNotes", true));
+    verify(store).markAiNotesUsed("m1");
+  }
+
+  @Test
+  void patchTurningAiNotesOffDoesNotMarkIt() {
+    m.setSettings(Meeting.Settings.builder().aiNotes(true).build());
+    Meeting off =
+        Meeting.builder()
+            .id("m1")
+            .hostId("host")
+            .settings(Meeting.Settings.builder().aiNotes(false).build())
+            .build();
+    when(store.update(eq("m1"), any())).thenReturn(Optional.of(off));
+
+    service.update(host, "m1", patch(new MeetingSettingsDto(null, null, null, null, null, false)));
+
+    verify(store, never()).markAiNotesUsed(any());
   }
 
   @Test
@@ -91,7 +149,7 @@ class MeetingServiceSettingsPatchTest {
     m.setSettings(null);
     when(store.update(eq("m1"), any())).thenReturn(Optional.of(m));
 
-    service.update(host, "m1", patch(new MeetingSettingsDto(null, null, null, null, true)));
+    service.update(host, "m1", patch(new MeetingSettingsDto(null, null, null, null, true, null)));
 
     Document set = set();
     assertThat(set).containsOnlyKeys("settings");
