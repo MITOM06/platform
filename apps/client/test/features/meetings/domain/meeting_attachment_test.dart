@@ -3,6 +3,25 @@ import 'package:platform_client/features/meetings/domain/meeting_attachment.dart
 import 'package:platform_client/features/meetings/domain/meeting_room_models.dart';
 
 void main() {
+  group('uploadPath', () {
+    test('relative url unchanged', () {
+      expect(uploadPath('/api/uploads/abc'), '/api/uploads/abc');
+      expect(uploadPath('abc'), 'abc');
+    });
+    test('absolute http(s) url keeps only the path', () {
+      expect(uploadPath('https://gw.example.com/api/uploads/abc'),
+          '/api/uploads/abc');
+      expect(uploadPath('HTTP://h:8080/api/uploads/abc?x=1#f'),
+          '/api/uploads/abc');
+      expect(uploadPath('https://gw.example.com'), '/');
+    });
+    test('other inputs unchanged', () {
+      expect(uploadPath(''), '');
+      expect(uploadPath('ftp://h/api/uploads/abc'), 'ftp://h/api/uploads/abc');
+      expect(uploadPath('http://['), 'http://[');
+    });
+  });
+
   group('parseAttachment', () {
     test('keeps a valid upload attachment', () {
       final a = parseAttachment({
