@@ -154,12 +154,11 @@ describe('toPublicProfile', () => {
       }
     });
 
-    // BUG (already tracked in users.controller.routes.spec.ts): the blocked
-    // branch returns `email: doc.email` although the normal non-self view omits
-    // it — blocking reveals MORE than not being blocked.
-    it.skip('BUG: blocked view must not expose fields the normal view hides (email)', () => {
+    it('blocked view never exposes fields the normal view hides (email)', () => {
       const blocked = toPublicProfile(owner, 'caller', { isBlockedByOwner: true });
-      const normal = toPublicProfile(owner, 'caller');
+      // Profile endpoints always pass friendsCount (the blocked view forces 0).
+      const normal = toPublicProfile(owner, 'caller', { friendsCount: 3 });
+      expect(blocked).not.toHaveProperty('email');
       for (const k of Object.keys(blocked)) {
         if (k === 'isBlockedByOwner') continue;
         expect(normal).toHaveProperty(k);

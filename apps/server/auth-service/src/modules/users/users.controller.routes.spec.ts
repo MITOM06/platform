@@ -26,6 +26,7 @@ function make() {
     getRoleNameMap: jest.fn(),
     findById: jest.fn(),
     isBlockedBy: jest.fn().mockResolvedValue(false),
+    findOwnersBlocking: jest.fn().mockResolvedValue(new Set()),
     getRoleName: jest.fn().mockResolvedValue('Member'),
   };
   const friendsService = {
@@ -243,25 +244,28 @@ describe('UsersController.findManyByIds (batch profiles)', () => {
     expect(out[0]).not.toHaveProperty('email');
   });
 
-  // BUG: the batch route never checks blocks — findManyByIds calls
-  // toPublicProfile without `isBlockedByOwner`, so a caller the owner BLOCKED
-  // gets the full profile (bio, phone / DOB / gender per toggles, createdAt,
-  // real friendsCount) via `GET /api/users?ids=<owner>`, bypassing the minimal
-  // view `GET /api/users/:id` returns. Fix in users.controller.ts findManyByIds:
-  // load the set of ids that blocked req.user.sub and pass isBlockedByOwner.
-  it.skip('BUG: owner blocked the caller → batch lookup must return the same minimal view as GET /:id', async () => {
+  it('owner blocked the caller → batch lookup returns the same minimal view as GET /:id', async () => {
     const { ctrl, usersService, friendsService } = make();
     usersService.findManyByIds.mockResolvedValue([
       docOf({ _id: 'u2', displayName: 'Bob', bio: 'secret', phoneNumber: '+84' }),
+      docOf({ _id: 'u3', displayName: 'Cy', bio: 'hi', phoneNumber: '+85' }),
     ]);
-    friendsService.countAcceptedForMany.mockResolvedValue(new Map([['u2', 9]]));
+    friendsService.countAcceptedForMany.mockResolvedValue(new Map([['u2', 9], ['u3', 4]]));
     usersService.getRoleNameMap.mockResolvedValue(new Map());
-    usersService.isBlockedBy.mockResolvedValue(true);
+    usersService.findOwnersBlocking.mockResolvedValue(new Set(['u2']));
 
-    const [out] = await ctrl.findManyByIds(req, 'u2');
+    const [out, other] = await ctrl.findManyByIds(req, 'u2,u3');
+
+    // One batched block lookup (owner → caller direction), never per-id.
+    expect(usersService.findOwnersBlocking).toHaveBeenCalledTimes(1);
+    expect(usersService.findOwnersBlocking).toHaveBeenCalledWith(['u2', 'u3'], CALLER);
+    expect(usersService.isBlockedBy).not.toHaveBeenCalled();
 
     expect(out).toMatchObject({ isBlockedByOwner: true, friendsCount: 0, bio: '' });
     expect(out).not.toHaveProperty('phoneNumber');
+    // Owners that did not block the caller keep the normal view.
+    expect(other).toMatchObject({ friendsCount: 4, bio: 'hi' });
+    expect(other).not.toHaveProperty('isBlockedByOwner');
   });
 });
 
@@ -313,12 +317,8 @@ describe('UsersController.findById (single profile)', () => {
     expect(out).not.toHaveProperty('phoneNumber');
   });
 
-  // BUG: toPublicProfile's blocked branch returns `email: doc.email`, so a caller
-  // the owner BLOCKED sees the owner's email, while a non-blocked member does
-  // not (the normal profile path omits email for non-self callers). Blocking
-  // should never reveal MORE than the normal view. Fix lives in
-  // src/modules/users/public-profile.ts (out of scope for this test-only task).
-  it.skip('BUG: owner blocked the caller → the blocked view must NOT expose the email', async () => {
+  // Blocking must never reveal MORE than the normal (email-less) view.
+  it('owner blocked the caller → the blocked view does NOT expose the email', async () => {
     const { ctrl, usersService } = make();
     usersService.findById.mockResolvedValue(
       docOf({ _id: 'u2', displayName: 'Bob', email: 'bob@x.io' }),

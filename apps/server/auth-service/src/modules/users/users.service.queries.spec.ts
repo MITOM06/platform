@@ -33,6 +33,7 @@ function makeService(withRoles = true) {
   };
   const userBlockModel: Record<string, jest.Mock> = {
     exists: jest.fn(),
+    find: jest.fn(),
     deleteOne: jest.fn(() => query({ deletedCount: 1 })),
   };
   const roleModel = { find: jest.fn() };
@@ -514,6 +515,29 @@ describe('UsersService block state', () => {
     });
     userBlockModel.exists.mockResolvedValueOnce(null);
     await expect(service.isBlockedBy('owner', 'caller')).resolves.toBe(false);
+  });
+
+  it('findOwnersBlocking: one owner → caller query for the whole list', async () => {
+    const { service, userBlockModel } = makeService();
+    const q = query([{ blockerId: 'o1' }, { blockerId: 'o3' }]);
+    userBlockModel.find.mockReturnValueOnce(q);
+    await expect(
+      service.findOwnersBlocking(['o1', 'o2', 'o3'], 'caller'),
+    ).resolves.toEqual(new Set(['o1', 'o3']));
+    expect(userBlockModel.find).toHaveBeenCalledTimes(1);
+    expect(userBlockModel.find).toHaveBeenCalledWith({
+      blockerId: { $in: ['o1', 'o2', 'o3'] },
+      blockedId: 'caller',
+    });
+    expect(q.select).toHaveBeenCalledWith('blockerId');
+  });
+
+  it('findOwnersBlocking: empty list → empty set, no query', async () => {
+    const { service, userBlockModel } = makeService();
+    await expect(service.findOwnersBlocking([], 'caller')).resolves.toEqual(
+      new Set(),
+    );
+    expect(userBlockModel.find).not.toHaveBeenCalled();
   });
 
   it('getBlockState reports each direction independently', async () => {

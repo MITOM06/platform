@@ -270,16 +270,19 @@ export class UsersController {
       throw new BadRequestException('Too many ids — max 100 per request');
     }
 
-    const [users, counts, roleNames] = await Promise.all([
+    const [users, counts, roleNames, blockedBy] = await Promise.all([
       this.usersService.findManyByIds(unique),
       this.friendsService.countAcceptedForMany(unique),
       this.usersService.getRoleNameMap(),
+      // Same rule as GET /:id — owners that blocked the caller → minimal view.
+      this.usersService.findOwnersBlocking(unique, req.user.sub),
     ]);
 
     return users.map((user) => {
       const doc = user.toObject();
       return toPublicProfile(doc, req.user.sub, {
         friendsCount: counts.get(String(user._id)) ?? 0,
+        isBlockedByOwner: blockedBy.has(String(user._id)),
         roleName: roleNames.get(String(doc.roleId ?? '')) ?? 'Member',
       });
     });
