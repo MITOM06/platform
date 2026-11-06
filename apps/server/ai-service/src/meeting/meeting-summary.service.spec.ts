@@ -66,5 +66,6 @@ describe('MeetingSummaryService.summarize', () => {
     });
     expect(s.usage.recordModelCall).toHaveBeenCalled();
     expect(s.create.mock.calls[0][0].model).toBe('m-x');
+    expect(s.create.mock.calls[0][1]).toEqual({ timeout: 180_000, maxRetries: 1 });
   });
 });

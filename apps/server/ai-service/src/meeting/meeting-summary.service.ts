@@ -76,12 +76,16 @@ export class MeetingSummaryService {
   }
 
   private async generate(prompt: string): Promise<MeetingSummary | null> {
-    const res = await this.anthropic.messages.create({
-      model: this.model,
-      max_tokens: 4000,
-      system: MEETING_SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    const res = await this.anthropic.messages.create(
+      {
+        model: this.model,
+        max_tokens: 4000,
+        system: MEETING_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: prompt }],
+      },
+      // Worst case 2 x 3 min < the 10 min chat-service sweep, so a result never outlives its attempt.
+      { timeout: 180_000, maxRetries: 1 },
+    );
     this.usageService?.recordModelCall(this.botUserId, res.usage, 'meeting-summary');
     const text = res.content
       .filter((b): b is Anthropic.TextBlock => b.type === 'text')
