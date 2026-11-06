@@ -22,6 +22,7 @@ void main() {
   var picked = true;
   var pickBytes = 5;
   var pickCalls = 0;
+  var reads = 0;
 
   setUp(() {
     uploads = [];
@@ -29,6 +30,7 @@ void main() {
     picked = true;
     pickBytes = 5;
     pickCalls = 0;
+    reads = 0;
     upload = (bytes, name) async {
       uploads.add(name);
       final g = gate;
@@ -43,7 +45,14 @@ void main() {
             meetingFilePickerProvider.overrideWithValue(() async {
               pickCalls++;
               return picked
-                  ? (bytes: List<int>.filled(pickBytes, 1), name: 'plan.pdf')
+                  ? (
+                      name: 'plan.pdf',
+                      size: pickBytes,
+                      read: () async {
+                        reads++;
+                        return List<int>.filled(1, 1);
+                      }
+                    )
                   : null;
             }),
             meetingUploaderProvider
@@ -148,6 +157,17 @@ void main() {
     expect(find.text(l10nOf(tester).meetingErrChatTooLong(2000)), findsWidgets);
   });
 
+  testWidgets('the length check ignores surrounding spaces, like send',
+      (tester) async {
+    final h = await pumpChat(tester);
+    await tester.enterText(find.byType(TextField), '${'a' * 2000}   ');
+    await tester.pump();
+    await attach(tester);
+    await tester.pump();
+    expect(pickCalls, 1);
+    expect(h.rt.sent.last.$2['content'], 'a' * 2000);
+  });
+
   testWidgets('cancelling the picker does nothing', (tester) async {
     final h = await pumpChat(tester);
     picked = false;
@@ -188,6 +208,7 @@ void main() {
     await attach(tester);
     await tester.pump();
     expect(uploads, isEmpty);
+    expect(reads, 0); // refused on the size alone, bytes never read
     expect(find.text(l10nOf(tester).meetingChatFileTooLarge), findsOneWidget);
   });
 

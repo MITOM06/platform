@@ -63,23 +63,23 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
 
   Future<void> _attach() async {
     final l = context.l10n;
-    if (_text.text.length > MeetingLimits.chat) {
+    if (_text.text.trim().length > MeetingLimits.chat) {
       _toast(l.meetingErrChatTooLong(MeetingLimits.chat));
       return;
     }
     final picked = await ref.read(meetingFilePickerProvider)();
     if (picked == null || !mounted) return;
-    if (picked.bytes.length > kMeetingFileMaxBytes) {
+    if (picked.size > kMeetingFileMaxBytes) {
       _toast(l.meetingChatFileTooLarge);
       return;
     }
     setState(() => _uploading = true);
     try {
-      final up =
-          await ref.read(meetingUploaderProvider)(picked.bytes, picked.name);
+      final bytes = await picked.read();
+      final up = await ref.read(meetingUploaderProvider)(bytes, picked.name);
       if (!mounted) return;
-      _staged = MeetingAttachment(
-          url: up.url, name: up.name, size: up.size, contentType: null);
+      setState(() => _staged = MeetingAttachment(
+          url: up.url, name: up.name, size: up.size, contentType: null));
       _deliver();
     } catch (e) {
       if (mounted) {
