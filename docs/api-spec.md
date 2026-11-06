@@ -766,6 +766,7 @@ Every payload is `MeetingEventDto` `{event, meetingId, …}`; absent fields are 
 | `/topic/meeting/{id}` | `meet.settings` | `{settings:{…6 fields, incl. `aiNotes`…}}` | `PATCH` or a host command changed settings |
 | `/topic/meeting/{id}` | `meet.hands` | `{hands:[Hand…]}` in raise order (`[]` = none) | raise / lower / lower all / leaving the room / removed |
 | `/topic/meeting/{id}` | `meet.chat` | `{clientId?, message: MeetingMessage}` | `/app/meet.chat` succeeded |
+| `/topic/meeting/{id}` | `meet.ai` | `{state: "thinking"\|"error", requesterId, code?}` — `requesterId` is only compared with your own id, never shown; `code` (`AI_UNAVAILABLE`, `AI_EMPTY`, `AI_ERROR`, …) only on `error` | a `/app/meet.chat` line mentioning `@AI` / `@ponai` (`(?i)@(AI\|ponai)\b`): `thinking` right after its `meet.chat`, `error` when the request could not be handed to ai-service or the AI failed / answered nothing. The answer is a normal `meet.chat` whose `message.sender.userId` is the AI bot (`ai-bot-000000000000000000000001`, display name `PON AI`) — not streamed, not pushed. The ai.requests payload for it has `conversationId: "meeting:{id}"` and `meetingId` (absent elsewhere) |
 | `/topic/meeting/{id}` | `meet.notes.updated` | `{version, updatedBy:{userId, displayName?}}` — never the text (GET it when not editing) | `PUT /notes/shared` succeeded while the meeting is not ENDED (private notes and edits after the end announce nothing) |
 | `/topic/meeting/{id}` | `meet.ended` | — | `POST /end`, LiveKit `room_finished`, `DELETE` (cancel) |
 | `/user/queue/meeting` | `meet.lobby` | `{waiting:[{userId, displayName}]}` (by name; nameless last) | to host + co-hosts when the lobby changes, to a host/co-host on `join` (empty list ⇒ clear the badge), and to a newly appointed co-host |
@@ -908,7 +909,7 @@ only via `/app/meet.host`, the notes switch via `PATCH`). Differences:
   `{ "type": "CLAIMS_CHANGED" }`.
 - **Meeting room topic:** `/topic/meeting/{meetingId}` — only for people allowed straight into
   the room (see 📅 Meetings); silent for people removed from the meeting. Events: `meet.roster`,
-  `meet.settings`, `meet.ended`, `meet.hands`, `meet.chat`, `meet.notes.updated`
+  `meet.settings`, `meet.ended`, `meet.hands`, `meet.chat`, `meet.ai`, `meet.notes.updated`
 - **Personal meeting queue:** `/user/queue/meeting` — `meet.lobby`, `meet.admitted`,
   `meet.denied`, `meet.ended` (lobby), `meet.invited`, `meet.starting`, `meet.cancelled`,
   `meet.removed`, `meet.muted`, `meet.error`

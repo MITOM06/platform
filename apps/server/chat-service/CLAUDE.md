@@ -102,6 +102,13 @@ replies on `meet:summary:result` `{meetingId, attempt, status: ok|empty|failed, 
 `MeetingSummaryResultListener` stores it, posts the `meeting_summary` card in the group and sends
 `meet.summary.ready`. `MeetingSummaryService` serves `GET /{id}/summary` + `POST /{id}/summary/regenerate`.
 
+`@AI` in the meeting chat: `MeetingChatService.send` → `MeetingAiBridge.ask` (async; `meet.ai thinking`) →
+RabbitMQ `AiRequestPayload{conversationId: "meeting:{id}", meetingId, history: 20 newest lines}` via
+`AiRedisPublisher.publishMeetingAiRequest` (failure ⇒ `meet.ai error AI_UNAVAILABLE`) → ai-service replies on
+`ai:response:meeting:{id}` → `AiResponseListener` hands `meeting:` events to `MeetingAiReplyHandler`: DONE ⇒
+SETNX `ai:done:` claim, one `MeetingMessage` from the AI bot + `meet.chat` (no push, no `messages` row);
+ERROR / blank ⇒ `meet.ai error {code}`; chunks ignored.
+
 ---
 
 ## Configuration (`application.yml`)
@@ -169,7 +176,7 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 - `/topic/conversation/{conversationId}` — Receive messages, reactions, edits, recalls, and AI streaming.
 - `/topic/conversation/{conversationId}/typing` — Receive typing status: `{ userId, typing: boolean }`
 - `/topic/meeting/{meetingId}` — `meet.roster | meet.settings | meet.ended | meet.hands | meet.chat |
-  meet.notes.updated`; SUBSCRIBE only when `MeetingAccess.decide` lets the user straight into the
+  meet.ai | meet.notes.updated`; SUBSCRIBE only when `MeetingAccess.decide` lets the user straight into the
   room (`MeetingTopicAuthorizer`); outbound frames are dropped for people in `meet:removed:{id}`
   (`MeetingTopicOutboundInterceptor`, next to `ConversationTopicOutboundInterceptor` on the
   clientOutboundChannel; fail-open on a Redis error)

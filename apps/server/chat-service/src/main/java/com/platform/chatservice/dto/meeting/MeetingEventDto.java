@@ -24,15 +24,18 @@ public class MeetingEventDto {
 
   /**
    * Room ({@code /topic/meeting/{id}}): {@code meet.roster | meet.settings | meet.ended |
-   * meet.hands | meet.chat | meet.notes.updated}. Personal ({@code /user/queue/meeting}): {@code
-   * meet.lobby | meet.admitted | meet.denied | meet.ended | meet.invited | meet.starting |
+   * meet.hands | meet.chat | meet.ai | meet.notes.updated}. Personal ({@code /user/queue/meeting}):
+   * {@code meet.lobby | meet.admitted | meet.denied | meet.ended | meet.invited | meet.starting |
    * meet.cancelled | meet.removed | meet.muted | meet.error}.
    */
   private String event;
 
   private String meetingId;
 
-  /** The meeting's shareable code ({@code abc-defg-hjk}) — never an error code. */
+  /**
+   * The meeting's shareable code ({@code abc-defg-hjk}); on {@code meet.ai} the AI error code
+   * instead ({@code AI_UNAVAILABLE | AI_EMPTY | ...}).
+   */
   private String code;
 
   private String title;
@@ -75,6 +78,15 @@ public class MeetingEventDto {
 
   /** {@code meet.summary.ready}: the meeting's group chat, null when none was created. */
   private String groupConversationId;
+
+  /** {@code meet.ai}: {@code thinking | error}. */
+  private String state;
+
+  /**
+   * {@code meet.ai}: who asked (a user id, like {@code sender.userId} of {@code meet.chat});
+   * clients only compare it with their own id, never display it.
+   */
+  private String requesterId;
 
   /** {@code meet.error}: an {@code ErrorCodes} value. */
   private String errorCode;

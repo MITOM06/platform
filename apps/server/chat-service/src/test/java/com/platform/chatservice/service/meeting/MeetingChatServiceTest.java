@@ -72,6 +72,7 @@ class MeetingChatServiceTest {
   private MeetingEvents events;
   private RateLimiterService rateLimiter;
   private MeetingChatService chat;
+  private MeetingAiBridge aiBridge;
   private final UserPrincipal an = new UserPrincipal("a");
 
   @BeforeEach
@@ -87,7 +88,8 @@ class MeetingChatServiceTest {
     events = mock(MeetingEvents.class);
     rateLimiter = mock(RateLimiterService.class);
     when(people.profiles(anyCollection())).thenReturn(Map.of("a", new PersonDto("a", "An", null)));
-    chat = new MeetingChatService(template, guard, people, events, rateLimiter);
+    aiBridge = mock(MeetingAiBridge.class);
+    chat = new MeetingChatService(template, guard, people, events, rateLimiter, aiBridge);
   }
 
   private void stored(String id, String meetingId, Instant at) {
@@ -307,5 +309,21 @@ class MeetingChatServiceTest {
     verify(guard).records(an, "m1");
     verify(guard, never()).inRoom(any(), any());
     verify(people, times(1)).profiles(anyCollection());
+  }
+
+  @Test
+  void aLineWithAMentionAsksTheAiAfterTheRoomSawIt() {
+    chat.send(an, "m1", "  @AI summarise  ", null);
+
+    org.mockito.InOrder order = org.mockito.Mockito.inOrder(events, aiBridge);
+    order.verify(events).chat(eq("m1"), any(), isNull());
+    order.verify(aiBridge).ask(an, "m1", "@AI summarise");
+  }
+
+  @Test
+  void aLineWithoutAMentionNeverAsksTheAi() {
+    chat.send(an, "m1", "just talking", null);
+
+    verifyNoInteractions(aiBridge);
   }
 }

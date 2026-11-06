@@ -169,6 +169,17 @@ public class MeetingEvents {
   }
 
   /**
+   * {@code meet.ai} to the room: {@code state} {@code thinking} (the AI is answering {@code
+   * requesterId}) or {@code error} with a stable {@code code}. The answer itself is a {@code
+   * meet.chat} from the AI bot.
+   */
+  public void ai(String meetingId, String state, String requesterId, String code) {
+    toTopic(
+        meetingId,
+        base("meet.ai", meetingId).state(state).requesterId(requesterId).code(code).build());
+  }
+
+  /**
    * {@code meet.chat} to the sender only ({@code /user/queue/meeting}): the stored line of a
    * re-sent {@code clientId}, so the sender's retry settles while the room never sees it twice.
    */

@@ -43,6 +43,7 @@ public class MeetingChatService {
   private final MeetingPeople people;
   private final MeetingEvents events;
   private final RateLimiterService rateLimiter;
+  private final MeetingAiBridge aiBridge;
 
   /**
    * Stores one chat line and tells the room. Order: room access → content (trimmed, 1..2000) →
@@ -96,6 +97,9 @@ public class MeetingChatService {
     }
     MeetingMessageDto dto = toDto(saved, people.profiles(List.of(uid)));
     events.chat(meetingId, dto, cid);
+    if (MeetingAiBridge.mentionsAi(text)) {
+      aiBridge.ask(caller, meetingId, text);
+    }
     return dto;
   }
 
