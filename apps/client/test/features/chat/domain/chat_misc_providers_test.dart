@@ -80,16 +80,18 @@ void main() {
     test('userStatus / userProfile / link preview read through the repos',
         () async {
       await make();
-      when(() => chat.getUserStatus('u2'))
-          .thenAnswer((_) async => UserStatus(userId: 'u2', online: true));
+      when(() => chat.getUserStatus('u2')).thenAnswer(
+          (_) async => const UserStatus(userId: 'u2', online: true));
       when(() => auth.getUserProfile('u2')).thenAnswer((_) async =>
           const UserModel(id: 'u2', email: 'b@x.io', displayName: 'Bob'));
-      when(() => chat.fetchLinkPreview('https://a.io'))
-          .thenAnswer((_) async => LinkPreviewData(url: 'https://a.io', title: 'A'));
+      when(() => chat.fetchLinkPreview('https://a.io')).thenAnswer(
+          (_) async => const LinkPreviewData(url: 'https://a.io', title: 'A'));
 
       expect((await c.read(userStatusProvider('u2').future)).online, isTrue);
-      expect((await c.read(userProfileProvider('u2').future)).displayName, 'Bob');
-      expect((await c.read(linkPreviewProvider('https://a.io').future)).title, 'A');
+      expect(
+          (await c.read(userProfileProvider('u2').future)).displayName, 'Bob');
+      expect((await c.read(linkPreviewProvider('https://a.io').future)).title,
+          'A');
     });
 
     test('profile is cached (keepAlive) — a second read does not refetch',
@@ -108,15 +110,19 @@ void main() {
           .thenAnswer((_) async => [_conv('a1')]);
       when(() => chat.listBlockedConversations())
           .thenAnswer((_) async => [_conv('b1')]);
-      expect((await c.read(archivedConversationsProvider.future)).single.id, 'a1');
-      expect((await c.read(blockedConversationsProvider.future)).single.id, 'b1');
+      expect(
+          (await c.read(archivedConversationsProvider.future)).single.id, 'a1');
+      expect(
+          (await c.read(blockedConversationsProvider.future)).single.id, 'b1');
     });
 
     test('conversationProvider: main list first, then AI threads, else null',
         () async {
       await make(
         convs: [_conv('c1')],
-        threads: [_conv('ai1', parts: const ['me', 'ai-bot'])],
+        threads: [
+          _conv('ai1', parts: const ['me', 'ai-bot'])
+        ],
       );
       expect(c.read(conversationProvider('c1'))?.id, 'c1');
       expect(c.read(conversationProvider('ai1'))?.id, 'ai1');
@@ -131,7 +137,8 @@ void main() {
       expect(c.read(chatWallpaperProvider('unknown')), isNull);
     });
 
-    test('optimistic value holds until the server reports it, then follows server',
+    test(
+        'optimistic value holds until the server reports it, then follows server',
         () async {
       await make(convs: [_conv('c1', wallpaper: 'w1')]);
       when(() => chat.setWallpaper('c1', 'w2'))

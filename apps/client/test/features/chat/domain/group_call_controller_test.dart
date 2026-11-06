@@ -9,7 +9,6 @@ import 'package:platform_client/features/auth/domain/auth_state.dart';
 import 'package:platform_client/features/chat/data/calls_repository.dart';
 import 'package:platform_client/features/chat/data/stomp_service.dart';
 import 'package:platform_client/features/chat/domain/call_failure.dart';
-import 'package:platform_client/features/chat/domain/call_transport.dart';
 import 'package:platform_client/features/chat/domain/group_call_controller.dart';
 import 'package:platform_client/features/chat/domain/group_call_state.dart';
 
@@ -91,8 +90,7 @@ void main() {
       CallParticipant(userId: id, displayName: id, joinedAt: at, leftAt: left);
 
   group('join (mesh)', () {
-    test('holds the conversation, opens media, announces call.join',
-        () async {
+    test('holds the conversation, opens media, announces call.join', () async {
       await joinMesh(isVideo: false);
       expect(stomp.subscribed, ['conv1']);
       expect(st().callId, 'call1');
@@ -114,8 +112,7 @@ void main() {
       expect(native.named('getUserMedia'), hasLength(1));
     });
 
-    test('mic/camera refused: MediaAccessException, nothing joined',
-        () async {
+    test('mic/camera refused: MediaAccessException, nothing joined', () async {
       native.onGetUserMedia =
           (_) => throw PlatformException(code: 'NotAllowedError');
       await expectLater(joinMesh(), throwsA(isA<MediaAccessException>()));
@@ -203,8 +200,7 @@ void main() {
       expect(native.named('addCandidate'), hasLength(1));
     });
 
-    test('remote stream binds to the peer tile with its video flag',
-        () async {
+    test('remote stream binds to the peer tile with its video flag', () async {
       await joinMesh();
       await ctl().onOffer('call1', 'x', 'sdp');
       await native.remoteTrack('pc1', streamId: 'sx');
@@ -214,8 +210,7 @@ void main() {
     });
   });
 
-  test('stream from a peer we offered to (no tile yet) gets a tile',
-      () async {
+  test('stream from a peer we offered to (no tile yet) gets a tile', () async {
     await joinMesh();
     await ctl().applyRoster('call1', [
       p('me', at: t0),
@@ -332,10 +327,9 @@ void main() {
           transport: CallTransport.sfu,
         );
 
-    test('token refused: leaves server-side and rethrows the reason',
-        () async {
-      api.token = (_) async => throw const CallRefusedException(
-          CallFailure.forbidden);
+    test('token refused: leaves server-side and rethrows the reason', () async {
+      api.token =
+          (_) async => throw const CallRefusedException(CallFailure.forbidden);
       await expectLater(joinSfu(), throwsA(isA<RoomConnectException>()));
       // Non-starter accepts first, then leaves so it is not counted in.
       expect(stomp.sent.map((s) => s.destination).toList(),
@@ -375,8 +369,7 @@ void main() {
     });
   });
 
-  test(
-      'disposing the controller releases its media even when STT never ran',
+  test('disposing the controller releases its media even when STT never ran',
       () async {
     await joinMesh();
     container.dispose();

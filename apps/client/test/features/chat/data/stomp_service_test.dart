@@ -3,7 +3,6 @@
 // socket drops, forced token refresh after an ERROR frame, logout when the
 // refresh is rejected, and stopping the reconnect loop without a session.
 
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -109,15 +108,16 @@ void main() {
       stomp.subscribePresence();
       await connectNow();
       await waitUntil(() => server.of('SUBSCRIBE').length == 3);
-      expect(server.subscribedDestinations(), containsAll([
-        '/topic/conversation/c1',
-        '/topic/conversation/c1/typing',
-        '/topic/presence',
-      ]));
+      expect(
+          server.subscribedDestinations(),
+          containsAll([
+            '/topic/conversation/c1',
+            '/topic/conversation/c1/typing',
+            '/topic/presence',
+          ]));
     });
 
-    test('conversation frames are routed to the right typed streams',
-        () async {
+    test('conversation frames are routed to the right typed streams', () async {
       await connectNow();
       stomp.subscribeConversation('c1');
       await waitUntil(() => server.of('SUBSCRIBE').length == 2);
@@ -142,8 +142,8 @@ void main() {
           {'type': 'MESSAGE_READ', 'messageId': 'm1', 'readerId': 'u2'});
       server.push('/topic/conversation/c1', 'not json');
       server.push('/topic/conversation/c1', {'type': 'SOME_FUTURE_EVENT'});
-      server.push('/topic/conversation/c1/typing',
-          {'userId': 'u2', 'typing': true});
+      server.push(
+          '/topic/conversation/c1/typing', {'userId': 'u2', 'typing': true});
 
       await waitUntil(() => typing.isNotEmpty);
       expect(messages.single.content, 'hello');
@@ -168,7 +168,8 @@ void main() {
       await waitUntil(() => server.of('UNSUBSCRIBE').length == 2);
     });
 
-    test('user queues: notifications, personal CONVERSATION_UPDATED, webrtc, '
+    test(
+        'user queues: notifications, personal CONVERSATION_UPDATED, webrtc, '
         'meeting', () async {
       await connectNow();
       stomp.subscribeNotifications();
@@ -238,14 +239,15 @@ void main() {
         'replyToId': 'm0',
       });
       expect(sends[2].headers['destination'], '/app/chat.typing');
-      expect(jsonDecode(sends[2].body),
-          {'conversationId': 'c1', 'typing': false});
+      expect(
+          jsonDecode(sends[2].body), {'conversationId': 'c1', 'typing': false});
       expect(jsonDecode(sends[3].body),
           {'conversationId': 'c1', 'messageId': 'm1'});
       expect(sends[4].body, 'b');
     });
 
-    test('socket drop → auto-reconnect re-subscribes everything, then '
+    test(
+        'socket drop → auto-reconnect re-subscribes everything, then '
         'announces the reconnect', () async {
       await connectNow();
       stomp.subscribeNotifications();
@@ -270,7 +272,8 @@ void main() {
       await s2.cancel();
     });
 
-    test('ERROR frame (token revoked server-side) → next connect FORCES a '
+    test(
+        'ERROR frame (token revoked server-side) → next connect FORCES a '
         'refresh and uses the new token', () async {
       FlutterSecureStorage.setMockInitialValues({
         'accessToken': token,
@@ -286,9 +289,10 @@ void main() {
       await server.dropSocket();
       await waitUntil(() => server.of('CONNECT').length == 2);
 
-      expect(server.refreshBodies.single, {'sid': 'sid-1', 'refreshToken': 'rt-1'});
-      expect(server.of('CONNECT').last.headers['Authorization'],
-          'Bearer $fresh');
+      expect(server.refreshBodies.single,
+          {'sid': 'sid-1', 'refreshToken': 'rt-1'});
+      expect(
+          server.of('CONNECT').last.headers['Authorization'], 'Bearer $fresh');
       expect(server.upgradeAuth.last, 'Bearer $fresh');
       expect(auth.forcedLogouts, 0);
     });

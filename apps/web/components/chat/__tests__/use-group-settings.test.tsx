@@ -65,7 +65,7 @@ const chatErr = (code: string) =>
 
 let qc: QueryClient
 let invalidated: unknown[][]
-let onClose: ReturnType<typeof vi.fn>
+let onClose: ReturnType<typeof vi.fn<() => void>>
 
 function render() {
   const wrapper = ({ children }: { children: React.ReactNode }) => (

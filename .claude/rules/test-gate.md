@@ -31,7 +31,8 @@
   JaCoCo `target/site/jacoco/jacoco.csv`, Flutter `coverage/lcov.info` — bỏ file sinh `*.g.dart`,
   `*.freezed.dart`, `l10n/`) và so với ngưỡng. Dưới ngưỡng → exit 1.
 - CI (`.github/workflows/ci.yml`) chạy cùng cổng sau bước Test của mỗi job → PR làm tụt coverage sẽ đỏ.
-- `scripts/test-all.sh` chạy y như CI ở máy local.
+- `scripts/test-all.sh` chạy y như CI ở máy local, gồm cả `tsc --noEmit` của web và `flutter analyze` (CI đỏ nếu
+  file test có lỗi kiểu / cảnh báo analyzer, kể cả mức info).
 
 ## Bẫy môi trường đã biết
 
