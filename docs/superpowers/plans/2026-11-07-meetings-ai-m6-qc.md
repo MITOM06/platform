@@ -59,3 +59,17 @@
 1. Chi phí vision (ảnh file M4 + ảnh màn hình M5) tính vào quota **người gửi** (hiện tại) hay **bot AI**.
 2. `UPLOADS_REQUIRE_AUTH` trên prod: bật hay tắt.
 3. Tên người bị đá có nằm trong danh sách tham dự của tin tóm tắt không (hiện: có).
+
+## Kết quả soát tự động (2026-11-06)
+
+- Full suite: chat-service 1102, ai-service 798, web 1292 (+ tsc, build), Flutter 1200 (+ analyze 0 issue) — xanh. `pnpm lint` ai-service hỏng do thiếu `eslint.config.*` (có từ trước trên `main`).
+- Sync-check web ↔ Flutter: 8 lệch, đều thẩm mỹ, không lỗi người dùng. Đã sửa 7 cho Flutter giống web (`20394372`); vị trí dòng "PON AI đang trả lời…" giữ khác (mobile ghim trên ô soạn). i18n: 32/33 key mới đủ 7 locale.
+- Soát hợp đồng chat-service ↔ ai-service: 0 lệch gây lỗi. `@AI` trống trong chat họp không gửi AI nữa (`10662ffd`). Thêm fixture dùng chung `meeting-record.internal.json` + `meet-summary-result.ok.json`, hai bên cùng test (`9d939c27`). Docs (`3f077ffe`).
+- Review lượt sửa: APPROVED, 5 Minor.
+
+Việc để sau (không chặn merge):
+- `@AI` trống trong chat thường/nhóm (kể cả nhóm sau họp) vẫn gửi nội dung rỗng sang ai-service — có từ trước, sửa sẽ đổi hành vi mọi chat ⇒ owner quyết.
+- chat-service `non_null` bỏ trường null khỏi JSON nội bộ (kể cả `assigneeName` trong summary): ai-service đã xử lý, type để optional; đừng viết `=== null`.
+- `compose.yml` / `compose.prod.yml` không bắt buộc `INTERNAL_API_KEY` (chỉ `compose.mini.yml` bắt buộc): thiếu ⇒ mọi tóm tắt `FAILED`.
+- Link trong câu trả lời AI trên Flutter vẫn được trình đọc màn hình đọc là "link".
+- Còn 7 kênh/endpoint chưa có fixture dùng chung (`meet:summarize`, `meet:material` file/screen, `meet:material:result` file, `ai.requests` họp, `ai:response:meeting:*`, `GET /internal/meetings`).
