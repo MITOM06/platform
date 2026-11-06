@@ -5,12 +5,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.platform.chatservice.dto.TokenUsageDayResponse;
 import com.platform.chatservice.exception.BadRequestException;
+import com.platform.chatservice.exception.ErrorCodes;
 import com.platform.chatservice.exception.UnauthorizedException;
 import com.platform.chatservice.model.TokenUsage;
 import com.platform.chatservice.repository.TokenUsageRepository;
@@ -19,7 +21,6 @@ import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -104,30 +105,21 @@ class UsageControllerTest {
         .isInstanceOf(IllegalArgumentException.class);
   }
 
-  /**
-   * BUG: {@code days} (and a custom {@code startDate}) are unbounded. {@code ?days=100000000} makes
-   * the controller build a 100-million-element list in memory for one authenticated request (OOM /
-   * CPU DoS); {@code startDate=0001-01-01} does the same. Fix: clamp, e.g. {@code days =
-   * Math.min(Math.max(days, 1), 366)} and the same span cap for the custom range.
-   */
+  /** {@code ?days=100000000} / {@code startDate=0001-01-01} must not build a huge list (DoS). */
   @Test
-  @Disabled("BUG: unbounded days / date range → huge in-memory list (DoS)")
   void hugeRangeIsCapped() {
     when(repo.findUsageInRange(eq(ME), anyString(), anyString())).thenReturn(List.of());
-    assertThat(controller.getTokenUsage(5_000, null, null)).hasSizeLessThanOrEqualTo(366);
-    assertThat(controller.getTokenUsage(30, "0001-01-01", today.toString()))
-        .hasSizeLessThanOrEqualTo(366);
+    assertThat(controller.getTokenUsage(5_000, null, null)).hasSize(366);
+    assertThat(controller.getTokenUsage(30, "0001-01-01", today.toString())).hasSize(366);
+    // Both modes keep the most recent 366 days (the custom range is anchored at its end date).
+    verify(repo, times(2)).findUsageInRange(ME, today.minusDays(365).toString(), today.toString());
   }
 
-  /**
-   * BUG: a malformed {@code startDate}/{@code endDate} throws {@code DateTimeParseException}, which
-   * is not an {@code IllegalArgumentException}, so the global handler answers an opaque 500 for a
-   * client error. Fix: catch it and throw {@code BadRequestException(INVALID_PARAMETER, …)}.
-   */
   @Test
-  @Disabled("BUG: malformed date param → 500 instead of 400")
   void malformedDateIsBadRequest() {
     assertThatThrownBy(() -> controller.getTokenUsage(30, "yesterday", "today"))
-        .isInstanceOf(BadRequestException.class);
+        .isInstanceOf(BadRequestException.class)
+        .extracting("code")
+        .isEqualTo(ErrorCodes.INVALID_PARAMETER);
   }
 }
