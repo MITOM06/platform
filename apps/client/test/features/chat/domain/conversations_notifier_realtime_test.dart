@@ -23,7 +23,6 @@ import 'package:platform_client/features/auth/domain/auth_state.dart';
 import 'package:platform_client/features/chat/data/chat_repository.dart';
 import 'package:platform_client/features/chat/data/stomp_service.dart';
 import 'package:platform_client/features/chat/domain/active_call_provider.dart';
-import 'package:platform_client/features/chat/domain/chat_misc_providers.dart';
 import 'package:platform_client/features/chat/domain/chat_state.dart';
 import 'package:platform_client/features/chat/domain/conversations_notifier.dart';
 import 'package:platform_client/features/chat/domain/group_call_signaling.dart';
@@ -110,7 +109,9 @@ ConversationModel _conv(String id,
     );
 
 Map<String, dynamic> _newMessage(String convId,
-        {String type = 'NEW_MESSAGE', String sender = 'u2', String content = 'yo'}) =>
+        {String type = 'NEW_MESSAGE',
+        String sender = 'u2',
+        String content = 'yo'}) =>
     {
       'type': type,
       'conversationId': convId,
@@ -305,9 +306,11 @@ void main() {
   group('CONVERSATION_UPDATED', () {
     test('merges into the matching conversation only', () async {
       await h.init(list: [_conv('c1'), _conv('c2')]);
-      h.stomp.convUpdates.add(const ConversationUpdateEvent(
-          json: {'id': 'c2', 'name': 'Renamed', 'participants': [_me, 'u2']},
-          personal: false));
+      h.stomp.convUpdates.add(const ConversationUpdateEvent(json: {
+        'id': 'c2',
+        'name': 'Renamed',
+        'participants': [_me, 'u2']
+      }, personal: false));
       await _settle();
       expect(h.byId('c2').name, 'Renamed');
       expect(h.byId('c1').name, isNull);
@@ -317,8 +320,10 @@ void main() {
         () async {
       await h.init(list: [_conv('c1'), _conv('g1')]);
       h.c.read(selectedConversationIdProvider.notifier).state = 'g1';
-      h.stomp.convUpdates.add(const ConversationUpdateEvent(
-          json: {'id': 'g1', 'participants': ['u2', 'u3']}, personal: false));
+      h.stomp.convUpdates.add(const ConversationUpdateEvent(json: {
+        'id': 'g1',
+        'participants': ['u2', 'u3']
+      }, personal: false));
       await _settle();
       expect(h.list.map((x) => x.id), ['c1']);
       // The open detail pane for the removed conversation is closed.
@@ -329,15 +334,15 @@ void main() {
       await h.init(list: [_conv('c1')]);
       when(() => h.repo.getConversation('g9'))
           .thenAnswer((_) async => _conv('g9', at: DateTime(2025)));
-      h.stomp.convUpdates.add(const ConversationUpdateEvent(
-          json: {
-            'id': 'ai7',
-            'type': 'direct',
-            'participants': [_me, 'ai-bot-000000000000000000000001'],
-          },
-          personal: true));
-      h.stomp.convUpdates.add(const ConversationUpdateEvent(
-          json: {'id': 'g9', 'participants': [_me, 'u2']}, personal: true));
+      h.stomp.convUpdates.add(const ConversationUpdateEvent(json: {
+        'id': 'ai7',
+        'type': 'direct',
+        'participants': [_me, 'ai-bot-000000000000000000000001'],
+      }, personal: true));
+      h.stomp.convUpdates.add(const ConversationUpdateEvent(json: {
+        'id': 'g9',
+        'participants': [_me, 'u2']
+      }, personal: true));
       await _settle();
       expect(h.list.map((x) => x.id), ['g9', 'c1']);
       verifyNever(() => h.repo.getConversation('ai7'));
@@ -396,8 +401,8 @@ void main() {
       await h.init(list: [_conv('c1')]);
       const until = 1893456000000;
       when(() => h.repo.muteConversation('c1', durationSeconds: 900))
-          .thenAnswer((_) async => _conv('c1', muted: true)
-              .copyWith(muteExpiresAt: until));
+          .thenAnswer((_) async =>
+              _conv('c1', muted: true).copyWith(muteExpiresAt: until));
       await h.n.toggleMuteConversation('c1', true, durationSeconds: 900);
       expect(h.byId('c1').isMuted, isTrue);
       expect(h.byId('c1').muteExpiresAt, until);

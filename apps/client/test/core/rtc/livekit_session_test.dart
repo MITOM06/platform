@@ -11,9 +11,8 @@ import 'fake_webrtc_platform.dart';
 /// without a real server.
 
 class _Capture implements ScreenCaptureHost {
-  _Capture({this.supported = true});
   @override
-  final bool supported;
+  final bool supported = true;
   int begins = 0;
   int ends = 0;
 
@@ -68,8 +67,7 @@ void main() {
     expect(native.named('mediaStreamTrackSwitchCamera'), isEmpty);
   });
 
-  test('disconnect releases the capture service even without a room',
-      () async {
+  test('disconnect releases the capture service even without a room', () async {
     await s.disconnect();
     expect(capture.ends, 1);
     expect(s.peers, isEmpty);

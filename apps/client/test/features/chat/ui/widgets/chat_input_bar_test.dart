@@ -2,7 +2,6 @@
 // (send / mic / quick reaction), callbacks, emoji toggle icon. Also covers
 // MentionList (the @mention picker shown above the composer).
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -135,8 +134,7 @@ void main() {
       final overrides =
           await baseOverrides(names: const {kBob: 'Bob', kCarol: 'Carol'});
       await tester.pumpWidget(wrapWidget(
-        MentionList(
-            participantIds: ids, query: query, onSelected: picked.add),
+        MentionList(participantIds: ids, query: query, onSelected: picked.add),
         overrides: overrides,
       ));
       await tester.pumpAndSettle();
