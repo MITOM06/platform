@@ -19,7 +19,9 @@ function mod(name) {
 // Things that only make sense relative to the real clock (upcoming meetings,
 // open reminders, token-usage meter) use REAL_NOW instead.
 const STORY_NOW = Date.parse(process.env.SEED_NOW || '2026-10-26T10:30:00Z');
-const REAL_NOW = Date.now();
+// SEED_REAL_NOW=<ISO> pretends the seed runs at another moment — local testing only
+// (on a real server it would create meetings/messages dated in the future).
+const REAL_NOW = process.env.SEED_REAL_NOW ? Date.parse(process.env.SEED_REAL_NOW) : Date.now();
 
 // Deterministic PRNG (mulberry32) so a re-seed produces the same company.
 function rng(seedText) {
@@ -39,4 +41,7 @@ function rng(seedText) {
   return next;
 }
 
-module.exports = { mod, ROOT, STORY_NOW, REAL_NOW, rng };
+// 'YYYY-MM-DDTHH:mm' in ICT (UTC+7) → epoch ms (November chapter, demo day).
+const ictTime = (at) => Date.parse(`${at}:00+07:00`);
+
+module.exports = { mod, ROOT, STORY_NOW, REAL_NOW, rng, ictTime };

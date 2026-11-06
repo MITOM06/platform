@@ -101,3 +101,61 @@ describe("AiConsumer", () => {
     ).resolves.toBeUndefined();
   });
 });
+
+describe("AiConsumer — trace header extraction", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const otel = require("@opentelemetry/api");
+  afterEach(() => jest.restoreAllMocks());
+
+  it("normalizes AMQP header values (Buffer / number) to strings and drops nulls", async () => {
+    const extract = jest.spyOn(otel.propagation, "extract");
+    const consumer = consumerWith({ handleRequest: jest.fn().mockResolvedValue(undefined) });
+    const msg = {
+      properties: {
+        headers: {
+          traceparent: Buffer.from("00-abc-def-01"),
+          tracestate: "k=v",
+          "x-retry": 2,
+          "x-null": null,
+          "x-undef": undefined,
+        },
+      },
+    } as unknown as ConsumeMessage;
+
+    await consumer.handleAiRequest(payload, msg);
+
+    expect(extract.mock.calls[0][1]).toEqual({
+      traceparent: "00-abc-def-01",
+      tracestate: "k=v",
+      "x-retry": "2",
+    });
+  });
+
+  it("handles a message without properties (pre-tracing publisher)", async () => {
+    const aiService = { handleRequest: jest.fn().mockResolvedValue(undefined) };
+    const consumer = consumerWith(aiService);
+    await expect(
+      consumer.handleAiRequest(payload, {} as ConsumeMessage),
+    ).resolves.toBeUndefined();
+    expect(aiService.handleRequest).toHaveBeenCalledWith(payload);
+  });
+
+  it("rejects a null payload (→ NACK → DLQ) without calling the AI service", async () => {
+    const aiService = { handleRequest: jest.fn() };
+    const consumer = consumerWith(aiService);
+    await expect(
+      consumer.handleAiRequest(null as unknown as AiRequestPayload, amqpMsg),
+    ).rejects.toThrow(TypeError);
+    expect(aiService.handleRequest).not.toHaveBeenCalled();
+  });
+
+  it("logs once the subscription is up", async () => {
+    const createSubscriber = jest.fn().mockResolvedValue(undefined);
+    const consumer = consumerWith({ handleRequest: jest.fn() }, { createSubscriber });
+    const log = jest.spyOn((consumer as unknown as { logger: { log: () => void } }).logger, "log")
+      .mockImplementation(() => undefined);
+    consumer.onApplicationBootstrap();
+    await new Promise((r) => setImmediate(r));
+    expect(log).toHaveBeenCalledWith(`Consuming ${AI_QUEUE}`);
+  });
+});

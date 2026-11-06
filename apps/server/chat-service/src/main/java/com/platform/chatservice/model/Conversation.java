@@ -71,6 +71,9 @@ public class Conversation {
    */
   @Indexed private String departmentId;
 
+  /** The meeting this group was created from (AI summary group); null for ordinary groups. */
+  private String meetingId;
+
   /** Public group channels are discoverable and joinable by any authenticated user. */
   @Builder.Default private boolean publicChannel = false;
 

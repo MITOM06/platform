@@ -11,11 +11,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.platform.chatservice.dto.meeting.MeetingChatCommand;
 import com.platform.chatservice.dto.meeting.MeetingHandCommand;
 import com.platform.chatservice.dto.meeting.MeetingHostCommand;
+import com.platform.chatservice.dto.meeting.MeetingTranscriptCommand;
 import com.platform.chatservice.exception.ApiException;
 import com.platform.chatservice.exception.RateLimitExceededException;
 import com.platform.chatservice.security.UserPrincipal;
@@ -23,6 +25,7 @@ import com.platform.chatservice.service.meeting.MeetingChatService;
 import com.platform.chatservice.service.meeting.MeetingEvents;
 import com.platform.chatservice.service.meeting.MeetingHandService;
 import com.platform.chatservice.service.meeting.MeetingHostService;
+import com.platform.chatservice.service.meeting.MeetingRecordService;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
@@ -43,12 +46,13 @@ class MeetingWsControllerTest {
   @Mock private MeetingChatService chat;
   @Mock private MeetingHostService host;
   @Mock private MeetingEvents events;
+  @Mock private MeetingRecordService records;
   private MeetingWsController controller;
   private final UserPrincipal an = new UserPrincipal("a", "Member", List.of(), List.of("dept-a"));
 
   @BeforeEach
   void setUp() {
-    controller = new MeetingWsController(hands, chat, host, events);
+    controller = new MeetingWsController(hands, chat, host, events, records);
   }
 
   @Test
@@ -69,7 +73,7 @@ class MeetingWsControllerTest {
                 null,
                 Map.of("field", "content", "max", 2000)))
         .when(chat)
-        .send(any(), eq("m1"), anyString(), eq("c-1"));
+        .send(any(), eq("m1"), anyString(), eq("c-1"), isNull());
 
     controller.chat(new MeetingChatCommand("m1", "x", "c-1"), an);
 
@@ -78,10 +82,19 @@ class MeetingWsControllerTest {
   }
 
   @Test
+  void theAttachmentOfTheCommandReachesTheService() {
+    var file = new MeetingChatCommand.Attachment("/api/uploads/x", "a.pdf", 1L, "application/pdf");
+
+    controller.chat(new MeetingChatCommand("m1", "", "c-1", file), an);
+
+    verify(chat).send(any(), eq("m1"), eq(""), eq("c-1"), eq(file));
+  }
+
+  @Test
   void aJunkClientIdIsNeverEchoedBack() {
     doThrow(new ApiException(HttpStatus.FORBIDDEN, "MEETING_FORBIDDEN"))
         .when(chat)
-        .send(any(), any(), any(), any());
+        .send(any(), any(), any(), any(), any());
 
     controller.chat(new MeetingChatCommand("m1", "x", "<script>"), an);
 
@@ -90,7 +103,7 @@ class MeetingWsControllerTest {
 
   @Test
   void aRateLimitedChatIsReportedAsRateLimited() {
-    doThrow(new RateLimitExceededException()).when(chat).send(any(), any(), any(), any());
+    doThrow(new RateLimitExceededException()).when(chat).send(any(), any(), any(), any(), any());
 
     controller.chat(new MeetingChatCommand("m1", "x", null), an);
 
@@ -146,5 +159,13 @@ class MeetingWsControllerTest {
     assertThatThrownBy(() -> controller.hand(new MeetingHandCommand("m1", true), an))
         .isInstanceOf(IllegalStateException.class);
     verify(events, never()).error(any(), any(), any(), any(), any(), any());
+  }
+
+  @Test
+  void transcriptDelegatesAndNeverRepliesMeetError() {
+    controller.transcript(new MeetingTranscriptCommand("m1", "hello", 123L), an);
+
+    verify(records).appendSpeech(an, "m1", "hello", 123L);
+    verifyNoInteractions(events);
   }
 }

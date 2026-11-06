@@ -103,6 +103,7 @@ export interface RoomControls {
   lock: 'LOCK' | 'UNLOCK'
   waitingRoom: 'WAITING_ROOM_ON' | 'WAITING_ROOM_OFF'
   screenShare: 'ATTENDEE_SCREEN_SHARE_ON' | 'ATTENDEE_SCREEN_SHARE_OFF'
+  aiNotes: 'AI_NOTES_ON' | 'AI_NOTES_OFF'
 }
 
 /** Room-wide host controls (the command each switch would send now), or null for attendees. */
@@ -118,6 +119,7 @@ export function roomControls(
     lock: settings.locked ? 'UNLOCK' : 'LOCK',
     waitingRoom: settings.waitingRoom ? 'WAITING_ROOM_OFF' : 'WAITING_ROOM_ON',
     screenShare: settings.allowAttendeeScreenShare ? 'ATTENDEE_SCREEN_SHARE_OFF' : 'ATTENDEE_SCREEN_SHARE_ON',
+    aiNotes: settings.aiNotes ? 'AI_NOTES_OFF' : 'AI_NOTES_ON',
   }
 }
 

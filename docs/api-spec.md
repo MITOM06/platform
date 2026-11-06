@@ -564,8 +564,11 @@ Response 200: { "success": true }
   "status": "SCHEDULED",
   "settings": {
     "waitingRoom": true, "muteOnEntry": false, "allowAttendeeScreenShare": true,
-    "attendeesCanEditNotes": true, "locked": false
+    "attendeesCanEditNotes": true, "locked": false, "aiNotes": false
   },
+  "aiNotesEverEnabled": false,
+  "summaryState": "DONE",
+  "groupConversationId": "670f1c2ab9e4d21f0c3a9e99",
   "attendance": [
     { "userId": "64b0…01", "displayName": "Lan Nguyen", "role": "host",
       "joinedAt": "2026-10-08T02:00:05Z", "leftAt": "2026-10-08T02:40:00Z" }
@@ -588,6 +591,18 @@ Response 200: { "success": true }
   (raw ids — for matching only, never displayed).
 - `attendance[]` is one row per session (rejoining = new row); `leftAt` absent = still inside;
   `role` ∈ `host | cohost | attendee` at join time.
+- `settings.aiNotes` (boolean, default `false`): AI meeting notes on. Clients treat a missing
+  `aiNotes` as `false`. In `PATCH`, a null `aiNotes` keeps the stored value.
+- `aiNotesEverEnabled` (boolean): latched `true` once AI notes were on while the meeting was LIVE —
+  set (atomically, only while LIVE and `aiNotes` on) when the meeting goes LIVE with `aiNotes` on,
+  when a host/co-host sends `AI_NOTES_ON`, or when a `PATCH` turns `aiNotes` on while LIVE. Never
+  reset by turning `aiNotes` off.
+- `summaryState` (`PENDING | DONE | EMPTY | FAILED`, absent = never asked): state of the AI summary.
+  A `PENDING` summary older than 10 min is flipped to `FAILED` by a sweep (which also sends `meet.summary.ready` with `FAILED` to host and co-hosts). `groupConversationId`:
+  the group chat created for the meeting (absent when none) — only open it when `GET .../summary`
+  says `inGroup`.
+- `MeetingSummary` = `{ overview, keyPoints[], decisions[], actionItems:[{text, assigneeName|null}],
+  fromMaterials[], language }`.
 - `displayName` / `avatarUrl` absent when unknown ⇒ show a generic localized label, never the id.
   `title` absent ⇒ the client shows its own localized default.
 
@@ -613,6 +628,9 @@ Response 200: { "success": true }
 | `GET /api/meetings/{id}/notes/private` | records access ¹ (always the caller's own note) | 200 `MeetingNote` | 403 · 404 |
 | `PUT /api/meetings/{id}/notes/private` | records access ¹ | 200 `MeetingNote` | 403 · 404 · 400 · 409 as above |
 | `GET /api/meetings/{id}/hands` | room access ² | 200 `{ "hands": [Hand…] }` | 403 `MEETING_FORBIDDEN` · 403 `MEETING_REMOVED` · 404 · 409 `MEETING_ENDED` |
+| `GET /api/meetings/{id}/summary` | records access ¹ | 200 `{ "state": null\|"PENDING"\|"DONE"\|"EMPTY"\|"FAILED", "summary"?: MeetingSummary, "createdAt"?, "groupConversationId"?, "inGroup": bool }` — `state` is the meeting's current state (`null` = AI notes were never on ⇒ `inGroup:false`; an ENDED meeting that had AI notes but never got a summary request reports `"FAILED"`, so the host can regenerate); `summary`/`createdAt` = the newest successful summary (may be older than a later `FAILED`/`PENDING`); `groupConversationId` only when `inGroup` (you are a member of the meeting's group chat) | 403 `MEETING_FORBIDDEN` · 403 `MEETING_REMOVED` · 404 |
+| `POST /api/meetings/{id}/summary/regenerate` | host, co-host | **202** `{ "state": "PENDING" }` — a new summary is requested; `meet.summary.ready` follows | 403 `MEETING_FORBIDDEN` (also attendees) · 403 `MEETING_REMOVED` · 404 · **409 `MEETING_SUMMARY_UNAVAILABLE`** (not ENDED, or AI notes never on; a meeting with no summary state yet is accepted) · **409 `MEETING_SUMMARY_PENDING`** (one is already being generated) |
+| `POST /api/meetings/{id}/screen-frames` | room access ², and host / co-host or `settings.allowAttendeeScreenShare` | multipart `frame` (JPEG or PNG, ≤ 2 MB, magic bytes checked) + optional `ts` (epoch ms, clamped to the last 60 s). **202** `{ "accepted": true }` — queued for the AI record. **204** (client stays silent) when `settings.aiNotes` is off, the caller sent a frame < 15 s ago (Redis `meet:screen:throttle:{meetingId}:{userId}`), Redis is unavailable, or the meeting already took `meetings.ai.screen-cap` (default 60) frames (the first one over the cap writes one SCREEN line "Đã đạt giới hạn ảnh màn hình AI đọc.") | 400 `MEETING_INVALID` `params.field:"frame"` (missing / empty / > 2 MB / not JPEG-PNG by magic bytes) · 403 `MEETING_FORBIDDEN` (waiting, or attendee while `allowAttendeeScreenShare=false`) · 403 `MEETING_REMOVED` · 404 · 409 `MEETING_ENDED` |
 
 ¹ **Records access** (also after the meeting ended): host, co-host, invited / department member,
 has an `attendance` row, or admitted — unless removed (403 `MEETING_REMOVED`).
@@ -622,7 +640,7 @@ Someone who once entered the room is remembered as admitted, so turning the wait
 locking the room later never shuts them out (`LOCK` only stops newcomers).
 
 `MEETING_INVALID` carries `params.field` ∈ `title | description | inviteeIds | departmentId |
-scheduledStart | scheduledEnd | settings | scope | size | content | version` and `params.max` when a limit applies, e.g.
+scheduledStart | scheduledEnd | settings | scope | size | content | attachment | frame | version` and `params.max` when a limit applies, e.g.
 `{"error":"Bad Request","code":"MEETING_INVALID","statusCode":400,"params":{"field":"title","max":120}}`.
 A body or query value that cannot be parsed is also 400 `MEETING_INVALID` (never 500), with
 `params.field` when the field is known — notably a datetime **without an offset**
@@ -641,7 +659,7 @@ gives `MEETING_INVALID` without `params`. (Outside `/api/meetings` the same fail
 - `scheduledStart` absent ⇒ instant meeting; present ⇒ not earlier than now − 5 min.
   `scheduledEnd` only with a start, `> scheduledStart` and `≤ scheduledStart + 24h`.
 - `settings` partial; defaults `waitingRoom=true, muteOnEntry=false, allowAttendeeScreenShare=true,
-  attendeesCanEditNotes=true, locked=false`. `muteOnEntry` is a client hint only.
+  attendeesCanEditNotes=true, locked=false, aiNotes=false`. `muteOnEntry` is a client hint only.
 
 **`UpdateMeetingRequest`** — same fields, all optional; absent = unchanged; `inviteeIds` replaces
 the list (newcomers get `meet.invited`); `settings` merges field by field (a change emits
@@ -677,13 +695,19 @@ meeting 48h past its start (or creation) is retired to ENDED by the sweep.
   `meet.denied` / `meet.ended`. Calling `join` again while waiting stays `waiting` (no duplicate);
   leaving the waiting page ⇒ `DELETE /lobby`.
 
-**`MeetingMessage`** (in-meeting chat — text only, no files, no system lines)
+**`MeetingMessage`** (in-meeting chat — text and/or one file, no system lines)
 
 ```json
 { "id": "6710aa01b9e4d21f0c3a9e55",
   "sender": { "userId": "64b0…03", "displayName": "Hoa Le", "avatarUrl": "/api/uploads/…" },
-  "content": "Slide 3 có số liệu mới", "createdAt": "2026-10-08T02:05:11.120Z" }
+  "content": "Slide 3 có số liệu mới", "createdAt": "2026-10-08T02:05:11.120Z",
+  "attachment": { "url": "/api/uploads/9f1c…", "name": "plan.pdf", "size": 48213, "contentType": "application/pdf" } }
 ```
+
+`attachment` is absent on text-only lines; `content` may be `""` when a file is attached. `GET
+/api/meetings/{id}/messages` returns it too. `size` and `contentType` are read from the stored upload
+(never the client's values). Everyone who can read the meeting's records (`MeetingAccess.canReadRecords`)
+may `GET` that `/api/uploads/{id}` (GridFS `metadata.refs` entry `{t:"m", id: meetingId}`).
 
 History: `before` = `id` of the oldest line the client already has (absent = newest page; unknown /
 other meeting's id ⇒ empty page); `size` default 50, max 100.
@@ -725,8 +749,25 @@ host/co-host whose STOMP reconnected calls `GET /lobby` to catch up on a missed 
 | Destination | Payload | Notes |
 |---|---|---|
 | `/app/meet.hand` | `{ "meetingId": "m1", "raised": true }` | Your own hand only. Raising again keeps your place (no event); lowering when not raised is a no-op. Room access ² |
-| `/app/meet.chat` | `{ "meetingId": "m1", "content": "…", "clientId": "c-7f3a" }` | `content` trimmed, 1..2000. Rate limit shared with normal chat (10 lines / 5 s). `clientId` optional, `[A-Za-z0-9_-]{1,64}` (otherwise dropped), echoed in `meet.chat` / `meet.error`. A valid `clientId` is stored with the line and makes the send **idempotent** per (meeting, sender, `clientId`) — see below |
+| `/app/meet.chat` | `{ "meetingId": "m1", "content": "…", "clientId": "c-7f3a", "attachment": { "url": "/api/uploads/<id>", "name": "plan.pdf" } }` | `content` trimmed, 1..2000 — may be empty when `attachment` is present. `attachment` optional: `url` must be exactly `/api/uploads/{uuid\|24-hex}` (no host / query), `name` 1..200 after trim, the upload must exist and be **uploaded by the sender**, else `meet.error MEETING_INVALID {field:"attachment"}`; `size` / `contentType` sent by the client are ignored. Rate limit shared with normal chat (10 lines / 5 s). `clientId` optional, `[A-Za-z0-9_-]{1,64}` (otherwise dropped), echoed in `meet.chat` / `meet.error`. A valid `clientId` is stored with the line and makes the send **idempotent** per (meeting, sender, `clientId`) — see below |
 | `/app/meet.host` | `{ "meetingId": "m1", "action": "MUTE_MIC", "targetId": "64b0…03" }` | Host / co-host. An attendee's command is **ignored** (logged, no event, no error). `targetId` required for `MUTE_MIC`, `REMOVE`, `LOWER_HAND`, `MAKE_COHOST`, `REVOKE_COHOST` |
+| `/app/meet.transcript` | `{ "meetingId": "m1", "text": "…", "ts": 1730800000000 }` | One line of the sender's own speech (client speech-to-text). **Never answered with `meet.error`** (high frequency): dropped silently unless the sender is in the room (entitled **and** has an open attendance row), `settings.aiNotes` is true and `text` is non-blank. `text` trimmed and cut to 500 chars; `ts` (epoch ms) clamped into [server now − 60 s, server now]. Per-user limit ~3 lines/s (burst 6); over the limit is dropped silently. Stored in Mongo `meeting_records` `{meetingId, kind: SPEECH\|FILE\|SCREEN, userId, displayName (null if unknown), text, ts, createdAt}`, index (meetingId, ts) |
+
+**Files and AI notes (Redis, service to service).** When `settings.aiNotes` is on at send time, a line with
+a file publishes `meet:material` `{kind: "file", meetingId, messageId, uploadId, fileName, mimeType, userId}` (chat-service →
+ai-service; at most `meetings.ai.file-cap`, default 20, files per meeting — the first file over the cap adds one
+record line "Đã đạt giới hạn file AI đọc."). ai-service answers on `meet:material:result` `{meetingId,
+messageId, fileName, kind: "file"|"screen", status: "ok"|"unsupported"|"failed", text?}` (`kind` echoes the request, absent = file; chat-service routes `screen` results — a frame id in `messageId` — to a `SCREEN` record, see screen frames); chat-service writes one `FILE` record
+(text capped at 6000 chars, or "Không đọc được file này.") attributed to the sender, deduplicated by
+`messageId` (`meet:material:done:{messageId}`, 1 h). Clients see none of this.
+
+**Shared contract fixtures.** `apps/server/contracts/` holds example payloads that tests on BOTH sides
+assert against (chat-service JUnit loads them by `Path.of("..", "contracts", …)`, ai-service Jest by
+`__dirname/../../../contracts`): `meet-material-result.screen.json` (`meet:material:result`, kind screen),
+`meet-summary-result.ok.json` (`meet:summary:result` ok + summary) and `meeting-record.internal.json`
+(`GET /internal/meetings/{id}/record`, as chat-service writes it: Jackson `non_null`, so a null field —
+including a null inside the stored summary — is **omitted**, never sent as `null`; instants are ISO-8601
+strings). Change a fixture only together with both sides.
 
 **Idempotent chat sends.** Re-sending `/app/meet.chat` with a `clientId` you already used in that
 meeting (a retry after a slow echo) stores nothing, is not counted against the rate limit, and
@@ -748,6 +789,7 @@ Host `action`s:
 | `LOCK` / `UNLOCK` | host, co-host | `settings.locked` | `meet.settings` (when it changed) |
 | `WAITING_ROOM_ON` / `WAITING_ROOM_OFF` | host, co-host | `settings.waitingRoom` | `meet.settings` (when it changed) |
 | `ATTENDEE_SCREEN_SHARE_ON` / `_OFF` | host, co-host | `settings.allowAttendeeScreenShare`; every attendee in the room is updated in LiveKit (OFF: camera + microphone only, a live share is stopped; ON: every source) | `meet.settings` (when it changed) |
+| `AI_NOTES_ON` / `AI_NOTES_OFF` | host, co-host (no `targetId`) | `settings.aiNotes`; ON also latches `aiNotesEverEnabled` while LIVE | `meet.settings` (when it changed; carries `aiNotes`) |
 | `MAKE_COHOST` | **host** | target must be in the room and not removed (else `MEETING_INVALID {field:"targetId"}`) | `meet.roster`; `meet.lobby` to the new co-host |
 | `REVOKE_COHOST` | **host** | target stays admitted | `meet.roster` |
 
@@ -758,6 +800,11 @@ it actually changes (one `settings.<field>` each), so it never reverts a concurr
 `WAITING_ROOM_*` / `ATTENDEE_SCREEN_SHARE_*` on another switch. Someone removed who reconnects to LiveKit with
 a still-valid token is kicked again on arrival and gets no attendance row.
 
+**AI notes capture (client rule).** Web and Android capture speech only while: in the room,
+`settings.aiNotes` is on, the user's **own** mic is on, and not paused ("pause my speech"). Each
+final STT result goes out as `/app/meet.transcript`. No Web Speech API (e.g. Firefox) or permission
+denied ⇒ no retry; the item shows a disabled "unsupported" label.
+
 ### STOMP — server events
 
 Every payload is `MeetingEventDto` `{event, meetingId, …}`; absent fields are omitted.
@@ -765,9 +812,10 @@ Every payload is `MeetingEventDto` `{event, meetingId, …}`; absent fields are 
 | Destination | `event` | Payload | When |
 |---|---|---|---|
 | `/topic/meeting/{id}` | `meet.roster` | `{participants:[{userId, displayName, role, joinedAt}]}` — one row per person inside; `role` is the **current** role (`attendance[].role` stays the role at join time) | LiveKit `participant_joined` / `participant_left`, `MAKE_COHOST` / `REVOKE_COHOST` |
-| `/topic/meeting/{id}` | `meet.settings` | `{settings:{…5 fields…}}` | `PATCH` or a host command changed settings |
+| `/topic/meeting/{id}` | `meet.settings` | `{settings:{…6 fields, incl. `aiNotes`…}}` | `PATCH` or a host command changed settings |
 | `/topic/meeting/{id}` | `meet.hands` | `{hands:[Hand…]}` in raise order (`[]` = none) | raise / lower / lower all / leaving the room / removed |
 | `/topic/meeting/{id}` | `meet.chat` | `{clientId?, message: MeetingMessage}` | `/app/meet.chat` succeeded |
+| `/topic/meeting/{id}` | `meet.ai` | `{state: "thinking"\|"error", requesterId, code?}` — `requesterId` is only compared with your own id, never shown; `code` (`AI_UNAVAILABLE`, `AI_QUOTA_EXCEEDED`, `AI_RATE_LIMITED`, `AI_EMPTY`, `AI_ERROR`, …) only on `error`; clients map quota / rate-limit to their own localized line and keep an `error` whose `requesterId` is missing (it still clears the oldest pending entry). In the meeting chat `/new` and `/memory` are ordinary question text and ai-service system notices (e.g. context-compacted, `trace.model == "system"`) are dropped, never a chat line | a `/app/meet.chat` line mentioning `@AI` / `@ponai` (`(?i)@(AI\|ponai)\b`): `thinking` right after its `meet.chat`, `error` when the request could not be handed to ai-service or the AI failed / answered nothing. The answer is a normal `meet.chat` whose `message.sender.userId` is the AI bot (`ai-bot-000000000000000000000001`, display name `PON AI`) — not streamed, not pushed. The ai.requests payload for it has `conversationId: "meeting:{id}"` and `meetingId` (absent elsewhere) |
 | `/topic/meeting/{id}` | `meet.notes.updated` | `{version, updatedBy:{userId, displayName?}}` — never the text (GET it when not editing) | `PUT /notes/shared` succeeded while the meeting is not ENDED (private notes and edits after the end announce nothing) |
 | `/topic/meeting/{id}` | `meet.ended` | — | `POST /end`, LiveKit `room_finished`, `DELETE` (cancel) |
 | `/user/queue/meeting` | `meet.lobby` | `{waiting:[{userId, displayName}]}` (by name; nameless last) | to host + co-hosts when the lobby changes, to a host/co-host on `join` (empty list ⇒ clear the badge), and to a newly appointed co-host |
@@ -780,6 +828,7 @@ Every payload is `MeetingEventDto` `{event, meetingId, …}`; absent fields are 
 | `/user/queue/meeting` | `meet.invited` | `{code, title, hostId, hostName, scheduledStart}` | create / `PATCH` added you (named invitees only) |
 | `/user/queue/meeting` | `meet.starting` | `{code, title, scheduledStart}` | 10 min before `scheduledStart` — host, co-hosts, invitees, department members, minus removed |
 | `/user/queue/meeting` | `meet.cancelled` | `{code, title, scheduledStart}` (`title` / `scheduledStart` absent when the meeting has none) | host cancelled — same recipients as `meet.starting` |
+| `/user/queue/meeting` | `meet.summary.ready` | `{summaryState: "DONE"\|"EMPTY"\|"FAILED", groupConversationId?}` — the key is `event` (not `type`); `GET /summary` for the content | the AI summary finished or failed (also sent by the stale-PENDING sweep, to host and co-hosts), to the people who may read it |
 
 Subscribing to `/topic/meeting/{id}` requires being allowed straight into the room (host, co-host,
 invited / department member / admitted); waiting, removed, locked-out people and ENDED meetings get
@@ -794,9 +843,20 @@ known action (the client's string is never echoed); `clientId` = the refused cha
 line's. (The field is `errorCode` because `code` is the meeting code.) Example:
 `{"event":"meet.error","meetingId":"m1","clientId":"c-7f3a","errorCode":"MEETING_INVALID","params":{"field":"content","max":2000}}`.
 
-New error codes: `MEETING_NOTE_CONFLICT` (409, with `latest`), `MEETING_NOTES_READ_ONLY` (403 —
+New error codes: `MEETING_SUMMARY_UNAVAILABLE` (409, regenerate on a meeting that is not ENDED or never had AI notes), `MEETING_SUMMARY_PENDING` (409, a summary is already being generated), `MEETING_NOTE_CONFLICT` (409, with `latest`), `MEETING_NOTES_READ_ONLY` (403 —
 an attendee editing the shared note while `attendeesCanEditNotes=false`), `RATE_LIMITED` (in
 `meet.error`; also the `code` of every chat-service REST 429, which carries `Retry-After`).
+
+**Service-to-service only** (not for clients): `GET /internal/meetings/{id}/record` (header
+`X-Internal-Key`; 401 on a missing/wrong key or unconfigured server, 404 for no meeting/no access —
+never 403) returns the capped transcript + chat that ai-service summarizes.
+The view also carries `summary` (the newest AI summary map, omitted when none).
+Each `records[]` item carries `fileName` (the file's name for `FILE` records, else null) and each
+`chat[]` item `attachmentName` (the name of the file on that line, else null).
+`GET /internal/meetings?userId=&q=&limit=` (same key and 401) lists the `ENDED` meetings with AI
+notes that `userId` may read, newest first: `[{id, title, code, startedAt, endedAt, summaryState}]`
+(never a user id). `limit` defaults to 20, max 50; `q` is a case-insensitive literal title match;
+a blank or missing `userId` is `200 []`.
 
 ### Web client (MT4–MT5) — how `apps/web` uses this contract
 
@@ -900,7 +960,7 @@ only via `/app/meet.host`, the notes switch via `PATCH`). Differences:
   `{ "type": "CLAIMS_CHANGED" }`.
 - **Meeting room topic:** `/topic/meeting/{meetingId}` — only for people allowed straight into
   the room (see 📅 Meetings); silent for people removed from the meeting. Events: `meet.roster`,
-  `meet.settings`, `meet.ended`, `meet.hands`, `meet.chat`, `meet.notes.updated`
+  `meet.settings`, `meet.ended`, `meet.hands`, `meet.chat`, `meet.ai`, `meet.notes.updated`
 - **Personal meeting queue:** `/user/queue/meeting` — `meet.lobby`, `meet.admitted`,
   `meet.denied`, `meet.ended` (lobby), `meet.invited`, `meet.starting`, `meet.cancelled`,
   `meet.removed`, `meet.muted`, `meet.error`

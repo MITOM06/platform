@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { expectsAiReply } from '@/lib/chat/ai-trigger'
 import { stompService } from '@/lib/stomp/client'
 import { chatService } from '@/lib/api/chat'
 import { useMessages } from '@/lib/hooks/use-messages'
@@ -119,17 +120,13 @@ export default function ConversationPage({ params }: Props) {
 
   const handleSend = async (content: string, type: MessageType = 'text') => {
     try {
-      // In AI conversations, prepend @AI so the server triggers the AI pipeline
-      const finalContent = isAI && type === 'text' && !content.match(/^@(AI|ponai)\b/i)
-        ? `@AI ${content}`
-        : content
       // Show the "thinking" bubble immediately when a reply from the AI is
       // expected — either a dedicated AI conversation or an @AI mention in a
       // group — so the indicator appears before the first stream chunk (parity
       // with Flutter, which creates the placeholder on send).
-      const triggersAi = type === 'text' && (isAI || /@(?:AI|ponai)\b/i.test(content))
+      const triggersAi = expectsAiReply(conversation, content, type)
       if (triggersAi) startLocalAiStream()
-      const sent = await chatService.sendMessage(id, finalContent, type, replyingTo?.id)
+      const sent = await chatService.sendMessage(id, content, type, replyingTo?.id)
       appendMessage(sent)
       setReplyingTo(null)
     } catch (err) {

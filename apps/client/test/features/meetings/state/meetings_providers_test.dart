@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,6 +23,10 @@ Meeting meeting(String id, {int day = 8}) => Meeting(
     createdAt: DateTime.utc(2026, 10, 7));
 
 class _FakeApi implements MeetingsApi {
+  @override
+  Future<bool> uploadScreenFrame(String id, Uint8List jpeg, {int? ts}) async =>
+      false;
+
   final listCalls = <(MeetingListScope, String?)>[];
   final pages = <String?, MeetingPage>{};
   Object? createError;

@@ -52,4 +52,15 @@ void main() {
     expect(find.text('Not allowed'), findsNothing);
     expect(find.text('Connect'), findsOneWidget);
   });
+
+  testWidgets('a connector without a known logo shows its name monogram', (tester) async {
+    // `/catalog` omitted `icon` → CatalogEntry defaults it to '🔌'; the badge
+    // monogram must come from the display name, not the icon emoji.
+    await _pump(
+      tester,
+      CatalogEntry.fromJson(const {'id': 'acme', 'name': 'Acme', 'available': true}),
+    );
+    expect(tester.takeException(), isNull);
+    expect(find.text('A'), findsOneWidget);
+  });
 }

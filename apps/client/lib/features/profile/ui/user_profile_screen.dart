@@ -162,24 +162,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     ),
                   ),
                   // When the profile owner has blocked the viewer, show only
-                  // minimal info: avatar, cover, name, email. Hide bio, friend
-                  // count, and action buttons per the no-raw-system-data rule.
+                  // minimal info: avatar, cover, name (the server drops the
+                  // email). Hide bio, friend count, and action buttons.
                   if (user.isBlockedByOwner) ...[
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Text(
-                        user.email,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.6),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
                     const SizedBox(height: 16),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 32),

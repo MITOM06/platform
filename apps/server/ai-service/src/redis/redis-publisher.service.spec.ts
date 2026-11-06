@@ -41,3 +41,35 @@ describe('RedisPublisherService.publish', () => {
     expect(client.publish).toHaveBeenCalledWith('ai:response:conv-9', expect.stringContaining('"conversationId":"conv-9"'));
   });
 });
+
+describe('RedisPublisherService — trace propagation', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const otel = require('@opentelemetry/api');
+  afterEach(() => jest.restoreAllMocks());
+
+  it('adds _traceparent/_tracestate when a span is active', async () => {
+    jest.spyOn(otel.propagation, 'inject').mockImplementation((...args: unknown[]) => {
+      const carrier = args[1] as Record<string, string>;
+      carrier['traceparent'] = '00-t-s-01';
+      carrier['tracestate'] = 'a=b';
+    });
+    const { service, sent } = make();
+    await service.publishToChannel('kb:status:d1', { type: 'KB_DONE' });
+    expect(sent()).toEqual([{ type: 'KB_DONE', _traceparent: '00-t-s-01', _tracestate: 'a=b' }]);
+  });
+
+  it('adds only the fields the carrier has', async () => {
+    jest.spyOn(otel.propagation, 'inject').mockImplementation((...args: unknown[]) => {
+      (args[1] as Record<string, string>)['baggage'] = 'x';
+    });
+    const { service, sent } = make();
+    await service.publishToChannel('ch', { a: 1 });
+    expect(sent()).toEqual([{ a: 1 }]);
+  });
+
+  it('publishToChannel publishes on the exact channel given', async () => {
+    const { service, client } = make();
+    await service.publishToChannel('meet:summary:result', { ok: true });
+    expect(client.publish).toHaveBeenCalledWith('meet:summary:result', '{"ok":true}');
+  });
+});

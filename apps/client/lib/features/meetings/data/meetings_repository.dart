@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -7,6 +9,7 @@ import '../../auth/domain/auth_provider.dart';
 import '../domain/json_read.dart';
 import '../domain/meeting_models.dart';
 import '../domain/meeting_room_models.dart';
+import '../domain/meeting_summary.dart';
 
 /// A 2xx body that does not match the contract. Mapped to the generic error
 /// message — never shown raw.
@@ -48,6 +51,17 @@ abstract interface class MeetingsApi {
   Future<MeetingNote> putNote(String id, NoteScope scope,
       {required String content, required int version});
   Future<List<MeetingHand>> hands(String id);
+
+  /// Current AI-summary state + the newest successful summary.
+  Future<MeetingSummaryResponse> summary(String id);
+
+  /// Host/co-host. 202 ⇒ PENDING; 409 MEETING_SUMMARY_PENDING / _UNAVAILABLE.
+  Future<void> regenerateSummary(String id);
+
+  /// A shared-screen frame for the AI record (JPEG ≤ 2 MB). true = accepted
+  /// (202); 204 / 429 / any other status = false. Never throws on a status
+  /// (no logout flow); network errors still throw.
+  Future<bool> uploadScreenFrame(String id, Uint8List jpeg, {int? ts});
 }
 
 class MeetingsRepository implements MeetingsApi {
@@ -157,6 +171,35 @@ class MeetingsRepository implements MeetingsApi {
   Future<List<MeetingHand>> hands(String id) async {
     final res = await _dio.get<Object?>('${_base(id)}/hands');
     return rowsOf(asJson(res.data)?['hands'], MeetingHand.fromJson);
+  }
+
+  @override
+  Future<MeetingSummaryResponse> summary(String id) async =>
+      MeetingSummaryResponse.fromJson(
+          (await _dio.get<Object?>('${_base(id)}/summary')).data) ??
+      (throw const MeetingFormatException('summary'));
+
+  @override
+  Future<void> regenerateSummary(String id) async {
+    await _dio.post<Object?>('${_base(id)}/summary/regenerate');
+  }
+
+  @override
+  Future<bool> uploadScreenFrame(String id, Uint8List jpeg, {int? ts}) async {
+    final res = await _dio.post<Object?>(
+      '${_base(id)}/screen-frames',
+      data: FormData.fromMap({
+        'frame': MultipartFile.fromBytes(jpeg,
+            filename: 'screen.jpg', contentType: DioMediaType('image', 'jpeg')),
+        if (ts != null) 'ts': ts.toString(),
+      }),
+      options: Options(
+        validateStatus: (_) => true,
+        sendTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+      ),
+    );
+    return res.statusCode == 202;
   }
 }
 

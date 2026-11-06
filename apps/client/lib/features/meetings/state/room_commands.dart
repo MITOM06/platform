@@ -6,6 +6,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../domain/meeting_attachment.dart';
 import '../domain/meeting_errors.dart';
 import '../domain/meeting_models.dart';
 import '../domain/meeting_room_models.dart';
@@ -60,9 +61,10 @@ mixin RoomCommands on RoomMedia {
     }
   }
 
-  String? sendChat(String content) => store.value.phase == RoomPhase.inRoom
-      ? roomChat.send(content, MeetingLimits.chat)
-      : null;
+  String? sendChat(String content, {MeetingAttachment? attachment}) =>
+      store.value.phase == RoomPhase.inRoom
+          ? roomChat.send(content, MeetingLimits.chat, attachment: attachment)
+          : null;
 
   void retryChat(String clientId) => roomChat.retry(clientId);
 

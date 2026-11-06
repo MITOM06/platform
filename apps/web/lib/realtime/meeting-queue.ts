@@ -107,6 +107,11 @@ export function handleMeetingQueueEvent(e: MeetingEvent, ctx: MeetingQueueContex
       applyMeetingEnded(qc, e.meetingId, ctx.now().toISOString(), false)
       forward(e, ctx)
       return
+    case 'meet.summary.ready':
+      // Content comes from GET /summary; the meeting row carries summaryState / group id.
+      void qc.invalidateQueries({ queryKey: meetingKeys.summary(e.meetingId) })
+      void qc.invalidateQueries({ queryKey: meetingKeys.detail(e.meetingId) })
+      return
     case 'meet.lobby':
       qc.setQueryData(meetingKeys.lobby(e.meetingId), e.waiting)
       forward(e, ctx)

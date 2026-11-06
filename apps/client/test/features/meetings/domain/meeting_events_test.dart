@@ -8,6 +8,19 @@ import 'package:platform_client/features/meetings/domain/meeting_room_models.dar
 MeetingEvent? p(Map<String, dynamic> m) => parseMeetingEvent(jsonEncode(m));
 
 void main() {
+  test('meet.ai needs a state and a requester; code is read for this event', () {
+    final e = p({'event': 'meet.ai', 'meetingId': 'm1', 'state': 'error', 'requesterId': 'u1', 'code': 'AI_UNAVAILABLE'}) as AiEvent;
+    expect((e.state, e.requesterId, e.code), (AiState.error, 'u1', 'AI_UNAVAILABLE'));
+    final t = p({'event': 'meet.ai', 'meetingId': 'm1', 'state': 'thinking', 'requesterId': 'u1', 'code': 'ABC'}) as AiEvent;
+    expect(t.state, AiState.thinking);
+    expect(p({'event': 'meet.ai', 'meetingId': 'm1', 'state': 'done', 'requesterId': 'u1'}), isNull);
+    expect(p({'event': 'meet.ai', 'meetingId': 'm1', 'state': 'thinking'}), isNull);
+    // An error without a requester is kept: it must still clear a pending entry.
+    final anon = p({'event': 'meet.ai', 'meetingId': 'm1', 'state': 'error', 'code': 'AI_EMPTY'}) as AiEvent;
+    expect((anon.state, anon.requesterId, anon.code), (AiState.error, '', 'AI_EMPTY'));
+    expect(p({'event': 'meet.ai', 'meetingId': 'm1', 'state': 'thinking', 'requesterId': ''}), isNull);
+  });
+
   test('roster keeps good rows, drops broken ones, defaults unknown roles to attendee', () {
     final e = p({'event': 'meet.roster', 'meetingId': 'm1', 'participants': [
       {'userId': 'a', 'displayName': 'An', 'role': 'cohost', 'joinedAt': '2026-10-08T02:00:00Z'},
@@ -18,7 +31,16 @@ void main() {
         [('a', MeetingRoomRole.cohost), ('b', MeetingRoomRole.attendee)]);
   });
 
-  test('settings need all five booleans', () {
+  test('meet.settings carries aiNotes; absent means false', () {
+    final base = {'waitingRoom': false, 'muteOnEntry': true, 'allowAttendeeScreenShare': false,
+        'attendeesCanEditNotes': true, 'locked': true};
+    final on = p({'event': 'meet.settings', 'meetingId': 'm1', 'settings': {...base, 'aiNotes': true}});
+    expect((on as SettingsEvent).settings.aiNotes, isTrue);
+    final off = p({'event': 'meet.settings', 'meetingId': 'm1', 'settings': base});
+    expect((off as SettingsEvent).settings.aiNotes, isFalse);
+  });
+
+  test('settings need the five original booleans', () {
     expect(p({'event': 'meet.settings', 'meetingId': 'm1', 'settings': {'locked': true}}), isNull);
     final ok = p({'event': 'meet.settings', 'meetingId': 'm1', 'settings': {'waitingRoom': false,
         'muteOnEntry': true, 'allowAttendeeScreenShare': false, 'attendeesCanEditNotes': true, 'locked': true}});
@@ -37,6 +59,14 @@ void main() {
     expect((e as ChatEvent).clientId, 'c-abc');
     expect(e.message.content, 'hi');
     expect(p({'event': 'meet.chat', 'meetingId': 'm1', 'message': {'id': 'x'}}), isNull);
+  });
+
+  test('meet.chat parses the attachment, dropping an invalid one', () {
+    Object? att(Object? a) => (p({'event': 'meet.chat', 'meetingId': 'm1', 'message': {
+          'id': 'x', 'sender': {'userId': 'u'}, 'content': '', 'createdAt': '2026-10-08T02:05:11.120Z',
+          'attachment': a}}) as ChatEvent).message.attachment?.url;
+    expect(att({'url': '/api/uploads/abc', 'name': 'a.pdf', 'size': 3}), '/api/uploads/abc');
+    expect(att({'url': 'https://x/a', 'name': 'a.pdf'}), isNull);
   });
 
   test('meet.error keeps only known host actions and scalar params', () {
@@ -62,6 +92,16 @@ void main() {
     expect((p({'event': 'meet.muted', 'meetingId': 'm1'}) as MutedEvent).actor, isNull);
     expect((p({'event': 'meet.notes.updated', 'meetingId': 'm1', 'version': 7,
       'updatedBy': {'userId': 'u2', 'displayName': 'Minh'}}) as NotesUpdatedEvent).version, 7);
+  });
+
+  test('meet.summary.ready carries state and group; PENDING / unknown state is junk', () {
+    final e = p({'event': 'meet.summary.ready', 'meetingId': 'm1', 'summaryState': 'DONE', 'groupConversationId': 'g1'})
+        as SummaryReadyEvent;
+    expect((e.meetingId, e.summaryState, e.groupConversationId), ('m1', MeetingSummaryState.done, 'g1'));
+    final f = p({'event': 'meet.summary.ready', 'meetingId': 'm1', 'summaryState': 'FAILED'}) as SummaryReadyEvent;
+    expect((f.summaryState, f.groupConversationId), (MeetingSummaryState.failed, null));
+    expect(p({'event': 'meet.summary.ready', 'meetingId': 'm1', 'summaryState': 'PENDING'}), isNull);
+    expect(p({'event': 'meet.summary.ready', 'meetingId': 'm1'}), isNull);
   });
 
   test('junk is null', () {

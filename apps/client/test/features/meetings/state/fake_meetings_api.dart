@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:platform_client/features/meetings/data/meetings_repository.dart';
@@ -14,6 +15,10 @@ DioException httpError(int status, String code) {
 }
 
 class FakeMeetingsApi implements MeetingsApi {
+  @override
+  Future<bool> uploadScreenFrame(String id, Uint8List jpeg, {int? ts}) async =>
+      false;
+
   FakeMeetingsApi(this.base);
 
   Meeting base;

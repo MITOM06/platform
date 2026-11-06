@@ -104,3 +104,6 @@ org/
 
 # Local dev server logs (scripts/dev/up.sh) — dev-only, never committed
 .dev-logs/
+
+# Báo cáo coverage sinh khi chạy test (scripts/test-all.sh, .claude/rules/test-gate.md)
+coverage/

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../chat/domain/ai_models.dart';
 import '../../domain/display.dart';
 import '../../domain/schedule.dart';
 import '../../state/meeting_room_providers.dart';
@@ -92,18 +93,26 @@ class _MeetingChatSheetState extends ConsumerState<MeetingChatSheet> {
         ref.watch(meetingRoomStoreProvider.select((s) => s.chatSeeded));
     final pending =
         ref.watch(meetingRoomStoreProvider.select((s) => s.pendingChat));
+    final notices =
+        ref.watch(meetingRoomStoreProvider.select((s) => s.aiNotices));
+    final aiPending = ref.watch(
+        meetingRoomStoreProvider.select((s) => s.pendingAi.isNotEmpty));
     _syncTick(pending.isNotEmpty);
     final now = c.now();
     final lines = chat.lines;
-    _total = lines.length + pending.length;
+    _total = lines.length + pending.length + notices.length;
     final away = _awayAt;
     final unseen = away == null ? 0 : (_total - away).clamp(0, _total);
     final locale = Localizations.localeOf(context).toLanguageTag();
     final myName = scope.myName.isEmpty ? l.meetingYou : scope.myName;
-    // Index 0 = newest: pending (newest last) first, then history.
+    // Index 0 = newest: AI notices, then pending (newest last), then history.
     Widget item(int i) {
-      if (i < pending.length) {
-        final p = pending[pending.length - 1 - i];
+      if (i < notices.length) {
+        return AiNoticeTile(notice: notices[notices.length - 1 - i]);
+      }
+      final k = i - notices.length;
+      if (k < pending.length) {
+        final p = pending[pending.length - 1 - k];
         return PendingLineTile(
           key: ValueKey('p:${p.clientId}'),
           line: p,
@@ -112,7 +121,7 @@ class _MeetingChatSheetState extends ConsumerState<MeetingChatSheet> {
           onDiscard: () => c.discardChat(p.clientId),
         );
       }
-      final j = lines.length - 1 - (i - pending.length);
+      final j = lines.length - 1 - (k - pending.length);
       final m = lines[j];
       final mine = m.sender.userId == scope.myId;
       final tile = ChatLineTile(
@@ -121,12 +130,14 @@ class _MeetingChatSheetState extends ConsumerState<MeetingChatSheet> {
         mine: mine,
         name: mine
             ? myName
-            : safeDisplayName(m.sender.displayName, m.sender.userId) ??
-                l.meetingParticipantFallback,
+            : m.sender.userId == kAiBotUserId
+                ? l.meetingAiName
+                : safeDisplayName(m.sender.displayName, m.sender.userId) ??
+                    l.meetingParticipantFallback,
         time: formatClockTime(locale, m.createdAt, const DeviceZone()),
         showName: !sameGroup(j > 0 ? lines[j - 1] : null, m),
       );
-      return i == 0 ? Semantics(liveRegion: true, child: tile) : tile;
+      return k == 0 ? Semantics(liveRegion: true, child: tile) : tile;
     }
 
     return Padding(
@@ -144,10 +155,17 @@ class _MeetingChatSheetState extends ConsumerState<MeetingChatSheet> {
               Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Text(l.meetingChatEmpty,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 14, color: AppTheme.mutedText(context))),
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    Text(l.meetingChatEmpty,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 14, color: AppTheme.mutedText(context))),
+                    const SizedBox(height: 4),
+                    Text(l.meetingChatAiHint,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 12, color: AppTheme.mutedText(context))),
+                  ]),
                 ),
               ),
             ListView.builder(
@@ -176,6 +194,7 @@ class _MeetingChatSheetState extends ConsumerState<MeetingChatSheet> {
               ),
           ]),
         ),
+        if (aiPending) const AiThinkingLine(),
         ChatComposer(onSent: _toNewest),
       ]),
     );

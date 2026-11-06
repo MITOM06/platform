@@ -3,6 +3,7 @@
 // a real room scope (`pumpRoom`), the room itself. Light + dark, Vietnamese,
 // 390 dp. Captured from the render view so sheets/overlays are included.
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -44,6 +45,10 @@ Meeting _meeting(String id, MeetingStatus status, {DateTime? start}) => Meeting(
     );
 
 class _ShotsApi implements MeetingsApi {
+  @override
+  Future<bool> uploadScreenFrame(String id, Uint8List jpeg, {int? ts}) async =>
+      false;
+
   final live = _meeting('m1', MeetingStatus.live);
   final later = _meeting('m2', MeetingStatus.scheduled,
       start: DateTime.now().add(const Duration(days: 1)));

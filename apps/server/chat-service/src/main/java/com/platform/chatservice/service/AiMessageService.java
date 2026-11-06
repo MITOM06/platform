@@ -203,11 +203,16 @@ public class AiMessageService {
    * message id so the caller can backfill {@code CallSession.summaryMessageId}.
    */
   public String saveMeetingSummary(String conversationId, String contentJson) {
-    MessageResponse response =
-        // No single user authored a call summary → no actor → no upload refs.
-        persistAndBroadcast(
-            conversationId, AiConstants.AI_BOT_USER_ID, contentJson, "meeting_summary", null, null);
-    return response.id();
+    return postMeetingSummary(conversationId, contentJson).id();
+  }
+
+  /**
+   * Same as {@link #saveMeetingSummary} but returns the whole message, so the caller can
+   * push-notify it. No single user authored it → no actor → no upload refs.
+   */
+  public MessageResponse postMeetingSummary(String conversationId, String contentJson) {
+    return persistAndBroadcast(
+        conversationId, AiConstants.AI_BOT_USER_ID, contentJson, "meeting_summary", null, null);
   }
 
   /**

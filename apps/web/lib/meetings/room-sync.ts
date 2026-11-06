@@ -1,6 +1,7 @@
 import type { LobbyEntry, Meeting, MeetingEvent, RosterEntry } from '@/lib/api/meeting-types'
 import { appendMessage, meetingKeys, rosterFromMeeting, type MessageListData } from './cache-updates'
 import { applyMeetingEnded } from './room-events'
+import type { MeetingRoomChat } from './meeting-room-chat'
 import type { MeetingRoomDeps } from './room-session'
 
 /** Cache re-reads / patches of MeetingRoomController that do not touch the room store. */
@@ -35,6 +36,16 @@ export function appendOwnChat(
   deps.queryClient.setQueryData<MessageListData>(meetingKeys.messages(e.meetingId), (d) =>
     appendMessage(d, e.message),
   )
+}
+
+/** `meet.chat` on the personal queue: my retried line into the history, never counted as unread. */
+export function handlePersonalChat(
+  deps: Pick<MeetingRoomDeps, 'queryClient'>,
+  chat: MeetingRoomChat,
+  e: Extract<MeetingEvent, { event: 'meet.chat' }>,
+): void {
+  appendOwnChat(deps, e)
+  chat.onEcho(e, false)
 }
 
 /** Host/co-host: who is waiting right now (a `meet.lobby` may have been missed). */

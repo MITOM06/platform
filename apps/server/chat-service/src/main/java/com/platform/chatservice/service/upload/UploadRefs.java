@@ -38,11 +38,17 @@ public class UploadRefs {
   public static final String FILES_COLLECTION = "fs.files";
   public static final String REF_CONVERSATION = "c";
   public static final String REF_DEPARTMENT = "d";
+  public static final String REF_MEETING = "m";
 
   private static final Pattern UPLOAD_URL =
       Pattern.compile(
           "/api/uploads/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
               + "|[0-9a-fA-F]{24})(?![0-9a-zA-Z_-])");
+
+  private static final Pattern UPLOAD_ID =
+      Pattern.compile(
+          "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+              + "|[0-9a-fA-F]{24}");
 
   private final MongoTemplate mongoTemplate;
   private final GridFsTemplate gridFsTemplate;
@@ -71,6 +77,36 @@ public class UploadRefs {
   /** Attaches only uploads {@code actorId} can read right now; a blank actor attaches nothing. */
   public void attachToDepartment(String text, String departmentId, String actorId) {
     attach(text, REF_DEPARTMENT, departmentId, actorId);
+  }
+
+  /**
+   * Lets everyone who can read the meeting's records open this upload. Takes the bare upload id;
+   * attaches only when {@code actorId} can already read the file (in practice the uploader), never
+   * throws, and returns whether the ref was added.
+   */
+  public boolean attachToMeeting(String uploadId, String meetingId, String actorId) {
+    try {
+      if (actorId == null || actorId.isBlank() || meetingId == null || meetingId.isBlank()) {
+        return false;
+      }
+      if (uploadId == null || !UPLOAD_ID.matcher(uploadId).matches()) return false;
+      Set<String> ids = extractIds("/api/uploads/" + uploadId);
+      if (ids.isEmpty()) return false;
+      Criteria files = readableBy(ids, actorId);
+      if (files == null) return false;
+      return mongoTemplate
+              .updateMulti(
+                  new Query(files),
+                  new Update()
+                      .addToSet(
+                          "metadata.refs", new Document("t", REF_MEETING).append("id", meetingId)),
+                  FILES_COLLECTION)
+              .getMatchedCount()
+          > 0;
+    } catch (RuntimeException e) {
+      log.warn("Could not record upload ref (m:{}): {}", meetingId, e.toString());
+      return false;
+    }
   }
 
   private void attach(String text, String type, String targetId, String actorId) {
@@ -107,7 +143,7 @@ public class UploadRefs {
    * a UUID by {@code metadata.fileId}; a 24-hex id only as a LEGACY file ({@code _id}, no {@code
    * metadata.fileId}).
    */
-  static Criteria fileCriteria(Set<String> ids) {
+  public static Criteria fileCriteria(Set<String> ids) {
     List<String> uuids = new ArrayList<>();
     List<ObjectId> legacy = new ArrayList<>();
     for (String id : ids) {

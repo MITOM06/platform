@@ -68,7 +68,11 @@ jobs:
       - name: Build
         run: pnpm run build
       - name: Test
-        run: pnpm exec jest --ci
+        run: pnpm exec jest --ci --coverage --coverageReporters=json-summary --coverageReporters=text-summary
+      # Cổng coverage ratchet (.claude/rules/test-gate.md): không được tụt dưới ngưỡng trong
+      # scripts/ci/coverage-thresholds.txt.
+      - name: Coverage gate
+        run: bash ../../../scripts/ci/coverage-gate.sh auth
 
   # ── Spring Boot Chat Service ───────────────────────────────────────────────
   chat-service:
@@ -88,6 +92,9 @@ jobs:
         run: mvn clean test -q
         env:
           JWT_ACCESS_SECRET: ci_test_secret_must_be_at_least_32_chars_long
+      # JaCoCo ghi target/site/jacoco/jacoco.csv trong pha test; cổng ratchet như các service khác.
+      - name: Coverage gate
+        run: bash ../../../scripts/ci/coverage-gate.sh chat
 
   # ── NestJS Connector Service ──────────────────────────────────────────────
   # deploy.yml has always tested this service before shipping it, but CI did not,
@@ -110,7 +117,11 @@ jobs:
       - name: Build
         run: pnpm run build
       - name: Test
-        run: pnpm exec jest --ci
+        run: pnpm exec jest --ci --coverage --coverageReporters=json-summary --coverageReporters=text-summary
+      # Cổng coverage ratchet (.claude/rules/test-gate.md): không được tụt dưới ngưỡng trong
+      # scripts/ci/coverage-thresholds.txt.
+      - name: Coverage gate
+        run: bash ../../../scripts/ci/coverage-gate.sh connector
 
   # ── NestJS AI Service ─────────────────────────────────────────────────────
   ai-service:
@@ -130,7 +141,11 @@ jobs:
       - name: Build
         run: pnpm run build
       - name: Test
-        run: pnpm exec jest --ci
+        run: pnpm exec jest --ci --coverage --coverageReporters=json-summary --coverageReporters=text-summary
+      # Cổng coverage ratchet (.claude/rules/test-gate.md): không được tụt dưới ngưỡng trong
+      # scripts/ci/coverage-thresholds.txt.
+      - name: Coverage gate
+        run: bash ../../../scripts/ci/coverage-gate.sh ai
 
   # ── Next.js Web Client ────────────────────────────────────────────────────
   web:
@@ -152,7 +167,9 @@ jobs:
       - name: Lint
         run: pnpm run lint
       - name: Test
-        run: pnpm run test
+        run: pnpm run test:cov
+      - name: Coverage gate
+        run: bash ../../scripts/ci/coverage-gate.sh web
       - name: Build
         run: pnpm run build
         env:
@@ -182,3 +199,5 @@ jobs:
         run: flutter analyze
       - name: Test
         run: flutter test --coverage
+      - name: Coverage gate
+        run: bash ../../scripts/ci/coverage-gate.sh flutter

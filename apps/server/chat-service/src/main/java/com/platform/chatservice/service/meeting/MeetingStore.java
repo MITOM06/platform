@@ -2,6 +2,7 @@ package com.platform.chatservice.service.meeting;
 
 import com.platform.chatservice.model.Meeting;
 import com.platform.chatservice.model.MeetingStatus;
+import com.platform.chatservice.model.MeetingSummaryState;
 import com.platform.chatservice.repository.MeetingRepository;
 import java.time.Duration;
 import java.time.Instant;
@@ -65,6 +66,133 @@ public class MeetingStore {
     Query query = new Query(byId(id).and("status").is(MeetingStatus.SCHEDULED));
     Update update = new Update().set("status", MeetingStatus.LIVE).set("startedAt", at);
     return mongo.updateFirst(query, update, Meeting.class).getModifiedCount() > 0;
+  }
+
+  /**
+   * Latches {@code aiNotesEverEnabled} once AI notes are on in a LIVE meeting; true only for the
+   * call that set it.
+   */
+  public boolean markAiNotesUsed(String id) {
+    Query query =
+        new Query(
+            byId(id)
+                .and("status")
+                .is(MeetingStatus.LIVE)
+                .and("settings.aiNotes")
+                .is(true)
+                .and("aiNotesEverEnabled")
+                .ne(true));
+    Update update = new Update().set("aiNotesEverEnabled", true);
+    return mongo.updateFirst(query, update, Meeting.class).getModifiedCount() > 0;
+  }
+
+  /**
+   * First summary request: only when never requested and AI notes were on. True only for the call
+   * that set PENDING.
+   */
+  public boolean claimSummary(String id, String attempt, Instant now) {
+    Query query =
+        new Query(byId(id).and("summaryState").is(null).and("aiNotesEverEnabled").is(true));
+    return mongo.updateFirst(query, pendingUpdate(attempt, now), Meeting.class).getModifiedCount()
+        > 0;
+  }
+
+  /**
+   * Asks again for an ENDED AI meeting whose last summary is DONE, EMPTY or FAILED, or that never
+   * got one (state null: the end-of-meeting trigger was lost).
+   */
+  public boolean claimRegenerate(String id, String attempt, Instant now) {
+    Query query =
+        new Query(
+            byId(id)
+                .and("status")
+                .is(MeetingStatus.ENDED)
+                .and("aiNotesEverEnabled")
+                .is(true)
+                .orOperator(
+                    Criteria.where("summaryState").is(null),
+                    Criteria.where("summaryState")
+                        .in(
+                            MeetingSummaryState.DONE,
+                            MeetingSummaryState.EMPTY,
+                            MeetingSummaryState.FAILED)));
+    return mongo.updateFirst(query, pendingUpdate(attempt, now), Meeting.class).getModifiedCount()
+        > 0;
+  }
+
+  private static Update pendingUpdate(String attempt, Instant now) {
+    return new Update()
+        .set("summaryState", MeetingSummaryState.PENDING)
+        .set("summaryAttempt", attempt)
+        .set("summaryRequestedAt", now);
+  }
+
+  /** PENDING ⇒ {@code state} for the current attempt only; returns the meeting after the update. */
+  public Optional<Meeting> finishSummary(String id, String attempt, MeetingSummaryState state) {
+    Query query =
+        new Query(
+            byId(id)
+                .and("summaryState")
+                .is(MeetingSummaryState.PENDING)
+                .and("summaryAttempt")
+                .is(attempt));
+    return Optional.ofNullable(
+        mongo.findAndModify(
+            query,
+            new Update().set("summaryState", state),
+            FindAndModifyOptions.options().returnNew(true),
+            Meeting.class));
+  }
+
+  /** Links the group conversation once; false when one is already set. */
+  public boolean setGroupConversation(String id, String convId) {
+    Query query = new Query(byId(id).and("groupConversationId").is(null));
+    return mongo
+            .updateFirst(query, new Update().set("groupConversationId", convId), Meeting.class)
+            .getModifiedCount()
+        > 0;
+  }
+
+  /** Swaps a dead group for a new one; false unless {@code oldConvId} is still the linked one. */
+  public boolean replaceGroupConversation(String id, String oldConvId, String newConvId) {
+    Query query = new Query(byId(id).and("groupConversationId").is(oldConvId));
+    return mongo
+            .updateFirst(query, new Update().set("groupConversationId", newConvId), Meeting.class)
+            .getModifiedCount()
+        > 0;
+  }
+
+  /**
+   * PENDING requested before {@code cutoff} ⇒ FAILED. Returns the meetings this call flipped (each
+   * flipped by a conditional update on the same attempt, so a result landing meanwhile wins).
+   */
+  public List<Meeting> failStaleSummaries(Instant cutoff) {
+    Query candidates =
+        new Query(
+            Criteria.where("summaryState")
+                .is(MeetingSummaryState.PENDING)
+                .and("summaryRequestedAt")
+                .lt(cutoff));
+    List<Meeting> flipped = new ArrayList<>();
+    for (Meeting c : mongo.find(candidates, Meeting.class)) {
+      Query one =
+          new Query(
+              byId(c.getId())
+                  .and("summaryState")
+                  .is(MeetingSummaryState.PENDING)
+                  .and("summaryAttempt")
+                  .is(c.getSummaryAttempt()));
+      Meeting after =
+          mongo.findAndModify(
+              one,
+              new Update().set("summaryState", MeetingSummaryState.FAILED),
+              FindAndModifyOptions.options().returnNew(true),
+              Meeting.class);
+      if (after != null) {
+        flipped.add(after);
+      }
+    }
+    return flipped;
   }
 
   /**
@@ -245,6 +373,81 @@ public class MeetingStore {
             .with(Sort.by(dir, "sortAt").and(Sort.by(dir, "_id")))
             .limit(limit);
     return mongo.find(query, Meeting.class);
+  }
+
+  /** Outcome of {@link #claimAiFileSlot}. */
+  public enum ClaimResult {
+    /** A slot was taken; the file may be sent to the AI. */
+    CLAIMED,
+    /** This upload id was already handed to the AI in this meeting; nothing was taken. */
+    ALREADY_CLAIMED,
+    /** The cap is reached and this call is the first to notice — it must write the notice line. */
+    CAP_REACHED_FIRST,
+    /** The cap is reached (or the meeting is gone). */
+    CAP_REACHED
+  }
+
+  /**
+   * Takes one of the meeting's {@code cap} AI file slots, atomically (a single {@code $inc} guarded
+   * by the count) and records {@code uploadId} in the same update, so the same upload is claimed at
+   * most once per meeting ({@link ClaimResult#ALREADY_CLAIMED}). Once full, exactly one caller gets
+   * {@link ClaimResult#CAP_REACHED_FIRST}.
+   */
+  public ClaimResult claimAiFileSlot(String id, int cap, String uploadId) {
+    Query open =
+        new Query(
+            byId(id)
+                .and("aiFileUploadIds")
+                .ne(uploadId)
+                .orOperator(
+                    Criteria.where("aiFileCount").exists(false),
+                    Criteria.where("aiFileCount").lt(cap)));
+    if (mongo
+            .updateFirst(
+                open,
+                new Update().inc("aiFileCount", 1).addToSet("aiFileUploadIds", uploadId),
+                Meeting.class)
+            .getModifiedCount()
+        > 0) {
+      return ClaimResult.CLAIMED;
+    }
+    if (mongo.exists(new Query(byId(id).and("aiFileUploadIds").is(uploadId)), Meeting.class)) {
+      return ClaimResult.ALREADY_CLAIMED;
+    }
+    Query unnoted = new Query(byId(id).and("aiFileCapNoted").ne(true));
+    return mongo
+                .updateFirst(unnoted, new Update().set("aiFileCapNoted", true), Meeting.class)
+                .getModifiedCount()
+            > 0
+        ? ClaimResult.CAP_REACHED_FIRST
+        : ClaimResult.CAP_REACHED;
+  }
+
+  /**
+   * Takes one of the meeting's {@code cap} AI screen-frame slots, atomically (a single {@code $inc}
+   * guarded by the count). Once full, exactly one caller gets {@link
+   * ClaimResult#CAP_REACHED_FIRST}; never {@link ClaimResult#ALREADY_CLAIMED}.
+   */
+  public ClaimResult claimAiScreenSlot(String id, int cap) {
+    Query open =
+        new Query(
+            byId(id)
+                .orOperator(
+                    Criteria.where("aiScreenCount").exists(false),
+                    Criteria.where("aiScreenCount").lt(cap)));
+    if (mongo
+            .updateFirst(open, new Update().inc("aiScreenCount", 1), Meeting.class)
+            .getModifiedCount()
+        > 0) {
+      return ClaimResult.CLAIMED;
+    }
+    Query unnoted = new Query(byId(id).and("aiScreenCapNoted").ne(true));
+    return mongo
+                .updateFirst(unnoted, new Update().set("aiScreenCapNoted", true), Meeting.class)
+                .getModifiedCount()
+            > 0
+        ? ClaimResult.CAP_REACHED_FIRST
+        : ClaimResult.CAP_REACHED;
   }
 
   private static Criteria byId(String id) {

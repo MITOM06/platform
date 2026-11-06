@@ -22,6 +22,8 @@ export interface MeetingSettings {
   allowAttendeeScreenShare: boolean
   attendeesCanEditNotes: boolean
   locked: boolean
+  /** AI takes notes of the meeting; everyone in the room is told. */
+  aiNotes: boolean
 }
 
 export interface MeetingAttendance {
@@ -50,9 +52,26 @@ export interface Meeting {
   removedIds?: string[]
   viewerRole: MeetingViewerRole
   createdAt: string
+  /** Sticky: AI notes were on at some point (gates the recap UI). */
+  aiNotesEverEnabled?: boolean
   startedAt?: string
   endedAt?: string
   cancelledAt?: string
+  /** AI summary state; absent = never asked (AI notes were never on). */
+  summaryState?: MeetingSummaryState
+  /** The group chat made for the meeting; only open it when `GET .../summary` says `inGroup`. */
+  groupConversationId?: string
+}
+
+export type MeetingSummaryState = 'PENDING' | 'DONE' | 'EMPTY' | 'FAILED'
+
+/** `GET /api/meetings/{id}/summary` — `summary` is the raw MeetingSummary (normalize before use). */
+export interface MeetingSummaryResponse {
+  state: MeetingSummaryState | null
+  summary?: unknown
+  createdAt?: string
+  groupConversationId?: string
+  inGroup: boolean
 }
 
 export interface MeetingPage {
@@ -78,10 +97,20 @@ export type MeetingJoinResponse =
   | { status: 'joined'; url: string; token: string; role: MeetingRoomRole }
   | { status: 'waiting' }
 
+/** File attached to a chat line (an upload of the sender's; `url` is `/api/uploads/...`). */
+export interface MeetingAttachment {
+  url: string
+  name: string
+  size: number
+  contentType: string | null
+}
+
 export interface MeetingMessage {
   id: string
   sender: MeetingPerson
+  /** May be empty when the line carries only a file. */
   content: string
+  attachment?: MeetingAttachment
   createdAt: string
 }
 
@@ -142,6 +171,8 @@ export const HOST_ACTIONS = [
   'WAITING_ROOM_OFF',
   'ATTENDEE_SCREEN_SHARE_ON',
   'ATTENDEE_SCREEN_SHARE_OFF',
+  'AI_NOTES_ON',
+  'AI_NOTES_OFF',
   'MAKE_COHOST',
   'REVOKE_COHOST',
 ] as const
@@ -177,6 +208,7 @@ export const DEFAULT_MEETING_SETTINGS: MeetingSettings = {
   allowAttendeeScreenShare: true,
   attendeesCanEditNotes: true,
   locked: false,
+  aiNotes: false,
 }
 
 /** Every STOMP meeting payload, after parseMeetingEvent (lib/meetings/meeting-events.ts). */
@@ -186,6 +218,8 @@ export type MeetingEvent =
   | { event: 'meet.ended'; meetingId: string }
   | { event: 'meet.hands'; meetingId: string; hands: MeetingHand[] }
   | { event: 'meet.chat'; meetingId: string; clientId?: string; message: MeetingMessage }
+  /** AI is answering an `@AI` line (`thinking`) or gave up (`error`; `code` = AI error code, not a meeting code). */
+  | { event: 'meet.ai'; meetingId: string; state: 'thinking' | 'error'; requesterId: string; code?: string }
   | { event: 'meet.notes.updated'; meetingId: string; version: number; updatedBy?: MeetingPerson }
   | { event: 'meet.lobby'; meetingId: string; waiting: LobbyEntry[] }
   | { event: 'meet.admitted' | 'meet.denied' | 'meet.removed'; meetingId: string }
@@ -211,5 +245,11 @@ export type MeetingEvent =
       scheduledStart?: string
     }
   | { event: 'meet.starting'; meetingId: string; code: string; title?: string; scheduledStart?: string }
+  | {
+      event: 'meet.summary.ready'
+      meetingId: string
+      summaryState: Exclude<MeetingSummaryState, 'PENDING'>
+      groupConversationId?: string
+    }
 
 export type MeetingEventName = MeetingEvent['event']

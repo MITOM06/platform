@@ -7,12 +7,13 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { renderAll } = require('./files');
+const { renderNovPngs } = require('./files-nov');
 const org = require('./org');
 
 (async () => {
   const dir = path.join(__dirname, 'prebuilt');
   fs.mkdirSync(dir, { recursive: true });
-  const out = await renderAll(org.PEOPLE);
+  const out = { ...(await renderAll(org.PEOPLE)), ...(await renderNovPngs()) };
   for (const [name, buf] of Object.entries(out)) fs.writeFileSync(path.join(dir, `${name}.png`), buf);
   console.log(`prebuilt ${Object.keys(out).length} PNGs → ${dir}`);
 })().catch((e) => { console.error(e); process.exit(1); });

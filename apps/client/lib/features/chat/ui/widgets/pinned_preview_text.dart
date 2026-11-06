@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../domain/chat_state.dart';
+import 'message_preview_text.dart';
 
 /// Builds a SANITIZED, localized preview string for a pinned message.
 ///
@@ -13,7 +14,9 @@ import '../../domain/chat_state.dart';
 /// - `system`            → generic localized label (never the raw code/id).
 /// - media / attachment  → bracketed attachment label, mirroring the
 ///                         conversation banner (e.g. `[Photo]`, `[File]`).
-/// - text (default)      → trimmed content, falling back to `—` when empty.
+/// - text (default)      → content sniffed like web `humanizeMessagePreview`
+///                         (typeless legacy pins may hold a system code, an
+///                         upload URL or file JSON), `—` when empty.
 String pinnedPreviewText(BuildContext context, PinnedMessageModel pinned) {
   final l10n = context.l10n;
   switch (pinned.type) {
@@ -42,6 +45,6 @@ String pinnedPreviewText(BuildContext context, PinnedMessageModel pinned) {
       return aiText.isEmpty ? '—' : aiText;
     default:
       final text = pinned.content.trim();
-      return text.isEmpty ? '—' : text;
+      return text.isEmpty ? '—' : messagePreviewFromContent(context, text);
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,6 +12,10 @@ import 'package:platform_client/features/meetings/ui/widgets/notes_editor.dart';
 import 'meeting_test_harness.dart';
 
 class _Api implements MeetingsApi {
+  @override
+  Future<bool> uploadScreenFrame(String id, Uint8List jpeg, {int? ts}) async =>
+      false;
+
   final puts = <(String, int)>[];
   final replies = <Object>[]; // MeetingNote or an error to throw, in order
   @override

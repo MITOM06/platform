@@ -18,6 +18,7 @@ class UploadReaderResolverTest {
   private static final String KEY = "internal-key-123";
 
   private MediaTokenService tokens;
+  private InternalKeyGuard guard;
   private UploadReaderResolver resolver;
   private MockHttpServletRequest req;
 
@@ -26,8 +27,9 @@ class UploadReaderResolverTest {
     tokens = mock(MediaTokenService.class);
     when(tokens.verify("good-t")).thenReturn(Optional.of("user-t"));
     when(tokens.verify("bad-t")).thenReturn(Optional.empty());
-    resolver = new UploadReaderResolver(tokens);
-    ReflectionTestUtils.setField(resolver, "internalKey", KEY);
+    guard = new InternalKeyGuard();
+    resolver = new UploadReaderResolver(tokens, guard);
+    ReflectionTestUtils.setField(guard, "internalKey", KEY);
     req = new MockHttpServletRequest("GET", "/api/uploads/x");
     SecurityContextHolder.clearContext();
   }
@@ -82,12 +84,12 @@ class UploadReaderResolverTest {
 
   @Test
   void blank_configured_key_never_matches() {
-    ReflectionTestUtils.setField(resolver, "internalKey", "");
+    ReflectionTestUtils.setField(guard, "internalKey", "");
     req.addHeader("X-Internal-Key", "");
     assertThat(resolver.resolve(req)).isEmpty();
 
     MockHttpServletRequest spaces = new MockHttpServletRequest("GET", "/api/uploads/x");
-    ReflectionTestUtils.setField(resolver, "internalKey", " ");
+    ReflectionTestUtils.setField(guard, "internalKey", " ");
     spaces.addHeader("X-Internal-Key", " ");
     assertThat(resolver.resolve(spaces)).isEmpty();
   }

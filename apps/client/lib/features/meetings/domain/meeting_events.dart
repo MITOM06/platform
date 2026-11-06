@@ -50,6 +50,21 @@ final class ChatEvent extends MeetingScopedEvent {
   final MeetingChatMessage message;
 }
 
+enum AiState { thinking, error }
+
+/// `meet.ai`: the assistant started on (or failed) a `@AI` question. Its
+/// `code` is an AI error code here — not the meeting code of other events.
+final class AiEvent extends MeetingScopedEvent {
+  const AiEvent(
+      {required super.meetingId,
+      required this.state,
+      required this.requesterId,
+      this.code});
+  final AiState state;
+  final String requesterId;
+  final String? code;
+}
+
 final class NotesUpdatedEvent extends MeetingScopedEvent {
   const NotesUpdatedEvent(
       {required super.meetingId, required this.version, this.updatedBy});
@@ -84,6 +99,18 @@ final class CancelledEvent extends MeetingScopedEvent {
 final class MutedEvent extends MeetingScopedEvent {
   const MutedEvent({required super.meetingId, this.actor});
   final MeetingPerson? actor;
+}
+
+/// The AI summary finished (never PENDING). Content comes from
+/// `GET .../summary`; [groupConversationId] is set when a group was made.
+final class SummaryReadyEvent extends MeetingScopedEvent {
+  const SummaryReadyEvent({
+    required super.meetingId,
+    required this.summaryState,
+    this.groupConversationId,
+  });
+  final MeetingSummaryState summaryState;
+  final String? groupConversationId;
 }
 
 final class MeetErrorEvent extends MeetingEvent {
@@ -186,6 +213,21 @@ MeetingEvent? _parseForMeeting(String event, String id, Json o) {
       return m == null
           ? null
           : ChatEvent(meetingId: id, clientId: str(o['clientId']), message: m);
+    case 'meet.ai':
+      final requesterId = str(o['requesterId']);
+      final state = switch (o['state']) {
+        'thinking' => AiState.thinking,
+        'error' => AiState.error,
+        _ => null,
+      };
+      if (state == null) return null;
+      // An error without a requester is kept: it still clears the oldest pending entry.
+      if (requesterId == null && state == AiState.thinking) return null;
+      return AiEvent(
+          meetingId: id,
+          state: state,
+          requesterId: requesterId ?? '',
+          code: str(o['code']));
     case 'meet.notes.updated':
       final version = o['version'];
       if (version is! num) return null;
@@ -207,6 +249,13 @@ MeetingEvent? _parseForMeeting(String event, String id, Json o) {
     case 'meet.cancelled':
       return CancelledEvent(
           meetingId: id, title: str(o['title']), code: str(o['code']));
+    case 'meet.summary.ready':
+      final state = MeetingSummaryState.fromWire(o['summaryState']);
+      if (state == null || state == MeetingSummaryState.pending) return null;
+      return SummaryReadyEvent(
+          meetingId: id,
+          summaryState: state,
+          groupConversationId: str(o['groupConversationId']));
     case 'meet.invited':
     case 'meet.starting':
       return _parseInvite(event, id, o);
