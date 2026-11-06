@@ -951,6 +951,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meetingSummaryTitle => 'Meeting summary';
 
   @override
+  String get meetingSummaryUnavailable => 'Summary unavailable';
+
+  @override
   String meetingSummaryDuration(String duration) {
     return 'Duration $duration';
   }
@@ -968,6 +971,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meetingSummaryActionItems => 'Action items';
+
+  @override
+  String get meetingSummaryDecisions => 'Decisions';
+
+  @override
+  String get meetingSummaryFromMaterials => 'From materials';
 
   @override
   String get profileTitle => 'Profile';
@@ -4823,6 +4832,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meetingErrNoteConflict => 'Someone saved a newer version';
 
   @override
+  String get meetingErrSummaryPending => 'A summary is already being generated';
+
+  @override
+  String get meetingErrSummaryUnavailable =>
+      'A summary is not available for this meeting';
+
+  @override
+  String get meetingAiSummaryTitle => 'AI summary';
+
+  @override
+  String get meetingAiSummaryPending => 'AI is summarizing…';
+
+  @override
+  String get meetingAiSummaryEmpty => 'The meeting had no content to summarize';
+
+  @override
+  String get meetingAiSummaryFailed => 'Couldn\'t create the summary';
+
+  @override
+  String get meetingAiSummaryOpenGroup => 'Open meeting group';
+
+  @override
+  String get meetingAiSummaryRegenerate => 'Regenerate';
+
+  @override
   String get meetingErrRateLimited =>
       'You\'re sending too fast. Wait a moment.';
 
@@ -5205,6 +5239,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meetingSettingLockedDesc => 'Only invited people can join';
+
+  @override
+  String get meetingSettingAiNotes => 'AI meeting notes';
+
+  @override
+  String get meetingSettingAiNotesDesc =>
+      'AI captures speech, chat, notes, files and shared screens to summarize after the meeting. Everyone in the room is notified.';
+
+  @override
+  String get meetingAiNotesActive => 'AI is taking notes';
+
+  @override
+  String get meetingAiReadingScreen => 'AI is reading the screen you share';
+
+  @override
+  String get meetingAiNotesStarted =>
+      'AI started taking notes for this meeting';
+
+  @override
+  String get meetingAiNotesPrejoin => 'This meeting has AI notes';
+
+  @override
+  String get meetingAiNotesPauseMine => 'Pause my speech capture';
+
+  @override
+  String get meetingAiNotesResumeMine => 'Resume my speech capture';
+
+  @override
+  String get meetingAiNotesUnsupported =>
+      'This device can\'t capture speech for AI notes';
 
   @override
   String get meetingSubmitCreate => 'Schedule';
@@ -5743,6 +5807,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Messages are visible to everyone in the meeting';
 
   @override
+  String get meetingAiName => 'PON AI';
+
+  @override
+  String get meetingAiThinking => 'PON AI is answering…';
+
+  @override
+  String get meetingAiUnavailable => 'AI is unavailable right now';
+
+  @override
+  String get meetingAiFailed => 'AI couldn\'t answer, try again';
+
+  @override
+  String get meetingAiQuotaExceeded => 'AI usage limit reached';
+
+  @override
+  String get meetingAiRateLimited => 'Too many requests, try again shortly';
+
+  @override
+  String get meetingChatAiHint =>
+      'Type @AI before a question to ask the assistant';
+
+  @override
   String get meetingChatFailed => 'Not sent';
 
   @override
@@ -5753,6 +5839,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meetingChatSending => 'Sending…';
+
+  @override
+  String get meetingChatAttach => 'Attach a file';
+
+  @override
+  String get meetingChatUploading => 'Uploading file…';
+
+  @override
+  String get meetingChatFileTooLarge => 'File is too large';
+
+  @override
+  String get meetingChatUploadFailed => 'Couldn\'t upload the file, try again';
+
+  @override
+  String get meetingChatNotSent =>
+      'Couldn\'t send the file. It is kept here, press Send to retry';
+
+  @override
+  String get meetingChatRemoveFile => 'Remove file';
 
   @override
   String get meetingChatOffline =>

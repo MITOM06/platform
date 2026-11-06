@@ -76,6 +76,11 @@ public class SecurityConfig {
                     .requestMatchers(
                         org.springframework.http.HttpMethod.POST, "/api/rtc/livekit/webhook")
                     .permitAll()
+                    // Service-to-service (ai-service): no JWT; InternalKeyGuard in the controller
+                    // is the only gate.
+                    .requestMatchers(
+                        org.springframework.http.HttpMethod.GET, "/internal/meetings/**")
+                    .permitAll()
                     .anyRequest()
                     .authenticated())
         .exceptionHandling(

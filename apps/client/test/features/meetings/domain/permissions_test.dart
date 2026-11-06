@@ -81,12 +81,18 @@ void main() {
     test('room controls send the opposite of the current setting', () {
       expect(roomControls(MeetingRoomRole.attendee, base, anyHands: true), isNull);
       final c = roomControls(MeetingRoomRole.cohost, base, anyHands: false)!;
-      expect((c.lowerAllHands, c.lock, c.waitingRoom, c.screenShare),
-          (false, HostAction.lock, HostAction.waitingRoomOff, HostAction.attendeeScreenShareOff));
+      expect((c.lowerAllHands, c.lock, c.waitingRoom, c.screenShare, c.aiNotes),
+          (false, HostAction.lock, HostAction.waitingRoomOff, HostAction.attendeeScreenShareOff, HostAction.aiNotesOn));
       final h = roomControls(MeetingRoomRole.host,
           base.copyWith(locked: true, waitingRoom: false, allowAttendeeScreenShare: false), anyHands: true)!;
-      expect((h.lowerAllHands, h.lock, h.waitingRoom, h.screenShare),
-          (true, HostAction.unlock, HostAction.waitingRoomOn, HostAction.attendeeScreenShareOn));
+      expect((h.lowerAllHands, h.lock, h.waitingRoom, h.screenShare, h.aiNotes),
+          (true, HostAction.unlock, HostAction.waitingRoomOn, HostAction.attendeeScreenShareOn, HostAction.aiNotesOn));
+    });
+    test('host and co-host can toggle aiNotes, attendee cannot', () {
+      expect(roomControls(MeetingRoomRole.host, base, anyHands: false)!.aiNotes, HostAction.aiNotesOn);
+      expect(roomControls(MeetingRoomRole.cohost, base.copyWith(aiNotes: true), anyHands: false)!.aiNotes,
+          HostAction.aiNotesOff);
+      expect(roomControls(MeetingRoomRole.attendee, base.copyWith(aiNotes: true), anyHands: false), isNull);
     });
     test('attendees present only when allowed', () {
       expect(canShareScreen(MeetingRoomRole.attendee, base), isTrue);
@@ -98,11 +104,11 @@ void main() {
       for (final t in [target(hand: true), target(role: MeetingRoomRole.cohost)]) {
         reachable.addAll(personActions(MeetingRoomRole.host, 'me', t));
       }
-      for (final s in [base, base.copyWith(locked: true, waitingRoom: false, allowAttendeeScreenShare: false)]) {
+      for (final s in [base, base.copyWith(locked: true, waitingRoom: false, allowAttendeeScreenShare: false, aiNotes: true)]) {
         final rc = roomControls(MeetingRoomRole.host, s, anyHands: true)!;
         reachable.add(HostAction.muteAll);
         if (rc.lowerAllHands) reachable.add(HostAction.lowerAllHands);
-        reachable.addAll([rc.lock, rc.waitingRoom, rc.screenShare]);
+        reachable.addAll([rc.lock, rc.waitingRoom, rc.screenShare, rc.aiNotes]);
       }
       expect(reachable, HostAction.values.toSet());
     });

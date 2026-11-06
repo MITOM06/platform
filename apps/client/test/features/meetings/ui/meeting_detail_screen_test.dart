@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -46,6 +48,10 @@ DioException failure(int status, String code) {
 }
 
 class _Api implements MeetingsApi {
+  @override
+  Future<bool> uploadScreenFrame(String id, Uint8List jpeg, {int? ts}) async =>
+      false;
+
   Object? getResult;
   Object messagesResult = const MeetingMessagePage(content: [], hasNext: false);
 

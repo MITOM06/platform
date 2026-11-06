@@ -1,8 +1,11 @@
 package com.platform.chatservice.service.meeting;
 
 import com.platform.chatservice.dto.PageResponse;
+import com.platform.chatservice.dto.meeting.MeetingAttachmentDto;
+import com.platform.chatservice.dto.meeting.MeetingChatCommand;
 import com.platform.chatservice.dto.meeting.MeetingMessageDto;
 import com.platform.chatservice.dto.meeting.PersonDto;
+import com.platform.chatservice.model.MeetingAttachment;
 import com.platform.chatservice.model.MeetingMessage;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.PageLimits;
@@ -43,12 +46,16 @@ public class MeetingChatService {
   private final MeetingPeople people;
   private final MeetingEvents events;
   private final RateLimiterService rateLimiter;
+  private final MeetingAiBridge aiBridge;
+  private final MeetingAttachments attachments;
+  private final MeetingMaterialTrigger materials;
 
   /**
-   * Stores one chat line and tells the room. Order: room access → content (trimmed, 1..2000) →
-   * {@code clientId} replay check → rate limit (shared with normal chat; checked after validation
-   * so a refused line costs nothing) → insert → {@code meet.chat}. A malformed {@code clientId} is
-   * dropped, never refused.
+   * Stores one chat line and tells the room. Order: room access → content (trimmed, 1..2000; may be
+   * empty with a file) and the file's shape → {@code clientId} replay check → rate limit (shared
+   * with normal chat; checked after validation so a refused line costs nothing) → the file must
+   * exist and be the sender's → insert → open the file to the meeting → {@code meet.chat} → hand
+   * the file to the AI if notes are on. A malformed {@code clientId} is dropped, never refused.
    *
    * <p>Idempotent per {@code (meetingId, sender, clientId)}: a re-send of a stored {@code clientId}
    * (a client retry after a slow echo) stores nothing, is not rate limited, and re-sends the stored
@@ -58,9 +65,19 @@ public class MeetingChatService {
    */
   public MeetingMessageDto send(
       UserPrincipal caller, String meetingId, String content, String clientId) {
+    return send(caller, meetingId, content, clientId, null);
+  }
+
+  public MeetingMessageDto send(
+      UserPrincipal caller,
+      String meetingId,
+      String content,
+      String clientId,
+      MeetingChatCommand.Attachment attachment) {
     guard.inRoom(caller, meetingId);
     String text = content == null ? "" : content.trim();
-    if (text.isEmpty()) {
+    String uploadId = attachment == null ? null : attachments.shape(attachment);
+    if (text.isEmpty() && uploadId == null) {
       throw MeetingRequests.invalid("content");
     }
     if (text.length() > CONTENT_MAX) {
@@ -75,6 +92,7 @@ public class MeetingChatService {
       }
     }
     rateLimiter.checkMessageRate(uid);
+    MeetingAttachment file = uploadId == null ? null : attachments.load(attachment, uploadId, uid);
 
     MeetingMessage saved;
     try {
@@ -85,6 +103,7 @@ public class MeetingChatService {
                   .senderId(uid)
                   .content(text)
                   .clientId(cid)
+                  .attachment(file)
                   .createdAt(Instant.now().truncatedTo(ChronoUnit.MILLIS))
                   .build());
     } catch (DuplicateKeyException e) {
@@ -94,8 +113,17 @@ public class MeetingChatService {
       }
       return replay(uid, meetingId, winner, cid);
     }
+    if (file != null) {
+      attachments.attach(file, meetingId, uid);
+    }
     MeetingMessageDto dto = toDto(saved, people.profiles(List.of(uid)));
     events.chat(meetingId, dto, cid);
+    if (file != null) {
+      materials.onFileSent(meetingId, saved.getId(), file, uid);
+    }
+    if (MeetingAiBridge.mentionsAi(text)) {
+      aiBridge.ask(caller, meetingId, text);
+    }
     return dto;
   }
 
@@ -175,7 +203,14 @@ public class MeetingChatService {
         row.getId(),
         MeetingMapper.person(row.getSenderId(), profiles),
         row.getContent(),
-        row.getCreatedAt());
+        row.getCreatedAt(),
+        attachmentDto(row.getAttachment()));
+  }
+
+  private static MeetingAttachmentDto attachmentDto(MeetingAttachment a) {
+    return a == null
+        ? null
+        : new MeetingAttachmentDto(a.getUrl(), a.getName(), a.getSize(), a.getContentType());
   }
 
   /**

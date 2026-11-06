@@ -256,4 +256,17 @@ class MeetingEventsTest {
     assertThat(got.get(2).getCode()).isNull(); // `code` is the meeting code, never an error
     verify(broker, never()).convertAndSend(anyString(), any(Object.class));
   }
+
+  @Test
+  void aiGoesToTheRoomTopicWithStateRequesterAndCode() {
+    events.ai("m1", "error", "a", "AI_EMPTY");
+
+    ArgumentCaptor<MeetingEventDto> sent = ArgumentCaptor.forClass(MeetingEventDto.class);
+    verify(broker).convertAndSend(eq("/topic/meeting/m1"), sent.capture());
+    assertThat(sent.getValue().getEvent()).isEqualTo("meet.ai");
+    assertThat(sent.getValue().getMeetingId()).isEqualTo("m1");
+    assertThat(sent.getValue().getState()).isEqualTo("error");
+    assertThat(sent.getValue().getRequesterId()).isEqualTo("a");
+    assertThat(sent.getValue().getCode()).isEqualTo("AI_EMPTY");
+  }
 }

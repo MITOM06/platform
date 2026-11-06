@@ -65,6 +65,9 @@
 - settings: { waitingRoom, muteOnEntry, allowAttendeeScreenShare, attendeesCanEditNotes, locked }
 - attendance: List<{ userId, displayName, role, sid, joinedAt, leftAt }> (one row per session)
 - reminded: boolean (10-minute reminder claimed)
+- aiNotes (in settings) / aiNotesEverEnabled: boolean (latched once AI notes were on while LIVE)
+- summaryState: null | PENDING | DONE | EMPTY | FAILED; summaryAttempt (UUID); summaryRequestedAt: Instant
+- groupConversationId: String (group chat created for the meeting; Conversation.meetingId points back)
 - createdAt / startedAt / endedAt / cancelledAt: Instant
 ```
 After the first insert a meeting is **only** changed through atomic updates in `MeetingStore`
@@ -77,13 +80,60 @@ contract in `docs/api-spec.md` § Meetings.
 
 ### MeetingMessage (`meeting_messages`) / MeetingNote (`meeting_notes`)
 ```
-meeting_messages: id, meetingId, senderId, content (text ≤ 2000), createdAt  — cursor (createdAt, _id)
+meeting_messages: id, meetingId, senderId, content (text ≤ 2000, may be "" with a file), clientId?,
+                  attachment? {uploadId, url, name ≤ 200, size, contentType — size/type read from GridFS,
+                  uploader must be the sender; `MeetingAttachments`}, createdAt  — cursor (createdAt, _id)
 meeting_notes:    id, meetingId, scope ("SHARED" | "PRIVATE"), ownerId (PRIVATE only), content (Markdown
                   ≤ 50 000), version (optimistic lock), updatedBy, updatedAt
                   — unique {meetingId, scope, ownerId} (MongoIndexInitializer)
 ```
 Written with `MongoTemplate` only (`insert` / conditional `findAndModify` on `version`); a stale
 `version` is 409 `MEETING_NOTE_CONFLICT` with `latest` (`MeetingNoteConflictException`).
+
+### MeetingRecord (`meeting_records`) / MeetingSummaryDoc (`meeting_summaries`)
+```
+meeting_records:   transcript lines of the meeting (MeetingRecordService), read by the internal endpoint;
+                   kind SPEECH | FILE | SCREEN, FILE rows also carry ref (uploadId) + fileName
+meeting_summaries: id, meetingId, attempt, status, summary (object MeetingSummary), createdAt
+                   — index (meetingId, createdAt); only successful (DONE) summaries; a regenerate adds a row
+```
+AI summary flow: meeting ends (or host `POST /{id}/summary/regenerate`) → `MeetingStore` claims
+PENDING atomically → `MeetingSummaryTrigger` publishes Redis `meet:summarize`
+`{meetingId, attempt, requesterId}` → ai-service reads `GET /internal/meetings/{id}/record`
+(`X-Internal-Key`; 401 bad key, 404 no meeting/access, caps 4000 lines / 1000 chat messages) →
+replies on `meet:summary:result` `{meetingId, attempt, status: ok|empty|failed, summary?}` →
+`MeetingSummaryResultListener` stores it, posts the `meeting_summary` card in the group and sends
+`meet.summary.ready`. `MeetingSummaryService` serves `GET /{id}/summary` + `POST /{id}/summary/regenerate`.
+
+Files in the meeting chat: `MeetingChatService.send` (inRoom → shape → replay → rate limit → file loaded from
+GridFS, must be the sender's → insert → `UploadRefs.attachToMeeting` ref `{t:"m"}` → `meet.chat`) →
+`MeetingMaterialTrigger` (only when `settings.aiNotes`; `MeetingStore.claimAiFileSlot` atomic cap
+`meetings.ai.file-cap`, default 20; first file over the cap writes one FILE notice line) publishes Redis
+`meet:material` `{meetingId, messageId, uploadId, fileName, mimeType, userId}` → ai-service reads the file and
+replies on `meet:material:result` `{meetingId, messageId, fileName, kind: file|screen, status: ok|unsupported|failed, text?}` →
+`MeetingMaterialResultListener` (SETNX `meet:material:done:{messageId}` 1 h) appends one FILE `MeetingRecord`
+for the sender (text ≤ 6000 or "Không đọc được file này."). Never fails the send.
+
+Shared-screen frames: `POST /api/meetings/{id}/screen-frames` → `MeetingScreenFrames` (inRoom → manager ||
+`allowAttendeeScreenShare` else 403 → `aiNotes` off ⇒ 204 → JPEG/PNG ≤ 2 MB by magic bytes else 400
+`MEETING_INVALID {field:"frame"}` → Redis `SET NX EX 15` `meet:screen:throttle:{meetingId}:{userId}` (exists or Redis
+down ⇒ 204) → `MeetingStore.claimAiScreenSlot` (`Meeting.aiScreenCount` / `aiScreenCapNoted`, cap
+`meetings.ai.screen-cap`, default 60; first over the cap writes one SCREEN notice line, then 204) → GridFS
+(metadata `{fileId, uploadedBy, screenFrame:true, createdAt}`, no refs) → ticket `meet:screen:frame:{frameId}`
+`{meetingId, userId, ts, uploadId}` TTL 1 h → `meet:material` `kind:"screen"`, `messageId = frameId` → 202). The
+file branch now also sends `kind:"file"`. `MeetingMaterialResultListener` routes on the result's `kind` (`screen`; a result without `kind` but with a live `meet:screen:frame:{messageId}` ticket also counts as screen, for rolling deploys; pinned by `apps/server/contracts/meet-material-result.screen.json` on both sides). For screen: needs the ticket
+(same meetingId; userId / ts / upload come from it), claims `meet:material:done:{frameId}`, writes one SCREEN
+`MeetingRecord` (text ≤ 1500) only for status `ok`, then deletes ticket + GridFS frame for every status; no
+ticket ⇒ does nothing. `MeetingScreenFrameSweep` (`meetings.ai.screen-sweep-ms`, default 10 min) deletes
+`screenFrame` files older than 1 h. A failure after the slot was taken is cleaned up best-effort and still
+answers 202.
+
+`@AI` in the meeting chat: `MeetingChatService.send` → `MeetingAiBridge.ask` (async; `meet.ai thinking`) →
+RabbitMQ `AiRequestPayload{conversationId: "meeting:{id}", meetingId, history: 20 newest lines}` via
+`AiRedisPublisher.publishMeetingAiRequest` (failure ⇒ `meet.ai error AI_UNAVAILABLE`) → ai-service replies on
+`ai:response:meeting:{id}` → `AiResponseListener` hands `meeting:` events to `MeetingAiReplyHandler`: DONE ⇒
+SETNX `ai:done:` claim, one `MeetingMessage` from the AI bot + `meet.chat` (no push, no `messages` row);
+ERROR / blank ⇒ `meet.ai error {code}`; chunks ignored.
 
 ---
 
@@ -113,6 +163,9 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 - `MeetingReminderSweep` — every `app.meeting.sweep-interval-ms` (60 s default, annotation only):
   claims each meeting starting within 10 min (`reminded` false → true, once cluster-wide) and
   sends `meet.starting` + FCM `MEETING_STARTING`; retires SCHEDULED meetings 48h past their start
+- `MeetingSummarySweep` — same interval: AI summaries PENDING for more than 10 min ⇒ FAILED
+  (`MeetingStore.failStaleSummaries`, returns the flipped meetings → `meet.summary.ready` to host +
+  co-hosts), so the host can regenerate
 - `AssistantTokenRenewal` — every `app.assistant.token-renew-interval-ms` (6 h default): re-issues
   the MCP token of each member's Bot Factory assistant 14 days before it expires
   (`external_bots.mcpTokenExpiresAt`, connector `BOT_SESSION_TTL_DAYS`) and swaps it into the bot's
@@ -149,12 +202,12 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 - `/topic/conversation/{conversationId}` — Receive messages, reactions, edits, recalls, and AI streaming.
 - `/topic/conversation/{conversationId}/typing` — Receive typing status: `{ userId, typing: boolean }`
 - `/topic/meeting/{meetingId}` — `meet.roster | meet.settings | meet.ended | meet.hands | meet.chat |
-  meet.notes.updated`; SUBSCRIBE only when `MeetingAccess.decide` lets the user straight into the
+  meet.ai | meet.notes.updated`; SUBSCRIBE only when `MeetingAccess.decide` lets the user straight into the
   room (`MeetingTopicAuthorizer`); outbound frames are dropped for people in `meet:removed:{id}`
   (`MeetingTopicOutboundInterceptor`, next to `ConversationTopicOutboundInterceptor` on the
   clientOutboundChannel; fail-open on a Redis error)
 - `/user/queue/meeting` — `meet.lobby | meet.admitted | meet.denied | meet.ended | meet.invited |
-  meet.starting | meet.cancelled | meet.removed | meet.muted | meet.error`
+  meet.starting | meet.cancelled | meet.removed | meet.muted | meet.summary.ready | meet.error`
 - `/user/queue/notifications` — Receive unread notifications: `{ type: "NEW_MESSAGE", conversationId, senderName }`;
   also `{ type: "CLAIMS_CHANGED" }` (role/department/permissions changed → refresh token, refetch capabilities, reconnect)
 
@@ -207,6 +260,10 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 - `POST /{id}/join` → `{status:"joined", url, token, role}` | `{status:"waiting"}` ·
   `DELETE /{id}/lobby` · `POST /{id}/lobby/{userId}/admit|deny` · `POST /{id}/end`
 - `GET /{id}/messages?before=&size=` · `GET|PUT /{id}/notes/shared|private` · `GET /{id}/hands`
+- `GET /{id}/summary` (records access) · `POST /{id}/summary/regenerate` (host/co-host, 202;
+  409 `MEETING_SUMMARY_UNAVAILABLE` / `MEETING_SUMMARY_PENDING`)
+- Internal (service-to-service): `GET /internal/meetings/{id}/record` (`X-Internal-Key`)
+  (view includes latest `summary`) and `GET /internal/meetings?userId=&q=&limit=` (readable ENDED AI meetings, limit 20/max 50)
 - Errors `MEETING_*` / `MEETINGS_UNAVAILABLE` (`ErrorCodes`), checked in the services (no `@PreAuthorize`)
 
 ### Other Services

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { MessageSquare, MonitorUp, MoreHorizontal, NotebookPen, Settings2, ShieldCheck, Users } from 'lucide-react'
+import { MessageSquare, MonitorUp, MicOff, MoreHorizontal, NotebookPen, Settings2, ShieldCheck, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ import {
 import { isManager } from '@/lib/meetings/permissions'
 import type { LayoutMode } from '@/lib/meetings/stage-layout'
 import { useMeetingRoomStore, type RoomPanel } from '@/lib/store/meeting.store'
+import { RoomContext } from './room-context'
 import { RoomDevicesDialog } from './RoomDevicesDialog'
 
 /** Id of the host-controls block at the end of the People panel (Task 19). */
@@ -65,6 +66,8 @@ export function ControlBarMore({ compact, share, attention = [] }: Props) {
   const [devicesOpen, setDevicesOpen] = useState(false)
   const layout = useMeetingRoomStore((s) => s.layout)
   const manager = isManager(useMeetingRoomStore((s) => s.myRole))
+  const room = useContext(RoomContext)
+  const speech = room?.meeting.settings.aiNotes === true ? room.speech : undefined
   const open = (panel: Exclude<RoomPanel, null>) => useMeetingRoomStore.getState().setPanel(panel)
   const openManage = () => {
     open('people')
@@ -109,6 +112,12 @@ export function ControlBarMore({ compact, share, attention = [] }: Props) {
             <Settings2 aria-hidden />
             {t('devicesTitle')}
           </DropdownMenuItem>
+          {speech ? (
+            <DropdownMenuItem disabled={!speech.supported} onSelect={() => speech.setPaused(!speech.paused)}>
+              <MicOff aria-hidden />
+              {!speech.supported ? t('aiNotesUnsupported') : speech.paused ? t('aiNotesResumeMine') : t('aiNotesPauseMine')}
+            </DropdownMenuItem>
+          ) : null}
           {manager ? (
             <DropdownMenuItem onSelect={openManage}>
               <ShieldCheck aria-hidden />

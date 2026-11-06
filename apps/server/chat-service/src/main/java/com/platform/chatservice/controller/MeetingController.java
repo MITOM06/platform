@@ -9,6 +9,7 @@ import com.platform.chatservice.dto.meeting.MeetingMessageDto;
 import com.platform.chatservice.dto.meeting.MeetingNoteDto;
 import com.platform.chatservice.dto.meeting.MeetingNoteRequest;
 import com.platform.chatservice.dto.meeting.MeetingResponse;
+import com.platform.chatservice.dto.meeting.MeetingSummaryResponse;
 import com.platform.chatservice.dto.meeting.UpdateMeetingRequest;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.meeting.MeetingChatService;
@@ -16,8 +17,11 @@ import com.platform.chatservice.service.meeting.MeetingHandService;
 import com.platform.chatservice.service.meeting.MeetingJoinService;
 import com.platform.chatservice.service.meeting.MeetingNotesService;
 import com.platform.chatservice.service.meeting.MeetingNotesService.Scope;
+import com.platform.chatservice.service.meeting.MeetingScreenFrames;
 import com.platform.chatservice.service.meeting.MeetingService;
+import com.platform.chatservice.service.meeting.MeetingSummaryService;
 import java.security.Principal;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +34,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Meetings REST API (contract: {@code docs/api-spec.md} § Meetings). Thin: parses the request and
@@ -47,6 +53,8 @@ public class MeetingController {
   private final MeetingChatService chat;
   private final MeetingNotesService notes;
   private final MeetingHandService hands;
+  private final MeetingSummaryService summary;
+  private final MeetingScreenFrames screenFrames;
 
   /** No body (or an empty one) creates an instant meeting with every default ("họp ngay"). */
   @PostMapping
@@ -164,6 +172,31 @@ public class MeetingController {
   @GetMapping("/{id}/hands")
   public MeetingHandsResponse hands(@PathVariable String id, Principal principal) {
     return hands.snapshot(caller(principal), id);
+  }
+
+  @GetMapping("/{id}/summary")
+  public MeetingSummaryResponse summary(@PathVariable String id, Principal principal) {
+    return summary.get(caller(principal), id);
+  }
+
+  /** Host / co-host: ask for a new AI summary; 202 {@code {state: PENDING}}. */
+  @PostMapping("/{id}/summary/regenerate")
+  public ResponseEntity<MeetingSummaryResponse> regenerateSummary(
+      @PathVariable String id, Principal principal) {
+    return ResponseEntity.status(HttpStatus.ACCEPTED)
+        .body(summary.regenerate(caller(principal), id));
+  }
+
+  /** A frame of the caller's shared screen for the AI record: 202 accepted, 204 skipped. */
+  @PostMapping(path = "/{id}/screen-frames", consumes = "multipart/form-data")
+  public ResponseEntity<Map<String, Boolean>> screenFrame(
+      @PathVariable String id,
+      @RequestPart(value = "frame", required = false) MultipartFile frame,
+      @RequestParam(required = false) Long ts,
+      Principal principal) {
+    return screenFrames.accept(caller(principal), id, frame, ts)
+        ? ResponseEntity.status(HttpStatus.ACCEPTED).body(Map.of("accepted", true))
+        : ResponseEntity.noContent().build();
   }
 
   /**

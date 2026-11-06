@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl'
 import { Loader2 } from 'lucide-react'
+import { FileCard } from '@/components/chat/FileContent'
 import { Button } from '@/components/ui/button'
 import type { MeetingMessage } from '@/lib/api/meeting-types'
 import { useMeetingMessages } from '@/lib/hooks/use-meetings'
@@ -22,7 +23,10 @@ function ChatLine({ message, timeFormat }: { message: MeetingMessage; timeFormat
         )}
       </p>
       {/* Plain text only — chat from other people is untrusted. */}
-      <p className="whitespace-pre-wrap break-words text-sm">{message.content}</p>
+      {message.attachment ? (
+        <FileCard url={message.attachment.url} name={message.attachment.name} size={message.attachment.size} isOwn={false} />
+      ) : null}
+      {message.content ? <p className="whitespace-pre-wrap break-words text-sm">{message.content}</p> : null}
     </li>
   )
 }

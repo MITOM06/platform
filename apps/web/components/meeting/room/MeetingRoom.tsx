@@ -11,6 +11,9 @@ import type { MeetingRoomController } from '@/lib/meetings/meeting-room-controll
 import { isManager } from '@/lib/meetings/permissions'
 import { useMeetingRoomStore } from '@/lib/store/meeting.store'
 import { useStompConnected } from '@/lib/stomp/use-stomp-connected'
+import { useMeetingScreenFrames } from '@/lib/meetings/use-meeting-screen-frames'
+import { useMeetingTranscriber } from '@/lib/meetings/use-meeting-transcriber'
+import { AiNotesIndicator } from './AiNotesIndicator'
 import { ControlBar } from './ControlBar'
 import { MeetingStage } from './MeetingStage'
 import { ReactionOverlay } from './ReactionOverlay'
@@ -39,7 +42,7 @@ function RoomBanners({ realtimeConnected }: { realtimeConnected: boolean }) {
         ? { icon: <SignalLow className="size-4" aria-hidden />, text: t('poorConnection') }
         : null
   return (
-    <div role="status" className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center px-4">
+    <div role="status" className="flex justify-center">
       {notice ? (
         <p className="flex max-w-full items-center gap-2 rounded-full bg-black/55 px-3 py-1.5 text-xs font-medium text-white">
           {notice.icon}
@@ -76,9 +79,16 @@ export function MeetingRoom({ meeting, controller, myId, myName, myAvatarUrl }: 
   useMeetingShortcuts(controller, raised)
   useLobbyToast(meeting.id)
 
+  // Web Speech listens to the mic on its own, so a muted mic must also silence it.
+  const micOn = useMeetingRoomStore((s) => s.mic)
+  const { supported, paused, setPaused } = useMeetingTranscriber(meeting.id, meeting.settings.aiNotes === true && micOn)
+  // Frames of my shared screen feed the AI record (aiNotes on + I'm presenting).
+  const screenOn = useMeetingRoomStore((s) => s.screen)
+  const aiReadsScreen = meeting.settings.aiNotes === true && screenOn
+  const reading = useMeetingScreenFrames(meeting.id, aiReadsScreen)
   const room = useMemo<RoomContextValue>(
-    () => ({ meeting, controller, myId, myName, myAvatarUrl, realtimeConnected }),
-    [meeting, controller, myId, myName, myAvatarUrl, realtimeConnected],
+    () => ({ meeting, controller, myId, myName, myAvatarUrl, realtimeConnected, speech: { supported, paused, setPaused } }),
+    [meeting, controller, myId, myName, myAvatarUrl, realtimeConnected, supported, paused, setPaused],
   )
   const title = meeting.title?.trim() || t('untitled')
 
@@ -87,7 +97,11 @@ export function MeetingRoom({ meeting, controller, myId, myName, myAvatarUrl }: 
       <div className="flex h-dvh w-full flex-col bg-background">
         <div className="flex min-h-0 flex-1">
           <main className="relative min-w-0 flex-1 bg-neutral-950" aria-label={title}>
-            <RoomBanners realtimeConnected={realtimeConnected} />
+            {/* One column so the connection banner and the AI chip never overlap. */}
+            <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex flex-col gap-2 px-4">
+              <RoomBanners realtimeConnected={realtimeConnected} />
+              <AiNotesIndicator active={meeting.settings.aiNotes === true} sharing={reading} />
+            </div>
             <MeetingStage />
             <ReactionOverlay />
           </main>

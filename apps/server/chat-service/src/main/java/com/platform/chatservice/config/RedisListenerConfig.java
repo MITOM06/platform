@@ -9,6 +9,8 @@ import com.platform.chatservice.service.ClusterBroadcastListener;
 import com.platform.chatservice.service.ClusterMessageBroker;
 import com.platform.chatservice.service.ConversationMembershipCache;
 import com.platform.chatservice.service.KbStatusListener;
+import com.platform.chatservice.service.meeting.MeetingMaterialResultListener;
+import com.platform.chatservice.service.meeting.MeetingSummaryResultListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -25,6 +27,8 @@ public class RedisListenerConfig {
       AiResponseListener aiResponseListener,
       KbStatusListener kbStatusListener,
       CallSummaryListener callSummaryListener,
+      MeetingSummaryResultListener meetingSummaryResultListener,
+      MeetingMaterialResultListener meetingMaterialResultListener,
       ClusterBroadcastListener clusterBroadcastListener,
       SessionRevokedListener sessionRevokedListener,
       ClaimsChangedListener claimsChangedListener,
@@ -36,6 +40,12 @@ public class RedisListenerConfig {
     container.addMessageListener(kbStatusListener, new PatternTopic("kb:status:*"));
     // Exact-name channel (no wildcard) — ai-service → chat-service summary results.
     container.addMessageListener(callSummaryListener, new ChannelTopic("call:summary:result"));
+    // ai-service → chat-service: the AI summary of a finished meeting.
+    container.addMessageListener(
+        meetingSummaryResultListener, new ChannelTopic(MeetingSummaryResultListener.CHANNEL));
+    // ai-service → chat-service: what the AI read from a file sent in the meeting chat.
+    container.addMessageListener(
+        meetingMaterialResultListener, new ChannelTopic(MeetingMaterialResultListener.CHANNEL));
     // Cross-instance fan-out of ordinary chat broadcasts (messages, notifications, typing, read
     // receipts, call signaling, presence) so realtime works when participants are connected to
     // different Cloud Run instances. Published by ClusterMessageBroker.

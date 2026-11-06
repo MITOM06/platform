@@ -56,6 +56,7 @@ public class MeetingRtcHandler implements RtcRoomEventHandler {
     if (m.getStatus() == MeetingStatus.SCHEDULED) {
       store.markLive(m.getId(), at);
     }
+    store.markAiNotesUsed(m.getId());
     boolean recorded =
         store.recordJoin(
             m.getId(),

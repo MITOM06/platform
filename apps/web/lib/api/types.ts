@@ -104,15 +104,6 @@ export type MessageType =
   | 'text' | 'image' | 'video' | 'file' | 'voice' | 'sticker' | 'system' | 'call_log' | 'ai'
   | 'meeting_summary'
 
-/** Parsed `content` of a `meeting_summary` message (Track A contract §6). */
-export interface MeetingSummaryPayload {
-  attendees: string[]
-  durationSec: number
-  overview: string
-  keyPoints: string[]
-  actionItems: string[]
-}
-
 export interface UploadResult {
   url: string
   filename: string

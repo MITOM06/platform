@@ -31,15 +31,15 @@ function iconFor(name: string) {
   }
 }
 
-export function FileContent({ content, isOwn }: { content: string; isOwn: boolean }) {
-  const { name, size } = parseFileMeta(content)
+/** File card from plain props: icon by extension, name, size, download link (never the URL as text). */
+export function FileCard({ url, name, size, isOwn }: { url: string; name: string; size: number; isOwn: boolean }) {
   const Icon = iconFor(name)
   const sizeStr = formatBytes(size)
   const onColor = isOwn ? 'text-primary-foreground' : 'text-foreground'
 
   return (
     <a
-      href={downloadMediaUrl(parseFileMeta(content).url ?? absoluteMediaUrl(content))}
+      href={downloadMediaUrl(url)}
       target="_blank"
       rel="noopener noreferrer"
       className="flex max-w-[240px] items-center gap-2.5"
@@ -56,4 +56,9 @@ export function FileContent({ content, isOwn }: { content: string; isOwn: boolea
       <Download className={cn('size-5 shrink-0', onColor)} />
     </a>
   )
+}
+
+export function FileContent({ content, isOwn }: { content: string; isOwn: boolean }) {
+  const meta = parseFileMeta(content)
+  return <FileCard url={meta.url ?? absoluteMediaUrl(content)} name={meta.name} size={meta.size} isOwn={isOwn} />
 }

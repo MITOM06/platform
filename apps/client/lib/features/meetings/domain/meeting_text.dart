@@ -16,6 +16,8 @@ enum MeetingText {
   errUnavailable,
   errNotesReadOnly,
   errNoteConflict,
+  errSummaryPending,
+  errSummaryUnavailable,
   errRateLimited,
   errChatTooLong,
   errNoteTooLong,

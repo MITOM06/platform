@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.model.AiTraceData;
 import com.platform.chatservice.model.PendingAction;
+import com.platform.chatservice.service.meeting.MeetingAiReplyHandler;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.Tracer;
 import io.micrometer.tracing.propagation.Propagator;
@@ -50,6 +51,7 @@ public class AiResponseListener implements MessageListener {
   private final Propagator propagator;
   private final StringRedisTemplate redisTemplate;
   private final AiPendingActionService pendingActionService;
+  private final MeetingAiReplyHandler meetingAiReplyHandler;
 
   @Override
   @SuppressWarnings("null")
@@ -116,6 +118,11 @@ public class AiResponseListener implements MessageListener {
   }
 
   private void deliverToStomp(Map<String, Object> payload, String type, String convId) {
+    if (convId.startsWith(AiConstants.MEETING_CONVERSATION_PREFIX)) {
+      // A reply to an @AI asked in a meeting chat: lands in the meeting, not in a conversation.
+      meetingAiReplyHandler.handle(payload);
+      return;
+    }
     String topic = "/topic/conversation/" + convId;
     switch (type) {
       case "AI_STREAM_CHUNK" -> {

@@ -5,7 +5,7 @@ import com.platform.chatservice.model.Meeting;
 
 /**
  * Meeting settings. Boxed so a create/update request can send only the fields it changes; a
- * response always carries all five ({@link #of}).
+ * response always carries all six ({@link #of}).
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record MeetingSettingsDto(
@@ -13,7 +13,8 @@ public record MeetingSettingsDto(
     Boolean muteOnEntry,
     Boolean allowAttendeeScreenShare,
     Boolean attendeesCanEditNotes,
-    Boolean locked) {
+    Boolean locked,
+    Boolean aiNotes) {
 
   public static MeetingSettingsDto of(Meeting.Settings s) {
     Meeting.Settings settings = s == null ? new Meeting.Settings() : s;
@@ -22,6 +23,7 @@ public record MeetingSettingsDto(
         settings.isMuteOnEntry(),
         settings.isAllowAttendeeScreenShare(),
         settings.isAttendeesCanEditNotes(),
-        settings.isLocked());
+        settings.isLocked(),
+        settings.isAiNotes());
   }
 }

@@ -49,6 +49,9 @@ class AiResponseListenerTest {
   @Mock private ValueOperations<String, String> valueOperations;
   @Mock private AiPendingActionService pendingActionService;
 
+  @Mock
+  private com.platform.chatservice.service.meeting.MeetingAiReplyHandler meetingAiReplyHandler;
+
   private AiResponseListener listener;
 
   private final ObjectMapper objectMapper = new ObjectMapper();
@@ -87,7 +90,8 @@ class AiResponseListenerTest {
             tracer,
             propagator,
             redisTemplate,
-            pendingActionService);
+            pendingActionService,
+            meetingAiReplyHandler);
   }
 
   @Test
@@ -618,5 +622,32 @@ class AiResponseListenerTest {
     verify(messageService)
         .persistAiMessage(
             eq("conv-1"), eq("ok"), any(), anyList(), eq("r-actor"), any(), eq("user-9"));
+  }
+
+  @Test
+  void onMessage_meetingConversation_goesToTheMeetingHandlerOnly() throws Exception {
+    Map<String, Object> payload =
+        Map.of(
+            "type", "AI_STREAM_DONE",
+            "fullContent", "answer",
+            "conversationId", "meeting:m1");
+    when(redisMessage.getBody()).thenReturn(objectMapper.writeValueAsBytes(payload));
+
+    listener.onMessage(redisMessage, null);
+
+    verify(meetingAiReplyHandler).handle(eq(payload));
+    verifyNoInteractions(messageService, notificationService, clusterBroker, messagingTemplate);
+    verify(redisTemplate, never()).opsForValue();
+  }
+
+  @Test
+  void onMessage_normalConversation_neverTouchesTheMeetingHandler() throws Exception {
+    Map<String, Object> payload =
+        Map.of("type", "AI_STREAM_CHUNK", "chunk", "Hi", "conversationId", "conv-1");
+    when(redisMessage.getBody()).thenReturn(objectMapper.writeValueAsBytes(payload));
+
+    listener.onMessage(redisMessage, null);
+
+    verifyNoInteractions(meetingAiReplyHandler);
   }
 }

@@ -2,7 +2,16 @@ import type { MeetingEvent, ReactionEmoji } from '@/lib/api/meeting-types'
 import { safeDisplayName } from '@/lib/chat/names'
 import type { RemotePeer } from '@/lib/rtc/livekit-session'
 import { useMeetingRoomStore, type FloatingReaction, type PendingChat } from '@/lib/store/meeting.store'
+import { AI_BOT_ID } from '@/lib/constants'
 import type { MessageKey } from './meeting-errors'
+import {
+  AI_PENDING_TTL_MS,
+  addPendingAi,
+  aiErrorKey,
+  expirePendingAi,
+  failPendingAi,
+  resolvePendingAi,
+} from './pending-ai'
 import { REACTION_TOPIC, createReactionThrottle, decodeReaction, encodeReaction } from './reactions'
 
 /**
@@ -25,16 +34,32 @@ interface DataSession {
 
 /** Reactions on screen at once; older ones are dropped first. */
 const MAX_REACTIONS = 30
+const MAX_AI_NOTICES = 5
 export const REACTION_LIFETIME_MS = 4000
 
 const store = () => useMeetingRoomStore.getState()
 const setPending = (fn: (list: PendingChat[]) => PendingChat[]) =>
   useMeetingRoomStore.setState((s) => ({ pendingChat: fn(s.pendingChat) }))
 
+/** The file a line carries when sent: the server reads only `url` + `name`. */
+export interface OutgoingAttachment {
+  url: string
+  name: string
+  size?: number
+}
+
+const chatBody = (meetingId: string, content: string, clientId: string, a?: OutgoingAttachment) => ({
+  meetingId,
+  content,
+  clientId,
+  ...(a ? { attachment: { url: a.url, name: a.name } } : {}),
+})
+
 export class MeetingRoomChat {
   private readonly allowReaction = createReactionThrottle()
   private readonly timers = new Set<ReturnType<typeof setTimeout>>()
   private nextReactionId = 1
+  private nextNoticeId = 1
 
   constructor(
     private readonly meetingId: string,
@@ -44,12 +69,15 @@ export class MeetingRoomChat {
   ) {}
 
   /** Returns the clientId, or null when the line cannot be sent (empty, too long, offline). */
-  send(content: string, max: number): string | null {
+  send(content: string, max: number, attachment?: OutgoingAttachment): string | null {
     const text = content.trim()
-    if (!text || text.length > max || !this.deps.isRealtimeConnected()) return null
+    if ((!text && !attachment) || text.length > max || !this.deps.isRealtimeConnected()) return null
     const clientId = this.deps.newClientId()
-    this.deps.publish('/app/meet.chat', { meetingId: this.meetingId, content: text, clientId })
-    setPending((list) => [...list, { clientId, content: text, sentAt: this.deps.now(), error: null }])
+    this.deps.publish('/app/meet.chat', chatBody(this.meetingId, text, clientId, attachment))
+    const kept = attachment
+      ? { attachment: { url: attachment.url, name: attachment.name, size: attachment.size ?? 0, contentType: null } }
+      : {}
+    setPending((list) => [...list, { clientId, content: text, ...kept, sentAt: this.deps.now(), error: null }])
     return clientId
   }
 
@@ -60,7 +88,7 @@ export class MeetingRoomChat {
       this.deps.notify('error', { key: 'realtimeOffline' })
       return
     }
-    this.deps.publish('/app/meet.chat', { meetingId: this.meetingId, content: line.content, clientId })
+    this.deps.publish('/app/meet.chat', chatBody(this.meetingId, line.content, clientId, line.attachment))
     setPending((list) =>
       list.map((p) => (p.clientId === clientId ? { ...p, sentAt: this.deps.now(), error: null } : p)),
     )
@@ -84,6 +112,41 @@ export class MeetingRoomChat {
     if (countUnread && e.message.sender.userId !== this.myId && store().panel !== 'chat') {
       useMeetingRoomStore.setState((s) => ({ unreadChat: s.unreadChat + 1 }))
     }
+  }
+
+  /** `meet.ai`: thinking adds an entry (expiring in 60 s); error removes one, and tells only the requester. */
+  onAi(e: Extract<MeetingEvent, { event: 'meet.ai' }>): void {
+    const now = this.deps.now()
+    const live = () => expirePendingAi(store().pendingAi, now)
+    if (e.state === 'thinking') {
+      useMeetingRoomStore.setState({ pendingAi: addPendingAi(live(), e.requesterId, now) })
+      const timer = setTimeout(() => {
+        this.timers.delete(timer)
+        useMeetingRoomStore.setState((s) => ({ pendingAi: expirePendingAi(s.pendingAi, this.deps.now()) }))
+      }, AI_PENDING_TTL_MS + 1)
+      this.timers.add(timer)
+      return
+    }
+    useMeetingRoomStore.setState({ pendingAi: failPendingAi(live(), e.requesterId) })
+    if (e.requesterId !== this.myId) return
+    const id = this.nextNoticeId++
+    useMeetingRoomStore.setState((s) => ({
+      aiNotices: [...s.aiNotices, { id, key: aiErrorKey(e.code) }].slice(-MAX_AI_NOTICES),
+    }))
+  }
+
+  /** `meet.chat` from `/topic/meeting/{id}`: settle my echo / count unread, and finish an AI answer. */
+  onTopicChat(e: Extract<MeetingEvent, { event: 'meet.chat' }>): void {
+    this.onEcho(e)
+    this.onAiAnswer(e)
+  }
+
+  /** The AI's answer is an ordinary `meet.chat` from the bot: the oldest entry is done. */
+  private onAiAnswer(e: Extract<MeetingEvent, { event: 'meet.chat' }>): void {
+    if (e.message.sender.userId !== AI_BOT_ID) return
+    useMeetingRoomStore.setState((s) => ({
+      pendingAi: resolvePendingAi(expirePendingAi(s.pendingAi, this.deps.now())),
+    }))
   }
 
   sendReaction(emoji: ReactionEmoji): boolean {

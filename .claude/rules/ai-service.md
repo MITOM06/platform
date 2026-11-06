@@ -141,6 +141,13 @@ for await (const chunk of stream) {
 await this.publisher.publish(convId, { type: 'AI_STREAM_DONE', fullContent: fullText });
 ```
 
+## Meeting context (M3)
+
+- A request with `payload.meetingId` (chat-service, `@AI` in the meeting chat, `conversationId = "meeting:{id}"`) or a post-meeting group chat (`conversations.meetingId`) gets a meeting block from `MeetingContextService.blockFor` (record fetched AS the asker): trusted instruction + summary then record inside `wrapUntrusted('Meeting record')`, <= 60 000 chars (`meeting/meeting-context.ts`). No access -> trusted "no access" line; fetch error -> "temporarily unavailable" line; neither carries content.
+- Any request with a meeting block skips the response cache (lookup and store).
+- Tools `list_my_meetings({query?})` and `get_meeting_record({meetingId, question?})` (`tools/`): offered ONLY in the 1-1 chat with the AI (`ToolContext.directAi`, from `ConversationContext.directAi === true`); outside it `execute` returns `"Meeting not found."` (same string for no access / unknown / invalid id). Always use `ctx.userId`, never an id from input. Results are `wrapUntrusted`, record capped at 30 000 chars, not result-cached (`NEVER_CACHED_TOOLS`). Fetch/list errors -> `"Meeting records are temporarily unavailable."`.
+- `meeting:` conversations get NO tools (`RequestContext.noTools`): the reply is shown to the whole room but tools would run with the asker's permissions. Post-meeting groups keep normal group-chat tools.
+
 ## Testing
 
 - Run: `pnpm test` (Jest)
@@ -148,3 +155,11 @@ await this.publisher.publish(convId, { type: 'AI_STREAM_DONE', fullContent: full
 - Mock `ioredis` with `ioredis-mock`
 - Mock `@golevelup/nestjs-rabbitmq` `AmqpConnection` with a jest mock object
 - After every change: `pnpm build && pnpm test`
+
+## Meeting material (M4)
+- `meet:material` (chat-service, a file sent in the meeting chat) -> `MeetingMaterialService` (`meeting/`): claim `meet:material:claim:{messageId}` (NX, EX 3600), fetch `resolveUploadUrl('/api/uploads/'+uploadId, chat.internalUrl)` with `internalUploadHeaders` via `common/fetch-upload-capped.ts` (redirects refused, 20 MB cap on Content-Length AND while streaming, one 20 s timeout over the whole body), then publish `meet:material:result` (`ok` + text <= 6000 chars surrogate-safe | `unsupported` | `failed`). `chat-image.service.ts` keeps its own fetch.
+- Routing sniffs by mime, file extension and magic bytes (chat-service mime may be null/generic): PDF/DOCX/`text/*` -> `DocumentExtractorService.extractText` (short PDF text is kept; no `describePdf`, cost); jpeg/png/gif/webp -> `VisionDescribeService.describeImage` (>5 MB or vision unavailable -> `unsupported`). Everything else and empty text -> `unsupported`; extractor/fetch errors -> `failed`.
+- Vision goes ONLY through the Anthropic API (`VisionDescribeService`); never add another provider for file reading. Logs carry ids only, never file content.
+
+- Shared-screen frames (M5): `meet:material` with `kind:"screen"` (missing/`"file"` = file; any other kind is dropped by the subscriber). `messageId` = frameId, `uploadId` = GridFS file. Branch in `MeetingMaterialService.readScreen`: same claim key + semaphore, fetch cap 3 MB (over -> `failed`), bytes must sniff as an image (else `unsupported`, no API call), vision unavailable / oversized / unsupported -> `unsupported`, other errors -> `failed`. Calls `describeImage(buf, mime, userId, {prompt: SCREEN_PROMPT, maxTokens: 800, usageLabel: 'meeting-screen'})`; result text capped 1500 (surrogate-safe). `describeImage` opts default to the KB behaviour (KB prompt, 4096, `kb-vision`).
+- Prompt renders SCREEN records as `[SCREEN] (shared by {name}): {text}` inside the untrusted fence; no time is rendered (records are in order, the prompt has no timezone).

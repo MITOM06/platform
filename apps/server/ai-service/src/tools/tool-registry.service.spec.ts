@@ -59,6 +59,7 @@ function makeRegistry(overrides: Partial<{
   mcpGetTools: jest.Mock;
   mcpCallTool: jest.Mock;
   cache: ToolResultCacheService;
+  listMeetings: jest.Mock;
 }> = {}): ToolRegistryService {
   const searchMessages = {
     execute: overrides.search ?? jest.fn().mockResolvedValue('search result'),
@@ -104,8 +105,30 @@ function makeRegistry(overrides: Partial<{
     mcpConnector,
     overrides.cache ?? makeCache(false),
     { execute: jest.fn().mockResolvedValue('dept notes') } as any,
+    { execute: overrides.listMeetings ?? jest.fn().mockResolvedValue('meetings') } as any,
+    { execute: jest.fn().mockResolvedValue('record') } as any,
   );
 }
+
+describe('ToolRegistryService meeting tools', () => {
+  const names = async (c: ToolContext) => (await makeRegistry().getDefinitions(c)).map((d) => d.name);
+  it('offered only when directAi === true', async () => {
+    expect(await names({ ...ctx, directAi: true })).toEqual(expect.arrayContaining(['list_my_meetings', 'get_meeting_record']));
+    for (const d of [false, undefined]) {
+      const n = await names({ ...ctx, directAi: d });
+      expect(n).not.toContain('list_my_meetings');
+      expect(n).not.toContain('get_meeting_record');
+    }
+  });
+  it('never serves one user\'s meeting result to another', async () => {
+    const listMeetings = jest.fn().mockResolvedValueOnce('A-list').mockResolvedValueOnce('B-list');
+    const r = makeRegistry({ listMeetings, cache: makeCache(true) });
+    const a = await r.execute('list_my_meetings', {}, { ...ctx, userId: 'A', directAi: true });
+    const b = await r.execute('list_my_meetings', {}, { ...ctx, userId: 'B', directAi: true });
+    expect([a, b]).toEqual(['A-list', 'B-list']);
+    expect(listMeetings).toHaveBeenCalledTimes(2);
+  });
+});
 
 describe('ToolRegistryService', () => {
   it('returns 8 static tool definitions when no dynamic tools', async () => {

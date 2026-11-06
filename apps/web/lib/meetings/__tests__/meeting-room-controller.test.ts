@@ -144,6 +144,25 @@ describe('chat', () => {
     expect(store().unreadChat).toBe(0)
   })
 
+  it('sends a file-only line; the pending line keeps it and a retry re-sends it', async () => {
+    await inRoom()
+    const att = { url: '/api/uploads/abc', name: 'plan.pdf', size: 99 }
+    expect(c.sendChat('', att)).toBe('c-abc')
+    expect(deps.publish).toHaveBeenCalledWith('/app/meet.chat',
+      { meetingId: 'm1', content: '', clientId: 'c-abc', attachment: { url: '/api/uploads/abc', name: 'plan.pdf' } })
+    expect(store().pendingChat[0].attachment).toEqual({ url: '/api/uploads/abc', name: 'plan.pdf', size: 99, contentType: null })
+    c.handle({ event: 'meet.error', meetingId: 'm1', clientId: 'c-abc', errorCode: 'RATE_LIMITED' })
+    c.retryChat('c-abc')
+    expect(deps.publish).toHaveBeenLastCalledWith('/app/meet.chat',
+      { meetingId: 'm1', content: '', clientId: 'c-abc', attachment: { url: '/api/uploads/abc', name: 'plan.pdf' } })
+  })
+
+  it('a plain line publishes no attachment key', async () => {
+    await inRoom()
+    c.sendChat('hi')
+    expect(deps.publish.mock.calls[0][1]).not.toHaveProperty('attachment')
+  })
+
   it('marks a refused line and lets me retry or discard it', async () => {
     await inRoom()
     c.sendChat('spam')
@@ -408,5 +427,58 @@ describe('lifecycle', () => {
     expect(flush).toHaveBeenCalled()
     expect(deps.api.end).toHaveBeenCalledWith('m1')
     expect(store().phase).toBe('ended')
+  })
+})
+
+describe('AI in the chat', () => {
+  const ai = (state: 'thinking' | 'error', requesterId: string, code?: string) =>
+    ({ event: 'meet.ai' as const, meetingId: 'm1', state, requesterId, ...(code ? { code } : {}) })
+  const botLine = () => ({ event: 'meet.chat' as const, meetingId: 'm1',
+    message: { id: 'b1', sender: { userId: 'ai-bot-000000000000000000000001' }, content: '**hi**', createdAt: 't' } })
+
+  it('thinking turns the indicator on, an AI line turns it off', async () => {
+    await inRoom()
+    c.onAi(ai('thinking', 'bob'))
+    expect(store().pendingAi).toEqual([{ requesterId: 'bob', startedAt: 10_000 }])
+    c.onChat(botLine())
+    expect(store().pendingAi).toEqual([])
+  })
+
+  it('an AI line counts as unread while the chat panel is closed', async () => {
+    await inRoom()
+    c.onChat(botLine())
+    expect(store().unreadChat).toBe(1)
+  })
+
+  it('a human line leaves the indicator alone', async () => {
+    await inRoom()
+    c.onAi(ai('thinking', 'bob'))
+    c.onChat({ ...botLine(), message: { ...botLine().message, sender: { userId: 'bob' } } })
+    expect(store().pendingAi).toHaveLength(1)
+  })
+
+  it('my error clears the indicator and adds a translated notice; others only clear', async () => {
+    await inRoom()
+    c.onAi(ai('thinking', 'me'))
+    c.onAi(ai('error', 'me', 'AI_UNAVAILABLE'))
+    expect(store().pendingAi).toEqual([])
+    expect(store().aiNotices.map((n) => n.key)).toEqual(['aiUnavailable'])
+    c.onAi(ai('thinking', 'bob'))
+    c.onAi(ai('error', 'bob', 'AI_EMPTY'))
+    expect(store().pendingAi).toEqual([])
+    expect(store().aiNotices).toHaveLength(1)
+  })
+
+  it('an entry expires after 60 s', async () => {
+    vi.useFakeTimers()
+    try {
+      await inRoom()
+      let t = 10_000
+      deps.now.mockImplementation(() => t)
+      c.onAi(ai('thinking', 'bob'))
+      t += 60_000
+      vi.advanceTimersByTime(60_001)
+      expect(store().pendingAi).toEqual([])
+    } finally { vi.useRealTimers() }
   })
 })
