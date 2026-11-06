@@ -1,4 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
+import { AI_BOT_ID } from '@/lib/constants'
 import {
   SHARED_CONVERSATION_FIELDS,
   type Conversation,
@@ -24,6 +25,19 @@ export const CONVERSATIONS_KEY = ['conversations'] as const
 export const ARCHIVED_CONVERSATIONS_KEY = ['conversations', 'archived'] as const
 const BLOCKED_CONVERSATIONS_KEY = ['conversations', 'blocked'] as const
 const LEGACY_BLOCKED_KEY = ['blocked-conversations'] as const
+
+/** The caller's AI threads (a plain `Conversation[]`, newest activity first). */
+export const AI_THREADS_KEY = ['ai-threads'] as const
+
+/**
+ * An AI conversation (thread): the AI bot is a participant of a non-group chat
+ * (a missing `type` counts as direct) — matches the server's `isAiThread`.
+ */
+export function isAiConversation(
+  c: (Pick<Conversation, 'participants'> & Partial<Pick<Conversation, 'type'>>) | undefined,
+): boolean {
+  return Array.isArray(c?.participants) && c.participants.includes(AI_BOT_ID) && c?.type !== 'group'
+}
 
 const LIST_KEYS = [CONVERSATIONS_KEY, ARCHIVED_CONVERSATIONS_KEY, BLOCKED_CONVERSATIONS_KEY] as const
 
@@ -89,6 +103,32 @@ function listContains(queryClient: QueryClient, key: readonly unknown[], id: str
   return data?.content.some((c) => c.id === id) ?? false
 }
 
+function patchAiThreads(
+  queryClient: QueryClient,
+  fn: (list: Conversation[]) => Conversation[],
+): void {
+  queryClient.setQueryData<Conversation[]>(AI_THREADS_KEY, (old) => (old ? fn(old) : old))
+}
+
+function aiThreadsContain(queryClient: QueryClient, id: string): boolean {
+  return queryClient.getQueryData<Conversation[]>(AI_THREADS_KEY)?.some((c) => c.id === id) ?? false
+}
+
+/** Insert (top) or replace a thread in `['ai-threads']`; no-op while that query is not loaded. */
+export function upsertAiThread(
+  queryClient: QueryClient,
+  conv: Conversation,
+  opts: { keepPosition?: boolean } = {},
+): void {
+  patchAiThreads(queryClient, (list) =>
+    list.some((c) => c.id === conv.id)
+      ? opts.keepPosition
+        ? list.map((c) => (c.id === conv.id ? conv : c))
+        : [conv, ...list.filter((c) => c.id !== conv.id)]
+      : [conv, ...list],
+  )
+}
+
 /** The cached copy of a conversation (detail query first, then any list). */
 export function findCachedConversation(
   queryClient: QueryClient,
@@ -100,12 +140,13 @@ export function findCachedConversation(
     const hit = queryClient.getQueryData<ConversationsResponse>(key)?.content.find((c) => c.id === id)
     if (hit) return hit
   }
-  return undefined
+  return queryClient.getQueryData<Conversation[]>(AI_THREADS_KEY)?.find((c) => c.id === id)
 }
 
 /** Remove a conversation (and its thread) from every cache. */
 export function dropConversation(queryClient: QueryClient, id: string): void {
   for (const key of LIST_KEYS) patchList(queryClient, key, (list) => list.filter((c) => c.id !== id))
+  patchAiThreads(queryClient, (list) => list.filter((c) => c.id !== id))
   queryClient.removeQueries({ queryKey: conversationKey(id), exact: true })
   queryClient.removeQueries({ queryKey: ['messages', id], exact: true })
 }
@@ -133,6 +174,14 @@ export function applySharedConversationUpdate(
     queryClient.setQueryData(conversationKey(shared.id), mergeSharedConversation(one, shared))
     found = true
   }
+  if (aiThreadsContain(queryClient, shared.id)) {
+    found = true
+    patchAiThreads(queryClient, (list) =>
+      list
+        .map((c) => (c.id === shared.id ? mergeSharedConversation(c, shared) : c))
+        .sort(byNewestActivity),
+    )
+  }
   for (const key of LIST_KEYS) {
     if (!listContains(queryClient, key, shared.id)) continue
     found = true
@@ -143,7 +192,11 @@ export function applySharedConversationUpdate(
     )
   }
   if (!found) {
-    queryClient.invalidateQueries({ queryKey: CONVERSATIONS_KEY, exact: true })
+    // AI threads never belong in the main list (fetched with excludeAi=true).
+    queryClient.invalidateQueries({
+      queryKey: isAiConversation(shared) ? AI_THREADS_KEY : CONVERSATIONS_KEY,
+      exact: true,
+    })
     return 'unknown'
   }
   return 'merged'
@@ -166,6 +219,12 @@ export function applyOwnConversationUpdate(
   const previous = findCachedConversation(queryClient, full.id)
   if (queryClient.getQueryData<Conversation>(conversationKey(full.id))) {
     queryClient.setQueryData(conversationKey(full.id), full)
+  }
+
+  if (isAiConversation(full)) {
+    // AI threads live only in `['ai-threads']`: insert a new one at the top.
+    upsertAiThread(queryClient, full, { keepPosition: aiThreadsContain(queryClient, full.id) })
+    return previous ? 'merged' : 'unknown'
   }
 
   const replace = (list: Conversation[]) => list.map((c) => (c.id === full.id ? full : c))
@@ -245,8 +304,10 @@ export function applyIncomingPreview(
   const { conversationId, messageId, createdAt } = event
   if (!messageId || !createdAt || !Number.isFinite(Date.parse(createdAt))) return false
   const list = queryClient.getQueryData<ConversationsResponse>(CONVERSATIONS_KEY)
-  const conv = list?.content.find((c) => c.id === conversationId)
-  if (!list || !conv) return false
+  const aiThreads = queryClient.getQueryData<Conversation[]>(AI_THREADS_KEY)
+  const aiConv = aiThreads?.find((c) => c.id === conversationId)
+  const conv = aiConv ?? list?.content.find((c) => c.id === conversationId)
+  if (!conv || (!aiConv && !list)) return false
   // Already applied (the open thread or a duplicate frame), or older than the row.
   if (conv.lastMessage?.messageId === messageId) return true
   if (conv.lastMessageAt && Date.parse(conv.lastMessageAt) > Date.parse(createdAt)) return true
@@ -263,9 +324,13 @@ export function applyIncomingPreview(
     lastMessageAt: createdAt,
     unreadCount: viewing ? conv.unreadCount : (conv.unreadCount ?? 0) + 1,
   }
+  if (aiConv) {
+    upsertAiThread(queryClient, updated)
+    return true
+  }
   queryClient.setQueryData<ConversationsResponse>(CONVERSATIONS_KEY, {
-    ...list,
-    content: [updated, ...list.content.filter((c) => c.id !== conversationId)],
+    ...list!,
+    content: [updated, ...list!.content.filter((c) => c.id !== conversationId)],
   })
   return true
 }

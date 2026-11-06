@@ -62,6 +62,8 @@ const _codeTexts = {
   'MEETINGS_UNAVAILABLE': MeetingText.errUnavailable,
   'MEETING_NOTES_READ_ONLY': MeetingText.errNotesReadOnly,
   'MEETING_NOTE_CONFLICT': MeetingText.errNoteConflict,
+  'MEETING_SUMMARY_PENDING': MeetingText.errSummaryPending,
+  'MEETING_SUMMARY_UNAVAILABLE': MeetingText.errSummaryUnavailable,
   'RATE_LIMITED': MeetingText.errRateLimited,
 };
 

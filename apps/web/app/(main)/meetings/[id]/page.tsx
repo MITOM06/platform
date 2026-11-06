@@ -11,6 +11,7 @@ import { MeetingStatusBadge } from '@/components/meeting/MeetingStatusBadge'
 import { NotesEditor } from '@/components/meeting/NotesEditor'
 import { AttendanceList } from '@/components/meeting/detail/AttendanceList'
 import { ChatHistory } from '@/components/meeting/detail/ChatHistory'
+import { MeetingAiSummary } from '@/components/meeting/detail/MeetingAiSummary'
 import { MeetingActions } from '@/components/meeting/detail/MeetingActions'
 import { MeetingInfoCard } from '@/components/meeting/detail/MeetingInfoCard'
 import type { Meeting } from '@/lib/api/meeting-types'
@@ -107,7 +108,7 @@ function MeetingDetail({ meeting: m }: { meeting: Meeting }) {
               <h2 className="text-sm font-medium">{t('sectionNotes')}</h2>
               <NotesEditor meetingId={m.id} canEditShared={canEditSharedNote(m.viewerRole, m.settings)} />
             </section>
-            {/* P2: AI summary slot */}
+            <MeetingAiSummary meeting={m} />
             <ChatHistory meetingId={m.id} enabled={recordsEnabled} />
           </CardContent>
         </Card>

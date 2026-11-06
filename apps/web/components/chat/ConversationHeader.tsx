@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
-import { ArrowLeft, Bot, Settings, Phone, Video, Users } from 'lucide-react'
+import { ArrowLeft, Bot, Settings, Phone, Video, Users, SquarePen } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useConversation } from '@/lib/hooks/use-conversation'
 import { useUserStatus } from '@/lib/hooks/use-user-status'
@@ -12,10 +12,10 @@ import { useRelationship } from '@/lib/hooks/use-relationship'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useUser } from '@/lib/hooks/use-user'
 import { useAssistant } from '@/lib/hooks/use-assistant'
-import { useAssistantName } from '@/lib/hooks/use-capabilities'
 import type { Conversation } from '@/lib/api/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { useCreateAiThread } from '@/lib/hooks/use-ai-threads'
 import { PinnedMessagesBar } from './PinnedMessagesBar'
 import { ConversationSettingsDrawer } from './ConversationSettingsDrawer'
 import { GroupSettingsDrawer } from './GroupSettingsDrawer'
@@ -78,6 +78,8 @@ export function ConversationHeader({
 }: Props) {
   const t = useTranslations('chat')
   const tCall = useTranslations('call')
+  const tThreads = useTranslations('aiThreads')
+  const createThread = useCreateAiThread()
   const router = useRouter()
   const { data: conversation } = useConversation(conversationId)
   const queryClient = useQueryClient()
@@ -105,17 +107,15 @@ export function ConversationHeader({
   const blockedMe = relationship?.blockedMe ?? false
   const { data: otherUser } = useUser(otherUserId)
   const nickname = useNickname(conversationId, otherUserId)
-  const assistantName = useAssistantName()
   const { data: extBotAssistant } = useAssistant()
 
-  const displayName =
-    nickname ??
-    conversation?.name ??
-    (isAI
-      ? (assistantName ?? t('aiAssistant'))
-      : isExtBot
+  const displayName = isAI
+    ? conversation?.name?.trim() || tThreads('untitled')
+    : (nickname ??
+      conversation?.name ??
+      (isExtBot
         ? (extBotAssistant?.name ?? t('aiAssistant'))
-        : (otherUser?.displayName ?? t('conversationDefault')))
+        : (otherUser?.displayName ?? t('conversationDefault'))))
   const avatarUrl = conversation?.avatarUrl ?? otherUser?.avatarUrl
   const isTyping = typingUserIds.length > 0
   const pinnedMessages = conversation?.pinnedMessages ?? []
@@ -152,7 +152,7 @@ export function ConversationHeader({
           variant="ghost"
           size="icon"
           className="md:hidden h-8 w-8 shrink-0 -ml-1"
-          onClick={() => router.push('/conversations')}
+          onClick={() => router.push(isAI ? '/ai-hub' : '/conversations')}
           title={t('backToList')}
         >
           <ArrowLeft className="size-5" />
@@ -221,6 +221,25 @@ export function ConversationHeader({
 
         {/* Header action buttons */}
         <div className="flex items-center gap-0.5 shrink-0">
+          {/* New AI chat — starts a fresh thread (reachable on mobile, where the sidebar is hidden) */}
+          {isAI && (
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={createThread.isPending}
+              onClick={() =>
+                createThread.mutate(undefined, {
+                  onSuccess: (conv) => router.push(`/conversations/${conv.id}`),
+                  onError: () => toast.error(tThreads('createFailed')),
+                })
+              }
+              title={tThreads('newThread')}
+              aria-label={tThreads('newThread')}
+              className="tap"
+            >
+              <SquarePen className="size-4" />
+            </Button>
+          )}
           {/* Group call — always visible for group conversations */}
           {isGroup && !isAI && (
             <Button

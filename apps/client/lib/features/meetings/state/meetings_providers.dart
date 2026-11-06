@@ -16,6 +16,7 @@ import '../data/my_departments_repository.dart';
 import '../domain/cache_updates.dart';
 import '../domain/meeting_errors.dart';
 import '../domain/meeting_models.dart';
+import '../domain/meeting_summary.dart';
 import 'meetings_store.dart';
 
 export '../domain/cache_updates.dart' show ChatHistory, MeetingListData;
@@ -139,6 +140,27 @@ class ChatHistoryNotifier
 
 final meetingChatHistoryProvider = AsyncNotifierProvider.autoDispose
     .family<ChatHistoryNotifier, ChatHistory, String>(ChatHistoryNotifier.new);
+
+/// AI summary of an ended meeting (`GET /{id}/summary`). `meet.summary.ready`
+/// invalidates it (see the queue context); a regenerate flips it to PENDING.
+class MeetingSummaryNotifier extends AutoDisposeFamilyAsyncNotifier<
+    MeetingSummaryResponse, String> {
+  @override
+  Future<MeetingSummaryResponse> build(String id) =>
+      ref.read(meetingsRepositoryProvider).summary(id);
+
+  /// Host/co-host. Rethrows the API error (409 ⇒ the caller maps it).
+  Future<void> regenerate() async {
+    await ref.read(meetingsRepositoryProvider).regenerateSummary(arg);
+    final current = state.valueOrNull ??
+        const MeetingSummaryResponse(inGroup: false);
+    state = AsyncData(current.withState(MeetingSummaryState.pending));
+  }
+}
+
+final meetingSummaryProvider = AsyncNotifierProvider.autoDispose
+    .family<MeetingSummaryNotifier, MeetingSummaryResponse, String>(
+        MeetingSummaryNotifier.new);
 
 /// Departments the caller belongs to (auth-service).
 final myDepartmentsProvider =

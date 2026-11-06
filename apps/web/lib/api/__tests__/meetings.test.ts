@@ -15,6 +15,14 @@ beforeEach(() => {
 })
 
 describe('meetingsApi', () => {
+  it('uploads a screen frame as multipart with a 15 s timeout', async () => {
+    await meetingsApi.uploadScreenFrame('m 1', new Blob(['x']), 5)
+    const [url, form, cfg] = http.post.mock.calls.at(-1)!
+    expect(url).toBe('/api/meetings/m%201/screen-frames')
+    expect((form as FormData).get('ts')).toBe('5')
+    expect(cfg).toMatchObject({ timeout: 15_000, validateStatus: expect.any(Function) })
+  })
+
   it('lists a scope with the cursor only when there is one', async () => {
     http.get.mockResolvedValue({ data: { content: [], page: 0, size: 20, totalElements: 0, hasNext: false } })
     await meetingsApi.list('upcoming')
@@ -54,6 +62,18 @@ describe('meetingsApi', () => {
     expect(http.get).toHaveBeenLastCalledWith('/api/meetings/m1/messages', {
       params: { before: 'msg7', size: 50 },
     })
+  })
+
+  it('validates attachments of history rows, dropping bad ones but keeping the row', async () => {
+    http.get.mockResolvedValueOnce({ data: { content: [
+      { id: 'a', content: '', attachment: { url: '/api/uploads/x', name: 'f.pdf', size: 3, contentType: 'application/pdf' } },
+      { id: 'b', content: 'hi', attachment: { url: 'https://evil.example/x', name: 'f' } },
+      { id: 'c', content: 'plain' },
+    ], page: 0, size: 50, totalElements: 3, hasNext: false } })
+    const page = await meetingsApi.messages('m1')
+    expect(page.content[0].attachment).toEqual({ url: '/api/uploads/x', name: 'f.pdf', size: 3, contentType: 'application/pdf' })
+    expect(page.content[1]).toEqual({ id: 'b', content: 'hi' })
+    expect(page.content[2]).toEqual({ id: 'c', content: 'plain' })
   })
 
   it('reads and writes notes by scope', async () => {

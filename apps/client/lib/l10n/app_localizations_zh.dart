@@ -936,6 +936,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get meetingSummaryTitle => '会议摘要';
 
   @override
+  String get meetingSummaryUnavailable => '摘要不可用';
+
+  @override
   String meetingSummaryDuration(String duration) {
     return '时长 $duration';
   }
@@ -953,6 +956,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get meetingSummaryActionItems => '待办事项';
+
+  @override
+  String get meetingSummaryDecisions => '决议';
+
+  @override
+  String get meetingSummaryFromMaterials => '来自资料';
 
   @override
   String get profileTitle => '个人资料';
@@ -3054,25 +3063,49 @@ class AppLocalizationsZh extends AppLocalizations {
   String get leaveWithoutSaving => '不保存离开';
 
   @override
-  String get aiSessionHistory => '对话历史';
+  String get aiThreadUntitled => '与 AI 聊天';
 
   @override
-  String get aiNewSession => '新对话';
+  String get aiThreadNew => '新对话';
 
   @override
-  String get aiSessionActive => '使用中';
+  String get aiThreadsTitle => '对话';
 
   @override
-  String get aiSessionSummarized => '已摘要';
+  String get aiThreadRename => '重命名';
 
   @override
-  String get aiSessionEmpty => '暂无历史对话';
+  String get aiThreadSave => '保存';
 
   @override
-  String get aiSessionResume => '恢复';
+  String get aiThreadCancel => '取消';
 
   @override
-  String get aiSessionLoadError => '无法加载对话历史';
+  String get aiThreadDelete => '删除';
+
+  @override
+  String get aiThreadDeleteTitle => '删除此对话？';
+
+  @override
+  String get aiThreadDeleteDesc => '此 AI 对话中的所有消息都将从你的账户中移除，且无法撤销。';
+
+  @override
+  String get aiThreadEmpty => '还没有对话。开始一个新的吧。';
+
+  @override
+  String get aiThreadLoadFailed => '无法加载对话，请重试。';
+
+  @override
+  String get aiThreadCreateFailed => '无法创建新对话，请重试。';
+
+  @override
+  String get aiThreadRenameFailed => '无法重命名，请重试。';
+
+  @override
+  String get aiThreadNameInvalid => '名称需为 1 到 80 个字符。';
+
+  @override
+  String get aiThreadDeleteFailed => '无法删除对话，请重试。';
 
   @override
   String multiSelectCount(int count) {
@@ -4563,6 +4596,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get meetingErrNoteConflict => '有人保存了更新的版本';
 
   @override
+  String get meetingErrSummaryPending => '摘要正在生成中';
+
+  @override
+  String get meetingErrSummaryUnavailable => '此会议暂无可用摘要';
+
+  @override
+  String get meetingAiSummaryTitle => 'AI 摘要';
+
+  @override
+  String get meetingAiSummaryPending => 'AI 正在生成摘要…';
+
+  @override
+  String get meetingAiSummaryEmpty => '会议没有可供总结的内容';
+
+  @override
+  String get meetingAiSummaryFailed => '暂时无法生成摘要';
+
+  @override
+  String get meetingAiSummaryOpenGroup => '打开会议群组';
+
+  @override
+  String get meetingAiSummaryRegenerate => '重新生成';
+
+  @override
   String get meetingErrRateLimited => '发送太快了，请稍等片刻。';
 
   @override
@@ -4929,6 +4986,34 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get meetingSettingLockedDesc => '只有受邀者可以加入';
+
+  @override
+  String get meetingSettingAiNotes => 'AI 会议纪要';
+
+  @override
+  String get meetingSettingAiNotesDesc =>
+      'AI 会记录发言、聊天、笔记、文件和共享屏幕，以便会后生成摘要。房间内所有人都会收到通知。';
+
+  @override
+  String get meetingAiNotesActive => 'AI 正在记录';
+
+  @override
+  String get meetingAiReadingScreen => 'AI 正在读取你共享的屏幕';
+
+  @override
+  String get meetingAiNotesStarted => 'AI 已开始记录本次会议';
+
+  @override
+  String get meetingAiNotesPrejoin => '本次会议启用了 AI 纪要';
+
+  @override
+  String get meetingAiNotesPauseMine => '暂停记录我的发言';
+
+  @override
+  String get meetingAiNotesResumeMine => '继续记录我的发言';
+
+  @override
+  String get meetingAiNotesUnsupported => '此设备不支持为 AI 笔记记录语音';
 
   @override
   String get meetingSubmitCreate => '安排';
@@ -5450,6 +5535,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get meetingChatEmpty => '会议中的所有人都能看到消息';
 
   @override
+  String get meetingAiName => 'PON AI';
+
+  @override
+  String get meetingAiThinking => 'PON AI 正在回答…';
+
+  @override
+  String get meetingAiUnavailable => 'AI 暂时不可用';
+
+  @override
+  String get meetingAiFailed => 'AI 无法回答，请重试';
+
+  @override
+  String get meetingAiQuotaExceeded => '已达到 AI 使用上限';
+
+  @override
+  String get meetingAiRateLimited => '请求过多，请稍后重试';
+
+  @override
+  String get meetingChatAiHint => '在问题前输入 @AI 即可向助手提问';
+
+  @override
   String get meetingChatFailed => '未发送';
 
   @override
@@ -5460,6 +5566,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get meetingChatSending => '正在发送…';
+
+  @override
+  String get meetingChatAttach => '添加附件';
+
+  @override
+  String get meetingChatUploading => '正在上传文件…';
+
+  @override
+  String get meetingChatFileTooLarge => '文件太大';
+
+  @override
+  String get meetingChatUploadFailed => '无法上传文件，请重试';
+
+  @override
+  String get meetingChatNotSent => '文件未能发送。已保留在此，点击发送重试';
+
+  @override
+  String get meetingChatRemoveFile => '移除文件';
 
   @override
   String get meetingChatOffline => '正在重新连接，暂时无法发送消息';

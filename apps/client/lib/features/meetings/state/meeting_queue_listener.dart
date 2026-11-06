@@ -13,6 +13,7 @@ import '../domain/meeting_text.dart';
 import '../domain/schedule.dart';
 import '../ui/meeting_text_l10n.dart';
 import 'active_room.dart';
+import 'meetings_providers.dart';
 import 'meetings_store.dart';
 
 /// Listens to `/user/queue/meeting` for the whole session (subscribed with
@@ -91,4 +92,8 @@ class _AppMeetingQueueContext implements MeetingQueueContext {
 
   @override
   ActiveMeetingRoom? activeRoom() => activeMeetingRoom();
+
+  @override
+  void summaryChanged(String meetingId) =>
+      _ref.invalidate(meetingSummaryProvider(meetingId));
 }

@@ -7,9 +7,10 @@ import { toast } from 'sonner'
 import { useLocale, useTranslations } from 'next-intl'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useNotificationPrefs } from '@/lib/store/notification-prefs'
+import { useAiThreads } from '@/lib/hooks/use-ai-threads'
 import { stompService } from '@/lib/stomp/client'
 import { refreshClaims } from '@/lib/realtime/claims'
-import { CONVERSATIONS_KEY } from '@/lib/realtime/conversation-cache'
+import { AI_THREADS_KEY, CONVERSATIONS_KEY } from '@/lib/realtime/conversation-cache'
 import { createPresenceHandler, handleWebRtcFrame } from '@/lib/realtime/session-handlers'
 import { presentNotice } from '@/lib/realtime/present-notice'
 import { handleMeetingQueueEvent, type MeetingQueueContext } from '@/lib/realtime/meeting-queue'
@@ -30,6 +31,8 @@ const conversationPath = (id: string) => `/conversations/${id}`
 export function useRealtimeNotifications(): void {
   const router = useRouter()
   const queryClient = useQueryClient()
+  // Keep ['ai-threads'] loaded app-wide so realtime AI updates always have a cache to land in.
+  useAiThreads()
   // Depend on a STABLE boolean, not the token value: the token is rotated on
   // every ~15-min refresh (and on every 401-refresh), and a value dependency
   // here would tear down + rebuild the STOMP singleton on each rotation — a
@@ -137,6 +140,7 @@ export function useRealtimeNotifications(): void {
       if (connected) refreshTransport()
       if (connected && !wasConnected && connectedBefore) {
         queryClient.invalidateQueries({ queryKey: CONVERSATIONS_KEY })
+        queryClient.invalidateQueries({ queryKey: AI_THREADS_KEY })
         queryClient.invalidateQueries({ queryKey: ['notifications'] })
       }
       if (connected) connectedBefore = true

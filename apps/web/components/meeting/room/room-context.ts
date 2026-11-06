@@ -15,6 +15,8 @@ export interface RoomContextValue {
   myAvatarUrl?: string
   /** STOMP up: hands, chat and host commands work. */
   realtimeConnected: boolean
+  /** My speech capture for AI notes (undefined outside the live room). */
+  speech?: { supported: boolean; paused: boolean; setPaused(p: boolean): void }
 }
 
 export const RoomContext = createContext<RoomContextValue | null>(null)

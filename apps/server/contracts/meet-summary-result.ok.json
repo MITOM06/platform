@@ -1,0 +1,16 @@
+{
+  "meetingId": "m1",
+  "attempt": "a1",
+  "status": "ok",
+  "summary": {
+    "overview": "The team agreed to ship in December.",
+    "keyPoints": ["Budget is 120k"],
+    "decisions": ["Ship in December"],
+    "actionItems": [
+      { "text": "Prepare the release notes", "assigneeName": "Binh" },
+      { "text": "Book the launch room", "assigneeName": null }
+    ],
+    "fromMaterials": ["Budget: 120k"],
+    "language": "en"
+  }
+}

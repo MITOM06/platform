@@ -10,8 +10,11 @@ import type {
   MeetingNote,
   MeetingNoteInput,
   MeetingPage,
+  MeetingSummaryResponse,
+  MeetingSummaryState,
   NoteScope,
 } from './meeting-types'
+import { normalizeHistoryRow } from '@/lib/meetings/meeting-attachment'
 
 // chat-service meetings REST API (docs/api-spec.md § Meetings). Every path
 // segment that comes from data goes through encodeURIComponent.
@@ -36,6 +39,14 @@ export const meetingsApi = {
 
   update: (id: string, input: MeetingInput): Promise<Meeting> =>
     chatApi.patch<Meeting>(base(id), input).then((r) => r.data),
+
+  /** AI summary: current state + newest successful summary (raw; see normalizeSummary). */
+  summary: (id: string): Promise<MeetingSummaryResponse> =>
+    chatApi.get<MeetingSummaryResponse>(`${base(id)}/summary`).then((r) => r.data),
+
+  /** Host/co-host. 202 `{state: 'PENDING'}`; 409 MEETING_SUMMARY_PENDING / _UNAVAILABLE. */
+  regenerateSummary: (id: string): Promise<{ state: MeetingSummaryState }> =>
+    chatApi.post<{ state: MeetingSummaryState }>(`${base(id)}/summary/regenerate`).then((r) => r.data),
 
   cancel: (id: string): Promise<void> => chatApi.delete(base(id)).then(() => undefined),
 
@@ -73,7 +84,10 @@ export const meetingsApi = {
   messages: (id: string, before?: string, size = 50): Promise<MeetingMessagePage> =>
     chatApi
       .get<MeetingMessagePage>(`${base(id)}/messages`, { params: { before, size } })
-      .then((r) => r.data),
+      .then((r) => {
+        const page = r.data
+        return Array.isArray(page?.content) ? { ...page, content: page.content.map(normalizeHistoryRow) } : page
+      }),
 
   getNote: (id: string, scope: NoteScope): Promise<MeetingNote> =>
     chatApi.get<MeetingNote>(`${base(id)}/notes/${scope}`).then((r) => r.data),
@@ -85,4 +99,18 @@ export const meetingsApi = {
     chatApi
       .get<{ hands?: MeetingHand[] }>(`${base(id)}/hands`)
       .then((r) => (Array.isArray(r.data?.hands) ? r.data.hands : [])),
+
+  /** Best-effort shared-screen frame for the AI record: 202 accepted, 204 skipped. */
+  uploadScreenFrame: (id: string, frame: Blob, ts: number) => {
+    const form = new FormData()
+    form.append('frame', new File([frame], 'screen.jpg', { type: 'image/jpeg' }))
+    form.append('ts', String(ts))
+    // Clear the JSON default so the browser sets multipart/form-data with its boundary.
+    return chatApi.post(`${base(id)}/screen-frames`, form, {
+      headers: { 'Content-Type': undefined },
+      // A stalled upload must not block the next frame (the hook skips ticks while one is in flight).
+      timeout: 15_000,
+      validateStatus: () => true,
+    })
+  },
 }

@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { DailyDigestCron } from './daily-digest.cron';
 import { ResolvedAiSettings } from '../settings/resolved-ai-settings';
 
@@ -22,17 +23,24 @@ interface Mocks {
   create: jest.Mock;
   deleteOne: jest.Mock;
   distinct: jest.Mock;
+  find: jest.Mock;
   generate: jest.Mock;
 }
 
 function makeCron(opts: {
   resolved: ResolvedAiSettings;
   activeIds?: string[];
+  aiThreadIds?: string[];
   createImpl?: jest.Mock;
   generateImpl?: jest.Mock;
 }): Mocks {
   const distinct = jest.fn().mockResolvedValue(opts.activeIds ?? ['conv-1']);
-  const connection = { collection: () => ({ distinct }) } as any;
+  const find = jest.fn().mockReturnValue({
+    toArray: jest
+      .fn()
+      .mockResolvedValue((opts.aiThreadIds ?? []).map((id) => ({ _id: new Types.ObjectId(id) }))),
+  });
+  const connection = { collection: () => ({ distinct, find }) } as any;
 
   const create = opts.createImpl ?? jest.fn().mockResolvedValue({});
   const deleteOne = jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue({}) });
@@ -47,7 +55,7 @@ function makeCron(opts: {
       ({ 'config.ai.timeZone': 'Asia/Ho_Chi_Minh', 'config.bot.userId': 'ai-bot-1' })[k],
   } as any;
   const cron = new DailyDigestCron(connection, digestLogModel, settingsService, generator, config);
-  return { cron, create, deleteOne, distinct, generate };
+  return { cron, create, deleteOne, distinct, find, generate };
 }
 
 // 08:00 in the workspace zone (Asia/Ho_Chi_Minh, +07:00) — 01:00 UTC. Absolute
@@ -99,6 +107,28 @@ describe('DailyDigestCron (TASK-11)', () => {
     expect(generate).toHaveBeenCalledTimes(2);
     // Delivered (returns true) ⇒ slot is NOT rolled back.
     expect(deleteOne).not.toHaveBeenCalled();
+  });
+
+  it('skips conversations whose participants include the AI bot (1-1 AI threads)', async () => {
+    const aiThread = new Types.ObjectId().toHexString();
+    const group = new Types.ObjectId().toHexString();
+    const { cron, find, create, generate } = makeCron({
+      resolved: settings(),
+      activeIds: [aiThread, group],
+      aiThreadIds: [aiThread],
+    });
+    await cron.run(AT_8);
+    expect(find).toHaveBeenCalledWith(
+      {
+        _id: { $in: [new Types.ObjectId(aiThread), new Types.ObjectId(group)] },
+        participants: 'ai-bot-1',
+        type: { $ne: 'group' },
+      },
+      { projection: { _id: 1 } },
+    );
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(create).toHaveBeenCalledWith({ conversationId: group, digestDate: '2026-06-22' });
+    expect(generate).toHaveBeenCalledTimes(1);
   });
 
   it('SKIPS generation on a duplicate-key (already digested ⇒ idempotent)', async () => {

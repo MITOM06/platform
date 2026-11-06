@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AiHubCard } from '@/components/ai/AiHubCard'
+import { AiThreadList } from '@/components/ai/AiThreadList'
 import { useOpenAiChat } from '@/lib/hooks/use-open-ai-chat'
 
 export default function AiHubPage() {
@@ -60,6 +61,12 @@ export default function AiHubPage() {
                   {t('startChat')}
                 </Button>
               </div>
+            </div>
+
+            {/* Mobile: the aside is hidden, so the thread list (new chat, switch,
+                back to messages) lives here. Desktop shows it in the sidebar. */}
+            <div className="mb-8 md:hidden rounded-xl border bg-card py-1">
+              <AiThreadList />
             </div>
 
             {/* Destination cards */}

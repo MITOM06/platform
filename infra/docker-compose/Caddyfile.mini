@@ -32,6 +32,11 @@
 		reverse_proxy connector-service:3003
 	}
 	handle_path /api/chat/* {
+		# /internal/* is for ai-service over the Docker network (X-Internal-Key). Never
+		# expose it publicly. handle_path already stripped /api/chat, so the controller
+		# path /internal/meetings/... is what arrives here.
+		@internal path /internal /internal/*
+		respond @internal 404
 		reverse_proxy chat-service:8080
 	}
 	# Both clients address ai-service through this prefix (web: axios baseURL

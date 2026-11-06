@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { stompService } from '@/lib/stomp/client'
 
 // Minimal typings for the Web Speech API (not in lib.dom for all targets).
@@ -25,13 +25,13 @@ interface SpeechRecognitionLike {
   lang: string
   onresult: ((e: SpeechRecognitionEvent) => void) | null
   onend: (() => void) | null
-  onerror: (() => void) | null
+  onerror: ((e: { error?: string }) => void) | null
   start: () => void
   stop: () => void
 }
 type SpeechRecognitionCtor = new () => SpeechRecognitionLike
 
-function getRecognitionCtor(): SpeechRecognitionCtor | null {
+export function getRecognitionCtor(): SpeechRecognitionCtor | null {
   if (typeof window === 'undefined') return null
   const w = window as unknown as {
     SpeechRecognition?: SpeechRecognitionCtor
@@ -41,25 +41,26 @@ function getRecognitionCtor(): SpeechRecognitionCtor | null {
 }
 
 /**
- * Client-side speech-to-text for the AI notetaker (Track A §7).
- *
- * When `enabled` (aiNotetaker on + active call), runs continuous browser
- * `SpeechRecognition` on the local mic. Interim results are ignored; on each
- * FINAL transcript it publishes `/app/call.transcript {callId, text, ts}`.
- * No-ops gracefully when the API is unavailable.
+ * Core browser speech-to-text: while `enabled`, runs continuous
+ * `SpeechRecognition` on the local mic and calls `onFinal` with each FINAL
+ * transcript (interim results are ignored). `supported` is false when the
+ * browser has no SpeechRecognition (the hook then no-ops).
  */
-export function useCallTranscriber(callId: string | null, enabled: boolean, lang?: string): void {
-  const recRef = useRef<SpeechRecognitionLike | null>(null)
-  const callIdRef = useRef(callId)
-
-  // Keep the latest callId available to the (long-lived) onresult callback
+export function useSpeechTranscriber(
+  enabled: boolean,
+  onFinal: (text: string) => void,
+  lang?: string,
+): { supported: boolean } {
+  const onFinalRef = useRef(onFinal)
+  const [blocked, setBlocked] = useState(false)
+  // Keep the latest callback available to the (long-lived) onresult handler
   // without re-creating the recognizer on every render.
   useEffect(() => {
-    callIdRef.current = callId
-  }, [callId])
+    onFinalRef.current = onFinal
+  }, [onFinal])
 
   useEffect(() => {
-    if (!enabled || !callId) return
+    if (!enabled) return
     const Ctor = getRecognitionCtor()
     if (!Ctor) return // unsupported browser → graceful no-op
 
@@ -70,17 +71,15 @@ export function useCallTranscriber(callId: string | null, enabled: boolean, lang
     rec.lang = lang || (typeof navigator !== 'undefined' ? navigator.language : 'en-US')
 
     rec.onresult = (e) => {
+      if (stopped) return // a stopped recognizer can still flush a late result
       for (let i = e.resultIndex; i < e.results.length; i += 1) {
         const result = e.results[i]
         if (!result.isFinal) continue
         const text = result[0]?.transcript?.trim()
-        const id = callIdRef.current
-        if (text && id) {
-          stompService.publish('/app/call.transcript', { callId: id, text, ts: Date.now() })
-        }
+        if (text) onFinalRef.current(text)
       }
     }
-    // Recognition stops itself periodically; restart while the call is live.
+    // Recognition stops itself periodically; restart while enabled.
     rec.onend = () => {
       if (!stopped) {
         try {
@@ -90,11 +89,15 @@ export function useCallTranscriber(callId: string | null, enabled: boolean, lang
         }
       }
     }
-    rec.onerror = () => {
-      // transient (e.g. no-speech) — onend handles the restart
+    rec.onerror = (e) => {
+      // Permission denied: restarting would loop forever, so stop for good.
+      if (e?.error === 'not-allowed' || e?.error === 'service-not-allowed') {
+        stopped = true
+        setBlocked(true)
+      }
+      // other errors are transient (e.g. no-speech) — onend handles the restart
     }
 
-    recRef.current = rec
     try {
       rec.start()
     } catch {
@@ -108,7 +111,24 @@ export function useCallTranscriber(callId: string | null, enabled: boolean, lang
       } catch {
         // ignore
       }
-      recRef.current = null
     }
-  }, [callId, enabled, lang])
+  }, [enabled, lang])
+
+  return { supported: !blocked && getRecognitionCtor() !== null }
+}
+
+/**
+ * Client-side speech-to-text for the AI notetaker (Track A §7).
+ *
+ * When `enabled` (aiNotetaker on + active call), publishes
+ * `/app/call.transcript {callId, text, ts}` on each FINAL transcript.
+ */
+export function useCallTranscriber(callId: string | null, enabled: boolean, lang?: string): void {
+  const onFinal = useCallback(
+    (text: string) => {
+      if (callId) stompService.publish('/app/call.transcript', { callId, text, ts: Date.now() })
+    },
+    [callId],
+  )
+  useSpeechTranscriber(enabled && !!callId, onFinal, lang)
 }

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,6 +14,10 @@ import 'package:platform_client/features/meetings/ui/create_meeting_sheet.dart';
 import 'meeting_test_harness.dart';
 
 class _Api implements MeetingsApi {
+  @override
+  Future<bool> uploadScreenFrame(String id, Uint8List jpeg, {int? ts}) async =>
+      false;
+
   final created = <MeetingInput>[];
   final updated = <MeetingInput>[];
   Object? failWith;

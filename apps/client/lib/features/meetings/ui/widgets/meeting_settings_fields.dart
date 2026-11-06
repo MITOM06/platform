@@ -12,7 +12,7 @@ typedef _Row = ({
   MeetingSettings Function(bool) apply,
 });
 
-/// The five meeting options as labelled switches — mirror of web
+/// The six meeting options as labelled switches — mirror of web
 /// `MeetingSettingsFields`.
 class MeetingSettingsFields extends StatelessWidget {
   const MeetingSettingsFields(
@@ -22,6 +22,12 @@ class MeetingSettingsFields extends StatelessWidget {
   final ValueChanged<MeetingSettings> onChanged;
 
   List<_Row> _rows(AppLocalizations l, MeetingSettings s) => [
+        (
+          label: l.meetingSettingAiNotes,
+          desc: l.meetingSettingAiNotesDesc,
+          value: s.aiNotes,
+          apply: (v) => s.copyWith(aiNotes: v),
+        ),
         (
           label: l.meetingSettingWaitingRoom,
           desc: l.meetingSettingWaitingRoomDesc,

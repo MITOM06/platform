@@ -133,6 +133,13 @@ class _RoomManageSectionState extends ConsumerState<RoomManageSection> {
           ]),
         ),
         _SettingSwitch(
+          label: l.meetingSettingAiNotes,
+          value: s.aiNotes,
+          enabled: online,
+          busy: pending(HostAction.aiNotesOn, HostAction.aiNotesOff),
+          onToggle: () => controller.hostCommand(rc.aiNotes),
+        ),
+        _SettingSwitch(
           label: l.meetingSettingLocked,
           value: s.locked,
           enabled: online,

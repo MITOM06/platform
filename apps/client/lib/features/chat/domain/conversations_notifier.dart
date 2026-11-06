@@ -11,6 +11,7 @@ import '../../auth/domain/auth_state.dart';
 import '../../home/domain/home_providers.dart';
 import '../data/chat_repository.dart';
 import '../data/stomp_service.dart';
+import '../../ai_hub/domain/ai_threads_provider.dart';
 import '../../settings/ui/settings_screen.dart' show notificationsEnabledProvider;
 import 'active_call_provider.dart';
 import 'chat_misc_providers.dart';
@@ -81,6 +82,8 @@ class ConversationsNotifier extends _$ConversationsNotifier {
   /// Merges a CONVERSATION_UPDATED (shared topic payload or the actor's own
   /// full view) into the list — never replacing it wholesale.
   void _onConversationUpdate(ConversationUpdateEvent event) {
+    // AI threads live in aiThreadsProvider only — never (re)insert them here.
+    if (isAiConversationJson(event.json)) return;
     final current = state.valueOrNull;
     if (current == null) return;
     final result = ConversationListOps.merge(
@@ -129,6 +132,11 @@ class ConversationsNotifier extends _$ConversationsNotifier {
       if (latest == null) return;
       final me = _currentUserId;
       if (me != null && !conv.participants.contains(me)) return;
+      if (conv.isAiConversation) {
+        // Never in the main list: hand it to the AI threads list instead.
+        ref.read(aiThreadsProvider.notifier).upsert(conv);
+        return;
+      }
       state = AsyncData(ConversationListOps.upsertSorted(latest, conv));
     } catch (_) {
       // Not accessible (removed / deleted) — nothing to add.
@@ -136,7 +144,21 @@ class ConversationsNotifier extends _$ConversationsNotifier {
   }
 
   /// Hide a conversation locally + on the server.
-  Future<void> deleteConversation(String conversationId) async {
+  ///
+  /// AI threads (web parity): server delete FIRST (failure rethrows, the row
+  /// stays), then [onDeleted] (navigate away), then the row is dropped from
+  /// aiThreadsProvider. For other conversations [onDeleted] runs after the
+  /// optimistic delete attempt (failures are rolled back silently).
+  Future<void> deleteConversation(String conversationId,
+      {FutureOr<void> Function(bool isAi)? onDeleted}) async {
+    if (ref.exists(aiThreadsProvider) &&
+        ref.read(aiThreadsProvider.notifier).contains(conversationId)) {
+      final ai = ref.read(aiThreadsProvider.notifier);
+      await ai.deleteOnServer(conversationId);
+      await onDeleted?.call(true);
+      ai.drop(conversationId);
+      return;
+    }
     final current = state.valueOrNull;
     if (current != null) {
       state = AsyncData(
@@ -148,6 +170,7 @@ class ConversationsNotifier extends _$ConversationsNotifier {
       // Roll back the optimistic removal without flashing the list to a spinner.
       await _silentRefetch();
     }
+    await onDeleted?.call(false);
   }
 
   Future<void> toggleMuteConversation(String conversationId, bool isMuted,
@@ -346,7 +369,11 @@ class ConversationsNotifier extends _$ConversationsNotifier {
       createdAt: notice.createdAt,
     );
     if (updated == null) {
-      unawaited(ensureLoaded(convId));
+      // A known AI thread is handled by aiThreadsProvider; don't refetch it
+      // just to drop it again.
+      final knownAi = ref.exists(aiThreadsProvider) &&
+          ref.read(aiThreadsProvider.notifier).contains(convId);
+      if (!knownAi) unawaited(ensureLoaded(convId));
       return;
     }
     state = AsyncData(updated);

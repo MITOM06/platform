@@ -13,6 +13,7 @@ import '../../../core/rtc/screen_capture.dart';
 import '../../../core/utils/app_error.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../../chat/data/stomp_service.dart';
+import '../../chat/domain/call_stt_service.dart';
 import '../../chat/domain/group_call_controller.dart';
 import '../../chat/domain/sfu_call_service.dart';
 import '../../chat/domain/webrtc_service.dart';
@@ -20,6 +21,8 @@ import '../data/meetings_repository.dart';
 import '../ui/meeting_text_l10n.dart';
 import 'meeting_room_deps.dart';
 import 'meeting_room_state.dart';
+import 'meeting_screen_frames.dart';
+import 'meeting_transcriber.dart';
 import 'meetings_store.dart';
 
 /// One meeting room is open at a time; its controller writes here.
@@ -141,3 +144,28 @@ final meetingKeepAwakeProvider = Provider<void Function(bool on)>(
 /// rule, applied late).
 final meetingBackgroundReleaseProvider = Provider<void Function()>(
     (ref) => () => ref.read(stompServiceProvider.notifier).disconnect());
+
+/// Speech capture for AI meeting notes (one room at a time); the session view
+/// syncs it, the "more" sheet pauses it.
+final meetingTranscriberProvider = Provider<MeetingTranscriber>((ref) {
+  final t = MeetingTranscriber(
+      ref.read(stompServiceProvider.notifier), SpeechCapture());
+  ref.onDispose(t.dispose);
+  return t;
+});
+
+/// Shared-screen frames for the AI record (Android, one room at a time); the
+/// session view syncs it.
+final meetingScreenFramesProvider = Provider<MeetingScreenFrames>((ref) {
+  final f = MeetingScreenFrames(
+    capture: () =>
+        captureScreenTrack(ref.read(meetingRoomStoreProvider).localScreen),
+    upload: (id, jpeg, ts) async {
+      await ref
+          .read(meetingsRepositoryProvider)
+          .uploadScreenFrame(id, jpeg, ts: ts);
+    },
+  );
+  ref.onDispose(f.dispose);
+  return f;
+});

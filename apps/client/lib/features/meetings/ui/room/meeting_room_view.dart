@@ -6,6 +6,7 @@ import '../../../../core/utils/global_messenger.dart';
 import '../../domain/permissions.dart';
 import '../../state/meeting_room_providers.dart';
 import '../../state/meeting_room_state.dart';
+import 'ai_notes_indicator.dart';
 import 'control_bar.dart';
 import 'meeting_room_scope.dart';
 import 'meeting_stage.dart';
@@ -34,6 +35,8 @@ class MeetingRoomView extends ConsumerWidget {
         if (context.mounted) openRoomPanel(context, RoomPanel.people);
       });
     });
+    final aiNotes = ref.watch(
+        meetingRoomStoreProvider.select((s) => s.settings.aiNotes == true));
     final title = MeetingRoomScope.of(context).meeting.title?.trim();
     return Scaffold(
       backgroundColor: kStageBackground,
@@ -42,10 +45,31 @@ class MeetingRoomView extends ConsumerWidget {
         child: Semantics(
           container: true,
           label: title == null || title.isEmpty ? l.meetingUntitled : title,
-          child: const Stack(children: [
-            Positioned.fill(child: MeetingStage()),
-            Positioned.fill(child: IgnorePointer(child: ReactionOverlay())),
-            Positioned(top: 8, left: 16, right: 16, child: RoomBanners()),
+          child: Stack(children: [
+            const Positioned.fill(child: MeetingStage()),
+            const Positioned.fill(
+                child: IgnorePointer(child: ReactionOverlay())),
+            // One column so the connection banner and the AI chip never overlap.
+            Positioned(
+              top: 8,
+              left: 16,
+              right: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const RoomBanners(),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable:
+                          ref.read(meetingScreenFramesProvider).reading,
+                      builder: (_, reading, __) =>
+                          AiNotesIndicator(active: aiNotes, sharing: reading),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ]),
         ),
       ),

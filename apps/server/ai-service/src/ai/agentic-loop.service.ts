@@ -90,6 +90,7 @@ export class AgenticLoopService {
       conversationId: ctx.conversationId,
       userId: ctx.userId,
       displayName: ctx.displayName,
+      directAi: ctx.directAi,
       departmentId: ctx.departmentId,
       perms: ctx.perms,
       departmentIds: ctx.departmentIds,
@@ -101,7 +102,7 @@ export class AgenticLoopService {
       withheldSink: withheld,
       skillOffSink: skillOff,
     };
-    const defs = await this.toolRegistry.getDefinitions(toolCtx);
+    const defs = ctx.noTools ? [] : await this.toolRegistry.getDefinitions(toolCtx);
     const autoRunProviders = defs.filter((d) => d.autoRun).map((d) => providerOf(d.name) ?? '');
     // Single chokepoint for the final messages array: normalizeMessages drops a
     // leading assistant turn and merges consecutive same-role PLAIN-TEXT turns
@@ -302,8 +303,8 @@ export class AgenticLoopService {
       max_tokens: 4096,
       system: state.system,
       messages: state.messages,
-      tools: state.tools,
-      tool_choice: { type: 'auto' },
+      // tool_choice without tools is a 400: send both only when tools are offered.
+      ...(state.tools.length > 0 ? { tools: state.tools, tool_choice: { type: 'auto' } } : {}),
       // `output_config.effort` is only accepted by effort-capable models
       // (Opus 4.5+, Sonnet 4.6+, Sonnet 5, Fable/Mythos 5). Sending it to
       // Sonnet 4.5 / Haiku 4.5 returns a 400 and takes the whole turn down.

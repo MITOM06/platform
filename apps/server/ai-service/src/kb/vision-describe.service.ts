@@ -33,6 +33,13 @@ const DESCRIBE_PROMPT =
   'Then describe charts, diagrams, tables, and layout in plain prose. ' +
   'Output plain text only — no markdown fences, no preamble, no commentary about the task.';
 
+/** Per-call overrides of describeImage; defaults are the KB indexing behaviour. */
+export interface DescribeImageOptions {
+  prompt?: string;
+  maxTokens?: number;
+  usageLabel?: string;
+}
+
 /** Vision-capable model id (claude-api skill: claude-opus-4-8 supports image_input). */
 const DEFAULT_VISION_MODEL = 'claude-opus-4-8';
 
@@ -82,7 +89,12 @@ export class VisionDescribeService {
    * Describe a single image. Validates media type + size cap, then sends a base64
    * image block (no newlines) before the text prompt. Returns the transcription.
    */
-  async describeImage(buffer: Buffer, mimeType: string, userId?: string): Promise<string> {
+  async describeImage(
+    buffer: Buffer,
+    mimeType: string,
+    userId?: string,
+    opts: DescribeImageOptions = {},
+  ): Promise<string> {
     if (!this.anthropic) throw new Error('VisionDescribeService: no API key configured');
     const mediaType = VisionDescribeService.toSupportedImageMediaType(mimeType);
     if (!mediaType) throw new VisionUnsupportedException(mimeType);
@@ -93,19 +105,19 @@ export class VisionDescribeService {
     const data = buffer.toString('base64');
     const message = await this.anthropic.messages.create({
       model: this.model,
-      max_tokens: 4096,
+      max_tokens: opts.maxTokens ?? 4096,
       messages: [
         {
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: mediaType, data } },
-            { type: 'text', text: DESCRIBE_PROMPT },
+            { type: 'text', text: opts.prompt ?? DESCRIBE_PROMPT },
           ],
         },
       ],
     });
     // KB indexing work is attributed to the uploader (it used to be unrecorded).
-    this.usageService?.recordModelCall(userId, message.usage, 'kb-vision');
+    this.usageService?.recordModelCall(userId, message.usage, opts.usageLabel ?? 'kb-vision');
     return extractText(message);
   }
 

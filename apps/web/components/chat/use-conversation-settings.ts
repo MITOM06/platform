@@ -15,6 +15,7 @@ import {
 import {
   setQuickReaction, quickReactionSystemMessage,
 } from '@/lib/quick-reaction'
+import { dropConversation, isAiConversation } from '@/lib/realtime/conversation-cache'
 import type { Conversation } from '@/lib/api/types'
 
 const AI_BOT_ID = 'ai-bot-000000000000000000000001'
@@ -214,7 +215,14 @@ export function useConversationSettings({ conversation, currentUserId, onClose }
       await chatService.deleteConversation(conversation.id)
       invalidate()
       onClose()
-      router.push('/conversations')
+      if (isAiConversation(conversation)) {
+        // AI thread: leave for the AI hub, then drop it from every cache (including
+        // ['ai-threads']) — navigate first so the open thread never refetches a 404.
+        router.replace('/ai-hub')
+        dropConversation(queryClient, conversation.id)
+      } else {
+        router.push('/conversations')
+      }
     }, t('deleteSuccess'))
   }
 

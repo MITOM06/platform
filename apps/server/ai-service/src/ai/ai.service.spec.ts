@@ -147,6 +147,9 @@ describe('AiService', () => {
   let checkAccess: jest.Mock;
   /** null = unknown (default: direct-chat behaviour), true = 1-1 AI chat, false = shared chat. */
   let directAi: jest.Mock;
+  /** Meeting id the fake conversation context reports (post-meeting group or meeting: chat). */
+  let convMeetingId: string | null;
+  let meetingBlockFor: jest.Mock;
   let getPersona: jest.Mock;
   let buildSystemPromptFn: jest.Mock;
   let extractFacts: jest.Mock;
@@ -192,6 +195,8 @@ describe('AiService', () => {
     acquire = jest.fn().mockResolvedValue({ allowed: true, release });
     checkAccess = jest.fn().mockResolvedValue('allowed');
     directAi = jest.fn().mockReturnValue(null);
+    convMeetingId = null;
+    meetingBlockFor = jest.fn().mockResolvedValue(null);
     getPersona = jest.fn().mockResolvedValue(null);
     buildSystemPromptFn = jest.fn().mockReturnValue('You are PON AI...');
     extractFacts = jest.fn().mockResolvedValue(undefined);
@@ -252,6 +257,7 @@ describe('AiService', () => {
       getConversationContext: jest.fn(async (convId: string, uid: string) => ({
         access: await checkAccess(convId, uid),
         directAi: directAi(),
+        meetingId: convMeetingId,
       })),
     } as unknown as ConversationAccessService;
     // Default resolved settings = pure env behavior (all defaults), so existing
@@ -333,6 +339,10 @@ describe('AiService', () => {
       fakeAiSession,
       fakeCompact,
       agenticLoop,
+      undefined,
+      undefined,
+      undefined,
+      { blockFor: meetingBlockFor } as never,
     );
     (service as any)['anthropic'] = { messages: { stream: mockStream, create: mockCreate } };
   });
@@ -1367,6 +1377,130 @@ describe('AiService', () => {
 
     expect(lookup).toHaveBeenCalledWith('conv-test', 'user-1', [0.1, 0.2]);
     expect(store).toHaveBeenCalledWith('conv-test', 'user-1', [0.1, 0.2], 'OK');
+  });
+
+  // ─── Meeting context (M3) ─────────────────────────────────────────────────
+
+  it('adds the meeting block to the prompt, skips the response cache and offers no tools for meeting: chats', async () => {
+    directAi.mockReturnValue(false);
+    convMeetingId = 'm1';
+    meetingBlockFor.mockResolvedValue('MEETING-BLOCK-TEXT');
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    const lookup = jest.fn().mockResolvedValue('cached');
+    const store = jest.fn().mockResolvedValue(undefined);
+    (service as any)['responseCache'].lookup = lookup;
+    (service as any)['responseCache'].store = store;
+    mockStream.mockReturnValue(makeStream(['answer']));
+
+    await service.handleRequest({
+      ...basePayload,
+      conversationId: 'meeting:m1',
+      meetingId: 'm1',
+      history: [{ role: 'user', content: 'earlier line', senderName: 'Lan' }],
+    });
+
+    expect(meetingBlockFor).toHaveBeenCalledWith(expect.objectContaining({ meetingId: 'm1' }), 'm1');
+    const params = mockStream.mock.calls[0][0];
+    expect(systemText(params)).toContain('MEETING-BLOCK-TEXT');
+    expect(systemText(params)).toContain('Lan: earlier line');
+    expect(toolRegistryGetDefinitions).not.toHaveBeenCalled();
+    expect(params.tools ?? []).toEqual([]);
+    expect(params).not.toHaveProperty('tool_choice');
+    expect(params).not.toHaveProperty('tools');
+    expect(lookup).not.toHaveBeenCalled();
+    expect(store).not.toHaveBeenCalled();
+  });
+
+  it('post-meeting group chat gets the block but keeps normal tools', async () => {
+    directAi.mockReturnValue(false);
+    convMeetingId = 'm1';
+    meetingBlockFor.mockResolvedValue('MEETING-BLOCK-TEXT');
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    const lookup = jest.fn().mockResolvedValue(null);
+    (service as any)['responseCache'].lookup = lookup;
+    mockStream.mockReturnValue(makeStream(['answer']));
+
+    await service.handleRequest(basePayload);
+
+    const params = mockStream.mock.calls[0][0];
+    expect(systemText(params)).toContain('MEETING-BLOCK-TEXT');
+    expect(params.tools.length).toBe(SAMPLE_TOOLS.length);
+    expect(lookup).not.toHaveBeenCalled();
+  });
+
+  it('no meeting block -> cache and tools behave as before', async () => {
+    const lookup = jest.fn().mockResolvedValue(null);
+    (service as any)['responseCache'].lookup = lookup;
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    mockStream.mockReturnValue(makeStream(['OK']));
+
+    await service.handleRequest(basePayload);
+
+    expect(lookup).toHaveBeenCalled();
+    expect(mockStream.mock.calls[0][0].tools.length).toBe(SAMPLE_TOOLS.length);
+    expect(mockStream.mock.calls[0][0].tool_choice).toEqual({ type: 'auto' });
+  });
+
+  it('does not extract key facts from a meeting turn', async () => {
+    directAi.mockReturnValue(false);
+    convMeetingId = 'm1';
+    meetingBlockFor.mockResolvedValue('MEETING-BLOCK-TEXT');
+    incrementMessageCount.mockResolvedValue(3); // would trigger the first extraction
+    mockStream.mockReturnValue(makeStream(['answer']));
+
+    await service.handleRequest({ ...basePayload, conversationId: 'meeting:m1' });
+
+    expect(incrementMessageCount).toHaveBeenCalled();
+    expect(extractFacts).not.toHaveBeenCalled();
+  });
+
+  it('treats /new and /memory as normal question text in a meeting: chat (no system notice into the room)', async () => {
+    directAi.mockReturnValue(false);
+    convMeetingId = 'm1';
+    meetingBlockFor.mockResolvedValue('MEETING-BLOCK-TEXT');
+    for (const content of ['/new', '/memory']) {
+      publish.mockClear();
+      createNewSession.mockClear();
+      getMemory.mockClear();
+      mockStream.mockReturnValue(makeStream(['model answer']));
+      await service.handleRequest({ ...basePayload, conversationId: 'meeting:m1', content });
+      expect(createNewSession).not.toHaveBeenCalled();
+      expect(getMemory).not.toHaveBeenCalled();
+      const dones = publish.mock.calls.map((c) => c[1]).filter((e) => e.type === 'AI_STREAM_DONE');
+      expect(dones).toHaveLength(1);
+      expect(dones[0].fullContent).toBe('model answer');
+    }
+  });
+
+  it('never publishes the context-compacted notice in a meeting: chat', async () => {
+    directAi.mockReturnValue(false);
+    convMeetingId = 'm1';
+    meetingBlockFor.mockResolvedValue('MEETING-BLOCK-TEXT');
+    maybeCompact.mockImplementation(async (sess: unknown) => ({ session: sess, compacted: true }));
+    mockStream.mockReturnValue(makeStream(['Answer']));
+
+    await service.handleRequest({ ...basePayload, conversationId: 'meeting:m1' });
+
+    const dones = publish.mock.calls.map((c) => c[1]).filter((e) => e.type === 'AI_STREAM_DONE');
+    expect(dones).toHaveLength(1);
+    expect(dones[0].fullContent).toBe('Answer');
+  });
+
+  it('does not extract key facts when a meeting tool ran in the turn', async () => {
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    incrementMessageCount.mockResolvedValue(3);
+    toolRegistryExecute.mockImplementation(async (_n: string, _i: unknown, ctx: { meetingContentRead?: boolean }) => {
+      ctx.meetingContentRead = true;
+      return 'meeting text';
+    });
+    mockStream
+      .mockReturnValueOnce(makeToolUseStream('get_meeting_record', 'tool-1', { meetingId: 'm1' }))
+      .mockReturnValueOnce(makeStream(['answer']));
+
+    await service.handleRequest(basePayload);
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(extractFacts).not.toHaveBeenCalled();
   });
 
   // ─── Thinking on any capable routed model (14) ────────────────────────────

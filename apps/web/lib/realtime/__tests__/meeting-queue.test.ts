@@ -145,3 +145,15 @@ describe('room events', () => {
     expect(ctx.notify).not.toHaveBeenCalled()
   })
 })
+
+describe('meet.summary.ready', () => {
+  it('invalidates the summary and the detail query of that meeting only', () => {
+    qc.setQueryData(meetingKeys.summary('m1'), { state: 'PENDING' })
+    qc.setQueryData(meetingKeys.detail('m1'), meeting('m1'))
+    qc.setQueryData(meetingKeys.summary('m2'), { state: 'PENDING' })
+    handleMeetingQueueEvent({ event: 'meet.summary.ready', meetingId: 'm1', summaryState: 'DONE', groupConversationId: 'c1' }, ctx)
+    expect(qc.getQueryState(meetingKeys.summary('m1'))?.isInvalidated).toBe(true)
+    expect(qc.getQueryState(meetingKeys.detail('m1'))?.isInvalidated).toBe(true)
+    expect(qc.getQueryState(meetingKeys.summary('m2'))?.isInvalidated).toBe(false)
+  })
+})

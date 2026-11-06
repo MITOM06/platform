@@ -6,9 +6,11 @@ import { safeDisplayName } from '@/lib/chat/names'
 import { getNickname } from '@/lib/nicknames'
 import {
   CONVERSATIONS_KEY,
+  AI_THREADS_KEY,
   applyIncomingPreview,
   applyOwnConversationUpdate,
   findCachedConversation,
+  isAiConversation,
   isConversationMuted,
 } from './conversation-cache'
 
@@ -147,7 +149,15 @@ export function handleUserQueueEvent(event: UserQueueEvent, ctx: UserQueueContex
           ctx.isViewingConversation(event.conversationId),
         )
       ) {
-        ctx.queryClient.invalidateQueries({ queryKey: CONVERSATIONS_KEY })
+        // Route the refetch to the list the chat belongs to; only a chat
+        // unknown everywhere (rare) may invalidate both.
+        const known = findCachedConversation(ctx.queryClient, event.conversationId)
+        if (!known || !isAiConversation(known)) {
+          ctx.queryClient.invalidateQueries({ queryKey: CONVERSATIONS_KEY })
+        }
+        if (!known || isAiConversation(known)) {
+          ctx.queryClient.invalidateQueries({ queryKey: AI_THREADS_KEY })
+        }
       }
       if (!ctx.notificationsEnabled()) return
       if (ctx.isViewingConversation(event.conversationId)) return

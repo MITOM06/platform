@@ -6,14 +6,18 @@ import 'dart:async';
 
 import '../../../core/rtc/rtc_session.dart';
 import '../domain/display.dart';
+import '../domain/meeting_attachment.dart';
 import '../domain/meeting_events.dart';
+import '../../chat/domain/ai_models.dart';
 import '../domain/meeting_text.dart';
+import '../domain/pending_ai.dart';
 import '../domain/reactions.dart';
 import 'meeting_room_deps.dart';
 import 'meeting_room_state.dart';
 
 /// Reactions on screen at once; older ones are dropped first.
 const _maxReactions = 30;
+const _maxAiNotices = 5;
 const kReactionLifetime = Duration(seconds: 4);
 
 class MeetingRoomChat {
@@ -35,22 +39,36 @@ class MeetingRoomChat {
   final bool Function(DateTime now) _allowReaction = createReactionThrottle();
   final Set<Timer> _timers = {};
   int _nextReactionId = 1;
+  int _nextNoticeId = 1;
 
   void _setPending(List<PendingChat> Function(List<PendingChat>) fn) =>
       _store.update((s) => s.copyWith(pendingChat: fn(s.pendingChat)));
 
-  /// The clientId, or null when the line cannot be sent (empty, too long,
-  /// offline).
-  String? send(String content, int max) {
+  Map<String, Object?> _body(
+          String content, String clientId, MeetingAttachment? attachment) =>
+      {
+        'meetingId': meetingId,
+        'content': content,
+        'clientId': clientId,
+        if (attachment != null) 'attachment': attachment.toWire(),
+      };
+
+  /// The clientId, or null when the line cannot be sent (empty without a
+  /// file, too long, offline).
+  String? send(String content, int max, {MeetingAttachment? attachment}) {
     final text = content.trim();
-    if (text.isEmpty || text.length > max || !_deps.realtime.isConnected) {
+    if ((text.isEmpty && attachment == null) ||
+        text.length > max ||
+        !_deps.realtime.isConnected) {
       return null;
     }
     final clientId = _deps.newClientId();
-    _deps.realtime.publish('/app/meet.chat',
-        {'meetingId': meetingId, 'content': text, 'clientId': clientId});
-    final line =
-        PendingChat(clientId: clientId, content: text, sentAt: _deps.now());
+    _deps.realtime.publish('/app/meet.chat', _body(text, clientId, attachment));
+    final line = PendingChat(
+        clientId: clientId,
+        content: text,
+        sentAt: _deps.now(),
+        attachment: attachment);
     _setPending((list) => [...list, line]);
     return clientId;
   }
@@ -68,11 +86,8 @@ class MeetingRoomChat {
           NoticeLevel.error, const MeetingNotice(MeetingText.realtimeOffline));
       return;
     }
-    _deps.realtime.publish('/app/meet.chat', {
-      'meetingId': meetingId,
-      'content': line.content,
-      'clientId': clientId
-    });
+    _deps.realtime.publish(
+        '/app/meet.chat', _body(line.content, clientId, line.attachment));
     final now = _deps.now();
     _setPending((list) => [
           for (final p in list)
@@ -101,6 +116,47 @@ class MeetingRoomChat {
         _store.value.panel != RoomPanel.chat) {
       _store.update((s) => s.copyWith(unreadChat: s.unreadChat + 1));
     }
+  }
+
+  /// `meet.chat` from `/topic/meeting/{id}`: settles my echo / counts unread,
+  /// and finishes an AI answer. (Not the personal queue: no double removal.)
+  void onTopicChat(ChatEvent e) {
+    onEcho(e);
+    if (e.message.sender.userId != kAiBotUserId) return;
+    _store.update((s) => s.copyWith(
+        pendingAi: resolvePendingAi(expirePendingAi(s.pendingAi, _nowMs()))));
+  }
+
+  int _nowMs() => _deps.now().millisecondsSinceEpoch;
+
+  /// `meet.ai`: thinking adds an entry (expiring in 60 s); error removes one,
+  /// and tells only the requester.
+  void onAi(AiEvent e) {
+    final now = _nowMs();
+    List<PendingAi> live() => expirePendingAi(_store.value.pendingAi, now);
+    if (e.state == AiState.thinking) {
+      _store.update((s) =>
+          s.copyWith(pendingAi: addPendingAi(live(), e.requesterId, now)));
+      late final Timer timer;
+      timer = Timer(kAiPendingTtl + const Duration(milliseconds: 1), () {
+        _timers.remove(timer);
+        _store.update((s) =>
+            s.copyWith(pendingAi: expirePendingAi(s.pendingAi, _nowMs())));
+      });
+      _timers.add(timer);
+      return;
+    }
+    _store.update(
+        (s) => s.copyWith(pendingAi: failPendingAi(live(), e.requesterId)));
+    if (e.requesterId != myId) return;
+    final notice = AiNotice(id: _nextNoticeId++, kind: aiErrorKind(e.code));
+    _store.update((s) {
+      final next = [...s.aiNotices, notice];
+      return s.copyWith(
+          aiNotices: next.length > _maxAiNotices
+              ? next.sublist(next.length - _maxAiNotices)
+              : next);
+    });
   }
 
   bool sendReaction(String emoji) {

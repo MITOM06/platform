@@ -1,6 +1,7 @@
 import { create } from 'zustand'
-import type { HostAction, MeetingRoomRole, ReactionEmoji } from '@/lib/api/meeting-types'
+import type { HostAction, MeetingAttachment, MeetingRoomRole, ReactionEmoji } from '@/lib/api/meeting-types'
 import type { MessageKey } from '@/lib/meetings/meeting-errors'
+import type { AiErrorKey, PendingAi } from '@/lib/meetings/pending-ai'
 import type { RemoteNewer } from '@/lib/meetings/note-sync'
 import type { RoomPhase } from '@/lib/meetings/room-phase'
 import type { LayoutMode } from '@/lib/meetings/stage-layout'
@@ -18,8 +19,16 @@ export type RoomPanel = 'people' | 'chat' | 'notes' | null
 export interface PendingChat {
   clientId: string
   content: string
+  /** Kept so a retry re-sends the file and the optimistic line shows its card. */
+  attachment?: MeetingAttachment
   sentAt: number
   error: MessageKey | null
+}
+
+/** A local, non-persisted notice line in the chat: my `@AI` question got no answer. */
+export interface AiNotice {
+  id: number
+  key: AiErrorKey
 }
 
 export interface FloatingReaction {
@@ -49,6 +58,9 @@ export interface MeetingRoomData {
   panel: RoomPanel
   unreadChat: number
   pendingChat: PendingChat[]
+  /** `@AI` questions in the room still unanswered (lib/meetings/pending-ai.ts). */
+  pendingAi: PendingAi[]
+  aiNotices: AiNotice[]
   /** Switch commands sent and not yet confirmed by `meet.settings` (action → sentAt). */
   pendingHost: Partial<Record<HostAction, number>>
   reactions: FloatingReaction[]
@@ -84,6 +96,8 @@ export const initialMeetingRoomData: MeetingRoomData = {
   panel: null,
   unreadChat: 0,
   pendingChat: [],
+  pendingAi: [],
+  aiNotices: [],
   pendingHost: {},
   reactions: [],
   sharedNoteRemote: null,

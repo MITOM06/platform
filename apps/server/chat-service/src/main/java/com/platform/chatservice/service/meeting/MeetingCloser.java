@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
  * Closes the open attendance rows, frees everyone still inside from the call-busy registry, drops
  * the waiting room and tells the room and the people still waiting.
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class MeetingCloser {
@@ -23,6 +25,7 @@ public class MeetingCloser {
   private final MeetingLobby lobby;
   private final MeetingEvents events;
   private final CallBusyRegistry busy;
+  private final MeetingSummaryTrigger summaries;
 
   /** True when this call ended the meeting; false when it was already ENDED (idempotent). */
   public boolean close(String meetingId) {
@@ -42,6 +45,12 @@ public class MeetingCloser {
       }
     }
     events.ended(meetingId, waiting);
+    try {
+      summaries.requestFirst(before.get());
+    } catch (RuntimeException e) {
+      // A summary problem must never undo or fail ending the meeting; the sweep marks it FAILED.
+      log.warn("Could not request the AI summary of meeting {}: {}", meetingId, e.toString());
+    }
     return true;
   }
 }

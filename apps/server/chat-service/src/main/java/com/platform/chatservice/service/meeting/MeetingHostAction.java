@@ -16,7 +16,9 @@ public enum MeetingHostAction {
   ATTENDEE_SCREEN_SHARE_ON(false),
   ATTENDEE_SCREEN_SHARE_OFF(false),
   MAKE_COHOST(true),
-  REVOKE_COHOST(true);
+  REVOKE_COHOST(true),
+  AI_NOTES_ON(false),
+  AI_NOTES_OFF(false);
 
   private final boolean needsTarget;
 

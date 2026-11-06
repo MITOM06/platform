@@ -69,6 +69,8 @@ public class MeetingHostService {
       case WAITING_ROOM_OFF -> setting(m, "settings.waitingRoom", false);
       case ATTENDEE_SCREEN_SHARE_ON -> setting(m, "settings.allowAttendeeScreenShare", true);
       case ATTENDEE_SCREEN_SHARE_OFF -> setting(m, "settings.allowAttendeeScreenShare", false);
+      case AI_NOTES_ON -> setting(m, "settings.aiNotes", true);
+      case AI_NOTES_OFF -> setting(m, "settings.aiNotes", false);
       case MAKE_COHOST -> makeCoHost(m, uid, target);
       case REVOKE_COHOST -> revokeCoHost(m, uid, target);
     }
@@ -129,6 +131,9 @@ public class MeetingHostService {
     if (field.endsWith("allowAttendeeScreenShare")) {
       policy.applyScreenShare(updated);
     }
+    if (value && field.equals("settings.aiNotes")) {
+      store.markAiNotesUsed(updated.getId());
+    }
   }
 
   /**
@@ -174,6 +179,7 @@ public class MeetingHostService {
     return switch (field) {
       case "settings.locked" -> settings.isLocked();
       case "settings.waitingRoom" -> settings.isWaitingRoom();
+      case "settings.aiNotes" -> settings.isAiNotes();
       default -> settings.isAllowAttendeeScreenShare();
     };
   }

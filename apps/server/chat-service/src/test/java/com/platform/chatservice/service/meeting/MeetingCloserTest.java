@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -30,6 +31,7 @@ class MeetingCloserTest {
   @Mock private MeetingLobby lobby;
   @Mock private MeetingEvents events;
   @Mock private CallBusyRegistry busy;
+  @Mock private MeetingSummaryTrigger summaries;
   @InjectMocks private MeetingCloser closer;
 
   @Test
@@ -64,5 +66,35 @@ class MeetingCloserTest {
 
     verify(lobby, never()).clear(anyString());
     verify(events, never()).ended(anyString(), anyCollection());
+  }
+
+  @Test
+  void closeRequestsTheSummaryFromTheStateBeforeEnding() {
+    Meeting before = Meeting.builder().id("m1").aiNotesEverEnabled(true).build();
+    when(store.markEnded(eq("m1"), any())).thenReturn(Optional.of(before));
+
+    assertThat(closer.close("m1")).isTrue();
+
+    verify(summaries).requestFirst(before);
+  }
+
+  @Test
+  void closeDoesNotRequestTheSummaryWhenAlreadyEnded() {
+    when(store.markEnded(eq("m1"), any())).thenReturn(Optional.empty());
+
+    closer.close("m1");
+
+    verify(summaries, never()).requestFirst(any());
+  }
+
+  @Test
+  void aSummaryFailureNeverBreaksEndingTheMeeting() {
+    Meeting before = Meeting.builder().id("m1").build();
+    when(store.markEnded(eq("m1"), any())).thenReturn(Optional.of(before));
+    doThrow(new IllegalStateException("redis down")).when(summaries).requestFirst(any());
+
+    assertThat(closer.close("m1")).isTrue();
+
+    verify(events).ended(eq("m1"), anyCollection());
   }
 }

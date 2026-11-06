@@ -132,12 +132,14 @@ class RoomControls {
     required this.lock,
     required this.waitingRoom,
     required this.screenShare,
+    required this.aiNotes,
   });
 
   final bool lowerAllHands;
   final HostAction lock;
   final HostAction waitingRoom;
   final HostAction screenShare;
+  final HostAction aiNotes;
 }
 
 /// null for attendees.
@@ -152,6 +154,7 @@ RoomControls? roomControls(MeetingRoomRole myRole, MeetingSettings s,
     screenShare: s.allowAttendeeScreenShare
         ? HostAction.attendeeScreenShareOff
         : HostAction.attendeeScreenShareOn,
+    aiNotes: s.aiNotes ? HostAction.aiNotesOff : HostAction.aiNotesOn,
   );
 }
 

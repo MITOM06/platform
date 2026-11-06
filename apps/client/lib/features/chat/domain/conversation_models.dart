@@ -138,6 +138,11 @@ class ConversationModel {
   bool get isDirectAi =>
       !isGroup && participants.contains(kAiBotUserId);
 
+  /// Any non-group conversation the AI bot takes part in — including every AI
+  /// thread (ChatGPT-style "new chat"). A missing type counts as direct. Mirrors
+  /// web `isAiConversation` and the server's `isAiThread`.
+  bool get isAiConversation => !isGroup && participants.contains(kAiBotUserId);
+
   /// Whether [userId] administers this group. Direct chats have no admins.
   bool isAdmin(String userId) => isGroup && admins.contains(userId);
 
@@ -309,4 +314,14 @@ class UserStatus {
           : null,
     );
   }
+}
+
+/// Same rule as [ConversationModel.isAiConversation] on a raw conversation
+/// payload: the AI bot is a participant of a non-group chat (missing type =
+/// direct). Used to route STOMP updates between the main list and AI threads.
+bool isAiConversationJson(Map<String, dynamic> json) {
+  final parts = json['participants'];
+  return parts is List &&
+      parts.contains(kAiBotUserId) &&
+      json['type'] != 'group';
 }

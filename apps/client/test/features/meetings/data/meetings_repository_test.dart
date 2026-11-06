@@ -108,6 +108,40 @@ void main() {
     expect((last().method, last().path), ('DELETE', '/api/meetings/m1'));
   });
 
+  test('summary GET parses the response; regenerate POSTs and reads the state', () async {
+    http.body = {'state': 'PENDING', 'summary': {'overview': 'old'}, 'inGroup': false};
+    final r = await api.summary('m1');
+    expect((last().method, last().path), ('GET', '/api/meetings/m1/summary'));
+    expect(r.state, MeetingSummaryState.pending);
+    expect(r.summary?.overview, 'old');
+    http.status = 202;
+    http.body = {'state': 'PENDING'};
+    await api.regenerateSummary('m1');
+    expect((last().method, last().path), ('POST', '/api/meetings/m1/summary/regenerate'));
+  });
+
+  test('screen frame: multipart jpeg, accepted only on 202, never throws on status', () async {
+    http.status = 202;
+    http.body = {'accepted': true};
+    expect(await api.uploadScreenFrame('m1', Uint8List.fromList([0xFF, 0xD8]), ts: 5), isTrue);
+    expect((last().method, last().path), ('POST', '/api/meetings/m1/screen-frames'));
+    final form = last().data as FormData;
+    final frame = form.files.single;
+    expect(frame.key, 'frame');
+    expect(frame.value.filename, 'screen.jpg');
+    expect(frame.value.contentType.toString(), 'image/jpeg');
+    expect(form.fields.map((e) => '${e.key}=${e.value}'), ['ts=5']);
+    for (final status in [204, 400, 403, 429, 500]) {
+      http.status = status;
+      expect(await api.uploadScreenFrame('m1', Uint8List(1)), isFalse);
+    }
+  });
+
+  test('a malformed summary body is an error', () async {
+    http.body = 'nope';
+    await expectLater(api.summary('m1'), throwsA(isA<MeetingFormatException>()));
+  });
+
   test('a malformed meeting body is an error, not a crash later', () async {
     http.body = {'id': 'm1'};
     await expectLater(api.get('m1'), throwsA(isA<MeetingFormatException>()));

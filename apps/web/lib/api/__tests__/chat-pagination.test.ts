@@ -49,8 +49,8 @@ describe('chatService pagination', () => {
     const res = await chatService.getConversations(true)
     expect(res.content.map((c) => c.id)).toEqual(['a', 'b', 'c'])
     expect(calls).toEqual([
-      { archived: true, page: 0, size: 100 },
-      { archived: true, page: 1, size: 100 },
+      { archived: true, excludeAi: true, page: 0, size: 100 },
+      { archived: true, excludeAi: true, page: 1, size: 100 },
     ])
   })
 

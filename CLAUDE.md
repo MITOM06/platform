@@ -95,7 +95,7 @@ Start infra: `docker compose -f infra/docker-compose/compose.yml up -d`
 
 | Exchange | Queue | Publisher | Consumer | Payload |
 |----------|-------|-----------|----------|---------|
-| `ai.direct` (direct) | `ai.requests` | chat-service | ai-service | `{conversationId, userId, displayName, content, history[]}` |
+| `ai.direct` (direct) | `ai.requests` | chat-service | ai-service | `{conversationId, userId, displayName, content, history[], departmentId, role, perms[], departmentIds[], meetingId}` (`AiRequestPayload`; `departmentId` = the conversation's department, null for personal chats and meetings; `role`/`perms`/`departmentIds` = caller's JWT claims; `meetingId` only for an `@AI` in a meeting chat, where `conversationId` is `meeting:{id}`; nulls are sent as `null`) |
 | `ai.direct` (direct) | `ai.requests.dlq` | RabbitMQ (TTL/nack) | — | dead-lettered messages |
 
 Queue settings: 30-second message TTL, dead-letter exchange `ai.direct.dlq`.
@@ -107,6 +107,12 @@ Queue settings: 30-second message TTL, dead-letter exchange `ai.direct.dlq`.
 | `ai:response:{conversationId}` | ai-service | chat-service | `{type: AI_STREAM_CHUNK\|AI_STREAM_DONE\|AI_STREAM_ERROR, chunk?, fullContent?}` |
 | `kb:process` | chat-service | ai-service | `{documentId, conversationId, userId, fileUrl, mimeType, fileName}` |
 | `kb:delete` | chat-service | ai-service | `{documentId}` |
+| `meet:summarize` | chat-service | ai-service | `{meetingId, attempt, requesterId}` (requesterId = host) |
+| `meet:summary:result` | ai-service | chat-service | `{meetingId, attempt, status: ok\|empty\|failed, summary?}` (summary only when ok) |
+| `meet:material` | chat-service | ai-service | `{meetingId, messageId, uploadId, fileName, mimeType, userId, kind: file\|screen}` (a file sent in the meeting chat, or a shared-screen frame where messageId = frameId; deduped on messageId) |
+| `meet:material:result` | ai-service | chat-service | `{meetingId, messageId, kind: file\|screen, fileName, status: ok\|unsupported\|failed, text?}` (text only when ok; <= 6000 chars for files, <= 1500 for screens) |
+
+Shared contract fixtures for these channels and the internal meeting endpoints live in `apps/server/contracts/` and are asserted by tests on BOTH sides (chat-service JUnit + ai-service Jest).
 
 ## Key Paths
 

@@ -4,22 +4,23 @@ import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
-import '../../chat/data/chat_repository.dart';
-import '../../chat/domain/chat_state.dart' show kAiBotUserId;
+import '../domain/ai_threads_provider.dart';
 import 'widgets/ai_hub_tile.dart';
+import 'widgets/ai_thread_list.dart';
 import '../../../core/utils/global_messenger.dart';
 import '../../chat/utils/chat_error.dart';
 
-/// Opens (or creates) the conversation with the PON AI bot and navigates to it.
+/// Opens the newest AI thread (creating the first one when there are none)
+/// and navigates to it.
 ///
 /// Shared entry point for the AI chat: reused by [AiHubScreen]'s hero CTA and
 /// any other surface that previously called `_startAiChat`. Mirrors the web
-/// `handleOpenAiChat` (create-or-get + navigate). Returns once navigation is
+/// `useOpenAiChat`. Returns once navigation is
 /// issued; on failure it shows a localized error snackbar and stays put.
 Future<void> startAiChat(BuildContext context, WidgetRef ref) async {
   try {
-    final repo = ref.read(chatRepositoryProvider);
-    final conv = await repo.getOrCreateConversation(kAiBotUserId);
+    final conv =
+        await ref.read(aiThreadsProvider.notifier).newestOrCreate();
     if (context.mounted) context.go('/chat/${conv.id}');
   } catch (e) {
     // The Hub keeps the user on-screen; say why so they can retry.
@@ -58,7 +59,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
         title: Text(l10n.aiHubTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => context.pop(),
+          onPressed: () => context.canPop() ? context.pop() : context.go('/'),
         ),
       ),
       body: SafeArea(
@@ -79,6 +80,14 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
               _HeroCard(loading: _startingChat, onTap: _onStartChat),
               const SizedBox(height: 20),
               _HubGrid(),
+              const SizedBox(height: 20),
+              Text(
+                l10n.aiThreadsTitle,
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 4),
+              const AiThreadList(),
             ],
           ),
         ),

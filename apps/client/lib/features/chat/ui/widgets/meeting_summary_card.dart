@@ -7,6 +7,8 @@ import '../../domain/chat_state.dart';
 import 'ai_message_parts.dart';
 import 'floating_reaction_sheet.dart';
 import 'message_bubble_parts.dart';
+import '../../../meetings/domain/meeting_summary.dart';
+import '../../../meetings/ui/widgets/summary_sections.dart';
 
 /// Full message-bubble wrapper for a `meeting_summary` message: the PON AI
 /// header, the summary card, and reaction chips. Long-press opens the
@@ -58,27 +60,22 @@ class MeetingSummaryBubble extends ConsumerWidget {
 
 /// Renders a `meeting_summary` message as a distinct card (contract §6).
 ///
-/// `content` is a JSON string:
-///   { attendees: string[], durationSec: number,
-///     overview: string, keyPoints: string[], actionItems: string[] }
+/// `content` is a JSON string, read by [normalizeSummary] in both formats:
+///  - old (group call): `actionItems: string[]`
+///  - new (meeting): `title`, `decisions`, `fromMaterials`,
+///    `actionItems: {text, assigneeName|null}[]`
 /// Parsed defensively — any malformed/missing field degrades gracefully.
 class MeetingSummaryCard extends StatelessWidget {
   final String content;
   const MeetingSummaryCard({super.key, required this.content});
 
-  Map<String, dynamic> _parse() {
+  /// null when `content` is not a JSON object (same as web `parsePayload`).
+  NormalizedSummary? _parse() {
     try {
-      final decoded = jsonDecode(content);
-      if (decoded is Map<String, dynamic>) return decoded;
-    } catch (_) {}
-    return const {};
-  }
-
-  List<String> _stringList(dynamic v) {
-    if (v is List) {
-      return v.map((e) => e.toString()).where((s) => s.isNotEmpty).toList();
+      return normalizeSummary(jsonDecode(content));
+    } catch (_) {
+      return null;
     }
-    return const [];
   }
 
   String _formatDuration(BuildContext context, int seconds) {
@@ -95,14 +92,19 @@ class MeetingSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = _parse();
-    final attendees = _stringList(data['attendees']);
-    final durationSec = (data['durationSec'] is num)
-        ? (data['durationSec'] as num).toInt()
-        : 0;
-    final overview = (data['overview'] ?? '').toString();
-    final keyPoints = _stringList(data['keyPoints']);
-    final actionItems = _stringList(data['actionItems']);
-
+    final muted = TextStyle(color: AppTheme.mutedText(context), fontSize: 12);
+    if (data == null) {
+      return Container(
+        constraints: const BoxConstraints(maxWidth: 360),
+        decoration: BoxDecoration(
+          color: AppTheme.accentTint(context),
+          borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Text(context.l10n.meetingSummaryUnavailable, style: muted),
+      );
+    }
+    final title = data.title;
     return Container(
       constraints: const BoxConstraints(maxWidth: 360),
       decoration: BoxDecoration(
@@ -116,7 +118,6 @@ class MeetingSummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header
           Row(
             children: [
               Icon(Icons.auto_awesome_rounded,
@@ -133,106 +134,26 @@ class MeetingSummaryCard extends StatelessWidget {
               ),
             ],
           ),
+          if (title != null) ...[
+            const SizedBox(height: 4),
+            Text(title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500)),
+          ],
           const SizedBox(height: 4),
-          Text(
-            _formatDuration(context, durationSec),
-            style: TextStyle(
-                color: AppTheme.mutedText(context), fontSize: 12),
-          ),
-          if (attendees.isNotEmpty) ...[
+          Text(_formatDuration(context, data.durationSec), style: muted),
+          if (data.attendees.isNotEmpty) ...[
             const SizedBox(height: 2),
             Text(
-              context.l10n.meetingSummaryAttendees(attendees.join(', ')),
-              style: TextStyle(
-                  color: AppTheme.mutedText(context), fontSize: 12),
+              context.l10n.meetingSummaryAttendees(data.attendees.join(', ')),
+              style: muted,
             ),
           ],
-          if (overview.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _SectionTitle(context.l10n.meetingSummaryOverview),
-            const SizedBox(height: 4),
-            Text(overview,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14)),
-          ],
-          if (keyPoints.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _SectionTitle(context.l10n.meetingSummaryKeyPoints),
-            const SizedBox(height: 4),
-            ...keyPoints.map((p) => _Bullet(text: p)),
-          ],
-          if (actionItems.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _SectionTitle(context.l10n.meetingSummaryActionItems),
-            const SizedBox(height: 4),
-            ...actionItems.map((a) => _ChecklistItem(text: a)),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  final String text;
-  const _SectionTitle(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text.toUpperCase(),
-      style: TextStyle(
-        color: AppTheme.accentTintFg(context),
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.6,
-      ),
-    );
-  }
-}
-
-class _Bullet extends StatelessWidget {
-  final String text;
-  const _Bullet({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('•  ',
-              style: TextStyle(color: AppTheme.accent(context), fontSize: 14)),
-          Expanded(
-            child: Text(text,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ChecklistItem extends StatelessWidget {
-  final String text;
-  const _ChecklistItem({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 1, right: 6),
-            child: Icon(Icons.check_box_outline_blank_rounded,
-                color: AppTheme.accent(context), size: 16),
-          ),
-          Expanded(
-            child: Text(text,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14)),
-          ),
+          SummarySections(data: data),
         ],
       ),
     );

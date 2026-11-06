@@ -1866,6 +1866,12 @@ abstract class AppLocalizations {
   /// **'Meeting summary'**
   String get meetingSummaryTitle;
 
+  /// No description provided for @meetingSummaryUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary unavailable'**
+  String get meetingSummaryUnavailable;
+
   /// No description provided for @meetingSummaryDuration.
   ///
   /// In en, this message translates to:
@@ -1895,6 +1901,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Action items'**
   String get meetingSummaryActionItems;
+
+  /// No description provided for @meetingSummaryDecisions.
+  ///
+  /// In en, this message translates to:
+  /// **'Decisions'**
+  String get meetingSummaryDecisions;
+
+  /// No description provided for @meetingSummaryFromMaterials.
+  ///
+  /// In en, this message translates to:
+  /// **'From materials'**
+  String get meetingSummaryFromMaterials;
 
   /// No description provided for @profileTitle.
   ///
@@ -5899,47 +5917,95 @@ abstract class AppLocalizations {
   /// **'Leave without saving'**
   String get leaveWithoutSaving;
 
-  /// No description provided for @aiSessionHistory.
+  /// No description provided for @aiThreadUntitled.
   ///
   /// In en, this message translates to:
-  /// **'Conversation history'**
-  String get aiSessionHistory;
+  /// **'Chat with AI'**
+  String get aiThreadUntitled;
 
-  /// No description provided for @aiNewSession.
+  /// No description provided for @aiThreadNew.
   ///
   /// In en, this message translates to:
   /// **'New conversation'**
-  String get aiNewSession;
+  String get aiThreadNew;
 
-  /// No description provided for @aiSessionActive.
+  /// No description provided for @aiThreadsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Active'**
-  String get aiSessionActive;
+  /// **'Conversations'**
+  String get aiThreadsTitle;
 
-  /// No description provided for @aiSessionSummarized.
+  /// No description provided for @aiThreadRename.
   ///
   /// In en, this message translates to:
-  /// **'Summarized'**
-  String get aiSessionSummarized;
+  /// **'Rename'**
+  String get aiThreadRename;
 
-  /// No description provided for @aiSessionEmpty.
+  /// No description provided for @aiThreadSave.
   ///
   /// In en, this message translates to:
-  /// **'No previous conversations'**
-  String get aiSessionEmpty;
+  /// **'Save'**
+  String get aiThreadSave;
 
-  /// No description provided for @aiSessionResume.
+  /// No description provided for @aiThreadCancel.
   ///
   /// In en, this message translates to:
-  /// **'Resume'**
-  String get aiSessionResume;
+  /// **'Cancel'**
+  String get aiThreadCancel;
 
-  /// No description provided for @aiSessionLoadError.
+  /// No description provided for @aiThreadDelete.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t load conversation history'**
-  String get aiSessionLoadError;
+  /// **'Delete'**
+  String get aiThreadDelete;
+
+  /// No description provided for @aiThreadDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this conversation?'**
+  String get aiThreadDeleteTitle;
+
+  /// No description provided for @aiThreadDeleteDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'All messages in this AI conversation will be removed from your account. This can\'t be undone.'**
+  String get aiThreadDeleteDesc;
+
+  /// No description provided for @aiThreadEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations yet. Start a new one.'**
+  String get aiThreadEmpty;
+
+  /// No description provided for @aiThreadLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load conversations. Please try again.'**
+  String get aiThreadLoadFailed;
+
+  /// No description provided for @aiThreadCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start a new conversation. Please try again.'**
+  String get aiThreadCreateFailed;
+
+  /// No description provided for @aiThreadRenameFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t rename. Please try again.'**
+  String get aiThreadRenameFailed;
+
+  /// No description provided for @aiThreadNameInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Name must be 1 to 80 characters.'**
+  String get aiThreadNameInvalid;
+
+  /// No description provided for @aiThreadDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the conversation. Please try again.'**
+  String get aiThreadDeleteFailed;
 
   /// No description provided for @multiSelectCount.
   ///
@@ -8665,6 +8731,54 @@ abstract class AppLocalizations {
   /// **'Someone saved a newer version'**
   String get meetingErrNoteConflict;
 
+  /// No description provided for @meetingErrSummaryPending.
+  ///
+  /// In en, this message translates to:
+  /// **'A summary is already being generated'**
+  String get meetingErrSummaryPending;
+
+  /// No description provided for @meetingErrSummaryUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'A summary is not available for this meeting'**
+  String get meetingErrSummaryUnavailable;
+
+  /// No description provided for @meetingAiSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI summary'**
+  String get meetingAiSummaryTitle;
+
+  /// No description provided for @meetingAiSummaryPending.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is summarizing…'**
+  String get meetingAiSummaryPending;
+
+  /// No description provided for @meetingAiSummaryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The meeting had no content to summarize'**
+  String get meetingAiSummaryEmpty;
+
+  /// No description provided for @meetingAiSummaryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create the summary'**
+  String get meetingAiSummaryFailed;
+
+  /// No description provided for @meetingAiSummaryOpenGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Open meeting group'**
+  String get meetingAiSummaryOpenGroup;
+
+  /// No description provided for @meetingAiSummaryRegenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate'**
+  String get meetingAiSummaryRegenerate;
+
   /// No description provided for @meetingErrRateLimited.
   ///
   /// In en, this message translates to:
@@ -9288,6 +9402,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only invited people can join'**
   String get meetingSettingLockedDesc;
+
+  /// No description provided for @meetingSettingAiNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'AI meeting notes'**
+  String get meetingSettingAiNotes;
+
+  /// No description provided for @meetingSettingAiNotesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'AI captures speech, chat, notes, files and shared screens to summarize after the meeting. Everyone in the room is notified.'**
+  String get meetingSettingAiNotesDesc;
+
+  /// No description provided for @meetingAiNotesActive.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is taking notes'**
+  String get meetingAiNotesActive;
+
+  /// No description provided for @meetingAiReadingScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is reading the screen you share'**
+  String get meetingAiReadingScreen;
+
+  /// No description provided for @meetingAiNotesStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'AI started taking notes for this meeting'**
+  String get meetingAiNotesStarted;
+
+  /// No description provided for @meetingAiNotesPrejoin.
+  ///
+  /// In en, this message translates to:
+  /// **'This meeting has AI notes'**
+  String get meetingAiNotesPrejoin;
+
+  /// No description provided for @meetingAiNotesPauseMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause my speech capture'**
+  String get meetingAiNotesPauseMine;
+
+  /// No description provided for @meetingAiNotesResumeMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume my speech capture'**
+  String get meetingAiNotesResumeMine;
+
+  /// No description provided for @meetingAiNotesUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This device can\'t capture speech for AI notes'**
+  String get meetingAiNotesUnsupported;
 
   /// No description provided for @meetingSubmitCreate.
   ///
@@ -10213,6 +10381,48 @@ abstract class AppLocalizations {
   /// **'Messages are visible to everyone in the meeting'**
   String get meetingChatEmpty;
 
+  /// No description provided for @meetingAiName.
+  ///
+  /// In en, this message translates to:
+  /// **'PON AI'**
+  String get meetingAiName;
+
+  /// No description provided for @meetingAiThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'PON AI is answering…'**
+  String get meetingAiThinking;
+
+  /// No description provided for @meetingAiUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is unavailable right now'**
+  String get meetingAiUnavailable;
+
+  /// No description provided for @meetingAiFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'AI couldn\'t answer, try again'**
+  String get meetingAiFailed;
+
+  /// No description provided for @meetingAiQuotaExceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'AI usage limit reached'**
+  String get meetingAiQuotaExceeded;
+
+  /// No description provided for @meetingAiRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests, try again shortly'**
+  String get meetingAiRateLimited;
+
+  /// No description provided for @meetingChatAiHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type @AI before a question to ask the assistant'**
+  String get meetingChatAiHint;
+
   /// No description provided for @meetingChatFailed.
   ///
   /// In en, this message translates to:
@@ -10236,6 +10446,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sending…'**
   String get meetingChatSending;
+
+  /// No description provided for @meetingChatAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach a file'**
+  String get meetingChatAttach;
+
+  /// No description provided for @meetingChatUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading file…'**
+  String get meetingChatUploading;
+
+  /// No description provided for @meetingChatFileTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'File is too large'**
+  String get meetingChatFileTooLarge;
+
+  /// No description provided for @meetingChatUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t upload the file, try again'**
+  String get meetingChatUploadFailed;
+
+  /// No description provided for @meetingChatNotSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send the file. It is kept here, press Send to retry'**
+  String get meetingChatNotSent;
+
+  /// No description provided for @meetingChatRemoveFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove file'**
+  String get meetingChatRemoveFile;
 
   /// No description provided for @meetingChatOffline.
   ///

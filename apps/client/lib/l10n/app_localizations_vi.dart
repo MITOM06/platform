@@ -950,6 +950,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get meetingSummaryTitle => 'Tóm tắt cuộc họp';
 
   @override
+  String get meetingSummaryUnavailable => 'Không có bản tóm tắt';
+
+  @override
   String meetingSummaryDuration(String duration) {
     return 'Thời lượng $duration';
   }
@@ -967,6 +970,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get meetingSummaryActionItems => 'Việc cần làm';
+
+  @override
+  String get meetingSummaryDecisions => 'Quyết định';
+
+  @override
+  String get meetingSummaryFromMaterials => 'Từ tài liệu';
 
   @override
   String get profileTitle => 'Trang cá nhân';
@@ -3157,25 +3166,54 @@ class AppLocalizationsVi extends AppLocalizations {
   String get leaveWithoutSaving => 'Thoát không lưu';
 
   @override
-  String get aiSessionHistory => 'Lịch sử cuộc trò chuyện';
+  String get aiThreadUntitled => 'Trò chuyện với AI';
 
   @override
-  String get aiNewSession => 'Cuộc trò chuyện mới';
+  String get aiThreadNew => 'Cuộc trò chuyện mới';
 
   @override
-  String get aiSessionActive => 'Đang hoạt động';
+  String get aiThreadsTitle => 'Cuộc trò chuyện';
 
   @override
-  String get aiSessionSummarized => 'Đã tóm tắt';
+  String get aiThreadRename => 'Đổi tên';
 
   @override
-  String get aiSessionEmpty => 'Chưa có cuộc trò chuyện nào trước đây';
+  String get aiThreadSave => 'Lưu';
 
   @override
-  String get aiSessionResume => 'Tiếp tục';
+  String get aiThreadCancel => 'Hủy';
 
   @override
-  String get aiSessionLoadError => 'Không thể tải lịch sử cuộc trò chuyện';
+  String get aiThreadDelete => 'Xóa';
+
+  @override
+  String get aiThreadDeleteTitle => 'Xóa cuộc trò chuyện này?';
+
+  @override
+  String get aiThreadDeleteDesc =>
+      'Toàn bộ tin nhắn trong cuộc trò chuyện với AI này sẽ bị xóa khỏi tài khoản của bạn. Hành động không thể hoàn tác.';
+
+  @override
+  String get aiThreadEmpty =>
+      'Chưa có cuộc trò chuyện nào. Bắt đầu một cuộc mới.';
+
+  @override
+  String get aiThreadLoadFailed =>
+      'Không tải được danh sách. Vui lòng thử lại.';
+
+  @override
+  String get aiThreadCreateFailed =>
+      'Không tạo được cuộc trò chuyện mới. Vui lòng thử lại.';
+
+  @override
+  String get aiThreadRenameFailed => 'Không đổi được tên. Vui lòng thử lại.';
+
+  @override
+  String get aiThreadNameInvalid => 'Tên phải từ 1 đến 80 ký tự.';
+
+  @override
+  String get aiThreadDeleteFailed =>
+      'Không xóa được cuộc trò chuyện. Vui lòng thử lại.';
 
   @override
   String multiSelectCount(int count) {
@@ -4768,6 +4806,30 @@ class AppLocalizationsVi extends AppLocalizations {
   String get meetingErrNoteConflict => 'Đã có người lưu bản mới hơn';
 
   @override
+  String get meetingErrSummaryPending => 'Tóm tắt đang được tạo';
+
+  @override
+  String get meetingErrSummaryUnavailable => 'Cuộc họp này chưa có tóm tắt';
+
+  @override
+  String get meetingAiSummaryTitle => 'Tóm tắt AI';
+
+  @override
+  String get meetingAiSummaryPending => 'AI đang tóm tắt…';
+
+  @override
+  String get meetingAiSummaryEmpty => 'Cuộc họp không có nội dung để tóm tắt';
+
+  @override
+  String get meetingAiSummaryFailed => 'Chưa tạo được tóm tắt';
+
+  @override
+  String get meetingAiSummaryOpenGroup => 'Mở nhóm cuộc họp';
+
+  @override
+  String get meetingAiSummaryRegenerate => 'Tạo lại';
+
+  @override
   String get meetingErrRateLimited => 'Bạn gửi quá nhanh. Hãy chờ một chút.';
 
   @override
@@ -5144,6 +5206,35 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get meetingSettingLockedDesc => 'Chỉ người được mời mới vào được';
+
+  @override
+  String get meetingSettingAiNotes => 'AI ghi chú cuộc họp';
+
+  @override
+  String get meetingSettingAiNotesDesc =>
+      'AI ghi nhận lời nói, chat, ghi chú, file và màn hình được chia sẻ để tóm tắt sau buổi họp. Mọi người trong phòng đều được báo.';
+
+  @override
+  String get meetingAiNotesActive => 'AI đang ghi chú';
+
+  @override
+  String get meetingAiReadingScreen => 'AI đang đọc màn hình bạn chia sẻ';
+
+  @override
+  String get meetingAiNotesStarted => 'AI bắt đầu ghi chú cuộc họp';
+
+  @override
+  String get meetingAiNotesPrejoin => 'Cuộc họp này có AI ghi chú';
+
+  @override
+  String get meetingAiNotesPauseMine => 'Tạm dừng ghi lời của tôi';
+
+  @override
+  String get meetingAiNotesResumeMine => 'Tiếp tục ghi lời của tôi';
+
+  @override
+  String get meetingAiNotesUnsupported =>
+      'Thiết bị này không hỗ trợ ghi lời cho AI';
 
   @override
   String get meetingSubmitCreate => 'Lên lịch';
@@ -5677,6 +5768,28 @@ class AppLocalizationsVi extends AppLocalizations {
   String get meetingChatEmpty => 'Mọi người trong cuộc họp đều thấy tin nhắn';
 
   @override
+  String get meetingAiName => 'PON AI';
+
+  @override
+  String get meetingAiThinking => 'PON AI đang trả lời…';
+
+  @override
+  String get meetingAiUnavailable => 'AI hiện không khả dụng';
+
+  @override
+  String get meetingAiFailed => 'AI chưa trả lời được, hãy thử lại';
+
+  @override
+  String get meetingAiQuotaExceeded => 'Đã hết lượt dùng AI';
+
+  @override
+  String get meetingAiRateLimited =>
+      'Quá nhiều yêu cầu, hãy thử lại sau ít phút';
+
+  @override
+  String get meetingChatAiHint => 'Gõ @AI trước câu hỏi để hỏi trợ lý';
+
+  @override
   String get meetingChatFailed => 'Chưa gửi được';
 
   @override
@@ -5687,6 +5800,25 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get meetingChatSending => 'Đang gửi…';
+
+  @override
+  String get meetingChatAttach => 'Đính kèm tệp';
+
+  @override
+  String get meetingChatUploading => 'Đang tải tệp lên…';
+
+  @override
+  String get meetingChatFileTooLarge => 'Tệp quá lớn';
+
+  @override
+  String get meetingChatUploadFailed => 'Không tải được tệp lên, hãy thử lại';
+
+  @override
+  String get meetingChatNotSent =>
+      'Chưa gửi được tệp. Tệp vẫn được giữ ở đây, nhấn Gửi để thử lại';
+
+  @override
+  String get meetingChatRemoveFile => 'Bỏ tệp';
 
   @override
   String get meetingChatOffline => 'Đang kết nối lại — tạm chưa gửi được tin';

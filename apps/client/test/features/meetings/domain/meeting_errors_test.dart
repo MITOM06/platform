@@ -22,6 +22,8 @@ void main() {
       'MEETING_ENDED': MeetingText.errEnded, 'MEETING_NOT_CANCELLABLE': MeetingText.errNotCancellable,
       'MEETINGS_UNAVAILABLE': MeetingText.errUnavailable, 'MEETING_NOTES_READ_ONLY': MeetingText.errNotesReadOnly,
       'MEETING_NOTE_CONFLICT': MeetingText.errNoteConflict, 'RATE_LIMITED': MeetingText.errRateLimited,
+      'MEETING_SUMMARY_PENDING': MeetingText.errSummaryPending,
+      'MEETING_SUMMARY_UNAVAILABLE': MeetingText.errSummaryUnavailable,
     };
     table.forEach((code, text) {
       test('$code → $text', () => expect(key(MeetingErrorInfo(code: code)), text));

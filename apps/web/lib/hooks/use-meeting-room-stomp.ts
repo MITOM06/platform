@@ -40,6 +40,7 @@ export function useMeetingRoomStomp(args: {
       onRoster: (r) => controller.onRoster(r),
       onSettings: (s) => controller.onSettings(s),
       onChat: (e) => controller.onChat(e),
+      onAi: (e) => controller.onAi(e),
       onSharedNoteUpdated: (v, by) => controller.onSharedNoteUpdated(v, by),
       onEnded: () => controller.onEnded(),
     }

@@ -35,6 +35,8 @@ const CODE_KEYS: Record<string, string> = {
   MEETINGS_UNAVAILABLE: 'errUnavailable',
   MEETING_NOTES_READ_ONLY: 'errNotesReadOnly',
   MEETING_NOTE_CONFLICT: 'errNoteConflict',
+  MEETING_SUMMARY_PENDING: 'errSummaryPending',
+  MEETING_SUMMARY_UNAVAILABLE: 'errSummaryUnavailable',
   RATE_LIMITED: 'errRateLimited',
 }
 

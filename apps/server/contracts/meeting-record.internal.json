@@ -1,0 +1,32 @@
+{
+  "meeting": {
+    "id": "m1",
+    "title": "Q3 planning",
+    "code": "abc-defg-hij",
+    "startedAt": "2026-11-06T01:00:00Z",
+    "endedAt": "2026-11-06T02:00:00Z",
+    "hostName": "Lan"
+  },
+  "attendees": [{ "displayName": "Lan" }, { "displayName": "Binh" }],
+  "records": [
+    { "kind": "SPEECH", "displayName": "Lan", "text": "Let us ship in December.", "ts": "2026-11-06T01:05:00Z" },
+    { "kind": "FILE", "displayName": "Binh", "text": "Budget: 120k", "ts": "2026-11-06T01:10:00Z", "fileName": "budget.xlsx" },
+    { "kind": "SCREEN", "displayName": "Lan", "text": "Slide: Q3 plan", "ts": "2026-11-06T01:15:00Z" },
+    { "kind": "SCREEN", "text": "Screen reading limit reached for this meeting.", "ts": "2026-11-06T01:20:00Z" }
+  ],
+  "chat": [
+    { "senderName": "Binh", "content": "see the budget", "createdAt": "2026-11-06T01:09:00Z", "attachmentName": "budget.xlsx" },
+    { "senderName": "Lan", "content": "@AI what did we decide?", "createdAt": "2026-11-06T01:30:00Z" }
+  ],
+  "summary": {
+    "overview": "The team agreed to ship in December.",
+    "keyPoints": ["Budget is 120k"],
+    "decisions": ["Ship in December"],
+    "actionItems": [
+      { "text": "Prepare the release notes", "assigneeName": "Binh" },
+      { "text": "Book the launch room" }
+    ],
+    "fromMaterials": ["Budget: 120k"],
+    "language": "en"
+  }
+}

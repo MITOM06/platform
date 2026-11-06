@@ -2,42 +2,45 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
-import { chatService } from '@/lib/api/chat'
+import { aiThreadsApi } from '@/lib/api/ai-threads'
+import { AI_BOT_ID } from '@/lib/constants'
+import { AI_THREADS_KEY, upsertAiThread } from '@/lib/realtime/conversation-cache'
+import type { Conversation } from '@/lib/api/types'
 
-export const AI_BOT_ID = 'ai-bot-000000000000000000000001'
+export { AI_BOT_ID }
 
-// Shared "Start chat with PON AI" logic used by both the AI Hub hero CTA and
-// (historically) the conversation-list Bot button. Creates the AI conversation
-// and navigates to it, with the 409 (already-exists) fallback that navigates to
-// the existing conversation. Mirrors Flutter `getOrCreateConversation(kAiBotUserId)`.
+// Shared "Start chat with PON AI" logic (AI Hub hero CTA). Opens the most recent
+// AI thread, or creates the first one when the user has none.
 export function useOpenAiChat() {
   const t = useTranslations('chat')
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [loading, setLoading] = useState(false)
 
   const openAiChat = useCallback(async () => {
     if (loading) return
     setLoading(true)
     try {
-      const conv = await chatService.createConversation(AI_BOT_ID)
-      router.push(`/conversations/${conv.id}`)
-    } catch (err) {
-      // 409 = conversation already exists — find and navigate to it.
-      const isConflict = (err as { response?: { status?: number } })?.response?.status === 409
-      if (isConflict) {
-        const body = (err as { response?: { data?: { conversationId?: string } } })?.response?.data
-        if (body?.conversationId) {
-          router.push(`/conversations/${body.conversationId}`)
-          return
-        }
+      const threads = await queryClient.fetchQuery<Conversation[]>({
+        queryKey: AI_THREADS_KEY,
+        queryFn: () => aiThreadsApi.list(),
+        staleTime: 0,
+      })
+      let target = threads[0]
+      if (!target) {
+        target = await aiThreadsApi.create()
+        upsertAiThread(queryClient, target)
       }
+      router.push(`/conversations/${target.id}`)
+    } catch {
       toast.error(t('aiOpenError'))
     } finally {
       setLoading(false)
     }
-  }, [loading, router, t])
+  }, [loading, queryClient, router, t])
 
   return { openAiChat, loading }
 }

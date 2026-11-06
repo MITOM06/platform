@@ -7,10 +7,12 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 import '../../../core/rtc/rtc_session.dart';
 import '../domain/cache_updates.dart';
+import '../domain/meeting_attachment.dart';
 import '../domain/meeting_models.dart';
 import '../domain/meeting_room_models.dart';
 import '../domain/meeting_text.dart';
 import '../domain/note_sync.dart';
+import '../domain/pending_ai.dart';
 import '../domain/room_phase.dart';
 import '../domain/stage_layout.dart';
 
@@ -23,19 +25,22 @@ class PendingChat {
     required this.content,
     required this.sentAt,
     this.error,
+    this.attachment,
   });
 
   final String clientId;
   final String content;
   final DateTime sentAt;
   final MeetingNotice? error;
+  final MeetingAttachment? attachment;
 
   /// [error] is always replaced (null clears it).
   PendingChat copyWith({DateTime? sentAt, MeetingNotice? error}) => PendingChat(
       clientId: clientId,
       content: content,
       sentAt: sentAt ?? this.sentAt,
-      error: error);
+      error: error,
+      attachment: attachment);
 
   @override
   bool operator ==(Object other) =>
@@ -43,10 +48,11 @@ class PendingChat {
       other.clientId == clientId &&
       other.content == content &&
       other.sentAt == sentAt &&
-      other.error == error;
+      other.error == error &&
+      other.attachment == attachment;
 
   @override
-  int get hashCode => Object.hash(clientId, content, sentAt, error);
+  int get hashCode => Object.hash(clientId, content, sentAt, error, attachment);
 
   @override
   String toString() => 'PendingChat($clientId, $content, $sentAt, $error)';
@@ -131,6 +137,8 @@ class MeetingRoomState {
     this.panel,
     this.unreadChat = 0,
     this.pendingChat = const [],
+    this.pendingAi = const [],
+    this.aiNotices = const [],
     this.pendingHost = const {},
     this.reactions = const [],
     this.roster = const [],
@@ -165,6 +173,12 @@ class MeetingRoomState {
   final RoomPanel? panel;
   final int unreadChat;
   final List<PendingChat> pendingChat;
+
+  /// `@AI` questions the assistant is still answering, oldest first.
+  final List<PendingAi> pendingAi;
+
+  /// Error lines for my own `@AI` questions (not persisted).
+  final List<AiNotice> aiNotices;
 
   /// Switch commands sent and not yet confirmed by `meet.settings`.
   final Map<HostAction, DateTime> pendingHost;
@@ -208,6 +222,8 @@ class MeetingRoomState {
     Object? panel = _keep,
     int? unreadChat,
     List<PendingChat>? pendingChat,
+    List<PendingAi>? pendingAi,
+    List<AiNotice>? aiNotices,
     Map<HostAction, DateTime>? pendingHost,
     List<FloatingReaction>? reactions,
     List<RosterEntry>? roster,
@@ -239,6 +255,8 @@ class MeetingRoomState {
       panel: pick<RoomPanel?>(panel, this.panel),
       unreadChat: unreadChat ?? this.unreadChat,
       pendingChat: pendingChat ?? this.pendingChat,
+      pendingAi: pendingAi ?? this.pendingAi,
+      aiNotices: aiNotices ?? this.aiNotices,
       pendingHost: pendingHost ?? this.pendingHost,
       reactions: reactions ?? this.reactions,
       roster: roster ?? this.roster,
