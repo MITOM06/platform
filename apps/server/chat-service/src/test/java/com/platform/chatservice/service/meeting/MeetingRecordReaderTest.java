@@ -126,6 +126,24 @@ class MeetingRecordReaderTest {
   }
 
   @Test
+  void aNoticeFileRecordWithoutAUserOrNameIsReadAsIs() {
+    template.insert(
+        MeetingRecord.builder()
+            .meetingId(MID)
+            .kind(MeetingRecord.Kind.FILE)
+            .text("Đã đạt giới hạn file AI đọc.")
+            .ts(T0)
+            .build());
+
+    List<MeetingRecordView.Rec> out = reader.read(MID, HOST).orElseThrow().records();
+
+    assertThat(out).hasSize(1);
+    assertThat(out.get(0).kind()).isEqualTo("FILE");
+    assertThat(out.get(0).displayName()).isNull();
+    assertThat(out.get(0).text()).isEqualTo("Đã đạt giới hạn file AI đọc.");
+  }
+
+  @Test
   void removedUserIsRefusedEvenWhenAdmittedOrAttended() {
     when(lobby.isAdmitted(MID, REMOVED)).thenReturn(true);
     assertThat(reader.read(MID, REMOVED)).isEmpty();

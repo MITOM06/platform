@@ -58,7 +58,7 @@ public class MeetingMaterialResultListener implements MessageListener {
       return;
     }
     MeetingMessage line = mongo.findById(messageId, MeetingMessage.class);
-    if (line == null || !meetingId.equals(line.getMeetingId())) {
+    if (line == null || !meetingId.equals(line.getMeetingId()) || line.getAttachment() == null) {
       return;
     }
     String claim = CLAIM_PREFIX + messageId;
@@ -75,18 +75,14 @@ public class MeetingMaterialResultListener implements MessageListener {
 
   private MeetingRecord record(String meetingId, MeetingMessage line, JsonNode root) {
     String body = "ok".equals(text(root, "status")) ? text(root, "text") : null;
-    String fileName = text(root, "fileName");
-    if (fileName == null && line.getAttachment() != null) {
-      fileName = line.getAttachment().getName();
-    }
     return MeetingRecord.builder()
         .meetingId(meetingId)
         .kind(MeetingRecord.Kind.FILE)
         .userId(line.getSenderId())
         .displayName(nameOf(line.getSenderId()))
         .text(body == null ? UNREADABLE : cap(body))
-        .ref(line.getAttachment() == null ? null : line.getAttachment().getUploadId())
-        .fileName(fileName)
+        .ref(line.getAttachment().getUploadId())
+        .fileName(line.getAttachment().getName())
         .ts(line.getCreatedAt())
         .build();
   }
@@ -100,7 +96,14 @@ public class MeetingMaterialResultListener implements MessageListener {
   }
 
   private static String cap(String s) {
-    return s.length() > TEXT_MAX ? s.substring(0, TEXT_MAX) : s;
+    if (s.length() <= TEXT_MAX) {
+      return s;
+    }
+    int end = TEXT_MAX;
+    if (Character.isHighSurrogate(s.charAt(end - 1))) {
+      end--; // never leave half of a surrogate pair
+    }
+    return s.substring(0, end);
   }
 
   private static String text(JsonNode root, String field) {

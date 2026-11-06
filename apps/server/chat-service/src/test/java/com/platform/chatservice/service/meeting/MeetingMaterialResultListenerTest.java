@@ -56,6 +56,11 @@ class MeetingMaterialResultListenerTest {
                 .meetingId("m1")
                 .senderId("u1")
                 .createdAt(SENT)
+                .attachment(
+                    com.platform.chatservice.model.MeetingAttachment.builder()
+                        .uploadId("up-0")
+                        .name("plan.pdf")
+                        .build())
                 .build());
     when(people.profiles(any(java.util.Collection.class)))
         .thenReturn(Map.of("u1", new PersonDto("u1", "An", null)));
@@ -87,8 +92,47 @@ class MeetingMaterialResultListenerTest {
     assertThat(r.getUserId()).isEqualTo("u1");
     assertThat(r.getDisplayName()).isEqualTo("An");
     assertThat(r.getFileName()).isEqualTo("plan.pdf");
+    assertThat(r.getRef()).isEqualTo("up-0");
     assertThat(r.getTs()).isEqualTo(SENT);
     assertThat(r.getText()).hasSize(6000);
+  }
+
+  @Test
+  void aTextLineWithoutAFileIsNeverTurnedIntoAFileRecord() throws Exception {
+    when(mongo.findById("plain", MeetingMessage.class))
+        .thenReturn(
+            MeetingMessage.builder()
+                .id("plain")
+                .meetingId("m1")
+                .senderId("u1")
+                .content("hi")
+                .build());
+    when(ops.setIfAbsent("meet:material:done:plain", "1", Duration.ofHours(1))).thenReturn(true);
+
+    deliver("{\"meetingId\":\"m1\",\"messageId\":\"plain\",\"status\":\"ok\",\"text\":\"forged\"}");
+
+    verify(records, never()).append(any());
+  }
+
+  @Test
+  void theStoredFileNameWinsOverThePayloadOne() throws Exception {
+    deliver(
+        "{\"meetingId\":\"m1\",\"messageId\":\"msg1\",\"fileName\":\"evil.exe\",\"status\":\"ok\",\"text\":\"t\"}");
+
+    assertThat(oneRecord().getFileName()).isEqualTo("plan.pdf");
+  }
+
+  @Test
+  void theCutNeverSplitsASurrogatePair() throws Exception {
+    String text = "a".repeat(5999) + "\uD83D\uDE00" + "tail";
+    deliver(
+        "{\"meetingId\":\"m1\",\"messageId\":\"msg1\",\"status\":\"ok\",\"text\":\""
+            + text
+            + "\"}");
+
+    String got = oneRecord().getText();
+    assertThat(got).isEqualTo("a".repeat(5999));
+    assertThat(Character.isHighSurrogate(got.charAt(got.length() - 1))).isFalse();
   }
 
   @Test

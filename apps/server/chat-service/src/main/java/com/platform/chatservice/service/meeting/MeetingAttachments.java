@@ -41,7 +41,7 @@ public class MeetingAttachments {
       throw MeetingRequests.invalid("attachment");
     }
     Matcher m = URL.matcher(a.url());
-    String name = a.name().trim();
+    String name = cleanName(a.name());
     if (!m.matches() || name.isEmpty() || name.length() > NAME_MAX) {
       throw MeetingRequests.invalid("attachment");
     }
@@ -58,10 +58,34 @@ public class MeetingAttachments {
     return MeetingAttachment.builder()
         .uploadId(uploadId)
         .url("/api/uploads/" + uploadId)
-        .name(a.name().trim())
+        .name(displayName(meta.getString("originalFilename"), a.name()))
         .size(file.getLength())
         .contentType(meta.getString("_contentType"))
         .build();
+  }
+
+  /**
+   * The stored original filename wins; the client's name only when none is stored. Control and
+   * format characters (bidi overrides included) are stripped, the result trimmed and capped.
+   */
+  static String displayName(String stored, String client) {
+    String name = cleanName(stored);
+    if (name.isEmpty()) {
+      name = cleanName(client);
+    }
+    return name.length() > NAME_MAX ? cutSafely(name, NAME_MAX) : name;
+  }
+
+  private static String cleanName(String raw) {
+    return raw == null ? "" : raw.replaceAll("[\\p{Cc}\\p{Cf}]", "").trim();
+  }
+
+  private static String cutSafely(String s, int max) {
+    int end = max;
+    if (Character.isHighSurrogate(s.charAt(end - 1))) {
+      end--;
+    }
+    return s.substring(0, end);
   }
 
   /** Lets everyone who can read the meeting's records open the file. Never throws. */

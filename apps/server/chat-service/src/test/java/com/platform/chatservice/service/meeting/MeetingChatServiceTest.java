@@ -399,6 +399,11 @@ class MeetingChatServiceTest {
             att(missing, "x.txt"),
             new MeetingChatCommand.Attachment("https://evil.example/a.txt", "x", null, null),
             new MeetingChatCommand.Attachment("/api/uploads/" + theirs + "?t=1", "x", null, null),
+            new MeetingChatCommand.Attachment("/api/uploads/" + theirs + "#f", "x", null, null),
+            new MeetingChatCommand.Attachment(
+                "https://pon.example.com/api/uploads/" + theirs, "x", null, null),
+            new MeetingChatCommand.Attachment(
+                "//evil.example/api/uploads/" + theirs, "x", null, null),
             new MeetingChatCommand.Attachment("/api/uploads/../" + theirs, "x", null, null),
             new MeetingChatCommand.Attachment(null, "x", null, null),
             att(upload("a", new byte[] {1}, "text/plain"), " "),
@@ -410,6 +415,32 @@ class MeetingChatServiceTest {
     assertThat(count()).isZero();
     verify(uploadRefs, never()).attachToMeeting(any(), any(), any());
     verify(materials, never()).onFileSent(any(), any(), any(), any());
+  }
+
+  @Test
+  void bidiAndControlCharactersAreStrippedFromTheClientName() {
+    String id = upload("a", new byte[] {1}, "application/pdf");
+
+    MeetingMessageDto dto =
+        chat.send(an, "m1", "x", null, att(id, "invoice\u202Efdp.exe\u0000\n\u200B"));
+
+    assertThat(dto.attachment().name()).isEqualTo("invoicefdp.exe");
+  }
+
+  @Test
+  void theStoredOriginalFilenameWinsOverTheClientName() {
+    String id = UUID.randomUUID().toString();
+    gridFs.store(
+        new ByteArrayInputStream(new byte[] {1}),
+        id,
+        "application/pdf",
+        new Document("fileId", id)
+            .append("uploadedBy", "a")
+            .append("originalFilename", "real\u202E.pdf"));
+
+    MeetingMessageDto dto = chat.send(an, "m1", "x", null, att(id, "fake.exe"));
+
+    assertThat(dto.attachment().name()).isEqualTo("real.pdf");
   }
 
   @Test
