@@ -84,8 +84,8 @@ DioException forbidden(String code) {
   return DioException(
     requestOptions: req,
     type: DioExceptionType.badResponse,
-    response:
-        Response(requestOptions: req, statusCode: 403, data: {'code': code}),
+    response: Response(
+        requestOptions: req, statusCode: 403, data: {'code': code}),
   );
 }
 
@@ -98,55 +98,43 @@ void main() {
         meetingsRepositoryProvider.overrideWithValue(api),
         myDepartmentsRepositoryProvider.overrideWithValue(_FakeMyDepartments()),
         departmentsProvider.overrideWith(_FakeAdminDepartments.new),
-        hasCapabilityProvider.overrideWith(
-            (ref, cap) => canManage && cap == Cap.manageDepartments),
+        hasCapabilityProvider
+            .overrideWith((ref, cap) => canManage && cap == Cap.manageDepartments),
         if (caps != null) capabilitiesProvider.overrideWith(() => caps),
       ]);
 
   setUp(() {
     api = _FakeApi()
       ..pages[null] = MeetingPage(content: [meeting('m1')], hasNext: true)
-      ..pages['m1'] =
-          MeetingPage(content: [meeting('m2', day: 9)], hasNext: false);
+      ..pages['m1'] = MeetingPage(content: [meeting('m2', day: 9)], hasNext: false);
     c = make();
   });
   tearDown(() => c.dispose());
 
   test('loads the first page, then the next one by the last row id', () async {
-    final sub =
-        c.listen(meetingListProvider(MeetingListScope.upcoming), (_, __) {});
-    final first =
-        await c.read(meetingListProvider(MeetingListScope.upcoming).future);
+    final sub = c.listen(meetingListProvider(MeetingListScope.upcoming), (_, __) {});
+    final first = await c.read(meetingListProvider(MeetingListScope.upcoming).future);
     expect(first.rows.map((m) => m.id), ['m1']);
 
-    await c
-        .read(meetingListProvider(MeetingListScope.upcoming).notifier)
-        .loadMore();
-    final next =
-        c.read(meetingListProvider(MeetingListScope.upcoming)).requireValue;
+    await c.read(meetingListProvider(MeetingListScope.upcoming).notifier).loadMore();
+    final next = c.read(meetingListProvider(MeetingListScope.upcoming)).requireValue;
     expect(next.rows.map((m) => m.id), ['m1', 'm2']);
     expect(api.listCalls, [
       (MeetingListScope.upcoming, null),
       (MeetingListScope.upcoming, 'm1'),
     ]);
 
-    await c
-        .read(meetingListProvider(MeetingListScope.upcoming).notifier)
-        .loadMore();
+    await c.read(meetingListProvider(MeetingListScope.upcoming).notifier).loadMore();
     expect(api.listCalls, hasLength(2)); // hasNext=false ⇒ no call
     sub.close();
   });
 
   test('a store patch shows in the list without refetching', () async {
-    final sub =
-        c.listen(meetingListProvider(MeetingListScope.upcoming), (_, __) {});
+    final sub = c.listen(meetingListProvider(MeetingListScope.upcoming), (_, __) {});
     await c.read(meetingListProvider(MeetingListScope.upcoming).future);
     c.read(meetingsStoreProvider.notifier).updateCache(
         (s) => s.markEnded('m1', DateTime.utc(2026, 10, 8), cancelled: true));
-    final rows = c
-        .read(meetingListProvider(MeetingListScope.upcoming))
-        .requireValue
-        .rows;
+    final rows = c.read(meetingListProvider(MeetingListScope.upcoming)).requireValue.rows;
     expect(rows, isEmpty);
     expect(api.listCalls, hasLength(1));
     sub.close();
@@ -179,14 +167,12 @@ void main() {
       final sub = c.listen(meetingDepartmentOptionsProvider, (_, __) {});
       await c.read(myDepartmentsProvider.future);
       await c.read(departmentsProvider.future);
-      final out =
-          c.read(meetingDepartmentOptionsProvider).map((d) => d.name).toList();
+      final out = c.read(meetingDepartmentOptionsProvider).map((d) => d.name).toList();
       sub.close();
       return out;
     }
 
-    test('MANAGE_DEPARTMENTS adds every department, unique and sorted',
-        () async {
+    test('MANAGE_DEPARTMENTS adds every department, unique and sorted', () async {
       final mc = make(canManage: true);
       addTearDown(mc.dispose);
       expect(await names(mc), ['Alpha', 'Beta']);
@@ -197,15 +183,12 @@ void main() {
     });
   });
 
-  test(
-      'create forbidden ⇒ capabilities refreshed silently and the error rethrown',
-      () async {
+  test('create forbidden ⇒ capabilities refreshed silently and the error rethrown', () async {
     final caps = _RecordingCaps();
     final mc = make(caps: caps);
     addTearDown(mc.dispose);
     api.createError = forbidden('MEETING_CREATE_FORBIDDEN');
-    await expectLater(
-        mc.read(meetingActionsProvider).create(const MeetingInput()),
+    await expectLater(mc.read(meetingActionsProvider).create(const MeetingInput()),
         throwsA(isA<DioException>()));
     expect(caps.silentRefreshes, 1);
   });

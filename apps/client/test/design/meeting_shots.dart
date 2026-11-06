@@ -1,10 +1,9 @@
-import 'dart:typed_data';
-
 // Meeting screens for the DESIGN_SHOTS run (see design_shots_test.dart):
 // the list and detail with fake data, the pre-join and a status screen inside
 // a real room scope (`pumpRoom`), the room itself. Light + dark, Vietnamese,
 // 390 dp. Captured from the render view so sheets/overlays are included.
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';

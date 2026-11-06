@@ -115,8 +115,8 @@ void main() {
     await open(tester);
     await submit(tester, l10nOf(tester).meetingSubmitCreate);
     expect(api.created, hasLength(1));
-    expect(
-        find.text(l10nOf(tester).meetingValTitleTooLong(120)), findsOneWidget);
+    expect(find.text(l10nOf(tester).meetingValTitleTooLong(120)),
+        findsOneWidget);
   });
 
   testWidgets(
@@ -156,7 +156,8 @@ void main() {
     expect(find.text(l10nOf(tester).meetingFieldDepartment), findsNothing);
   });
 
-  testWidgets('editing sends only the switch that was flipped', (tester) async {
+  testWidgets('editing sends only the switch that was flipped',
+      (tester) async {
     await open(tester,
         mode: MeetingFormMode.edit,
         meeting: sample(scheduled: true, status: MeetingStatus.scheduled));

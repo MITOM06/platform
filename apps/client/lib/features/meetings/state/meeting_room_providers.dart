@@ -133,8 +133,9 @@ final meetingRoomStreamsProvider = Provider<MeetingRoomStreams>((ref) {
 
 /// Keep the screen on while in the room (best-effort; no-op in tests).
 final meetingKeepAwakeProvider = Provider<void Function(bool on)>(
-  (_) => (on) => unawaited((on ? WakelockPlus.enable() : WakelockPlus.disable())
-      .catchError((Object _) {})),
+  (_) => (on) => unawaited(
+      (on ? WakelockPlus.enable() : WakelockPlus.disable())
+          .catchError((Object _) {})),
 );
 
 /// The meeting stopped (ended / removed / dropped) while the app is in the

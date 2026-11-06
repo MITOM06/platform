@@ -122,6 +122,16 @@ void main() {
     expect(captures, 1);
   });
 
+  test('another meeting id restarts for the new meeting', () async {
+    f.sync(meetingId: 'm1', active: true);
+    await flush();
+    f.sync(meetingId: 'm2', active: true);
+    await flush();
+    expect(timers.first.cancelled, true);
+    expect(timers.length, 2);
+    expect(uploads.map((u) => u.$1), ['m1', 'm2']);
+  });
+
   test('stops on inactive / null meeting; ticks after stop do nothing',
       () async {
     f.sync(meetingId: 'm1', active: true);

@@ -64,6 +64,7 @@ class MeetingScreenFrames {
   final ValueNotifier<bool> reading = ValueNotifier(false);
 
   Timer? _ticker;
+  String? _meetingId;
   int _gen = 0;
   bool _inFlight = false;
   bool _disabled = false; // captureFrame failed: off until the share ends
@@ -78,7 +79,11 @@ class MeetingScreenFrames {
       _stop();
       return;
     }
-    if (_ticker != null) return; // idempotent
+    if (_ticker != null) {
+      if (_meetingId == meetingId) return; // idempotent
+      _stop(); // another meeting: never keep sending to the old one
+    }
+    _meetingId = meetingId;
     final gen = ++_gen;
     _lastThumb = null;
     _lastSentAt = null;

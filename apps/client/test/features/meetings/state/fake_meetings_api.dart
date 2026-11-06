@@ -1,6 +1,5 @@
-import 'dart:typed_data';
-
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:platform_client/features/meetings/data/meetings_repository.dart';
@@ -12,10 +11,7 @@ DioException httpError(int status, String code) {
   return DioException(
       requestOptions: o,
       type: DioExceptionType.badResponse,
-      response: Response(
-          requestOptions: o,
-          statusCode: status,
-          data: {'code': code, 'statusCode': status}));
+      response: Response(requestOptions: o, statusCode: status, data: {'code': code, 'statusCode': status}));
 }
 
 class FakeMeetingsApi implements MeetingsApi {
@@ -35,13 +31,8 @@ class FakeMeetingsApi implements MeetingsApi {
   final lobbies = <List<LobbyEntry>>[];
   List<MeetingHand> handsAnswer = const [];
   Object? handsError;
-  MeetingMessagePage messagesAnswer =
-      const MeetingMessagePage(content: [], hasNext: false);
-  int joinCalls = 0,
-      getCalls = 0,
-      lobbyCalls = 0,
-      leaveLobbyCalls = 0,
-      endCalls = 0;
+  MeetingMessagePage messagesAnswer = const MeetingMessagePage(content: [], hasNext: false);
+  int joinCalls = 0, getCalls = 0, lobbyCalls = 0, leaveLobbyCalls = 0, endCalls = 0;
   final admitted = <String>[], denied = <String>[];
 
   @override
@@ -88,8 +79,7 @@ class FakeMeetingsApi implements MeetingsApi {
   }
 
   @override
-  Future<MeetingMessagePage> messages(String id,
-          {String? before, int size = 50}) async =>
+  Future<MeetingMessagePage> messages(String id, {String? before, int size = 50}) async =>
       messagesAnswer;
 
   @override

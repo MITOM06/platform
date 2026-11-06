@@ -155,8 +155,7 @@ void main() {
     expect(find.text(l.meetingJoin), findsOneWidget);
     expect(find.text(l.meetingEdit), findsOneWidget);
     expect(find.text(l.meetingCancelMeeting), findsOneWidget);
-    expect(
-        find.text(l.meetingParticipantFallback), findsNWidgets(2)); // web label
+    expect(find.text(l.meetingParticipantFallback), findsNWidgets(2)); // web label
     expect(find.textContaining('64b0'), findsNothing);
     // SCHEDULED and nobody joined yet: no attendance section.
     expect(find.text(l.meetingSectionAttendance), findsNothing);

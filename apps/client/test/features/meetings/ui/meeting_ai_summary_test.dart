@@ -92,8 +92,7 @@ void main() {
       GoRoute(
           path: '/',
           builder: (_, __) => Scaffold(
-              body:
-                  SingleChildScrollView(child: MeetingAiSummary(meeting: m)))),
+              body: SingleChildScrollView(child: MeetingAiSummary(meeting: m)))),
       GoRoute(path: '/chat/:id', builder: (_, s) => Text(s.uri.path)),
     ]);
     await tester.pumpWidget(ProviderScope(
@@ -124,8 +123,7 @@ void main() {
     expect(find.text(l.meetingAiSummaryTitle), findsNothing);
   });
 
-  testWidgets(
-      'fetches when summaryState is set even without aiNotesEverEnabled',
+  testWidgets('fetches when summaryState is set even without aiNotesEverEnabled',
       (tester) async {
     api.next = resp(MeetingSummaryState.done, summary: done);
     await pump(tester, meeting(aiEver: false, state: MeetingSummaryState.done));
