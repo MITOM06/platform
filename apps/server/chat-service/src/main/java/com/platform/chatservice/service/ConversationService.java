@@ -114,6 +114,30 @@ public class ConversationService {
   }
 
   /**
+   * Group chat of a finished meeting: created by {@code hostId} (the only admin), every member
+   * joins directly ({@code pendingMembers} empty). Internal — no REST, no department checks.
+   */
+  public ConversationResponse createMeetingGroup(
+      String hostId, String name, List<String> members, String meetingId) {
+    LinkedHashSet<String> all = new LinkedHashSet<>();
+    all.add(hostId);
+    all.addAll(members);
+    Conversation saved =
+        conversationCacheService.save(
+            Conversation.builder()
+                .type(Conversation.TYPE_GROUP)
+                .name(name)
+                .participants(new ArrayList<>(all))
+                .admins(new ArrayList<>(List.of(hostId)))
+                .createdBy(hostId)
+                .meetingId(meetingId)
+                .lastMessageAt(Instant.now())
+                .pendingMembers(new ArrayList<>())
+                .build());
+    return support.view(saved, hostId, 0L);
+  }
+
+  /**
    * A group's departmentId scopes its AI bot to that department's knowledge base (ai-service
    * searches every document with the same departmentId). Taking it from the request unchecked let
    * any member open a group "in" another department and read that department's documents through

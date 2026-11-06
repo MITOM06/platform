@@ -1,6 +1,7 @@
 package com.platform.chatservice.dto.meeting;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.platform.chatservice.model.MeetingSummaryState;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +69,12 @@ public class MeetingEventDto {
 
   /** {@code meet.chat} / {@code meet.error}: echo of the sender's optional chat client id. */
   private String clientId;
+
+  /** {@code meet.summary.ready}: how the summary ended (DONE | EMPTY | FAILED). */
+  private MeetingSummaryState summaryState;
+
+  /** {@code meet.summary.ready}: the meeting's group chat, null when none was created. */
+  private String groupConversationId;
 
   /** {@code meet.error}: an {@code ErrorCodes} value. */
   private String errorCode;

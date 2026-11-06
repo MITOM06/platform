@@ -189,6 +189,21 @@ public class MeetingEvents {
     toUser(userId, base("meet.removed", meetingId).build());
   }
 
+  /**
+   * {@code meet.summary.ready}: the AI summary finished ({@code summaryState}) and, when a group
+   * chat holds it, where ({@code groupConversationId}).
+   */
+  public void summaryReady(Meeting m, Collection<String> userIds) {
+    for (String userId : distinct(userIds)) {
+      toUser(
+          userId,
+          base("meet.summary.ready", m.getId())
+              .summaryState(m.getSummaryState())
+              .groupConversationId(m.getGroupConversationId())
+              .build());
+    }
+  }
+
   /** {@code meet.muted} to the person whose microphone {@code actor} muted. */
   public void muted(String meetingId, String userId, PersonDto actor) {
     toUser(userId, base("meet.muted", meetingId).actor(actor).build());

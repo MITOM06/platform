@@ -148,6 +148,15 @@ public class MeetingStore {
         > 0;
   }
 
+  /** Swaps a dead group for a new one; false unless {@code oldConvId} is still the linked one. */
+  public boolean replaceGroupConversation(String id, String oldConvId, String newConvId) {
+    Query query = new Query(byId(id).and("groupConversationId").is(oldConvId));
+    return mongo
+            .updateFirst(query, new Update().set("groupConversationId", newConvId), Meeting.class)
+            .getModifiedCount()
+        > 0;
+  }
+
   /** PENDING requested before {@code cutoff} ⇒ FAILED; returns how many flipped. */
   public long failStaleSummaries(Instant cutoff) {
     Query query =
