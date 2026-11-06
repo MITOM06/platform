@@ -6,6 +6,8 @@ import com.platform.chatservice.model.Meeting;
 import com.platform.chatservice.model.MeetingRecord;
 import com.platform.chatservice.security.UserPrincipal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
@@ -119,5 +121,20 @@ public class MeetingRecordService {
     return mongo.find(
         new Query(Criteria.where("meetingId").is(meetingId)).with(Sort.by("ts")),
         MeetingRecord.class);
+  }
+
+  /**
+   * The newest {@code limit} records of a meeting, oldest first (capped in Mongo, not in memory).
+   */
+  public List<MeetingRecord> listNewest(String meetingId, int limit) {
+    List<MeetingRecord> rows =
+        new ArrayList<>(
+            mongo.find(
+                new Query(Criteria.where("meetingId").is(meetingId))
+                    .with(Sort.by(Sort.Direction.DESC, "ts"))
+                    .limit(limit),
+                MeetingRecord.class));
+    Collections.reverse(rows);
+    return rows;
   }
 }
