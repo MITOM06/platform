@@ -65,8 +65,8 @@ void main() {
     await container.read(authNotifierProvider.future);
     container.read(groupCallControllerProvider); // build
   });
-  // Not disposed here: see the skipped BUG test at the bottom (disposing a
-  // controller whose STT never started throws inside onDispose).
+  // Not disposed here: the last test disposes the container itself to check
+  // that onDispose releases the call's media.
   tearDown(() async {
     await pumpEventQueue();
     native.uninstall();
@@ -383,12 +383,5 @@ void main() {
     await pumpEventQueue();
     expect(native.named('streamDispose'), hasLength(1));
     expect(native.named('videoRendererDispose'), hasLength(1));
-  },
-      // BUG: group_call_controller.dart:28/90 — `_stt` is a lazy `late final`
-      // that does `ref.read(stompServiceProvider…)`; its first touch is inside
-      // ref.onDispose when STT never started, so it throws "ProviderContainer
-      // already disposed" and the rest of the dispose callback (mesh, sfu,
-      // renderers) never runs. Fix: read the StompService once in build()
-      // (e.g. `final stomp = ref.read(...)`) and create `_stt` from it there.
-      skip: 'BUG: onDispose reads ref lazily (see comment)');
+  });
 }
