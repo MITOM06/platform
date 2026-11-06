@@ -80,7 +80,7 @@ class MeetingSummaryResultListenerTest {
     t0 = Instant.now().truncatedTo(ChronoUnit.MILLIS).minusSeconds(3600);
 
     store = new MeetingStore(template, meetingRepository);
-    summaries = new MeetingSummaryStore(template);
+    summaries = org.mockito.Mockito.spy(new MeetingSummaryStore(template));
     ConversationCacheService cache = new ConversationCacheService(conversationRepository);
     ConversationMapper mapper = new ConversationMapper(messageRepository);
     ConversationWriteSupport support =
@@ -122,7 +122,7 @@ class MeetingSummaryResultListenerTest {
             });
     MeetingGroupService groups =
         new MeetingGroupService(
-            store, conversations, conversationRepository, messages, broker, notifications);
+            store, conversations, conversationRepository, messages, broker, notifications, cache);
     listener =
         new MeetingSummaryResultListener(store, summaries, groups, ai, notifications, events, json);
   }
@@ -315,6 +315,31 @@ class MeetingSummaryResultListenerTest {
     assertThat(second).isNotNull().isNotEqualTo(first);
     assertThat(conversationRepository.existsById(second)).isTrue();
     assertThat(summaryMessages(second)).hasSize(1);
+  }
+
+  @Test
+  void aFailingSummaryDocSaveStillPostsAndSendsTheEvent() throws Exception {
+    Meeting m = pending("ml9-aaaa-aaa", "T", "a1", "inv1");
+    org.mockito.Mockito.doThrow(new RuntimeException("mongo down")).when(summaries).save(any());
+
+    deliver(m.getId(), "a1", "ok");
+
+    Meeting after = store.findById(m.getId()).orElseThrow();
+    assertThat(after.getSummaryState()).isEqualTo(MeetingSummaryState.DONE);
+    assertThat(summaryMessages(after.getGroupConversationId())).hasSize(1);
+    verify(events).summaryReady(any(Meeting.class), any());
+  }
+
+  @Test
+  void aFailingEventSendDoesNotEscape() throws Exception {
+    Meeting m = pending("mla-aaaa-aaa", "T", "a1", "inv1");
+    org.mockito.Mockito.doThrow(new RuntimeException("stomp down"))
+        .when(events)
+        .summaryReady(any(Meeting.class), any());
+
+    deliver(m.getId(), "a1", "ok");
+
+    assertThat(summaries.latest(m.getId())).isPresent();
   }
 
   @Test

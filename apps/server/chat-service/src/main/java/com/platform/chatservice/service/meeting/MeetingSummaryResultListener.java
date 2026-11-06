@@ -81,18 +81,27 @@ public class MeetingSummaryResultListener implements MessageListener {
     }
     Meeting m = finished.get();
     if (ok) {
-      summaries.save(
-          MeetingSummaryDoc.builder()
-              .meetingId(meetingId)
-              .attempt(attempt)
-              .status(state)
-              .summary(
-                  objectMapper.convertValue(summary, new TypeReference<Map<String, Object>>() {}))
-              .createdAt(Instant.now())
-              .build());
+      try {
+        summaries.save(
+            MeetingSummaryDoc.builder()
+                .meetingId(meetingId)
+                .attempt(attempt)
+                .status(state)
+                .summary(
+                    objectMapper.convertValue(summary, new TypeReference<Map<String, Object>>() {}))
+                .createdAt(Instant.now())
+                .build());
+      } catch (Exception e) {
+        // The state is already DONE; still post and notify so clients refetch (and see the gap).
+        log.error("Saving the summary of meeting {} failed", meetingId, e);
+      }
       m = postToGroup(m, (ObjectNode) summary);
     }
-    events.summaryReady(m, recipients(m, ok));
+    try {
+      events.summaryReady(m, recipients(m, ok));
+    } catch (Exception e) {
+      log.error("Sending meet.summary.ready for meeting {} failed", meetingId, e);
+    }
   }
 
   /** Group + post; any failure is logged and leaves the state DONE. Returns the fresh meeting. */

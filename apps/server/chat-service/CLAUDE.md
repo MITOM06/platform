@@ -131,7 +131,8 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
   claims each meeting starting within 10 min (`reminded` false → true, once cluster-wide) and
   sends `meet.starting` + FCM `MEETING_STARTING`; retires SCHEDULED meetings 48h past their start
 - `MeetingSummarySweep` — same interval: AI summaries PENDING for more than 10 min ⇒ FAILED
-  (`MeetingStore.failStaleSummaries`), so the host can regenerate
+  (`MeetingStore.failStaleSummaries`, returns the flipped meetings → `meet.summary.ready` to host +
+  co-hosts), so the host can regenerate
 - `AssistantTokenRenewal` — every `app.assistant.token-renew-interval-ms` (6 h default): re-issues
   the MCP token of each member's Bot Factory assistant 14 days before it expires
   (`external_bots.mcpTokenExpiresAt`, connector `BOT_SESSION_TTL_DAYS`) and swaps it into the bot's

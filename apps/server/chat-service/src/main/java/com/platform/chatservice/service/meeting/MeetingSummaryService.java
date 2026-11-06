@@ -26,6 +26,9 @@ public class MeetingSummaryService {
   public MeetingSummaryResponse get(UserPrincipal caller, String meetingId) {
     Meeting m = guard.records(caller, meetingId);
     String state = m.getSummaryState() == null ? null : m.getSummaryState().name();
+    if (state == null && m.getStatus() == MeetingStatus.ENDED && m.isAiNotesEverEnabled()) {
+      state = MeetingSummaryState.FAILED.name(); // AI was on but no summary was ever requested
+    }
     MeetingSummaryDoc doc = summaries.latest(m.getId()).orElse(null);
     boolean inGroup = inGroup(m, caller.getUserId());
     return new MeetingSummaryResponse(

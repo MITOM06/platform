@@ -4,6 +4,7 @@ import com.platform.chatservice.dto.MessageResponse;
 import com.platform.chatservice.model.Meeting;
 import com.platform.chatservice.repository.ConversationRepository;
 import com.platform.chatservice.service.ClusterMessageBroker;
+import com.platform.chatservice.service.ConversationCacheService;
 import com.platform.chatservice.service.ConversationService;
 import com.platform.chatservice.service.MessageNotificationService;
 import com.platform.chatservice.service.MessageService;
@@ -27,6 +28,7 @@ public class MeetingGroupService {
   private final MessageService messageService;
   private final ClusterMessageBroker clusterBroker;
   private final MessageNotificationService notificationService;
+  private final ConversationCacheService conversationCache;
 
   /**
    * The meeting's group: the linked one while it still exists, otherwise a new one (needs at least
@@ -52,6 +54,7 @@ public class MeetingGroupService {
     if (!linkedNow) {
       // Another writer linked a group first: drop ours, use theirs.
       conversationRepository.deleteById(created);
+      conversationCache.evict(created);
       return store.findById(m.getId()).map(Meeting::getGroupConversationId);
     }
     announceCreated(created, hostId);

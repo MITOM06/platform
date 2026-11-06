@@ -113,6 +113,7 @@ class MeetingSummaryServiceTest {
 
   @Test
   void aMeetingWithoutAiAnswersNullState() {
+    m.setAiNotesEverEnabled(false);
     m.setSummaryState(null);
     m.setGroupConversationId(null);
     when(summaries.latest("m1")).thenReturn(Optional.empty());
@@ -120,6 +121,28 @@ class MeetingSummaryServiceTest {
     assertThat(r.state()).isNull();
     assertThat(r.inGroup()).isFalse();
     assertThat(r.summary()).isNull();
+  }
+
+  @Test
+  void anEndedAiMeetingWithNoSummaryStateReportsFailed() {
+    m.setSummaryState(null);
+    when(summaries.latest("m1")).thenReturn(Optional.empty());
+    assertThat(service.get(host, "m1").state()).isEqualTo("FAILED");
+  }
+
+  @Test
+  void aLiveAiMeetingWithNoSummaryStateStaysNull() {
+    m.setSummaryState(null);
+    m.setStatus(MeetingStatus.LIVE);
+    when(summaries.latest("m1")).thenReturn(Optional.empty());
+    assertThat(service.get(host, "m1").state()).isNull();
+  }
+
+  @Test
+  void regenerateIsAcceptedWhenNoSummaryStateWasEverSet() {
+    m.setSummaryState(null);
+    when(trigger.regenerate(m)).thenReturn(MeetingSummaryTrigger.Result.PUBLISHED);
+    assertThat(service.regenerate(host, "m1").state()).isEqualTo("PENDING");
   }
 
   @Test

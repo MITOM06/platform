@@ -572,7 +572,7 @@ Response 200: { "success": true }
   when a host/co-host sends `AI_NOTES_ON`, or when a `PATCH` turns `aiNotes` on while LIVE. Never
   reset by turning `aiNotes` off.
 - `summaryState` (`PENDING | DONE | EMPTY | FAILED`, absent = never asked): state of the AI summary.
-  A `PENDING` summary older than 10 min is flipped to `FAILED` by a sweep. `groupConversationId`:
+  A `PENDING` summary older than 10 min is flipped to `FAILED` by a sweep (which also sends `meet.summary.ready` with `FAILED` to host and co-hosts). `groupConversationId`:
   the group chat created for the meeting (absent when none) — only open it when `GET .../summary`
   says `inGroup`.
 - `MeetingSummary` = `{ overview, keyPoints[], decisions[], actionItems:[{text, assigneeName|null}],
@@ -602,8 +602,8 @@ Response 200: { "success": true }
 | `GET /api/meetings/{id}/notes/private` | records access ¹ (always the caller's own note) | 200 `MeetingNote` | 403 · 404 |
 | `PUT /api/meetings/{id}/notes/private` | records access ¹ | 200 `MeetingNote` | 403 · 404 · 400 · 409 as above |
 | `GET /api/meetings/{id}/hands` | room access ² | 200 `{ "hands": [Hand…] }` | 403 `MEETING_FORBIDDEN` · 403 `MEETING_REMOVED` · 404 · 409 `MEETING_ENDED` |
-| `GET /api/meetings/{id}/summary` | records access ¹ | 200 `{ "state": null\|"PENDING"\|"DONE"\|"EMPTY"\|"FAILED", "summary"?: MeetingSummary, "createdAt"?, "groupConversationId"?, "inGroup": bool }` — `state` is the meeting's current state (`null` = AI notes were never on ⇒ `inGroup:false`); `summary`/`createdAt` = the newest successful summary (may be older than a later `FAILED`/`PENDING`); `groupConversationId` only when `inGroup` (you are a member of the meeting's group chat) | 403 `MEETING_FORBIDDEN` · 403 `MEETING_REMOVED` · 404 |
-| `POST /api/meetings/{id}/summary/regenerate` | host, co-host | **202** `{ "state": "PENDING" }` — a new summary is requested; `meet.summary.ready` follows | 403 `MEETING_FORBIDDEN` (also attendees) · 403 `MEETING_REMOVED` · 404 · **409 `MEETING_SUMMARY_UNAVAILABLE`** (not ENDED, or AI notes never on) · **409 `MEETING_SUMMARY_PENDING`** (one is already being generated) |
+| `GET /api/meetings/{id}/summary` | records access ¹ | 200 `{ "state": null\|"PENDING"\|"DONE"\|"EMPTY"\|"FAILED", "summary"?: MeetingSummary, "createdAt"?, "groupConversationId"?, "inGroup": bool }` — `state` is the meeting's current state (`null` = AI notes were never on ⇒ `inGroup:false`; an ENDED meeting that had AI notes but never got a summary request reports `"FAILED"`, so the host can regenerate); `summary`/`createdAt` = the newest successful summary (may be older than a later `FAILED`/`PENDING`); `groupConversationId` only when `inGroup` (you are a member of the meeting's group chat) | 403 `MEETING_FORBIDDEN` · 403 `MEETING_REMOVED` · 404 |
+| `POST /api/meetings/{id}/summary/regenerate` | host, co-host | **202** `{ "state": "PENDING" }` — a new summary is requested; `meet.summary.ready` follows | 403 `MEETING_FORBIDDEN` (also attendees) · 403 `MEETING_REMOVED` · 404 · **409 `MEETING_SUMMARY_UNAVAILABLE`** (not ENDED, or AI notes never on; a meeting with no summary state yet is accepted) · **409 `MEETING_SUMMARY_PENDING`** (one is already being generated) |
 
 ¹ **Records access** (also after the meeting ended): host, co-host, invited / department member,
 has an `attendance` row, or admitted — unless removed (403 `MEETING_REMOVED`).
@@ -778,7 +778,7 @@ Every payload is `MeetingEventDto` `{event, meetingId, …}`; absent fields are 
 | `/user/queue/meeting` | `meet.invited` | `{code, title, hostId, hostName, scheduledStart}` | create / `PATCH` added you (named invitees only) |
 | `/user/queue/meeting` | `meet.starting` | `{code, title, scheduledStart}` | 10 min before `scheduledStart` — host, co-hosts, invitees, department members, minus removed |
 | `/user/queue/meeting` | `meet.cancelled` | `{code, title, scheduledStart}` (`title` / `scheduledStart` absent when the meeting has none) | host cancelled — same recipients as `meet.starting` |
-| `/user/queue/meeting` | `meet.summary.ready` | `{summaryState: "DONE"\|"EMPTY"\|"FAILED", groupConversationId?}` — the key is `event` (not `type`); `GET /summary` for the content | the AI summary finished or failed, to the people who may read it |
+| `/user/queue/meeting` | `meet.summary.ready` | `{summaryState: "DONE"\|"EMPTY"\|"FAILED", groupConversationId?}` — the key is `event` (not `type`); `GET /summary` for the content | the AI summary finished or failed (also sent by the stale-PENDING sweep, to host and co-hosts), to the people who may read it |
 
 Subscribing to `/topic/meeting/{id}` requires being allowed straight into the room (host, co-host,
 invited / department member / admitted); waiting, removed, locked-out people and ENDED meetings get

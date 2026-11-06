@@ -97,7 +97,10 @@ public class MeetingStore {
         > 0;
   }
 
-  /** Asks again for an ENDED AI meeting whose last summary is DONE, EMPTY or FAILED. */
+  /**
+   * Asks again for an ENDED AI meeting whose last summary is DONE, EMPTY or FAILED, or that never
+   * got one (state null: the end-of-meeting trigger was lost).
+   */
   public boolean claimRegenerate(String id, String attempt, Instant now) {
     Query query =
         new Query(
@@ -106,11 +109,13 @@ public class MeetingStore {
                 .is(MeetingStatus.ENDED)
                 .and("aiNotesEverEnabled")
                 .is(true)
-                .and("summaryState")
-                .in(
-                    MeetingSummaryState.DONE,
-                    MeetingSummaryState.EMPTY,
-                    MeetingSummaryState.FAILED));
+                .orOperator(
+                    Criteria.where("summaryState").is(null),
+                    Criteria.where("summaryState")
+                        .in(
+                            MeetingSummaryState.DONE,
+                            MeetingSummaryState.EMPTY,
+                            MeetingSummaryState.FAILED)));
     return mongo.updateFirst(query, pendingUpdate(attempt, now), Meeting.class).getModifiedCount()
         > 0;
   }
@@ -157,18 +162,37 @@ public class MeetingStore {
         > 0;
   }
 
-  /** PENDING requested before {@code cutoff} ⇒ FAILED; returns how many flipped. */
-  public long failStaleSummaries(Instant cutoff) {
-    Query query =
+  /**
+   * PENDING requested before {@code cutoff} ⇒ FAILED. Returns the meetings this call flipped (each
+   * flipped by a conditional update on the same attempt, so a result landing meanwhile wins).
+   */
+  public List<Meeting> failStaleSummaries(Instant cutoff) {
+    Query candidates =
         new Query(
             Criteria.where("summaryState")
                 .is(MeetingSummaryState.PENDING)
                 .and("summaryRequestedAt")
                 .lt(cutoff));
-    return mongo
-        .updateMulti(
-            query, new Update().set("summaryState", MeetingSummaryState.FAILED), Meeting.class)
-        .getModifiedCount();
+    List<Meeting> flipped = new ArrayList<>();
+    for (Meeting c : mongo.find(candidates, Meeting.class)) {
+      Query one =
+          new Query(
+              byId(c.getId())
+                  .and("summaryState")
+                  .is(MeetingSummaryState.PENDING)
+                  .and("summaryAttempt")
+                  .is(c.getSummaryAttempt()));
+      Meeting after =
+          mongo.findAndModify(
+              one,
+              new Update().set("summaryState", MeetingSummaryState.FAILED),
+              FindAndModifyOptions.options().returnNew(true),
+              Meeting.class);
+      if (after != null) {
+        flipped.add(after);
+      }
+    }
+    return flipped;
   }
 
   /**

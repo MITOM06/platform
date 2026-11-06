@@ -383,6 +383,18 @@ class MeetingStoreTest {
   }
 
   @Test
+  void claimRegenerateWhenNoSummaryWasEverRequested() {
+    Meeting m = aiMeeting("sg1-gggg-ggg"); // aiNotesEverEnabled, summaryState null
+    assertThat(store.claimRegenerate(m.getId(), "r", now)).isFalse(); // not ENDED yet
+    setStatus(m, MeetingStatus.ENDED);
+
+    assertThat(store.claimRegenerate(m.getId(), "r", now)).isTrue();
+    assertThat(store.claimRegenerate(m.getId(), "r2", now)).isFalse(); // now PENDING
+    assertThat(reload(m).getSummaryState()).isEqualTo(MeetingSummaryState.PENDING);
+    assertThat(reload(m).getSummaryAttempt()).isEqualTo("r");
+  }
+
+  @Test
   void setGroupConversationOnlyOnce() {
     Meeting m = meeting("se1-eeee-eee", now);
 
@@ -401,7 +413,11 @@ class MeetingStoreTest {
     store.claimSummary(done.getId(), "a", now.minus(30, ChronoUnit.MINUTES));
     store.finishSummary(done.getId(), "a", MeetingSummaryState.DONE);
 
-    assertThat(store.failStaleSummaries(now.minus(10, ChronoUnit.MINUTES))).isEqualTo(1);
+    assertThat(store.failStaleSummaries(now.minus(10, ChronoUnit.MINUTES)))
+        .extracting(Meeting::getId)
+        .containsExactly(old.getId());
+    // a second sweep finds nothing left to flip
+    assertThat(store.failStaleSummaries(now.minus(10, ChronoUnit.MINUTES))).isEmpty();
 
     assertThat(reload(old).getSummaryState()).isEqualTo(MeetingSummaryState.FAILED);
     assertThat(reload(fresh).getSummaryState()).isEqualTo(MeetingSummaryState.PENDING);
