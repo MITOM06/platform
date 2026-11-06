@@ -2,6 +2,7 @@ package com.platform.chatservice.service.meeting;
 
 import com.platform.chatservice.model.Meeting;
 import com.platform.chatservice.model.MeetingStatus;
+import com.platform.chatservice.model.MeetingSummaryState;
 import com.platform.chatservice.repository.MeetingRepository;
 import java.time.Duration;
 import java.time.Instant;
@@ -83,6 +84,82 @@ public class MeetingStore {
                 .ne(true));
     Update update = new Update().set("aiNotesEverEnabled", true);
     return mongo.updateFirst(query, update, Meeting.class).getModifiedCount() > 0;
+  }
+
+  /**
+   * First summary request: only when never requested and AI notes were on. True only for the call
+   * that set PENDING.
+   */
+  public boolean claimSummary(String id, String attempt, Instant now) {
+    Query query =
+        new Query(byId(id).and("summaryState").is(null).and("aiNotesEverEnabled").is(true));
+    return mongo.updateFirst(query, pendingUpdate(attempt, now), Meeting.class).getModifiedCount()
+        > 0;
+  }
+
+  /** Asks again for an ENDED AI meeting whose last summary is DONE, EMPTY or FAILED. */
+  public boolean claimRegenerate(String id, String attempt, Instant now) {
+    Query query =
+        new Query(
+            byId(id)
+                .and("status")
+                .is(MeetingStatus.ENDED)
+                .and("aiNotesEverEnabled")
+                .is(true)
+                .and("summaryState")
+                .in(
+                    MeetingSummaryState.DONE,
+                    MeetingSummaryState.EMPTY,
+                    MeetingSummaryState.FAILED));
+    return mongo.updateFirst(query, pendingUpdate(attempt, now), Meeting.class).getModifiedCount()
+        > 0;
+  }
+
+  private static Update pendingUpdate(String attempt, Instant now) {
+    return new Update()
+        .set("summaryState", MeetingSummaryState.PENDING)
+        .set("summaryAttempt", attempt)
+        .set("summaryRequestedAt", now);
+  }
+
+  /** PENDING ⇒ {@code state} for the current attempt only; returns the meeting after the update. */
+  public Optional<Meeting> finishSummary(String id, String attempt, MeetingSummaryState state) {
+    Query query =
+        new Query(
+            byId(id)
+                .and("summaryState")
+                .is(MeetingSummaryState.PENDING)
+                .and("summaryAttempt")
+                .is(attempt));
+    return Optional.ofNullable(
+        mongo.findAndModify(
+            query,
+            new Update().set("summaryState", state),
+            FindAndModifyOptions.options().returnNew(true),
+            Meeting.class));
+  }
+
+  /** Links the group conversation once; false when one is already set. */
+  public boolean setGroupConversation(String id, String convId) {
+    Query query = new Query(byId(id).and("groupConversationId").is(null));
+    return mongo
+            .updateFirst(query, new Update().set("groupConversationId", convId), Meeting.class)
+            .getModifiedCount()
+        > 0;
+  }
+
+  /** PENDING requested before {@code cutoff} ⇒ FAILED; returns how many flipped. */
+  public long failStaleSummaries(Instant cutoff) {
+    Query query =
+        new Query(
+            Criteria.where("summaryState")
+                .is(MeetingSummaryState.PENDING)
+                .and("summaryRequestedAt")
+                .lt(cutoff));
+    return mongo
+        .updateMulti(
+            query, new Update().set("summaryState", MeetingSummaryState.FAILED), Meeting.class)
+        .getModifiedCount();
   }
 
   /**

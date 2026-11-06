@@ -87,6 +87,17 @@ public class Meeting {
   /** Set once AI notes were on in a LIVE meeting; never cleared. */
   private boolean aiNotesEverEnabled;
 
+  /** Null = a summary was never requested. Only changed by atomic updates in MeetingStore. */
+  private MeetingSummaryState summaryState;
+
+  /** Fresh UUID per summary request; a result is only accepted for the current attempt. */
+  private String summaryAttempt;
+
+  private Instant summaryRequestedAt;
+
+  /** The group conversation created from this meeting; set at most once. */
+  private String groupConversationId;
+
   @Data
   @Builder
   @NoArgsConstructor

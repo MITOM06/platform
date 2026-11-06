@@ -29,4 +29,6 @@ public record MeetingResponse(
     Instant startedAt,
     Instant endedAt,
     Instant cancelledAt,
-    Boolean aiNotesEverEnabled) {}
+    Boolean aiNotesEverEnabled,
+    String summaryState,
+    String groupConversationId) {}

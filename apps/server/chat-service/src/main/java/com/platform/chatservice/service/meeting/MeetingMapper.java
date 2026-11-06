@@ -88,7 +88,9 @@ public class MeetingMapper {
         m.getStartedAt(),
         m.getEndedAt(),
         m.getCancelledAt(),
-        guest ? null : m.isAiNotesEverEnabled());
+        guest ? null : m.isAiNotesEverEnabled(),
+        guest || m.getSummaryState() == null ? null : m.getSummaryState().name(),
+        guest ? null : m.getGroupConversationId());
   }
 
   /** The resolved profile, or a nameless entry for an unknown user. */

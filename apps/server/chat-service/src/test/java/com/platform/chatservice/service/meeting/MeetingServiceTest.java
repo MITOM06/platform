@@ -276,6 +276,18 @@ class MeetingServiceTest {
   }
 
   @Test
+  void summaryStateAndGroupAreHiddenFromGuestsButShownToMembers() {
+    Meeting m = stored();
+    m.setSummaryState(com.platform.chatservice.model.MeetingSummaryState.DONE);
+    m.setGroupConversationId("c1");
+
+    assertThat(service.get(stranger, "m1").summaryState()).isNull();
+    assertThat(service.get(stranger, "m1").groupConversationId()).isNull();
+    assertThat(service.get(host, "m1").summaryState()).isEqualTo("DONE");
+    assertThat(service.get(host, "m1").groupConversationId()).isEqualTo("c1");
+  }
+
+  @Test
   void aGuestSeesOnlyWhatTheLinkPageNeeds() {
     stored();
     MeetingResponse r = service.get(stranger, "m1");

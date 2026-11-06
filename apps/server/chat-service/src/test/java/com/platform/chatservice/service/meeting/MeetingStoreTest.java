@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.platform.chatservice.model.Meeting;
 import com.platform.chatservice.model.MeetingStatus;
+import com.platform.chatservice.model.MeetingSummaryState;
 import com.platform.chatservice.repository.MeetingRepository;
 import java.time.Duration;
 import java.time.Instant;
@@ -315,5 +316,95 @@ class MeetingStoreTest {
 
     // Attending only widens the past list: an open walk-in to a LIVE meeting is not "upcoming".
     assertThat(store.page("me", List.of(), true, null, 10)).isEmpty();
+  }
+
+  private Meeting aiMeeting(String code) {
+    Meeting m = meeting(code, now);
+    template.updateFirst(
+        new Query(Criteria.where("_id").is(m.getId())),
+        new Update().set("aiNotesEverEnabled", true),
+        Meeting.class);
+    return reload(m);
+  }
+
+  private void setStatus(Meeting m, MeetingStatus s) {
+    template.updateFirst(
+        new Query(Criteria.where("_id").is(m.getId())),
+        new Update().set("status", s),
+        Meeting.class);
+  }
+
+  @Test
+  void claimSummaryOnlyOnce() {
+    Meeting m = aiMeeting("sa1-aaaa-aaa");
+
+    assertThat(store.claimSummary(m.getId(), "a", now)).isTrue();
+    assertThat(store.claimSummary(m.getId(), "b", now)).isFalse();
+
+    Meeting after = reload(m);
+    assertThat(after.getSummaryState()).isEqualTo(MeetingSummaryState.PENDING);
+    assertThat(after.getSummaryAttempt()).isEqualTo("a");
+    assertThat(after.getSummaryRequestedAt()).isEqualTo(now);
+  }
+
+  @Test
+  void claimSummaryRefusedWhenAiNeverEnabled() {
+    Meeting m = meeting("sb1-bbbb-bbb", now);
+
+    assertThat(store.claimSummary(m.getId(), "a", now)).isFalse();
+    assertThat(reload(m).getSummaryState()).isNull();
+  }
+
+  @Test
+  void finishSummaryIgnoresStaleAttempt() {
+    Meeting m = aiMeeting("sc1-cccc-ccc");
+    store.claimSummary(m.getId(), "a", now);
+    setStatus(m, MeetingStatus.ENDED);
+
+    assertThat(store.claimRegenerate(m.getId(), "b", now)).isFalse();
+    assertThat(store.finishSummary(m.getId(), "b", MeetingSummaryState.DONE)).isEmpty();
+    assertThat(store.finishSummary(m.getId(), "a", MeetingSummaryState.DONE))
+        .get()
+        .extracting(Meeting::getSummaryState)
+        .isEqualTo(MeetingSummaryState.DONE);
+  }
+
+  @Test
+  void claimRegenerateAfterFailed() {
+    Meeting m = aiMeeting("sd1-dddd-ddd");
+    store.claimSummary(m.getId(), "a", now);
+    store.finishSummary(m.getId(), "a", MeetingSummaryState.FAILED);
+
+    assertThat(store.claimRegenerate(m.getId(), "b", now)).isFalse(); // not ENDED yet
+    setStatus(m, MeetingStatus.ENDED);
+    assertThat(store.claimRegenerate(m.getId(), "b", now)).isTrue();
+    assertThat(reload(m).getSummaryAttempt()).isEqualTo("b");
+    assertThat(reload(m).getSummaryState()).isEqualTo(MeetingSummaryState.PENDING);
+  }
+
+  @Test
+  void setGroupConversationOnlyOnce() {
+    Meeting m = meeting("se1-eeee-eee", now);
+
+    assertThat(store.setGroupConversation(m.getId(), "c1")).isTrue();
+    assertThat(store.setGroupConversation(m.getId(), "c2")).isFalse();
+    assertThat(reload(m).getGroupConversationId()).isEqualTo("c1");
+  }
+
+  @Test
+  void failStaleSummariesFlipsOnlyOldPending() {
+    Meeting old = aiMeeting("sf1-ffff-fff");
+    Meeting fresh = aiMeeting("sf2-ffff-fff");
+    Meeting done = aiMeeting("sf3-ffff-fff");
+    store.claimSummary(old.getId(), "a", now.minus(11, ChronoUnit.MINUTES));
+    store.claimSummary(fresh.getId(), "a", now.minus(1, ChronoUnit.MINUTES));
+    store.claimSummary(done.getId(), "a", now.minus(30, ChronoUnit.MINUTES));
+    store.finishSummary(done.getId(), "a", MeetingSummaryState.DONE);
+
+    assertThat(store.failStaleSummaries(now.minus(10, ChronoUnit.MINUTES))).isEqualTo(1);
+
+    assertThat(reload(old).getSummaryState()).isEqualTo(MeetingSummaryState.FAILED);
+    assertThat(reload(fresh).getSummaryState()).isEqualTo(MeetingSummaryState.PENDING);
+    assertThat(reload(done).getSummaryState()).isEqualTo(MeetingSummaryState.DONE);
   }
 }
