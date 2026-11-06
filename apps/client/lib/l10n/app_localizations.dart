@@ -10351,6 +10351,18 @@ abstract class AppLocalizations {
   /// **'AI couldn\'t answer, try again'**
   String get meetingAiFailed;
 
+  /// No description provided for @meetingAiQuotaExceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'AI usage limit reached'**
+  String get meetingAiQuotaExceeded;
+
+  /// No description provided for @meetingAiRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests, try again shortly'**
+  String get meetingAiRateLimited;
+
   /// No description provided for @meetingChatAiHint.
   ///
   /// In en, this message translates to:

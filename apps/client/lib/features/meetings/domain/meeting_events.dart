@@ -220,11 +220,13 @@ MeetingEvent? _parseForMeeting(String event, String id, Json o) {
         'error' => AiState.error,
         _ => null,
       };
-      if (state == null || requesterId == null) return null;
+      if (state == null) return null;
+      // An error without a requester is kept: it still clears the oldest pending entry.
+      if (requesterId == null && state == AiState.thinking) return null;
       return AiEvent(
           meetingId: id,
           state: state,
-          requesterId: requesterId,
+          requesterId: requesterId ?? '',
           code: str(o['code']));
     case 'meet.notes.updated':
       final version = o['version'];

@@ -31,7 +31,7 @@ class PendingAi {
 }
 
 /// Which translated line the requester sees on error.
-enum AiErrorKind { unavailable, failed }
+enum AiErrorKind { unavailable, failed, quotaExceeded, rateLimited }
 
 /// A non-persisted error line in the chat (only the requester gets one).
 class AiNotice {
@@ -62,6 +62,12 @@ List<PendingAi> expirePendingAi(List<PendingAi> list, int now) => list
     .where((p) => now - p.startedAt < kAiPendingTtl.inMilliseconds)
     .toList();
 
-/// Never the raw code: AI_UNAVAILABLE → unavailable; anything else → failed.
-AiErrorKind aiErrorKind(String? code) =>
-    code == 'AI_UNAVAILABLE' ? AiErrorKind.unavailable : AiErrorKind.failed;
+/// Never the raw code: AI_UNAVAILABLE → unavailable; quota / rate limit → their
+/// own line (wire codes carry the `AI_` prefix, the bare form is accepted too);
+/// anything else → failed.
+AiErrorKind aiErrorKind(String? code) => switch (code) {
+      'AI_UNAVAILABLE' => AiErrorKind.unavailable,
+      'AI_QUOTA_EXCEEDED' || 'QUOTA_EXCEEDED' => AiErrorKind.quotaExceeded,
+      'AI_RATE_LIMITED' || 'RATE_LIMITED' => AiErrorKind.rateLimited,
+      _ => AiErrorKind.failed,
+    };

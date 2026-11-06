@@ -15,6 +15,9 @@ void main() {
     expect(t.state, AiState.thinking);
     expect(p({'event': 'meet.ai', 'meetingId': 'm1', 'state': 'done', 'requesterId': 'u1'}), isNull);
     expect(p({'event': 'meet.ai', 'meetingId': 'm1', 'state': 'thinking'}), isNull);
+    // An error without a requester is kept: it must still clear a pending entry.
+    final anon = p({'event': 'meet.ai', 'meetingId': 'm1', 'state': 'error', 'code': 'AI_EMPTY'}) as AiEvent;
+    expect((anon.state, anon.requesterId, anon.code), (AiState.error, '', 'AI_EMPTY'));
     expect(p({'event': 'meet.ai', 'meetingId': 'm1', 'state': 'thinking', 'requesterId': ''}), isNull);
   });
 

@@ -2188,6 +2188,8 @@
   "meetingAiThinking": "PON AI est en train de répondre…",
   "meetingAiUnavailable": "L'IA est indisponible pour le moment",
   "meetingAiFailed": "L'IA n'a pas pu répondre, réessayez",
+  "meetingAiQuotaExceeded": "Limite d'utilisation de l'IA atteinte",
+  "meetingAiRateLimited": "Trop de requêtes, réessayez dans un instant",
   "meetingChatAiHint": "Tapez @AI avant une question pour interroger l'assistant",
   "meetingChatFailed": "Non envoyé",
   "meetingChatRetry": "Réessayer",

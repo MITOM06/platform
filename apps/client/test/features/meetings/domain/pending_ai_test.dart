@@ -36,4 +36,11 @@ void main() {
     expect(aiErrorKind('AI_ERROR'), AiErrorKind.failed);
     expect(aiErrorKind(null), AiErrorKind.failed);
   });
+
+  test('quota and rate-limit codes (wire and bare form) get their own kind', () {
+    expect(aiErrorKind('AI_QUOTA_EXCEEDED'), AiErrorKind.quotaExceeded);
+    expect(aiErrorKind('QUOTA_EXCEEDED'), AiErrorKind.quotaExceeded);
+    expect(aiErrorKind('AI_RATE_LIMITED'), AiErrorKind.rateLimited);
+    expect(aiErrorKind('RATE_LIMITED'), AiErrorKind.rateLimited);
+  });
 }

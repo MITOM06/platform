@@ -2188,6 +2188,8 @@
   "meetingAiThinking": "PON AI đang trả lời…",
   "meetingAiUnavailable": "AI hiện không khả dụng",
   "meetingAiFailed": "AI chưa trả lời được, hãy thử lại",
+  "meetingAiQuotaExceeded": "Đã hết lượt dùng AI",
+  "meetingAiRateLimited": "Quá nhiều yêu cầu, hãy thử lại sau ít phút",
   "meetingChatAiHint": "Gõ @AI trước câu hỏi để hỏi trợ lý",
   "meetingChatFailed": "Chưa gửi được",
   "meetingChatRetry": "Gửi lại",

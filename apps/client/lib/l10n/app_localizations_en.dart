@@ -5788,6 +5788,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meetingAiFailed => 'AI couldn\'t answer, try again';
 
   @override
+  String get meetingAiQuotaExceeded => 'AI usage limit reached';
+
+  @override
+  String get meetingAiRateLimited => 'Too many requests, try again shortly';
+
+  @override
   String get meetingChatAiHint =>
       'Type @AI before a question to ask the assistant';
 

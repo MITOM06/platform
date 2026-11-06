@@ -5587,6 +5587,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get meetingAiFailed => 'AI가 답변하지 못했습니다. 다시 시도해 주세요';
 
   @override
+  String get meetingAiQuotaExceeded => 'AI 사용 한도에 도달했습니다';
+
+  @override
+  String get meetingAiRateLimited => '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요';
+
+  @override
   String get meetingChatAiHint => '질문 앞에 @AI를 입력하면 어시스턴트에게 물어볼 수 있습니다';
 
   @override

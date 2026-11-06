@@ -5520,6 +5520,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get meetingAiFailed => 'AI 无法回答，请重试';
 
   @override
+  String get meetingAiQuotaExceeded => '已达到 AI 使用上限';
+
+  @override
+  String get meetingAiRateLimited => '请求过多，请稍后重试';
+
+  @override
   String get meetingChatAiHint => '在问题前输入 @AI 即可向助手提问';
 
   @override

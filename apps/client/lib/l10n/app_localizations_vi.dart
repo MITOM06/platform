@@ -5748,6 +5748,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get meetingAiFailed => 'AI chưa trả lời được, hãy thử lại';
 
   @override
+  String get meetingAiQuotaExceeded => 'Đã hết lượt dùng AI';
+
+  @override
+  String get meetingAiRateLimited =>
+      'Quá nhiều yêu cầu, hãy thử lại sau ít phút';
+
+  @override
   String get meetingChatAiHint => 'Gõ @AI trước câu hỏi để hỏi trợ lý';
 
   @override

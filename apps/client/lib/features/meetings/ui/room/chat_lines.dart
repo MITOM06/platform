@@ -197,9 +197,12 @@ class AiNoticeTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: Text(
-          notice.kind == AiErrorKind.unavailable
-              ? l.meetingAiUnavailable
-              : l.meetingAiFailed,
+          switch (notice.kind) {
+            AiErrorKind.unavailable => l.meetingAiUnavailable,
+            AiErrorKind.quotaExceeded => l.meetingAiQuotaExceeded,
+            AiErrorKind.rateLimited => l.meetingAiRateLimited,
+            AiErrorKind.failed => l.meetingAiFailed,
+          },
           style: TextStyle(
               fontSize: 12, color: Theme.of(context).colorScheme.error)),
     );

@@ -322,6 +322,14 @@ void main() {
         expect(s.aiNotices.single.kind, AiErrorKind.failed);
       });
 
+      test('an error with no requester still clears the oldest pending entry', () async {
+        await inRoom();
+        c.onTopicEvent(ai('thinking', 'bob'));
+        c.onTopicEvent(const AiEvent(meetingId: 'm1', state: AiState.error, requesterId: '', code: 'AI_EMPTY'));
+        expect(s.pendingAi, isEmpty);
+        expect(s.aiNotices, isEmpty);
+      });
+
       test('notices are capped at 5', () async {
         await inRoom();
         for (var i = 0; i < 7; i++) {

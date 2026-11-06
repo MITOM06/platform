@@ -2954,6 +2954,8 @@
   "meetingAiThinking": "PON AI is answering…",
   "meetingAiUnavailable": "AI is unavailable right now",
   "meetingAiFailed": "AI couldn't answer, try again",
+  "meetingAiQuotaExceeded": "AI usage limit reached",
+  "meetingAiRateLimited": "Too many requests, try again shortly",
   "meetingChatAiHint": "Type @AI before a question to ask the assistant",
   "meetingChatFailed": "Not sent",
   "meetingChatRetry": "Retry",

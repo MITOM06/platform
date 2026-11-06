@@ -2188,6 +2188,8 @@
   "meetingAiThinking": "PON AI 正在回答…",
   "meetingAiUnavailable": "AI 暂时不可用",
   "meetingAiFailed": "AI 无法回答，请重试",
+  "meetingAiQuotaExceeded": "已达到 AI 使用上限",
+  "meetingAiRateLimited": "请求过多，请稍后重试",
   "meetingChatAiHint": "在问题前输入 @AI 即可向助手提问",
   "meetingChatFailed": "未发送",
   "meetingChatRetry": "重试",

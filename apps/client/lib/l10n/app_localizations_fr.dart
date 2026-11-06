@@ -5881,6 +5881,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meetingAiFailed => 'L\'IA n\'a pas pu répondre, réessayez';
 
   @override
+  String get meetingAiQuotaExceeded =>
+      'Limite d\'utilisation de l\'IA atteinte';
+
+  @override
+  String get meetingAiRateLimited =>
+      'Trop de requêtes, réessayez dans un instant';
+
+  @override
   String get meetingChatAiHint =>
       'Tapez @AI avant une question pour interroger l\'assistant';
 
