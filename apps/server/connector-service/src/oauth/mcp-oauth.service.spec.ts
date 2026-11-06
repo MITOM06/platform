@@ -162,3 +162,124 @@ describe('McpOAuthService', () => {
     });
   });
 });
+
+describe('McpOAuthService — hostile / broken servers', () => {
+  const realFetch = global.fetch;
+  let svc: McpOAuthService;
+  let fetchMock: jest.Mock;
+
+  beforeEach(() => {
+    svc = new McpOAuthService();
+    fetchMock = jest.fn();
+    global.fetch = fetchMock as unknown as typeof fetch;
+    jest.spyOn(resolver, 'lookup').mockImplementation(async (host: string) =>
+      host.startsWith('internal') ? [{ address: '169.254.169.254', family: 4 }] : [{ address: '93.184.216.34', family: 4 }],
+    );
+    jest.spyOn((svc as any).logger, 'warn').mockImplementation(() => undefined);
+  });
+  afterEach(() => {
+    global.fetch = realFetch;
+    jest.restoreAllMocks();
+  });
+
+  const asMeta = (over: Record<string, unknown> = {}) => ({
+    authorization_endpoint: 'https://auth.example.com/authorize',
+    token_endpoint: 'https://auth.example.com/token',
+    registration_endpoint: 'https://auth.example.com/register',
+    scopes_supported: 'not-an-array',
+    ...over,
+  });
+  const discoverWith = (meta: unknown) => {
+    fetchMock.mockImplementation(async (url: string) =>
+      String(url).includes('oauth-authorization-server') ? jsonRes(meta) : jsonRes({}, false, 404),
+    );
+    return svc.discoverMetadata('https://mcp.example.com/mcp');
+  };
+
+  it.each([
+    ['a token endpoint on a metadata IP (SSRF)', { token_endpoint: 'https://internal.example.com/token' }],
+    ['a registration endpoint on a metadata IP', { registration_endpoint: 'https://internal.example.com/reg' }],
+    ['a non-URL authorize endpoint', { authorization_endpoint: 'javascript:alert(1)' }],
+  ])('rejects metadata with %s as OAUTH_DISCOVERY_FAILED', async (_l, over) => {
+    await expect(discoverWith(asMeta(over))).rejects.toMatchObject({
+      code: 'OAUTH_DISCOVERY_FAILED',
+      response: expect.objectContaining({ reason: 'unsafe endpoint' }),
+    });
+  });
+
+  it('ignores non-string registration / non-array scopes in metadata', async () => {
+    const meta = await discoverWith(asMeta({ registration_endpoint: 42 }));
+    expect(meta).toEqual({
+      authorizationEndpoint: 'https://auth.example.com/authorize',
+      tokenEndpoint: 'https://auth.example.com/token',
+      registrationEndpoint: undefined,
+      scopesSupported: undefined,
+    });
+  });
+
+  it('treats metadata without string endpoints as missing', async () => {
+    await expect(discoverWith({ authorization_endpoint: 1, token_endpoint: 'x' })).rejects.toMatchObject({
+      code: 'OAUTH_DISCOVERY_FAILED',
+    });
+  });
+
+  it('DCR: a non-OK answer is DCR_FAILED with the status only', async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 400, text: async () => '{"error":"invalid_redirect_uri"}' });
+    const err = await svc.registerClient('https://auth.example.com/register', 'https://cb', []).catch((e) => e);
+    expect(err).toMatchObject({ code: 'DCR_FAILED', response: expect.objectContaining({ status: 400 }) });
+    const sent = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(sent.token_endpoint_auth_method).toBe('none');
+    expect(sent.scope).toBeUndefined();
+  });
+
+  it('DCR: keeps a confidential client secret, rejects a non-JSON answer', async () => {
+    fetchMock.mockResolvedValueOnce(jsonRes({ client_id: 'cid', client_secret: 's3' }));
+    expect(await svc.registerClient('https://auth.example.com/register', 'https://cb', ['a'])).toEqual({
+      clientId: 'cid',
+      clientSecret: 's3',
+    });
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 201, json: async () => { throw new SyntaxError('html'); } });
+    await expect(svc.registerClient('https://auth.example.com/register', 'https://cb', [])).rejects.toMatchObject({
+      code: 'DCR_FAILED',
+    });
+  });
+
+  it('DCR refuses to POST to an internal registration endpoint', async () => {
+    await expect(svc.registerClient('https://internal.example.com/register', 'https://cb', [])).rejects.toMatchObject({ response: { code: 'UNSAFE_URL' } });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('refresh posts the refresh grant (+ client secret when present) and keeps a given expiry_date', async () => {
+    fetchMock.mockResolvedValue(jsonRes({ access_token: 'n', expires_in: 60, expiry_date: 123 }));
+    const tokens = await svc.refresh({
+      tokenEndpoint: 'https://auth.example.com/token',
+      clientId: 'cid',
+      clientSecret: 'sec',
+      refreshToken: 'rt',
+      resource: 'https://mcp.example.com/mcp',
+    });
+    expect(Object.fromEntries(new URLSearchParams(fetchMock.mock.calls[0][1].body))).toEqual({
+      grant_type: 'refresh_token',
+      refresh_token: 'rt',
+      client_id: 'cid',
+      client_secret: 'sec',
+      resource: 'https://mcp.example.com/mcp',
+    });
+    expect(tokens.expiry_date).toBe(123);
+  });
+
+  it('a token answer without access_token is EXCHANGE_FAILED (invalid_response)', async () => {
+    fetchMock.mockResolvedValue(jsonRes({ token_type: 'bearer' }));
+    await expect(
+      svc.refresh({ tokenEndpoint: 'https://auth.example.com/token', clientId: 'c', refreshToken: 'r', resource: 'x' }),
+    ).rejects.toMatchObject({ code: 'EXCHANGE_FAILED', oauthError: 'invalid_response' });
+    expect(new URLSearchParams(fetchMock.mock.calls[0][1].body).has('client_secret')).toBe(false);
+  });
+
+  it('a non-OK token answer carries the RFC 6749 error code (invalid_grant)', async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 400, text: async () => '{"error":"invalid_grant"}' });
+    await expect(
+      svc.refresh({ tokenEndpoint: 'https://auth.example.com/token', clientId: 'c', refreshToken: 'r', resource: 'x' }),
+    ).rejects.toMatchObject({ code: 'EXCHANGE_FAILED', oauthError: 'invalid_grant' });
+  });
+});

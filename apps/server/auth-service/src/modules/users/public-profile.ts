@@ -43,7 +43,6 @@ export function toPublicProfile(
       displayName: doc.displayName,
       avatarUrl: doc.avatarUrl ?? '',
       coverPhoto: doc.coverPhoto ?? '',
-      email: doc.email,
       isVerified: doc.isVerified ?? false,
       friendsCount: 0,
       bio: '',

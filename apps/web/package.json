@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:cov": "vitest run --coverage",
     "gen:api-types": "openapi-typescript ../server/auth-service/openapi.json -o lib/api/generated/auth-api.ts"
   },
   "dependencies": {
@@ -51,6 +52,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.2",
+    "@vitest/coverage-v8": "4.1.9",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "jsdom": "^29.1.1",

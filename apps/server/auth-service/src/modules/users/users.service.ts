@@ -476,6 +476,23 @@ export class UsersService {
   }
 
   /**
+   * Batch form of `isBlockedBy`: which of `ownerIds` have blocked `callerId`.
+   * One query for the whole list (the batch profile route must not fan out).
+   */
+  async findOwnersBlocking(
+    ownerIds: string[],
+    callerId: string,
+  ): Promise<Set<string>> {
+    if (ownerIds.length === 0) return new Set();
+    const blocks = await this.userBlockModel
+      .find({ blockerId: { $in: ownerIds }, blockedId: callerId })
+      .select('blockerId')
+      .lean()
+      .exec();
+    return new Set(blocks.map((b) => String(b.blockerId)));
+  }
+
+  /**
    * Block relationship between two users, from `userId`'s point of view:
    *   - `iBlocked`  — current user has blocked `otherId`
    *   - `blockedMe` — `otherId` has blocked the current user

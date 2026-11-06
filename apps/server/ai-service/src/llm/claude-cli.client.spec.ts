@@ -245,3 +245,113 @@ describe('ClaudeCliClient home directory', () => {
     expect(seen.options!.cwd).toBe(home);
   });
 });
+
+describe('ClaudeCliClient.runLoop — failure modes that must hand over to the API', () => {
+  const params = (over: Record<string, unknown> = {}) => ({
+    model: 'claude-sonnet-4-5', system: '', messages: [{ role: 'user' as const, content: 'hi' }], tools: [], thinking: false, maxTurns: 2,
+    onText: async () => undefined, onToolCall: async () => '', onRound: () => undefined, ...over,
+  });
+
+  it('throws when the stream ends without a result message', async () => {
+    const { sdk } = fakeSdk(async function* () {
+      yield assistant([{ type: 'text', text: 'half' }]);
+    });
+    await expect(client(sdk).runLoop(params())).rejects.toThrow('ended without a result');
+  });
+
+  it('reports a timeout (abort) as a ClaudeCliError naming the limit', async () => {
+    jest.useFakeTimers({ legacyFakeTimers: true });
+    try {
+      const { sdk } = fakeSdk(async function* (_h, options) {
+        const abort = options.abortController as AbortController;
+        await new Promise<void>((resolve) => abort.signal.addEventListener('abort', () => resolve()));
+        throw new Error('aborted');
+      });
+      const run = client(sdk, { timeoutMs: 50 }).runLoop(params());
+      await Promise.resolve();
+      await Promise.resolve();
+      jest.advanceTimersByTime(60);
+      await expect(run).rejects.toThrow('timed out after 50 ms');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('ignores sub-agent stream events and messages (parent_tool_use_id set)', async () => {
+    const { sdk } = fakeSdk(async function* () {
+      yield { ...delta('hidden'), parent_tool_use_id: 'tu-1' };
+      yield { ...assistant([{ type: 'text', text: 'hidden too' }]), parent_tool_use_id: 'tu-1' };
+      yield { ...user([{ type: 'tool_result', tool_use_id: 'x', content: 'r' }]), parent_tool_use_id: 'tu-1' };
+      yield delta('shown');
+      yield success();
+    });
+    const text: string[] = [];
+    const rounds: unknown[] = [];
+    const r = await client(sdk).runLoop(params({ onText: async (d: string) => void text.push(d), onRound: (a: unknown) => rounds.push(a) }));
+    expect(r.text).toBe('shown');
+    expect(text).toEqual(['shown']);
+    expect(rounds).toEqual([]);
+  });
+
+  it('collects thinking blocks and enables adaptive thinking when asked', async () => {
+    const { sdk, seen } = fakeSdk(async function* () {
+      yield assistant([{ type: 'thinking', thinking: 'hmm' }, { type: 'text', text: 'A' }]);
+      yield assistant([{ type: 'text', text: 'B' }]);
+      yield success();
+    });
+    const r = await client(sdk).runLoop(params({ thinking: true }));
+    expect(r.thinkingBlocks).toEqual(['hmm']);
+    expect(r.text).toBe('A\nB');
+    expect(seen.options?.thinking).toEqual({ type: 'adaptive' });
+  });
+
+  it('a non-success result without an errors list still throws with its subtype', async () => {
+    const { sdk } = fakeSdk(async function* () {
+      yield success({ subtype: 'error_max_turns' });
+    });
+    await expect(client(sdk).runLoop(params())).rejects.toThrow('error_max_turns');
+  });
+});
+
+describe('renderPrompt — block kinds', () => {
+  it('renders tool calls, tool results and images as readable markers', () => {
+    const out = renderPrompt([
+      { role: 'user', content: [{ type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'x' } }, { type: 'text', text: 'see' }] },
+      { role: 'assistant', content: [{ type: 'tool_use', id: 't', name: 'search', input: { q: 1 } }] },
+      { role: 'user', content: [{ type: 'tool_result', tool_use_id: 't', content: [{ type: 'text', text: 'found' }] }] },
+      { role: 'user', content: [{ type: 'tool_result', tool_use_id: 't2', content: 'plain' }, { type: 'tool_result', tool_use_id: 't3' }] },
+      { role: 'user', content: 'now?' },
+    ] as Anthropic.MessageParam[]);
+    expect(out).toContain('User: [ảnh]\nsee');
+    expect(out).toContain('Assistant: [gọi tool search({"q":1})]');
+    expect(out).toContain('User: [kết quả tool: found]');
+    expect(out).toContain('User: [kết quả tool: plain]\n[kết quả tool: ]');
+    expect(renderPrompt([])).toBe('');
+  });
+});
+
+describe('toZodShape — remaining types', () => {
+  it('maps number, boolean, nested object, free-form object and unknown types', () => {
+    const shape = toZodShape({
+      type: 'object',
+      properties: {
+        n: { type: 'number' },
+        b: { type: 'boolean' },
+        o: { type: 'object', properties: { x: { type: 'string' } }, required: ['x'] },
+        free: { type: 'object' },
+        any: {},
+        list: { type: 'array' },
+      },
+      required: ['n', 'b', 'o', 'free', 'any', 'list'],
+    }) as unknown as Record<string, { safeParse(v: unknown): { success: boolean } }>;
+    expect(shape.n.safeParse(1.5).success).toBe(true);
+    expect(shape.n.safeParse('1').success).toBe(false);
+    expect(shape.b.safeParse(true).success).toBe(true);
+    expect(shape.b.safeParse('true').success).toBe(false);
+    expect(shape.o.safeParse({ x: 'y' }).success).toBe(true);
+    expect(shape.o.safeParse({}).success).toBe(false);
+    expect(shape.free.safeParse({ k: 1 }).success).toBe(true);
+    expect(shape.any.safeParse(42).success).toBe(true);
+    expect(shape.list.safeParse([1, 'a']).success).toBe(true);
+  });
+});
