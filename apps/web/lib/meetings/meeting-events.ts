@@ -10,6 +10,7 @@ import {
   type MeetingSettings,
   type RosterEntry,
 } from '@/lib/api/meeting-types'
+import { parseAttachment } from './meeting-attachment'
 
 /**
  * STOMP meeting frames (`/user/queue/meeting`, `/topic/meeting/{id}`) → typed events.
@@ -85,6 +86,8 @@ function settings(v: unknown): MeetingSettings | undefined {
     allowAttendeeScreenShare: v.allowAttendeeScreenShare as boolean,
     attendeesCanEditNotes: v.attendeesCanEditNotes as boolean,
     locked: v.locked as boolean,
+    // Older servers omit it: treat as off rather than dropping the whole event.
+    aiNotes: v.aiNotes === true,
   }
 }
 
@@ -94,7 +97,7 @@ function message(v: unknown): MeetingMessage | undefined {
   const { id, content, createdAt } = v
   if (!sender || typeof id !== 'string' || typeof content !== 'string') return undefined
   if (typeof createdAt !== 'string') return undefined
-  return { id, sender, content, createdAt }
+  return { id, sender, content, ...opt('attachment', parseAttachment(v.attachment)), createdAt }
 }
 
 function scalarParams(v: unknown): Record<string, string | number> | undefined {
@@ -138,6 +141,13 @@ function parseForMeeting(event: string, meetingId: string, o: Obj): MeetingEvent
       const m = message(o.message)
       return m ? { event, meetingId, ...opt('clientId', str(o.clientId)), message: m } : null
     }
+    case 'meet.ai': {
+      const requesterId = str(o.requesterId)
+      if (o.state !== 'thinking' && o.state !== 'error') return null
+      // An error without a requester must still reach the controller: it clears the oldest pending entry.
+      if (!requesterId && o.state === 'thinking') return null
+      return { event, meetingId, state: o.state, requesterId: requesterId ?? '', ...opt('code', str(o.code)) }
+    }
     case 'meet.notes.updated':
       if (typeof o.version !== 'number') return null
       return { event, meetingId, version: o.version, ...opt('updatedBy', person(o.updatedBy)) }
@@ -150,6 +160,11 @@ function parseForMeeting(event: string, meetingId: string, o: Obj): MeetingEvent
       return { event, meetingId }
     case 'meet.cancelled':
       return { event, meetingId, ...opt('title', str(o.title)), ...opt('code', str(o.code)) }
+    case 'meet.summary.ready': {
+      const summaryState = o.summaryState
+      if (summaryState !== 'DONE' && summaryState !== 'EMPTY' && summaryState !== 'FAILED') return null
+      return { event, meetingId, summaryState, ...opt('groupConversationId', str(o.groupConversationId)) }
+    }
     case 'meet.invited':
     case 'meet.starting': {
       const code = str(o.code)

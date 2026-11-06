@@ -28,6 +28,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
   @CompoundIndex(name = "dept_sort", def = "{'departmentId': 1, 'sortAt': 1}"),
   @CompoundIndex(name = "attendee_sort", def = "{'attendance.userId': 1, 'sortAt': 1}"),
   @CompoundIndex(name = "status_start", def = "{'status': 1, 'scheduledStart': 1}"),
+  @CompoundIndex(
+      name = "summary_sweep",
+      def = "{'summaryState': 1, 'summaryRequestedAt': 1}",
+      sparse = true),
 })
 @Data
 @Builder
@@ -84,6 +88,35 @@ public class Meeting {
 
   private Instant cancelledAt;
 
+  /** Set once AI notes were on in a LIVE meeting; never cleared. */
+  private boolean aiNotesEverEnabled;
+
+  /** Null = a summary was never requested. Only changed by atomic updates in MeetingStore. */
+  private MeetingSummaryState summaryState;
+
+  /** Fresh UUID per summary request; a result is only accepted for the current attempt. */
+  private String summaryAttempt;
+
+  private Instant summaryRequestedAt;
+
+  /** Files already handed to the AI reader; capped by {@code meetings.ai.file-cap}. */
+  private int aiFileCount;
+
+  /** Upload ids already handed to the AI reader; a re-sent file never takes a second slot. */
+  @Builder.Default private List<String> aiFileUploadIds = new ArrayList<>();
+
+  /** The "file limit reached" record line was written; only ever set once. */
+  private boolean aiFileCapNoted;
+
+  /** Screen frames already handed to the AI reader; capped by {@code meetings.ai.screen-cap}. */
+  private int aiScreenCount;
+
+  /** The "screen limit reached" record line was written; only ever set once. */
+  private boolean aiScreenCapNoted;
+
+  /** The group conversation created from this meeting; set at most once. */
+  private String groupConversationId;
+
   @Data
   @Builder
   @NoArgsConstructor
@@ -99,6 +132,9 @@ public class Meeting {
     @Builder.Default private boolean attendeesCanEditNotes = true;
 
     private boolean locked;
+
+    /** AI meeting notes on; default off. */
+    private boolean aiNotes;
   }
 
   /** One session of one person in the room. */

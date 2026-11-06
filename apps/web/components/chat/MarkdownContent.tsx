@@ -10,20 +10,28 @@ import remarkGfm from 'remark-gfm'
  *
  * Links open in a new tab; styling is kept compact to sit inside a chat bubble.
  */
-export function MarkdownContent({ content }: { content: string }) {
+export function MarkdownContent({ content, disallowImages = false }: {
+  content: string
+  /** Shared-room mode: images render as alt text (never fetched) and links as inert text (untrusted text echoed by the AI). */
+  disallowImages?: boolean
+}) {
   return (
     <div className="text-sm leading-relaxed break-words [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 space-y-2">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          a: ({ ...props }) => (
-            <a
-              {...props}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary underline underline-offset-2 hover:opacity-80 break-all"
-            />
-          ),
+          ...(disallowImages ? { img: ({ alt }) => <span>{alt}</span> } : {}),
+          a: disallowImages
+            ? // Shared room: a model-echoed link is untrusted text, never a live anchor.
+              ({ children }) => <span>{children}</span>
+            : ({ ...props }) => (
+                <a
+                  {...props}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline underline-offset-2 hover:opacity-80 break-all"
+                />
+              ),
           p: ({ ...props }) => <p {...props} className="whitespace-pre-wrap" />,
           ul: ({ ...props }) => <ul {...props} className="list-disc pl-5 space-y-1" />,
           ol: ({ ...props }) => <ol {...props} className="list-decimal pl-5 space-y-1" />,

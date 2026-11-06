@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch'
 import type { MeetingSettings } from '@/lib/api/meeting-types'
 
 const ROWS: { key: keyof MeetingSettings; label: string; desc?: string }[] = [
+  { key: 'aiNotes', label: 'settingAiNotes', desc: 'settingAiNotesDesc' },
   { key: 'waitingRoom', label: 'settingWaitingRoom', desc: 'settingWaitingRoomDesc' },
   { key: 'muteOnEntry', label: 'settingMuteOnEntry', desc: 'settingMuteOnEntryDesc' },
   { key: 'allowAttendeeScreenShare', label: 'settingScreenShare' },
@@ -20,7 +21,7 @@ interface Props {
   disabled?: boolean
 }
 
-/** The five meeting options as labelled switches. */
+/** The six meeting options as labelled switches. */
 export function MeetingSettingsFields({ settings, onChange, disabled }: Props) {
   const t = useTranslations('meeting')
   const baseId = useId()

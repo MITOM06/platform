@@ -7,6 +7,8 @@ import { SearchKnowledgeBaseTool } from './search-knowledge-base.tool';
 import { SummarizeConversationTool } from './summarize-conversation.tool';
 import { CreateReminderTool } from './create-reminder.tool';
 import { RememberFactTool } from './remember-fact.tool';
+import { ListMyMeetingsTool } from './list-my-meetings.tool';
+import { GetMeetingRecordTool } from './get-meeting-record.tool';
 import { WebSearchTool } from './web-search.tool';
 import { WebSearchService } from './web-search/web-search.service';
 import { McpConnectorClient } from './mcp-connector.client';
@@ -35,6 +37,9 @@ const NEVER_CACHED_TOOLS: ReadonlySet<string> = new Set([
   'web_search',
   'search_knowledge_base',
   'summarize_conversation',
+  // Per-user permission-filtered meeting data: never replay a stale grant from cache.
+  'list_my_meetings',
+  'get_meeting_record',
 ]);
 
 /** Whether a tool's result may be served from the short-TTL result cache. */
@@ -160,6 +165,8 @@ export class ToolRegistryService {
     private readonly mcpConnector: McpConnectorClient,
     private readonly resultCache: ToolResultCacheService,
     private readonly getDepartmentContext: GetDepartmentContextTool,
+    private readonly listMyMeetings: ListMyMeetingsTool,
+    private readonly getMeetingRecord: GetMeetingRecordTool,
   ) {}
 
   async getDefinitions(ctx: ToolContext): Promise<ToolDefinition[]> {
@@ -177,6 +184,8 @@ export class ToolRegistryService {
     // (TASK-12) AND a provider is configured (TASK-09 graceful-degradation gate).
     // `ctx.webSearchEnabled === false` ⇒ never register; undefined/true defers to
     // the provider gate (preserves env behavior).
+    // Meeting tools: only in the 1-1 chat with the AI (a group reply is visible to others).
+    if (ctx.directAi === true) staticDefs.push(ListMyMeetingsTool.definition, GetMeetingRecordTool.definition);
     if (ctx.webSearchEnabled !== false && this.webSearchService.isAvailable()) {
       staticDefs.push(WebSearchTool.definition);
     }
@@ -262,6 +271,10 @@ export class ToolRegistryService {
           return await this.createReminder.execute(input, ctx);
         case 'remember_fact':
           return await this.rememberFact.execute(input, ctx);
+        case 'list_my_meetings':
+          return await this.listMyMeetings.execute(input, ctx);
+        case 'get_meeting_record':
+          return await this.getMeetingRecord.execute(input, ctx);
         case 'web_search':
           return await this.webSearch.execute(input, ctx);
         default:

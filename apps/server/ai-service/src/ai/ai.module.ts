@@ -18,6 +18,7 @@ import { SkillsModule } from '../skills/skills.module';
 import { ConversationModule } from '../conversation/conversation.module';
 import { SettingsModule } from '../settings/settings.module';
 import { AiContextModule } from '../ai-context/ai-context.module';
+import { MeetingModule } from '../meeting/meeting.module';
 import { ActionsModule } from '../actions/actions.module';
 
 @Module({
@@ -40,6 +41,8 @@ import { ActionsModule } from '../actions/actions.module';
     // PendingActionStore — ToolRoundRunner holds sensitive connector writes for
     // the user's in-chat confirmation instead of executing them (§F2).
     ActionsModule,
+    // MeetingContextService: record of the meeting an @AI question is about.
+    MeetingModule,
   ],
   controllers: [AiController],
   providers: [

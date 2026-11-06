@@ -39,6 +39,24 @@ enum MeetingViewerRole {
   }
 }
 
+/// AI summary state of an ended meeting; absent on the wire = never asked.
+enum MeetingSummaryState {
+  pending('PENDING'),
+  done('DONE'),
+  empty('EMPTY'),
+  failed('FAILED');
+
+  const MeetingSummaryState(this.wire);
+  final String wire;
+
+  static MeetingSummaryState? fromWire(Object? v) {
+    for (final s in values) {
+      if (s.wire == v) return s;
+    }
+    return null;
+  }
+}
+
 enum MeetingRoomRole { host, cohost, attendee }
 
 enum MeetingListScope { upcoming, past }
@@ -132,9 +150,12 @@ class Meeting {
     this.removedIds = const [],
     required this.viewerRole,
     required this.createdAt,
+    this.aiNotesEverEnabled = false,
     this.startedAt,
     this.endedAt,
     this.cancelledAt,
+    this.summaryState,
+    this.groupConversationId,
   });
 
   final String id;
@@ -155,9 +176,19 @@ class Meeting {
   final List<String> removedIds;
   final MeetingViewerRole viewerRole;
   final DateTime createdAt;
+
+  /// Sticky: AI notes were on at some point (gates the recap UI).
+  final bool aiNotesEverEnabled;
   final DateTime? startedAt;
   final DateTime? endedAt;
   final DateTime? cancelledAt;
+
+  /// null = never asked (AI notes were never on).
+  final MeetingSummaryState? summaryState;
+
+  /// The group chat made for the meeting; only open it when
+  /// `GET .../summary` says `inGroup`.
+  final String? groupConversationId;
 
   bool get isCancelled => status == MeetingStatus.ended && cancelledAt != null;
 
@@ -200,9 +231,12 @@ class Meeting {
           : const [],
       viewerRole: viewerRole,
       createdAt: createdAt,
+      aiNotesEverEnabled: o['aiNotesEverEnabled'] == true,
       startedAt: dateOrNull(o['startedAt']),
       endedAt: dateOrNull(o['endedAt']),
       cancelledAt: dateOrNull(o['cancelledAt']),
+      summaryState: MeetingSummaryState.fromWire(o['summaryState']),
+      groupConversationId: str(o['groupConversationId']),
     );
   }
 
@@ -211,6 +245,8 @@ class Meeting {
     MeetingSettings? settings,
     DateTime? endedAt,
     DateTime? cancelledAt,
+    MeetingSummaryState? summaryState,
+    String? groupConversationId,
   }) =>
       Meeting(
         id: id,
@@ -229,9 +265,12 @@ class Meeting {
         removedIds: removedIds,
         viewerRole: viewerRole,
         createdAt: createdAt,
+        aiNotesEverEnabled: aiNotesEverEnabled,
         startedAt: startedAt,
         endedAt: endedAt ?? this.endedAt,
         cancelledAt: cancelledAt ?? this.cancelledAt,
+        summaryState: summaryState ?? this.summaryState,
+        groupConversationId: groupConversationId ?? this.groupConversationId,
       );
 }
 

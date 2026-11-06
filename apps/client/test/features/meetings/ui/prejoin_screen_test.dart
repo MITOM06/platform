@@ -21,6 +21,7 @@ Future<RoomHarness> pumpPrejoin(WidgetTester tester,
         inCall: inCall);
 
 void main() {
+  aiNotesPrejoinTests();
   testWidgets('a guest facing a waiting room asks to join', (tester) async {
     await pumpPrejoin(tester, viewerRole: MeetingViewerRole.guest);
     final l = roomL10n(tester);
@@ -101,5 +102,16 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(
         find.byTooltip(roomL10n(tester).meetingSwitchCamera), findsOneWidget);
+  });
+}
+
+void aiNotesPrejoinTests() {
+  testWidgets('pre-join tells when AI notes are on', (tester) async {
+    await pumpPrejoin(tester, settings: const MeetingSettings(aiNotes: true));
+    expect(find.text(roomL10n(tester).meetingAiNotesPrejoin), findsOneWidget);
+  });
+  testWidgets('pre-join says nothing when AI notes are off', (tester) async {
+    await pumpPrejoin(tester);
+    expect(find.text(roomL10n(tester).meetingAiNotesPrejoin), findsNothing);
   });
 }

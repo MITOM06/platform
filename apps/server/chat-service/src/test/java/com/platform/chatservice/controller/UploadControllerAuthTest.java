@@ -52,6 +52,7 @@ import org.springframework.test.web.servlet.MockMvc;
   JwtAuthenticationFilter.class,
   MediaTokenService.class,
   UploadReaderResolver.class,
+  com.platform.chatservice.security.InternalKeyGuard.class,
   UploadControllerAuthTest.ClockConfig.class
 })
 @TestPropertySource(
@@ -100,7 +101,7 @@ class UploadControllerAuthTest {
 
   @Autowired private MockMvc mvc;
   @Autowired private UploadController controller;
-  @Autowired private UploadReaderResolver resolver;
+  @Autowired private com.platform.chatservice.security.InternalKeyGuard internalKeyGuard;
   @Autowired private MediaTokenService tokens;
   @Autowired private MutableClock clock;
 
@@ -116,7 +117,7 @@ class UploadControllerAuthTest {
   void setUp() throws Exception {
     clock.now = Instant.parse("2026-11-05T10:00:00Z");
     ReflectionTestUtils.setField(controller, "requireAuth", true);
-    ReflectionTestUtils.setField(resolver, "internalKey", INTERNAL);
+    ReflectionTestUtils.setField(internalKeyGuard, "internalKey", INTERNAL);
 
     GridFSFile file = org.mockito.Mockito.mock(GridFSFile.class);
     when(file.getMetadata()).thenReturn(new Document("uploadedBy", USER));
@@ -181,7 +182,7 @@ class UploadControllerAuthTest {
 
   @Test
   void flag_on_blank_configured_key_never_matches_401() throws Exception {
-    ReflectionTestUtils.setField(resolver, "internalKey", "");
+    ReflectionTestUtils.setField(internalKeyGuard, "internalKey", "");
     mvc.perform(get(path()).header("X-Internal-Key", "")).andExpect(status().isUnauthorized());
     mvc.perform(get(path()).header("X-Internal-Key", " ")).andExpect(status().isUnauthorized());
   }

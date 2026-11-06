@@ -17,6 +17,9 @@ import { AnthropicWebSearchProvider } from './web-search/anthropic-web-search.pr
 import { McpConnectorClient } from './mcp-connector.client';
 import { ToolRegistryService } from './tool-registry.service';
 import { ToolResultCacheService } from './tool-result-cache.service';
+import { ListMyMeetingsTool } from './list-my-meetings.tool';
+import { GetMeetingRecordTool } from './get-meeting-record.tool';
+import { MeetingModule } from '../meeting/meeting.module';
 import { KbModule } from '../kb/kb.module';
 import { MemoryModule } from '../memory/memory.module';
 import { RedisModule } from '../redis/redis.module';
@@ -26,7 +29,7 @@ const reminderFeature = MongooseModule.forFeature([
 ]) as unknown as DynamicModule;
 
 @Module({
-  imports: [reminderFeature, KbModule, MemoryModule, RedisModule, AiContextModule],
+  imports: [reminderFeature, KbModule, MemoryModule, RedisModule, AiContextModule, MeetingModule],
   providers: [
     SearchMessagesTool,
     GetUserInfoTool,
@@ -36,6 +39,8 @@ const reminderFeature = MongooseModule.forFeature([
     SummarizeConversationTool,
     CreateReminderTool,
     RememberFactTool,
+    ListMyMeetingsTool,
+    GetMeetingRecordTool,
     WebSearchTool,
     WebSearchService,
     GenericSearchProvider,

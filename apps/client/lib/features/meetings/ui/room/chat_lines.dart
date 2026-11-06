@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 import '../../../../core/l10n/l10n_ext.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../chat/domain/ai_models.dart';
 import '../../domain/meeting_room_models.dart';
 import '../../domain/meeting_text.dart';
+import '../../domain/pending_ai.dart';
 import '../../state/meeting_room_state.dart';
 import '../meeting_text_l10n.dart';
+import 'meeting_file_card.dart';
 
 /// Consecutive lines of one person within this window share one name.
 const _groupWindow = Duration(minutes: 2);
@@ -26,15 +30,23 @@ MeetingNotice? pendingError(PendingChat p, DateTime now) =>
         : null);
 
 class _Bubble extends StatelessWidget {
-  const _Bubble({required this.text, required this.mine, this.border});
+  const _Bubble(
+      {required this.text,
+      required this.mine,
+      this.border,
+      this.markdown = false});
 
   final String text;
   final bool mine;
+
+  /// The assistant's lines only: Markdown, with images and links inert.
+  final bool markdown;
   final Color? border;
 
   @override
   Widget build(BuildContext context) {
     final b = border;
+    final body = Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14);
     return ConstrainedBox(
       constraints:
           BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.8),
@@ -48,10 +60,22 @@ class _Bubble extends StatelessWidget {
           border: b == null ? null : Border.all(color: b),
         ),
         // Plain text only — chat from other people is untrusted.
-        child: SelectableText(text,
-            style: TextStyle(
-                fontSize: 14,
-                color: mine ? AppTheme.accentTintFg(context) : null)),
+        child: markdown
+            ? MarkdownBody(
+                data: text,
+                selectable: true,
+                // No network image loading in chat; no onTapLink: links
+                // stay non-tappable.
+                sizedImageBuilder: (config) => Text(config.alt ?? ''),
+                // Links look like the text around them (web renders a
+                // plain span): nothing suggests they can be tapped.
+                styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
+                    .copyWith(p: body, a: body),
+              )
+            : SelectableText(text,
+                style: TextStyle(
+                    fontSize: 14,
+                    color: mine ? AppTheme.accentTintFg(context) : null)),
       ),
     );
   }
@@ -96,7 +120,18 @@ class ChatLineTile extends StatelessWidget {
                           fontSize: 12, color: AppTheme.mutedText(context))),
                 ])),
               ),
-            _Bubble(text: message.content, mine: mine),
+            // The file card comes first, then the text (web `ChatLine`).
+            if (message.attachment case final file?)
+              MeetingFileCard(attachment: file, mine: mine),
+            if (message.content.isNotEmpty)
+              Padding(
+                padding:
+                    EdgeInsets.only(top: message.attachment != null ? 4 : 0),
+                child: _Bubble(
+                    text: message.content,
+                    mine: mine,
+                    markdown: message.sender.userId == kAiBotUserId),
+              ),
           ],
         ),
       );
@@ -128,10 +163,23 @@ class PendingLineTile extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
         Opacity(
           opacity: e == null ? 0.6 : 1,
-          child: _Bubble(
-              text: line.content,
-              mine: true,
-              border: e == null ? null : cs.error),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            // Card first, then text; both outlined red once failed (web
+            // `PendingLine`).
+            if (line.attachment case final file?)
+              MeetingFileCard(
+                  attachment: file,
+                  mine: true,
+                  border: e == null ? null : cs.error),
+            if (line.content.isNotEmpty)
+              Padding(
+                padding: EdgeInsets.only(top: line.attachment != null ? 4 : 0),
+                child: _Bubble(
+                    text: line.content,
+                    mine: true,
+                    border: e == null ? null : cs.error),
+              ),
+          ]),
         ),
         if (e == null)
           Padding(
@@ -155,4 +203,57 @@ class PendingLineTile extends StatelessWidget {
       ]),
     );
   }
+}
+
+/// The requester's error line for an `@AI` question — translated, never a
+/// code (web `AiNoticeLine`).
+class AiNoticeTile extends StatelessWidget {
+  const AiNoticeTile({super.key, required this.notice});
+
+  final AiNotice notice;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    // A system-style note, centred and muted (web `AiNoticeLine`).
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+      child: SizedBox(
+        width: double.infinity,
+        child: Text(
+            switch (notice.kind) {
+              AiErrorKind.unavailable => l.meetingAiUnavailable,
+              AiErrorKind.quotaExceeded => l.meetingAiQuotaExceeded,
+              AiErrorKind.rateLimited => l.meetingAiRateLimited,
+              AiErrorKind.failed => l.meetingAiFailed,
+            },
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: AppTheme.mutedText(context))),
+      ),
+    );
+  }
+}
+
+/// "PON AI is answering…" while any `@AI` question is open (web
+/// `MeetingChatPanel` status line).
+class AiThinkingLine extends StatelessWidget {
+  const AiThinkingLine({super.key});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        liveRegion: true,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+          child: Row(children: [
+            const SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(strokeWidth: 2)),
+            const SizedBox(width: 6),
+            Text(context.l10n.meetingAiThinking,
+                style: TextStyle(
+                    fontSize: 12, color: AppTheme.mutedText(context))),
+          ]),
+        ),
+      );
 }

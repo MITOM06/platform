@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:platform_client/features/admin/data/models/admin_models.dart';
@@ -22,6 +24,10 @@ Meeting live() => Meeting(
     createdAt: DateTime.utc(2026, 10, 7));
 
 class _Api implements MeetingsApi {
+  @override
+  Future<bool> uploadScreenFrame(String id, Uint8List jpeg, {int? ts}) async =>
+      false;
+
   final created = <MeetingInput>[];
   List<Meeting> upcoming = [live()];
 

@@ -63,8 +63,41 @@ public class AiRedisPublisher {
             departmentId,
             role,
             perms == null ? List.of() : perms,
-            departmentIds == null ? List.of() : departmentIds);
+            departmentIds == null ? List.of() : departmentIds,
+            null);
+    send(payload);
+  }
 
+  /**
+   * An {@code @AI} asked in a meeting chat: {@code conversationId} is {@code meeting:{meetingId}},
+   * there is no Conversation to look up (department null) and the payload carries {@code
+   * meetingId}.
+   */
+  public void publishMeetingAiRequest(
+      String meetingId,
+      String userId,
+      String displayName,
+      String content,
+      List<AiHistoryEntry> history,
+      String role,
+      List<String> perms,
+      List<String> departmentIds) {
+    send(
+        new AiRequestPayload(
+            AiConstants.MEETING_CONVERSATION_PREFIX + meetingId,
+            userId,
+            displayName,
+            content,
+            history,
+            null,
+            role,
+            perms == null ? List.of() : perms,
+            departmentIds == null ? List.of() : departmentIds,
+            meetingId));
+  }
+
+  private void send(AiRequestPayload payload) {
+    String conversationId = payload.conversationId();
     // Create a child span for the RabbitMQ publish operation. The scope is closed
     // explicitly BEFORE the span is ended so the thread-local context is cleared
     // first (correct OTel span lifecycle ordering).

@@ -2,10 +2,13 @@
 
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
-import type { MeetingMessage } from '@/lib/api/meeting-types'
+import type { MeetingAttachment, MeetingMessage } from '@/lib/api/meeting-types'
+import { FileCard } from '@/components/chat/FileContent'
+import { MarkdownContent } from '@/components/chat/MarkdownContent'
 import { safeDisplayName } from '@/lib/chat/names'
+import { AI_BOT_ID } from '@/lib/constants'
 import type { MessageKey } from '@/lib/meetings/meeting-errors'
-import type { PendingChat } from '@/lib/store/meeting.store'
+import type { AiNotice, PendingChat } from '@/lib/store/meeting.store'
 import { cn } from '@/lib/utils'
 import { useRoom } from './room-context'
 
@@ -17,7 +20,16 @@ export function sameGroup(prev: MeetingMessage | undefined, m: MeetingMessage): 
   return Date.parse(m.createdAt) - Date.parse(prev.createdAt) <= GROUP_MS
 }
 
-/** A delivered line. Plain text only — chat from other people is untrusted. */
+/** The file of a chat line as a card; the URL itself is never shown. */
+function AttachmentCard({ attachment, mine }: { attachment: MeetingAttachment; mine: boolean }) {
+  return (
+    <div className={cn('max-w-[85%] rounded-lg px-3 py-2', mine ? 'bg-accent text-accent-foreground' : 'bg-muted')}>
+      <FileCard url={attachment.url} name={attachment.name} size={attachment.size} isOwn={false} />
+    </div>
+  )
+}
+
+/** A delivered line. Plain text only — chat from other people is untrusted; the AI's answer is Markdown. */
 export function ChatLine({ message, showName, timeFormat }: {
   message: MeetingMessage
   showName: boolean
@@ -25,9 +37,12 @@ export function ChatLine({ message, showName, timeFormat }: {
 }) {
   const t = useTranslations('meeting')
   const { myId, myName } = useRoom()
-  const mine = message.sender.userId === myId
+  const isAi = message.sender.userId === AI_BOT_ID
+  const mine = !isAi && message.sender.userId === myId
   const at = new Date(message.createdAt)
-  const name = mine
+  const name = isAi
+    ? t('aiName')
+    : mine
     ? myName || t('you')
     : safeDisplayName(message.sender.displayName, message.sender.userId) ?? t('participantFallback')
   return (
@@ -42,10 +57,29 @@ export function ChatLine({ message, showName, timeFormat }: {
           )}
         </p>
       ) : null}
-      <p className={cn('max-w-[85%] rounded-lg px-3 py-1.5 text-sm break-words whitespace-pre-wrap', mine ? 'bg-accent text-accent-foreground' : 'bg-muted')}>
-        {message.content}
-      </p>
+      {isAi ? (
+        <div className="max-w-[85%] rounded-lg bg-muted px-3 py-1.5">
+          <MarkdownContent content={message.content} disallowImages />
+        </div>
+      ) : (
+        <>
+          {message.attachment ? <AttachmentCard attachment={message.attachment} mine={mine} /> : null}
+          {message.content ? (
+            <p className={cn('max-w-[85%] rounded-lg px-3 py-1.5 text-sm break-words whitespace-pre-wrap', mine ? 'bg-accent text-accent-foreground' : 'bg-muted', message.attachment && 'mt-1')}>
+              {message.content}
+            </p>
+          ) : null}
+        </>
+      )}
     </li>
+  )
+}
+
+/** Local system-style line: my `@AI` question got no answer. Never carries the server's code or text. */
+export function AiNoticeLine({ notice }: { notice: AiNotice }) {
+  const t = useTranslations('meeting')
+  return (
+    <li className="mt-2 px-2 text-center text-xs text-muted-foreground">{t(notice.key)}</li>
   )
 }
 
@@ -60,14 +94,18 @@ export function PendingLine({ line, error, onRetry, onDiscard }: {
   const t = useTranslations('meeting')
   return (
     <li className="mt-1 flex flex-col items-end">
-      <p
-        className={cn(
-          'max-w-[85%] rounded-lg bg-accent px-3 py-1.5 text-sm break-words whitespace-pre-wrap text-accent-foreground',
-          error ? 'border border-destructive' : 'opacity-60',
-        )}
-      >
-        {line.content}
-      </p>
+      <div className={cn('flex max-w-[85%] flex-col items-end gap-1', error ? '[&>*]:border [&>*]:border-destructive' : 'opacity-60')}>
+        {line.attachment ? (
+          <div className="rounded-lg bg-accent px-3 py-2 text-accent-foreground">
+            <FileCard url={line.attachment.url} name={line.attachment.name} size={line.attachment.size} isOwn={false} />
+          </div>
+        ) : null}
+        {line.content ? (
+          <p className="rounded-lg bg-accent px-3 py-1.5 text-sm break-words whitespace-pre-wrap text-accent-foreground">
+            {line.content}
+          </p>
+        ) : null}
+      </div>
       {error ? (
         <div className="mt-0.5 flex flex-wrap items-center justify-end gap-1">
           <span className="text-xs text-destructive">

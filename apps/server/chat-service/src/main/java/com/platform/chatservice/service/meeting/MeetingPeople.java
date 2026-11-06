@@ -81,6 +81,23 @@ public class MeetingPeople {
         .toList();
   }
 
+  /** Department ids (hex) a user belongs to; empty for an unknown or invalid user. */
+  public List<String> departmentIdsOf(String userId) {
+    if (userId == null || !ObjectId.isValid(userId)) {
+      return List.of();
+    }
+    Query query = new Query(Criteria.where("_id").is(new ObjectId(userId)));
+    query.fields().include("departmentIds");
+    Document doc = mongo.findOne(query, Document.class, USERS);
+    if (doc == null || !(doc.get("departmentIds") instanceof Collection<?> raw)) {
+      return List.of();
+    }
+    return raw.stream()
+        .map(v -> v instanceof ObjectId oid ? oid.toHexString() : v == null ? null : v.toString())
+        .filter(java.util.Objects::nonNull)
+        .toList();
+  }
+
   private static List<ObjectId> objectIds(Collection<String> userIds) {
     if (userIds == null) {
       return List.of();

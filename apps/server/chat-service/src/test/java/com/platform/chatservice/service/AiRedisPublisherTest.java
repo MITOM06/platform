@@ -144,4 +144,24 @@ class AiRedisPublisherTest {
 
     publisher.reportUnavailable("conv-1", "user-1", new IllegalStateException("broker down"));
   }
+
+  @Test
+  void publishMeetingAiRequest_sendsMeetingConversationWithMeetingIdAndNoLookup() {
+    publisher.publishMeetingAiRequest(
+        "m1", "user-1", "Alice", "hi", List.of(), "Manager", List.of("P"), List.of("d1"));
+
+    ArgumentCaptor<com.platform.chatservice.dto.AiRequestPayload> payload =
+        ArgumentCaptor.forClass(com.platform.chatservice.dto.AiRequestPayload.class);
+    verify(rabbitTemplate)
+        .convertAndSend(
+            eq(RabbitMqConfig.AI_EXCHANGE),
+            eq(RabbitMqConfig.AI_ROUTING_KEY),
+            payload.capture(),
+            any(MessagePostProcessor.class));
+    assertThat(payload.getValue().conversationId()).isEqualTo("meeting:m1");
+    assertThat(payload.getValue().meetingId()).isEqualTo("m1");
+    assertThat(payload.getValue().departmentId()).isNull();
+    assertThat(payload.getValue().departmentIds()).containsExactly("d1");
+    verifyNoInteractions(conversationRepository);
+  }
 }

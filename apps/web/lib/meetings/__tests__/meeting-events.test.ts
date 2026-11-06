@@ -3,6 +3,33 @@ import { parseMeetingEvent } from '@/lib/meetings/meeting-events'
 
 const j = (v: unknown) => JSON.stringify(v)
 
+describe('meet.chat attachment', () => {
+  const chat = (attachment: unknown) => parseMeetingEvent(j({
+    event: 'meet.chat', meetingId: 'm1',
+    message: { id: 'x', sender: { userId: 'u' }, content: '', createdAt: 't', attachment },
+  })) as { message: { content: string; attachment?: unknown } } | null
+
+  it('keeps a valid attachment, defaulting size and contentType', () => {
+    expect(chat({ url: '/api/uploads/abc', name: 'a.pdf', size: 5, contentType: 'application/pdf' })?.message.attachment)
+      .toEqual({ url: '/api/uploads/abc', name: 'a.pdf', size: 5, contentType: 'application/pdf' })
+    expect(chat({ url: '/api/uploads/abc', name: 'a.pdf', size: '5' })?.message.attachment)
+      .toEqual({ url: '/api/uploads/abc', name: 'a.pdf', size: 0, contentType: null })
+  })
+
+  it.each([
+    ['foreign url', { url: 'https://evil.example/x', name: 'a' }],
+    ['relative url outside uploads', { url: '/other/abc', name: 'a' }],
+    ['empty name', { url: '/api/uploads/abc', name: '' }],
+    ['no name', { url: '/api/uploads/abc' }],
+    ['not an object', 'x'],
+    ['array', []],
+  ])('drops a bad attachment (%s) but keeps the line', (_n, bad) => {
+    const e = chat(bad)
+    expect(e).not.toBeNull()
+    expect(e!.message).not.toHaveProperty('attachment')
+  })
+})
+
 describe('parseMeetingEvent', () => {
   it('rejects junk, unknown events and missing meeting ids', () => {
     expect(parseMeetingEvent('not json')).toBeNull()
@@ -29,13 +56,27 @@ describe('parseMeetingEvent', () => {
     })
   })
 
-  it('needs all five settings', () => {
-    const settings = { waitingRoom: true, muteOnEntry: false, allowAttendeeScreenShare: false,
+  it('needs the five original settings; aiNotes defaults to false', () => {
+    const base = { waitingRoom: true, muteOnEntry: false, allowAttendeeScreenShare: false,
       attendeesCanEditNotes: true, locked: false }
-    expect(parseMeetingEvent(j({ event: 'meet.settings', meetingId: 'm1', settings })))
-      .toEqual({ event: 'meet.settings', meetingId: 'm1', settings })
+    expect(parseMeetingEvent(j({ event: 'meet.settings', meetingId: 'm1', settings: { ...base, aiNotes: false } })))
+      .toEqual({ event: 'meet.settings', meetingId: 'm1', settings: { ...base, aiNotes: false } })
     expect(parseMeetingEvent(j({ event: 'meet.settings', meetingId: 'm1', settings: { locked: true } })))
       .toBeNull()
+  })
+
+  it('meet.settings carries aiNotes', () => {
+    const settings = { waitingRoom: true, muteOnEntry: false, allowAttendeeScreenShare: false,
+      attendeesCanEditNotes: true, locked: false, aiNotes: true }
+    const e = parseMeetingEvent(j({ event: 'meet.settings', meetingId: 'm1', settings }))
+    expect(e?.event === 'meet.settings' && e.settings.aiNotes).toBe(true)
+  })
+
+  it('meet.settings without aiNotes parses with aiNotes=false', () => {
+    const settings = { waitingRoom: true, muteOnEntry: false, allowAttendeeScreenShare: false,
+      attendeesCanEditNotes: true, locked: false }
+    const e = parseMeetingEvent(j({ event: 'meet.settings', meetingId: 'm1', settings }))
+    expect(e?.event === 'meet.settings' && e.settings.aiNotes).toBe(false)
   })
 
   it('keeps hands in server order', () => {
@@ -98,5 +139,35 @@ describe('parseMeetingEvent', () => {
       .toEqual({ event: 'meet.cancelled', meetingId: 'm1', title: 'Sync', code: 'abc-defg-hjk' })
     expect(parseMeetingEvent(j({ event: 'meet.cancelled', meetingId: 'm1', title: '', code: 7 })))
       .toEqual({ event: 'meet.cancelled', meetingId: 'm1' })
+  })
+})
+
+describe('meet.summary.ready', () => {
+  it('parses state and optional group id; rejects an unknown state', () => {
+    expect(parseMeetingEvent(j({ event: 'meet.summary.ready', meetingId: 'm1', summaryState: 'DONE', groupConversationId: 'c1' })))
+      .toEqual({ event: 'meet.summary.ready', meetingId: 'm1', summaryState: 'DONE', groupConversationId: 'c1' })
+    expect(parseMeetingEvent(j({ event: 'meet.summary.ready', meetingId: 'm1', summaryState: 'FAILED' })))
+      .toEqual({ event: 'meet.summary.ready', meetingId: 'm1', summaryState: 'FAILED' })
+    expect(parseMeetingEvent(j({ event: 'meet.summary.ready', meetingId: 'm1', summaryState: 'WAT' }))).toBeNull()
+  })
+})
+
+describe('parseMeetingEvent meet.ai', () => {
+  it('parses thinking and error; code is the AI error code here', () => {
+    expect(parseMeetingEvent(j({ event: 'meet.ai', meetingId: 'm1', state: 'thinking', requesterId: 'u1' })))
+      .toEqual({ event: 'meet.ai', meetingId: 'm1', state: 'thinking', requesterId: 'u1' })
+    expect(parseMeetingEvent(j({ event: 'meet.ai', meetingId: 'm1', state: 'error', requesterId: 'u1', code: 'AI_EMPTY' })))
+      .toEqual({ event: 'meet.ai', meetingId: 'm1', state: 'error', requesterId: 'u1', code: 'AI_EMPTY' })
+  })
+
+  it('keeps an error without a requesterId (it must still clear a pending entry); thinking needs one', () => {
+    expect(parseMeetingEvent(j({ event: 'meet.ai', meetingId: 'm1', state: 'error', code: 'AI_EMPTY' })))
+      .toEqual({ event: 'meet.ai', meetingId: 'm1', state: 'error', requesterId: '', code: 'AI_EMPTY' })
+    expect(parseMeetingEvent(j({ event: 'meet.ai', meetingId: 'm1', state: 'thinking' }))).toBeNull()
+  })
+
+  it('unknown state or missing requester ⇒ null', () => {
+    expect(parseMeetingEvent(j({ event: 'meet.ai', meetingId: 'm1', state: 'done', requesterId: 'u1' }))).toBeNull()
+    expect(parseMeetingEvent(j({ event: 'meet.ai', meetingId: 'm1', state: 'thinking' }))).toBeNull()
   })
 })

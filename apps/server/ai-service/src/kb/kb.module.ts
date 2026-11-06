@@ -27,6 +27,6 @@ const kbFeature = MongooseModule.forFeature([
     KbProcessorService,
     RerankerService,
   ],
-  exports: [KbProcessorService, VectorStoreService, EmbeddingService, RerankerService],
+  exports: [DocumentExtractorService, VisionDescribeService, KbProcessorService, VectorStoreService, EmbeddingService, RerankerService],
 })
 export class KbModule {}

@@ -64,6 +64,15 @@ class MeetingRtcHandlerTest {
   }
 
   @Test
+  void firstJoinOfAnAiNotesMeetingMarksItUsed() {
+    handler.onParticipantJoined(ev("host", "PA_1", at));
+
+    var order = org.mockito.Mockito.inOrder(store);
+    order.verify(store).markLive("m1", at);
+    order.verify(store).markAiNotesUsed("m1");
+  }
+
+  @Test
   void theFirstPersonInMakesTheMeetingLiveAndIsRecorded() {
     handler.onParticipantJoined(ev("host", "PA_1", at));
 
