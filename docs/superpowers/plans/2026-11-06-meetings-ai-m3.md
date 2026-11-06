@@ -93,3 +93,32 @@
 
 - [ ] `docs/api-spec.md` (`meet.ai`, payload `meetingId`, 2 endpoint nội bộ), `.claude/rules/ai-service.md` (2 tool, khối ngữ cảnh cuộc họp), `apps/server/chat-service/CLAUDE.md`. Gộp vào commit của Task 2/4 nếu tiện; nếu không, commit `docs(meetings): M3 contracts`.
 - [ ] Thử tay trên `dev`: `@AI tóm tắt 5 phút vừa rồi` trong chat họp; `@AI` trong nhóm sau họp; chat 1-1 "cuộc họp sprint hôm qua chốt gì"; tài khoản ngoài cuộc hỏi cùng câu ⇒ không tìm thấy.
+
+---
+
+## Kết quả (2026-11-06)
+
+Task 1–6 DONE trên `feat/meetings-ai` (`e233da14..3afbd816`): review từng task, review cuối toàn nhánh và một đợt sửa (F1–F8) đều đã duyệt. Docs gộp vào commit của Task 1/2/4 và đợt sửa. Task 7 (thử tay trên `dev`) **chưa chạy**: cần owner đồng ý merge.
+
+Quyết định thêm khi thực thi:
+- `@AI` trong chat họp chạy **không tool**, không khối thông tin tổ chức (org) và không trí nhớ của người hỏi, vì câu trả lời hiện cho cả phòng.
+- `meetingId` chỉ lấy từ chính cuộc trò chuyện. Bỏ qua `meetingId` gửi kèm trong payload.
+- Lượt có nội dung cuộc họp không ghi vào trí nhớ dài hạn (key facts) và không dùng response cache.
+- `/new` và `/memory` trong chat họp được coi như câu hỏi thường.
+- Câu trả lời AI trong chat họp: không tải ảnh từ link ngoài, link không bấm được.
+- Thành viên được thêm vào nhóm cuộc họp sau đó vẫn thấy câu trả lời về cuộc họp. Chấp nhận, vì tin tóm tắt vốn đã nằm trong nhóm.
+
+Việc để sau (không chặn merge):
+- Thử tay trên `dev`:
+  - `@AI` trong phòng có khách được duyệt vào từ phòng chờ.
+  - `@AI /new` trong phòng.
+  - `@AI` trong nhóm sau họp.
+  - Chat 1-1 hỏi "cuộc họp … chốt gì".
+  - Tài khoản ngoài cuộc hỏi cùng câu ⇒ không tìm thấy.
+  - Tin AI có ảnh/link ⇒ không tải ảnh, link không bấm được.
+- Tool `remember_fact` vẫn lưu được nội dung cuộc họp nếu người dùng chủ động yêu cầu trong chat 1-1.
+- `list_my_meetings` có thể trả ít hơn `limit`. Không liệt kê người chỉ được duyệt từ phòng chờ.
+- Lọc từ khoá theo dòng làm mất dòng nối tiếp. Câu hỏi CJK/Thái hoặc toàn từ ngắn rơi về bản ghi đầy đủ (có giới hạn).
+- Câu trả lời tới sau khi họp kết thúc vẫn được lưu. Dòng lỗi AI không tự ẩn.
+- `ai.service.ts` gần chạm 500 dòng.
+- Chat thường (không phải họp) vẫn tải ảnh ngoài trong câu trả lời AI. Lỗi này có từ trước M3.
