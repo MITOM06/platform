@@ -2277,6 +2277,7 @@
     "settingAiNotes": "AI 議事メモ",
     "settingAiNotesDesc": "AI が発言、チャット、メモ、ファイル、共有画面を記録し、会議後に要約します。ルーム内の全員に通知されます。",
     "aiNotesActive": "AI がメモを取っています",
+    "aiReadingScreen": "AI があなたの共有画面を読み取っています",
     "aiNotesStarted": "AI が会議のメモを開始しました",
     "aiNotesPrejoin": "この会議では AI がメモを取ります",
     "aiNotesPauseMine": "自分の発言の記録を一時停止",

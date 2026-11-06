@@ -99,4 +99,16 @@ export const meetingsApi = {
     chatApi
       .get<{ hands?: MeetingHand[] }>(`${base(id)}/hands`)
       .then((r) => (Array.isArray(r.data?.hands) ? r.data.hands : [])),
+
+  /** Best-effort shared-screen frame for the AI record: 202 accepted, 204 skipped. */
+  uploadScreenFrame: (id: string, frame: Blob, ts: number) => {
+    const form = new FormData()
+    form.append('frame', new File([frame], 'screen.jpg', { type: 'image/jpeg' }))
+    form.append('ts', String(ts))
+    // Clear the JSON default so the browser sets multipart/form-data with its boundary.
+    return chatApi.post(`${base(id)}/screen-frames`, form, {
+      headers: { 'Content-Type': undefined },
+      validateStatus: () => true,
+    })
+  },
 }

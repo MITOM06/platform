@@ -2277,6 +2277,7 @@
     "settingAiNotes": "AI 会议纪要",
     "settingAiNotesDesc": "AI 会记录发言、聊天、笔记、文件和共享屏幕，以便会后生成摘要。房间内所有人都会收到通知。",
     "aiNotesActive": "AI 正在记录",
+    "aiReadingScreen": "AI 正在读取你共享的屏幕",
     "aiNotesStarted": "AI 已开始记录本次会议",
     "aiNotesPrejoin": "本次会议启用了 AI 纪要",
     "aiNotesPauseMine": "暂停记录我的发言",

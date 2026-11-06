@@ -41,4 +41,13 @@ describe('AiNotesIndicator', () => {
     render(<AiNotesIndicator active />)
     expect(toastInfo).not.toHaveBeenCalled()
   })
+
+  it('sharer line shows only while sharing with AI on', () => {
+    const { rerender } = render(<AiNotesIndicator active sharing />)
+    expect(screen.getByText('aiReadingScreen')).toBeTruthy()
+    rerender(<AiNotesIndicator active />)
+    expect(screen.queryByText('aiReadingScreen')).toBeNull()
+    rerender(<AiNotesIndicator active={false} sharing />)
+    expect(screen.queryByText('aiReadingScreen')).toBeNull()
+  })
 })

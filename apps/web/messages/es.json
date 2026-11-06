@@ -2277,6 +2277,7 @@
     "settingAiNotes": "Notas de reunión con IA",
     "settingAiNotesDesc": "La IA registra voz, chat, notas, archivos y pantallas compartidas para resumir después de la reunión. Se avisa a todos en la sala.",
     "aiNotesActive": "La IA está tomando notas",
+    "aiReadingScreen": "La IA está leyendo la pantalla que compartes",
     "aiNotesStarted": "La IA empezó a tomar notas de la reunión",
     "aiNotesPrejoin": "Esta reunión tiene notas con IA",
     "aiNotesPauseMine": "Pausar la captura de mi voz",
