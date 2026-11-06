@@ -29,7 +29,13 @@ const COUNTER_FROM = 1800
 export function MeetingChatComposer() {
   const t = useTranslations('meeting')
   const { controller, realtimeConnected } = useRoom()
-  const [text, setText] = useState('')
+  const [text, setTextState] = useState('')
+  /** Always the box's current value; async work (the upload) must read this, never a captured `text`. */
+  const textRef = useRef('')
+  const setText = (v: string) => {
+    textRef.current = v
+    setTextState(v)
+  }
   const tooLong = text.length > MAX
   const [uploading, setUploading] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
@@ -39,7 +45,12 @@ export function MeetingChatComposer() {
 
   /** Sends text + the staged file; clears them only once the controller accepted the line. */
   const deliver = (file: OutgoingAttachment | null): boolean => {
-    const sent = file ? controller.sendChat(text, file) : controller.sendChat(text)
+    const current = textRef.current
+    if (current.length > MAX) {
+      toast.error(t('errChatTooLong', { max: MAX }))
+      return false
+    }
+    const sent = file ? controller.sendChat(current, file) : controller.sendChat(current)
     if (sent === null) return false
     setText('')
     setStaged(null)
@@ -65,7 +76,7 @@ export function MeetingChatComposer() {
         size: Number.isFinite(size) ? size : file.size,
       }
       setStaged(ready)
-      if (!deliver(ready)) toast.error(t('chatNotSent'))
+      if (textRef.current.length <= MAX && !deliver(ready)) toast.error(t('chatNotSent'))
     } catch (err) {
       toast.error(err instanceof Error && err.message === FILE_TOO_LARGE ? t('chatFileTooLarge') : t('chatUploadFailed'))
     } finally {

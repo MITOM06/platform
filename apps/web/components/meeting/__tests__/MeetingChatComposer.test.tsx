@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 const h = vi.hoisted(() => ({
@@ -34,6 +34,34 @@ describe('MeetingChatComposer attach', () => {
     expect(h.upload).toHaveBeenCalledWith(file)
     expect(h.sendChat).toHaveBeenCalledWith('see this', { url: '/api/uploads/abc', name: 'plan.pdf', size: 1234 })
     expect(screen.getByRole('textbox')).toHaveValue('')
+  })
+
+  it('text typed while the upload is pending is sent with the file and the box keeps nothing unsent', async () => {
+    let done: (v: unknown) => void = () => {}
+    h.upload.mockReturnValue(new Promise((r) => { done = r }))
+    render(<MeetingChatComposer />)
+    await userEvent.type(screen.getByRole('textbox'), 'see')
+    await pick()
+    await screen.findByText('chatUploading')
+    await userEvent.type(screen.getByRole('textbox'), ' this now')
+    await act(async () => { done({ url: '/api/uploads/a', filename: 'plan.pdf', size: '1' }) })
+    await waitFor(() => expect(h.sendChat).toHaveBeenCalled())
+    expect(h.sendChat).toHaveBeenCalledWith('see this now', expect.objectContaining({ name: 'plan.pdf' }))
+    expect(screen.getByRole('textbox')).toHaveValue('')
+  })
+
+  it('text that grew past the limit during the upload is not sent; the file stays staged', async () => {
+    let done: (v: unknown) => void = () => {}
+    h.upload.mockReturnValue(new Promise((r) => { done = r }))
+    render(<MeetingChatComposer />)
+    await pick()
+    await screen.findByText('chatUploading')
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'x'.repeat(2001) } })
+    await act(async () => { done({ url: '/api/uploads/a', filename: 'plan.pdf', size: '1' }) })
+    await waitFor(() => expect(screen.queryByText('chatUploading')).not.toBeInTheDocument())
+    expect(h.sendChat).not.toHaveBeenCalled()
+    expect(screen.getByText('plan.pdf')).toBeInTheDocument()
+    expect(screen.getByRole('textbox')).toHaveValue('x'.repeat(2001))
   })
 
   it('a file alone is sent with empty text', async () => {
