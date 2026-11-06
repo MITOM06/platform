@@ -125,3 +125,31 @@
   - Kết thúc họp ⇒ tóm tắt có mục "Từ tài liệu".
   - Gửi `.pptx` ⇒ "Không đọc được file này.".
   - Người ngoài mở link file ⇒ 403. Bật `UPLOADS_REQUIRE_AUTH=true` để kiểm.
+
+---
+
+## Kết quả (2026-11-07)
+
+Task 1–5 DONE trên `feat/meetings-ai` (`19b69050..67bb54d0`). Đã qua review từng task, review cuối toàn nhánh và một đợt sửa (F1–F7). Task 6 (thử tay trên `dev`) **chưa chạy**: cần owner đồng ý merge.
+
+Quyết định thêm khi thực thi:
+- Tên file lấy từ GridFS (`originalFilename`). Ký tự điều khiển/bidi bị lọc. Cắt còn 200 ký tự.
+- Kết quả đọc file chỉ được ghi khi tin chat thật sự có file.
+- Gửi lại cùng một file trong cùng cuộc họp: không tốn thêm suất và không đọc lại.
+- Ảnh được kiểm tra byte trước khi gọi vision.
+- ai-service xử lý tối đa 2 file cùng lúc.
+- Prompt ghi tên file: `[FILE] tên (shared by người gửi): …`.
+- **Chi phí vision của ảnh trong cuộc họp đang tính vào quota người gửi file. Owner quyết trước khi lên `main`.**
+
+Việc để sau (không chặn merge):
+- Thử tay trên `dev`:
+  - Gửi PDF, DOCX và ảnh slide ⇒ `meeting_records` có dòng FILE.
+  - Tóm tắt có mục "Từ tài liệu".
+  - Gửi `.pptx` ⇒ "Không đọc được file này.".
+  - Bật `UPLOADS_REQUIRE_AUTH=true`: người ngoài mở link file ⇒ 403.
+  - Mất mạng ngay sau khi upload ⇒ file giữ lại để gửi lại.
+  - Độ tương phản của card file.
+- ai-service chết thì file đó không có dòng record nào (không báo).
+- Redis lỗi lúc claim có thể sinh nhiều kết quả `failed` cho cùng một file (chat-service lấy kết quả đầu tiên).
+- Khi `UPLOADS_REQUIRE_AUTH=false` (mặc định), link file là URL ai có cũng mở được. Áp dụng cho mọi upload, có từ trước.
+- Bộ chọn file trong chat thường trên Flutter đọc cả file vào bộ nhớ trước khi kiểm tra kích thước. Lỗi này có từ trước.
