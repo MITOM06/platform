@@ -57,10 +57,8 @@ export function renderRecordBody(view: MeetingRecordView): string {
         lines.push(`[FILE] ${file}${who ? ` (shared by ${who})` : ''}: ${r.text}`);
       } else if (r.kind === 'SCREEN') {
         const who = oneLine(r.displayName) || GENERIC_SPEAKER;
-        const t = Date.parse(r.ts);
-        // Record time is shown in UTC: the prompt has no per-viewer timezone.
-        const hhmm = Number.isNaN(t) ? '' : `, ${new Date(t).toISOString().slice(11, 16)}`;
-        lines.push(`[SCREEN] (shared by ${who}${hhmm}): ${r.text}`);
+        // No time: records are already in order and the prompt has no timezone.
+        lines.push(`[SCREEN] (shared by ${who}): ${r.text}`);
       } else {
         lines.push(`[${r.kind}] ${oneLine(r.displayName) || GENERIC_SPEAKER}: ${r.text}`);
       }
