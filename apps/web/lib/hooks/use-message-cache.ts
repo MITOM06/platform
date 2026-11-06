@@ -9,7 +9,14 @@ import type {
   Message,
   MessagesResponse,
 } from '@/lib/api/types'
-import { CONVERSATIONS_KEY, lastMessageOf, markPreviewRecalled } from '@/lib/realtime/conversation-cache'
+import {
+  CONVERSATIONS_KEY,
+  findCachedConversation,
+  isAiConversation,
+  lastMessageOf,
+  markPreviewRecalled,
+  upsertAiThread,
+} from '@/lib/realtime/conversation-cache'
 import { withActionStatus, type ActionStatus } from '@/lib/ai/pending-actions'
 
 type Pages = InfiniteData<MessagesResponse>
@@ -60,6 +67,22 @@ export function reconcileThread(old: Pages | undefined, incoming: Message[]): Pa
 
 /** Refresh the conversation-list preview for a message without refetching the list. */
 function bumpListPreview(queryClient: QueryClient, incoming: Message): void {
+  // AI threads live in ['ai-threads'], never in the main list: bump them there
+  // and never refetch the main list because of them.
+  const cached = findCachedConversation(queryClient, incoming.conversationId)
+  if (isAiConversation(cached)) {
+    if (
+      cached &&
+      !(cached.lastMessageAt && Date.parse(cached.lastMessageAt) > Date.parse(incoming.createdAt))
+    ) {
+      upsertAiThread(queryClient, {
+        ...cached,
+        lastMessage: lastMessageOf(incoming),
+        lastMessageAt: incoming.createdAt,
+      })
+    }
+    return
+  }
   // On busy threads this fires per message, so invalidating (refetching the
   // whole list) every time was a refetch storm. Fall back to invalidate only
   // when the list cache is empty or doesn't yet contain this conversation

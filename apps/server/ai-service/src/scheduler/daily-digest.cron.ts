@@ -8,6 +8,7 @@ import { DigestGeneratorService } from './digest-generator.service';
 import { DigestLog, DigestLogDocument } from './digest-log.schema';
 import { localHour, yesterdayWindow } from './digest-date.util';
 import { safeTimeZone } from '../common/time-zone';
+import { toObjectIds } from '../common/object-id';
 
 /** Mongo duplicate-key error code (unique-index idempotency guard). */
 const DUP_KEY = 11000;
@@ -122,6 +123,20 @@ export class DailyDigestCron {
       senderId: { $ne: this.botUserId },
       recalled: { $ne: true },
     });
-    return (ids as unknown[]).map((id) => String(id)).filter(Boolean);
+    const activeIds = (ids as unknown[]).map((id) => String(id)).filter(Boolean);
+
+    // 1-1 AI threads (direct/untyped conversation with the bot as participant)
+    // must never get a digest. Groups containing the bot are still digested.
+    const objectIds = toObjectIds(activeIds);
+    if (objectIds.length === 0) return activeIds;
+    const aiThreads = await this.connection
+      .collection('conversations')
+      .find(
+        { _id: { $in: objectIds }, participants: this.botUserId, type: { $ne: 'group' } },
+        { projection: { _id: 1 } },
+      )
+      .toArray();
+    const skip = new Set(aiThreads.map((c) => String(c._id)));
+    return activeIds.filter((id) => !skip.has(id));
   }
 }

@@ -6,12 +6,12 @@ import '../../admin/state/capabilities_provider.dart';
 import '../../admin/state/usage_dashboard_provider.dart';
 import '../../ai_context/domain/ai_context_providers.dart';
 import '../../assistant/state/assistant_provider.dart';
+import '../../ai_hub/domain/ai_threads_provider.dart';
 import '../../chat/data/stomp_service.dart';
 import '../../chat/domain/active_call_provider.dart';
 import '../../chat/domain/ai_actions_provider.dart';
 import '../../chat/domain/ai_memory_provider.dart';
 import '../../chat/domain/ai_persona_provider.dart';
-import '../../chat/domain/ai_session_provider.dart';
 import '../../chat/domain/chat_provider.dart';
 import '../../chat/domain/group_call_signaling.dart';
 import '../../chat/domain/kb_provider.dart';
@@ -40,6 +40,7 @@ void resetSessionState(Ref ref) {
   for (final invalidate in <void Function()>[
     // Chat & people.
     () => ref.invalidate(conversationsNotifierProvider),
+    () => ref.invalidate(aiThreadsProvider),
     () => ref.invalidate(archivedConversationsProvider),
     () => ref.invalidate(blockedConversationsProvider),
     () => ref.invalidate(chatNotifierProvider),
@@ -69,7 +70,6 @@ void resetSessionState(Ref ref) {
     () => ref.invalidate(assistantProvidersProvider),
     () => ref.invalidate(aiMemoriesProvider),
     () => ref.invalidate(aiPersonaProvider),
-    () => ref.invalidate(aiSessionsProvider),
     () => ref.invalidate(myAiContextProvider),
     () => ref.invalidate(kbDocumentsProvider),
     () => ref.invalidate(aiActionsProvider),

@@ -3089,25 +3089,49 @@ class AppLocalizationsKo extends AppLocalizations {
   String get leaveWithoutSaving => '저장하지 않고 나가기';
 
   @override
-  String get aiSessionHistory => '대화 기록';
+  String get aiThreadUntitled => 'AI와 채팅';
 
   @override
-  String get aiNewSession => '새 대화';
+  String get aiThreadNew => '새 대화';
 
   @override
-  String get aiSessionActive => '사용 중';
+  String get aiThreadsTitle => '대화';
 
   @override
-  String get aiSessionSummarized => '요약됨';
+  String get aiThreadRename => '이름 변경';
 
   @override
-  String get aiSessionEmpty => '이전 대화가 없습니다';
+  String get aiThreadSave => '저장';
 
   @override
-  String get aiSessionResume => '다시 시작';
+  String get aiThreadCancel => '취소';
 
   @override
-  String get aiSessionLoadError => '대화 기록을 불러올 수 없습니다';
+  String get aiThreadDelete => '삭제';
+
+  @override
+  String get aiThreadDeleteTitle => '이 대화를 삭제할까요?';
+
+  @override
+  String get aiThreadDeleteDesc => '이 AI 대화의 모든 메시지가 계정에서 삭제됩니다. 되돌릴 수 없습니다.';
+
+  @override
+  String get aiThreadEmpty => '아직 대화가 없습니다. 새로 시작하세요.';
+
+  @override
+  String get aiThreadLoadFailed => '대화를 불러오지 못했습니다. 다시 시도해 주세요.';
+
+  @override
+  String get aiThreadCreateFailed => '새 대화를 만들지 못했습니다. 다시 시도해 주세요.';
+
+  @override
+  String get aiThreadRenameFailed => '이름을 변경하지 못했습니다. 다시 시도해 주세요.';
+
+  @override
+  String get aiThreadNameInvalid => '이름은 1~80자여야 합니다.';
+
+  @override
+  String get aiThreadDeleteFailed => '대화를 삭제하지 못했습니다. 다시 시도해 주세요.';
 
   @override
   String multiSelectCount(int count) {

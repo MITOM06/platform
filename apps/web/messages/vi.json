@@ -2259,5 +2259,23 @@
     "chatSending": "Đang gửi…",
     "chatOffline": "Đang kết nối lại — tạm chưa gửi được tin",
     "chatCounter": "{count}/{max}"
+  },
+  "aiThreads": {
+    "untitled": "Trò chuyện với AI",
+    "newThread": "Cuộc trò chuyện mới",
+    "backToMessages": "Quay lại tin nhắn",
+    "listLabel": "Các cuộc trò chuyện với AI",
+    "rename": "Đổi tên",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "deleteTitle": "Xóa cuộc trò chuyện này?",
+    "deleteDesc": "Toàn bộ tin nhắn trong cuộc trò chuyện với AI này sẽ bị xóa khỏi tài khoản của bạn. Hành động không thể hoàn tác.",
+    "empty": "Chưa có cuộc trò chuyện nào. Bắt đầu một cuộc mới.",
+    "loadFailed": "Không tải được danh sách. Vui lòng thử lại.",
+    "createFailed": "Không tạo được cuộc trò chuyện mới. Vui lòng thử lại.",
+    "renameFailed": "Không đổi được tên. Vui lòng thử lại.",
+    "nameInvalid": "Tên phải từ 1 đến 80 ký tự.",
+    "deleteFailed": "Không xóa được cuộc trò chuyện. Vui lòng thử lại."
   }
 }

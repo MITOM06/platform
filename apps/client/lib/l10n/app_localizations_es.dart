@@ -3179,26 +3179,55 @@ class AppLocalizationsEs extends AppLocalizations {
   String get leaveWithoutSaving => 'Salir sin guardar';
 
   @override
-  String get aiSessionHistory => 'Historial de conversaciones';
+  String get aiThreadUntitled => 'Chatear con la IA';
 
   @override
-  String get aiNewSession => 'Nueva conversación';
+  String get aiThreadNew => 'Nueva conversación';
 
   @override
-  String get aiSessionActive => 'Activa';
+  String get aiThreadsTitle => 'Conversaciones';
 
   @override
-  String get aiSessionSummarized => 'Resumida';
+  String get aiThreadRename => 'Renombrar';
 
   @override
-  String get aiSessionEmpty => 'No hay conversaciones anteriores';
+  String get aiThreadSave => 'Guardar';
 
   @override
-  String get aiSessionResume => 'Reanudar';
+  String get aiThreadCancel => 'Cancelar';
 
   @override
-  String get aiSessionLoadError =>
-      'No se pudo cargar el historial de conversaciones';
+  String get aiThreadDelete => 'Eliminar';
+
+  @override
+  String get aiThreadDeleteTitle => '¿Eliminar esta conversación?';
+
+  @override
+  String get aiThreadDeleteDesc =>
+      'Todos los mensajes de esta conversación con la IA se eliminarán de tu cuenta. No se puede deshacer.';
+
+  @override
+  String get aiThreadEmpty => 'Aún no hay conversaciones. Empieza una nueva.';
+
+  @override
+  String get aiThreadLoadFailed =>
+      'No se pudieron cargar las conversaciones. Inténtalo de nuevo.';
+
+  @override
+  String get aiThreadCreateFailed =>
+      'No se pudo crear la conversación. Inténtalo de nuevo.';
+
+  @override
+  String get aiThreadRenameFailed =>
+      'No se pudo renombrar. Inténtalo de nuevo.';
+
+  @override
+  String get aiThreadNameInvalid =>
+      'El nombre debe tener entre 1 y 80 caracteres.';
+
+  @override
+  String get aiThreadDeleteFailed =>
+      'No se pudo eliminar la conversación. Inténtalo de nuevo.';
 
   @override
   String multiSelectCount(int count) {

@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { ConversationList } from '@/components/chat/ConversationList'
+import { AiThreadList } from '@/components/ai/AiThreadList'
 import { OfflineBanner } from '@/components/chat/OfflineBanner'
 import { ActiveFriendsRow } from '@/components/chat/ActiveFriendsRow'
 import { AssistantEntry } from '@/components/chat/AssistantEntry'
@@ -19,6 +20,8 @@ import { SidebarAiHubButton } from '@/components/layout/SidebarAiHubButton'
 import { NotificationBell } from '@/components/layout/NotificationBell'
 import { PonLogo } from '@/components/layout/PonLogo'
 import { useUiStore } from '@/lib/store/ui.store'
+import { useConversation } from '@/lib/hooks/use-conversation'
+import { isAiConversation } from '@/lib/realtime/conversation-cache'
 import { useSidebarResize } from '@/lib/hooks/use-sidebar-resize'
 import { useRealtimeNotifications } from '@/lib/hooks/use-realtime-notifications'
 import { useMediaRemountKey, useMediaTokenResume } from '@/lib/hooks/use-media-token-session'
@@ -64,7 +67,14 @@ function MainShell({ children }: { children: React.ReactNode }) {
   // settings, admin, friends, profile…) renders full-width with no sidebar.
   const isConversationOpen = /^\/conversations\/.+/.test(pathname)
   const isMessagingArea = /^\/conversations(\/|$)/.test(pathname)
-  const showSidebar = isMessagingArea
+  // The AI hub also gets the sidebar on desktop (it lists the AI threads); on
+  // mobile the hub page owns the screen and embeds the thread list itself.
+  const isAiHub = /^\/ai-hub(\/|$)/.test(pathname)
+  const showSidebar = isMessagingArea || isAiHub
+  // An open AI thread swaps the conversation list for the ChatGPT-style thread list.
+  const openId = /^\/conversations\/([^/]+)/.exec(pathname)?.[1] ?? ''
+  const { data: openConversation } = useConversation(openId)
+  const showAiThreads = isAiHub || isAiConversation(openConversation)
   // The meeting room (/meet/{code}) is full-screen — no generic mobile nav either.
   const isMeetingRoom = /^\/meet\//.test(pathname)
   // Hide the generic mobile nav across the whole messaging area — the
@@ -100,7 +110,7 @@ function MainShell({ children }: { children: React.ReactNode }) {
         key={`aside-${mediaKey}`}
         className={cn(
           'w-full border-r border-border/60 flex-col shrink-0 relative overflow-hidden @container',
-          isConversationOpen ? 'hidden md:flex' : 'flex',
+          isConversationOpen || isAiHub ? 'hidden md:flex' : 'flex',
           // Desktop: dynamic width driven by the drag handle / collapse toggle.
           'md:w-[var(--sidebar-w)]',
         )}
@@ -198,12 +208,18 @@ function MainShell({ children }: { children: React.ReactNode }) {
               every status banner flows top→down (mirrors the Flutter list screen
               where OfflineBanner is the first child of the body Column). */}
           <OfflineBanner />
-          {/* Horizontal presence row doesn't fit the compact rail — hide it. */}
-          <div className="hidden @[300px]:block">
-            <ActiveFriendsRow />
-          </div>
-          <AssistantEntry />
-          <ConversationList />
+          {showAiThreads ? (
+            <AiThreadList />
+          ) : (
+            <>
+              {/* Horizontal presence row doesn't fit the compact rail — hide it. */}
+              <div className="hidden @[300px]:block">
+                <ActiveFriendsRow />
+              </div>
+              <AssistantEntry />
+              <ConversationList />
+            </>
+          )}
         </div>
         {/* Bottom cluster — AI Hub launcher sits directly above the account anchor (desktop). */}
         <SidebarAiHubButton />
@@ -219,7 +235,7 @@ function MainShell({ children }: { children: React.ReactNode }) {
         as="main"
         className={cn(
           'flex-1 overflow-hidden flex-col',
-          showSidebar && !isConversationOpen ? 'hidden md:flex' : 'flex',
+          showSidebar && !isConversationOpen && !isAiHub ? 'hidden md:flex' : 'flex',
         )}
       >
         {children}
