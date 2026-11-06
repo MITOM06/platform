@@ -816,6 +816,8 @@ an attendee editing the shared note while `attendeesCanEditNotes=false`), `RATE_
 `X-Internal-Key`; 401 on a missing/wrong key or unconfigured server, 404 for no meeting/no access —
 never 403) returns the capped transcript + chat that ai-service summarizes.
 The view also carries `summary` (the newest AI summary map, omitted when none).
+Each `records[]` item carries `fileName` (the file's name for `FILE` records, else null) and each
+`chat[]` item `attachmentName` (the name of the file on that line, else null).
 `GET /internal/meetings?userId=&q=&limit=` (same key and 401) lists the `ENDED` meetings with AI
 notes that `userId` may read, newest first: `[{id, title, code, startedAt, endedAt, summaryState}]`
 (never a user id). `limit` defaults to 20, max 50; `q` is a case-insensitive literal title match;

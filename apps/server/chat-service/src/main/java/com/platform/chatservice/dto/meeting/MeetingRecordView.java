@@ -21,7 +21,7 @@ public record MeetingRecordView(
 
   public record Attendee(String displayName) {}
 
-  public record Rec(String kind, String displayName, String text, Instant ts) {}
+  public record Rec(String kind, String displayName, String text, Instant ts, String fileName) {}
 
-  public record Chat(String senderName, String content, Instant createdAt) {}
+  public record Chat(String senderName, String content, Instant createdAt, String attachmentName) {}
 }

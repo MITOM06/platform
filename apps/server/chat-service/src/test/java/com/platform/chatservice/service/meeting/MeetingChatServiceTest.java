@@ -407,7 +407,7 @@ class MeetingChatServiceTest {
             new MeetingChatCommand.Attachment("/api/uploads/../" + theirs, "x", null, null),
             new MeetingChatCommand.Attachment(null, "x", null, null),
             att(upload("a", new byte[] {1}, "text/plain"), " "),
-            att(upload("a", new byte[] {1}, "text/plain"), "n".repeat(201)));
+            att(upload("a", new byte[] {1}, "text/plain"), "n".repeat(1001)));
 
     for (MeetingChatCommand.Attachment a : bad) {
       assertInvalidAttachment(apiError(() -> chat.send(an, "m1", "hi", null, a)));
@@ -415,6 +415,15 @@ class MeetingChatServiceTest {
     assertThat(count()).isZero();
     verify(uploadRefs, never()).attachToMeeting(any(), any(), any());
     verify(materials, never()).onFileSent(any(), any(), any(), any());
+  }
+
+  @Test
+  void aLongClientNameIsAcceptedAndCutToTwoHundred() {
+    String id = upload("a", new byte[] {1}, "application/pdf");
+
+    MeetingMessageDto dto = chat.send(an, "m1", "x", null, att(id, "n".repeat(1000)));
+
+    assertThat(dto.attachment().name()).hasSize(200);
   }
 
   @Test

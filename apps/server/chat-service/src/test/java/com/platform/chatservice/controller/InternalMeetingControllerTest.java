@@ -61,8 +61,8 @@ class InternalMeetingControllerTest {
     return new MeetingRecordView(
         new MeetingRecordView.Meeting("m1", "Sync", "abc", Instant.EPOCH, null, "Host"),
         List.of(new MeetingRecordView.Attendee("Lan")),
-        List.of(new MeetingRecordView.Rec("SPEECH", "Lan", "hi", Instant.EPOCH)),
-        List.of(new MeetingRecordView.Chat("Lan", "yo", Instant.EPOCH)),
+        List.of(new MeetingRecordView.Rec("SPEECH", "Lan", "hi", Instant.EPOCH, null)),
+        List.of(new MeetingRecordView.Chat("Lan", "yo", Instant.EPOCH, null)),
         "note",
         null);
   }

@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import com.platform.chatservice.dto.meeting.MeetingRecordView;
 import com.platform.chatservice.model.Meeting;
+import com.platform.chatservice.model.MeetingAttachment;
 import com.platform.chatservice.model.MeetingMessage;
 import com.platform.chatservice.model.MeetingNote;
 import com.platform.chatservice.model.MeetingRecord;
@@ -141,6 +142,41 @@ class MeetingRecordReaderTest {
     assertThat(out.get(0).kind()).isEqualTo("FILE");
     assertThat(out.get(0).displayName()).isNull();
     assertThat(out.get(0).text()).isEqualTo("Đã đạt giới hạn file AI đọc.");
+  }
+
+  @Test
+  void fileRecordsCarryTheFileNameAndChatLinesTheAttachmentName() {
+    template.insert(
+        MeetingRecord.builder()
+            .meetingId(MID)
+            .kind(MeetingRecord.Kind.FILE)
+            .userId(LAN)
+            .displayName("Lan Nguyen")
+            .text("Bảng giá Q3")
+            .fileName("gia.pdf")
+            .ts(T0)
+            .build());
+    template.insert(
+        MeetingMessage.builder()
+            .meetingId(MID)
+            .senderId(LAN)
+            .content("xem nhé")
+            .attachment(MeetingAttachment.builder().uploadId("u").name("plan.pdf").build())
+            .createdAt(T0)
+            .build());
+    template.insert(
+        MeetingMessage.builder()
+            .meetingId(MID)
+            .senderId(LAN)
+            .content("plain")
+            .createdAt(T0.plusSeconds(1))
+            .build());
+
+    MeetingRecordView view = reader.read(MID, HOST).orElseThrow();
+
+    assertThat(view.records().get(0).fileName()).isEqualTo("gia.pdf");
+    assertThat(view.chat().get(0).attachmentName()).isEqualTo("plan.pdf");
+    assertThat(view.chat().get(1).attachmentName()).isNull();
   }
 
   @Test

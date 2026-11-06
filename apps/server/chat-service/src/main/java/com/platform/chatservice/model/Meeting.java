@@ -102,6 +102,9 @@ public class Meeting {
   /** Files already handed to the AI reader; capped by {@code meetings.ai.file-cap}. */
   private int aiFileCount;
 
+  /** Upload ids already handed to the AI reader; a re-sent file never takes a second slot. */
+  @Builder.Default private List<String> aiFileUploadIds = new ArrayList<>();
+
   /** The "file limit reached" record line was written; only ever set once. */
   private boolean aiFileCapNoted;
 

@@ -379,6 +379,8 @@ public class MeetingStore {
   public enum ClaimResult {
     /** A slot was taken; the file may be sent to the AI. */
     CLAIMED,
+    /** This upload id was already handed to the AI in this meeting; nothing was taken. */
+    ALREADY_CLAIMED,
     /** The cap is reached and this call is the first to notice — it must write the notice line. */
     CAP_REACHED_FIRST,
     /** The cap is reached (or the meeting is gone). */
@@ -387,20 +389,30 @@ public class MeetingStore {
 
   /**
    * Takes one of the meeting's {@code cap} AI file slots, atomically (a single {@code $inc} guarded
-   * by the count). Once full, exactly one caller gets {@link ClaimResult#CAP_REACHED_FIRST}.
+   * by the count) and records {@code uploadId} in the same update, so the same upload is claimed at
+   * most once per meeting ({@link ClaimResult#ALREADY_CLAIMED}). Once full, exactly one caller gets
+   * {@link ClaimResult#CAP_REACHED_FIRST}.
    */
-  public ClaimResult claimAiFileSlot(String id, int cap) {
+  public ClaimResult claimAiFileSlot(String id, int cap, String uploadId) {
     Query open =
         new Query(
             byId(id)
+                .and("aiFileUploadIds")
+                .ne(uploadId)
                 .orOperator(
                     Criteria.where("aiFileCount").exists(false),
                     Criteria.where("aiFileCount").lt(cap)));
     if (mongo
-            .updateFirst(open, new Update().inc("aiFileCount", 1), Meeting.class)
+            .updateFirst(
+                open,
+                new Update().inc("aiFileCount", 1).addToSet("aiFileUploadIds", uploadId),
+                Meeting.class)
             .getModifiedCount()
         > 0) {
       return ClaimResult.CLAIMED;
+    }
+    if (mongo.exists(new Query(byId(id).and("aiFileUploadIds").is(uploadId)), Meeting.class)) {
+      return ClaimResult.ALREADY_CLAIMED;
     }
     Query unnoted = new Query(byId(id).and("aiFileCapNoted").ne(true));
     return mongo

@@ -26,6 +26,9 @@ public class MeetingAttachments {
 
   static final int NAME_MAX = 200;
 
+  /** What a client may claim; the stored name wins and is cut to {@link #NAME_MAX}. */
+  static final int CLIENT_NAME_MAX = 1000;
+
   /** Exactly a relative upload URL; no query, fragment or host. */
   private static final Pattern URL =
       Pattern.compile(
@@ -42,7 +45,7 @@ public class MeetingAttachments {
     }
     Matcher m = URL.matcher(a.url());
     String name = cleanName(a.name());
-    if (!m.matches() || name.isEmpty() || name.length() > NAME_MAX) {
+    if (!m.matches() || name.isEmpty() || name.length() > CLIENT_NAME_MAX) {
       throw MeetingRequests.invalid("attachment");
     }
     return m.group(1).toLowerCase(Locale.ROOT);

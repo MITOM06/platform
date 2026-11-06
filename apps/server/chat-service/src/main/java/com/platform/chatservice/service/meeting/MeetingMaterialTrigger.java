@@ -51,10 +51,10 @@ public class MeetingMaterialTrigger {
       if (m == null || m.getSettings() == null || !m.getSettings().isAiNotes()) {
         return;
       }
-      switch (store.claimAiFileSlot(meetingId, fileCap)) {
+      switch (store.claimAiFileSlot(meetingId, fileCap, file.getUploadId())) {
         case CLAIMED -> publish(meetingId, messageId, file, senderId);
         case CAP_REACHED_FIRST -> noteCap(meetingId);
-        case CAP_REACHED -> {}
+        case CAP_REACHED, ALREADY_CLAIMED -> {}
       }
     } catch (Exception e) {
       log.warn("Could not hand file of meeting {} to the AI: {}", meetingId, e.toString());

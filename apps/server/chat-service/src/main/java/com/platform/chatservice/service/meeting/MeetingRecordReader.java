@@ -86,7 +86,8 @@ public class MeetingRecordReader {
                             r.getKind() == null ? null : r.getKind().name(),
                             r.getDisplayName(),
                             r.getText(),
-                            r.getTs()))
+                            r.getTs(),
+                            r.getFileName()))
                 .toList(),
             messages.stream()
                 .map(
@@ -94,7 +95,8 @@ public class MeetingRecordReader {
                         new MeetingRecordView.Chat(
                             nameOf(c.getSenderId(), profiles, attendanceNames),
                             c.getContent(),
-                            c.getCreatedAt()))
+                            c.getCreatedAt(),
+                            c.getAttachment() == null ? null : c.getAttachment().getName()))
                 .toList(),
             sharedNote(meetingId),
             summaries.latest(meetingId).map(MeetingSummaryDoc::getSummary).orElse(null)));

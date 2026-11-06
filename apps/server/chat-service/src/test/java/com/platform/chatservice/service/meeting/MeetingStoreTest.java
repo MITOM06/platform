@@ -109,13 +109,42 @@ class MeetingStoreTest {
     Meeting m = meeting("fc1-aaaa-aaa", now);
 
     for (int i = 0; i < 3; i++) {
-      assertThat(store.claimAiFileSlot(m.getId(), 3)).isEqualTo(MeetingStore.ClaimResult.CLAIMED);
+      assertThat(store.claimAiFileSlot(m.getId(), 3, "up" + i))
+          .isEqualTo(MeetingStore.ClaimResult.CLAIMED);
     }
-    assertThat(store.claimAiFileSlot(m.getId(), 3))
+    assertThat(store.claimAiFileSlot(m.getId(), 3, "up3"))
         .isEqualTo(MeetingStore.ClaimResult.CAP_REACHED_FIRST);
-    assertThat(store.claimAiFileSlot(m.getId(), 3)).isEqualTo(MeetingStore.ClaimResult.CAP_REACHED);
+    assertThat(store.claimAiFileSlot(m.getId(), 3, "up4"))
+        .isEqualTo(MeetingStore.ClaimResult.CAP_REACHED);
     assertThat(reload(m).getAiFileCount()).isEqualTo(3);
-    assertThat(store.claimAiFileSlot("missing", 3)).isEqualTo(MeetingStore.ClaimResult.CAP_REACHED);
+    assertThat(store.claimAiFileSlot("missing", 3, "up0"))
+        .isEqualTo(MeetingStore.ClaimResult.CAP_REACHED);
+  }
+
+  @Test
+  void claimingTheSameUploadAgainTakesNoSlot() {
+    Meeting m = meeting("fc3-aaaa-aaa", now);
+
+    assertThat(store.claimAiFileSlot(m.getId(), 3, "same"))
+        .isEqualTo(MeetingStore.ClaimResult.CLAIMED);
+    assertThat(store.claimAiFileSlot(m.getId(), 3, "same"))
+        .isEqualTo(MeetingStore.ClaimResult.ALREADY_CLAIMED);
+    assertThat(store.claimAiFileSlot(m.getId(), 3, "other"))
+        .isEqualTo(MeetingStore.ClaimResult.CLAIMED);
+
+    assertThat(reload(m).getAiFileCount()).isEqualTo(2);
+    assertThat(reload(m).getAiFileUploadIds()).containsExactly("same", "other");
+  }
+
+  @Test
+  void aRepeatedUploadStaysAlreadyClaimedEvenWhenTheCapIsFull() {
+    Meeting m = meeting("fc4-aaaa-aaa", now);
+    store.claimAiFileSlot(m.getId(), 1, "a");
+
+    assertThat(store.claimAiFileSlot(m.getId(), 1, "a"))
+        .isEqualTo(MeetingStore.ClaimResult.ALREADY_CLAIMED);
+    assertThat(store.claimAiFileSlot(m.getId(), 1, "b"))
+        .isEqualTo(MeetingStore.ClaimResult.CAP_REACHED_FIRST);
   }
 
   @Test
@@ -125,7 +154,8 @@ class MeetingStoreTest {
         java.util.concurrent.Executors.newFixedThreadPool(8);
     List<java.util.concurrent.Future<MeetingStore.ClaimResult>> results = new ArrayList<>();
     for (int i = 0; i < 40; i++) {
-      results.add(pool.submit(() -> store.claimAiFileSlot(m.getId(), 20)));
+      String upload = "up" + i;
+      results.add(pool.submit(() -> store.claimAiFileSlot(m.getId(), 20, upload)));
     }
     int claimed = 0;
     int first = 0;

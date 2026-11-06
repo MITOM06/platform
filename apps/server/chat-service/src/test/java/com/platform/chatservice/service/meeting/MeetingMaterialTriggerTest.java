@@ -57,7 +57,8 @@ class MeetingMaterialTriggerTest {
   @Test
   void publishesTheFileWhenAiNotesAreOn() throws Exception {
     meetingWith(true);
-    when(store.claimAiFileSlot("m1", 20)).thenReturn(MeetingStore.ClaimResult.CLAIMED);
+    when(store.claimAiFileSlot("m1", 20, FILE.getUploadId()))
+        .thenReturn(MeetingStore.ClaimResult.CLAIMED);
 
     trigger().onFileSent("m1", "msg1", FILE, "u1");
 
@@ -79,14 +80,15 @@ class MeetingMaterialTriggerTest {
 
     trigger().onFileSent("m1", "msg1", FILE, "u1");
 
-    verify(store, never()).claimAiFileSlot(anyString(), org.mockito.ArgumentMatchers.anyInt());
+    verify(store, never())
+        .claimAiFileSlot(anyString(), org.mockito.ArgumentMatchers.anyInt(), anyString());
     verify(redis, never()).convertAndSend(anyString(), anyString());
   }
 
   @Test
   void theFileOverTheCapIsNotPublishedAndTheNoticeIsWrittenOnce() {
     meetingWith(true);
-    when(store.claimAiFileSlot("m1", 20))
+    when(store.claimAiFileSlot("m1", 20, FILE.getUploadId()))
         .thenReturn(MeetingStore.ClaimResult.CAP_REACHED_FIRST)
         .thenReturn(MeetingStore.ClaimResult.CAP_REACHED);
 
@@ -103,9 +105,22 @@ class MeetingMaterialTriggerTest {
   }
 
   @Test
+  void aFileAlreadyHandedOverIsNeitherPublishedNorNoted() {
+    meetingWith(true);
+    when(store.claimAiFileSlot("m1", 20, FILE.getUploadId()))
+        .thenReturn(MeetingStore.ClaimResult.ALREADY_CLAIMED);
+
+    trigger().onFileSent("m1", "msg2", FILE, "u1");
+
+    verify(redis, never()).convertAndSend(anyString(), anyString());
+    verify(records, never()).append(any());
+  }
+
+  @Test
   void nothingEverEscapes() {
     meetingWith(true);
-    when(store.claimAiFileSlot("m1", 20)).thenReturn(MeetingStore.ClaimResult.CLAIMED);
+    when(store.claimAiFileSlot("m1", 20, FILE.getUploadId()))
+        .thenReturn(MeetingStore.ClaimResult.CLAIMED);
     doThrow(new IllegalStateException("redis down"))
         .when(redis)
         .convertAndSend(anyString(), anyString());
