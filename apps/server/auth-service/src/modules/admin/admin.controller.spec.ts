@@ -43,6 +43,7 @@ function make() {
     listRoles: jest.fn().mockResolvedValue([{ id: 'r1' }]),
     createRole: jest.fn().mockResolvedValue({ id: 'r2' }),
     updateRole: jest.fn().mockResolvedValue({ id: 'r1' }),
+    deleteRole: jest.fn().mockResolvedValue(undefined),
   };
   const ctrl = new AdminController(
     adminService as never,
@@ -139,6 +140,14 @@ describe('AdminController — delegation to services', () => {
     expect(adminService.listDepartments).not.toHaveBeenCalled();
   });
 
+  it('DELETE /admin/roles/:id passes the full actor + route id and answers { success: true }', async () => {
+    const { ctrl, rolesService } = make();
+    await expect(ctrl.deleteRole(ACTOR, 'r9')).resolves.toEqual({
+      success: true,
+    });
+    expect(rolesService.deleteRole).toHaveBeenCalledWith(ACTOR, 'r9');
+  });
+
   it('workspace endpoints: GET reads, PATCH passes the full actor + body', async () => {
     const { ctrl, adminService } = make();
     const dto = { name: 'Acme 2' } as never;
@@ -200,6 +209,23 @@ describe('AdminController — service errors propagate unchanged', () => {
     });
   });
 
+  it('ConflictException ROLE_IN_USE from deleteRole keeps its counts', async () => {
+    const { ctrl, rolesService } = make();
+    rolesService.deleteRole.mockRejectedValue(
+      new ConflictException({
+        code: 'ROLE_IN_USE',
+        params: { members: 2, invitations: 1, ssoMappings: 0 },
+      }),
+    );
+    await expect(ctrl.deleteRole(ACTOR, 'r1')).rejects.toMatchObject({
+      status: 409,
+      response: {
+        code: 'ROLE_IN_USE',
+        params: { members: 2, invitations: 1, ssoMappings: 0 },
+      },
+    });
+  });
+
   it('ConflictException from setMemberStatus (last Owner) is not swallowed', async () => {
     const { ctrl, adminService } = make();
     adminService.setMemberStatus.mockRejectedValue(
@@ -223,6 +249,7 @@ const ROUTE_CAPABILITIES: Array<[keyof AdminController, Capability]> = [
   ['listRoles', Capability.MANAGE_ROLES],
   ['createRole', Capability.MANAGE_ROLES],
   ['updateRole', Capability.MANAGE_ROLES],
+  ['deleteRole', Capability.MANAGE_ROLES],
   ['getWorkspace', Capability.MANAGE_WORKSPACE],
   ['updateWorkspace', Capability.MANAGE_WORKSPACE],
   ['listAudit', Capability.VIEW_AUDIT_LOG],
