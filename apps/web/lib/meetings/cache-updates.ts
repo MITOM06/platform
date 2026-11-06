@@ -31,6 +31,7 @@ export const meetingKeys = {
   roster: (id: string) => ['meeting-roster', id] as const,
   hands: (id: string) => ['meeting-hands', id] as const,
   lobby: (id: string) => ['meeting-lobby', id] as const,
+  summary: (id: string) => ['meeting-summary', id] as const,
   messages: (id: string) => ['meeting-messages', id] as const,
   note: (id: string, scope: NoteScope) => ['meeting-note', id, scope] as const,
   myDepartments: ['meeting-my-departments'] as const,

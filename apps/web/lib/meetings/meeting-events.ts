@@ -152,6 +152,11 @@ function parseForMeeting(event: string, meetingId: string, o: Obj): MeetingEvent
       return { event, meetingId }
     case 'meet.cancelled':
       return { event, meetingId, ...opt('title', str(o.title)), ...opt('code', str(o.code)) }
+    case 'meet.summary.ready': {
+      const summaryState = o.summaryState
+      if (summaryState !== 'DONE' && summaryState !== 'EMPTY' && summaryState !== 'FAILED') return null
+      return { event, meetingId, summaryState, ...opt('groupConversationId', str(o.groupConversationId)) }
+    }
     case 'meet.invited':
     case 'meet.starting': {
       const code = str(o.code)

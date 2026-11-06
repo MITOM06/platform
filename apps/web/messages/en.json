@@ -1789,7 +1789,9 @@
     "errNetwork": "Couldn't reach the server. Check your connection and try again.",
     "errFailed": "Couldn't connect the call. Please try again.",
     "errStartTimeout": "Couldn't start the call — the server didn't respond. Please try again.",
-    "errPeerNeverJoined": "Couldn't connect to {name}. Please try again."
+    "errPeerNeverJoined": "Couldn't connect to {name}. Please try again.",
+    "summaryDecisions": "Decisions",
+    "summaryFromMaterials": "From materials"
   },
   "notFound": {
     "title": "Page not found",
@@ -2266,6 +2268,14 @@
     "aiNotesPrejoin": "This meeting has AI notes",
     "aiNotesPauseMine": "Pause my speech capture",
     "aiNotesResumeMine": "Resume my speech capture",
-    "aiNotesUnsupported": "This browser can't capture speech for AI notes"
+    "aiNotesUnsupported": "This browser can't capture speech for AI notes",
+    "aiSummaryTitle": "AI summary",
+    "aiSummaryPending": "AI is summarizing…",
+    "aiSummaryEmpty": "The meeting had no content to summarize",
+    "aiSummaryFailed": "Couldn't create the summary",
+    "aiSummaryOpenGroup": "Open meeting group",
+    "aiSummaryRegenerate": "Regenerate",
+    "errSummaryPending": "A summary is already being generated",
+    "errSummaryUnavailable": "A summary is not available for this meeting"
   }
 }

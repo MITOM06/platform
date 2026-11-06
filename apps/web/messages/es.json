@@ -1789,7 +1789,9 @@
     "errNetwork": "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
     "errFailed": "No se pudo conectar la llamada. Inténtalo de nuevo.",
     "errStartTimeout": "No se pudo iniciar la llamada: el servidor no respondió. Inténtalo de nuevo.",
-    "errPeerNeverJoined": "No se pudo conectar con {name}. Inténtalo de nuevo."
+    "errPeerNeverJoined": "No se pudo conectar con {name}. Inténtalo de nuevo.",
+    "summaryDecisions": "Decisiones",
+    "summaryFromMaterials": "De los materiales"
   },
   "notFound": {
     "title": "Página no encontrada",
@@ -2266,6 +2268,14 @@
     "aiNotesPrejoin": "Esta reunión tiene notas con IA",
     "aiNotesPauseMine": "Pausar la captura de mi voz",
     "aiNotesResumeMine": "Reanudar la captura de mi voz",
-    "aiNotesUnsupported": "Este navegador no admite la captura de voz para las notas de IA"
+    "aiNotesUnsupported": "Este navegador no admite la captura de voz para las notas de IA",
+    "aiSummaryTitle": "Resumen de IA",
+    "aiSummaryPending": "La IA está resumiendo…",
+    "aiSummaryEmpty": "La reunión no tiene contenido para resumir",
+    "aiSummaryFailed": "No se pudo crear el resumen",
+    "aiSummaryOpenGroup": "Abrir el grupo de la reunión",
+    "aiSummaryRegenerate": "Regenerar",
+    "errSummaryPending": "Ya se está generando un resumen",
+    "errSummaryUnavailable": "No hay resumen disponible para esta reunión"
   }
 }

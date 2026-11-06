@@ -1789,7 +1789,9 @@
     "errNetwork": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
     "errFailed": "Impossible de connecter l'appel. Réessayez.",
     "errStartTimeout": "Impossible de lancer l'appel : le serveur n'a pas répondu. Réessayez.",
-    "errPeerNeverJoined": "Impossible de se connecter à {name}. Veuillez réessayer."
+    "errPeerNeverJoined": "Impossible de se connecter à {name}. Veuillez réessayer.",
+    "summaryDecisions": "Décisions",
+    "summaryFromMaterials": "Issu des documents"
   },
   "notFound": {
     "title": "Page introuvable",
@@ -2266,6 +2268,14 @@
     "aiNotesPrejoin": "Cette réunion a des notes par IA",
     "aiNotesPauseMine": "Suspendre la capture de ma voix",
     "aiNotesResumeMine": "Reprendre la capture de ma voix",
-    "aiNotesUnsupported": "Ce navigateur ne prend pas en charge la capture vocale pour les notes IA"
+    "aiNotesUnsupported": "Ce navigateur ne prend pas en charge la capture vocale pour les notes IA",
+    "aiSummaryTitle": "Résumé IA",
+    "aiSummaryPending": "L'IA rédige le résumé…",
+    "aiSummaryEmpty": "La réunion n'a pas de contenu à résumer",
+    "aiSummaryFailed": "Impossible de créer le résumé",
+    "aiSummaryOpenGroup": "Ouvrir le groupe de la réunion",
+    "aiSummaryRegenerate": "Régénérer",
+    "errSummaryPending": "Un résumé est déjà en cours de génération",
+    "errSummaryUnavailable": "Aucun résumé n'est disponible pour cette réunion"
   }
 }

@@ -1789,7 +1789,9 @@
     "errNetwork": "サーバーに接続できません。ネットワークを確認してもう一度お試しください。",
     "errFailed": "通話を接続できませんでした。もう一度お試しください。",
     "errStartTimeout": "通話を開始できませんでした。サーバーから応答がありません。もう一度お試しください。",
-    "errPeerNeverJoined": "{name} に接続できませんでした。もう一度お試しください。"
+    "errPeerNeverJoined": "{name} に接続できませんでした。もう一度お試しください。",
+    "summaryDecisions": "決定事項",
+    "summaryFromMaterials": "資料から"
   },
   "notFound": {
     "title": "ページが見つかりません",
@@ -2266,6 +2268,14 @@
     "aiNotesPrejoin": "この会議では AI がメモを取ります",
     "aiNotesPauseMine": "自分の発言の記録を一時停止",
     "aiNotesResumeMine": "自分の発言の記録を再開",
-    "aiNotesUnsupported": "このブラウザーはAIノート用の音声記録に対応していません"
+    "aiNotesUnsupported": "このブラウザーはAIノート用の音声記録に対応していません",
+    "aiSummaryTitle": "AI 要約",
+    "aiSummaryPending": "AI が要約中です…",
+    "aiSummaryEmpty": "要約できる内容がありませんでした",
+    "aiSummaryFailed": "要約を作成できませんでした",
+    "aiSummaryOpenGroup": "会議グループを開く",
+    "aiSummaryRegenerate": "再生成",
+    "errSummaryPending": "要約はすでに生成中です",
+    "errSummaryUnavailable": "この会議では要約を利用できません"
   }
 }

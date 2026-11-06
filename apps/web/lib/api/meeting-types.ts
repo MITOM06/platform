@@ -57,6 +57,21 @@ export interface Meeting {
   startedAt?: string
   endedAt?: string
   cancelledAt?: string
+  /** AI summary state; absent = never asked (AI notes were never on). */
+  summaryState?: MeetingSummaryState
+  /** The group chat made for the meeting; only open it when `GET .../summary` says `inGroup`. */
+  groupConversationId?: string
+}
+
+export type MeetingSummaryState = 'PENDING' | 'DONE' | 'EMPTY' | 'FAILED'
+
+/** `GET /api/meetings/{id}/summary` — `summary` is the raw MeetingSummary (normalize before use). */
+export interface MeetingSummaryResponse {
+  state: MeetingSummaryState | null
+  summary?: unknown
+  createdAt?: string
+  groupConversationId?: string
+  inGroup: boolean
 }
 
 export interface MeetingPage {
@@ -218,5 +233,11 @@ export type MeetingEvent =
       scheduledStart?: string
     }
   | { event: 'meet.starting'; meetingId: string; code: string; title?: string; scheduledStart?: string }
+  | {
+      event: 'meet.summary.ready'
+      meetingId: string
+      summaryState: Exclude<MeetingSummaryState, 'PENDING'>
+      groupConversationId?: string
+    }
 
 export type MeetingEventName = MeetingEvent['event']

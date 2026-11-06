@@ -114,3 +114,13 @@ describe('parseMeetingEvent', () => {
       .toEqual({ event: 'meet.cancelled', meetingId: 'm1' })
   })
 })
+
+describe('meet.summary.ready', () => {
+  it('parses state and optional group id; rejects an unknown state', () => {
+    expect(parseMeetingEvent(j({ event: 'meet.summary.ready', meetingId: 'm1', summaryState: 'DONE', groupConversationId: 'c1' })))
+      .toEqual({ event: 'meet.summary.ready', meetingId: 'm1', summaryState: 'DONE', groupConversationId: 'c1' })
+    expect(parseMeetingEvent(j({ event: 'meet.summary.ready', meetingId: 'm1', summaryState: 'FAILED' })))
+      .toEqual({ event: 'meet.summary.ready', meetingId: 'm1', summaryState: 'FAILED' })
+    expect(parseMeetingEvent(j({ event: 'meet.summary.ready', meetingId: 'm1', summaryState: 'WAT' }))).toBeNull()
+  })
+})

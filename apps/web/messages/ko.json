@@ -1789,7 +1789,9 @@
     "errNetwork": "서버에 연결할 수 없습니다. 네트워크를 확인하고 다시 시도하세요.",
     "errFailed": "통화를 연결하지 못했습니다. 다시 시도하세요.",
     "errStartTimeout": "통화를 시작하지 못했습니다. 서버가 응답하지 않습니다. 다시 시도하세요.",
-    "errPeerNeverJoined": "{name}님과 연결하지 못했습니다. 다시 시도해 주세요."
+    "errPeerNeverJoined": "{name}님과 연결하지 못했습니다. 다시 시도해 주세요.",
+    "summaryDecisions": "결정 사항",
+    "summaryFromMaterials": "자료에서"
   },
   "notFound": {
     "title": "페이지를 찾을 수 없습니다",
@@ -2266,6 +2268,14 @@
     "aiNotesPrejoin": "이 회의는 AI 노트를 사용합니다",
     "aiNotesPauseMine": "내 음성 기록 일시중지",
     "aiNotesResumeMine": "내 음성 기록 다시 시작",
-    "aiNotesUnsupported": "이 브라우저는 AI 노트용 음성 기록을 지원하지 않습니다"
+    "aiNotesUnsupported": "이 브라우저는 AI 노트용 음성 기록을 지원하지 않습니다",
+    "aiSummaryTitle": "AI 요약",
+    "aiSummaryPending": "AI가 요약하는 중…",
+    "aiSummaryEmpty": "요약할 내용이 없는 회의입니다",
+    "aiSummaryFailed": "요약을 만들지 못했습니다",
+    "aiSummaryOpenGroup": "회의 그룹 열기",
+    "aiSummaryRegenerate": "다시 생성",
+    "errSummaryPending": "요약이 이미 생성 중입니다",
+    "errSummaryUnavailable": "이 회의에는 요약을 사용할 수 없습니다"
   }
 }

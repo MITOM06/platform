@@ -10,6 +10,8 @@ import type {
   MeetingNote,
   MeetingNoteInput,
   MeetingPage,
+  MeetingSummaryResponse,
+  MeetingSummaryState,
   NoteScope,
 } from './meeting-types'
 
@@ -36,6 +38,14 @@ export const meetingsApi = {
 
   update: (id: string, input: MeetingInput): Promise<Meeting> =>
     chatApi.patch<Meeting>(base(id), input).then((r) => r.data),
+
+  /** AI summary: current state + newest successful summary (raw; see normalizeSummary). */
+  summary: (id: string): Promise<MeetingSummaryResponse> =>
+    chatApi.get<MeetingSummaryResponse>(`${base(id)}/summary`).then((r) => r.data),
+
+  /** Host/co-host. 202 `{state: 'PENDING'}`; 409 MEETING_SUMMARY_PENDING / _UNAVAILABLE. */
+  regenerateSummary: (id: string): Promise<{ state: MeetingSummaryState }> =>
+    chatApi.post<{ state: MeetingSummaryState }>(`${base(id)}/summary/regenerate`).then((r) => r.data),
 
   cancel: (id: string): Promise<void> => chatApi.delete(base(id)).then(() => undefined),
 

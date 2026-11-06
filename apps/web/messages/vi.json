@@ -1789,7 +1789,9 @@
     "errNetwork": "Không kết nối được tới máy chủ. Kiểm tra mạng rồi thử lại.",
     "errFailed": "Không thể kết nối cuộc gọi. Vui lòng thử lại.",
     "errStartTimeout": "Không thể bắt đầu cuộc gọi — máy chủ không phản hồi. Vui lòng thử lại.",
-    "errPeerNeverJoined": "Không thể kết nối với {name}. Vui lòng thử lại."
+    "errPeerNeverJoined": "Không thể kết nối với {name}. Vui lòng thử lại.",
+    "summaryDecisions": "Quyết định",
+    "summaryFromMaterials": "Từ tài liệu"
   },
   "notFound": {
     "title": "Trang không tồn tại",
@@ -2266,6 +2268,14 @@
     "aiNotesPrejoin": "Cuộc họp này có AI ghi chú",
     "aiNotesPauseMine": "Tạm dừng ghi lời của tôi",
     "aiNotesResumeMine": "Tiếp tục ghi lời của tôi",
-    "aiNotesUnsupported": "Trình duyệt này không hỗ trợ ghi lời cho AI"
+    "aiNotesUnsupported": "Trình duyệt này không hỗ trợ ghi lời cho AI",
+    "aiSummaryTitle": "Tóm tắt AI",
+    "aiSummaryPending": "AI đang tóm tắt…",
+    "aiSummaryEmpty": "Cuộc họp không có nội dung để tóm tắt",
+    "aiSummaryFailed": "Chưa tạo được tóm tắt",
+    "aiSummaryOpenGroup": "Mở nhóm cuộc họp",
+    "aiSummaryRegenerate": "Tạo lại",
+    "errSummaryPending": "Tóm tắt đang được tạo",
+    "errSummaryUnavailable": "Cuộc họp này chưa có tóm tắt"
   }
 }
