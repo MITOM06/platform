@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { internalUploadHeaders } from '../common/upload-ref';
-import { MeetingRecordView } from './meeting.constants';
+import { MeetingListItem, MeetingRecordView } from './meeting.constants';
 
 const TIMEOUT_MS = 10_000;
 
@@ -33,5 +33,18 @@ export class MeetingRecordClient {
     if (res.status === 404) return null;
     if (!res.ok) throw new Error(`meeting record fetch failed: HTTP ${res.status}`);
     return (await res.json()) as MeetingRecordView;
+  }
+
+  /** The user's finished meetings (already permission-filtered by chat-service), newest first. Non-2xx -> throws. */
+  async listMine(userId: string, q?: string, limit = 20): Promise<MeetingListItem[]> {
+    const params = new URLSearchParams({ userId, limit: String(limit) });
+    if (q?.trim()) params.set('q', q.trim());
+    const res = await fetch(`${this.baseUrl}/internal/meetings?${params.toString()}`, {
+      headers: internalUploadHeaders({ internalApiKey: this.internalApiKey }),
+      redirect: 'error',
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!res.ok) throw new Error(`meeting list failed: HTTP ${res.status}`);
+    return (await res.json()) as MeetingListItem[];
   }
 }

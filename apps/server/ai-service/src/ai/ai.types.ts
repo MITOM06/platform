@@ -91,6 +91,8 @@ export interface RequestContext {
   responseCacheable?: boolean;
   /** Offer the model no tools at all (answer is visible to a whole room, e.g. the meeting chat). */
   noTools?: boolean;
+  /** True only for the 1-1 chat with the AI (gates the meeting tools). */
+  directAi?: boolean;
   /** Resolved workspace AI settings (TASK-12) threaded into the loop. */
   settings: ResolvedAiSettings;
   /** Skill ids enabled for this user; gates action-skill MCP tools in the registry. */

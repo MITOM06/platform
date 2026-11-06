@@ -11,7 +11,7 @@ export const MEETING_INSTRUCTION =
   "say so when the record doesn't contain the answer, and never invent details.";
 
 /** Summary part first: overview, decisions, action items (with owner), key points. */
-function renderSummary(s: MeetingSummary): string {
+export function renderSummary(s: MeetingSummary): string {
   const lines: string[] = ['## AI summary', oneLine(s.overview)];
   if (s.decisions.length) lines.push('', '### Decisions', ...s.decisions.map((d) => `- ${oneLine(d)}`));
   if (s.actionItems.length) {

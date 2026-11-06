@@ -30,6 +30,16 @@ export interface MeetingRecordView {
   summary?: MeetingSummary | null;
 }
 
+/** One row of chat-service `GET /internal/meetings` (title may be absent). */
+export interface MeetingListItem {
+  id: string;
+  title?: string | null;
+  code: string;
+  startedAt: string | null;
+  endedAt: string | null;
+  summaryState: string | null;
+}
+
 export interface MeetingActionItem {
   text: string;
   assigneeName: string | null;

@@ -25,6 +25,8 @@ export interface ToolContext {
   conversationId: string;
   userId: string;
   displayName: string;
+  /** True only for the 1-1 chat with the AI; gates the meeting tools (a group reply is visible to others). */
+  directAi?: boolean;
   /** Owning department id (P6 group bot); scopes KB retrieval when present. */
   departmentId?: string;
   /** Caller capabilities (JWT `perms`) — gates `get_department_context`. Absent ⇒ none. */

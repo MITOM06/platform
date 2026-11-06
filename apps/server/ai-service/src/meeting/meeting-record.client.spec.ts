@@ -38,4 +38,17 @@ describe('MeetingRecordClient', () => {
     mock(503);
     await expect(make('k').fetch('m', 'u')).rejects.toThrow();
   });
+  it('listMine GETs the list URL with userId/q/limit and the key; non-2xx throws', async () => {
+    const f = mock(200, [{ id: 'm' }]);
+    expect(await make('k').listMine('u 1', ' kế hoạch ')).toEqual([{ id: 'm' }]);
+    const url = new URL(f.mock.calls[0][0]);
+    expect(url.origin + url.pathname).toBe('http://chat:8080/internal/meetings');
+    expect(url.searchParams.get('userId')).toBe('u 1');
+    expect(url.searchParams.get('q')).toBe('kế hoạch');
+    expect(url.searchParams.get('limit')).toBe('20');
+    expect(f.mock.calls[0][1].headers).toEqual({ 'X-Internal-Key': 'k' });
+    expect(f.mock.calls[0][1].redirect).toBe('error');
+    mock(503);
+    await expect(make('k').listMine('u')).rejects.toThrow();
+  });
 });

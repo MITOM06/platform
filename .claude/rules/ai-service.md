@@ -145,6 +145,7 @@ await this.publisher.publish(convId, { type: 'AI_STREAM_DONE', fullContent: full
 
 - A request with `payload.meetingId` (chat-service, `@AI` in the meeting chat, `conversationId = "meeting:{id}"`) or a post-meeting group chat (`conversations.meetingId`) gets a meeting block from `MeetingContextService.blockFor` (record fetched AS the asker): trusted instruction + summary then record inside `wrapUntrusted('Meeting record')`, <= 60 000 chars (`meeting/meeting-context.ts`). No access -> trusted "no access" line; fetch error -> "temporarily unavailable" line; neither carries content.
 - Any request with a meeting block skips the response cache (lookup and store).
+- Tools `list_my_meetings({query?})` and `get_meeting_record({meetingId, question?})` (`tools/`): offered ONLY in the 1-1 chat with the AI (`ToolContext.directAi`, from `ConversationContext.directAi === true`); outside it `execute` returns `"Meeting not found."` (same string for no access / unknown / invalid id). Always use `ctx.userId`, never an id from input. Results are `wrapUntrusted`, record capped at 30 000 chars, not result-cached (`NEVER_CACHED_TOOLS`). Fetch/list errors -> `"Meeting records are temporarily unavailable."`.
 - `meeting:` conversations get NO tools (`RequestContext.noTools`): the reply is shown to the whole room but tools would run with the asker's permissions. Post-meeting groups keep normal group-chat tools.
 
 ## Testing

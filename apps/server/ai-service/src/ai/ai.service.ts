@@ -334,6 +334,7 @@ export class AiService {
       responseCacheable,
       // The in-meeting chat answer is shown to the whole room: no tools run as the asker.
       noTools: isMeetingChatId(conversationId),
+      directAi: conversation.directAi === true,
       settings,
       enabledSkillIds,
     };

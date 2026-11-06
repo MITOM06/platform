@@ -90,6 +90,7 @@ export class AgenticLoopService {
       conversationId: ctx.conversationId,
       userId: ctx.userId,
       displayName: ctx.displayName,
+      directAi: ctx.directAi,
       departmentId: ctx.departmentId,
       perms: ctx.perms,
       departmentIds: ctx.departmentIds,
