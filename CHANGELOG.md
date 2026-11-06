@@ -3,6 +3,43 @@
 All notable changes to PON. One version per promotion to `main`; web, mobile and the
 NestJS services share the product version (`apps/client/pubspec.yaml`, `apps/*/package.json`).
 
+## 1.6.1 — 2026-11-06
+
+Quality release: one branch tested on `dev` (`fix/test-gate-bugs`, which contains `chore/test-gate`)
+with deeper tests, a coverage gate in CI and the 15 bugs those tests found. No dev-only commits,
+no new features.
+
+### Security
+
+- **Knowledge-base downloads cannot reach internal addresses** (ai-service `kb-processor`):
+  localhost, IPv6 loopback / ULA / link-local, IPv4-mapped IPv6, CGNAT `100.64.0.0/10` (tailnet)
+  and the remaining non-public IPv4 ranges are refused.
+- **Blocking hides your email** from the person you blocked, and the batch user lookup respects
+  blocks too (auth-service).
+
+### Fixes
+
+- Mobile: a pinned message without a type no longer shows a raw system code, internal URL or JSON
+  (matches web).
+- Mobile: a failed recall / delete-for-me no longer drops realtime messages that arrived meanwhile.
+- Mobile: photos uploaded in SD mode carry a file name and `image/jpeg`.
+- Mobile: a connector whose name starts with an emoji no longer crashes its logo.
+- Mobile: leaving a group call no longer throws when the screen is already gone; list rows in cards
+  and the mention list render correctly; a blocked profile no longer shows an empty email row.
+- chat-service: token-usage ranges are capped at 366 days; a malformed date answers 400.
+
+### Tests and CI
+
+- New tests across all six parts (auth, AI, connector, chat, web, Flutter); coverage is measured
+  for chat-service (JaCoCo) and web (vitest v8), and CI fails when coverage drops below the
+  per-part thresholds in `scripts/ci/coverage-thresholds.txt`. `scripts/test-all.sh` runs the same
+  checks locally.
+
+### Known issue
+
+- iPhone app: the 1-on-1 call screen turns black (calls still connect, audio and video flow).
+  Not fixed in this release; being investigated on a cabled device.
+
 ## 1.6.0 — 2026-11-06
 
 Three branches tested on `dev` — Meetings AI, AI chat threads and a web @AI fix — plus everything
