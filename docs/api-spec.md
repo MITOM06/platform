@@ -731,7 +731,7 @@ host/co-host whose STOMP reconnected calls `GET /lobby` to catch up on a missed 
 a file publishes `meet:material` `{meetingId, messageId, uploadId, fileName, mimeType, userId}` (chat-service →
 ai-service; at most `meetings.ai.file-cap`, default 20, files per meeting — the first file over the cap adds one
 record line "Đã đạt giới hạn file AI đọc."). ai-service answers on `meet:material:result` `{meetingId,
-messageId, fileName, status: "ok"|"unsupported"|"failed", text?}`; chat-service writes one `FILE` record
+messageId, fileName, kind: "file"|"screen", status: "ok"|"unsupported"|"failed", text?}` (`kind` echoes the request, absent = file; chat-service routes `screen` results — a frame id in `messageId` — to a `SCREEN` record, see screen frames); chat-service writes one `FILE` record
 (text capped at 6000 chars, or "Không đọc được file này.") attributed to the sender, deduplicated by
 `messageId` (`meet:material:done:{messageId}`, 1 h). Clients see none of this.
 

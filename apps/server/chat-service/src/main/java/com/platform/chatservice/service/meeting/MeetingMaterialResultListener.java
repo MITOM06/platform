@@ -58,7 +58,12 @@ public class MeetingMaterialResultListener implements MessageListener {
       log.warn("{} missing meetingId or messageId", CHANNEL);
       return;
     }
-    if ("screen".equals(text(root, "kind"))) {
+    String kind = text(root, "kind");
+    // No kind = an older ai-service (rolling deploy): a live frame ticket still marks a screen
+    // result.
+    if ("screen".equals(kind)
+        || (kind == null
+            && redis.opsForValue().get(MeetingScreenFrames.TICKET_PREFIX + messageId) != null)) {
       handleScreen(meetingId, messageId, root);
       return;
     }

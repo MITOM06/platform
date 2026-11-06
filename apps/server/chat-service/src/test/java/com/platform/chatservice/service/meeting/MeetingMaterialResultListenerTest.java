@@ -204,6 +204,28 @@ class MeetingMaterialResultListenerTest {
   }
 
   @Test
+  void screenResultWithoutKindButWithATicketStillTakesTheScreenBranch() throws Exception {
+    ticket(TICKET);
+    deliver("{\"meetingId\":\"m1\",\"messageId\":\"fr1\",\"status\":\"ok\",\"text\":\"slide\"}");
+
+    assertThat(oneRecord().getKind()).isEqualTo(MeetingRecord.Kind.SCREEN);
+    verify(redis).delete("meet:screen:frame:fr1");
+  }
+
+  @Test
+  void theSharedContractFixtureIsRoutedAsAScreenRecord() throws Exception {
+    String json =
+        java.nio.file.Files.readString(
+            java.nio.file.Path.of("..", "contracts", "meet-material-result.screen.json"));
+    ticket(TICKET);
+    deliver(json);
+
+    MeetingRecord r = oneRecord();
+    assertThat(r.getKind()).isEqualTo(MeetingRecord.Kind.SCREEN);
+    assertThat(r.getText()).isEqualTo("Slide: Q3 plan");
+  }
+
+  @Test
   void screenWithoutATicketDoesNothingAndDeletesNothing() throws Exception {
     when(ops.get("meet:screen:frame:fr1")).thenReturn(null);
     when(ops.setIfAbsent("meet:material:done:fr1", "1", Duration.ofHours(1))).thenReturn(true);

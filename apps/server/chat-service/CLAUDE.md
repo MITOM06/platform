@@ -110,7 +110,7 @@ GridFS, must be the sender's → insert → `UploadRefs.attachToMeeting` ref `{t
 `MeetingMaterialTrigger` (only when `settings.aiNotes`; `MeetingStore.claimAiFileSlot` atomic cap
 `meetings.ai.file-cap`, default 20; first file over the cap writes one FILE notice line) publishes Redis
 `meet:material` `{meetingId, messageId, uploadId, fileName, mimeType, userId}` → ai-service reads the file and
-replies on `meet:material:result` `{meetingId, messageId, fileName, status: ok|unsupported|failed, text?}` →
+replies on `meet:material:result` `{meetingId, messageId, fileName, kind: file|screen, status: ok|unsupported|failed, text?}` →
 `MeetingMaterialResultListener` (SETNX `meet:material:done:{messageId}` 1 h) appends one FILE `MeetingRecord`
 for the sender (text ≤ 6000 or "Không đọc được file này."). Never fails the send.
 
@@ -121,7 +121,7 @@ down ⇒ 204) → `MeetingStore.claimAiScreenSlot` (`Meeting.aiScreenCount` / `a
 `meetings.ai.screen-cap`, default 60; first over the cap writes one SCREEN notice line, then 204) → GridFS
 (metadata `{fileId, uploadedBy, screenFrame:true, createdAt}`, no refs) → ticket `meet:screen:frame:{frameId}`
 `{meetingId, userId, ts, uploadId}` TTL 1 h → `meet:material` `kind:"screen"`, `messageId = frameId` → 202). The
-file branch now also sends `kind:"file"`. `MeetingMaterialResultListener` for `kind:"screen"`: needs the ticket
+file branch now also sends `kind:"file"`. `MeetingMaterialResultListener` routes on the result's `kind` (`screen`; a result without `kind` but with a live `meet:screen:frame:{messageId}` ticket also counts as screen, for rolling deploys; pinned by `apps/server/contracts/meet-material-result.screen.json` on both sides). For screen: needs the ticket
 (same meetingId; userId / ts / upload come from it), claims `meet:material:done:{frameId}`, writes one SCREEN
 `MeetingRecord` (text ≤ 1500) only for status `ok`, then deletes ticket + GridFS frame for every status; no
 ticket ⇒ does nothing. `MeetingScreenFrameSweep` (`meetings.ai.screen-sweep-ms`, default 10 min) deletes
