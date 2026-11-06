@@ -89,34 +89,33 @@ void main() {
     });
 
     // A pin whose payload lacks `type` defaults to 'text' (PinnedMessageModel
-    // .fromJson) and the default branch prints content verbatim. Web's
-    // humanizeMessagePreview sniffs typeless/text content (system code,
-    // upload URL, file JSON) — mobile does not, so legacy pins leak.
-    testWidgets('typeless pin holding a system code is still humanized',
-        (tester) async {
-      await _pump(tester, _pin('system.message.pinned:$kCarol'));
+    // .fromJson); like web's humanizeMessagePreview, the content is sniffed
+    // (system code, upload URL, file JSON) so legacy pins never leak.
+    testWidgets(
+      'typeless pin holding a system code is still humanized',
+      (tester) async {
+        await _pump(tester, _pin('system.message.pinned:$kCarol'));
 
-      expectNoRaw(tester, ['system.', kCarol]);
-    },
-        skip: true, // BUG: pinned_preview_text.dart default branch returns raw content (P1, no-raw-system-data); route it through messagePreviewFromContent like web humanizeMessagePreview.
+        expectNoRaw(tester, ['system.', kCarol]);
+      },
     );
 
-    testWidgets('typeless pin holding an upload URL shows a label',
-        (tester) async {
-      await _pump(tester, _pin(kUploadUrl));
+    testWidgets(
+      'typeless pin holding an upload URL shows a label',
+      (tester) async {
+        await _pump(tester, _pin(kUploadUrl));
 
-      expectNoRaw(tester, ['/api/uploads/']);
-    },
-        skip: true, // BUG: same as above — pinned_preview_text.dart default branch leaks /api/uploads URL.
+        expectNoRaw(tester, ['/api/uploads/']);
+      },
     );
 
-    testWidgets('typeless pin holding file JSON shows a label',
-        (tester) async {
-      await _pump(tester, _pin(kFileJson));
+    testWidgets(
+      'typeless pin holding file JSON shows a label',
+      (tester) async {
+        await _pump(tester, _pin(kFileJson));
 
-      expectNoRaw(tester, ['{"url"', '/api/uploads/']);
-    },
-        skip: true, // BUG: same as above — pinned_preview_text.dart default branch leaks file JSON.
+        expectNoRaw(tester, ['{"url"', '/api/uploads/']);
+      },
     );
   });
 

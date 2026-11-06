@@ -86,11 +86,12 @@ void main() {
     expectNoRaw(tester, ['system.', kCarol, '/api/uploads/', '{"url"']);
   });
 
-  testWidgets('typeless pin with a system code is humanized', (tester) async {
-    await _pump(tester, [_pin('p1', 'system.message.pinned:$kCarol')]);
-    expectNoRaw(tester, ['system.', kCarol]);
-  },
-      skip: true, // BUG: pinned_preview_text.dart default branch returns raw content (P1) — same root cause as PinnedMessageBar.
+  testWidgets(
+    'typeless pin with a system code is humanized',
+    (tester) async {
+      await _pump(tester, [_pin('p1', 'system.message.pinned:$kCarol')]);
+      expectNoRaw(tester, ['system.', kCarol]);
+    },
   );
 
   testWidgets('shows at most 5 pins', (tester) async {
