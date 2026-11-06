@@ -2491,15 +2491,15 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get adminRoleName => 'ロール名';
-
-  @override
   String get adminRoleDelete => 'ロールを削除';
 
   @override
   String adminRoleDeleteConfirm(String name) {
     return '$name を削除しますか？誰も使っていないロールだけを削除できます。保持しているメンバー、このロールで送った保留中の招待、割り当てられた SSO グループがないことが条件です。この操作は元に戻せません。';
   }
+
+  @override
+  String get adminRoleName => 'ロール名';
 
   @override
   String get adminAuditTitle => '監査ログ';
@@ -4182,15 +4182,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get authErrPresetRoleRenameForbidden => '組み込みロールの名前は変更できません。';
 
   @override
-  String get authErrRoleNameTaken => 'この名前のロールは既に存在します。';
-
-  @override
   String get authErrPresetRoleDeleteForbidden => '組み込みロールは削除できません。';
 
   @override
   String authErrRoleInUse(int members, int invitations, int ssoMappings) {
     return 'このロールはまだ使われています（メンバー: $members、保留中の招待: $invitations、SSO の割り当て: $ssoMappings）。先に別のロールへ移してください。';
   }
+
+  @override
+  String get authErrRoleNameTaken => 'この名前のロールは既に存在します。';
 
   @override
   String get authErrOwnerRoleImmutable => 'Owner ロールは変更・削除できません。';
@@ -4269,10 +4269,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get adminAuditActionRoleUpdate => 'ロールを更新';
 
   @override
-  String get adminAuditActionInvitationCreate => '招待を送信';
+  String get adminAuditActionRoleDelete => 'ロールを削除';
 
   @override
-  String get adminAuditActionRoleDelete => 'ロールを削除';
+  String get adminAuditActionInvitationCreate => '招待を送信';
 
   @override
   String get adminAuditActionInvitationResend => '招待を再送信';
