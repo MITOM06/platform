@@ -59,6 +59,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 class MeetingControllerTest {
 
   @Mock private MeetingService meetings;
+  @Mock private com.platform.chatservice.service.meeting.MeetingScreenFrames screenFrames;
   @Mock private MeetingJoinService joins;
   @Mock private MeetingChatService chat;
   @Mock private MeetingNotesService notes;
@@ -72,7 +73,7 @@ class MeetingControllerTest {
   void setUp() {
     mvc =
         MockMvcBuilders.standaloneSetup(
-                new MeetingController(meetings, joins, chat, notes, hands, summary))
+                new MeetingController(meetings, joins, chat, notes, hands, summary, screenFrames))
             .setControllerAdvice(new GlobalExceptionHandler())
             .build();
   }
@@ -101,6 +102,30 @@ class MeetingControllerTest {
         null,
         null,
         null);
+  }
+
+  @Test
+  void screenFrameAnswers202WhenAcceptedAnd204WhenSkipped() throws Exception {
+    org.springframework.mock.web.MockMultipartFile frame =
+        new org.springframework.mock.web.MockMultipartFile(
+            "frame", "s.jpg", "image/jpeg", new byte[] {1, 2, 3});
+    when(screenFrames.accept(any(), eq("m1"), any(), eq(123L))).thenReturn(true, false);
+
+    mvc.perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart(
+                    "/api/meetings/m1/screen-frames")
+                .file(frame)
+                .param("ts", "123")
+                .principal(lan))
+        .andExpect(status().isAccepted())
+        .andExpect(jsonPath("$.accepted").value(true));
+    mvc.perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart(
+                    "/api/meetings/m1/screen-frames")
+                .file(frame)
+                .param("ts", "123")
+                .principal(lan))
+        .andExpect(status().isNoContent());
   }
 
   @Test
@@ -256,7 +281,8 @@ class MeetingControllerTest {
     assertThatCode(
             () ->
                 MockMvcBuilders.standaloneSetup(
-                        new MeetingController(meetings, joins, chat, notes, hands, summary),
+                        new MeetingController(
+                            meetings, joins, chat, notes, hands, summary, screenFrames),
                         new CallRestController(
                             org.mockito.Mockito.mock(SfuCallService.class),
                             new LiveKitProperties()))

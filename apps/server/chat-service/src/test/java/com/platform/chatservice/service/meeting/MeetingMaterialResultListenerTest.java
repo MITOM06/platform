@@ -41,6 +41,7 @@ class MeetingMaterialResultListenerTest {
   @Mock private MeetingRecordService records;
   @Mock private StringRedisTemplate redis;
   @Mock private ValueOperations<String, String> ops;
+  @Mock private org.springframework.data.mongodb.gridfs.GridFsTemplate gridFs;
   private MeetingMaterialResultListener listener;
 
   @BeforeEach
@@ -64,7 +65,8 @@ class MeetingMaterialResultListenerTest {
                 .build());
     when(people.profiles(any(java.util.Collection.class)))
         .thenReturn(Map.of("u1", new PersonDto("u1", "An", null)));
-    listener = new MeetingMaterialResultListener(store, mongo, people, records, redis, mapper);
+    listener =
+        new MeetingMaterialResultListener(store, mongo, people, records, redis, mapper, gridFs);
   }
 
   private void deliver(String json) throws Exception {
@@ -168,6 +170,68 @@ class MeetingMaterialResultListenerTest {
               + "\",\"text\":\"ignored\"}");
       assertThat(oneRecord().getText()).isEqualTo("Không đọc được file này.");
     }
+  }
+
+  private static final String TICKET =
+      "{\"meetingId\":\"m1\",\"userId\":\"u1\",\"ts\":1762478523000,\"uploadId\":\"up-s\"}";
+
+  private void ticket(String json) {
+    when(ops.get("meet:screen:frame:fr1")).thenReturn(json);
+    when(ops.setIfAbsent("meet:material:done:fr1", "1", Duration.ofHours(1))).thenReturn(true);
+  }
+
+  private static String screen(String status, String text) {
+    return "{\"kind\":\"screen\",\"meetingId\":\"m1\",\"messageId\":\"fr1\",\"status\":\""
+        + status
+        + "\""
+        + (text == null ? "" : ",\"text\":\"" + text + "\"")
+        + "}";
+  }
+
+  @Test
+  void screenWithATicketWritesOneScreenRecordThenDeletesTicketAndFrame() throws Exception {
+    ticket(TICKET);
+    deliver(screen("ok", "y".repeat(1600)));
+
+    MeetingRecord r = oneRecord();
+    assertThat(r.getKind()).isEqualTo(MeetingRecord.Kind.SCREEN);
+    assertThat(r.getUserId()).isEqualTo("u1");
+    assertThat(r.getDisplayName()).isEqualTo("An");
+    assertThat(r.getTs()).isEqualTo(Instant.ofEpochMilli(1762478523000L));
+    assertThat(r.getText()).hasSize(1500);
+    verify(redis).delete("meet:screen:frame:fr1");
+    verify(gridFs).delete(any(org.springframework.data.mongodb.core.query.Query.class));
+  }
+
+  @Test
+  void screenWithoutATicketDoesNothingAndDeletesNothing() throws Exception {
+    when(ops.get("meet:screen:frame:fr1")).thenReturn(null);
+    when(ops.setIfAbsent("meet:material:done:fr1", "1", Duration.ofHours(1))).thenReturn(true);
+
+    deliver(screen("ok", "forged"));
+
+    verify(records, never()).append(any());
+    verify(gridFs, never()).delete(any(org.springframework.data.mongodb.core.query.Query.class));
+    verify(redis, never()).delete(org.mockito.ArgumentMatchers.anyString());
+  }
+
+  @Test
+  void screenFailedOrUnsupportedWritesNothingButStillDeletesTheFrame() throws Exception {
+    for (String status : List.of("failed", "unsupported")) {
+      org.mockito.Mockito.clearInvocations(records, gridFs);
+      ticket(TICKET);
+      deliver(screen(status, "ignored"));
+      verify(records, never()).append(any());
+      verify(gridFs).delete(any(org.springframework.data.mongodb.core.query.Query.class));
+    }
+  }
+
+  @Test
+  void screenTicketOfAnotherMeetingIsIgnored() throws Exception {
+    ticket(TICKET.replace("\"m1\"", "\"m2\""));
+    deliver(screen("ok", "x"));
+    verify(records, never()).append(any());
+    verify(gridFs, never()).delete(any(org.springframework.data.mongodb.core.query.Query.class));
   }
 
   @Test

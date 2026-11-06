@@ -122,6 +122,23 @@ class MeetingStoreTest {
   }
 
   @Test
+  void claimAiScreenSlotStopsAtTheCapAndNotesItOnce() {
+    Meeting m = meeting("sc1-aaaa-aaa", now);
+
+    for (int i = 0; i < 3; i++) {
+      assertThat(store.claimAiScreenSlot(m.getId(), 3)).isEqualTo(MeetingStore.ClaimResult.CLAIMED);
+    }
+    assertThat(store.claimAiScreenSlot(m.getId(), 3))
+        .isEqualTo(MeetingStore.ClaimResult.CAP_REACHED_FIRST);
+    assertThat(store.claimAiScreenSlot(m.getId(), 3))
+        .isEqualTo(MeetingStore.ClaimResult.CAP_REACHED);
+    assertThat(reload(m).getAiScreenCount()).isEqualTo(3);
+    assertThat(reload(m).isAiScreenCapNoted()).isTrue();
+    assertThat(store.claimAiScreenSlot("missing", 3))
+        .isEqualTo(MeetingStore.ClaimResult.CAP_REACHED);
+  }
+
+  @Test
   void claimingTheSameUploadAgainTakesNoSlot() {
     Meeting m = meeting("fc3-aaaa-aaa", now);
 

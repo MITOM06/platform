@@ -604,6 +604,7 @@ Response 200: { "success": true }
 | `GET /api/meetings/{id}/hands` | room access ² | 200 `{ "hands": [Hand…] }` | 403 `MEETING_FORBIDDEN` · 403 `MEETING_REMOVED` · 404 · 409 `MEETING_ENDED` |
 | `GET /api/meetings/{id}/summary` | records access ¹ | 200 `{ "state": null\|"PENDING"\|"DONE"\|"EMPTY"\|"FAILED", "summary"?: MeetingSummary, "createdAt"?, "groupConversationId"?, "inGroup": bool }` — `state` is the meeting's current state (`null` = AI notes were never on ⇒ `inGroup:false`; an ENDED meeting that had AI notes but never got a summary request reports `"FAILED"`, so the host can regenerate); `summary`/`createdAt` = the newest successful summary (may be older than a later `FAILED`/`PENDING`); `groupConversationId` only when `inGroup` (you are a member of the meeting's group chat) | 403 `MEETING_FORBIDDEN` · 403 `MEETING_REMOVED` · 404 |
 | `POST /api/meetings/{id}/summary/regenerate` | host, co-host | **202** `{ "state": "PENDING" }` — a new summary is requested; `meet.summary.ready` follows | 403 `MEETING_FORBIDDEN` (also attendees) · 403 `MEETING_REMOVED` · 404 · **409 `MEETING_SUMMARY_UNAVAILABLE`** (not ENDED, or AI notes never on; a meeting with no summary state yet is accepted) · **409 `MEETING_SUMMARY_PENDING`** (one is already being generated) |
+| `POST /api/meetings/{id}/screen-frames` | room access ², and host / co-host or `settings.allowAttendeeScreenShare` | multipart `frame` (JPEG or PNG, ≤ 2 MB, magic bytes checked) + optional `ts` (epoch ms, clamped to the last 60 s). **202** `{ "accepted": true }` — queued for the AI record. **204** (client stays silent) when `settings.aiNotes` is off, the caller sent a frame < 15 s ago (Redis `meet:screen:throttle:{meetingId}:{userId}`), Redis is unavailable, or the meeting already took `meetings.ai.screen-cap` (default 60) frames (the first one over the cap writes one SCREEN line "Đã đạt giới hạn ảnh màn hình AI đọc.") | 400 `MEETING_INVALID` `params.field:"frame"` (missing / empty / > 2 MB / not JPEG-PNG by magic bytes) · 403 `MEETING_FORBIDDEN` (waiting, or attendee while `allowAttendeeScreenShare=false`) · 403 `MEETING_REMOVED` · 404 · 409 `MEETING_ENDED` |
 
 ¹ **Records access** (also after the meeting ended): host, co-host, invited / department member,
 has an `attendance` row, or admitted — unless removed (403 `MEETING_REMOVED`).
@@ -613,7 +614,7 @@ Someone who once entered the room is remembered as admitted, so turning the wait
 locking the room later never shuts them out (`LOCK` only stops newcomers).
 
 `MEETING_INVALID` carries `params.field` ∈ `title | description | inviteeIds | departmentId |
-scheduledStart | scheduledEnd | settings | scope | size | content | attachment | version` and `params.max` when a limit applies, e.g.
+scheduledStart | scheduledEnd | settings | scope | size | content | attachment | frame | version` and `params.max` when a limit applies, e.g.
 `{"error":"Bad Request","code":"MEETING_INVALID","statusCode":400,"params":{"field":"title","max":120}}`.
 A body or query value that cannot be parsed is also 400 `MEETING_INVALID` (never 500), with
 `params.field` when the field is known — notably a datetime **without an offset**

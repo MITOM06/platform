@@ -24,6 +24,7 @@ public class MeetingMaterialTrigger {
 
   public static final String CHANNEL = "meet:material";
   static final String CAP_NOTICE = "Đã đạt giới hạn file AI đọc.";
+  static final String SCREEN_CAP_NOTICE = "Đã đạt giới hạn ảnh màn hình AI đọc.";
 
   private final MeetingStore store;
   private final MeetingRecordService records;
@@ -64,6 +65,7 @@ public class MeetingMaterialTrigger {
   private void publish(String meetingId, String messageId, MeetingAttachment file, String userId)
       throws Exception {
     Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("kind", "file");
     payload.put("meetingId", meetingId);
     payload.put("messageId", messageId);
     payload.put("uploadId", file.getUploadId());
@@ -71,6 +73,31 @@ public class MeetingMaterialTrigger {
     payload.put("mimeType", file.getContentType());
     payload.put("userId", userId);
     redis.convertAndSend(CHANNEL, objectMapper.writeValueAsString(payload));
+  }
+
+  /** A shared-screen frame: {@code messageId} is the frame id (its Redis ticket key suffix). */
+  void publishScreen(
+      String meetingId, String frameId, String uploadId, String mimeType, String userId)
+      throws Exception {
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("kind", "screen");
+    payload.put("meetingId", meetingId);
+    payload.put("messageId", frameId);
+    payload.put("uploadId", uploadId);
+    payload.put("fileName", "screen.jpg");
+    payload.put("mimeType", mimeType);
+    payload.put("userId", userId);
+    redis.convertAndSend(CHANNEL, objectMapper.writeValueAsString(payload));
+  }
+
+  void noteScreenCap(String meetingId) {
+    records.append(
+        MeetingRecord.builder()
+            .meetingId(meetingId)
+            .kind(MeetingRecord.Kind.SCREEN)
+            .text(SCREEN_CAP_NOTICE)
+            .ts(Instant.now())
+            .build());
   }
 
   private void noteCap(String meetingId) {

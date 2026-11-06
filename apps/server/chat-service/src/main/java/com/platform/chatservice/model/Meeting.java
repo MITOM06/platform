@@ -108,6 +108,12 @@ public class Meeting {
   /** The "file limit reached" record line was written; only ever set once. */
   private boolean aiFileCapNoted;
 
+  /** Screen frames already handed to the AI reader; capped by {@code meetings.ai.screen-cap}. */
+  private int aiScreenCount;
+
+  /** The "screen limit reached" record line was written; only ever set once. */
+  private boolean aiScreenCapNoted;
+
   /** The group conversation created from this meeting; set at most once. */
   private String groupConversationId;
 

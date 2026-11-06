@@ -114,6 +114,20 @@ replies on `meet:material:result` `{meetingId, messageId, fileName, status: ok|u
 `MeetingMaterialResultListener` (SETNX `meet:material:done:{messageId}` 1 h) appends one FILE `MeetingRecord`
 for the sender (text ≤ 6000 or "Không đọc được file này."). Never fails the send.
 
+Shared-screen frames: `POST /api/meetings/{id}/screen-frames` → `MeetingScreenFrames` (inRoom → manager ||
+`allowAttendeeScreenShare` else 403 → `aiNotes` off ⇒ 204 → JPEG/PNG ≤ 2 MB by magic bytes else 400
+`MEETING_INVALID {field:"frame"}` → Redis `SET NX EX 15` `meet:screen:throttle:{meetingId}:{userId}` (exists or Redis
+down ⇒ 204) → `MeetingStore.claimAiScreenSlot` (`Meeting.aiScreenCount` / `aiScreenCapNoted`, cap
+`meetings.ai.screen-cap`, default 60; first over the cap writes one SCREEN notice line, then 204) → GridFS
+(metadata `{fileId, uploadedBy, screenFrame:true, createdAt}`, no refs) → ticket `meet:screen:frame:{frameId}`
+`{meetingId, userId, ts, uploadId}` TTL 1 h → `meet:material` `kind:"screen"`, `messageId = frameId` → 202). The
+file branch now also sends `kind:"file"`. `MeetingMaterialResultListener` for `kind:"screen"`: needs the ticket
+(same meetingId; userId / ts / upload come from it), claims `meet:material:done:{frameId}`, writes one SCREEN
+`MeetingRecord` (text ≤ 1500) only for status `ok`, then deletes ticket + GridFS frame for every status; no
+ticket ⇒ does nothing. `MeetingScreenFrameSweep` (`meetings.ai.screen-sweep-ms`, default 10 min) deletes
+`screenFrame` files older than 1 h. A failure after the slot was taken is cleaned up best-effort and still
+answers 202.
+
 `@AI` in the meeting chat: `MeetingChatService.send` → `MeetingAiBridge.ask` (async; `meet.ai thinking`) →
 RabbitMQ `AiRequestPayload{conversationId: "meeting:{id}", meetingId, history: 20 newest lines}` via
 `AiRedisPublisher.publishMeetingAiRequest` (failure ⇒ `meet.ai error AI_UNAVAILABLE`) → ai-service replies on

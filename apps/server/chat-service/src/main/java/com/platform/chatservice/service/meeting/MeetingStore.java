@@ -423,6 +423,33 @@ public class MeetingStore {
         : ClaimResult.CAP_REACHED;
   }
 
+  /**
+   * Takes one of the meeting's {@code cap} AI screen-frame slots, atomically (a single {@code $inc}
+   * guarded by the count). Once full, exactly one caller gets {@link
+   * ClaimResult#CAP_REACHED_FIRST}; never {@link ClaimResult#ALREADY_CLAIMED}.
+   */
+  public ClaimResult claimAiScreenSlot(String id, int cap) {
+    Query open =
+        new Query(
+            byId(id)
+                .orOperator(
+                    Criteria.where("aiScreenCount").exists(false),
+                    Criteria.where("aiScreenCount").lt(cap)));
+    if (mongo
+            .updateFirst(open, new Update().inc("aiScreenCount", 1), Meeting.class)
+            .getModifiedCount()
+        > 0) {
+      return ClaimResult.CLAIMED;
+    }
+    Query unnoted = new Query(byId(id).and("aiScreenCapNoted").ne(true));
+    return mongo
+                .updateFirst(unnoted, new Update().set("aiScreenCapNoted", true), Meeting.class)
+                .getModifiedCount()
+            > 0
+        ? ClaimResult.CAP_REACHED_FIRST
+        : ClaimResult.CAP_REACHED;
+  }
+
   private static Criteria byId(String id) {
     return Criteria.where("_id").is(id);
   }

@@ -65,13 +65,14 @@ class MeetingMaterialTriggerTest {
     ArgumentCaptor<String> payload = ArgumentCaptor.forClass(String.class);
     verify(redis).convertAndSend(eq("meet:material"), payload.capture());
     JsonNode json = mapper.readTree(payload.getValue());
+    assertThat(json.get("kind").asText()).isEqualTo("file");
     assertThat(json.get("meetingId").asText()).isEqualTo("m1");
     assertThat(json.get("messageId").asText()).isEqualTo("msg1");
     assertThat(json.get("uploadId").asText()).isEqualTo(FILE.getUploadId());
     assertThat(json.get("fileName").asText()).isEqualTo("plan.pdf");
     assertThat(json.get("mimeType").asText()).isEqualTo("application/pdf");
     assertThat(json.get("userId").asText()).isEqualTo("u1");
-    assertThat(json.size()).isEqualTo(6);
+    assertThat(json.size()).isEqualTo(7);
   }
 
   @Test
@@ -102,6 +103,21 @@ class MeetingMaterialTriggerTest {
     assertThat(rec.getValue().getMeetingId()).isEqualTo("m1");
     assertThat(rec.getValue().getText()).isEqualTo("Đã đạt giới hạn file AI đọc.");
     assertThat(rec.getValue().getTs()).isNotNull();
+  }
+
+  @Test
+  void publishScreenSendsKindScreenWithTheFrameIdAsMessageId() throws Exception {
+    trigger().publishScreen("m1", "frame1", "up9", "image/jpeg", "u1");
+
+    ArgumentCaptor<String> payload = ArgumentCaptor.forClass(String.class);
+    verify(redis).convertAndSend(eq("meet:material"), payload.capture());
+    JsonNode json = mapper.readTree(payload.getValue());
+    assertThat(json.get("kind").asText()).isEqualTo("screen");
+    assertThat(json.get("messageId").asText()).isEqualTo("frame1");
+    assertThat(json.get("uploadId").asText()).isEqualTo("up9");
+    assertThat(json.get("fileName").asText()).isEqualTo("screen.jpg");
+    assertThat(json.get("mimeType").asText()).isEqualTo("image/jpeg");
+    assertThat(json.get("userId").asText()).isEqualTo("u1");
   }
 
   @Test
