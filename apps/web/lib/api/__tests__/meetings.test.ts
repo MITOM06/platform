@@ -56,6 +56,18 @@ describe('meetingsApi', () => {
     })
   })
 
+  it('validates attachments of history rows, dropping bad ones but keeping the row', async () => {
+    http.get.mockResolvedValueOnce({ data: { content: [
+      { id: 'a', content: '', attachment: { url: '/api/uploads/x', name: 'f.pdf', size: 3, contentType: 'application/pdf' } },
+      { id: 'b', content: 'hi', attachment: { url: 'https://evil.example/x', name: 'f' } },
+      { id: 'c', content: 'plain' },
+    ], page: 0, size: 50, totalElements: 3, hasNext: false } })
+    const page = await meetingsApi.messages('m1')
+    expect(page.content[0].attachment).toEqual({ url: '/api/uploads/x', name: 'f.pdf', size: 3, contentType: 'application/pdf' })
+    expect(page.content[1]).toEqual({ id: 'b', content: 'hi' })
+    expect(page.content[2]).toEqual({ id: 'c', content: 'plain' })
+  })
+
   it('reads and writes notes by scope', async () => {
     await meetingsApi.getNote('m1', 'private')
     expect(http.get).toHaveBeenLastCalledWith('/api/meetings/m1/notes/private')

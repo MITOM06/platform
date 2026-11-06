@@ -42,3 +42,28 @@ describe('ChatLine AI', () => {
     expect(container.textContent).toContain('a **bold** word')
   })
 })
+
+describe('ChatLine attachment', () => {
+  const att = { url: '/api/uploads/abc', name: 'plan.pdf', size: 2048, contentType: 'application/pdf' }
+
+  it('renders a file card (name, size, download link) and never the URL', () => {
+    const { container } = render(
+      <ul><ChatLine message={{ ...line('u2', 'Bob', 'look'), attachment: att }} showName timeFormat={fmt} /></ul>,
+    )
+    expect(screen.getByText('plan.pdf')).toBeTruthy()
+    expect(screen.getByText('2.0 KB')).toBeTruthy()
+    const a = container.querySelector('a')!
+    expect(a.getAttribute('href')).toContain('/api/uploads/abc')
+    expect(a.getAttribute('href')).toContain('download=true')
+    expect(container.textContent).not.toContain('/api/uploads')
+    expect(container.textContent).toContain('look')
+  })
+
+  it('a file-only line has no empty text bubble', () => {
+    const { container } = render(
+      <ul><ChatLine message={{ ...line('u2', 'Bob', ''), attachment: att }} showName={false} timeFormat={fmt} /></ul>,
+    )
+    expect(container.querySelector('a')).not.toBeNull()
+    expect(container.querySelectorAll('li > p')).toHaveLength(0)
+  })
+})

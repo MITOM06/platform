@@ -41,6 +41,20 @@ const store = () => useMeetingRoomStore.getState()
 const setPending = (fn: (list: PendingChat[]) => PendingChat[]) =>
   useMeetingRoomStore.setState((s) => ({ pendingChat: fn(s.pendingChat) }))
 
+/** The file a line carries when sent: the server reads only `url` + `name`. */
+export interface OutgoingAttachment {
+  url: string
+  name: string
+  size?: number
+}
+
+const chatBody = (meetingId: string, content: string, clientId: string, a?: OutgoingAttachment) => ({
+  meetingId,
+  content,
+  clientId,
+  ...(a ? { attachment: { url: a.url, name: a.name } } : {}),
+})
+
 export class MeetingRoomChat {
   private readonly allowReaction = createReactionThrottle()
   private readonly timers = new Set<ReturnType<typeof setTimeout>>()
@@ -55,12 +69,15 @@ export class MeetingRoomChat {
   ) {}
 
   /** Returns the clientId, or null when the line cannot be sent (empty, too long, offline). */
-  send(content: string, max: number): string | null {
+  send(content: string, max: number, attachment?: OutgoingAttachment): string | null {
     const text = content.trim()
-    if (!text || text.length > max || !this.deps.isRealtimeConnected()) return null
+    if ((!text && !attachment) || text.length > max || !this.deps.isRealtimeConnected()) return null
     const clientId = this.deps.newClientId()
-    this.deps.publish('/app/meet.chat', { meetingId: this.meetingId, content: text, clientId })
-    setPending((list) => [...list, { clientId, content: text, sentAt: this.deps.now(), error: null }])
+    this.deps.publish('/app/meet.chat', chatBody(this.meetingId, text, clientId, attachment))
+    const kept = attachment
+      ? { attachment: { url: attachment.url, name: attachment.name, size: attachment.size ?? 0, contentType: null } }
+      : {}
+    setPending((list) => [...list, { clientId, content: text, ...kept, sentAt: this.deps.now(), error: null }])
     return clientId
   }
 
@@ -71,7 +88,7 @@ export class MeetingRoomChat {
       this.deps.notify('error', { key: 'realtimeOffline' })
       return
     }
-    this.deps.publish('/app/meet.chat', { meetingId: this.meetingId, content: line.content, clientId })
+    this.deps.publish('/app/meet.chat', chatBody(this.meetingId, line.content, clientId, line.attachment))
     setPending((list) =>
       list.map((p) => (p.clientId === clientId ? { ...p, sentAt: this.deps.now(), error: null } : p)),
     )

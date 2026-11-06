@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { HostAction, MeetingRoomRole, ReactionEmoji } from '@/lib/api/meeting-types'
+import type { HostAction, MeetingAttachment, MeetingRoomRole, ReactionEmoji } from '@/lib/api/meeting-types'
 import type { MessageKey } from '@/lib/meetings/meeting-errors'
 import type { AiErrorKey, PendingAi } from '@/lib/meetings/pending-ai'
 import type { RemoteNewer } from '@/lib/meetings/note-sync'
@@ -19,6 +19,8 @@ export type RoomPanel = 'people' | 'chat' | 'notes' | null
 export interface PendingChat {
   clientId: string
   content: string
+  /** Kept so a retry re-sends the file and the optimistic line shows its card. */
+  attachment?: MeetingAttachment
   sentAt: number
   error: MessageKey | null
 }

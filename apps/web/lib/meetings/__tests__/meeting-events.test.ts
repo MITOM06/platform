@@ -3,6 +3,33 @@ import { parseMeetingEvent } from '@/lib/meetings/meeting-events'
 
 const j = (v: unknown) => JSON.stringify(v)
 
+describe('meet.chat attachment', () => {
+  const chat = (attachment: unknown) => parseMeetingEvent(j({
+    event: 'meet.chat', meetingId: 'm1',
+    message: { id: 'x', sender: { userId: 'u' }, content: '', createdAt: 't', attachment },
+  })) as { message: { content: string; attachment?: unknown } } | null
+
+  it('keeps a valid attachment, defaulting size and contentType', () => {
+    expect(chat({ url: '/api/uploads/abc', name: 'a.pdf', size: 5, contentType: 'application/pdf' })?.message.attachment)
+      .toEqual({ url: '/api/uploads/abc', name: 'a.pdf', size: 5, contentType: 'application/pdf' })
+    expect(chat({ url: '/api/uploads/abc', name: 'a.pdf', size: '5' })?.message.attachment)
+      .toEqual({ url: '/api/uploads/abc', name: 'a.pdf', size: 0, contentType: null })
+  })
+
+  it.each([
+    ['foreign url', { url: 'https://evil.example/x', name: 'a' }],
+    ['relative url outside uploads', { url: '/other/abc', name: 'a' }],
+    ['empty name', { url: '/api/uploads/abc', name: '' }],
+    ['no name', { url: '/api/uploads/abc' }],
+    ['not an object', 'x'],
+    ['array', []],
+  ])('drops a bad attachment (%s) but keeps the line', (_n, bad) => {
+    const e = chat(bad)
+    expect(e).not.toBeNull()
+    expect(e!.message).not.toHaveProperty('attachment')
+  })
+})
+
 describe('parseMeetingEvent', () => {
   it('rejects junk, unknown events and missing meeting ids', () => {
     expect(parseMeetingEvent('not json')).toBeNull()

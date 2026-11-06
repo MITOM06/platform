@@ -144,6 +144,25 @@ describe('chat', () => {
     expect(store().unreadChat).toBe(0)
   })
 
+  it('sends a file-only line; the pending line keeps it and a retry re-sends it', async () => {
+    await inRoom()
+    const att = { url: '/api/uploads/abc', name: 'plan.pdf', size: 99 }
+    expect(c.sendChat('', att)).toBe('c-abc')
+    expect(deps.publish).toHaveBeenCalledWith('/app/meet.chat',
+      { meetingId: 'm1', content: '', clientId: 'c-abc', attachment: { url: '/api/uploads/abc', name: 'plan.pdf' } })
+    expect(store().pendingChat[0].attachment).toEqual({ url: '/api/uploads/abc', name: 'plan.pdf', size: 99, contentType: null })
+    c.handle({ event: 'meet.error', meetingId: 'm1', clientId: 'c-abc', errorCode: 'RATE_LIMITED' })
+    c.retryChat('c-abc')
+    expect(deps.publish).toHaveBeenLastCalledWith('/app/meet.chat',
+      { meetingId: 'm1', content: '', clientId: 'c-abc', attachment: { url: '/api/uploads/abc', name: 'plan.pdf' } })
+  })
+
+  it('a plain line publishes no attachment key', async () => {
+    await inRoom()
+    c.sendChat('hi')
+    expect(deps.publish.mock.calls[0][1]).not.toHaveProperty('attachment')
+  })
+
   it('marks a refused line and lets me retry or discard it', async () => {
     await inRoom()
     c.sendChat('spam')

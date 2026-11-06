@@ -97,10 +97,20 @@ export type MeetingJoinResponse =
   | { status: 'joined'; url: string; token: string; role: MeetingRoomRole }
   | { status: 'waiting' }
 
+/** File attached to a chat line (an upload of the sender's; `url` is `/api/uploads/...`). */
+export interface MeetingAttachment {
+  url: string
+  name: string
+  size: number
+  contentType: string | null
+}
+
 export interface MeetingMessage {
   id: string
   sender: MeetingPerson
+  /** May be empty when the line carries only a file. */
   content: string
+  attachment?: MeetingAttachment
   createdAt: string
 }
 

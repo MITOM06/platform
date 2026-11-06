@@ -10,6 +10,7 @@ import {
   type MeetingSettings,
   type RosterEntry,
 } from '@/lib/api/meeting-types'
+import { parseAttachment } from './meeting-attachment'
 
 /**
  * STOMP meeting frames (`/user/queue/meeting`, `/topic/meeting/{id}`) → typed events.
@@ -96,7 +97,7 @@ function message(v: unknown): MeetingMessage | undefined {
   const { id, content, createdAt } = v
   if (!sender || typeof id !== 'string' || typeof content !== 'string') return undefined
   if (typeof createdAt !== 'string') return undefined
-  return { id, sender, content, createdAt }
+  return { id, sender, content, ...opt('attachment', parseAttachment(v.attachment)), createdAt }
 }
 
 function scalarParams(v: unknown): Record<string, string | number> | undefined {

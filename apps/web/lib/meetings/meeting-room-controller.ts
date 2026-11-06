@@ -15,7 +15,7 @@ import { useMeetingRoomStore, type MeetingRoomData } from '@/lib/store/meeting.s
 import { setActiveMeetingRoom, getActiveMeetingRoom, type ActiveMeetingRoom } from './active-room'
 import { meetingKeys } from './cache-updates'
 import { meetingErrorKey, meetingEventErrorKey, parseMeetingError } from './meeting-errors'
-import { MeetingRoomChat } from './meeting-room-chat'
+import { MeetingRoomChat, type OutgoingAttachment } from './meeting-room-chat'
 import { RoomMedia } from './room-media'
 import { canShareScreen, isManager } from './permissions'
 import {
@@ -249,8 +249,8 @@ export class MeetingRoomController implements ActiveMeetingRoom {
     if (this.online()) this.deps.publish('/app/meet.hand', { meetingId: this.meetingId, raised })
   }
 
-  sendChat(content: string): string | null {
-    return store().phase === 'inRoom' ? this.chat.send(content, MEETING_LIMITS.chat) : null
+  sendChat(content: string, attachment?: OutgoingAttachment): string | null {
+    return store().phase === 'inRoom' ? this.chat.send(content, MEETING_LIMITS.chat, attachment) : null
   }
 
   retryChat(clientId: string): void {

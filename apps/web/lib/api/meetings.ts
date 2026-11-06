@@ -14,6 +14,7 @@ import type {
   MeetingSummaryState,
   NoteScope,
 } from './meeting-types'
+import { normalizeHistoryRow } from '@/lib/meetings/meeting-attachment'
 
 // chat-service meetings REST API (docs/api-spec.md § Meetings). Every path
 // segment that comes from data goes through encodeURIComponent.
@@ -83,7 +84,10 @@ export const meetingsApi = {
   messages: (id: string, before?: string, size = 50): Promise<MeetingMessagePage> =>
     chatApi
       .get<MeetingMessagePage>(`${base(id)}/messages`, { params: { before, size } })
-      .then((r) => r.data),
+      .then((r) => {
+        const page = r.data
+        return Array.isArray(page?.content) ? { ...page, content: page.content.map(normalizeHistoryRow) } : page
+      }),
 
   getNote: (id: string, scope: NoteScope): Promise<MeetingNote> =>
     chatApi.get<MeetingNote>(`${base(id)}/notes/${scope}`).then((r) => r.data),
