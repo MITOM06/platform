@@ -124,3 +124,17 @@ describe('meet.summary.ready', () => {
     expect(parseMeetingEvent(j({ event: 'meet.summary.ready', meetingId: 'm1', summaryState: 'WAT' }))).toBeNull()
   })
 })
+
+describe('parseMeetingEvent meet.ai', () => {
+  it('parses thinking and error; code is the AI error code here', () => {
+    expect(parseMeetingEvent(j({ event: 'meet.ai', meetingId: 'm1', state: 'thinking', requesterId: 'u1' })))
+      .toEqual({ event: 'meet.ai', meetingId: 'm1', state: 'thinking', requesterId: 'u1' })
+    expect(parseMeetingEvent(j({ event: 'meet.ai', meetingId: 'm1', state: 'error', requesterId: 'u1', code: 'AI_EMPTY' })))
+      .toEqual({ event: 'meet.ai', meetingId: 'm1', state: 'error', requesterId: 'u1', code: 'AI_EMPTY' })
+  })
+
+  it('unknown state or missing requester ⇒ null', () => {
+    expect(parseMeetingEvent(j({ event: 'meet.ai', meetingId: 'm1', state: 'done', requesterId: 'u1' }))).toBeNull()
+    expect(parseMeetingEvent(j({ event: 'meet.ai', meetingId: 'm1', state: 'thinking' }))).toBeNull()
+  })
+})

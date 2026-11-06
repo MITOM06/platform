@@ -2,7 +2,16 @@ import type { MeetingEvent, ReactionEmoji } from '@/lib/api/meeting-types'
 import { safeDisplayName } from '@/lib/chat/names'
 import type { RemotePeer } from '@/lib/rtc/livekit-session'
 import { useMeetingRoomStore, type FloatingReaction, type PendingChat } from '@/lib/store/meeting.store'
+import { AI_BOT_ID } from '@/lib/constants'
 import type { MessageKey } from './meeting-errors'
+import {
+  AI_PENDING_TTL_MS,
+  addPendingAi,
+  aiErrorKey,
+  expirePendingAi,
+  failPendingAi,
+  resolvePendingAi,
+} from './pending-ai'
 import { REACTION_TOPIC, createReactionThrottle, decodeReaction, encodeReaction } from './reactions'
 
 /**
@@ -25,6 +34,7 @@ interface DataSession {
 
 /** Reactions on screen at once; older ones are dropped first. */
 const MAX_REACTIONS = 30
+const MAX_AI_NOTICES = 5
 export const REACTION_LIFETIME_MS = 4000
 
 const store = () => useMeetingRoomStore.getState()
@@ -35,6 +45,7 @@ export class MeetingRoomChat {
   private readonly allowReaction = createReactionThrottle()
   private readonly timers = new Set<ReturnType<typeof setTimeout>>()
   private nextReactionId = 1
+  private nextNoticeId = 1
 
   constructor(
     private readonly meetingId: string,
@@ -84,6 +95,35 @@ export class MeetingRoomChat {
     if (countUnread && e.message.sender.userId !== this.myId && store().panel !== 'chat') {
       useMeetingRoomStore.setState((s) => ({ unreadChat: s.unreadChat + 1 }))
     }
+  }
+
+  /** `meet.ai`: thinking adds an entry (expiring in 60 s); error removes one, and tells only the requester. */
+  onAi(e: Extract<MeetingEvent, { event: 'meet.ai' }>): void {
+    const now = this.deps.now()
+    const live = () => expirePendingAi(store().pendingAi, now)
+    if (e.state === 'thinking') {
+      useMeetingRoomStore.setState({ pendingAi: addPendingAi(live(), e.requesterId, now) })
+      const timer = setTimeout(() => {
+        this.timers.delete(timer)
+        useMeetingRoomStore.setState((s) => ({ pendingAi: expirePendingAi(s.pendingAi, this.deps.now()) }))
+      }, AI_PENDING_TTL_MS + 1)
+      this.timers.add(timer)
+      return
+    }
+    useMeetingRoomStore.setState({ pendingAi: failPendingAi(live(), e.requesterId) })
+    if (e.requesterId !== this.myId) return
+    const id = this.nextNoticeId++
+    useMeetingRoomStore.setState((s) => ({
+      aiNotices: [...s.aiNotices, { id, key: aiErrorKey(e.code) }].slice(-MAX_AI_NOTICES),
+    }))
+  }
+
+  /** The AI's answer is an ordinary `meet.chat` from the bot: the oldest entry is done. */
+  onAiAnswer(e: Extract<MeetingEvent, { event: 'meet.chat' }>): void {
+    if (e.message.sender.userId !== AI_BOT_ID) return
+    useMeetingRoomStore.setState((s) => ({
+      pendingAi: resolvePendingAi(expirePendingAi(s.pendingAi, this.deps.now())),
+    }))
   }
 
   sendReaction(emoji: ReactionEmoji): boolean {

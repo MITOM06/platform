@@ -369,15 +369,14 @@ export class MeetingRoomController implements ActiveMeetingRoom {
 
   onChat(e: Extract<MeetingEvent, { event: 'meet.chat' }>): void {
     this.chat.onEcho(e)
+    this.chat.onAiAnswer(e)
   }
 
-  onSharedNoteUpdated(version: number, updatedBy?: MeetingPerson): void {
-    set({ sharedNoteRemote: updatedBy ? { version, updatedBy } : { version } })
-  }
+  onAi(e: Extract<MeetingEvent, { event: 'meet.ai' }>): void { this.chat.onAi(e) }
 
-  onEnded(): void {
-    if (store().phase !== 'ended') this.close('ended')
-  }
+  onSharedNoteUpdated(version: number, updatedBy?: MeetingPerson): void { set({ sharedNoteRemote: updatedBy ? { version, updatedBy } : { version } }) }
+
+  onEnded(): void { if (store().phase !== 'ended') this.close('ended') }
 
   /** STOMP came back: re-ask while waiting (missed `meet.admitted`); in the room re-read and apply what changed. */
   async onRealtimeReconnected(): Promise<void> {

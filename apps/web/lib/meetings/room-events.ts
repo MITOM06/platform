@@ -27,6 +27,7 @@ export interface RoomEventDeps {
   onRoster?(participants: RosterEntry[]): void
   onSettings?(settings: MeetingSettings): void
   onChat?(e: Extract<MeetingEvent, { event: 'meet.chat' }>): void
+  onAi?(e: Extract<MeetingEvent, { event: 'meet.ai' }>): void
   onSharedNoteUpdated?(version: number, updatedBy?: MeetingPerson): void
   onEnded?(): void
 }
@@ -69,6 +70,9 @@ export function applyRoomEvent(e: MeetingEvent, deps: RoomEventDeps): void {
         appendMessage(d, e.message),
       )
       deps.onChat?.(e)
+      return
+    case 'meet.ai':
+      deps.onAi?.(e)
       return
     case 'meet.notes.updated':
       deps.onSharedNoteUpdated?.(e.version, e.updatedBy)

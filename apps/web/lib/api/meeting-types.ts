@@ -208,6 +208,8 @@ export type MeetingEvent =
   | { event: 'meet.ended'; meetingId: string }
   | { event: 'meet.hands'; meetingId: string; hands: MeetingHand[] }
   | { event: 'meet.chat'; meetingId: string; clientId?: string; message: MeetingMessage }
+  /** AI is answering an `@AI` line (`thinking`) or gave up (`error`; `code` = AI error code, not a meeting code). */
+  | { event: 'meet.ai'; meetingId: string; state: 'thinking' | 'error'; requesterId: string; code?: string }
   | { event: 'meet.notes.updated'; meetingId: string; version: number; updatedBy?: MeetingPerson }
   | { event: 'meet.lobby'; meetingId: string; waiting: LobbyEntry[] }
   | { event: 'meet.admitted' | 'meet.denied' | 'meet.removed'; meetingId: string }

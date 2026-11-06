@@ -140,6 +140,11 @@ function parseForMeeting(event: string, meetingId: string, o: Obj): MeetingEvent
       const m = message(o.message)
       return m ? { event, meetingId, ...opt('clientId', str(o.clientId)), message: m } : null
     }
+    case 'meet.ai': {
+      const requesterId = str(o.requesterId)
+      if ((o.state !== 'thinking' && o.state !== 'error') || !requesterId) return null
+      return { event, meetingId, state: o.state, requesterId, ...opt('code', str(o.code)) }
+    }
     case 'meet.notes.updated':
       if (typeof o.version !== 'number') return null
       return { event, meetingId, version: o.version, ...opt('updatedBy', person(o.updatedBy)) }
