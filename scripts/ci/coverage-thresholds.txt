@@ -7,5 +7,5 @@ ai=92
 connector=93
 chat=74
 web=54
-flutter=38
+flutter=55
 # Mục tiêu: auth/ai/connector/chat 90 · web 70 · flutter 60
