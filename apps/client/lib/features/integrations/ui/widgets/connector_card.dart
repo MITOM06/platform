@@ -49,7 +49,7 @@ class ConnectorCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _IconBadge(icon: entry.icon),
+            _IconBadge(icon: entry.icon, name: entry.name),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -120,7 +120,8 @@ class ConnectorCard extends StatelessWidget {
 
 class _IconBadge extends StatelessWidget {
   final String icon;
-  const _IconBadge({required this.icon});
+  final String name;
+  const _IconBadge({required this.icon, required this.name});
 
   @override
   Widget build(BuildContext context) {
@@ -135,7 +136,7 @@ class _IconBadge extends StatelessWidget {
       ),
       child: ProviderLogo(
         icon: icon,
-        name: icon,
+        name: name,
         monogramColor: AppTheme.mutedText(context),
       ),
     );

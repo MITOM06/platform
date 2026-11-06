@@ -118,11 +118,15 @@ class StagedAttachmentsNotifier extends StateNotifier<List<StagedAttachment>> {
         final url = await repo.uploadFile(att.file!);
         await chat.sendMessage(url, type: 'video');
       } else {
+        final sdName = '${att.file!.name.split('.').first}.jpg';
         final url = isHD
             ? await repo.uploadFile(att.file!)
             : await repo.uploadFile(XFile.fromData(
                 Uint8List.fromList(await _bytesForImage(att, isHD)),
-                name: '${att.file!.name.split('.').first}.jpg',
+                name: sdName,
+                // On io `XFile.name` is derived from `path` (`name` is ignored)
+                // — without it the upload has an empty filename / no image/*.
+                path: sdName,
                 mimeType: 'image/jpeg',
               ));
         images.add(url);

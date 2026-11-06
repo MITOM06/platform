@@ -69,6 +69,10 @@ class GroupCallController extends _$GroupCallController {
 
   @override
   GroupCallState build() {
+    // Touch the lazy `_stt` NOW: it does `ref.read`, which throws once the
+    // container is disposed — first touching it inside onDispose would abort
+    // the rest of the cleanup (mesh, sfu, renderers).
+    final stt = _stt;
     _service.onLocalStream = (stream) => _localRenderer.srcObject = stream;
     _service.onRemoteStream = _onRemoteStream;
     _service.onPeerRemoved = _onPeerRemoved;
@@ -87,7 +91,7 @@ class GroupCallController extends _$GroupCallController {
         }
       };
     ref.onDispose(() {
-      _stt.stop();
+      stt.stop();
       _service.dispose();
       _sfu.dispose();
       _localRenderer.dispose();

@@ -53,7 +53,7 @@ Chỉ dừng và hỏi khi gặp đúng các tình huống dưới đây — kh�
 - MongoDB database name: `platform` — shared across all services.
 - JWT env var: `JWT_ACCESS_SECRET` — must be **identical** across all services.
 - Always check existing files before creating new ones.
-- Always run build/test after changes to verify.
+- Always run build/test after changes to verify — **`bash scripts/test-all.sh <phần>` (test + cổng coverage ratchet) phải xanh trước khi báo xong / mở PR.** Luật đầy đủ: `.claude/rules/test-gate.md`.
 - **Never commit/merge local dev setup or fake seed data into `main`** — bring-up
   scripts, seed/fixture data, test accounts, localhost wiring and debug bypasses
   live only on the `dev` branch. Full rule: `.claude/rules/dev-local-only.md`.

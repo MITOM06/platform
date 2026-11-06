@@ -33,38 +33,47 @@ class MentionList extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border(
-          top: BorderSide(color: AppTheme.hairline(context).withValues(alpha: 0.4)),
+          top: BorderSide(
+              color: AppTheme.hairline(context).withValues(alpha: 0.4)),
         ),
       ),
-      child: ListView.builder(
-        shrinkWrap: true,
-        padding: EdgeInsets.zero,
-        itemCount: matches.length,
-        itemBuilder: (ctx, i) {
-          final entry = matches[i];
-          final letter =
-              entry.value.isNotEmpty ? entry.value[0].toUpperCase() : '?';
-          return ListTile(
-            dense: true,
-            leading: CircleAvatar(
-              radius: 16,
-              backgroundColor: AppTheme.accent(context).withValues(alpha: 0.2),
-              child: Text(
-                letter,
-                style: TextStyle(
-                  color: AppTheme.accent(context),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+      // Transparent Material: the ListTiles' ink paints here, not on an
+      // ancestor hidden under this coloured box.
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListView.builder(
+          shrinkWrap: true,
+          padding: EdgeInsets.zero,
+          itemCount: matches.length,
+          itemBuilder: (ctx, i) {
+            final entry = matches[i];
+            final letter =
+                entry.value.isNotEmpty ? entry.value[0].toUpperCase() : '?';
+            return ListTile(
+              dense: true,
+              leading: CircleAvatar(
+                radius: 16,
+                backgroundColor:
+                    AppTheme.accent(context).withValues(alpha: 0.2),
+                child: Text(
+                  letter,
+                  style: TextStyle(
+                    color: AppTheme.accent(context),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            ),
-            title: Text(
-              entry.value,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
-            ),
-            onTap: () => onSelected(entry.value),
-          );
-        },
+              title: Text(
+                entry.value,
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 14),
+              ),
+              onTap: () => onSelected(entry.value),
+            );
+          },
+        ),
       ),
     );
   }
