@@ -364,6 +364,11 @@ const PRIVATE_IPV4 = [
   /^172\.(1[6-9]|2\d|3[01])\./, // RFC 1918
   /^192\.168\./, // RFC 1918
   /^169\.254\./, // link-local
+  /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./, // CGNAT 100.64.0.0/10 — gồm IP Tailscale (tailnet nội bộ)
+  /^192\.0\.0\./, // IETF protocol assignments 192.0.0.0/24
+  /^198\.1[89]\./, // benchmark 198.18.0.0/15
+  /^(22[4-9]|23\d)\./, // multicast 224.0.0.0/4
+  /^(24\d|25[0-5])\./, // reserved 240.0.0.0/4 + broadcast
 ];
 
 /** Private / loopback IPv6 ranges (bracket-less, lower-case). */

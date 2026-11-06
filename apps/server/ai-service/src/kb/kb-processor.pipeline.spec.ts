@@ -246,6 +246,16 @@ describe('KbProcessorService.processDocument', () => {
       ['IPv4-mapped loopback', 'http://[::ffff:127.0.0.1]/api/uploads/x'],
       ['IPv4-mapped RFC1918', 'http://[::ffff:10.0.0.5]/api/uploads/x'],
       ['IPv4 0.0.0.0', 'http://0.0.0.0/api/uploads/x'],
+      // CGNAT 100.64.0.0/10 — gồm IP Tailscale (máy Mini 100.71.140.53): không được gọi sang máy khác trong tailnet.
+      ['CGNAT đầu dải 100.64', 'http://100.64.0.1/api/uploads/x'],
+      ['CGNAT Tailscale 100.71', 'http://100.71.140.53/api/uploads/x'],
+      ['CGNAT cuối dải 100.127', 'http://100.127.255.254/api/uploads/x'],
+      ['IPv4-mapped CGNAT', 'http://[::ffff:100.71.140.53]/api/uploads/x'],
+      ['IETF 192.0.0/24', 'http://192.0.0.8/api/uploads/x'],
+      ['benchmark 198.18/15', 'http://198.19.1.1/api/uploads/x'],
+      ['multicast 224/4', 'http://239.1.2.3/api/uploads/x'],
+      ['reserved 240/4', 'http://240.0.0.1/api/uploads/x'],
+      ['broadcast', 'http://255.255.255.255/api/uploads/x'],
     ])('blocks %s', async (_label, fileUrl) => {
       const m = make();
       await expectError(m, payload({ fileUrl }), 'private IP');
@@ -259,6 +269,9 @@ describe('KbProcessorService.processDocument', () => {
     });
 
     it.each([
+      // Sát biên CGNAT nhưng là IP công khai → vẫn cho qua (không chặn nhầm).
+      ['100.63.255.255 (ngay trước CGNAT)', 'http://100.63.255.255/api/uploads/x'],
+      ['100.128.0.1 (ngay sau CGNAT)', 'http://100.128.0.1/api/uploads/x'],
       ['a public IPv6 host', 'http://[2001:db8::1]/api/uploads/x'],
       ['a domain that merely starts with "fd"', 'https://fdroid.example.com/api/uploads/x'],
     ])('allows %s', async (_label, fileUrl) => {
