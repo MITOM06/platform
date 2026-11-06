@@ -1,5 +1,6 @@
 package com.platform.chatservice.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -12,6 +13,7 @@ import com.platform.chatservice.dto.meeting.MeetingRecordView;
 import com.platform.chatservice.security.InternalKeyGuard;
 import com.platform.chatservice.security.JwtAuthenticationFilter;
 import com.platform.chatservice.security.JwtUtil;
+import com.platform.chatservice.security.SessionStatus;
 import com.platform.chatservice.security.SessionValidator;
 import com.platform.chatservice.service.meeting.MeetingRecordReader;
 import java.time.Instant;
@@ -64,6 +66,18 @@ class InternalMeetingControllerTest {
   @Test
   void rejectsMissingKey() throws Exception {
     mvc.perform(get(URL).param("userId", "u1")).andExpect(status().isUnauthorized());
+    verifyNoInteractions(reader);
+  }
+
+  @Test
+  void validUserJwtWithoutInternalKeyIsStill401() throws Exception {
+    when(jwtUtil.isValid("good-jwt")).thenReturn(true);
+    when(jwtUtil.extractUserId("good-jwt")).thenReturn("u1");
+    when(jwtUtil.extractPerms("good-jwt")).thenReturn(List.of());
+    when(jwtUtil.extractDepts("good-jwt")).thenReturn(List.of());
+    when(sessionValidator.validateToken(any(), any(), any())).thenReturn(SessionStatus.VALID);
+    mvc.perform(get(URL).param("userId", "u1").header("Authorization", "Bearer good-jwt"))
+        .andExpect(status().isUnauthorized());
     verifyNoInteractions(reader);
   }
 
