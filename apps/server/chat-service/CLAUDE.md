@@ -230,6 +230,7 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 - `GET /{id}/summary` (records access) · `POST /{id}/summary/regenerate` (host/co-host, 202;
   409 `MEETING_SUMMARY_UNAVAILABLE` / `MEETING_SUMMARY_PENDING`)
 - Internal (service-to-service): `GET /internal/meetings/{id}/record` (`X-Internal-Key`)
+  (view includes latest `summary`) and `GET /internal/meetings?userId=&q=&limit=` (readable ENDED AI meetings, limit 20/max 50)
 - Errors `MEETING_*` / `MEETINGS_UNAVAILABLE` (`ErrorCodes`), checked in the services (no `@PreAuthorize`)
 
 ### Other Services

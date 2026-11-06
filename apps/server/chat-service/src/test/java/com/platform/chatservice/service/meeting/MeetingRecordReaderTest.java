@@ -50,6 +50,7 @@ class MeetingRecordReaderTest {
   @Autowired private MongoTemplate template;
   private MeetingStore store;
   private MeetingLobby lobby;
+  private MeetingSummaryStore summaries;
   private MeetingRecordReader reader;
 
   @BeforeEach
@@ -60,10 +61,16 @@ class MeetingRecordReaderTest {
     template.dropCollection("users");
     store = mock(MeetingStore.class);
     lobby = mock(MeetingLobby.class);
+    summaries = mock(MeetingSummaryStore.class);
     MeetingPeople people = new MeetingPeople(template);
     reader =
         new MeetingRecordReader(
-            store, lobby, template, people, new MeetingRecordService(template, null, people));
+            store,
+            lobby,
+            template,
+            people,
+            new MeetingRecordService(template, null, people),
+            summaries);
     template.insert(user(HOST, "Host Ha", List.of()), "users");
     template.insert(user(LAN, "Lan Nguyen", List.of()), "users");
     template.insert(user(DEPT_USER, "Dung", List.of(new ObjectId(DEPT))), "users");
@@ -122,6 +129,22 @@ class MeetingRecordReaderTest {
   void removedUserIsRefusedEvenWhenAdmittedOrAttended() {
     when(lobby.isAdmitted(MID, REMOVED)).thenReturn(true);
     assertThat(reader.read(MID, REMOVED)).isEmpty();
+  }
+
+  @Test
+  void recordIncludesLatestSummaryOrNull() {
+    when(summaries.latest(MID)).thenReturn(Optional.empty());
+    assertThat(reader.read(MID, HOST).orElseThrow().summary()).isNull();
+
+    when(summaries.latest(MID))
+        .thenReturn(
+            Optional.of(
+                com.platform.chatservice.model.MeetingSummaryDoc.builder()
+                    .meetingId(MID)
+                    .summary(java.util.Map.of("overview", "We shipped it"))
+                    .build()));
+    assertThat(reader.read(MID, HOST).orElseThrow().summary())
+        .containsEntry("overview", "We shipped it");
   }
 
   @Test

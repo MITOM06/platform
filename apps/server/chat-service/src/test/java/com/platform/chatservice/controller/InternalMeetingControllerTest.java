@@ -9,12 +9,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.platform.chatservice.config.SecurityConfig;
+import com.platform.chatservice.dto.meeting.MeetingListItem;
 import com.platform.chatservice.dto.meeting.MeetingRecordView;
 import com.platform.chatservice.security.InternalKeyGuard;
 import com.platform.chatservice.security.JwtAuthenticationFilter;
 import com.platform.chatservice.security.JwtUtil;
 import com.platform.chatservice.security.SessionStatus;
 import com.platform.chatservice.security.SessionValidator;
+import com.platform.chatservice.service.meeting.MeetingDirectory;
 import com.platform.chatservice.service.meeting.MeetingRecordReader;
 import java.time.Instant;
 import java.util.List;
@@ -46,6 +48,7 @@ class InternalMeetingControllerTest {
   @Autowired private InternalKeyGuard guard;
 
   @MockBean private MeetingRecordReader reader;
+  @MockBean private MeetingDirectory directory;
   @MockBean private JwtUtil jwtUtil;
   @MockBean private SessionValidator sessionValidator;
 
@@ -60,7 +63,8 @@ class InternalMeetingControllerTest {
         List.of(new MeetingRecordView.Attendee("Lan")),
         List.of(new MeetingRecordView.Rec("SPEECH", "Lan", "hi", Instant.EPOCH)),
         List.of(new MeetingRecordView.Chat("Lan", "yo", Instant.EPOCH)),
-        "note");
+        "note",
+        null);
   }
 
   @Test
@@ -134,5 +138,52 @@ class InternalMeetingControllerTest {
     mvc.perform(get(URL).header("X-Internal-Key", KEY))
         .andExpect(status().isNotFound())
         .andExpect(content().contentTypeCompatibleWith("application/json"));
+  }
+
+  @Test
+  void listRequiresKey() throws Exception {
+    mvc.perform(get("/internal/meetings").param("userId", "u1"))
+        .andExpect(status().isUnauthorized())
+        .andExpect(jsonPath("$.error").value("Unauthorized"))
+        .andExpect(jsonPath("$.statusCode").value(401));
+    verifyNoInteractions(directory);
+  }
+
+  @Test
+  void listBlankUserIdReturnsEmpty() throws Exception {
+    mvc.perform(get("/internal/meetings").param("userId", " ").header("X-Internal-Key", KEY))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
+    mvc.perform(get("/internal/meetings").header("X-Internal-Key", KEY))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
+    verifyNoInteractions(directory);
+  }
+
+  @Test
+  void listReturnsItemsAndClampsLimit() throws Exception {
+    when(directory.listReadable("u1", "syn", 50))
+        .thenReturn(
+            List.of(
+                new MeetingListItem("m1", "Sync", "abc", Instant.EPOCH, Instant.EPOCH, "DONE")));
+    mvc.perform(
+            get("/internal/meetings")
+                .param("userId", "u1")
+                .param("q", "syn")
+                .param("limit", "999")
+                .header("X-Internal-Key", KEY))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].id").value("m1"))
+        .andExpect(jsonPath("$[0].summaryState").value("DONE"));
+    when(directory.listReadable("u1", null, 20)).thenReturn(List.of());
+    mvc.perform(get("/internal/meetings").param("userId", "u1").header("X-Internal-Key", KEY))
+        .andExpect(status().isOk());
+    when(directory.listReadable("u1", null, 1)).thenReturn(List.of());
+    mvc.perform(
+            get("/internal/meetings")
+                .param("userId", "u1")
+                .param("limit", "-5")
+                .header("X-Internal-Key", KEY))
+        .andExpect(status().isOk());
   }
 }

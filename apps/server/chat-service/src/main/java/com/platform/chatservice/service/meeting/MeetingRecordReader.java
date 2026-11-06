@@ -5,6 +5,7 @@ import com.platform.chatservice.dto.meeting.PersonDto;
 import com.platform.chatservice.model.Meeting;
 import com.platform.chatservice.model.MeetingMessage;
 import com.platform.chatservice.model.MeetingNote;
+import com.platform.chatservice.model.MeetingSummaryDoc;
 import com.platform.chatservice.service.AiConstants;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +40,7 @@ public class MeetingRecordReader {
   private final MongoTemplate mongo;
   private final MeetingPeople people;
   private final MeetingRecordService records;
+  private final MeetingSummaryStore summaries;
 
   public Optional<MeetingRecordView> read(String meetingId, String userId) {
     if (meetingId == null || meetingId.isBlank() || userId == null || userId.isBlank()) {
@@ -94,7 +96,8 @@ public class MeetingRecordReader {
                             c.getContent(),
                             c.getCreatedAt()))
                 .toList(),
-            sharedNote(meetingId)));
+            sharedNote(meetingId),
+            summaries.latest(meetingId).map(MeetingSummaryDoc::getSummary).orElse(null)));
   }
 
   private List<MeetingMessage> newestChat(String meetingId) {
