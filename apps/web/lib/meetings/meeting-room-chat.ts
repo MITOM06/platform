@@ -118,8 +118,14 @@ export class MeetingRoomChat {
     }))
   }
 
+  /** `meet.chat` from `/topic/meeting/{id}`: settle my echo / count unread, and finish an AI answer. */
+  onTopicChat(e: Extract<MeetingEvent, { event: 'meet.chat' }>): void {
+    this.onEcho(e)
+    this.onAiAnswer(e)
+  }
+
   /** The AI's answer is an ordinary `meet.chat` from the bot: the oldest entry is done. */
-  onAiAnswer(e: Extract<MeetingEvent, { event: 'meet.chat' }>): void {
+  private onAiAnswer(e: Extract<MeetingEvent, { event: 'meet.chat' }>): void {
     if (e.message.sender.userId !== AI_BOT_ID) return
     useMeetingRoomStore.setState((s) => ({
       pendingAi: resolvePendingAi(expirePendingAi(s.pendingAi, this.deps.now())),

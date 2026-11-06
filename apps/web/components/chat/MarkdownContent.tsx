@@ -10,12 +10,17 @@ import remarkGfm from 'remark-gfm'
  *
  * Links open in a new tab; styling is kept compact to sit inside a chat bubble.
  */
-export function MarkdownContent({ content }: { content: string }) {
+export function MarkdownContent({ content, disallowImages = false }: {
+  content: string
+  /** Images render as their alt text, never fetched (untrusted text echoed by the AI in shared rooms). */
+  disallowImages?: boolean
+}) {
   return (
     <div className="text-sm leading-relaxed break-words [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 space-y-2">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
+          ...(disallowImages ? { img: ({ alt }) => <span>{alt}</span> } : {}),
           a: ({ ...props }) => (
             <a
               {...props}

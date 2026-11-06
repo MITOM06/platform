@@ -425,6 +425,12 @@ describe('AI in the chat', () => {
     expect(store().pendingAi).toEqual([])
   })
 
+  it('an AI line counts as unread while the chat panel is closed', async () => {
+    await inRoom()
+    c.onChat(botLine())
+    expect(store().unreadChat).toBe(1)
+  })
+
   it('a human line leaves the indicator alone', async () => {
     await inRoom()
     c.onAi(ai('thinking', 'bob'))

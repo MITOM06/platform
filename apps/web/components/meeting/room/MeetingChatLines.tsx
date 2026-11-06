@@ -49,7 +49,7 @@ export function ChatLine({ message, showName, timeFormat }: {
       ) : null}
       {isAi ? (
         <div className="max-w-[85%] rounded-lg bg-muted px-3 py-1.5">
-          <MarkdownContent content={message.content} />
+          <MarkdownContent content={message.content} disallowImages />
         </div>
       ) : (
         <p className={cn('max-w-[85%] rounded-lg px-3 py-1.5 text-sm break-words whitespace-pre-wrap', mine ? 'bg-accent text-accent-foreground' : 'bg-muted')}>

@@ -21,7 +21,7 @@ import {
   SWITCH_ACTIONS, answerLobby, flushNotes, hostCommandBody, initialRoomRole, mutedNotice, roleChange, withoutPending,
 } from './room-host'
 import { wireRoomSession, type JoinMedia, type MeetingRoomDeps, type RoomSession } from './room-session'
-import { appendOwnChat, markMeetingEnded, rereadLobby, rereadMeeting } from './room-sync'
+import { handlePersonalChat, markMeetingEnded, rereadLobby, rereadMeeting } from './room-sync'
 import { phaseAfterJoinError, phaseAfterPersonalEvent, phaseAfterRoomClosed } from './room-phase'
 
 /**
@@ -319,16 +319,11 @@ export class MeetingRoomController implements ActiveMeetingRoom {
     return answerLobby(this.deps, this.meetingId, userId, () => this.deps.api.deny(this.meetingId, userId))
   }
 
-  // ── Events ───────────────────────────────────────────────────────────────
-
-  /** Personal-queue events for this meeting (ActiveMeetingRoom). */
+  /** Events: personal-queue events for this meeting (ActiveMeetingRoom). */
   handle(e: MeetingEvent): void {
     if (e.event === 'meet.muted') return this.onMuted(e.actor)
     if (e.event === 'meet.error') return this.onError(e)
-    if (e.event === 'meet.chat') {
-      appendOwnChat(this.deps, e) // my own line re-sent to me alone (an idempotent retry): never unread
-      return this.chat.onEcho(e, false)
-    }
+    if (e.event === 'meet.chat') return handlePersonalChat(this.deps, this.chat, e)
     const next = phaseAfterPersonalEvent(store().phase, e)
     if (next === null) return
     if (next === 'rejoin') void this.rejoin()
@@ -368,15 +363,20 @@ export class MeetingRoomController implements ActiveMeetingRoom {
   }
 
   onChat(e: Extract<MeetingEvent, { event: 'meet.chat' }>): void {
-    this.chat.onEcho(e)
-    this.chat.onAiAnswer(e)
+    this.chat.onTopicChat(e)
   }
 
-  onAi(e: Extract<MeetingEvent, { event: 'meet.ai' }>): void { this.chat.onAi(e) }
+  onAi(e: Extract<MeetingEvent, { event: 'meet.ai' }>): void {
+    this.chat.onAi(e)
+  }
 
-  onSharedNoteUpdated(version: number, updatedBy?: MeetingPerson): void { set({ sharedNoteRemote: updatedBy ? { version, updatedBy } : { version } }) }
+  onSharedNoteUpdated(version: number, updatedBy?: MeetingPerson): void {
+    set({ sharedNoteRemote: updatedBy ? { version, updatedBy } : { version } })
+  }
 
-  onEnded(): void { if (store().phase !== 'ended') this.close('ended') }
+  onEnded(): void {
+    if (store().phase !== 'ended') this.close('ended')
+  }
 
   /** STOMP came back: re-ask while waiting (missed `meet.admitted`); in the room re-read and apply what changed. */
   async onRealtimeReconnected(): Promise<void> {

