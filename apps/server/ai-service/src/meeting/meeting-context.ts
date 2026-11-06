@@ -10,9 +10,22 @@ export const MEETING_INSTRUCTION =
   'The user is asking about the meeting below. Answer questions about this meeting from the record; ' +
   "say so when the record doesn't contain the answer, and never invent details.";
 
+/** True when the summary has any content (the overview alone must not gate the rest). */
+export function hasSummaryContent(s: MeetingSummary | null | undefined): s is MeetingSummary {
+  return (
+    !!s &&
+    (!!s.overview?.trim() ||
+      !!s.decisions?.length ||
+      !!s.actionItems?.length ||
+      !!s.keyPoints?.length ||
+      !!s.fromMaterials?.length)
+  );
+}
+
 /** Summary part first: overview, decisions, action items (with owner), key points. */
 export function renderSummary(s: MeetingSummary): string {
-  const lines: string[] = ['## AI summary', oneLine(s.overview)];
+  const lines: string[] = ['## AI summary'];
+  if (s.overview?.trim()) lines.push(oneLine(s.overview));
   if (s.decisions.length) lines.push('', '### Decisions', ...s.decisions.map((d) => `- ${oneLine(d)}`));
   if (s.actionItems.length) {
     lines.push(
@@ -33,7 +46,7 @@ export function renderSummary(s: MeetingSummary): string {
  */
 export function buildMeetingContextBlock(view: MeetingRecordView, maxChars = MEETING_CONTEXT_MAX_CHARS): string {
   const head = `${MEETING_INSTRUCTION}\n\n`;
-  const summary = view.summary?.overview?.trim() ? renderSummary(view.summary) : '';
+  const summary = hasSummaryContent(view.summary) ? renderSummary(view.summary) : '';
   const record = renderRecordBody(view);
   const fenceOverhead = wrapUntrusted(LABEL, 'x').length - 1;
   const room = Math.max(0, maxChars - head.length - fenceOverhead);

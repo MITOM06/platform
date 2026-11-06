@@ -27,6 +27,8 @@ export interface ToolContext {
   displayName: string;
   /** True only for the 1-1 chat with the AI; gates the meeting tools (a group reply is visible to others). */
   directAi?: boolean;
+  /** Set by the meeting tools when meeting content entered this turn — such a turn never feeds key-fact extraction. */
+  meetingContentRead?: boolean;
   /** Owning department id (P6 group bot); scopes KB retrieval when present. */
   departmentId?: string;
   /** Caller capabilities (JWT `perms`) — gates `get_department_context`. Absent ⇒ none. */

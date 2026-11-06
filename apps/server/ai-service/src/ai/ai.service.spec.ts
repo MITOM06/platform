@@ -1454,6 +1454,55 @@ describe('AiService', () => {
     expect(extractFacts).not.toHaveBeenCalled();
   });
 
+  it('treats /new and /memory as normal question text in a meeting: chat (no system notice into the room)', async () => {
+    directAi.mockReturnValue(false);
+    convMeetingId = 'm1';
+    meetingBlockFor.mockResolvedValue('MEETING-BLOCK-TEXT');
+    for (const content of ['/new', '/memory']) {
+      publish.mockClear();
+      createNewSession.mockClear();
+      getMemory.mockClear();
+      mockStream.mockReturnValue(makeStream(['model answer']));
+      await service.handleRequest({ ...basePayload, conversationId: 'meeting:m1', content });
+      expect(createNewSession).not.toHaveBeenCalled();
+      expect(getMemory).not.toHaveBeenCalled();
+      const dones = publish.mock.calls.map((c) => c[1]).filter((e) => e.type === 'AI_STREAM_DONE');
+      expect(dones).toHaveLength(1);
+      expect(dones[0].fullContent).toBe('model answer');
+    }
+  });
+
+  it('never publishes the context-compacted notice in a meeting: chat', async () => {
+    directAi.mockReturnValue(false);
+    convMeetingId = 'm1';
+    meetingBlockFor.mockResolvedValue('MEETING-BLOCK-TEXT');
+    maybeCompact.mockImplementation(async (sess: unknown) => ({ session: sess, compacted: true }));
+    mockStream.mockReturnValue(makeStream(['Answer']));
+
+    await service.handleRequest({ ...basePayload, conversationId: 'meeting:m1' });
+
+    const dones = publish.mock.calls.map((c) => c[1]).filter((e) => e.type === 'AI_STREAM_DONE');
+    expect(dones).toHaveLength(1);
+    expect(dones[0].fullContent).toBe('Answer');
+  });
+
+  it('does not extract key facts when a meeting tool ran in the turn', async () => {
+    toolRegistryGetDefinitions.mockReturnValue(SAMPLE_TOOLS);
+    incrementMessageCount.mockResolvedValue(3);
+    toolRegistryExecute.mockImplementation(async (_n: string, _i: unknown, ctx: { meetingContentRead?: boolean }) => {
+      ctx.meetingContentRead = true;
+      return 'meeting text';
+    });
+    mockStream
+      .mockReturnValueOnce(makeToolUseStream('get_meeting_record', 'tool-1', { meetingId: 'm1' }))
+      .mockReturnValueOnce(makeStream(['answer']));
+
+    await service.handleRequest(basePayload);
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(extractFacts).not.toHaveBeenCalled();
+  });
+
   // ─── Thinking on any capable routed model (14) ────────────────────────────
 
   it('applies the thinking toggle to a routed non-primary model that supports adaptive thinking', async () => {

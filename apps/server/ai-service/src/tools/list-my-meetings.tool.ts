@@ -28,6 +28,7 @@ export class ListMyMeetingsTool {
 
   async execute(input: Record<string, unknown>, ctx: ToolContext): Promise<string> {
     if (ctx.directAi !== true) return MEETING_NOT_FOUND;
+    ctx.meetingContentRead = true;
     const raw = input['query'];
     const query = typeof raw === 'string' ? oneLine(raw).slice(0, 200) : '';
     let items;

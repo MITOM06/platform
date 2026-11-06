@@ -66,4 +66,12 @@ describe('buildMeetingContextBlock', () => {
     expect(small.length).toBeLessThanOrEqual(3000);
     expect(small).toContain('Ship on Friday');
   });
+
+  it('keeps the summary when the overview is blank but other sections exist', () => {
+    const out = buildMeetingContextBlock(
+      view({ summary: { overview: '  ', keyPoints: [], decisions: ['Ship on Friday'], actionItems: [], fromMaterials: [], language: 'en' } }),
+    );
+    expect(out).toContain('## AI summary');
+    expect(out).toContain('Ship on Friday');
+  });
 });

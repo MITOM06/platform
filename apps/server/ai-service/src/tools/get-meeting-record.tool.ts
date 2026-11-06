@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { wrapUntrusted } from '../ai/injection-guard';
 import { MeetingRecordClient } from '../meeting/meeting-record.client';
 import { cutMiddle, renderRecordBody } from '../meeting/meeting-prompt';
-import { renderSummary } from '../meeting/meeting-context';
+import { hasSummaryContent, renderSummary } from '../meeting/meeting-context';
 import { MeetingRecordView } from '../meeting/meeting.constants';
 import { MEETING_NOT_FOUND, MEETING_UNAVAILABLE } from './list-my-meetings.tool';
 import { ToolContext, ToolDefinition } from './tool.interface';
@@ -51,6 +51,7 @@ export class GetMeetingRecordTool {
 
   async execute(input: Record<string, unknown>, ctx: ToolContext): Promise<string> {
     if (ctx.directAi !== true) return MEETING_NOT_FOUND;
+    ctx.meetingContentRead = true;
     const id = input['meetingId'];
     if (typeof id !== 'string' || !MEETING_ID_RE.test(id)) return MEETING_NOT_FOUND;
     const question = typeof input['question'] === 'string' ? input['question'] : '';
@@ -65,7 +66,7 @@ export class GetMeetingRecordTool {
     }
     if (!view) return MEETING_NOT_FOUND;
 
-    const summary = view.summary?.overview?.trim() ? renderSummary(view.summary) : '';
+    const summary = hasSummaryContent(view.summary) ? renderSummary(view.summary) : '';
     const body = renderBody(view, keywords);
     const text = summary ? `${summary}\n\n${body}` : body;
     return wrapUntrusted('Meeting record', cutMiddle(text, MEETING_TOOL_MAX_CHARS));

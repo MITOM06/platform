@@ -71,6 +71,23 @@ describe('GetMeetingRecordTool', () => {
     expect(out.indexOf('Tổng quan X')).toBeLessThan(out.indexOf('ngân sách'));
     expect(out).toContain('trời đẹp');
   });
+  it('keeps the summary when the overview is blank but decisions exist', async () => {
+    const out = await make(view({ summary: { overview: '', keyPoints: [], decisions: ['Chốt ngân sách'], actionItems: [] } as any }))
+      .execute({ meetingId: 'm1' }, ctx());
+    expect(out).toContain('AI summary');
+    expect(out).toContain('Chốt ngân sách');
+  });
+  it('marks the turn as having read meeting content (blocks key-fact extraction)', async () => {
+    const c = ctx();
+    await make(view()).execute({ meetingId: 'm1' }, c);
+    expect(c.meetingContentRead).toBe(true);
+    const c2 = ctx();
+    await new ListMyMeetingsTool({ listMine: jest.fn().mockResolvedValue([]) } as any).execute({}, c2);
+    expect(c2.meetingContentRead).toBe(true);
+    const c3 = ctx({ directAi: false });
+    await make(view()).execute({ meetingId: 'm1' }, c3);
+    expect(c3.meetingContentRead).toBeUndefined();
+  });
   it('question keeps only matching lines (Vietnamese diacritics, case-insensitive)', async () => {
     const out = await make(view()).execute({ meetingId: 'm1', question: 'NGÂN SÁCH?' }, ctx());
     expect(out).toContain('ngân sách');
