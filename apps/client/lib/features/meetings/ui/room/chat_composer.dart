@@ -80,7 +80,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
       final up = await ref.read(meetingUploaderProvider)(bytes, picked.name);
       if (!mounted) return;
       setState(() => _staged = MeetingAttachment(
-          url: up.url, name: up.name, size: up.size, contentType: null));
+          url: uploadPath(up.url), name: up.name, size: up.size, contentType: null));
       // Typed past the limit during the upload: keep the file staged, no
       // toast — the inline too-long error already shows (web `attach`).
       if (_text.text.length <= MeetingLimits.chat) _deliver();

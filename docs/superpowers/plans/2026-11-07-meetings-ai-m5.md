@@ -157,7 +157,7 @@ Việc để sau (không chặn merge):
   - Share video ⇒ tối đa 1 ảnh / 15 s.
   - Thử `captureFrame` trên máy Android thật.
   - Thử Safari / Firefox.
-- Chip trên Flutter bật ngay khi bắt đầu, chưa đợi khung hình đầu. Nếu `captureFrame` liên tục trả null thì chip không tự tắt. Nên làm giống web.
+- ~~Chip trên Flutter bật ngay khi bắt đầu~~ — XONG: chip chỉ bật sau khung hình đầu, bỏ cuộc sau 20 lần null liên tiếp như web.
 - Giới hạn multipart chung là 100 MB, nên ảnh quá cỡ vẫn bị ghi tạm ra đĩa rồi mới bị chặn ở 2 MB.
 - Sweep quét `fs.files` vì chưa có index `metadata.screenFrame`.
 - Lỗi xảy ra sau khi đã giữ suất thì vẫn tốn suất đó.

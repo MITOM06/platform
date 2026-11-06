@@ -38,6 +38,10 @@ Future<Uint8List?> captureScreenTrack(rtc.MediaStream? stream) async {
   return buf.asUint8List();
 }
 
+/// Same as web `WARMUP_MAX_RETRIES`: after this many consecutive empty
+/// captures the share is given up (a further one stops it).
+const int kScreenWarmupMaxRetries = 20;
+
 class MeetingScreenFrames {
   MeetingScreenFrames({
     required this.capture,
@@ -60,14 +64,17 @@ class MeetingScreenFrames {
   final int Function() _now;
   final bool Function() _isSupported;
 
-  /// True while frames are being read — drives the sharer's notice.
+  /// True only once a frame was really captured (and until stopped / given
+  /// up) — drives the sharer's notice.
   final ValueNotifier<bool> reading = ValueNotifier(false);
 
   Timer? _ticker;
   String? _meetingId;
   int _gen = 0;
   bool _inFlight = false;
-  bool _disabled = false; // captureFrame failed: off until the share ends
+  bool _disabled =
+      false; // captureFrame failed / gave up: off until the share ends
+  int _empty = 0; // consecutive captures that returned null
   List<int>? _lastThumb;
   int? _lastSentAt;
 
@@ -87,7 +94,7 @@ class MeetingScreenFrames {
     final gen = ++_gen;
     _lastThumb = null;
     _lastSentAt = null;
-    reading.value = true;
+    _empty = 0;
     _ticker = _timer(const Duration(milliseconds: kScreenCheckMs),
         () => unawaited(_tick(meetingId, gen)));
     unawaited(_tick(meetingId, gen));
@@ -121,7 +128,16 @@ class MeetingScreenFrames {
         }
         return;
       }
-      if (bytes == null || gen != _gen) return;
+      if (gen != _gen) return;
+      if (bytes == null) {
+        if (++_empty > kScreenWarmupMaxRetries) {
+          _disabled = true; // like web: give up for this share
+          _stop();
+        }
+        return;
+      }
+      _empty = 0;
+      reading.value = true;
       final now = _now();
       final out = await _encoder(bytes, _lastThumb, _lastSentAt, now);
       if (out == null || gen != _gen) return;

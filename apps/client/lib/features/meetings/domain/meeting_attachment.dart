@@ -4,6 +4,15 @@
 /// Only our own upload store is a valid attachment target.
 const kUploadPrefix = '/api/uploads/';
 
+/// chat-service answers `/api/uploads/<id>`; if a gateway ever returns it
+/// absolute, keep only the path (web `uploadPath`). Anything else — relative,
+/// or an absolute URL that does not parse — is returned unchanged.
+String uploadPath(String url) {
+  if (!RegExp(r'^https?://', caseSensitive: false).hasMatch(url)) return url;
+  final uri = Uri.tryParse(url);
+  return uri == null ? url : (uri.path.isEmpty ? '/' : uri.path);
+}
+
 class MeetingAttachment {
   const MeetingAttachment({
     required this.url,

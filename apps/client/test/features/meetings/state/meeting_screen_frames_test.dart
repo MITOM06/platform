@@ -206,15 +206,73 @@ void main() {
     expect(uploads.length, 1);
   });
 
-  test('capture returning null (no frame yet) just waits', () async {
+  MeetingScreenFrames nullCapture(List<_Timer> ts) => MeetingScreenFrames(
+        capture: () async {
+          captures++;
+          return null;
+        },
+        encoder: (b, t, l, n) async => fail('not called'),
+        upload: (id, j, ts) async => fail('not called'),
+        timer: (d, cb) {
+          final t = _Timer(cb);
+          ts.add(t);
+          return t;
+        },
+        isSupported: () => true,
+      );
+
+  test('capture returning null: chip stays off while waiting', () async {
+    f = nullCapture(timers);
+    f.sync(meetingId: 'm1', active: true);
+    await flush();
+    expect(f.reading.value, false);
+  });
+
+  test('null captures give up after the web limit, chip off', () async {
+    f = nullCapture(timers);
+    f.sync(meetingId: 'm1', active: true);
+    await flush(); // attempt 1
+    for (var i = 2; i <= kScreenWarmupMaxRetries; i++) {
+      timers.single.cb();
+      await flush();
+    }
+    expect(captures, kScreenWarmupMaxRetries);
+    expect(timers.single.cancelled, false);
+    timers.single.cb(); // one more empty capture: gives up
+    await flush();
+    expect(captures, kScreenWarmupMaxRetries + 1);
+    expect(timers.single.cancelled, true);
+    expect(f.reading.value, false);
+    f.sync(meetingId: 'm1', active: true); // same share: stays off
+    await flush();
+    expect(captures, kScreenWarmupMaxRetries + 1);
+    f.sync(meetingId: 'm1', active: false); // new share tries again
+    f.sync(meetingId: 'm1', active: true);
+    await flush();
+    expect(captures, kScreenWarmupMaxRetries + 2);
+  });
+
+  test('first real frame turns the chip on', () async {
+    var n = 0;
     f = MeetingScreenFrames(
-      capture: () async => null,
-      encoder: (b, t, l, n) async => fail('not called'),
-      upload: (id, j, ts) async => fail('not called'),
-      timer: (d, cb) => _Timer(cb),
+      capture: () async => ++n < 3 ? null : Uint8List.fromList([1]),
+      encoder: (b, t, l, now) async =>
+          ProcessedFrame([1], Uint8List.fromList([1])),
+      upload: (id, j, ts) async {},
+      timer: (d, cb) {
+        final t = _Timer(cb);
+        timers.add(t);
+        return t;
+      },
       isSupported: () => true,
     );
     f.sync(meetingId: 'm1', active: true);
+    await flush();
+    expect(f.reading.value, false);
+    timers.last.cb();
+    await flush();
+    expect(f.reading.value, false);
+    timers.last.cb();
     await flush();
     expect(f.reading.value, true);
   });
