@@ -174,3 +174,20 @@
 ### Task 8: Thử tay trên `dev` (cần owner đồng ý merge vào `dev`)
 
 - [ ] Merge `feat/meetings-ai` vào `dev`, chạy stack. Họp có AI 2 người (web + Android) + 1 người được mời vắng ⇒ kết thúc ⇒ ≤ 1 phút có nhóm 3 người, tin tóm tắt đúng tên, push tới máy vắng. Tắt ai-service rồi kết thúc họp ⇒ 10' sau FAILED ⇒ bật lại, host bấm tạo lại ⇒ tin mới vào nhóm.
+
+---
+
+## Kết quả (2026-11-06)
+
+Task 1–7 DONE trên `feat/meetings-ai` (`60f16528..ebf3d4ba`), review từng task + review cuối toàn nhánh + một đợt sửa (3 Important, 7 Minor) đã duyệt. Task 8 (thử tay trên `dev`) **chưa chạy**: cần owner đồng ý merge vào `dev`.
+
+Quyết định thêm khi thực thi: `meet.summary.ready` dùng khoá `event` như mọi sự kiện họp; `meeting_summaries` chỉ lưu bản thành công; PENDING/FAILED vẫn hiện bản tóm tắt cũ bên dưới dòng trạng thái; "Mở nhóm cuộc họp" hiện ở mọi trạng thái khi người xem thuộc nhóm; cuộc họp có AI mà `summaryState` null ⇒ GET báo FAILED và cho tạo lại; sweep báo `meet.summary.ready` cho host/co-host; gọi Anthropic timeout 180 s, 1 lần retry.
+
+Việc còn để sau (không chặn merge):
+- Thử tay trên `dev`: curl chặn `/api/chat/internal/...` (cả `%69nternal`, `//internal`, `/Internal`) qua Caddy; push tới máy người được mời mà vắng; tắt ai-service ⇒ sau 10' FAILED ⇒ tạo lại.
+- Tên người tham dự trong tin tóm tắt gồm cả người bị đá (họ đã vào họp) — owner quyết.
+- Whitelist 6 khoá khi chép `summary` từ ai-service; nhóm còn < 2 người vẫn bị coi là sống.
+- Regenerate chưa có cooldown (chi phí bị chặn vì chỉ một lần chạy cùng lúc).
+- Thiếu test: lost link race, `inGroup=false` khi nhóm mất, nhánh `departmentIds` lưu dạng string.
+- `call-summary.service.ts` (gọi nhóm, có từ trước) chưa rào prompt injection như tóm tắt họp.
+- Subscriber Redis lỗi lúc boot chỉ log, không retry (giống subscriber gọi nhóm).
