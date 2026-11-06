@@ -70,6 +70,10 @@ export interface MeetingMaterialMessage {
   fileName: string;
   mimeType?: string | null;
   userId: string;
+  /** Absent means "file". For "screen", messageId is the frame id and uploadId the GridFS file. */
+  kind?: MeetingMaterialKind;
 }
+
+export type MeetingMaterialKind = 'file' | 'screen';
 
 export type MeetingMaterialStatus = 'ok' | 'unsupported' | 'failed';

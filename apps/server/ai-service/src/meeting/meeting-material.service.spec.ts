@@ -1,4 +1,4 @@
-import { MeetingMaterialService, capText } from './meeting-material.service';
+import { MeetingMaterialService, SCREEN_PROMPT, capText } from './meeting-material.service';
 import { MEETING_MATERIAL_RESULT_CHANNEL } from './meeting.constants';
 import { UnsupportedFileTypeException } from '../kb/document-extractor.service';
 import { VisionOversizedException } from '../kb/vision-describe.service';
@@ -239,5 +239,62 @@ describe('MeetingMaterialService', () => {
     const s = setup();
     await s.svc.process(msg);
     expect(s.published()[0]).toMatchObject({ status: 'failed' });
+  });
+
+  describe('screen frames', () => {
+    const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46, 0x49, 0x46, 0, 1]);
+    const screen = { ...msg, kind: 'screen' as const, fileName: 'screen.jpg', mimeType: 'image/jpeg' };
+
+    it('describes a JPEG with the screen prompt, 800 tokens, meeting-screen label; text capped 1500', async () => {
+      fetchMock.mockImplementation(async () => res(JPEG));
+      const s = setup();
+      s.vision.describeImage.mockResolvedValue('x'.repeat(2000));
+      await s.svc.process(screen);
+      const [buf, mime, userId, opts] = s.vision.describeImage.mock.calls[0];
+      expect(buf).toEqual(JPEG);
+      expect(mime).toBe('image/jpeg');
+      expect(userId).toBe('u1');
+      expect(opts).toEqual({ prompt: SCREEN_PROMPT, maxTokens: 800, usageLabel: 'meeting-screen' });
+      expect(s.published()[0]).toMatchObject({ status: 'ok', messageId: 'x1' });
+      expect(s.published()[0].text).toHaveLength(1500);
+    });
+
+    it('bytes that are not an image -> unsupported, no vision call', async () => {
+      fetchMock.mockImplementation(async () => res(Buffer.from('%PDF-1.4 data')));
+      const s = setup();
+      await s.svc.process(screen);
+      expect(s.vision.describeImage).not.toHaveBeenCalled();
+      expect(s.published()[0]).toMatchObject({ status: 'unsupported' });
+    });
+
+    it('over 3 MB -> failed, no vision call', async () => {
+      fetchMock.mockImplementation(async () => res(Buffer.alloc(3_000_001, 0xff)));
+      const s = setup();
+      await s.svc.process(screen);
+      expect(s.vision.describeImage).not.toHaveBeenCalled();
+      expect(s.published()[0]).toMatchObject({ status: 'failed' });
+    });
+
+    it('vision unavailable or oversized -> unsupported; other vision error -> failed', async () => {
+      fetchMock.mockImplementation(async () => res(JPEG));
+      const a = setup({ visionAvailable: false });
+      await a.svc.process(screen);
+      expect(a.published()[0]).toMatchObject({ status: 'unsupported' });
+      const b = setup();
+      b.vision.describeImage.mockRejectedValue(new VisionOversizedException(9, 5));
+      await b.svc.process(screen);
+      expect(b.published()[0]).toMatchObject({ status: 'unsupported' });
+      const c = setup();
+      c.vision.describeImage.mockRejectedValue(new Error('boom'));
+      await c.svc.process(screen);
+      expect(c.published()[0]).toMatchObject({ status: 'failed' });
+    });
+
+    it('missing kind stays a file: 20 MB cap path, default describeImage call', async () => {
+      fetchMock.mockImplementation(async () => res(PNG));
+      const s = setup();
+      await s.svc.process({ ...msg, fileName: 'a.png', mimeType: 'image/png' });
+      expect(s.vision.describeImage).toHaveBeenCalledWith(PNG, 'image/png', 'u1');
+    });
   });
 });

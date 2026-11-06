@@ -55,6 +55,12 @@ export function renderRecordBody(view: MeetingRecordView): string {
         const file = oneLine(r.fileName) || GENERIC_FILE;
         const who = oneLine(r.displayName);
         lines.push(`[FILE] ${file}${who ? ` (shared by ${who})` : ''}: ${r.text}`);
+      } else if (r.kind === 'SCREEN') {
+        const who = oneLine(r.displayName) || GENERIC_SPEAKER;
+        const t = Date.parse(r.ts);
+        // Record time is shown in UTC: the prompt has no per-viewer timezone.
+        const hhmm = Number.isNaN(t) ? '' : `, ${new Date(t).toISOString().slice(11, 16)}`;
+        lines.push(`[SCREEN] (shared by ${who}${hhmm}): ${r.text}`);
       } else {
         lines.push(`[${r.kind}] ${oneLine(r.displayName) || GENERIC_SPEAKER}: ${r.text}`);
       }

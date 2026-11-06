@@ -21,6 +21,16 @@ import {
 export const MATERIAL_MAX_BYTES = 20_000_000;
 export const MATERIAL_FETCH_TIMEOUT_MS = 20_000;
 export const MATERIAL_TEXT_MAX_CHARS = 6000;
+export const SCREEN_MAX_BYTES = 3_000_000;
+export const SCREEN_TEXT_MAX_CHARS = 1500;
+export const SCREEN_MAX_TOKENS = 800;
+export const SCREEN_USAGE_LABEL = 'meeting-screen';
+export const SCREEN_PROMPT =
+  'This is a frame of a screen shared in a meeting. Extract what a participant who missed it would need: ' +
+  'the visible text of slides/documents (titles, bullets), numbers/figures/table values, and the key point of the screen. ' +
+  'Skip UI chrome (browser bars, taskbars, app menus, video tiles). ' +
+  'If the screen is not meaningful content (desktop, blank, video of people), answer with one short sentence saying so. ' +
+  'Answer in the language of the text on the screen. Plain text only, no markdown headings, at most about 1200 characters.';
 /** Files read at once; each can buffer up to MATERIAL_MAX_BYTES. */
 export const MATERIAL_MAX_CONCURRENT = 2;
 
@@ -99,7 +109,9 @@ export class MeetingMaterialService {
         messageId: msg.messageId,
         fileName: msg.fileName,
         status: outcome.status as MeetingMaterialStatus,
-        ...(outcome.status === 'ok' ? { text: capText(outcome.text) } : {}),
+        ...(outcome.status === 'ok'
+          ? { text: capText(outcome.text, msg.kind === 'screen' ? SCREEN_TEXT_MAX_CHARS : MATERIAL_TEXT_MAX_CHARS) }
+          : {}),
       });
       this.logger.log(`Published meeting material ${msg.meetingId}/${msg.messageId}: ${outcome.status}`);
     } catch (err) {
@@ -107,9 +119,33 @@ export class MeetingMaterialService {
     }
   }
 
+  /** A shared-screen frame: image only, small cap, screen-specific prompt. */
+  private async readScreen(msg: MeetingMaterialMessage, url: string): Promise<Outcome> {
+    const { body } = await fetchUploadCapped(url, {
+      maxBytes: SCREEN_MAX_BYTES,
+      timeoutMs: MATERIAL_FETCH_TIMEOUT_MS,
+      headers: internalUploadHeaders({ internalApiKey: this.internalApiKey }),
+    });
+    const sniffed = sniffImageMediaType(body);
+    if (!sniffed || !this.vision.isAvailable()) return { status: 'unsupported' };
+    try {
+      return nonEmpty(
+        await this.vision.describeImage(body, sniffed, msg.userId, {
+          prompt: SCREEN_PROMPT,
+          maxTokens: SCREEN_MAX_TOKENS,
+          usageLabel: SCREEN_USAGE_LABEL,
+        }),
+      );
+    } catch (err) {
+      if (isVisionRefusal(err)) return { status: 'unsupported' };
+      throw err;
+    }
+  }
+
   private async read(msg: MeetingMaterialMessage): Promise<Outcome> {
     const url = resolveUploadUrl(`/api/uploads/${msg.uploadId}`, this.chatBaseUrl);
     if (!url) return { status: 'failed' };
+    if (msg.kind === 'screen') return this.readScreen(msg, url);
 
     // `url` is re-anchored on the internal chat base, the only place the key goes.
     const { body } = await fetchUploadCapped(url, {
@@ -128,9 +164,7 @@ export class MeetingMaterialService {
       try {
         return nonEmpty(await this.vision.describeImage(body, sniffed, msg.userId));
       } catch (err) {
-        if (err instanceof VisionOversizedException || err instanceof VisionUnsupportedException) {
-          return { status: 'unsupported' };
-        }
+        if (isVisionRefusal(err)) return { status: 'unsupported' };
         throw err;
       }
     }
@@ -143,6 +177,10 @@ export class MeetingMaterialService {
       throw err;
     }
   }
+}
+
+function isVisionRefusal(err: unknown): boolean {
+  return err instanceof VisionOversizedException || err instanceof VisionUnsupportedException;
 }
 
 function nonEmpty(text: string | null | undefined): Outcome {

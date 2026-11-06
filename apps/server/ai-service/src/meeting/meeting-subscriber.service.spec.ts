@@ -30,9 +30,16 @@ describe('MeetingSubscriberService', () => {
     ['empty fileName', { ...good, fileName: ' ' }],
     ['missing userId', { ...good, userId: undefined }],
     ['non-string mime', { ...good, mimeType: 5 }],
+    ['unknown kind', { ...good, kind: 'video' }],
+    ['non-string kind', { ...good, kind: 5 }],
   ])('drops malformed material: %s', async (_n, p) => {
     const t = await boot();
     t.emit('meet:material', p);
     expect(t.material.process).not.toHaveBeenCalled();
+  });
+  it.each([['file'], ['screen'], [undefined]])('accepts kind %s', async (kind) => {
+    const t = await boot();
+    t.emit('meet:material', { ...good, kind });
+    expect(t.material.process).toHaveBeenCalledTimes(1);
   });
 });

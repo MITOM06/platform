@@ -69,7 +69,8 @@ export class MeetingSubscriberService implements OnApplicationBootstrap {
       ok(payload?.userId) &&
       typeof payload?.uploadId === 'string' &&
       UPLOAD_ID_RE.test(payload.uploadId) &&
-      (payload.mimeType == null || typeof payload.mimeType === 'string');
+      (payload.mimeType == null || typeof payload.mimeType === 'string') &&
+      (payload.kind == null || payload.kind === 'file' || payload.kind === 'screen');
     if (!valid) {
       this.logger.warn(`Dropping malformed meet:material message (messageId=${String(payload?.messageId)})`);
       return;
