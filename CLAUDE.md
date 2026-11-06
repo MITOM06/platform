@@ -109,6 +109,8 @@ Queue settings: 30-second message TTL, dead-letter exchange `ai.direct.dlq`.
 | `kb:delete` | chat-service | ai-service | `{documentId}` |
 | `meet:summarize` | chat-service | ai-service | `{meetingId, attempt, requesterId}` (requesterId = host) |
 | `meet:summary:result` | ai-service | chat-service | `{meetingId, attempt, status: ok\|empty\|failed, summary?}` (summary only when ok) |
+| `meet:material` | chat-service | ai-service | `{meetingId, messageId, uploadId, fileName, mimeType, userId}` (a file sent in the meeting chat; deduped on messageId) |
+| `meet:material:result` | ai-service | chat-service | `{meetingId, messageId, fileName, status: ok\|unsupported\|failed, text?}` (text only when ok, <= 6000 chars) |
 
 ## Key Paths
 

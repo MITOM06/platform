@@ -56,3 +56,20 @@ export interface MeetingSummary {
 }
 
 export type MeetingSummaryStatus = 'ok' | 'empty' | 'failed';
+
+/** chat-service -> ai-service: read a file sent in the meeting chat. */
+export const MEETING_MATERIAL_CHANNEL = 'meet:material';
+/** ai-service -> chat-service: the extracted text (or why there is none). */
+export const MEETING_MATERIAL_RESULT_CHANNEL = 'meet:material:result';
+
+/** Inbound `meet:material` message. */
+export interface MeetingMaterialMessage {
+  meetingId: string;
+  messageId: string;
+  uploadId: string;
+  fileName: string;
+  mimeType?: string | null;
+  userId: string;
+}
+
+export type MeetingMaterialStatus = 'ok' | 'unsupported' | 'failed';

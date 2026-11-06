@@ -1,10 +1,12 @@
 import { Logger, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
+import { KbModule } from '../kb/kb.module';
 import { RedisModule } from '../redis/redis.module';
 import { UsageModule } from '../usage/usage.module';
 import { MeetingContextService } from './meeting-context.service';
 import { MeetingRecordClient } from './meeting-record.client';
+import { MeetingMaterialService } from './meeting-material.service';
 import { MeetingSummaryService } from './meeting-summary.service';
 import { MeetingSubscriberService } from './meeting-subscriber.service';
 import { MEETING_REDIS_SUBSCRIBER } from './meeting.constants';
@@ -12,7 +14,7 @@ import { MEETING_REDIS_SUBSCRIBER } from './meeting.constants';
 const redisLogger = new Logger('MeetingRedisSubscriber');
 
 @Module({
-  imports: [RedisModule, UsageModule],
+  imports: [RedisModule, UsageModule, KbModule],
   providers: [
     {
       // Own connection: a subscriber-mode client cannot run other commands.
@@ -33,6 +35,7 @@ const redisLogger = new Logger('MeetingRedisSubscriber');
     MeetingRecordClient,
     MeetingContextService,
     MeetingSummaryService,
+    MeetingMaterialService,
     MeetingSubscriberService,
   ],
   exports: [MeetingRecordClient, MeetingContextService],

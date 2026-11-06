@@ -83,3 +83,15 @@ describe('parseMeetingSummary', () => {
     expect(parseMeetingSummary('{"keyPoints":["a"]}')).toBeNull();
   });
 });
+
+describe('FILE records', () => {
+  it('renders "[FILE] name: text" inside the single untrusted fence', () => {
+    const p = renderMeetingPrompt(view({
+      records: [{ kind: 'FILE', displayName: 'Lan', text: 'Q3 budget is 5M', ts: 't' }],
+    }));
+    const line = '[FILE] Lan: Q3 budget is 5M';
+    expect(p).toContain(line);
+    expect(p.indexOf(line)).toBeGreaterThan(p.indexOf('<<<UNTRUSTED_DATA>>>'));
+    expect(p.indexOf(line)).toBeLessThan(p.indexOf('<<<END_UNTRUSTED_DATA>>>'));
+  });
+});

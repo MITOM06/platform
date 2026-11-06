@@ -155,3 +155,9 @@ await this.publisher.publish(convId, { type: 'AI_STREAM_DONE', fullContent: full
 - Mock `ioredis` with `ioredis-mock`
 - Mock `@golevelup/nestjs-rabbitmq` `AmqpConnection` with a jest mock object
 - After every change: `pnpm build && pnpm test`
+
+## Meeting material (M4)
+- `meet:material` (chat-service, a file sent in the meeting chat) -> `MeetingMaterialService` (`meeting/`): claim `meet:material:claim:{messageId}` (NX, EX 3600), fetch `resolveUploadUrl('/api/uploads/'+uploadId, chat.internalUrl)` with `internalUploadHeaders` via `common/fetch-upload-capped.ts` (redirects refused, 20 MB cap on Content-Length AND while streaming, one 20 s timeout over the whole body), then publish `meet:material:result` (`ok` + text <= 6000 chars surrogate-safe | `unsupported` | `failed`). `chat-image.service.ts` keeps its own fetch.
+- Routing sniffs by mime, file extension and magic bytes (chat-service mime may be null/generic): PDF/DOCX/`text/*` -> `DocumentExtractorService.extractText` (short PDF text is kept; no `describePdf`, cost); jpeg/png/gif/webp -> `VisionDescribeService.describeImage` (>5 MB or vision unavailable -> `unsupported`). Everything else and empty text -> `unsupported`; extractor/fetch errors -> `failed`.
+- Vision goes ONLY through the Anthropic API (`VisionDescribeService`); never add another provider for file reading. Logs carry ids only, never file content.
+
