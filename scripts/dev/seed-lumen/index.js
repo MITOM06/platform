@@ -13,14 +13,16 @@
 // DEV-ONLY: never commit this to main (.claude/rules/dev-local-only.md).
 
 const crypto = require('node:crypto');
-const { mod, STORY_NOW, REAL_NOW } = require('./lib');
+const { mod, STORY_NOW, REAL_NOW, ictTime } = require('./lib');
 const bcrypt = mod('bcrypt');
 const { MongoClient, ObjectId, GridFSBucket } = mod('mongodb');
 const Redis = mod('ioredis');
 
 const org = require('./org');
 const { CONVERSATIONS, FRIENDSHIPS, REMINDERS, MEMORIES, MEMORY_FACTS } = require('./conversations');
-const { MEETINGS, RECURRING, PRIVATE_NOTES } = require('./meetings');
+const { CHAPTER, REMINDERS_NOV } = require('./chapter-nov');
+const { seedMeetings } = require('./meeting-seed');
+const { buildNovFiles } = require('./files-nov');
 const { withFiller } = require('./filler');
 const { buildFiles, avatarPng } = require('./files');
 const { buildMessages, AI_BOT_ID } = require('./messages');
@@ -76,19 +78,12 @@ async function embed(texts) {
   return json.data.map((d) => d.embedding);
 }
 
-// Meeting codes look like `abc-defg-hjk` (no i, l, o).
-function meetingCode() {
-  const letters = 'abcdefghjkmnpqrstuvwxyz';
-  const s = Array.from(crypto.randomBytes(10), (b) => letters[b % letters.length]).join('');
-  return `${s.slice(0, 3)}-${s.slice(3, 7)}-${s.slice(7)}`;
-}
-
 // ------------------------------------------------------------------- reset
 
 const TRACKED = [
   'conversations', 'departments', 'friendships', 'invitations', 'ai_context_entries', 'ai_user_context',
   'reminders', 'ai_memories', 'token_usage', 'auditlogs', 'notifications', 'ai_personas', 'ai_feedback',
-  'kb_documents', 'meetings', 'meeting_notes', 'meeting_messages',
+  'kb_documents', 'meetings', 'meeting_notes', 'meeting_messages', 'meeting_summaries', 'meeting_records',
   'user_connections', 'user_skills', 'user_blocks', 'call_sessions', 'ai_digest_log',
 ];
 const MANIFEST = 'dev_seed_manifest';
@@ -129,6 +124,8 @@ async function reset(db, bucket, redis) {
     .find({ $or: [filterFor('meetings'), { hostId: { $in: fakeUserIds } }] }, { projection: { _id: 1 } }).toArray()).map((m) => String(m._id));
   await db.collection('meeting_notes').deleteMany({ $or: [filterFor('meeting_notes'), { meetingId: { $in: meetingIds } }] });
   await db.collection('meeting_messages').deleteMany({ $or: [filterFor('meeting_messages'), { meetingId: { $in: meetingIds } }] });
+  await db.collection('meeting_summaries').deleteMany({ $or: [filterFor('meeting_summaries'), { meetingId: { $in: meetingIds } }] });
+  await db.collection('meeting_records').deleteMany({ $or: [filterFor('meeting_records'), { meetingId: { $in: meetingIds } }] });
   await db.collection('meetings').deleteMany({ _id: { $in: meetingIds.map((id) => new ObjectId(id)) } });
 
   // Semantic memory of fake users in Qdrant.
@@ -145,7 +142,7 @@ async function reset(db, bucket, redis) {
   // People are kept (upserted by email in seedPeople) so 2FA enrolment, changed
   // passwords, connector links and mobile sessions survive a re-seed; --reset removes them.
   if (RESET_ONLY) await db.collection('users').deleteMany({ _id: { $in: users.map((u) => u._id) } });
-  for (const c of TRACKED) if (!['kb_documents', 'conversations', 'meetings', 'meeting_notes', 'meeting_messages'].includes(c)) await db.collection(c).deleteMany(filterFor(c));
+  for (const c of TRACKED) if (!['kb_documents', 'conversations', 'meetings', 'meeting_notes', 'meeting_messages', 'meeting_summaries', 'meeting_records'].includes(c)) await db.collection(c).deleteMany(filterFor(c));
   await db.collection(MANIFEST).deleteOne({ _id: TAG });
   console.log(`reset: removed ${convIds.length} conversations, ${RESET_ONLY ? users.length : 0} users (${users.length} kept), ${kbDocs.length} KB docs, ${meetingIds.length} meetings`);
 }
@@ -257,12 +254,29 @@ async function seedSocial(db, { ids, names }) {
   }
 }
 
-async function seedConversations(db, bucket, redis, ctx) {
+// November chapter (chapter-nov.js): absolute ICT times → "minutes before STORY_NOW"
+// (negative = after it). Lines later than the moment the seed runs are dropped, so a
+// seed run before demo day never shows messages from the future.
+function withChapter(c) {
+  const extra = (CHAPTER[c.key] || [])
+    .map(({ at, ...m }) => ({ ...m, ts: ictTime(at) }))
+    .sort((x, y) => x.ts - y.ts)
+    .filter((m) => m.ts <= REAL_NOW)
+    .map(({ ts, ...m }) => ({ ...m, ago: Math.round((STORY_NOW - ts) / 60000) }));
+  const kb = [...(c.kb || []), ...(NOV_KB[c.key] || [])];
+  return extra.length || kb.length !== (c.kb || []).length ? { ...c, messages: [...c.messages, ...extra], kb } : c;
+}
+
+// November documents the person keeps in their AI chat's knowledge base.
+const NOV_KB = {
+  'dm-khang-ai': ['seed_memo', 'okr_q4', 'appendix_pl02', 'postmortem', 'fleet_proposal'],
+  'dm-minh-ai': ['postmortem', 'quote_phuthinh', 'okr_q4'],
+  'dm-tri-ai': ['fleet_proposal', 'pilot_week45'],
+};
+
+async function seedConversations(db, bucket, redis, ctx, { files, urlFor }) {
   const { ids, dept } = ctx;
   const uid = (k) => (k === 'ai' ? AI_BOT_ID : k === 'system' ? 'system' : String(ids[k]));
-  const files = await buildFiles();
-  const fileUrls = {};
-  const urlFor = async (key, uploader) => (fileUrls[key] ??= await storeFile(bucket, files[key], uploader));
   const allPeople = org.PEOPLE.filter((p) => p.status !== 'blocked').map((p) => p.key);
   const leadOf = Object.fromEntries(org.DEPARTMENTS.map((d) => [d.key, d.lead]));
 
@@ -273,6 +287,7 @@ async function seedConversations(db, bucket, redis, ctx) {
   let kbCount = 0;
   let messageCount = 0;
   for (let c of CONVERSATIONS) {
+    c = withChapter(c);
     const known = (k) => k === 'ai' || k === 'system' || ids[k];
     const members = (c.members === 'ALL' ? allPeople : c.members).filter(known);
     if (c.messages.some((m) => !known(m.from))) c = { ...c, messages: c.messages.filter((m) => known(m.from)) };
@@ -338,85 +353,6 @@ async function seedConversations(db, bucket, redis, ctx) {
   return { convIds, aiMessages, kbCount, callEnds, digestLogs, messageCount };
 }
 
-async function seedMeetings(db, { ids, names, dept }) {
-  let count = 0;
-  const meetingIds = {};
-  for (let m of MEETINGS) {
-    const start = minsAgo(m.start);
-    const end = new Date(start.getTime() + m.duration * 60000);
-    // Ended once the REAL clock is past it (a story meeting "tomorrow" is long over by now).
-    const ended = end.getTime() < REAL_NOW;
-    if (ended && !m.attended) m = { ...m, attended: [m.host, ...m.invitees.filter((k) => k !== m.host)] };
-    const id = new ObjectId();
-    const roleOf = (k) => (k === m.host ? 'host' : (m.cohosts || []).includes(k) ? 'cohost' : 'attendee');
-    const attendance = ended ? (m.attended || []).map((k, i) => ({
-      userId: String(ids[k]), displayName: names[k], role: roleOf(k), sid: `PA_${crypto.randomBytes(6).toString('hex')}`,
-      joinedAt: new Date(start.getTime() + i * 45000), leftAt: new Date(end.getTime() - (i % 3) * 30000),
-    })) : [];
-    await db.collection('meetings').insertOne(tagged({
-      _id: id, code: meetingCode(), title: m.title, description: m.description,
-      hostId: String(ids[m.host]), coHostIds: (m.cohosts || []).map((k) => String(ids[k])),
-      inviteeIds: m.invitees.map((k) => String(ids[k])), departmentId: m.dept ? String(dept[m.dept]) : null,
-      scheduledStart: start, scheduledEnd: end, sortAt: start, status: ended ? 'ENDED' : 'SCHEDULED',
-      settings: { waitingRoom: true, muteOnEntry: false, allowAttendeeScreenShare: true, attendeesCanEditNotes: true, locked: false },
-      removedIds: [], attendance, reminded: ended,
-      createdAt: new Date(start.getTime() - (ended ? 3 : 2) * 86400000),
-      ...(ended ? { startedAt: new Date(start.getTime() + 30000), endedAt: end } : {}),
-      _class: 'com.platform.chatservice.model.Meeting',
-    }));
-    meetingIds[m.key] = String(id);
-    if (m.notes) {
-      await db.collection('meeting_notes').insertOne(tagged({
-        meetingId: String(id), scope: 'shared', ownerId: null, content: m.notes, version: 7,
-        updatedBy: String(ids[m.host]), updatedAt: new Date(end.getTime() - 120000),
-        _class: 'com.platform.chatservice.model.MeetingNote',
-      }));
-    }
-    for (const line of m.chat || []) {
-      await db.collection('meeting_messages').insertOne(tagged({
-        meetingId: String(id), senderId: String(ids[line.from]), content: line.text,
-        clientId: crypto.randomUUID(), createdAt: new Date(start.getTime() + line.atMin * 60000),
-        _class: 'com.platform.chatservice.model.MeetingMessage',
-      }));
-    }
-    count++;
-  }
-
-  for (const n of PRIVATE_NOTES) {
-    if (!meetingIds[n.meeting]) continue;
-    await db.collection('meeting_notes').insertOne(tagged({
-      meetingId: meetingIds[n.meeting], scope: 'private', ownerId: String(ids[n.owner]), content: n.content, version: 3,
-      updatedBy: String(ids[n.owner]), updatedAt: minsAgo(2 * 24 * 60),
-      _class: 'com.platform.chatservice.model.MeetingNote',
-    }));
-  }
-
-  // Recurring meetings against the real clock: next occurrences of a weekday, from tomorrow.
-  const ICT = 7 * 3600 * 1000;
-  for (const r of RECURRING) {
-    const [hh, mm] = r.at.split(':').map(Number);
-    const local = new Date(REAL_NOW + ICT);
-    let day = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate()) + 86400000; // tomorrow 00:00 local, as UTC
-    for (let made = 0; made < r.count; day += 86400000) {
-      if (new Date(day).getUTCDay() !== r.weekday) continue;
-      const start = new Date(day + (hh * 60 + mm) * 60000 - ICT);
-      const end = new Date(start.getTime() + r.duration * 60000);
-      await db.collection('meetings').insertOne(tagged({
-        code: meetingCode(), title: r.title, description: r.description,
-        hostId: String(ids[r.host]), coHostIds: r.cohosts.map((k) => String(ids[k])),
-        inviteeIds: r.invitees.map((k) => String(ids[k])), departmentId: r.dept ? String(dept[r.dept]) : null,
-        scheduledStart: start, scheduledEnd: end, sortAt: start, status: 'SCHEDULED',
-        settings: { waitingRoom: true, muteOnEntry: false, allowAttendeeScreenShare: true, attendeesCanEditNotes: true, locked: false },
-        removedIds: [], attendance: [], reminded: false, createdAt: new Date(REAL_NOW - 3 * 86400000),
-        _class: 'com.platform.chatservice.model.Meeting',
-      }));
-      made++;
-      count++;
-    }
-  }
-  return count;
-}
-
 async function seedAiData(db, { ids }, { convIds, aiMessages }) {
   for (const r of REMINDERS) {
     await db.collection('reminders').insertOne(tagged({
@@ -427,6 +363,15 @@ async function seedAiData(db, { ids }, { convIds, aiMessages }) {
         return { remindAt: new Date(at), done, notified: done };
       })(),
       attempts: 0, createdAt: r.real ? realMinsAgo(24 * 60) : minsAgo(3 * 24 * 60), _class: 'com.platform.chatservice.model.Reminder',
+    }));
+  }
+  for (const r of REMINDERS_NOV) {
+    if (!ids[r.user] || !convIds[r.conv]) continue;
+    const at = ictTime(r.at);
+    const done = at < REAL_NOW;
+    await db.collection('reminders').insertOne(tagged({
+      userId: String(ids[r.user]), conversationId: String(convIds[r.conv]), text: r.text, remindAt: new Date(at), done, notified: done,
+      attempts: 0, createdAt: new Date(Math.min(REAL_NOW, at) - 2 * 86400000), _class: 'com.platform.chatservice.model.Reminder',
     }));
   }
   for (const m of MEMORIES) {
@@ -575,8 +520,11 @@ async function seedExtras(db, { ids, names }, { callEnds, digestLogs }) {
     await db.collection('workspaces').updateOne({}, { $set: { ...org.WORKSPACE, updatedAt: new Date() } });
     const ctx = await seedPeople(db, bucket);
     await seedSocial(db, ctx);
-    const convs = await seedConversations(db, bucket, redis, ctx);
-    const meetings = await seedMeetings(db, ctx);
+    const files = { ...(await buildFiles()), ...(await buildNovFiles()) };
+    const fileUrls = {};
+    const urlFor = async (key, uploader) => (fileUrls[key] ??= await storeFile(bucket, files[key], uploader));
+    const convs = await seedConversations(db, bucket, redis, ctx, { files, urlFor });
+    const meetings = await seedMeetings(db, ctx, { files, urlFor, minsAgo });
     await seedAiData(db, ctx, convs);
     const facts = await seedMemoryFacts(ctx, convs).catch((e) => { console.warn(`!! memory facts: ${e.message}`); return 0; });
     await seedAudit(db, ctx);
@@ -590,7 +538,7 @@ async function seedExtras(db, { ids, names }, { callEnds, digestLogs }) {
     console.log(`  ${CONVERSATIONS.length} conversations, ${convs.messageCount} messages, ${convs.callEnds.length} call sessions, ${convs.digestLogs.length} digests`);
     console.log(`  ${org.CONNECTIONS.length} connections (expired/revoked), ${Object.values(org.SKILLS).flat().length} skills on, ${org.BLOCKS.length} blocks`);
     console.log(`  ${CONVERSATIONS.length} conversations, ${convs.aiMessages.length} AI answers, ${convs.kbCount} KB documents ${redis ? 'queued for embedding' : '(pending)'}`);
-    console.log(`  ${meetings} meetings, ${facts} memory facts`);
+    console.log(`  ${meetings.count} meetings (${meetings.summaries} AI summaries, ${meetings.records} AI records, ${meetings.groups} meeting groups), ${facts} memory facts`);
     console.log(`\n  login: <email> / ${PASSWORD}`);
     for (const p of org.PEOPLE.filter((p) => p.team)) console.log(`    ${p.team.padEnd(6)} ${p.email.padEnd(30)} ${p.role.padEnd(7)} ${p.title}`);
   }
