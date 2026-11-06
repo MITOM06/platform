@@ -38,6 +38,14 @@ void main() {
       expect(Meeting.fromJson('not a map'), isNull);
     });
 
+    test('reads summaryState and groupConversationId; absent/unknown => null', () {
+      final m = Meeting.fromJson(meetingJson({'summaryState': 'FAILED', 'groupConversationId': 'g1'}))!;
+      expect((m.summaryState, m.groupConversationId), (MeetingSummaryState.failed, 'g1'));
+      final n = Meeting.fromJson(meetingJson({'summaryState': 'WAT'}))!;
+      expect((n.summaryState, n.groupConversationId), (null, null));
+      expect(Meeting.fromJson(meetingJson())!.summaryState, isNull);
+    });
+
     test('falls back to default settings when the block is malformed', () {
       expect(Meeting.fromJson(meetingJson({'settings': {'locked': 'yes'}}))!.settings, MeetingSettings.defaults);
       expect(MeetingSettings.fromJson({'locked': true}), isNull);

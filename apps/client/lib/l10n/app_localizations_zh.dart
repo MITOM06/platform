@@ -955,6 +955,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get meetingSummaryActionItems => '待办事项';
 
   @override
+  String get meetingSummaryDecisions => '决议';
+
+  @override
+  String get meetingSummaryFromMaterials => '来自资料';
+
+  @override
   String get profileTitle => '个人资料';
 
   @override
@@ -4561,6 +4567,30 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get meetingErrNoteConflict => '有人保存了更新的版本';
+
+  @override
+  String get meetingErrSummaryPending => '摘要正在生成中';
+
+  @override
+  String get meetingErrSummaryUnavailable => '此会议暂无可用摘要';
+
+  @override
+  String get meetingAiSummaryTitle => 'AI 摘要';
+
+  @override
+  String get meetingAiSummaryPending => 'AI 正在生成摘要…';
+
+  @override
+  String get meetingAiSummaryEmpty => '会议没有可供总结的内容';
+
+  @override
+  String get meetingAiSummaryFailed => '暂时无法生成摘要';
+
+  @override
+  String get meetingAiSummaryOpenGroup => '打开会议群组';
+
+  @override
+  String get meetingAiSummaryRegenerate => '重新生成';
 
   @override
   String get meetingErrRateLimited => '发送太快了，请稍等片刻。';

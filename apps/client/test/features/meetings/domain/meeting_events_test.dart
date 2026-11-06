@@ -73,6 +73,16 @@ void main() {
       'updatedBy': {'userId': 'u2', 'displayName': 'Minh'}}) as NotesUpdatedEvent).version, 7);
   });
 
+  test('meet.summary.ready carries state and group; PENDING / unknown state is junk', () {
+    final e = p({'event': 'meet.summary.ready', 'meetingId': 'm1', 'summaryState': 'DONE', 'groupConversationId': 'g1'})
+        as SummaryReadyEvent;
+    expect((e.meetingId, e.summaryState, e.groupConversationId), ('m1', MeetingSummaryState.done, 'g1'));
+    final f = p({'event': 'meet.summary.ready', 'meetingId': 'm1', 'summaryState': 'FAILED'}) as SummaryReadyEvent;
+    expect((f.summaryState, f.groupConversationId), (MeetingSummaryState.failed, null));
+    expect(p({'event': 'meet.summary.ready', 'meetingId': 'm1', 'summaryState': 'PENDING'}), isNull);
+    expect(p({'event': 'meet.summary.ready', 'meetingId': 'm1'}), isNull);
+  });
+
   test('junk is null', () {
     expect(parseMeetingEvent('not json'), isNull);
     expect(parseMeetingEvent('[]'), isNull);

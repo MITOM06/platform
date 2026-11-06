@@ -969,6 +969,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get meetingSummaryActionItems => 'Việc cần làm';
 
   @override
+  String get meetingSummaryDecisions => 'Quyết định';
+
+  @override
+  String get meetingSummaryFromMaterials => 'Từ tài liệu';
+
+  @override
   String get profileTitle => 'Trang cá nhân';
 
   @override
@@ -4766,6 +4772,30 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get meetingErrNoteConflict => 'Đã có người lưu bản mới hơn';
+
+  @override
+  String get meetingErrSummaryPending => 'Tóm tắt đang được tạo';
+
+  @override
+  String get meetingErrSummaryUnavailable => 'Cuộc họp này chưa có tóm tắt';
+
+  @override
+  String get meetingAiSummaryTitle => 'Tóm tắt AI';
+
+  @override
+  String get meetingAiSummaryPending => 'AI đang tóm tắt…';
+
+  @override
+  String get meetingAiSummaryEmpty => 'Cuộc họp không có nội dung để tóm tắt';
+
+  @override
+  String get meetingAiSummaryFailed => 'Chưa tạo được tóm tắt';
+
+  @override
+  String get meetingAiSummaryOpenGroup => 'Mở nhóm cuộc họp';
+
+  @override
+  String get meetingAiSummaryRegenerate => 'Tạo lại';
 
   @override
   String get meetingErrRateLimited => 'Bạn gửi quá nhanh. Hãy chờ một chút.';

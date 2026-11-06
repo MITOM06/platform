@@ -979,6 +979,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meetingSummaryActionItems => 'Tareas pendientes';
 
   @override
+  String get meetingSummaryDecisions => 'Decisiones';
+
+  @override
+  String get meetingSummaryFromMaterials => 'De los materiales';
+
+  @override
   String get profileTitle => 'Perfil';
 
   @override
@@ -4840,6 +4846,32 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get meetingErrNoteConflict =>
       'Alguien guardó una versión más reciente';
+
+  @override
+  String get meetingErrSummaryPending => 'Ya se está generando un resumen';
+
+  @override
+  String get meetingErrSummaryUnavailable =>
+      'No hay resumen disponible para esta reunión';
+
+  @override
+  String get meetingAiSummaryTitle => 'Resumen de IA';
+
+  @override
+  String get meetingAiSummaryPending => 'La IA está resumiendo…';
+
+  @override
+  String get meetingAiSummaryEmpty =>
+      'La reunión no tiene contenido para resumir';
+
+  @override
+  String get meetingAiSummaryFailed => 'No se pudo crear el resumen';
+
+  @override
+  String get meetingAiSummaryOpenGroup => 'Abrir el grupo de la reunión';
+
+  @override
+  String get meetingAiSummaryRegenerate => 'Regenerar';
 
   @override
   String get meetingErrRateLimited =>

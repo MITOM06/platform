@@ -958,6 +958,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get meetingSummaryActionItems => 'アクションアイテム';
 
   @override
+  String get meetingSummaryDecisions => '決定事項';
+
+  @override
+  String get meetingSummaryFromMaterials => '資料から';
+
+  @override
   String get profileTitle => 'プロフィール';
 
   @override
@@ -4624,6 +4630,30 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get meetingErrNoteConflict => '他の人が新しいバージョンを保存しました';
+
+  @override
+  String get meetingErrSummaryPending => '要約はすでに生成中です';
+
+  @override
+  String get meetingErrSummaryUnavailable => 'この会議では要約を利用できません';
+
+  @override
+  String get meetingAiSummaryTitle => 'AI 要約';
+
+  @override
+  String get meetingAiSummaryPending => 'AI が要約中です…';
+
+  @override
+  String get meetingAiSummaryEmpty => '要約できる内容がありませんでした';
+
+  @override
+  String get meetingAiSummaryFailed => '要約を作成できませんでした';
+
+  @override
+  String get meetingAiSummaryOpenGroup => '会議グループを開く';
+
+  @override
+  String get meetingAiSummaryRegenerate => '再生成';
 
   @override
   String get meetingErrRateLimited => '送信が速すぎます。少し待ってください。';

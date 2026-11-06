@@ -57,6 +57,9 @@ abstract interface class MeetingQueueContext {
   /// Informational banner.
   void info(MeetingNotice n);
   ActiveMeetingRoom? activeRoom();
+
+  /// The AI summary of [meetingId] changed: drop what was fetched for it.
+  void summaryChanged(String meetingId);
 }
 
 /// What tapping a meeting banner does.
@@ -136,6 +139,18 @@ void _onCancelled(CancelledEvent e, MeetingQueueContext ctx) {
   }
 }
 
+void _onSummaryReady(SummaryReadyEvent e, MeetingQueueContext ctx) {
+  // The row carries state + group id; the content comes from GET /summary.
+  ctx.cache.updateCache((s) {
+    final m = s.byId[e.meetingId];
+    if (m == null) return s;
+    return s.put(m.copyWith(
+        summaryState: e.summaryState,
+        groupConversationId: e.groupConversationId));
+  });
+  ctx.summaryChanged(e.meetingId);
+}
+
 void _forward(MeetingEvent e, MeetingQueueContext ctx) {
   final room = ctx.activeRoom();
   if (room == null) return;
@@ -156,6 +171,8 @@ void handleMeetingQueueEvent(MeetingEvent e, MeetingQueueContext ctx) {
       ctx.cache.updateCache(
           (s) => s.markEnded(e.meetingId, ctx.now(), cancelled: false));
       _forward(e, ctx);
+    case SummaryReadyEvent():
+      _onSummaryReady(e, ctx);
     // My own chat line re-sent to me alone: a retry of a clientId the server
     // had already stored.
     case LobbyEvent() ||

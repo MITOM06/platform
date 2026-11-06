@@ -12,6 +12,7 @@ import '../state/meetings_providers.dart';
 import 'widgets/detail/attendance_list.dart';
 import 'widgets/detail/chat_history_view.dart';
 import 'widgets/detail/meeting_actions_bar.dart';
+import 'widgets/detail/meeting_ai_summary.dart';
 import 'widgets/detail/meeting_info_card.dart';
 import 'widgets/meeting_status_chip.dart';
 import 'widgets/notes_editor.dart';
@@ -154,7 +155,7 @@ class _Records extends StatelessWidget {
           meetingId: m.id,
           canEditShared: canEditSharedNoteViewer(m.viewerRole, m.settings),
         ),
-        // P2: AI summary slot
+        MeetingAiSummary(meeting: m),
         const SizedBox(height: 24),
         ChatHistoryView(meetingId: m.id),
       ],

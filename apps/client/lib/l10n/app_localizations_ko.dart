@@ -958,6 +958,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get meetingSummaryActionItems => '할 일';
 
   @override
+  String get meetingSummaryDecisions => '결정 사항';
+
+  @override
+  String get meetingSummaryFromMaterials => '자료에서';
+
+  @override
   String get profileTitle => '프로필';
 
   @override
@@ -4625,6 +4631,30 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get meetingErrNoteConflict => '다른 사람이 더 최신 버전을 저장했습니다';
+
+  @override
+  String get meetingErrSummaryPending => '요약이 이미 생성 중입니다';
+
+  @override
+  String get meetingErrSummaryUnavailable => '이 회의에는 요약을 사용할 수 없습니다';
+
+  @override
+  String get meetingAiSummaryTitle => 'AI 요약';
+
+  @override
+  String get meetingAiSummaryPending => 'AI가 요약하는 중…';
+
+  @override
+  String get meetingAiSummaryEmpty => '요약할 내용이 없는 회의입니다';
+
+  @override
+  String get meetingAiSummaryFailed => '요약을 만들지 못했습니다';
+
+  @override
+  String get meetingAiSummaryOpenGroup => '회의 그룹 열기';
+
+  @override
+  String get meetingAiSummaryRegenerate => '다시 생성';
 
   @override
   String get meetingErrRateLimited => '너무 빠르게 보내고 있습니다. 잠시 기다려 주세요.';

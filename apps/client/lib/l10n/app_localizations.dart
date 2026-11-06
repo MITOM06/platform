@@ -1896,6 +1896,18 @@ abstract class AppLocalizations {
   /// **'Action items'**
   String get meetingSummaryActionItems;
 
+  /// No description provided for @meetingSummaryDecisions.
+  ///
+  /// In en, this message translates to:
+  /// **'Decisions'**
+  String get meetingSummaryDecisions;
+
+  /// No description provided for @meetingSummaryFromMaterials.
+  ///
+  /// In en, this message translates to:
+  /// **'From materials'**
+  String get meetingSummaryFromMaterials;
+
   /// No description provided for @profileTitle.
   ///
   /// In en, this message translates to:
@@ -8664,6 +8676,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Someone saved a newer version'**
   String get meetingErrNoteConflict;
+
+  /// No description provided for @meetingErrSummaryPending.
+  ///
+  /// In en, this message translates to:
+  /// **'A summary is already being generated'**
+  String get meetingErrSummaryPending;
+
+  /// No description provided for @meetingErrSummaryUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'A summary is not available for this meeting'**
+  String get meetingErrSummaryUnavailable;
+
+  /// No description provided for @meetingAiSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI summary'**
+  String get meetingAiSummaryTitle;
+
+  /// No description provided for @meetingAiSummaryPending.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is summarizing…'**
+  String get meetingAiSummaryPending;
+
+  /// No description provided for @meetingAiSummaryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The meeting had no content to summarize'**
+  String get meetingAiSummaryEmpty;
+
+  /// No description provided for @meetingAiSummaryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create the summary'**
+  String get meetingAiSummaryFailed;
+
+  /// No description provided for @meetingAiSummaryOpenGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Open meeting group'**
+  String get meetingAiSummaryOpenGroup;
+
+  /// No description provided for @meetingAiSummaryRegenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate'**
+  String get meetingAiSummaryRegenerate;
 
   /// No description provided for @meetingErrRateLimited.
   ///

@@ -108,6 +108,23 @@ void main() {
     expect((last().method, last().path), ('DELETE', '/api/meetings/m1'));
   });
 
+  test('summary GET parses the response; regenerate POSTs and reads the state', () async {
+    http.body = {'state': 'PENDING', 'summary': {'overview': 'old'}, 'inGroup': false};
+    final r = await api.summary('m1');
+    expect((last().method, last().path), ('GET', '/api/meetings/m1/summary'));
+    expect(r.state, MeetingSummaryState.pending);
+    expect(r.summary?.overview, 'old');
+    http.status = 202;
+    http.body = {'state': 'PENDING'};
+    await api.regenerateSummary('m1');
+    expect((last().method, last().path), ('POST', '/api/meetings/m1/summary/regenerate'));
+  });
+
+  test('a malformed summary body is an error', () async {
+    http.body = 'nope';
+    await expectLater(api.summary('m1'), throwsA(isA<MeetingFormatException>()));
+  });
+
   test('a malformed meeting body is an error, not a crash later', () async {
     http.body = {'id': 'm1'};
     await expectLater(api.get('m1'), throwsA(isA<MeetingFormatException>()));

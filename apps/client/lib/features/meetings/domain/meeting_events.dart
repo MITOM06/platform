@@ -86,6 +86,18 @@ final class MutedEvent extends MeetingScopedEvent {
   final MeetingPerson? actor;
 }
 
+/// The AI summary finished (never PENDING). Content comes from
+/// `GET .../summary`; [groupConversationId] is set when a group was made.
+final class SummaryReadyEvent extends MeetingScopedEvent {
+  const SummaryReadyEvent({
+    required super.meetingId,
+    required this.summaryState,
+    this.groupConversationId,
+  });
+  final MeetingSummaryState summaryState;
+  final String? groupConversationId;
+}
+
 final class MeetErrorEvent extends MeetingEvent {
   const MeetErrorEvent({
     this.meetingId,
@@ -207,6 +219,13 @@ MeetingEvent? _parseForMeeting(String event, String id, Json o) {
     case 'meet.cancelled':
       return CancelledEvent(
           meetingId: id, title: str(o['title']), code: str(o['code']));
+    case 'meet.summary.ready':
+      final state = MeetingSummaryState.fromWire(o['summaryState']);
+      if (state == null || state == MeetingSummaryState.pending) return null;
+      return SummaryReadyEvent(
+          meetingId: id,
+          summaryState: state,
+          groupConversationId: str(o['groupConversationId']));
     case 'meet.invited':
     case 'meet.starting':
       return _parseInvite(event, id, o);

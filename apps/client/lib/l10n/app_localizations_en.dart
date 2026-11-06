@@ -970,6 +970,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meetingSummaryActionItems => 'Action items';
 
   @override
+  String get meetingSummaryDecisions => 'Decisions';
+
+  @override
+  String get meetingSummaryFromMaterials => 'From materials';
+
+  @override
   String get profileTitle => 'Profile';
 
   @override
@@ -4793,6 +4799,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meetingErrNoteConflict => 'Someone saved a newer version';
+
+  @override
+  String get meetingErrSummaryPending => 'A summary is already being generated';
+
+  @override
+  String get meetingErrSummaryUnavailable =>
+      'A summary is not available for this meeting';
+
+  @override
+  String get meetingAiSummaryTitle => 'AI summary';
+
+  @override
+  String get meetingAiSummaryPending => 'AI is summarizing…';
+
+  @override
+  String get meetingAiSummaryEmpty => 'The meeting had no content to summarize';
+
+  @override
+  String get meetingAiSummaryFailed => 'Couldn\'t create the summary';
+
+  @override
+  String get meetingAiSummaryOpenGroup => 'Open meeting group';
+
+  @override
+  String get meetingAiSummaryRegenerate => 'Regenerate';
 
   @override
   String get meetingErrRateLimited =>

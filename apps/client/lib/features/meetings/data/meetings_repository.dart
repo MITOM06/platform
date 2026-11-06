@@ -7,6 +7,7 @@ import '../../auth/domain/auth_provider.dart';
 import '../domain/json_read.dart';
 import '../domain/meeting_models.dart';
 import '../domain/meeting_room_models.dart';
+import '../domain/meeting_summary.dart';
 
 /// A 2xx body that does not match the contract. Mapped to the generic error
 /// message — never shown raw.
@@ -48,6 +49,12 @@ abstract interface class MeetingsApi {
   Future<MeetingNote> putNote(String id, NoteScope scope,
       {required String content, required int version});
   Future<List<MeetingHand>> hands(String id);
+
+  /// Current AI-summary state + the newest successful summary.
+  Future<MeetingSummaryResponse> summary(String id);
+
+  /// Host/co-host. 202 ⇒ PENDING; 409 MEETING_SUMMARY_PENDING / _UNAVAILABLE.
+  Future<void> regenerateSummary(String id);
 }
 
 class MeetingsRepository implements MeetingsApi {
@@ -157,6 +164,17 @@ class MeetingsRepository implements MeetingsApi {
   Future<List<MeetingHand>> hands(String id) async {
     final res = await _dio.get<Object?>('${_base(id)}/hands');
     return rowsOf(asJson(res.data)?['hands'], MeetingHand.fromJson);
+  }
+
+  @override
+  Future<MeetingSummaryResponse> summary(String id) async =>
+      MeetingSummaryResponse.fromJson(
+          (await _dio.get<Object?>('${_base(id)}/summary')).data) ??
+      (throw const MeetingFormatException('summary'));
+
+  @override
+  Future<void> regenerateSummary(String id) async {
+    await _dio.post<Object?>('${_base(id)}/summary/regenerate');
   }
 }
 
