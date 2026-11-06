@@ -12,7 +12,7 @@ import remarkGfm from 'remark-gfm'
  */
 export function MarkdownContent({ content, disallowImages = false }: {
   content: string
-  /** Images render as their alt text, never fetched (untrusted text echoed by the AI in shared rooms). */
+  /** Shared-room mode: images render as alt text (never fetched) and links as inert text (untrusted text echoed by the AI). */
   disallowImages?: boolean
 }) {
   return (
@@ -21,14 +21,17 @@ export function MarkdownContent({ content, disallowImages = false }: {
         remarkPlugins={[remarkGfm]}
         components={{
           ...(disallowImages ? { img: ({ alt }) => <span>{alt}</span> } : {}),
-          a: ({ ...props }) => (
-            <a
-              {...props}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary underline underline-offset-2 hover:opacity-80 break-all"
-            />
-          ),
+          a: disallowImages
+            ? // Shared room: a model-echoed link is untrusted text, never a live anchor.
+              ({ children }) => <span>{children}</span>
+            : ({ ...props }) => (
+                <a
+                  {...props}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline underline-offset-2 hover:opacity-80 break-all"
+                />
+              ),
           p: ({ ...props }) => <p {...props} className="whitespace-pre-wrap" />,
           ul: ({ ...props }) => <ul {...props} className="list-disc pl-5 space-y-1" />,
           ol: ({ ...props }) => <ol {...props} className="list-decimal pl-5 space-y-1" />,

@@ -142,8 +142,10 @@ function parseForMeeting(event: string, meetingId: string, o: Obj): MeetingEvent
     }
     case 'meet.ai': {
       const requesterId = str(o.requesterId)
-      if ((o.state !== 'thinking' && o.state !== 'error') || !requesterId) return null
-      return { event, meetingId, state: o.state, requesterId, ...opt('code', str(o.code)) }
+      if (o.state !== 'thinking' && o.state !== 'error') return null
+      // An error without a requester must still reach the controller: it clears the oldest pending entry.
+      if (!requesterId && o.state === 'thinking') return null
+      return { event, meetingId, state: o.state, requesterId: requesterId ?? '', ...opt('code', str(o.code)) }
     }
     case 'meet.notes.updated':
       if (typeof o.version !== 'number') return null

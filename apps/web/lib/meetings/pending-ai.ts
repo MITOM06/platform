@@ -18,7 +18,7 @@ export interface PendingAi {
 }
 
 /** i18n key (namespace `meeting`) of the line shown to the requester on error. */
-export type AiErrorKey = 'aiUnavailable' | 'aiFailed'
+export type AiErrorKey = 'aiUnavailable' | 'aiFailed' | 'aiQuotaExceeded' | 'aiRateLimited'
 
 export const addPendingAi = (list: PendingAi[], requesterId: string, now: number): PendingAi[] => [
   ...list,
@@ -36,6 +36,22 @@ export function failPendingAi(list: PendingAi[], requesterId: string): PendingAi
 export const expirePendingAi = (list: PendingAi[], now: number): PendingAi[] =>
   list.filter((p) => now - p.startedAt < AI_PENDING_TTL_MS)
 
-/** Never the raw code: AI_UNAVAILABLE → unavailable; AI_EMPTY, anything else, none → couldn't answer. */
-export const aiErrorKey = (code: string | undefined): AiErrorKey =>
-  code === 'AI_UNAVAILABLE' ? 'aiUnavailable' : 'aiFailed'
+/**
+ * Never the raw code: AI_UNAVAILABLE → unavailable; quota / rate limit → their own line (the
+ * wire codes carry the `AI_` prefix, the bare form is accepted too); AI_EMPTY, anything else,
+ * none → couldn't answer.
+ */
+export function aiErrorKey(code: string | undefined): AiErrorKey {
+  switch (code) {
+    case 'AI_UNAVAILABLE':
+      return 'aiUnavailable'
+    case 'AI_QUOTA_EXCEEDED':
+    case 'QUOTA_EXCEEDED':
+      return 'aiQuotaExceeded'
+    case 'AI_RATE_LIMITED':
+    case 'RATE_LIMITED':
+      return 'aiRateLimited'
+    default:
+      return 'aiFailed'
+  }
+}

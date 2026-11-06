@@ -2259,6 +2259,8 @@
     "aiThinking": "PON AI está respondiendo…",
     "aiUnavailable": "La IA no está disponible en este momento",
     "aiFailed": "La IA no pudo responder, inténtalo de nuevo",
+    "aiQuotaExceeded": "Se alcanzó el límite de uso de la IA",
+    "aiRateLimited": "Demasiadas solicitudes, inténtalo de nuevo en breve",
     "chatAiHint": "Escribe @AI antes de una pregunta para consultar al asistente",
     "chatFailed": "No enviado",
     "chatRetry": "Reintentar",

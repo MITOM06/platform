@@ -2259,6 +2259,8 @@
     "aiThinking": "PON AI đang trả lời…",
     "aiUnavailable": "AI hiện không khả dụng",
     "aiFailed": "AI chưa trả lời được, hãy thử lại",
+    "aiQuotaExceeded": "Đã hết lượt dùng AI",
+    "aiRateLimited": "Quá nhiều yêu cầu, hãy thử lại sau ít phút",
     "chatAiHint": "Gõ @AI trước câu hỏi để hỏi trợ lý",
     "chatFailed": "Chưa gửi được",
     "chatRetry": "Gửi lại",

@@ -2259,6 +2259,8 @@
     "aiThinking": "PON AI 正在回答…",
     "aiUnavailable": "AI 暂时不可用",
     "aiFailed": "AI 无法回答，请重试",
+    "aiQuotaExceeded": "已达到 AI 使用上限",
+    "aiRateLimited": "请求过多，请稍后重试",
     "chatAiHint": "在问题前输入 @AI 即可向助手提问",
     "chatFailed": "未发送",
     "chatRetry": "重试",

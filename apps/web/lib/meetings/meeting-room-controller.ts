@@ -10,12 +10,13 @@ import {
   type ReactionEmoji,
   type RosterEntry,
 } from '@/lib/api/meeting-types'
-import { MediaAccessError, ScreenShareError } from '@/lib/rtc/livekit-session'
+import { MediaAccessError } from '@/lib/rtc/livekit-session'
 import { useMeetingRoomStore, type MeetingRoomData } from '@/lib/store/meeting.store'
 import { setActiveMeetingRoom, getActiveMeetingRoom, type ActiveMeetingRoom } from './active-room'
 import { meetingKeys } from './cache-updates'
 import { meetingErrorKey, meetingEventErrorKey, parseMeetingError } from './meeting-errors'
 import { MeetingRoomChat } from './meeting-room-chat'
+import { RoomMedia } from './room-media'
 import { canShareScreen, isManager } from './permissions'
 import {
   SWITCH_ACTIONS, answerLobby, flushNotes, hostCommandBody, initialRoomRole, mutedNotice, roleChange, withoutPending,
@@ -38,12 +39,12 @@ const set = (patch: Partial<MeetingRoomData>) => useMeetingRoomStore.setState(pa
 export class MeetingRoomController implements ActiveMeetingRoom {
   readonly meetingId: string
   private session: RoomSession | null = null
-  /** What a (re)join publishes: the pre-join choice, then every in-room toggle / server mute. */
-  private media: JoinMedia = { mic: true, camera: true }
   private settings: MeetingSettings
   /** Bumped by every join / leave / dispose: answers of an older run are dropped. */
   private epoch = 0
   private readonly chat: MeetingRoomChat
+  /** Mic / camera / screen / devices; also holds what a (re)join publishes. */
+  private readonly mediaCtl: RoomMedia
   private notesFlush: (() => Promise<void>) | null = null
 
   constructor(
@@ -54,6 +55,7 @@ export class MeetingRoomController implements ActiveMeetingRoom {
     this.meetingId = meeting.id
     this.settings = meeting.settings
     this.chat = new MeetingRoomChat(meeting.id, myId, deps, () => this.session)
+    this.mediaCtl = new RoomMedia(deps, () => this.session, () => this.settings)
   }
 
   activate(): void {
@@ -74,7 +76,7 @@ export class MeetingRoomController implements ActiveMeetingRoom {
   // ── Joining ──────────────────────────────────────────────────────────────
 
   async join(media: JoinMedia): Promise<void> {
-    this.media = media
+    this.mediaCtl.media = media
     await this.enter(true)
   }
 
@@ -113,7 +115,7 @@ export class MeetingRoomController implements ActiveMeetingRoom {
     const session = this.deps.createSession()
     this.session = session
     this.wire(session)
-    const { mic, camera, audioDeviceId, videoDeviceId } = this.media
+    const { mic, camera, audioDeviceId, videoDeviceId } = this.mediaCtl.media
     let media = { mic, camera }
     try {
       await session.connect(res.url, res.token, { video: camera, audio: mic, audioDeviceId, videoDeviceId })
@@ -133,7 +135,7 @@ export class MeetingRoomController implements ActiveMeetingRoom {
       session.disconnect()
       return
     }
-    this.media = { ...this.media, ...media }
+    this.mediaCtl.media = { ...this.mediaCtl.media, ...media }
     set({
       phase: 'inRoom',
       myRole: res.role,
@@ -173,7 +175,6 @@ export class MeetingRoomController implements ActiveMeetingRoom {
     if (ended) markMeetingEnded(this.deps, this.meetingId)
     set({ phase: ended ? 'ended' : 'left' })
   }
-
 
   /** `pagehide` while waiting: the request must outlive the page (keepalive). */
   leaveLobbyOnExit(): void {
@@ -226,56 +227,15 @@ export class MeetingRoomController implements ActiveMeetingRoom {
     session?.disconnect()
   }
 
-  // ── Media ────────────────────────────────────────────────────────────────
+  // ── Media (delegated to RoomMedia) ───────────────────────────────────────
 
-  private async toggle(key: 'mic' | 'camera', apply: (s: RoomSession, on: boolean) => Promise<void>) {
-    const session = this.session
-    if (!session || store().phase !== 'inRoom') return
-    const next = !store()[key]
-    set({ [key]: next })
-    try {
-      await apply(session, next)
-      if (this.session === session) this.media = { ...this.media, [key]: next }
-    } catch {
-      if (this.session === session) set({ [key]: !next })
-      this.deps.notify('error', { key: 'mediaFailed' })
-    }
-  }
-
-  toggleMic(): Promise<void> {
-    return this.toggle('mic', (s, on) => s.setMic(on))
-  }
-
-  toggleCamera(): Promise<void> {
-    return this.toggle('camera', (s, on) => s.setCamera(on))
-  }
-
-  async toggleScreenShare(): Promise<void> {
-    const session = this.session
-    if (!session || store().phase !== 'inRoom') return
-    const next = !store().screen
-    if (next && !canShareScreen(store().myRole, this.settings)) return
-    set({ screen: next })
-    try {
-      await session.setScreenShare(next)
-    } catch (err) {
-      if (this.session === session) set({ screen: !next })
-      if (!(err instanceof ScreenShareError)) this.deps.notify('error', { key: 'shareFailed' })
-    }
-  }
-
-  async switchDevice(kind: 'audioinput' | 'videoinput', deviceId: string): Promise<void> {
-    this.media = { ...this.media, [kind === 'audioinput' ? 'audioDeviceId' : 'videoDeviceId']: deviceId }
-    try {
-      await this.session?.switchDevice(kind, deviceId)
-    } catch {
-      this.deps.notify('error', { key: 'mediaFailed' })
-    }
-  }
-
-  setPeerVideoEnabled(identity: string, enabled: boolean): void {
-    this.session?.setPeerVideoEnabled(identity, enabled)
-  }
+  toggleMic = (): Promise<void> => this.mediaCtl.toggleMic()
+  toggleCamera = (): Promise<void> => this.mediaCtl.toggleCamera()
+  toggleScreenShare = (): Promise<void> => this.mediaCtl.toggleScreenShare()
+  switchDevice = (kind: 'audioinput' | 'videoinput', deviceId: string): Promise<void> =>
+    this.mediaCtl.switchDevice(kind, deviceId)
+  setPeerVideoEnabled = (identity: string, enabled: boolean): void =>
+    this.mediaCtl.setPeerVideoEnabled(identity, enabled)
 
   // ── Realtime commands ────────────────────────────────────────────────────
 
@@ -332,7 +292,7 @@ export class MeetingRoomController implements ActiveMeetingRoom {
   }
 
   private onMuted(actor: MeetingPerson | undefined): void {
-    this.media = { ...this.media, mic: false }
+    this.mediaCtl.media = { ...this.mediaCtl.media, mic: false }
     if (store().phase === 'inRoom') set({ mic: false })
     this.deps.notify('info', mutedNotice(actor))
   }

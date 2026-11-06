@@ -47,4 +47,11 @@ describe('pending AI list', () => {
     expect(aiErrorKey('AI_ERROR')).toBe('aiFailed')
     expect(aiErrorKey(undefined)).toBe('aiFailed')
   })
+
+  it('maps quota and rate-limit codes (wire form and bare form) to their own notices', () => {
+    expect(aiErrorKey('AI_QUOTA_EXCEEDED')).toBe('aiQuotaExceeded')
+    expect(aiErrorKey('QUOTA_EXCEEDED')).toBe('aiQuotaExceeded')
+    expect(aiErrorKey('AI_RATE_LIMITED')).toBe('aiRateLimited')
+    expect(aiErrorKey('RATE_LIMITED')).toBe('aiRateLimited')
+  })
 })
