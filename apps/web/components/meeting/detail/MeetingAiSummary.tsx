@@ -14,7 +14,8 @@ import { isManager } from '@/lib/meetings/permissions'
 
 /**
  * "AI summary" block of the meeting detail page. Nothing at all when AI notes were never on
- * (state null) or the summary cannot be read. Open-group only when the viewer is in the group;
+ * (state null) or the summary cannot be read. The newest successful summary stays visible under a
+ * PENDING / FAILED status line. Open-group whenever the viewer is in the group;
  * regenerate only for host / co-host. The server re-checks both.
  */
 export function MeetingAiSummary({ meeting: m }: { meeting: Meeting }) {
@@ -29,7 +30,7 @@ export function MeetingAiSummary({ meeting: m }: { meeting: Meeting }) {
   if (!enabled || !data || state === null) return null
 
   const canRegenerate = isManager(m.viewerRole)
-  const groupId = data.inGroup ? data.groupConversationId : undefined
+  const groupId = data.inGroup && data.groupConversationId ? data.groupConversationId : undefined
   const summary = normalizeSummary(data.summary)
 
   const onRegenerate = () =>
@@ -58,11 +59,11 @@ export function MeetingAiSummary({ meeting: m }: { meeting: Meeting }) {
       )}
       {state === 'EMPTY' && <p className="text-sm text-muted-foreground">{t('aiSummaryEmpty')}</p>}
       {state === 'FAILED' && <p className="text-sm text-muted-foreground">{t('aiSummaryFailed')}</p>}
-      {state === 'DONE' && summary ? <SummarySections data={summary} /> : null}
+      {state !== 'EMPTY' && summary ? <SummarySections data={summary} /> : null}
 
       {groupId || regenerateButton ? (
         <div className="flex flex-wrap gap-2">
-          {state === 'DONE' && groupId ? (
+          {groupId ? (
             <Button variant="outline" size="sm" onClick={() => router.push(`/conversations/${groupId}`)}>
               <MessagesSquare className="size-4" />
               {t('aiSummaryOpenGroup')}

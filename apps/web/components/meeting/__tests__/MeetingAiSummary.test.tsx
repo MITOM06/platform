@@ -105,6 +105,36 @@ describe('MeetingAiSummary', () => {
     expect(await screen.findByText('aiSummaryPending')).toBeInTheDocument()
   })
 
+  it.each(['PENDING', 'FAILED'])('%s keeps the older summary visible under the status line', async (state) => {
+    api.summary.mockResolvedValue({ ...DONE, state })
+    renderBlock(meeting())
+    expect(await screen.findByText('The overview')).toBeInTheDocument()
+    expect(screen.getByText(state === 'PENDING' ? 'aiSummaryPending' : 'aiSummaryFailed')).toBeInTheDocument()
+  })
+
+  it('EMPTY does not render a stale summary', async () => {
+    api.summary.mockResolvedValue({ ...DONE, state: 'EMPTY' })
+    renderBlock(meeting())
+    expect(await screen.findByText('aiSummaryEmpty')).toBeInTheDocument()
+    expect(screen.queryByText('The overview')).not.toBeInTheDocument()
+  })
+
+  it.each(['PENDING', 'FAILED', 'EMPTY'])('%s still offers open-group when in the group', async (state) => {
+    api.summary.mockResolvedValue({ ...DONE, state })
+    renderBlock(meeting({ viewerRole: 'invited' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'aiSummaryOpenGroup' }))
+    expect(push).toHaveBeenCalledWith('/conversations/c9')
+  })
+
+  it('409 MEETING_SUMMARY_PENDING refetches the summary so the real state shows', async () => {
+    api.summary.mockResolvedValueOnce({ ...DONE, state: 'FAILED' }).mockResolvedValue({ state: 'PENDING', inGroup: false })
+    api.regenerateSummary.mockRejectedValue(conflict('MEETING_SUMMARY_PENDING'))
+    renderBlock(meeting())
+    await userEvent.click(await screen.findByRole('button', { name: 'aiSummaryRegenerate' }))
+    expect(await screen.findByText('aiSummaryPending')).toBeInTheDocument()
+    expect(api.summary).toHaveBeenCalledTimes(2)
+  })
+
   it.each([
     ['MEETING_SUMMARY_PENDING', 'errSummaryPending'],
     ['MEETING_SUMMARY_UNAVAILABLE', 'errSummaryUnavailable'],

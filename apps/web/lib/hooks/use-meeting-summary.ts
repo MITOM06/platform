@@ -24,6 +24,12 @@ export function useRegenerateSummary(id: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: () => meetingsApi.regenerateSummary(id),
+    onError: (err) => {
+      // Someone else already started it: our cached state is stale, show the real PENDING.
+      if (parseMeetingError(err).code === 'MEETING_SUMMARY_PENDING') {
+        void qc.invalidateQueries({ queryKey: meetingKeys.summary(id) })
+      }
+    },
     onSuccess: () => {
       qc.setQueryData<MeetingSummaryResponse>(meetingKeys.summary(id), (d) => ({
         ...(d ?? { inGroup: false }),
