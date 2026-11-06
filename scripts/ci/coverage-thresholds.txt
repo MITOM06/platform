@@ -2,10 +2,10 @@
 # Đặt = mức đo được làm tròn xuống, trừ 1 điểm biên cho lệch môi trường CI ↔ máy local.
 # CHỈ được NÂNG, không bao giờ hạ (trừ khi xoá code đã có test làm % đổi — ghi lý do trong commit).
 # Đo lần đầu 2026-11-06 trên main cfda7a57.
-auth=86
-ai=84
-connector=83
+auth=89
+ai=92
+connector=93
 chat=74
-web=46
+web=54
 flutter=38
 # Mục tiêu: auth/ai/connector/chat 90 · web 70 · flutter 60
