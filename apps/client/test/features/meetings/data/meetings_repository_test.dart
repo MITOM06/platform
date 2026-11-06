@@ -12,10 +12,13 @@ class _Recorder implements HttpClientAdapter {
   int status = 200;
 
   @override
-  Future<ResponseBody> fetch(RequestOptions o, Stream<Uint8List>? s, Future<void>? cancel) async {
+  Future<ResponseBody> fetch(
+      RequestOptions o, Stream<Uint8List>? s, Future<void>? cancel) async {
     requests.add(o);
     return ResponseBody.fromString(body == null ? '' : jsonEncode(body), status,
-        headers: {Headers.contentTypeHeader: [Headers.jsonContentType]});
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType]
+        });
   }
 
   @override
@@ -23,10 +26,19 @@ class _Recorder implements HttpClientAdapter {
 }
 
 Map<String, dynamic> meeting(String id) => {
-      'id': id, 'code': 'abc-defg-hjk', 'host': {'userId': 'h'}, 'status': 'LIVE',
-      'settings': {'waitingRoom': true, 'muteOnEntry': false, 'allowAttendeeScreenShare': true,
-          'attendeesCanEditNotes': true, 'locked': false},
-      'viewerRole': 'host', 'createdAt': '2026-10-07T00:00:00Z',
+      'id': id,
+      'code': 'abc-defg-hjk',
+      'host': {'userId': 'h'},
+      'status': 'LIVE',
+      'settings': {
+        'waitingRoom': true,
+        'muteOnEntry': false,
+        'allowAttendeeScreenShare': true,
+        'attendeesCanEditNotes': true,
+        'locked': false
+      },
+      'viewerRole': 'host',
+      'createdAt': '2026-10-07T00:00:00Z',
     };
 
 void main() {
@@ -36,18 +48,26 @@ void main() {
 
   setUp(() {
     http = _Recorder();
-    api = MeetingsRepository(Dio(BaseOptions(baseUrl: 'https://chat.test'))..httpClientAdapter = http);
+    api = MeetingsRepository(Dio(BaseOptions(baseUrl: 'https://chat.test'))
+      ..httpClientAdapter = http);
   });
 
   test('lists a scope with the cursor only when there is one', () async {
-    http.body = {'content': [meeting('m1')], 'page': 0, 'size': 20, 'totalElements': 1, 'hasNext': true};
+    http.body = {
+      'content': [meeting('m1')],
+      'page': 0,
+      'size': 20,
+      'totalElements': 1,
+      'hasNext': true
+    };
     final page = await api.list(MeetingListScope.upcoming);
     expect(last().path, '/api/meetings');
     expect(last().queryParameters, {'scope': 'upcoming', 'size': 20});
     expect(page.content.single.id, 'm1');
     expect(page.hasNext, isTrue);
     await api.list(MeetingListScope.past, cursor: 'm9', size: 50);
-    expect(last().queryParameters, {'scope': 'past', 'cursor': 'm9', 'size': 50});
+    expect(
+        last().queryParameters, {'scope': 'past', 'cursor': 'm9', 'size': 50});
   });
 
   test('encodes ids and codes in paths', () async {
@@ -71,7 +91,13 @@ void main() {
   });
 
   test('pages chat history newest-first with before + size', () async {
-    http.body = {'content': [], 'page': 0, 'size': 50, 'totalElements': 0, 'hasNext': false};
+    http.body = {
+      'content': [],
+      'page': 0,
+      'size': 50,
+      'totalElements': 0,
+      'hasNext': false
+    };
     await api.messages('m1', before: 'msg7');
     expect(last().path, '/api/meetings/m1/messages');
     expect(last().queryParameters, {'before': 'msg7', 'size': 50});
@@ -82,18 +108,28 @@ void main() {
     await api.getNote('m1', NoteScope.private);
     expect(last().path, '/api/meetings/m1/notes/private');
     http.body = {'scope': 'shared', 'content': '# hi', 'version': 4};
-    final saved = await api.putNote('m1', NoteScope.shared, content: '# hi', version: 3);
+    final saved =
+        await api.putNote('m1', NoteScope.shared, content: '# hi', version: 3);
     expect(last().method, 'PUT');
     expect(last().data, {'content': '# hi', 'version': 3});
     expect(saved.version, 4);
   });
 
   test('unwraps hands and lobby and tolerates a missing array', () async {
-    http.body = {'hands': [{'userId': 'a', 'raisedAt': '2026-10-08T02:06:00Z'}]};
+    http.body = {
+      'hands': [
+        {'userId': 'a', 'raisedAt': '2026-10-08T02:06:00Z'}
+      ]
+    };
     expect((await api.hands('m1')).single.userId, 'a');
     http.body = {};
     expect(await api.hands('m1'), isEmpty);
-    http.body = {'entries': [{'userId': 'g', 'displayName': 'Guest'}, {'bad': true}]};
+    http.body = {
+      'entries': [
+        {'userId': 'g', 'displayName': 'Guest'},
+        {'bad': true}
+      ]
+    };
     expect((await api.lobby('m1')).single.displayName, 'Guest');
     expect(last().path, '/api/meetings/m1/lobby');
   });
@@ -108,8 +144,13 @@ void main() {
     expect((last().method, last().path), ('DELETE', '/api/meetings/m1'));
   });
 
-  test('summary GET parses the response; regenerate POSTs and reads the state', () async {
-    http.body = {'state': 'PENDING', 'summary': {'overview': 'old'}, 'inGroup': false};
+  test('summary GET parses the response; regenerate POSTs and reads the state',
+      () async {
+    http.body = {
+      'state': 'PENDING',
+      'summary': {'overview': 'old'},
+      'inGroup': false
+    };
     final r = await api.summary('m1');
     expect((last().method, last().path), ('GET', '/api/meetings/m1/summary'));
     expect(r.state, MeetingSummaryState.pending);
@@ -117,12 +158,37 @@ void main() {
     http.status = 202;
     http.body = {'state': 'PENDING'};
     await api.regenerateSummary('m1');
-    expect((last().method, last().path), ('POST', '/api/meetings/m1/summary/regenerate'));
+    expect((last().method, last().path),
+        ('POST', '/api/meetings/m1/summary/regenerate'));
+  });
+
+  test(
+      'screen frame: multipart jpeg, accepted only on 202, never throws on status',
+      () async {
+    http.status = 202;
+    http.body = {'accepted': true};
+    expect(
+        await api.uploadScreenFrame('m1', Uint8List.fromList([0xFF, 0xD8]),
+            ts: 5),
+        isTrue);
+    expect((last().method, last().path),
+        ('POST', '/api/meetings/m1/screen-frames'));
+    final form = last().data as FormData;
+    final frame = form.files.single;
+    expect(frame.key, 'frame');
+    expect(frame.value.filename, 'screen.jpg');
+    expect(frame.value.contentType.toString(), 'image/jpeg');
+    expect(form.fields.map((e) => '${e.key}=${e.value}'), ['ts=5']);
+    for (final status in [204, 400, 403, 429, 500]) {
+      http.status = status;
+      expect(await api.uploadScreenFrame('m1', Uint8List(1)), isFalse);
+    }
   });
 
   test('a malformed summary body is an error', () async {
     http.body = 'nope';
-    await expectLater(api.summary('m1'), throwsA(isA<MeetingFormatException>()));
+    await expectLater(
+        api.summary('m1'), throwsA(isA<MeetingFormatException>()));
   });
 
   test('a malformed meeting body is an error, not a crash later', () async {

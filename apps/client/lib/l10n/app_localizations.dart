@@ -9373,6 +9373,12 @@ abstract class AppLocalizations {
   /// **'AI is taking notes'**
   String get meetingAiNotesActive;
 
+  /// No description provided for @meetingAiReadingScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is reading the screen you share'**
+  String get meetingAiReadingScreen;
+
   /// No description provided for @meetingAiNotesStarted.
   ///
   /// In en, this message translates to:

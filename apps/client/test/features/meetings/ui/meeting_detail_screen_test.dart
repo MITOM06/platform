@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -46,6 +48,10 @@ DioException failure(int status, String code) {
 }
 
 class _Api implements MeetingsApi {
+  @override
+  Future<bool> uploadScreenFrame(String id, Uint8List jpeg, {int? ts}) async =>
+      false;
+
   Object? getResult;
   Object messagesResult = const MeetingMessagePage(content: [], hasNext: false);
 
@@ -149,7 +155,8 @@ void main() {
     expect(find.text(l.meetingJoin), findsOneWidget);
     expect(find.text(l.meetingEdit), findsOneWidget);
     expect(find.text(l.meetingCancelMeeting), findsOneWidget);
-    expect(find.text(l.meetingParticipantFallback), findsNWidgets(2)); // web label
+    expect(
+        find.text(l.meetingParticipantFallback), findsNWidgets(2)); // web label
     expect(find.textContaining('64b0'), findsNothing);
     // SCHEDULED and nobody joined yet: no attendance section.
     expect(find.text(l.meetingSectionAttendance), findsNothing);

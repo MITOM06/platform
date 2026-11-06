@@ -5037,6 +5037,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get meetingAiNotesActive => 'AI がメモを取っています';
 
   @override
+  String get meetingAiReadingScreen => 'AI があなたの共有画面を読み取っています';
+
+  @override
   String get meetingAiNotesStarted => 'AI が会議のメモを開始しました';
 
   @override

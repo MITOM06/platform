@@ -3,12 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:platform_client/features/meetings/ui/room/ai_notes_indicator.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
 
-Widget host(bool active, List<String> announced) => MaterialApp(
+Widget host(bool active, List<String> announced, {bool sharing = false}) =>
+    MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       locale: const Locale('en'),
       home: Scaffold(
-          body: AiNotesIndicator(active: active, announce: announced.add)),
+          body: AiNotesIndicator(
+              active: active, sharing: sharing, announce: announced.add)),
     );
 
 void main() {
@@ -41,5 +43,16 @@ void main() {
     final announced = <String>[];
     await tester.pumpWidget(host(true, announced));
     expect(announced, isEmpty);
+  });
+
+  testWidgets('sharer sees the screen-reading line only when sharing',
+      (tester) async {
+    const reading = 'AI is reading the screen you share';
+    await tester.pumpWidget(host(true, []));
+    expect(find.text(reading), findsNothing);
+    await tester.pumpWidget(host(true, [], sharing: true));
+    expect(find.text(reading), findsOneWidget);
+    await tester.pumpWidget(host(false, [], sharing: true));
+    expect(find.text(reading), findsNothing);
   });
 }

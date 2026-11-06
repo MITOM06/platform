@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -55,6 +57,11 @@ abstract interface class MeetingsApi {
 
   /// Host/co-host. 202 ⇒ PENDING; 409 MEETING_SUMMARY_PENDING / _UNAVAILABLE.
   Future<void> regenerateSummary(String id);
+
+  /// A shared-screen frame for the AI record (JPEG ≤ 2 MB). true = accepted
+  /// (202); 204 / 429 / any other status = false. Never throws on a status
+  /// (no logout flow); network errors still throw.
+  Future<bool> uploadScreenFrame(String id, Uint8List jpeg, {int? ts});
 }
 
 class MeetingsRepository implements MeetingsApi {
@@ -175,6 +182,24 @@ class MeetingsRepository implements MeetingsApi {
   @override
   Future<void> regenerateSummary(String id) async {
     await _dio.post<Object?>('${_base(id)}/summary/regenerate');
+  }
+
+  @override
+  Future<bool> uploadScreenFrame(String id, Uint8List jpeg, {int? ts}) async {
+    final res = await _dio.post<Object?>(
+      '${_base(id)}/screen-frames',
+      data: FormData.fromMap({
+        'frame': MultipartFile.fromBytes(jpeg,
+            filename: 'screen.jpg', contentType: DioMediaType('image', 'jpeg')),
+        if (ts != null) 'ts': ts.toString(),
+      }),
+      options: Options(
+        validateStatus: (_) => true,
+        sendTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+      ),
+    );
+    return res.statusCode == 202;
   }
 }
 

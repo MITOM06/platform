@@ -5040,6 +5040,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get meetingAiNotesActive => 'AI가 노트 작성 중';
 
   @override
+  String get meetingAiReadingScreen => 'AI가 공유 중인 화면을 읽고 있습니다';
+
+  @override
   String get meetingAiNotesStarted => 'AI가 회의 노트 작성을 시작했습니다';
 
   @override

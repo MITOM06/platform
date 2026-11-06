@@ -2635,6 +2635,7 @@
   "meetingSettingAiNotes": "AI meeting notes",
   "meetingSettingAiNotesDesc": "AI captures speech, chat, notes, files and shared screens to summarize after the meeting. Everyone in the room is notified.",
   "meetingAiNotesActive": "AI is taking notes",
+  "meetingAiReadingScreen": "AI is reading the screen you share",
   "meetingAiNotesStarted": "AI started taking notes for this meeting",
   "meetingAiNotesPrejoin": "This meeting has AI notes",
   "meetingAiNotesPauseMine": "Pause my speech capture",

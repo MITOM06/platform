@@ -5189,6 +5189,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get meetingAiNotesActive => 'AI đang ghi chú';
 
   @override
+  String get meetingAiReadingScreen => 'AI đang đọc màn hình bạn chia sẻ';
+
+  @override
   String get meetingAiNotesStarted => 'AI bắt đầu ghi chú cuộc họp';
 
   @override

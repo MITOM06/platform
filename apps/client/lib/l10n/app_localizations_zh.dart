@@ -4974,6 +4974,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get meetingAiNotesActive => 'AI 正在记录';
 
   @override
+  String get meetingAiReadingScreen => 'AI 正在读取你共享的屏幕';
+
+  @override
   String get meetingAiNotesStarted => 'AI 已开始记录本次会议';
 
   @override

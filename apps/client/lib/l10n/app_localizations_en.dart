@@ -5223,6 +5223,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meetingAiNotesActive => 'AI is taking notes';
 
   @override
+  String get meetingAiReadingScreen => 'AI is reading the screen you share';
+
+  @override
   String get meetingAiNotesStarted =>
       'AI started taking notes for this meeting';
 

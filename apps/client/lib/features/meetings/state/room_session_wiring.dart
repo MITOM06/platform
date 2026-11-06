@@ -79,3 +79,14 @@ void wireRoomSession(
     active: s.settings.aiNotes == true && s.mic,
   );
 }
+
+/// What the screen-frame sender syncs to: in the room, AI notes on AND my own
+/// screen share on.
+({String? meetingId, bool active}) screenFramesSyncArgs(
+    MeetingRoomState s, String meetingId) {
+  if (s.phase != RoomPhase.inRoom) return (meetingId: null, active: false);
+  return (
+    meetingId: meetingId,
+    active: s.settings.aiNotes == true && s.screen,
+  );
+}

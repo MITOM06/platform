@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 // Meeting screens for the DESIGN_SHOTS run (see design_shots_test.dart):
 // the list and detail with fake data, the pre-join and a status screen inside
 // a real room scope (`pumpRoom`), the room itself. Light + dark, Vietnamese,
@@ -44,6 +46,10 @@ Meeting _meeting(String id, MeetingStatus status, {DateTime? start}) => Meeting(
     );
 
 class _ShotsApi implements MeetingsApi {
+  @override
+  Future<bool> uploadScreenFrame(String id, Uint8List jpeg, {int? ts}) async =>
+      false;
+
   final live = _meeting('m1', MeetingStatus.live);
   final later = _meeting('m2', MeetingStatus.scheduled,
       start: DateTime.now().add(const Duration(days: 1)));

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,6 +14,10 @@ import 'package:platform_client/features/meetings/ui/create_meeting_sheet.dart';
 import 'meeting_test_harness.dart';
 
 class _Api implements MeetingsApi {
+  @override
+  Future<bool> uploadScreenFrame(String id, Uint8List jpeg, {int? ts}) async =>
+      false;
+
   final created = <MeetingInput>[];
   final updated = <MeetingInput>[];
   Object? failWith;
@@ -109,8 +115,8 @@ void main() {
     await open(tester);
     await submit(tester, l10nOf(tester).meetingSubmitCreate);
     expect(api.created, hasLength(1));
-    expect(find.text(l10nOf(tester).meetingValTitleTooLong(120)),
-        findsOneWidget);
+    expect(
+        find.text(l10nOf(tester).meetingValTitleTooLong(120)), findsOneWidget);
   });
 
   testWidgets(
@@ -150,8 +156,7 @@ void main() {
     expect(find.text(l10nOf(tester).meetingFieldDepartment), findsNothing);
   });
 
-  testWidgets('editing sends only the switch that was flipped',
-      (tester) async {
+  testWidgets('editing sends only the switch that was flipped', (tester) async {
     await open(tester,
         mode: MeetingFormMode.edit,
         meeting: sample(scheduled: true, status: MeetingStatus.scheduled));

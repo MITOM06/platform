@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -47,6 +49,10 @@ const done = {
 };
 
 class _Api implements MeetingsApi {
+  @override
+  Future<bool> uploadScreenFrame(String id, Uint8List jpeg, {int? ts}) async =>
+      false;
+
   Object next = const MeetingSummaryResponse(inGroup: false);
   int summaryCalls = 0, regenCalls = 0;
   Object? regenError;
@@ -86,7 +92,8 @@ void main() {
       GoRoute(
           path: '/',
           builder: (_, __) => Scaffold(
-              body: SingleChildScrollView(child: MeetingAiSummary(meeting: m)))),
+              body:
+                  SingleChildScrollView(child: MeetingAiSummary(meeting: m)))),
       GoRoute(path: '/chat/:id', builder: (_, s) => Text(s.uri.path)),
     ]);
     await tester.pumpWidget(ProviderScope(
@@ -117,7 +124,8 @@ void main() {
     expect(find.text(l.meetingAiSummaryTitle), findsNothing);
   });
 
-  testWidgets('fetches when summaryState is set even without aiNotesEverEnabled',
+  testWidgets(
+      'fetches when summaryState is set even without aiNotesEverEnabled',
       (tester) async {
     api.next = resp(MeetingSummaryState.done, summary: done);
     await pump(tester, meeting(aiEver: false, state: MeetingSummaryState.done));

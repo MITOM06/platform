@@ -17,6 +17,7 @@ import '../../state/meeting_room_controller.dart';
 import '../../state/meeting_room_state.dart';
 import '../../state/meeting_room_providers.dart';
 import '../../state/meeting_room_realtime.dart';
+import '../../state/meeting_screen_frames.dart';
 import '../../state/meeting_transcriber.dart';
 import '../../state/room_session_wiring.dart';
 import 'leave_sheet.dart';
@@ -45,6 +46,7 @@ class _MeetingSessionViewState extends ConsumerState<MeetingSessionView> {
   late final void Function(bool on) _keepAwake;
   late final String _myId;
   late final MeetingTranscriber _transcriber;
+  late final MeetingScreenFrames _screenFrames;
   bool _endedHandled = false;
   bool _activated = false;
 
@@ -58,6 +60,7 @@ class _MeetingSessionViewState extends ConsumerState<MeetingSessionView> {
     _myId = auth is AuthAuthenticated ? auth.user.id : '';
     _keepAwake = ref.read(meetingKeepAwakeProvider);
     _transcriber = ref.read(meetingTranscriberProvider);
+    _screenFrames = ref.read(meetingScreenFramesProvider);
     _controller = MeetingRoomController(
       meeting: widget.meeting,
       myId: _myId,
@@ -111,6 +114,7 @@ class _MeetingSessionViewState extends ConsumerState<MeetingSessionView> {
     // same frame activates first and is left alone).
     scheduleMicrotask(_controller.dispose);
     scheduleMicrotask(() => _transcriber.sync(meetingId: null, active: false));
+    scheduleMicrotask(() => _screenFrames.sync(meetingId: null, active: false));
     super.dispose();
   }
 
@@ -119,6 +123,13 @@ class _MeetingSessionViewState extends ConsumerState<MeetingSessionView> {
     if (!_isOpen) return;
     final a = transcriberSyncArgs(s, widget.meeting.id);
     _transcriber.sync(meetingId: a.meetingId, active: a.active);
+  }
+
+  /// Shared-screen frames follow: in the room, AI notes on, my screen on.
+  void _syncScreenFrames(MeetingRoomState s) {
+    if (!_isOpen) return;
+    final a = screenFramesSyncArgs(s, widget.meeting.id);
+    _screenFrames.sync(meetingId: a.meetingId, active: a.active);
   }
 
   void _onPhase(RoomPhase? prev, RoomPhase phase) {
@@ -168,6 +179,10 @@ class _MeetingSessionViewState extends ConsumerState<MeetingSessionView> {
         meetingRoomStoreProvider
             .select((s) => transcriberSyncArgs(s, widget.meeting.id)),
         (_, a) => _syncTranscriber(ref.read(meetingRoomStoreProvider)));
+    ref.listen(
+        meetingRoomStoreProvider
+            .select((s) => screenFramesSyncArgs(s, widget.meeting.id)),
+        (_, a) => _syncScreenFrames(ref.read(meetingRoomStoreProvider)));
     final phase = ref.watch(meetingRoomStoreProvider.select((s) => s.phase));
     // Until activated (or once another room took the store) show nothing of
     // the shared store.

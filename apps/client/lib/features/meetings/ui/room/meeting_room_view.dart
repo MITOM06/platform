@@ -60,7 +60,12 @@ class MeetingRoomView extends ConsumerWidget {
                   const RoomBanners(),
                   Align(
                     alignment: AlignmentDirectional.centerStart,
-                    child: AiNotesIndicator(active: aiNotes),
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable:
+                          ref.read(meetingScreenFramesProvider).reading,
+                      builder: (_, reading, __) =>
+                          AiNotesIndicator(active: aiNotes, sharing: reading),
+                    ),
                   ),
                 ],
               ),

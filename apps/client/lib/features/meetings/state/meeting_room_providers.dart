@@ -21,6 +21,7 @@ import '../data/meetings_repository.dart';
 import '../ui/meeting_text_l10n.dart';
 import 'meeting_room_deps.dart';
 import 'meeting_room_state.dart';
+import 'meeting_screen_frames.dart';
 import 'meeting_transcriber.dart';
 import 'meetings_store.dart';
 
@@ -132,9 +133,8 @@ final meetingRoomStreamsProvider = Provider<MeetingRoomStreams>((ref) {
 
 /// Keep the screen on while in the room (best-effort; no-op in tests).
 final meetingKeepAwakeProvider = Provider<void Function(bool on)>(
-  (_) => (on) => unawaited(
-      (on ? WakelockPlus.enable() : WakelockPlus.disable())
-          .catchError((Object _) {})),
+  (_) => (on) => unawaited((on ? WakelockPlus.enable() : WakelockPlus.disable())
+      .catchError((Object _) {})),
 );
 
 /// The meeting stopped (ended / removed / dropped) while the app is in the
@@ -151,4 +151,20 @@ final meetingTranscriberProvider = Provider<MeetingTranscriber>((ref) {
       ref.read(stompServiceProvider.notifier), SpeechCapture());
   ref.onDispose(t.dispose);
   return t;
+});
+
+/// Shared-screen frames for the AI record (Android, one room at a time); the
+/// session view syncs it.
+final meetingScreenFramesProvider = Provider<MeetingScreenFrames>((ref) {
+  final f = MeetingScreenFrames(
+    capture: () =>
+        captureScreenTrack(ref.read(meetingRoomStoreProvider).localScreen),
+    upload: (id, jpeg, ts) async {
+      await ref
+          .read(meetingsRepositoryProvider)
+          .uploadScreenFrame(id, jpeg, ts: ts);
+    },
+  );
+  ref.onDispose(f.dispose);
+  return f;
 });
