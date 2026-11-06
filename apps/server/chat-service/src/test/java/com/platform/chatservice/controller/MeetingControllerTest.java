@@ -63,6 +63,7 @@ class MeetingControllerTest {
   @Mock private MeetingChatService chat;
   @Mock private MeetingNotesService notes;
   @Mock private MeetingHandService hands;
+  @Mock private com.platform.chatservice.service.meeting.MeetingSummaryService summary;
   private MockMvc mvc;
   private final UserPrincipal lan =
       new UserPrincipal("lan", "Member", List.of("HOST_MEETING"), List.of("dept-a"));
@@ -70,7 +71,8 @@ class MeetingControllerTest {
   @BeforeEach
   void setUp() {
     mvc =
-        MockMvcBuilders.standaloneSetup(new MeetingController(meetings, joins, chat, notes, hands))
+        MockMvcBuilders.standaloneSetup(
+                new MeetingController(meetings, joins, chat, notes, hands, summary))
             .setControllerAdvice(new GlobalExceptionHandler())
             .build();
   }
@@ -254,7 +256,7 @@ class MeetingControllerTest {
     assertThatCode(
             () ->
                 MockMvcBuilders.standaloneSetup(
-                        new MeetingController(meetings, joins, chat, notes, hands),
+                        new MeetingController(meetings, joins, chat, notes, hands, summary),
                         new CallRestController(
                             org.mockito.Mockito.mock(SfuCallService.class),
                             new LiveKitProperties()))
@@ -359,5 +361,37 @@ class MeetingControllerTest {
     // Same path, other verb: leaving the lobby still works.
     mvc.perform(delete("/api/meetings/m1/lobby").principal(lan)).andExpect(status().isNoContent());
     verify(joins).leaveLobby("lan", "m1");
+  }
+
+  @Test
+  void summaryIsReadWithTheCallersPrincipal() throws Exception {
+    when(summary.get(any(), eq("m1")))
+        .thenReturn(
+            new com.platform.chatservice.dto.meeting.MeetingSummaryResponse(
+                "DONE", Map.of("overview", "o"), null, "g1", true));
+
+    mvc.perform(get("/api/meetings/m1/summary").principal(lan))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.state").value("DONE"))
+        .andExpect(jsonPath("$.summary.overview").value("o"))
+        .andExpect(jsonPath("$.groupConversationId").value("g1"))
+        .andExpect(jsonPath("$.inGroup").value(true));
+  }
+
+  @Test
+  void regenerateAnswers202AndConflictsKeepTheirCode() throws Exception {
+    when(summary.regenerate(any(), eq("m1")))
+        .thenReturn(
+            new com.platform.chatservice.dto.meeting.MeetingSummaryResponse(
+                "PENDING", null, null, null, false));
+    when(summary.regenerate(any(), eq("m2")))
+        .thenThrow(new ApiException(HttpStatus.CONFLICT, "MEETING_SUMMARY_PENDING"));
+
+    mvc.perform(post("/api/meetings/m1/summary/regenerate").principal(lan))
+        .andExpect(status().isAccepted())
+        .andExpect(jsonPath("$.state").value("PENDING"));
+    mvc.perform(post("/api/meetings/m2/summary/regenerate").principal(lan))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.code").value("MEETING_SUMMARY_PENDING"));
   }
 }

@@ -9,6 +9,7 @@ import com.platform.chatservice.dto.meeting.MeetingMessageDto;
 import com.platform.chatservice.dto.meeting.MeetingNoteDto;
 import com.platform.chatservice.dto.meeting.MeetingNoteRequest;
 import com.platform.chatservice.dto.meeting.MeetingResponse;
+import com.platform.chatservice.dto.meeting.MeetingSummaryResponse;
 import com.platform.chatservice.dto.meeting.UpdateMeetingRequest;
 import com.platform.chatservice.security.UserPrincipal;
 import com.platform.chatservice.service.meeting.MeetingChatService;
@@ -17,6 +18,7 @@ import com.platform.chatservice.service.meeting.MeetingJoinService;
 import com.platform.chatservice.service.meeting.MeetingNotesService;
 import com.platform.chatservice.service.meeting.MeetingNotesService.Scope;
 import com.platform.chatservice.service.meeting.MeetingService;
+import com.platform.chatservice.service.meeting.MeetingSummaryService;
 import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -47,6 +49,7 @@ public class MeetingController {
   private final MeetingChatService chat;
   private final MeetingNotesService notes;
   private final MeetingHandService hands;
+  private final MeetingSummaryService summary;
 
   /** No body (or an empty one) creates an instant meeting with every default ("họp ngay"). */
   @PostMapping
@@ -164,6 +167,19 @@ public class MeetingController {
   @GetMapping("/{id}/hands")
   public MeetingHandsResponse hands(@PathVariable String id, Principal principal) {
     return hands.snapshot(caller(principal), id);
+  }
+
+  @GetMapping("/{id}/summary")
+  public MeetingSummaryResponse summary(@PathVariable String id, Principal principal) {
+    return summary.get(caller(principal), id);
+  }
+
+  /** Host / co-host: ask for a new AI summary; 202 {@code {state: PENDING}}. */
+  @PostMapping("/{id}/summary/regenerate")
+  public ResponseEntity<MeetingSummaryResponse> regenerateSummary(
+      @PathVariable String id, Principal principal) {
+    return ResponseEntity.status(HttpStatus.ACCEPTED)
+        .body(summary.regenerate(caller(principal), id));
   }
 
   /**

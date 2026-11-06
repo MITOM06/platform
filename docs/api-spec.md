@@ -541,6 +541,8 @@ Response 200: { "success": true }
     "attendeesCanEditNotes": true, "locked": false, "aiNotes": false
   },
   "aiNotesEverEnabled": false,
+  "summaryState": "DONE",
+  "groupConversationId": "670f1c2ab9e4d21f0c3a9e99",
   "attendance": [
     { "userId": "64b0…01", "displayName": "Lan Nguyen", "role": "host",
       "joinedAt": "2026-10-08T02:00:05Z", "leftAt": "2026-10-08T02:40:00Z" }
@@ -569,6 +571,12 @@ Response 200: { "success": true }
   set (atomically, only while LIVE and `aiNotes` on) when the meeting goes LIVE with `aiNotes` on,
   when a host/co-host sends `AI_NOTES_ON`, or when a `PATCH` turns `aiNotes` on while LIVE. Never
   reset by turning `aiNotes` off.
+- `summaryState` (`PENDING | DONE | EMPTY | FAILED`, absent = never asked): state of the AI summary.
+  A `PENDING` summary older than 10 min is flipped to `FAILED` by a sweep. `groupConversationId`:
+  the group chat created for the meeting (absent when none) — only open it when `GET .../summary`
+  says `inGroup`.
+- `MeetingSummary` = `{ overview, keyPoints[], decisions[], actionItems:[{text, assigneeName|null}],
+  fromMaterials[], language }`.
 - `displayName` / `avatarUrl` absent when unknown ⇒ show a generic localized label, never the id.
   `title` absent ⇒ the client shows its own localized default.
 
@@ -594,6 +602,8 @@ Response 200: { "success": true }
 | `GET /api/meetings/{id}/notes/private` | records access ¹ (always the caller's own note) | 200 `MeetingNote` | 403 · 404 |
 | `PUT /api/meetings/{id}/notes/private` | records access ¹ | 200 `MeetingNote` | 403 · 404 · 400 · 409 as above |
 | `GET /api/meetings/{id}/hands` | room access ² | 200 `{ "hands": [Hand…] }` | 403 `MEETING_FORBIDDEN` · 403 `MEETING_REMOVED` · 404 · 409 `MEETING_ENDED` |
+| `GET /api/meetings/{id}/summary` | records access ¹ | 200 `{ "state": null\|"PENDING"\|"DONE"\|"EMPTY"\|"FAILED", "summary"?: MeetingSummary, "createdAt"?, "groupConversationId"?, "inGroup": bool }` — `state` is the meeting's current state (`null` = AI notes were never on ⇒ `inGroup:false`); `summary`/`createdAt` = the newest successful summary (may be older than a later `FAILED`/`PENDING`); `groupConversationId` only when `inGroup` (you are a member of the meeting's group chat) | 403 `MEETING_FORBIDDEN` · 403 `MEETING_REMOVED` · 404 |
+| `POST /api/meetings/{id}/summary/regenerate` | host, co-host | **202** `{ "state": "PENDING" }` — a new summary is requested; `meet.summary.ready` follows | 403 `MEETING_FORBIDDEN` (also attendees) · 403 `MEETING_REMOVED` · 404 · **409 `MEETING_SUMMARY_UNAVAILABLE`** (not ENDED, or AI notes never on) · **409 `MEETING_SUMMARY_PENDING`** (one is already being generated) |
 
 ¹ **Records access** (also after the meeting ended): host, co-host, invited / department member,
 has an `attendance` row, or admitted — unless removed (403 `MEETING_REMOVED`).
@@ -768,6 +778,7 @@ Every payload is `MeetingEventDto` `{event, meetingId, …}`; absent fields are 
 | `/user/queue/meeting` | `meet.invited` | `{code, title, hostId, hostName, scheduledStart}` | create / `PATCH` added you (named invitees only) |
 | `/user/queue/meeting` | `meet.starting` | `{code, title, scheduledStart}` | 10 min before `scheduledStart` — host, co-hosts, invitees, department members, minus removed |
 | `/user/queue/meeting` | `meet.cancelled` | `{code, title, scheduledStart}` (`title` / `scheduledStart` absent when the meeting has none) | host cancelled — same recipients as `meet.starting` |
+| `/user/queue/meeting` | `meet.summary.ready` | `{summaryState: "DONE"\|"EMPTY"\|"FAILED", groupConversationId?}` — the key is `event` (not `type`); `GET /summary` for the content | the AI summary finished or failed, to the people who may read it |
 
 Subscribing to `/topic/meeting/{id}` requires being allowed straight into the room (host, co-host,
 invited / department member / admitted); waiting, removed, locked-out people and ENDED meetings get
@@ -782,9 +793,13 @@ known action (the client's string is never echoed); `clientId` = the refused cha
 line's. (The field is `errorCode` because `code` is the meeting code.) Example:
 `{"event":"meet.error","meetingId":"m1","clientId":"c-7f3a","errorCode":"MEETING_INVALID","params":{"field":"content","max":2000}}`.
 
-New error codes: `MEETING_NOTE_CONFLICT` (409, with `latest`), `MEETING_NOTES_READ_ONLY` (403 —
+New error codes: `MEETING_SUMMARY_UNAVAILABLE` (409, regenerate on a meeting that is not ENDED or never had AI notes), `MEETING_SUMMARY_PENDING` (409, a summary is already being generated), `MEETING_NOTE_CONFLICT` (409, with `latest`), `MEETING_NOTES_READ_ONLY` (403 —
 an attendee editing the shared note while `attendeesCanEditNotes=false`), `RATE_LIMITED` (in
 `meet.error`; also the `code` of every chat-service REST 429, which carries `Retry-After`).
+
+**Service-to-service only** (not for clients): `GET /internal/meetings/{id}/record` (header
+`X-Internal-Key`; 401 on a missing/wrong key or unconfigured server, 404 for no meeting/no access —
+never 403) returns the capped transcript + chat that ai-service summarizes.
 
 ### Web client (MT4–MT5) — how `apps/web` uses this contract
 

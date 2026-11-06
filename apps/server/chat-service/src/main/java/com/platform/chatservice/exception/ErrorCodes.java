@@ -108,6 +108,12 @@ public final class ErrorCodes {
   /** 403 — an attendee edits the shared note while {@code attendeesCanEditNotes} is off. */
   public static final String MEETING_NOTES_READ_ONLY = "MEETING_NOTES_READ_ONLY";
 
+  /** 409 — regenerate on a meeting that has not ended or never had AI notes on. */
+  public static final String MEETING_SUMMARY_UNAVAILABLE = "MEETING_SUMMARY_UNAVAILABLE";
+
+  /** 409 — regenerate while a summary is already being generated. */
+  public static final String MEETING_SUMMARY_PENDING = "MEETING_SUMMARY_PENDING";
+
   // ── Rate limiting ─────────────────────────────────────────────────────────
 
   /**

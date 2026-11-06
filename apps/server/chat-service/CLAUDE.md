@@ -65,6 +65,9 @@
 - settings: { waitingRoom, muteOnEntry, allowAttendeeScreenShare, attendeesCanEditNotes, locked }
 - attendance: List<{ userId, displayName, role, sid, joinedAt, leftAt }> (one row per session)
 - reminded: boolean (10-minute reminder claimed)
+- aiNotes (in settings) / aiNotesEverEnabled: boolean (latched once AI notes were on while LIVE)
+- summaryState: null | PENDING | DONE | EMPTY | FAILED; summaryAttempt (UUID); summaryRequestedAt: Instant
+- groupConversationId: String (group chat created for the meeting; Conversation.meetingId points back)
 - createdAt / startedAt / endedAt / cancelledAt: Instant
 ```
 After the first insert a meeting is **only** changed through atomic updates in `MeetingStore`
@@ -84,6 +87,20 @@ meeting_notes:    id, meetingId, scope ("SHARED" | "PRIVATE"), ownerId (PRIVATE 
 ```
 Written with `MongoTemplate` only (`insert` / conditional `findAndModify` on `version`); a stale
 `version` is 409 `MEETING_NOTE_CONFLICT` with `latest` (`MeetingNoteConflictException`).
+
+### MeetingRecord (`meeting_records`) / MeetingSummaryDoc (`meeting_summaries`)
+```
+meeting_records:   transcript lines of the meeting (MeetingRecordService), read by the internal endpoint
+meeting_summaries: id, meetingId, attempt, status, summary (object MeetingSummary), createdAt
+                   — index (meetingId, createdAt); only successful (DONE) summaries; a regenerate adds a row
+```
+AI summary flow: meeting ends (or host `POST /{id}/summary/regenerate`) → `MeetingStore` claims
+PENDING atomically → `MeetingSummaryTrigger` publishes Redis `meet:summarize`
+`{meetingId, attempt, requesterId}` → ai-service reads `GET /internal/meetings/{id}/record`
+(`X-Internal-Key`; 401 bad key, 404 no meeting/access, caps 4000 lines / 1000 chat messages) →
+replies on `meet:summary:result` `{meetingId, attempt, status: ok|empty|failed, summary?}` →
+`MeetingSummaryResultListener` stores it, posts the `meeting_summary` card in the group and sends
+`meet.summary.ready`. `MeetingSummaryService` serves `GET /{id}/summary` + `POST /{id}/summary/regenerate`.
 
 ---
 
@@ -113,6 +130,8 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 - `MeetingReminderSweep` — every `app.meeting.sweep-interval-ms` (60 s default, annotation only):
   claims each meeting starting within 10 min (`reminded` false → true, once cluster-wide) and
   sends `meet.starting` + FCM `MEETING_STARTING`; retires SCHEDULED meetings 48h past their start
+- `MeetingSummarySweep` — same interval: AI summaries PENDING for more than 10 min ⇒ FAILED
+  (`MeetingStore.failStaleSummaries`), so the host can regenerate
 - `AssistantTokenRenewal` — every `app.assistant.token-renew-interval-ms` (6 h default): re-issues
   the MCP token of each member's Bot Factory assistant 14 days before it expires
   (`external_bots.mcpTokenExpiresAt`, connector `BOT_SESSION_TTL_DAYS`) and swaps it into the bot's
@@ -154,7 +173,7 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
   (`MeetingTopicOutboundInterceptor`, next to `ConversationTopicOutboundInterceptor` on the
   clientOutboundChannel; fail-open on a Redis error)
 - `/user/queue/meeting` — `meet.lobby | meet.admitted | meet.denied | meet.ended | meet.invited |
-  meet.starting | meet.cancelled | meet.removed | meet.muted | meet.error`
+  meet.starting | meet.cancelled | meet.removed | meet.muted | meet.summary.ready | meet.error`
 - `/user/queue/notifications` — Receive unread notifications: `{ type: "NEW_MESSAGE", conversationId, senderName }`;
   also `{ type: "CLAIMS_CHANGED" }` (role/department/permissions changed → refresh token, refetch capabilities, reconnect)
 
@@ -207,6 +226,9 @@ app.reminder.sweep-interval-ms: ${REMINDER_SWEEP_INTERVAL_MS:60000}  # due-remin
 - `POST /{id}/join` → `{status:"joined", url, token, role}` | `{status:"waiting"}` ·
   `DELETE /{id}/lobby` · `POST /{id}/lobby/{userId}/admit|deny` · `POST /{id}/end`
 - `GET /{id}/messages?before=&size=` · `GET|PUT /{id}/notes/shared|private` · `GET /{id}/hands`
+- `GET /{id}/summary` (records access) · `POST /{id}/summary/regenerate` (host/co-host, 202;
+  409 `MEETING_SUMMARY_UNAVAILABLE` / `MEETING_SUMMARY_PENDING`)
+- Internal (service-to-service): `GET /internal/meetings/{id}/record` (`X-Internal-Key`)
 - Errors `MEETING_*` / `MEETINGS_UNAVAILABLE` (`ErrorCodes`), checked in the services (no `@PreAuthorize`)
 
 ### Other Services
