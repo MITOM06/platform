@@ -35,8 +35,8 @@ const serverError = (code: string) =>
     data: { code, message: 'java.lang.SecurityException: internal' },
   })
 
-let forward: ReturnType<typeof vi.fn>
-let optimistic: ReturnType<typeof vi.fn>
+let forward: ReturnType<typeof vi.fn<(message: Message) => void>>
+let optimistic: ReturnType<typeof vi.fn<Parameters<typeof useMultiSelect>[3]>>
 
 function render(messages: Message[]) {
   return renderHook(() => useMultiSelect(messages, ME, forward, optimistic))

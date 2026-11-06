@@ -153,8 +153,7 @@ void main() {
       final overrides =
           await baseOverrides(names: const {kBob: 'Bob', kCarol: 'Carol'});
       await tester.pumpWidget(wrapWidget(
-        MentionList(
-            participantIds: ids, query: query, onSelected: picked.add),
+        MentionList(participantIds: ids, query: query, onSelected: picked.add),
         overrides: overrides,
       ));
       await tester.pumpAndSettle();

@@ -205,7 +205,7 @@ describe('AI streaming', () => {
       send({ type, replyId: 'r1', chunk: 'x' })
     }
     expect(h.ai.handleEvent).toHaveBeenCalledTimes(3)
-    expect(h.ai.handleEvent.mock.calls.map(([e]) => (e as { type: string }).type)).toEqual([
+    expect((h.ai.handleEvent.mock.calls as unknown as [{ type: string }][]).map(([e]) => e.type)).toEqual([
       'AI_STREAM_CHUNK', 'AI_TOOL_CALL', 'AI_ACTION_PENDING',
     ])
   })

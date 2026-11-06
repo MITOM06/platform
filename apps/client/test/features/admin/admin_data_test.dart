@@ -67,9 +67,10 @@ void main() {
       expect(Workspace.fromJson(const {}).id, '');
     });
 
-    test('WorkspaceSso: round trip; empty default role omitted; enforced strict',
+    test(
+        'WorkspaceSso: round trip; empty default role omitted; enforced strict',
         () {
-      final sso = WorkspaceSso.fromJson({
+      final sso = WorkspaceSso.fromJson(const {
         'enabled': true,
         'enforced': 'true',
         'allowedDomains': ['acme.com'],
@@ -89,7 +90,8 @@ void main() {
           const WorkspaceSso(defaultRole: 'r2').toJson()['defaultRole'], 'r2');
     });
 
-    test('AI settings: absent allowedConnectors = inherit, [] = allow none', () {
+    test('AI settings: absent allowedConnectors = inherit, [] = allow none',
+        () {
       expect(WorkspaceAiSettings.fromJson(const {}).allowedConnectors, isNull);
       expect(
           WorkspaceAiSettings.fromJson(const {'allowedConnectors': null})
@@ -135,9 +137,10 @@ void main() {
       expect(r.isOwner, isTrue);
       expect(r.isPreset, isFalse);
       expect(r.permissions, {'MANAGE_ROLES': true, 'X': false});
-      expect(Role.fromJson(const {'id': 'r2', 'name': 'owner'}).isOwner, isFalse);
+      expect(
+          Role.fromJson(const {'id': 'r2', 'name': 'owner'}).isOwner, isFalse);
 
-      final audit = AuditListResult.fromJson({
+      final audit = AuditListResult.fromJson(const {
         'items': [
           <String, dynamic>{'createdAt': 'garbage', 'targetId': 7},
           <String, dynamic>{},
@@ -170,7 +173,11 @@ void main() {
     test('nulls inside rows and non-string fields fall back safely', () {
       final d = UsageDashboard.fromJson({
         'range': {'from': '2026-11-01', 'to': 5, 'label': null},
-        'totals': {'inputTokens': 10.9, 'totalTokens': null, 'estimatedCostUsd': 1},
+        'totals': {
+          'inputTokens': 10.9,
+          'totalTokens': null,
+          'estimatedCostUsd': 1
+        },
         'perModelCost': [
           {'model': null, 'costUsd': 0.25}
         ],
@@ -236,7 +243,8 @@ void main() {
         'POST /admin/members/m1/mfa/reset': const Reply(200, {}),
         'GET /admin/invitations': const Reply(200, []),
         'POST /admin/invitations': const Reply(201, {'emailSent': false}),
-        'POST /admin/invitations/i1/resend': const Reply(200, {'emailSent': true}),
+        'POST /admin/invitations/i1/resend':
+            const Reply(200, {'emailSent': true}),
         'DELETE /admin/invitations/i1': const Reply(200, {}),
         'POST /admin/roles': const Reply(201, {}),
         'PATCH /admin/roles/r1': const Reply(200, {}),
@@ -261,7 +269,10 @@ void main() {
       await repo.createInvitation(email: 'n@acme.com');
       expect(a.requests.last.data, {'email': 'n@acme.com'});
       await repo.createInvitation(
-          email: 'n@acme.com', roleId: 'r1', departmentIds: ['d1'], locale: 'vi');
+          email: 'n@acme.com',
+          roleId: 'r1',
+          departmentIds: ['d1'],
+          locale: 'vi');
       expect(a.requests.last.data, {
         'email': 'n@acme.com',
         'roleId': 'r1',
@@ -298,7 +309,8 @@ void main() {
       expect(capsCalls, 2);
     });
 
-    test('capabilities: refreshSilently keeps the last value on failure', () async {
+    test('capabilities: refreshSilently keeps the last value on failure',
+        () async {
       var fail = false;
       final a = RouteAdapter({
         'GET /me/capabilities': (RecordedRequest _) => fail
@@ -351,7 +363,9 @@ void main() {
       // setStatus answered mfaEnabled false already; reload to check reset alone.
       expect(c.read(membersProvider).value!.first.mfaEnabled, isFalse);
 
-      await c.read(membersProvider.notifier).updateMember('m2', {'roleId': 'r'});
+      await c
+          .read(membersProvider.notifier)
+          .updateMember('m2', {'roleId': 'r'});
       expect(listCalls, 2);
     });
 
@@ -412,13 +426,15 @@ void main() {
       expect(a.calls('GET', '/admin/roles'), hasLength(3));
     });
 
-    test('invitations: mutations return the server result and reload', () async {
+    test('invitations: mutations return the server result and reload',
+        () async {
       final a = RouteAdapter({
         'GET /admin/invitations': const Reply(200, [
           {'_id': 'i1', 'email': 'n@acme.com', 'status': 'expired'}
         ]),
         'POST /admin/invitations': const Reply(201, {'emailSent': false}),
-        'POST /admin/invitations/i1/resend': const Reply(200, {'emailSent': true}),
+        'POST /admin/invitations/i1/resend':
+            const Reply(200, {'emailSent': true}),
         'DELETE /admin/invitations/i1': const Reply(200, {}),
       });
       final c = _container(a);

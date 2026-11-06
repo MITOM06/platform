@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Chạy test + coverage của PON giống CI rồi kiểm cổng coverage (.claude/rules/test-gate.md).
+# Chạy test + coverage của PON giống CI (kể cả tsc của web, flutter analyze) rồi kiểm cổng coverage
+# (.claude/rules/test-gate.md).
 #
 #   bash scripts/test-all.sh                 # mọi phần
 #   bash scripts/test-all.sh auth web        # chỉ các phần đã sửa
@@ -38,8 +39,8 @@ for part in "${PARTS[@]}"; do
     connector) run connector apps/server/connector-service pnpm exec jest "${JEST_COV[@]}" ;;
     chat) JWT_ACCESS_SECRET="${JWT_ACCESS_SECRET:-ci_test_secret_must_be_at_least_32_chars_long}" \
           run chat apps/server/chat-service mvn -q clean test ;;
-    web) run web apps/web pnpm run test:cov ;;
-    flutter) run flutter apps/client sh -c 'dart run build_runner build --delete-conflicting-outputs >/dev/null && flutter test --coverage' ;;
+    web) run web apps/web sh -c 'pnpm exec tsc --noEmit && pnpm run test:cov' ;;
+    flutter) run flutter apps/client sh -c 'dart run build_runner build --delete-conflicting-outputs >/dev/null && flutter analyze && flutter test --coverage' ;;
     *) echo "phần lạ: $part (auth ai connector chat web flutter)"; failed+=("$part:unknown") ;;
   esac
 done
