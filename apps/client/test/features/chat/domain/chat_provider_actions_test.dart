@@ -295,11 +295,7 @@ void main() {
 
     test(
         'failure must not drop messages that arrived while the request was '
-        'in flight',
-        skip: 'BUG: chat_provider_actions.dart recallMessage catch restores the '
-            'whole pre-request snapshot (`state = AsyncData(current)`), wiping '
-            'realtime messages received meanwhile. Fix: drop the restore — '
-            'recall applies no optimistic change.', () async {
+        'in flight', () async {
       final h = await ChatHarness.create(initial: [msg('m1', sender: kMe)]);
       addTearDown(h.dispose);
       final gate = Completer<void>();
@@ -434,12 +430,7 @@ void main() {
     });
 
     test(
-        'failure rollback must keep messages that arrived meanwhile',
-        skip: 'BUG: chat_provider_actions.dart deleteForMe catch does '
-            '`state = AsyncData(current)` — the whole pre-request snapshot — so a '
-            'realtime message received during the request disappears. Fix: '
-            're-insert only the removed message into the latest state.',
-        () async {
+        'failure rollback must keep messages that arrived meanwhile', () async {
       final h = await ChatHarness.create(initial: [msg('m1')]);
       addTearDown(h.dispose);
       final gate = Completer<void>();
@@ -451,6 +442,26 @@ void main() {
       gate.completeError(_offline());
       await deleting;
       expect(h.ids, ['m2', 'm1']);
+    });
+
+    test('failure re-inserts the message at its chronological position',
+        () async {
+      DateTime t(int h) => DateTime(2024, 1, 1, h);
+      final h = await ChatHarness.create(initial: [
+        msg('m3', at: t(3)),
+        msg('m2', at: t(2)),
+        msg('m1', at: t(1)),
+      ]);
+      addTearDown(h.dispose);
+      final gate = Completer<void>();
+      when(() => h.repo.deleteMessageForMe('m2'))
+          .thenAnswer((_) => gate.future);
+      final deleting = h.notifier.deleteForMe('m2');
+      h.stomp.messagesCtrl.add(msg('m4', at: t(4)));
+      await settle();
+      gate.completeError(_offline());
+      await deleting;
+      expect(h.ids, ['m4', 'm3', 'm2', 'm1']);
     });
   });
 }
