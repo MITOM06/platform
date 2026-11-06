@@ -107,6 +107,8 @@ Queue settings: 30-second message TTL, dead-letter exchange `ai.direct.dlq`.
 | `ai:response:{conversationId}` | ai-service | chat-service | `{type: AI_STREAM_CHUNK\|AI_STREAM_DONE\|AI_STREAM_ERROR, chunk?, fullContent?}` |
 | `kb:process` | chat-service | ai-service | `{documentId, conversationId, userId, fileUrl, mimeType, fileName}` |
 | `kb:delete` | chat-service | ai-service | `{documentId}` |
+| `meet:summarize` | chat-service | ai-service | `{meetingId, attempt, requesterId}` (requesterId = host) |
+| `meet:summary:result` | ai-service | chat-service | `{meetingId, attempt, status: ok\|empty\|failed, summary?}` (summary only when ok) |
 
 ## Key Paths
 
