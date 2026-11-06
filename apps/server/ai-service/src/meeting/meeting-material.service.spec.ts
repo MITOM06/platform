@@ -39,11 +39,16 @@ function setup(opts: { claim?: string | null; visionAvailable?: boolean } = {}) 
   return { svc, redis, publisher, extractor, vision, published };
 }
 
-let fetchMock: jest.SpyInstance;
+// Gán thẳng fetch giả thay vì jest.spyOn(global, 'fetch'): với Node ≥ 22 trong jest-environment-node, fetch không phải
+// thuộc tính riêng của global nên spyOn báo "Property `fetch` does not exist" (CI chạy Node 20 nên không lộ).
+const realFetch = global.fetch;
+let fetchMock: jest.Mock;
 beforeEach(() => {
-  fetchMock = jest.spyOn(global, 'fetch').mockImplementation(async () => res(Buffer.from('%PDF-1.4 data')));
+  fetchMock = jest.fn(async () => res(Buffer.from('%PDF-1.4 data')));
+  global.fetch = fetchMock as unknown as typeof fetch;
 });
 afterEach(() => {
+  global.fetch = realFetch;
   jest.restoreAllMocks();
   jest.useRealTimers();
 });
@@ -226,12 +231,16 @@ describe('MeetingMaterialService', () => {
   });
 
   it('timeout (20 s over the whole body) -> failed', async () => {
-    jest.useFakeTimers();
+    // legacyFakeTimers: với Node ≥ 22, useRealTimers sau timer giả "modern" không trả lại setTimeout cho global
+    // (các test sau báo "setTimeout is not defined"); bản legacy khôi phục đúng trên cả Node 20 của CI.
+    jest.useFakeTimers({ legacyFakeTimers: true });
     fetchMock.mockImplementation((_u: string, init: RequestInit) =>
       new Promise((_r, rej) => init.signal!.addEventListener('abort', () => rej(new Error('aborted')))));
     const s = setup();
     const p = s.svc.process(msg);
-    await jest.advanceTimersByTimeAsync(20_001);
+    // Chờ process tới chỗ đặt hạn rồi mới tua (legacy không có advanceTimersByTimeAsync).
+    for (let i = 0; i < 20 && fetchMock.mock.calls.length === 0; i++) await Promise.resolve();
+    jest.advanceTimersByTime(20_001);
     await p;
     expect(s.published()[0]).toMatchObject({ status: 'failed' });
   });
