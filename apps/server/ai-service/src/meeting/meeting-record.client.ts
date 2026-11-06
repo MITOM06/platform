@@ -27,6 +27,7 @@ export class MeetingRecordClient {
       `?userId=${encodeURIComponent(userId)}`;
     const res = await fetch(url, {
       headers: internalUploadHeaders({ internalApiKey: this.internalApiKey }),
+      redirect: 'error',
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     if (res.status === 404) return null;

@@ -21,6 +21,7 @@ describe('MeetingRecordClient', () => {
     expect(out).toEqual({ meeting: { id: 'm' } });
     expect(f.mock.calls[0][0]).toBe('http://chat:8080/internal/meetings/m%2F1/record?userId=u%202');
     expect(f.mock.calls[0][1].headers).toEqual({ 'X-Internal-Key': 'k' });
+    expect(f.mock.calls[0][1].redirect).toBe('error');
   });
   it('omits the header without a key', async () => {
     const f = mock(200);
