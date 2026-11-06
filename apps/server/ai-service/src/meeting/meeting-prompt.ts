@@ -4,6 +4,7 @@ import { MeetingActionItem, MeetingRecordView, MeetingSummary } from './meeting.
 export const MEETING_PROMPT_MAX_CHARS = 120_000;
 const CUT_MARKER = '\n[…]\n';
 const GENERIC_SPEAKER = 'Speaker';
+const GENERIC_FILE = 'file';
 
 export const MEETING_SYSTEM_PROMPT =
   'You are PON AI, summarizing a finished meeting for its participants. ' +
@@ -50,12 +51,21 @@ export function renderRecordBody(view: MeetingRecordView): string {
   if (view.records.length) {
     lines.push('', '## Record');
     for (const r of view.records) {
-      lines.push(`[${r.kind}] ${oneLine(r.displayName) || GENERIC_SPEAKER}: ${r.text}`);
+      if (r.kind === 'FILE') {
+        const file = oneLine(r.fileName) || GENERIC_FILE;
+        const who = oneLine(r.displayName);
+        lines.push(`[FILE] ${file}${who ? ` (shared by ${who})` : ''}: ${r.text}`);
+      } else {
+        lines.push(`[${r.kind}] ${oneLine(r.displayName) || GENERIC_SPEAKER}: ${r.text}`);
+      }
     }
   }
   if (view.chat.length) {
     lines.push('', '## Chat');
-    for (const c of view.chat) lines.push(`${oneLine(c.senderName)}: ${c.content}`);
+    for (const c of view.chat) {
+      const file = c.attachmentName == null ? '' : `[file: ${oneLine(c.attachmentName) || GENERIC_FILE}] `;
+      lines.push(`${oneLine(c.senderName)}: ${file}${c.content}`);
+    }
   }
   if (view.sharedNote?.trim()) lines.push('', '## Shared note', view.sharedNote.trim());
 

@@ -21,6 +21,8 @@ import {
 export const MATERIAL_MAX_BYTES = 20_000_000;
 export const MATERIAL_FETCH_TIMEOUT_MS = 20_000;
 export const MATERIAL_TEXT_MAX_CHARS = 6000;
+/** Files read at once; each can buffer up to MATERIAL_MAX_BYTES. */
+export const MATERIAL_MAX_CONCURRENT = 2;
 
 const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 const TEXT_EXTENSIONS = new Set(['txt', 'md', 'markdown', 'csv', 'log', 'tsv']);
@@ -36,6 +38,25 @@ export function capText(text: string, max = MATERIAL_TEXT_MAX_CHARS): string {
   return text.slice(0, end);
 }
 
+/** Minimal FIFO semaphore: at most `limit` holders, the rest wait in order. */
+class Semaphore {
+  private active = 0;
+  private readonly waiters: (() => void)[] = [];
+  constructor(private readonly limit: number) {}
+
+  async run<T>(task: () => Promise<T>): Promise<T> {
+    if (this.active >= this.limit) await new Promise<void>((resolve) => this.waiters.push(resolve));
+    else this.active++;
+    try {
+      return await task();
+    } finally {
+      const next = this.waiters.shift();
+      if (next) next(); // hand the slot over directly
+      else this.active--;
+    }
+  }
+}
+
 /**
  * Reads a file sent in a meeting chat (`meet:material`) and publishes its text,
  * or an image description, as `meet:material:result`. Vision goes only through
@@ -46,6 +67,7 @@ export class MeetingMaterialService {
   private readonly logger = new Logger(MeetingMaterialService.name);
   private readonly chatBaseUrl: string;
   private readonly internalApiKey?: string;
+  private readonly slots = new Semaphore(MATERIAL_MAX_CONCURRENT);
 
   constructor(
     @Inject(REDIS_PUBLISHER) private readonly redis: Redis,
@@ -62,12 +84,11 @@ export class MeetingMaterialService {
 
   async process(msg: MeetingMaterialMessage): Promise<void> {
     // pub/sub reaches every instance: only the claimant does the work.
-    const claimed = await this.redis.set(`meet:material:claim:${msg.messageId}`, '1', 'EX', 3600, 'NX');
-    if (claimed !== 'OK') return;
-
     let outcome: Outcome;
     try {
-      outcome = await this.read(msg);
+      const claimed = await this.redis.set(`meet:material:claim:${msg.messageId}`, '1', 'EX', 3600, 'NX');
+      if (claimed !== 'OK') return;
+      outcome = await this.slots.run(() => this.read(msg));
     } catch (err) {
       this.logger.warn(`Material ${msg.meetingId}/${msg.messageId} failed: ${(err as Error).message}`);
       outcome = { status: 'failed' };
@@ -101,9 +122,11 @@ export class MeetingMaterialService {
     if (!route) return { status: 'unsupported' };
 
     if (route.kind === 'image') {
-      if (!this.vision.isAvailable()) return { status: 'unsupported' };
+      // The declared type is only a claim: the bytes must really be an image before any paid call.
+      const sniffed = sniffImageMediaType(body);
+      if (!sniffed || !this.vision.isAvailable()) return { status: 'unsupported' };
       try {
-        return nonEmpty(await this.vision.describeImage(body, route.mime, msg.userId));
+        return nonEmpty(await this.vision.describeImage(body, sniffed, msg.userId));
       } catch (err) {
         if (err instanceof VisionOversizedException || err instanceof VisionUnsupportedException) {
           return { status: 'unsupported' };

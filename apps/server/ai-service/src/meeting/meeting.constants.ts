@@ -23,8 +23,8 @@ export interface MeetingRecordView {
     hostName: string | null;
   };
   attendees: { displayName: string }[];
-  records: { kind: 'SPEECH' | 'FILE' | 'SCREEN'; displayName: string | null; text: string; ts: string }[];
-  chat: { senderName: string; content: string; createdAt: string }[];
+  records: { kind: 'SPEECH' | 'FILE' | 'SCREEN'; displayName: string | null; text: string; ts: string; fileName?: string | null }[];
+  chat: { senderName: string; content: string; createdAt: string; attachmentName?: string | null }[];
   sharedNote: string | null;
   /** Newest AI summary of the meeting; absent/null when none exists yet. */
   summary?: MeetingSummary | null;

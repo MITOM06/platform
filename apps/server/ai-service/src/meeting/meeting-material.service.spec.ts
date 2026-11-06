@@ -130,6 +130,41 @@ describe('MeetingMaterialService', () => {
     expect(s.vision.describeImage).toHaveBeenCalledWith(expect.any(Buffer), 'image/png', 'u1');
   });
 
+  it('declared image whose bytes are not an image -> unsupported, no vision call', async () => {
+    fetchMock.mockImplementation(async () => res(Buffer.from('<html>not an image</html>')));
+    const s = setup();
+    await s.svc.process({ ...msg, fileName: 'p.png', mimeType: 'image/png' });
+    expect(s.vision.describeImage).not.toHaveBeenCalled();
+    expect(s.published()[0]).toMatchObject({ status: 'unsupported' });
+  });
+
+  it('a redis claim error still ends in one failed result', async () => {
+    const s = setup();
+    s.redis.set.mockRejectedValue(new Error('redis down'));
+    await s.svc.process(msg);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(s.published()).toEqual([expect.objectContaining({ messageId: 'x1', status: 'failed' })]);
+  });
+
+  it('reads at most 2 files at once; a third waits for a free slot', async () => {
+    const s = setup();
+    const release: (() => void)[] = [];
+    fetchMock.mockImplementation(
+      () => new Promise<Response>((resolve) => release.push(() => resolve(res(Buffer.from('%PDF-1.4 data'))))),
+    );
+    const runs = [1, 2, 3].map((i) => s.svc.process({ ...msg, messageId: `c${i}` }));
+    await new Promise((r) => setImmediate(r));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    release[0]();
+    await new Promise((r) => setImmediate(r));
+    await new Promise((r) => setImmediate(r));
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    release[1]();
+    release[2]();
+    await Promise.all(runs);
+    expect(s.published()).toHaveLength(3);
+  });
+
   it('oversized image (>5 MB) -> unsupported', async () => {
     fetchMock.mockImplementation(async () => res(PNG));
     const s = setup();
