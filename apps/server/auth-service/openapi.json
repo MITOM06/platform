@@ -1964,6 +1964,33 @@
         "tags": [
           "admin"
         ]
+      },
+      "delete": {
+        "operationId": "AdminController_deleteRole",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a custom role nothing uses (presets stay; non-Owners: not their own role, only roles inside their capabilities)",
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/admin/workspace": {

@@ -53,6 +53,14 @@ export enum AuthCode {
   LAST_OWNER_CANNOT_BE_DEMOTED = 'LAST_OWNER_CANNOT_BE_DEMOTED',
   /** PATCH /admin/roles/:id — preset roles (Owner/Admin/Manager/Member) keep their name. */
   PRESET_ROLE_RENAME_FORBIDDEN = 'PRESET_ROLE_RENAME_FORBIDDEN',
+  /** DELETE /admin/roles/:id — preset roles (Owner/Admin/Member) can't be deleted. */
+  PRESET_ROLE_DELETE_FORBIDDEN = 'PRESET_ROLE_DELETE_FORBIDDEN',
+  /**
+   * DELETE /admin/roles/:id — the role is still assigned: members hold it, pending invitations
+   * offer it, or the SSO group mapping / default role names it. Move those first.
+   * params: { members: number, invitations: number, ssoMappings: number }
+   */
+  ROLE_IN_USE = 'ROLE_IN_USE',
   /** DELETE /api/users/device-tokens without a `token` (body or `?token=`). */
   DEVICE_TOKEN_REQUIRED = 'DEVICE_TOKEN_REQUIRED',
   /**
@@ -133,7 +141,7 @@ export enum AuthCode {
    * params: { capabilities: string[] } — the capability keys the actor is missing.
    */
   ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS = 'ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS',
-  /** PATCH /admin/roles/:id — a non-Owner cannot edit the role they currently hold. */
+  /** PATCH / DELETE /admin/roles/:id — a non-Owner cannot edit or delete the role they hold. */
   CANNOT_EDIT_OWN_ROLE = 'CANNOT_EDIT_OWN_ROLE',
   /** PATCH /admin/workspace — only an Owner may map SSO groups / defaultRole to the Owner role. */
   OWNER_SSO_MAPPING_FORBIDDEN = 'OWNER_SSO_MAPPING_FORBIDDEN',

@@ -8,11 +8,15 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
+  Invitation,
+  InvitationDocument,
   PermissionMatrix,
   Role,
   RoleDocument,
   User,
   UserDocument,
+  Workspace,
+  WorkspaceDocument,
   enabledCapabilities,
 } from '@platform/database';
 import { AuthCode } from '../../common/auth-code.enum';
@@ -32,15 +36,20 @@ import { CreateRoleDto, UpdateRoleDto } from './dto/role.dto';
 
 /**
  * Role administration (`/admin/roles`). Every mutation enforces the anti-escalation rule from
- * common/role-grant: a non-Owner can only create or edit roles inside their own capability set,
- * and never the role they currently hold. The Owner role is immutable; preset roles keep their
- * name (bootstrap re-seeds presets by name, so a rename would spawn a duplicate on next boot).
+ * common/role-grant: a non-Owner can only create, edit or delete roles inside their own
+ * capability set, and never the role they currently hold. The Owner role is immutable; preset
+ * roles keep their name and can't be deleted (bootstrap re-seeds presets by name, so a rename
+ * would spawn a duplicate on next boot); a custom role is deleted only once nothing uses it.
  */
 @Injectable()
 export class RolesService {
   constructor(
     @InjectModel(Role.name) private readonly roleModel: Model<RoleDocument>,
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    @InjectModel(Invitation.name)
+    private readonly invitationModel: Model<InvitationDocument>,
+    @InjectModel(Workspace.name)
+    private readonly workspaceModel: Model<WorkspaceDocument>,
     private readonly audit: AuditService,
     private readonly session: SessionService,
   ) {}
@@ -154,6 +163,81 @@ export class RolesService {
       await this.session.markClaimsStaleForUsers(await this.holderIds(role));
     }
     return updated;
+  }
+
+  /**
+   * Delete a custom role.
+   * Check order: ROLE_NOT_FOUND (404) → PRESET_ROLE_DELETE_FORBIDDEN (400) → CANNOT_EDIT_OWN_ROLE
+   * (403) → ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS (403; a non-Owner may not remove a role above
+   * them) → ROLE_IN_USE (409, params { members, invitations, ssoMappings }).
+   *
+   * Only an unused role goes: no member holds it, no pending invitation offers it, and the SSO
+   * group mapping / default role does not name it. So no session needs claims-stale marking. A
+   * member assigned in the instant between the check and the delete falls back to Member
+   * (ClaimsService), the least-privileged preset, so a miss never grants anything.
+   */
+  async deleteRole(actor: RoleActor, id: string): Promise<void> {
+    const role = isObjectIdString(id)
+      ? await this.roleModel.findById(id).exec()
+      : null;
+    if (!role) throw new NotFoundException({ code: AuthCode.ROLE_NOT_FOUND });
+    if (role.isPreset) {
+      throw new BadRequestException({
+        code: AuthCode.PRESET_ROLE_DELETE_FORBIDDEN,
+      });
+    }
+
+    if (!isOwnerActor(actor)) {
+      if (await this.actorHoldsRole(actor, role)) {
+        throw new ForbiddenException({ code: AuthCode.CANNOT_EDIT_OWN_ROLE });
+      }
+      assertCanGrant(actor, role.permissions);
+    }
+
+    const [members, invitations, ssoMappings] = await Promise.all([
+      this.userModel.countDocuments({ roleId: role._id }).exec(),
+      // Expired-but-pending counts too: a resend revives it with the same role.
+      this.invitationModel
+        .countDocuments({ roleId: role._id, status: 'pending' })
+        .exec(),
+      this.ssoMappingsNaming(role.name),
+    ]);
+    if (members + invitations + ssoMappings > 0) {
+      throw new ConflictException({
+        code: AuthCode.ROLE_IN_USE,
+        params: { members, invitations, ssoMappings },
+      });
+    }
+
+    const deleted = await this.roleModel
+      .deleteOne({ _id: role._id, isPreset: false })
+      .exec();
+    if (deleted.deletedCount !== 1) {
+      throw new NotFoundException({ code: AuthCode.ROLE_NOT_FOUND });
+    }
+    await this.audit.record({
+      actorId: actor.sub,
+      action: 'role.delete',
+      targetType: 'role',
+      targetId: role._id.toString(),
+      // The audit list names a deleted role from here (the role document is gone).
+      meta: { name: role.name },
+    });
+  }
+
+  /** SSO group mappings and the SSO default role that name `roleName` (they map by name). */
+  private async ssoMappingsNaming(roleName: string): Promise<number> {
+    const ws = await this.workspaceModel
+      .findOne()
+      .select('sso')
+      .lean()
+      .exec();
+    const sso = ws?.sso;
+    if (!sso) return 0;
+    const mapped = Object.values(sso.groupRoleMap ?? {}).filter(
+      (name) => name === roleName,
+    ).length;
+    return mapped + (sso.defaultRole === roleName ? 1 : 0);
   }
 
   /**

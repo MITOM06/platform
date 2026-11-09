@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   assignableRoles,
+  canDeleteRole,
   canResetMemberMfa,
   canToggleMemberBlock,
   isPrivilegedRole,
@@ -14,6 +15,31 @@ const roles: Role[] = [
   { _id: 'a', name: 'Admin', isPreset: true, permissions: {} },
   { _id: 'm', name: 'Member', isPreset: true, permissions: {} },
 ]
+
+describe('canDeleteRole (mirror of DELETE /admin/roles/:id)', () => {
+  const support: Role = { _id: 's', name: 'Support', isPreset: false, permissions: { USE_GROUP_BOT: true } }
+  const deputy: Role = { _id: 'd', name: 'Deputy', isPreset: false, permissions: { MANAGE_WORKSPACE: true } }
+  const owner = { isOwner: true, roleName: 'Owner', perms: [] }
+  const admin = { isOwner: false, roleName: 'Admin', perms: ['USE_GROUP_BOT', 'MANAGE_ROLES'] }
+
+  it('never offers a preset, not even to the Owner', () => {
+    for (const r of roles) expect(canDeleteRole(r, owner)).toBe(false)
+  })
+
+  it('lets the Owner delete any custom role', () => {
+    expect(canDeleteRole(support, owner)).toBe(true)
+    expect(canDeleteRole(deputy, owner)).toBe(true)
+  })
+
+  it('lets a non-Owner delete a custom role inside their capabilities only', () => {
+    expect(canDeleteRole(support, admin)).toBe(true)
+    expect(canDeleteRole(deputy, admin)).toBe(false)
+  })
+
+  it('never the role the caller holds (CANNOT_EDIT_OWN_ROLE)', () => {
+    expect(canDeleteRole(support, { ...admin, roleName: 'Support' })).toBe(false)
+  })
+})
 
 describe('role guard', () => {
   it('hides the Owner role unless the caller is Owner', () => {

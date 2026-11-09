@@ -107,6 +107,58 @@ void main() {
       expect(can(callerOwner: true, self: true), isFalse);
       expect(can(targetOwner: false, manager: false), isFalse);
     });
+
+    group('canDeleteRole (mirror of DELETE /admin/roles/:id)', () {
+      const support = Role(
+          id: 's',
+          name: 'Support',
+          isPreset: false,
+          permissions: {Cap.useGroupBot: true, Cap.manageWorkspace: false});
+      const deputy = Role(
+          id: 'd',
+          name: 'Deputy',
+          isPreset: false,
+          permissions: {Cap.manageWorkspace: true});
+      const adminPerms = [Cap.useGroupBot, Cap.manageRoles];
+
+      test('never offers a preset, not even to the Owner', () {
+        for (final r in _roles) {
+          expect(
+              canDeleteRole(role: r, callerRole: 'Owner', callerPerms: const []),
+              isFalse);
+        }
+      });
+
+      test('lets the Owner delete any custom role', () {
+        expect(
+            canDeleteRole(
+                role: support, callerRole: 'Owner', callerPerms: const []),
+            isTrue);
+        expect(
+            canDeleteRole(
+                role: deputy, callerRole: 'Owner', callerPerms: const []),
+            isTrue);
+      });
+
+      test('a non-Owner only inside their capabilities (unticked ones ignored)',
+          () {
+        expect(
+            canDeleteRole(
+                role: support, callerRole: 'Admin', callerPerms: adminPerms),
+            isTrue);
+        expect(
+            canDeleteRole(
+                role: deputy, callerRole: 'Admin', callerPerms: adminPerms),
+            isFalse);
+      });
+
+      test('never the role the caller holds (CANNOT_EDIT_OWN_ROLE)', () {
+        expect(
+            canDeleteRole(
+                role: support, callerRole: 'Support', callerPerms: adminPerms),
+            isFalse);
+      });
+    });
   });
 
   group('MemberEditDialog', () {

@@ -144,6 +144,17 @@ export class AdminController {
     return this.rolesService.updateRole(user, id, dto);
   }
 
+  @Delete('roles/:id')
+  @RequirePermission(Capability.MANAGE_ROLES)
+  @ApiOperation({
+    summary:
+      'Delete a custom role nothing uses (presets stay; non-Owners: not their own role, only roles inside their capabilities)',
+  })
+  async deleteRole(@CurrentUser() user: JwtUser, @Param('id') id: string) {
+    await this.rolesService.deleteRole(user, id);
+    return { success: true };
+  }
+
   // ===================== WORKSPACE =====================
   @Get('workspace')
   @RequirePermission(Capability.MANAGE_WORKSPACE)

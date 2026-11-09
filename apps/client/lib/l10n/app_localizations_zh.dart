@@ -2476,6 +2476,14 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get adminRoleDelete => '删除角色';
+
+  @override
+  String adminRoleDeleteConfirm(String name) {
+    return '删除角色 $name？只能删除无人使用的角色：没有成员持有、没有待处理的邀请使用它，也没有 SSO 组映射到它。此操作无法撤销。';
+  }
+
+  @override
   String get adminRoleName => '角色名称';
 
   @override
@@ -4125,6 +4133,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authErrPresetRoleRenameForbidden => '内置角色无法重命名。';
 
   @override
+  String get authErrPresetRoleDeleteForbidden => '内置角色不能删除。';
+
+  @override
+  String authErrRoleInUse(int members, int invitations, int ssoMappings) {
+    return '该角色仍在使用中（成员：$members，待处理邀请：$invitations，SSO 映射：$ssoMappings）。请先将它们改为其他角色。';
+  }
+
+  @override
   String get authErrRoleNameTaken => '已存在同名角色。';
 
   @override
@@ -4201,6 +4217,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminAuditActionRoleUpdate => '更新了角色';
+
+  @override
+  String get adminAuditActionRoleDelete => '删除了角色';
 
   @override
   String get adminAuditActionInvitationCreate => '发送了邀请';

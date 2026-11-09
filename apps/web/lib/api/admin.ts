@@ -107,6 +107,9 @@ export const adminService = {
   updateRole: (id: string, input: UpdateRoleInput) =>
     authApi.patch<Role>(`/admin/roles/${id}`, input).then((r) => r.data),
 
+  deleteRole: (id: string) =>
+    authApi.delete(`/admin/roles/${id}`).then(() => undefined),
+
   // ── audit ─────────────────────────────────────────────────────────────────
   getAudit: (page = 0, limit = 20) =>
     authApi

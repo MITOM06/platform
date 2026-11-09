@@ -216,6 +216,14 @@ String _codeToString(
       return l10n.authErrCannotEditOwnRole;
     case 'PRESET_ROLE_RENAME_FORBIDDEN':
       return l10n.authErrPresetRoleRenameForbidden;
+    case 'PRESET_ROLE_DELETE_FORBIDDEN':
+      return l10n.authErrPresetRoleDeleteForbidden;
+    case 'ROLE_IN_USE':
+      return l10n.authErrRoleInUse(
+        _intParam(params, 'members'),
+        _intParam(params, 'invitations'),
+        _intParam(params, 'ssoMappings'),
+      );
     case 'ROLE_NAME_TAKEN':
       return l10n.authErrRoleNameTaken;
     case 'OWNER_ROLE_IMMUTABLE':

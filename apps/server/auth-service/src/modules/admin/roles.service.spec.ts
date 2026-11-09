@@ -6,9 +6,11 @@ import { getModelToken } from '@nestjs/mongoose';
 import {
   ALL_CAPABILITIES,
   Capability,
+  Invitation,
   PRESET_ROLES,
   Role,
   User,
+  Workspace,
   buildFullMatrix,
 } from '@platform/database';
 import { RolesService } from './roles.service';
@@ -47,6 +49,10 @@ describe('RolesService', () => {
   let service: RolesService;
   let roleModel: any;
   let userModel: any;
+  let invitationModel: { countDocuments: jest.Mock };
+  let workspaceModel: { findOne: jest.Mock };
+  /** The workspace document the SSO-mapping lookup reads. */
+  let workspace: any;
   let audit: { record: jest.Mock };
   let session: { markClaimsStaleForUsers: jest.Mock };
   let rolesById: Record<string, any>;
@@ -85,6 +91,14 @@ describe('RolesService', () => {
       findByIdAndUpdate: jest.fn((id: string, upd: any) =>
         execable({ ...rolesById[id], ...upd.$set }),
       ),
+      deleteOne: jest.fn(() => execable({ deletedCount: 1 })),
+    };
+    workspace = { sso: { groupRoleMap: {} } };
+    invitationModel = { countDocuments: jest.fn(() => execable(0)) };
+    workspaceModel = {
+      findOne: jest.fn(() => ({
+        select: () => ({ lean: () => execable(workspace) }),
+      })),
     };
     // The actor's stored role (Admin) — used when the JWT role name is stale.
     userModel = {
@@ -92,6 +106,7 @@ describe('RolesService', () => {
         .fn()
         .mockReturnValue(leanExec({ _id: ACTOR_ID, roleId: ADMIN_ROLE_ID })),
       find: jest.fn(() => ({ lean: () => execable(holders) })),
+      countDocuments: jest.fn(() => execable(0)),
     };
     audit = { record: jest.fn().mockResolvedValue(undefined) };
     session = {
@@ -103,6 +118,8 @@ describe('RolesService', () => {
         RolesService,
         { provide: getModelToken(Role.name), useValue: roleModel },
         { provide: getModelToken(User.name), useValue: userModel },
+        { provide: getModelToken(Invitation.name), useValue: invitationModel },
+        { provide: getModelToken(Workspace.name), useValue: workspaceModel },
         { provide: AuditService, useValue: audit },
         { provide: SessionService, useValue: session },
       ],
@@ -378,6 +395,127 @@ describe('RolesService', () => {
         service.updateRole(admin, ADMIN_ROLE_ID, { permissions: {} }),
       ).rejects.toMatchObject({ response: { code: 'CANNOT_EDIT_OWN_ROLE' } });
       expect(session.markClaimsStaleForUsers).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteRole', () => {
+    it('404 ROLE_NOT_FOUND for a malformed or unknown id (no CastError)', async () => {
+      await expect(service.deleteRole(owner, 'nope')).rejects.toMatchObject({
+        status: 404,
+        response: { code: 'ROLE_NOT_FOUND' },
+      });
+      await expect(
+        service.deleteRole(owner, '64b0000000000000000000ff'),
+      ).rejects.toMatchObject({ status: 404 });
+      expect(roleModel.deleteOne).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['Owner', OWNER_ROLE_ID],
+      ['Admin', ADMIN_ROLE_ID],
+      ['Member', MEMBER_ROLE_ID],
+    ])('400 PRESET_ROLE_DELETE_FORBIDDEN for the %s preset, even for the Owner', async (_n, id) => {
+      await expect(service.deleteRole(owner, id)).rejects.toMatchObject({
+        status: 400,
+        response: { code: 'PRESET_ROLE_DELETE_FORBIDDEN' },
+      });
+      expect(roleModel.deleteOne).not.toHaveBeenCalled();
+    });
+
+    it('the Owner deletes an unused custom role: audited with its name, nobody marked', async () => {
+      await service.deleteRole(owner, CUSTOM_ROLE_ID);
+      expect(roleModel.deleteOne).toHaveBeenCalledWith({
+        _id: rolesById[CUSTOM_ROLE_ID]._id,
+        isPreset: false,
+      });
+      expect(audit.record).toHaveBeenCalledWith({
+        actorId: ACTOR_ID,
+        action: 'role.delete',
+        targetType: 'role',
+        targetId: CUSTOM_ROLE_ID,
+        meta: { name: 'Support' },
+      });
+      expect(session.markClaimsStaleForUsers).not.toHaveBeenCalled();
+    });
+
+    it('409 ROLE_IN_USE with how many members, pending invitations and SSO mappings use it', async () => {
+      userModel.countDocuments.mockReturnValue(execable(2));
+      invitationModel.countDocuments.mockReturnValue(execable(1));
+      workspace = {
+        sso: {
+          groupRoleMap: { helpdesk: 'Support', staff: 'Member', l2: 'Support' },
+          defaultRole: 'Support',
+        },
+      };
+      await expect(service.deleteRole(owner, CUSTOM_ROLE_ID)).rejects.toMatchObject({
+        status: 409,
+        response: {
+          code: 'ROLE_IN_USE',
+          params: { members: 2, invitations: 1, ssoMappings: 3 },
+        },
+      });
+      expect(userModel.countDocuments).toHaveBeenCalledWith({
+        roleId: rolesById[CUSTOM_ROLE_ID]._id,
+      });
+      expect(invitationModel.countDocuments).toHaveBeenCalledWith({
+        roleId: rolesById[CUSTOM_ROLE_ID]._id,
+        status: 'pending',
+      });
+      expect(roleModel.deleteOne).not.toHaveBeenCalled();
+      expect(audit.record).not.toHaveBeenCalled();
+    });
+
+    it('one SSO mapping alone is enough to keep the role', async () => {
+      workspace = { sso: { groupRoleMap: {}, defaultRole: 'Support' } };
+      await expect(service.deleteRole(owner, CUSTOM_ROLE_ID)).rejects.toMatchObject({
+        response: {
+          code: 'ROLE_IN_USE',
+          params: { members: 0, invitations: 0, ssoMappings: 1 },
+        },
+      });
+    });
+
+    it('403 CANNOT_EDIT_OWN_ROLE when a non-Owner deletes the role they hold', async () => {
+      const support = { sub: ACTOR_ID, role: 'Support', perms: [C.USE_GROUP_BOT] };
+      await expect(service.deleteRole(support, CUSTOM_ROLE_ID)).rejects.toMatchObject({
+        status: 403,
+        response: { code: 'CANNOT_EDIT_OWN_ROLE' },
+      });
+      expect(roleModel.deleteOne).not.toHaveBeenCalled();
+    });
+
+    it('403 ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS when an Admin deletes a role above them', async () => {
+      rolesById[CUSTOM_ROLE_ID] = roleDoc(
+        CUSTOM_ROLE_ID,
+        'Deputy',
+        { [C.MANAGE_WORKSPACE]: true, [C.USE_GROUP_BOT]: true },
+        false,
+      );
+      await expect(service.deleteRole(admin, CUSTOM_ROLE_ID)).rejects.toMatchObject({
+        status: 403,
+        response: {
+          code: 'ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS',
+          params: { capabilities: [C.MANAGE_WORKSPACE] },
+        },
+      });
+      expect(roleModel.deleteOne).not.toHaveBeenCalled();
+    });
+
+    it('an Admin deletes an unused custom role inside their capabilities', async () => {
+      await service.deleteRole(admin, CUSTOM_ROLE_ID);
+      expect(roleModel.deleteOne).toHaveBeenCalled();
+      expect(audit.record).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'role.delete', actorId: ACTOR_ID }),
+      );
+    });
+
+    it('404 when the role vanished between the checks and the delete', async () => {
+      roleModel.deleteOne.mockReturnValue(execable({ deletedCount: 0 }));
+      await expect(service.deleteRole(owner, CUSTOM_ROLE_ID)).rejects.toMatchObject({
+        status: 404,
+        response: { code: 'ROLE_NOT_FOUND' },
+      });
+      expect(audit.record).not.toHaveBeenCalled();
     });
   });
 });
