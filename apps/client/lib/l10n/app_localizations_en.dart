@@ -2106,7 +2106,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customMcpAuthApiKey => 'API key';
 
   @override
-  String get customMcpAuthOauth => 'OAuth';
+  String get customMcpAuthOauth => 'Bearer token';
 
   @override
   String get customMcpCredential => 'Credential';

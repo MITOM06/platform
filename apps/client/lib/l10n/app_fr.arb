@@ -766,7 +766,7 @@
   "customMcpAuth": "Auth",
   "customMcpAuthNone": "Aucune",
   "customMcpAuthApiKey": "Clé API",
-  "customMcpAuthOauth": "OAuth",
+  "customMcpAuthOauth": "Bearer token",
   "customMcpCredential": "Identifiant",
   "customMcpDiscover": "Découvrir les outils",
   "customMcpSave": "Enregistrer",

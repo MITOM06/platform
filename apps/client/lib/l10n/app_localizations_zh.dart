@@ -2061,7 +2061,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get customMcpAuthApiKey => 'API 密钥';
 
   @override
-  String get customMcpAuthOauth => 'OAuth';
+  String get customMcpAuthOauth => 'Bearer token';
 
   @override
   String get customMcpCredential => '凭据';

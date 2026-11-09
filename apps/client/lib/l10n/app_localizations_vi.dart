@@ -2106,7 +2106,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get customMcpAuthApiKey => 'Khóa API';
 
   @override
-  String get customMcpAuthOauth => 'OAuth';
+  String get customMcpAuthOauth => 'Bearer token';
 
   @override
   String get customMcpCredential => 'Thông tin xác thực';

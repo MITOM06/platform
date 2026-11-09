@@ -766,7 +766,7 @@
   "customMcpAuth": "认证",
   "customMcpAuthNone": "无",
   "customMcpAuthApiKey": "API 密钥",
-  "customMcpAuthOauth": "OAuth",
+  "customMcpAuthOauth": "Bearer token",
   "customMcpCredential": "凭据",
   "customMcpDiscover": "发现工具",
   "customMcpSave": "保存",
