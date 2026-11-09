@@ -2139,7 +2139,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get customMcpAuthApiKey => 'Clé API';
 
   @override
-  String get customMcpAuthOauth => 'OAuth';
+  String get customMcpAuthOauth => 'Bearer token';
 
   @override
   String get customMcpCredential => 'Identifiant';

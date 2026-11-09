@@ -123,7 +123,7 @@ export function CustomMcpPanel() {
             </Select>
           </div>
 
-          {authType === 'apikey' && (
+          {authType !== 'none' && (
             <div className="space-y-1.5">
               <Label className="font-mono text-[10.5px] tracking-wide uppercase text-muted-foreground">
                 {t('customCredentialLabel')}

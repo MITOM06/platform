@@ -3982,7 +3982,7 @@ abstract class AppLocalizations {
   /// No description provided for @customMcpAuthOauth.
   ///
   /// In en, this message translates to:
-  /// **'OAuth'**
+  /// **'Bearer token'**
   String get customMcpAuthOauth;
 
   /// No description provided for @customMcpCredential.

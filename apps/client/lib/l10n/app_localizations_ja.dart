@@ -2072,7 +2072,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get customMcpAuthApiKey => 'API キー';
 
   @override
-  String get customMcpAuthOauth => 'OAuth';
+  String get customMcpAuthOauth => 'Bearer token';
 
   @override
   String get customMcpCredential => '認証情報';
