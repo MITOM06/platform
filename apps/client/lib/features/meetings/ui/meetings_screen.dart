@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/router/back_nav.dart';
 import '../../../core/theme/app_theme.dart';
 import '../domain/meeting_models.dart';
 import '../state/meetings_providers.dart';
@@ -31,6 +32,13 @@ class MeetingsScreen extends ConsumerWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
+          // Reached by `context.go` (leaving a room, a deep link) this page is
+          // alone on the stack: back must still lead home, not nowhere.
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            onPressed: () => popOrGo(context, '/'),
+          ),
           title: Text(l10n.meetingTitle,
               style: const TextStyle(fontWeight: FontWeight.w600)),
         ),

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/l10n/l10n_ext.dart';
+import '../../../../core/router/back_nav.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/pon_widgets.dart';
@@ -128,6 +129,15 @@ class _PrejoinScreenState extends ConsumerState<PrejoinScreen> {
       onJoin: widget.busy || inCall ? null : () => unawaited(_join()),
     );
     return Scaffold(
+      // Same back as the system gesture: to the page this room was opened from,
+      // or the meetings list when the room is alone on the stack (deep link).
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          onPressed: () => popOrGo(context, '/meetings'),
+        ),
+      ),
       body: SafeArea(
         child: LayoutBuilder(builder: (context, box) {
           if (box.maxWidth >= 768) {
