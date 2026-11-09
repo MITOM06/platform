@@ -22,6 +22,7 @@ const org = require('./org');
 const { CONVERSATIONS, FRIENDSHIPS, REMINDERS, MEMORIES, MEMORY_FACTS } = require('./conversations');
 const { CHAPTER: CHAPTER_NOV, REMINDERS_NOV: REMINDERS_NOV_ONLY } = require('./chapter-nov');
 const { CHAPTER_W46, REMINDERS_W46 } = require('./chapter-w46');
+const { CHAPTER_EXTRAS } = require('./chapter-extras');
 const { seedMeetings } = require('./meeting-seed');
 const { buildNovFiles } = require('./files-nov');
 const { buildW46Files } = require('./files-w46');
@@ -29,9 +30,10 @@ const { withFiller } = require('./filler');
 const { buildFiles, avatarPng } = require('./files');
 const { buildMessages, AI_BOT_ID } = require('./messages');
 
-// November chapter + week 46 (Fri 13/11 demo day), merged per conversation.
-const CHAPTER = Object.fromEntries([...new Set([...Object.keys(CHAPTER_NOV), ...Object.keys(CHAPTER_W46)])]
-  .map((k) => [k, [...(CHAPTER_NOV[k] || []), ...(CHAPTER_W46[k] || [])]]));
+// November chapter + week 46 (Fri 13/11 demo day) + calls/stickers/voice notes, merged per conversation.
+const CHAPTERS = [CHAPTER_NOV, CHAPTER_W46, CHAPTER_EXTRAS];
+const CHAPTER = Object.fromEntries([...new Set(CHAPTERS.flatMap(Object.keys))]
+  .map((k) => [k, CHAPTERS.flatMap((ch) => ch[k] || [])]));
 const REMINDERS_NOV = [...REMINDERS_NOV_ONLY, ...REMINDERS_W46];
 
 const TAG = 'lumen';

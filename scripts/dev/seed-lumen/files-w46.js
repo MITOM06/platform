@@ -2,6 +2,8 @@
 // Same entry shape as files-nov.js: { name, mime, buf, kb?, image?, text }.
 // DEV-ONLY seed data.
 
+const fs = require('node:fs');
+const path = require('node:path');
 const { docx, xlsx, plainText, sheetsText } = require('./office');
 
 const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -257,8 +259,20 @@ function teamBuildingBudget() {
   ];
 }
 
+// Voice notes rendered once with macOS `say -v Linh` (no TTS inside the ai-service image).
+const VOICE_KEYS = ['voice_trang', 'voice_lananh', 'voice_oanh', 'voice_han', 'voice_giang', 'voice_nhung'];
+function voiceFiles() {
+  const out = {};
+  for (const key of VOICE_KEYS) {
+    const file = path.join(__dirname, 'prebuilt', `${key}.m4a`);
+    if (fs.existsSync(file)) out[key] = { name: `${key}_${Date.parse('2026-11-12T00:00:00Z')}.m4a`, mime: 'audio/mp4', buf: fs.readFileSync(file), kb: false, text: '' };
+  }
+  return out;
+}
+
 function buildW46Files() {
   return {
+    ...voiceFiles(),
     ai_guide: mdEntry('Huong-dan-tro-ly-AI-Lumi.md', AI_GUIDE),
     dd_checklist: docEntry('Danh-sach-tai-lieu-DD-Saigon-Seed-Partners.docx', DD_CHECKLIST, 'Due diligence Saigon Seed Partners'),
     scale_plan: docEntry('Ke-hoach-scale-ha-tang-2027.docx', SCALE_PLAN, 'Kế hoạch scale hạ tầng 2027'),

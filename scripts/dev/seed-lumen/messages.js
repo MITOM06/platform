@@ -38,6 +38,10 @@ async function buildMessages({ c, convId, participants, uid, files, urlFor, mins
     const type = m.type || 'text';
     const senderId = uid(m.from);
     let content = m.text || '';
+    if (type === 'voice') {
+      if (!files[m.file]) continue; // voice clip not prebuilt on this machine — skip the line
+      content = await urlFor(m.file, senderId);
+    }
     if (type === 'file' || type === 'image') {
       const f = files[m.file];
       const url = await urlFor(m.file, senderId);

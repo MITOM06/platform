@@ -39,3 +39,7 @@ Continues STORY-NOV.md (which still holds; 11/11 is now history). Files: `chapte
 | 16:45–17:10 | 1-1 Khang × Minh | Khang | AI off |
 
 Run the seed on the morning of 13/11 (any time before 15:30, otherwise the live slot ends up ENDED with no summary).
+
+## Extras (chapter-extras.js)
+
+24 calls (system.call.ended pills → call_sessions) + 2 missed, 14 stickers, 6 voice notes (prebuilt/voice_*.m4a, macOS `say -v Linh`; only female senders because the one Vietnamese voice is female).
