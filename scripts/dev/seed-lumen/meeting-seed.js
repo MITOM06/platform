@@ -14,6 +14,7 @@ const { mod, REAL_NOW, ictTime } = require('./lib');
 const { ObjectId } = mod('mongodb');
 const { MEETINGS, RECURRING, PRIVATE_NOTES } = require('./meetings');
 const { MEETINGS_NOV, AI_FOR_EXISTING } = require('./meetings-nov');
+const { MEETINGS_W46 } = require('./meetings-w46');
 const { AI_BOT_ID } = require('./messages');
 
 const TAG = 'lumen';
@@ -33,7 +34,7 @@ const settings = (aiNotes) => ({ waitingRoom: true, muteOnEntry: false, allowAtt
 // Story meetings use "minutes before STORY_NOW"; November ones an ICT timestamp.
 function normalise(minsAgo) {
   const story = MEETINGS.map((m) => ({ ...m, ...(AI_FOR_EXISTING[m.key] || {}), aiNotes: !!AI_FOR_EXISTING[m.key], startDate: minsAgo(m.start) }));
-  const nov = MEETINGS_NOV.map((m) => ({ ...m, startDate: new Date(ictTime(m.startAt)) }));
+  const nov = [...MEETINGS_NOV, ...MEETINGS_W46].map((m) => ({ ...m, startDate: new Date(ictTime(m.startAt)) }));
   return [...story, ...nov];
 }
 

@@ -20,12 +20,19 @@ const Redis = mod('ioredis');
 
 const org = require('./org');
 const { CONVERSATIONS, FRIENDSHIPS, REMINDERS, MEMORIES, MEMORY_FACTS } = require('./conversations');
-const { CHAPTER, REMINDERS_NOV } = require('./chapter-nov');
+const { CHAPTER: CHAPTER_NOV, REMINDERS_NOV: REMINDERS_NOV_ONLY } = require('./chapter-nov');
+const { CHAPTER_W46, REMINDERS_W46 } = require('./chapter-w46');
 const { seedMeetings } = require('./meeting-seed');
 const { buildNovFiles } = require('./files-nov');
+const { buildW46Files } = require('./files-w46');
 const { withFiller } = require('./filler');
 const { buildFiles, avatarPng } = require('./files');
 const { buildMessages, AI_BOT_ID } = require('./messages');
+
+// November chapter + week 46 (Fri 13/11 demo day), merged per conversation.
+const CHAPTER = Object.fromEntries([...new Set([...Object.keys(CHAPTER_NOV), ...Object.keys(CHAPTER_W46)])]
+  .map((k) => [k, [...(CHAPTER_NOV[k] || []), ...(CHAPTER_W46[k] || [])]]));
+const REMINDERS_NOV = [...REMINDERS_NOV_ONLY, ...REMINDERS_W46];
 
 const TAG = 'lumen';
 const PASSWORD = process.env.SEED_PASSWORD || 'Lumen2026!';
@@ -269,9 +276,9 @@ function withChapter(c) {
 
 // November documents the person keeps in their AI chat's knowledge base.
 const NOV_KB = {
-  'dm-khang-ai': ['seed_memo', 'okr_q4', 'appendix_pl02', 'postmortem', 'fleet_proposal'],
-  'dm-minh-ai': ['postmortem', 'quote_phuthinh', 'okr_q4'],
-  'dm-tri-ai': ['fleet_proposal', 'pilot_week45'],
+  'dm-khang-ai': ['seed_memo', 'okr_q4', 'appendix_pl02', 'postmortem', 'fleet_proposal', 'dd_checklist', 'scale_plan'],
+  'dm-minh-ai': ['postmortem', 'quote_phuthinh', 'okr_q4', 'sprint14_report'],
+  'dm-tri-ai': ['fleet_proposal', 'pilot_week45', 'driver_training'],
 };
 
 async function seedConversations(db, bucket, redis, ctx, { files, urlFor }) {
@@ -520,7 +527,7 @@ async function seedExtras(db, { ids, names }, { callEnds, digestLogs }) {
     await db.collection('workspaces').updateOne({}, { $set: { ...org.WORKSPACE, updatedAt: new Date() } });
     const ctx = await seedPeople(db, bucket);
     await seedSocial(db, ctx);
-    const files = { ...(await buildFiles()), ...(await buildNovFiles()) };
+    const files = { ...(await buildFiles()), ...(await buildNovFiles()), ...buildW46Files() };
     const fileUrls = {};
     const urlFor = async (key, uploader) => (fileUrls[key] ??= await storeFile(bucket, files[key], uploader));
     const convs = await seedConversations(db, bucket, redis, ctx, { files, urlFor });
