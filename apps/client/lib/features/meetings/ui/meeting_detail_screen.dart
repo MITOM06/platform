@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/router/back_nav.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/pon_widgets.dart';
 import '../domain/meeting_errors.dart';
@@ -33,8 +33,7 @@ class MeetingDetailScreen extends ConsumerWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           tooltip: l10n.meetingBackToList,
-          onPressed: () =>
-              context.canPop() ? context.pop() : context.go('/meetings'),
+          onPressed: () => popOrGo(context, '/meetings'),
         ),
         title: Text(l10n.meetingTitle,
             style: const TextStyle(fontWeight: FontWeight.w600)),
