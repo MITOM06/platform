@@ -766,7 +766,7 @@
   "customMcpAuth": "인증",
   "customMcpAuthNone": "없음",
   "customMcpAuthApiKey": "API 키",
-  "customMcpAuthOauth": "OAuth",
+  "customMcpAuthOauth": "Bearer token",
   "customMcpCredential": "자격 증명",
   "customMcpDiscover": "도구 탐색",
   "customMcpSave": "저장",

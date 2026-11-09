@@ -766,7 +766,7 @@
   "customMcpAuth": "認証",
   "customMcpAuthNone": "なし",
   "customMcpAuthApiKey": "API キー",
-  "customMcpAuthOauth": "OAuth",
+  "customMcpAuthOauth": "Bearer token",
   "customMcpCredential": "認証情報",
   "customMcpDiscover": "ツールを検出",
   "customMcpSave": "保存",

@@ -766,7 +766,7 @@
   "customMcpAuth": "Xác thực",
   "customMcpAuthNone": "Không",
   "customMcpAuthApiKey": "Khóa API",
-  "customMcpAuthOauth": "OAuth",
+  "customMcpAuthOauth": "Bearer token",
   "customMcpCredential": "Thông tin xác thực",
   "customMcpDiscover": "Khám phá công cụ",
   "customMcpSave": "Lưu",

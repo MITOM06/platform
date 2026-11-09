@@ -1062,7 +1062,7 @@
   "customMcpAuth": "Auth",
   "customMcpAuthNone": "None",
   "customMcpAuthApiKey": "API key",
-  "customMcpAuthOauth": "OAuth",
+  "customMcpAuthOauth": "Bearer token",
   "customMcpCredential": "Credential",
   "customMcpDiscover": "Discover tools",
   "customMcpSave": "Save",
