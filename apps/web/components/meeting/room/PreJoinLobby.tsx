@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { useLocale, useNow, useTranslations } from 'next-intl'
-import { AlertTriangle, Loader2 } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Meeting } from '@/lib/api/meeting-types'
 import { useMediaPreview } from '@/lib/hooks/use-media-preview'
@@ -74,7 +74,14 @@ export function PreJoinLobby({ meeting, controller, busy, myName, myAvatarUrl }:
 
   return (
     <div className="h-dvh w-full overflow-y-auto bg-background">
-      <div className="mx-auto grid w-full max-w-5xl gap-8 px-4 py-8 md:grid-cols-[1fr_320px] md:items-center md:py-16">
+      {/* The room is full screen (no sidebar): a visible way back, like the details page (mirrors Flutter prejoin). */}
+      <div className="mx-auto w-full max-w-5xl px-4 pt-4">
+        <Link href="/meetings" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="size-4" aria-hidden />
+          {t('backToList')}
+        </Link>
+      </div>
+      <div className="mx-auto grid w-full max-w-5xl gap-8 px-4 py-8 md:grid-cols-[1fr_320px] md:items-center md:py-12">
         <div className="min-w-0 space-y-4">
           <PrejoinPreview preview={preview} myName={myName || t('you')} myAvatarUrl={myAvatarUrl} disabled={busy} />
           <DeviceSelects
