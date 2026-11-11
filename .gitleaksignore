@@ -16,3 +16,7 @@ eb7492e6e715ac96b17a100c2af71ccb1f8840f0:apps/client/lib/firebase_options_dev.da
 b20cf09399d659237afa2377922d87bb343a7d5f:scripts/dev/up.sh:generic-api-key:179
 # Fake internal key ("internal-key-123") in the upload reader resolver unit test — not a credential.
 73ba62da1ed264b0b2bfc831537d8007f618386e:apps/server/chat-service/src/test/java/com/platform/chatservice/security/UploadReaderResolverTest.java:generic-api-key:18
+# Keycloak's DB address "jdbc:postgresql://keycloak-db:5432/keycloak" in the first
+# commit of the production Keycloak stack — a hostname, not a credential. The next
+# commit replaced it with KC_DB_URL_HOST / KC_DB_URL_DATABASE.
+c5bd604e0d859d5444c753b2284fdb03dad4850c:infra/keycloak/compose.keycloak.yml:generic-api-key:57
