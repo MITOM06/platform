@@ -28,6 +28,17 @@ optionally `LIVEKIT_API_URL`; all blank means calls stay peer-to-peer and
 meetings report themselves unavailable. Runbooks:
 `docs/superpowers/runbooks/livekit.md`, `docs/superpowers/runbooks/self-host.md`.
 
+## Enterprise SSO — OIDC
+
+auth-service offers "Sign in with SSO" only when **both** switches are on: the
+`OIDC_*` variables in its environment (`OIDC_ENABLED`, `OIDC_ISSUER`,
+`OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_REDIRECT_URI`, `OIDC_GROUPS_CLAIM`)
+and Admin → SSO → *Enable SSO* in the workspace. Locally `scripts/dev/up.sh
+--sso` wires a throwaway Keycloak (`dev` only). On the Mac mini the IdP is
+`infra/keycloak/` (a separate stack, upgraded by hand) and `compose.mini.yml`
+derives `OIDC_REDIRECT_URI` from `PON_API_BASE`; blank `OIDC_ENABLED` keeps SSO
+off. Runbook: `docs/superpowers/runbooks/keycloak.md`.
+
 ## Push notifications — localized wording
 
 `PUSH_LOCALIZED=true` (chat-service) sends the fixed wording of message pushes
