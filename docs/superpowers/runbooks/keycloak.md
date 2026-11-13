@@ -46,7 +46,10 @@ container, `admin/admin`, client secret `pon-dev-only` công khai và tài kho�
 
 **0. Điều kiện.** Stack `pon-mini` đang chạy (`docker network ls | grep pon-mini_app-net` phải có
 kết quả), tunnel kiểu named (`CF_TUNNEL_TOKEN` trong `.env.mini`), domain nằm trên Cloudflare,
-mini còn trống khoảng 1,5 GB RAM.
+**VM Docker** (không phải RAM máy) còn trống ≥ 1,3 GB: Docker Desktop trên mini là một VM ~3,8 GiB
+dùng chung cho mọi stack, xem bằng `docker stats --no-stream`. Keycloak bị giới hạn `mem_limit: 1g`,
+Postgres `256m`. Thiếu thì tăng *Memory limit* trong Docker Desktop → Settings → Resources
+(phải restart Docker = mọi container trên mini tắt ~1 phút).
 
 **1. Điền `.env.keycloak`.**
 ```bash

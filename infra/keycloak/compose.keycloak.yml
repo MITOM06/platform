@@ -29,6 +29,8 @@ services:
   keycloak-db:
     image: postgres:16-alpine
     <<: *restart
+    # A handful of users and sessions; Postgres idles far below this.
+    mem_limit: 256m
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
@@ -47,12 +49,20 @@ services:
     # Same version as the dev IdP on `dev`, so what was tested there is what runs.
     image: quay.io/keycloak/keycloak:26.7.5
     <<: *restart
+    # Docker on the mini is one VM (~3.8 GiB) shared by every stack there (PON,
+    # marketlink, jarvis…). Without a limit the JVM sizes its heap from the
+    # whole VM (Keycloak's default: MaxRAMPercentage=70, Initial=50) and can
+    # starve chat-service. With 1g the heap tops out around 650 MB — plenty for
+    # one small realm. Raise both together if `docker stats` shows it pinned.
+    mem_limit: 1g
     # `start` is production mode: strict hostname, no dev defaults, caches on.
     # --import-realm creates the `pon` realm from realm-pon.json on the FIRST
     # start only; an existing realm is never overwritten, so later changes are
     # made in the admin console (or by exporting and re-importing on purpose).
     command: ["start", "--import-realm"]
     environment:
+      # Heap as a share of mem_limit above (Keycloak's defaults are 50/70).
+      JAVA_OPTS_KC_HEAP: "-XX:InitialRAMPercentage=25 -XX:MaxRAMPercentage=65"
       KC_DB: postgres
       # Host + database rather than one jdbc: URL — same connection, and the
       # combined form trips gitleaks' generic-api-key rule ("keycloak-db:…").
