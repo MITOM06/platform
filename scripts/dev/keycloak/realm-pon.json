@@ -1,0 +1,101 @@
+{
+  "realm": "pon",
+  "displayName": "PON dev IdP (Keycloak)",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "rememberMe": false,
+  "bruteForceProtected": false,
+  "groups": [
+    { "name": "staff", "path": "/staff" },
+    { "name": "admins", "path": "/admins" }
+  ],
+  "users": [
+    {
+      "username": "alice",
+      "email": "alice@pon.local",
+      "emailVerified": true,
+      "firstName": "Alice",
+      "lastName": "Test",
+      "enabled": true,
+      "requiredActions": [],
+      "credentials": [
+        { "type": "password", "value": "Devpass123!", "temporary": false }
+      ],
+      "groups": ["/staff"]
+    },
+    {
+      "username": "bob",
+      "email": "bob@pon.local",
+      "emailVerified": true,
+      "firstName": "Bob",
+      "lastName": "Test",
+      "enabled": true,
+      "requiredActions": [],
+      "credentials": [
+        { "type": "password", "value": "Devpass123!", "temporary": false }
+      ],
+      "groups": ["/admins"]
+    },
+    {
+      "username": "carol",
+      "email": "carol@pon.local",
+      "emailVerified": true,
+      "firstName": "Carol",
+      "lastName": "Test",
+      "enabled": true,
+      "requiredActions": [],
+      "credentials": [
+        { "type": "password", "value": "Devpass123!", "temporary": false }
+      ],
+      "groups": ["/staff"]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "pon-auth",
+      "name": "PON auth-service (local dev)",
+      "description": "DEV ONLY. Confidential client used by the local auth-service for OIDC SSO.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "pon-dev-only",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "consentRequired": false,
+      "frontchannelLogout": true,
+      "rootUrl": "http://localhost:3000",
+      "baseUrl": "/",
+      "redirectUris": ["http://localhost:3001/auth/oidc/callback"],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:3000/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "groups",
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ]
+}
