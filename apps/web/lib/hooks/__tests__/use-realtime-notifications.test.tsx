@@ -32,6 +32,7 @@ const h = vi.hoisted(() => {
     presenceDispose: vi.fn(),
     refreshCallTransport: vi.fn(),
     refreshClaims: vi.fn(),
+    presentNotice: vi.fn(),
     t: (k: string) => `layout.${k}`,
     tChat: (k: string) => `chat.${k}`,
     tMeeting: (k: string) => `meeting.${k}`,
@@ -77,6 +78,7 @@ vi.mock('@/lib/realtime/session-handlers', () => ({
   createPresenceHandler: () => ({ handle: h.presenceHandle, dispose: h.presenceDispose }),
 }))
 vi.mock('@/lib/realtime/claims', () => ({ refreshClaims: h.refreshClaims }))
+vi.mock('@/lib/realtime/present-notice', () => ({ presentNotice: h.presentNotice }))
 vi.mock('@/lib/webrtc/call-transport', () => ({ refreshCallTransport: h.refreshCallTransport }))
 
 import { useRealtimeNotifications } from '@/lib/hooks/use-realtime-notifications'
@@ -199,6 +201,46 @@ describe('durable subscriptions route each queue', () => {
 
     ctx.onClaimsChanged()
     expect(h.refreshClaims).toHaveBeenCalledWith(qc)
+  })
+})
+
+describe('notice callbacks', () => {
+  it('user-queue notices open the conversation; errors toast', () => {
+    render()
+    h.durable.get('/user/queue/notifications')!({ body: 'n1' })
+    const ctx = h.handleUserQueueEvent.mock.calls[0][1] as {
+      showNotification: (n: { conversationId: string; title: string; body: string }) => void
+      showError: (m: string) => void
+    }
+    ctx.showNotification({ conversationId: 'c9', title: 'Ann', body: 'hi' })
+    const [title, body, open, label] = h.presentNotice.mock.calls[0]
+    expect([title, body, label]).toEqual(['Ann', 'hi', 'layout.notificationOpen'])
+    open()
+    expect(h.push).toHaveBeenCalledWith('/conversations/c9')
+    ctx.showError('boom')
+    expect(h.toastError).toHaveBeenCalledWith('boom')
+  })
+
+  it('meeting-queue notices open their link; info toasts; clock and room accessors', () => {
+    render()
+    h.durable.get('/user/queue/meeting')!({ body: 'm1' })
+    const mctx = h.handleMeetingQueueEvent.mock.calls[0][1] as {
+      notify: (n: { title: string; body: string; href: string }) => void
+      toastInfo: (m: string) => void
+      now: () => Date
+      notificationsEnabled: () => boolean
+      activeRoom: () => unknown
+    }
+    mctx.notify({ title: 'Standup', body: 'starting', href: '/meet/abc' })
+    const [title, body, open, label] = h.presentNotice.mock.calls[0]
+    expect([title, body, label]).toEqual(['Standup', 'starting', 'meeting.notifOpen'])
+    open()
+    expect(h.push).toHaveBeenCalledWith('/meet/abc')
+    mctx.toastInfo('admitted')
+    expect(h.toastInfo).toHaveBeenCalledWith('admitted')
+    expect(mctx.now()).toBeInstanceOf(Date)
+    expect(typeof mctx.notificationsEnabled()).toBe('boolean')
+    expect(mctx.activeRoom()).toBeNull()
   })
 })
 
