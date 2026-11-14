@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest'
 import { QueryClient } from '@tanstack/react-query'
 
 vi.mock('@/lib/rtc/livekit-session', async () => {
@@ -25,7 +25,7 @@ function fakeSession() {
 }
 
 let session: ReturnType<typeof fakeSession> | null
-let notify: ReturnType<typeof vi.fn>
+let notify: Mock<(level: "info" | "error", msg: unknown) => void>
 let settings = { allowAttendeeScreenShare: false }
 const media = () => new RoomMedia({ notify } as unknown as MeetingRoomDeps, () => session, () => settings as never)
 

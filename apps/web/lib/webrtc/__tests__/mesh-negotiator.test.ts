@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 
 const { publish } = vi.hoisted(() => ({ publish: vi.fn() }))
 vi.mock('@/lib/stomp/client', () => ({ stompService: { publish } }))
@@ -20,7 +20,7 @@ type Pc = ReturnType<typeof fakePc>
 
 let pc: Pc | null
 let target: { peerId: string; conversationId: string } | null
-let flush: ReturnType<typeof vi.fn>
+let flush: Mock<(p: unknown) => Promise<void>>
 const link: NegotiationLink = {
   pc: () => pc as unknown as RTCPeerConnection,
   target: () => target,
