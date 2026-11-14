@@ -13,6 +13,7 @@ import 'package:platform_client/features/auth/data/auth_repository.dart';
 import 'package:platform_client/features/auth/domain/auth_state.dart';
 import 'package:platform_client/features/chat/data/chat_repository.dart';
 import 'package:platform_client/features/chat/domain/chat_misc_providers.dart';
+import 'package:platform_client/features/chat/domain/chat_system_message_parser.dart';
 import 'package:platform_client/features/chat/domain/chat_state.dart';
 import 'package:platform_client/features/chat/domain/conversations_notifier.dart';
 
@@ -218,6 +219,66 @@ void main() {
       await c.read(quickReactionProvider('c1').notifier).setQuickReaction('❤️');
       expect(c.read(quickReactionProvider('c1')), '❤️');
       expect(prefs.getString('chat_quick_reaction_c1'), '❤️');
+    });
+  });
+
+  group('ChatSystemMessageParser', () {
+    MessageModel sys(String content, {String type = 'system'}) =>
+        MessageModel.fromJson({
+          'id': 'm1',
+          'conversationId': 'c1',
+          'senderId': 'u1',
+          'content': content,
+          'type': type,
+          'createdAt': '2026-01-01T00:00:00Z',
+        });
+
+    /// Runs the parser with a real Riverpod [Ref].
+    void apply(MessageModel m) {
+      final p = Provider<void Function()>(
+          (ref) => () => ChatSystemMessageParser.apply(ref, 'c1', m));
+      c.read(p)();
+    }
+
+    test('nickname change keeps colons inside the nickname', () async {
+      await make();
+      apply(sys('system.nickname.changed:u2:Dr: Who'));
+      await Future<void>.delayed(Duration.zero);
+      expect(c.read(nicknamesProvider('c1')), {'u2': 'Dr: Who'});
+    });
+
+    test('a nickname change without a value clears it', () async {
+      await make(stored: {
+        'chat_nicknames_c1': ['u2:Old']
+      });
+      apply(sys('system.nickname.changed:u2'));
+      await Future<void>.delayed(Duration.zero);
+      expect(c.read(nicknamesProvider('c1')), isEmpty);
+    });
+
+    test('theme change applies the full URL (with its scheme colon)',
+        () async {
+      await make();
+      apply(sys('system.theme.changed:https://cdn/w.png'));
+      expect(c.read(chatWallpaperProvider('c1')), 'https://cdn/w.png');
+    });
+
+    test('quick reaction change, defaulting to 👍', () async {
+      await make(stored: {'chat_quick_reaction_c1': '🔥'});
+      apply(sys('system.quick_reaction.changed:😂'));
+      await Future<void>.delayed(Duration.zero);
+      expect(c.read(quickReactionProvider('c1')), '😂');
+    });
+
+    test('non-system messages and unknown system codes are ignored',
+        () async {
+      await make();
+      apply(sys('system.nickname.changed:u2:X', type: 'text'));
+      apply(sys('system.member.left:u2'));
+      await Future<void>.delayed(Duration.zero);
+      expect(c.read(nicknamesProvider('c1')), isEmpty);
+      expect(c.read(quickReactionProvider('c1')), '👍');
+      expect(c.read(chatWallpaperProvider('c1')), isNull);
     });
   });
 }

@@ -247,4 +247,104 @@ void main() {
     expect(afterRollback!.map((c) => c.id), containsAll(['conv-X', 'conv-Y']));
     expect(afterRollback, hasLength(2));
   });
+
+  group('list mutations', () {
+    Future<void> boot(List<String> ids) async {
+      when(() => mockRepo.listConversations())
+          .thenAnswer((_) async => [for (final id in ids) _fakeConversation(id)]);
+      await container.read(conversationsNotifierProvider.future);
+    }
+
+    List<String> ids() => container
+        .read(conversationsNotifierProvider)
+        .value!
+        .map((c) => c.id)
+        .toList();
+
+    test('delete calls onDeleted(false) after the server answered', () async {
+      await boot(['a', 'b']);
+      when(() => mockRepo.deleteConversation('a')).thenAnswer((_) async {});
+      final calls = <bool>[];
+      await container
+          .read(conversationsNotifierProvider.notifier)
+          .deleteConversation('a', onDeleted: calls.add);
+      expect(calls, [false]);
+      expect(ids(), ['b']);
+    });
+
+    test('block-archive removes optimistically; failure refetches', () async {
+      await boot(['a', 'b']);
+      when(() => mockRepo.blockArchiveConversation('a'))
+          .thenAnswer((_) async => _fakeConversation('a'));
+      await container
+          .read(conversationsNotifierProvider.notifier)
+          .blockAndArchiveConversation('a');
+      expect(ids(), ['b']);
+
+      when(() => mockRepo.blockArchiveConversation('b'))
+          .thenThrow(Exception('down'));
+      await container
+          .read(conversationsNotifierProvider.notifier)
+          .blockAndArchiveConversation('b');
+      // Rolled back by refetching the server list.
+      expect(ids(), ['a', 'b']);
+    });
+
+    test('unblock restores via a refetch (also on failure)', () async {
+      await boot(['a']);
+      when(() => mockRepo.blockRestoreConversation('x'))
+          .thenAnswer((_) async => _fakeConversation('x'));
+      when(() => mockRepo.listConversations()).thenAnswer(
+          (_) async => [_fakeConversation('a'), _fakeConversation('x')]);
+      await container
+          .read(conversationsNotifierProvider.notifier)
+          .unblockAndRestoreConversation('x');
+      expect(ids(), ['a', 'x']);
+      verify(() => mockRepo.blockRestoreConversation('x')).called(1);
+
+      when(() => mockRepo.blockRestoreConversation('y'))
+          .thenThrow(Exception('down'));
+      await container
+          .read(conversationsNotifierProvider.notifier)
+          .unblockAndRestoreConversation('y');
+      expect(ids(), ['a', 'x']);
+    });
+
+    test('archive removes the row; a failed archive restores it', () async {
+      await boot(['a', 'b']);
+      when(() => mockRepo.archiveConversation('a')).thenAnswer((_) async => _fakeConversation('a'));
+      await container
+          .read(conversationsNotifierProvider.notifier)
+          .archiveConversation('a');
+      expect(ids(), ['b']);
+
+      when(() => mockRepo.archiveConversation('b'))
+          .thenThrow(Exception('down'));
+      when(() => mockRepo.listConversations())
+          .thenAnswer((_) async => [_fakeConversation('b')]);
+      await container
+          .read(conversationsNotifierProvider.notifier)
+          .archiveConversation('b');
+      expect(ids(), ['b']);
+    });
+
+    test('unarchive puts the restored conversation back', () async {
+      await boot(['a']);
+      when(() => mockRepo.unarchiveConversation('z'))
+          .thenAnswer((_) async => _fakeConversation('z'));
+      await container
+          .read(conversationsNotifierProvider.notifier)
+          .unarchiveConversation('z');
+      expect(ids(), containsAll(['a', 'z']));
+
+      when(() => mockRepo.unarchiveConversation('q'))
+          .thenThrow(Exception('down'));
+      when(() => mockRepo.listConversations())
+          .thenAnswer((_) async => [_fakeConversation('a')]);
+      await container
+          .read(conversationsNotifierProvider.notifier)
+          .unarchiveConversation('q');
+      expect(ids(), ['a']);
+    });
+  });
 }
