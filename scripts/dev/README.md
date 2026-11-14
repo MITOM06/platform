@@ -1,7 +1,7 @@
 # Local development — onboarding
 
 Everything here is **dev-only** and lives on the `dev` branch. See
-`.claude/rules/dev-local-only.md` for why none of it goes to `main`.
+`docs/engineering/dev-local-only.md` for why none of it goes to `main`.
 
 ## First time on a new machine
 
@@ -88,7 +88,7 @@ git diff origin/main...feat/x --stat    # must list ONLY your feature's files
 ```
 
 If that diff shows `scripts/dev/`, a seed script or a `*.local` env file, stop —
-see `.claude/rules/dev-local-only.md`.
+see `docs/engineering/dev-local-only.md`.
 
 ## SSO with a local Keycloak
 

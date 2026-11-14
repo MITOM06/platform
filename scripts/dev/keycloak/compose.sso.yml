@@ -1,5 +1,5 @@
 # DEV ONLY — lives on the `dev` branch, never on `main`
-# (.claude/rules/dev-local-only.md).
+# (docs/engineering/dev-local-only.md).
 #
 # Local Keycloak IdP for testing PON's OIDC SSO, layered on the main stack.
 # `scripts/dev/up.sh --sso` does all of this; by hand:

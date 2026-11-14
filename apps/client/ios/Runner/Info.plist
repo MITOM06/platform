@@ -28,7 +28,7 @@
 	     first time the app reaches a LAN address; NSLocalNetworkUsageDescription is
 	     the text it displays. Unlike the Android switch this cannot be scoped to a
 	     debug variant — Info.plist ships with release too — so it stays on `dev`
-	     per .claude/rules/dev-local-only.md and must never be merged into main. -->
+	     per docs/engineering/dev-local-only.md and must never be merged into main. -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

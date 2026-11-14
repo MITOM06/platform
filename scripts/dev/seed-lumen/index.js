@@ -10,7 +10,7 @@
 // Runs from the repo (local stack) or inside the ai-service image (/app/seed-lumen).
 // Every document carries `seedTag: 'lumen'` (GridFS: metadata.seedTag) and the
 // manifest records every _id, so a re-run / --reset wipes exactly this data.
-// DEV-ONLY: never commit this to main (.claude/rules/dev-local-only.md).
+// DEV-ONLY: never commit this to main (docs/engineering/dev-local-only.md).
 
 const crypto = require('node:crypto');
 const { mod, STORY_NOW, REAL_NOW, ictTime } = require('./lib');

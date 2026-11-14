@@ -10,7 +10,7 @@
 // Needs seed-users.js to have run first (dev/alice/bob join the company).
 // Every document written here carries `seedTag: 'novatech'` (GridFS:
 // `metadata.seedTag`), so a re-run wipes exactly this data and nothing else.
-// DEV-ONLY: never commit this to main (.claude/rules/dev-local-only.md).
+// DEV-ONLY: never commit this to main (docs/engineering/dev-local-only.md).
 
 const path = require('node:path');
 const crypto = require('node:crypto');
