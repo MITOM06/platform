@@ -178,6 +178,11 @@ class RolesNotifier extends AsyncNotifier<List<Role>> {
     await ref.read(adminRepositoryProvider).updateRole(id, body);
     await _reload();
   }
+
+  Future<void> remove(String id) async {
+    await ref.read(adminRepositoryProvider).deleteRole(id);
+    await _reload();
+  }
 }
 
 final rolesProvider =

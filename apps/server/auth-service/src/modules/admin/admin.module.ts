@@ -7,6 +7,8 @@ import {
   WorkspaceSchema,
   Department,
   DepartmentSchema,
+  Invitation,
+  InvitationSchema,
   Role,
   RoleSchema,
   User,
@@ -29,6 +31,7 @@ import { SsoModule } from '../sso/sso.module';
     MongooseModule.forFeature([
       { name: Workspace.name, schema: WorkspaceSchema },
       { name: Department.name, schema: DepartmentSchema },
+      { name: Invitation.name, schema: InvitationSchema },
       { name: Role.name, schema: RoleSchema },
       { name: User.name, schema: UserSchema },
     ]),

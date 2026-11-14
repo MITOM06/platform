@@ -29,6 +29,13 @@ void main() {
     expect(find.text(l.meetingJoinNow), findsNothing);
   });
 
+  testWidgets('the top back arrow leaves to the meetings list', (tester) async {
+    await pumpPrejoin(tester);
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    expect(find.text('/meetings'), findsOneWidget);
+  });
+
   testWidgets('an invited person joins now', (tester) async {
     await pumpPrejoin(tester);
     final l = roomL10n(tester);

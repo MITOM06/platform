@@ -129,6 +129,15 @@ void main() {
     expect(find.text('/meetings/m1'), findsOneWidget);
   });
 
+  testWidgets('has a back button even when it is the only page',
+      (tester) async {
+    await pump(tester);
+    expect(find.byTooltip('Back'), findsOneWidget);
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    expect(find.text('Weekly sync'), findsOneWidget); // fallback '/' = home here
+  });
+
   testWidgets('shows the empty Past list', (tester) async {
     await pump(tester);
     await tester.tap(find.text(l10nOf(tester).meetingTabPast));

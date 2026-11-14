@@ -4783,6 +4783,18 @@ abstract class AppLocalizations {
   /// **'Clone {name}'**
   String adminRoleCloneTitle(String name);
 
+  /// No description provided for @adminRoleDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete role'**
+  String get adminRoleDelete;
+
+  /// No description provided for @adminRoleDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}? Only a role nobody uses can be deleted: no member holds it, no pending invitation offers it and no SSO group maps to it. This can\'t be undone.'**
+  String adminRoleDeleteConfirm(String name);
+
   /// No description provided for @adminRoleName.
   ///
   /// In en, this message translates to:
@@ -7843,6 +7855,18 @@ abstract class AppLocalizations {
   /// **'Built-in roles can\'t be renamed.'**
   String get authErrPresetRoleRenameForbidden;
 
+  /// No description provided for @authErrPresetRoleDeleteForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Built-in roles can\'t be deleted.'**
+  String get authErrPresetRoleDeleteForbidden;
+
+  /// No description provided for @authErrRoleInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'This role is still in use (members: {members}, pending invitations: {invitations}, SSO mappings: {ssoMappings}). Move them to another role first.'**
+  String authErrRoleInUse(int members, int invitations, int ssoMappings);
+
   /// No description provided for @authErrRoleNameTaken.
   ///
   /// In en, this message translates to:
@@ -7992,6 +8016,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Role updated'**
   String get adminAuditActionRoleUpdate;
+
+  /// No description provided for @adminAuditActionRoleDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Role deleted'**
+  String get adminAuditActionRoleDelete;
 
   /// No description provided for @adminAuditActionInvitationCreate.
   ///

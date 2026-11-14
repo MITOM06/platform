@@ -2572,6 +2572,14 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get adminRoleDelete => 'Eliminar rol';
+
+  @override
+  String adminRoleDeleteConfirm(String name) {
+    return '¿Eliminar $name? Solo se puede eliminar un rol que nadie usa: ningún miembro lo tiene, ninguna invitación pendiente lo ofrece y ningún grupo SSO se asigna a él. Esta acción no se puede deshacer.';
+  }
+
+  @override
   String get adminRoleName => 'Nombre del rol';
 
   @override
@@ -4352,6 +4360,15 @@ class AppLocalizationsEs extends AppLocalizations {
       'Los roles predefinidos no se pueden renombrar.';
 
   @override
+  String get authErrPresetRoleDeleteForbidden =>
+      'Los roles predefinidos no se pueden eliminar.';
+
+  @override
+  String authErrRoleInUse(int members, int invitations, int ssoMappings) {
+    return 'Este rol todavía está en uso (miembros: $members, invitaciones pendientes: $invitations, asignaciones SSO: $ssoMappings). Muévelos primero a otro rol.';
+  }
+
+  @override
   String get authErrRoleNameTaken => 'Ya existe un rol con este nombre.';
 
   @override
@@ -4434,6 +4451,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get adminAuditActionRoleUpdate => 'Rol actualizado';
+
+  @override
+  String get adminAuditActionRoleDelete => 'Rol eliminado';
 
   @override
   String get adminAuditActionInvitationCreate => 'Invitación enviada';

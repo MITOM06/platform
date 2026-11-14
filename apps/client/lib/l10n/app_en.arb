@@ -1217,6 +1217,15 @@
   "adminRolePreset": "Preset",
   "adminRoleClone": "Clone",
   "adminRoleCloneTitle": "Clone {name}",
+  "adminRoleDelete": "Delete role",
+  "adminRoleDeleteConfirm": "Delete {name}? Only a role nobody uses can be deleted: no member holds it, no pending invitation offers it and no SSO group maps to it. This can't be undone.",
+  "@adminRoleDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminRoleName": "Role name",
   "adminAuditTitle": "Audit log",
   "adminAuditComingSoon": "The audit log will be available in a future update.",
@@ -2169,6 +2178,21 @@
   "authErrRoleGrantExceedsOwnPermissionsGeneric": "You can't grant permissions you don't have yourself.",
   "authErrCannotEditOwnRole": "You can't edit your own role.",
   "authErrPresetRoleRenameForbidden": "Built-in roles can't be renamed.",
+  "authErrPresetRoleDeleteForbidden": "Built-in roles can't be deleted.",
+  "authErrRoleInUse": "This role is still in use (members: {members}, pending invitations: {invitations}, SSO mappings: {ssoMappings}). Move them to another role first.",
+  "@authErrRoleInUse": {
+    "placeholders": {
+      "members": {
+        "type": "int"
+      },
+      "invitations": {
+        "type": "int"
+      },
+      "ssoMappings": {
+        "type": "int"
+      }
+    }
+  },
   "authErrRoleNameTaken": "A role with this name already exists.",
   "authErrOwnerRoleImmutable": "The Owner role can't be modified or deleted.",
   "authErrOwnerSsoMappingForbidden": "Only an Owner can map SSO groups to the Owner role.",
@@ -2201,6 +2225,7 @@
   "adminAuditActionMemberUnblock": "Member unblocked",
   "adminAuditActionRoleCreate": "Role created",
   "adminAuditActionRoleUpdate": "Role updated",
+  "adminAuditActionRoleDelete": "Role deleted",
   "adminAuditActionInvitationCreate": "Invitation sent",
   "adminAuditActionInvitationResend": "Invitation resent",
   "adminAuditActionInvitationRevoke": "Invitation revoked",

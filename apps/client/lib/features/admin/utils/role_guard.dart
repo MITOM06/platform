@@ -41,6 +41,24 @@ bool canToggleMemberBlock({
 List<Role> assignableRoles(List<Role> roles, {required bool callerIsOwner}) =>
     callerIsOwner ? roles : roles.where((r) => !r.isOwner).toList();
 
+/// Whether the caller sees "Delete" enabled on [role] (mirror of `DELETE
+/// /admin/roles/:id` and of web `canDeleteRole`): never on a preset
+/// (PRESET_ROLE_DELETE_FORBIDDEN); a non-Owner neither on the role they hold
+/// (CANNOT_EDIT_OWN_ROLE) nor on one granting capabilities they lack. Whether
+/// the role is still in use (ROLE_IN_USE) is only known to the server.
+bool canDeleteRole({
+  required Role role,
+  required String? callerRole,
+  required List<String> callerPerms,
+}) {
+  if (role.isPreset) return false;
+  if (callerRole == 'Owner') return true;
+  if (callerRole == role.name) return false;
+  return role.permissions.entries
+      .where((e) => e.value)
+      .every((e) => callerPerms.contains(e.key));
+}
+
 /// Whether [role] is Owner / Admin-like: Owner, Admin, or any role granting
 /// workspace / member / role management (so a cloned admin-like role counts
 /// too). Mirror of the server rule used for the 2FA reset authority.

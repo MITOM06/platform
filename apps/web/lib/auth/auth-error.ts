@@ -105,6 +105,8 @@ export function authCodeToI18nKey(code: string): string {
     ROLE_GRANT_EXCEEDS_OWN_PERMISSIONS: 'errRoleGrantExceedsOwnPermissionsGeneric',
     CANNOT_EDIT_OWN_ROLE: 'errCannotEditOwnRole',
     PRESET_ROLE_RENAME_FORBIDDEN: 'errPresetRoleRenameForbidden',
+    PRESET_ROLE_DELETE_FORBIDDEN: 'errPresetRoleDeleteForbidden',
+    ROLE_IN_USE: 'errRoleInUse',
     ROLE_NAME_TAKEN: 'errRoleNameTaken',
     OWNER_ROLE_IMMUTABLE: 'errOwnerRoleImmutable',
     OWNER_SSO_MAPPING_FORBIDDEN: 'errOwnerSsoMappingForbidden',
