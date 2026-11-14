@@ -22,3 +22,32 @@ b20cf09399d659237afa2377922d87bb343a7d5f:scripts/dev/up.sh:generic-api-key:179
 # KC_DB_URL_DATABASE; do not quote the URL again, the rule matches it anywhere.
 c5bd604e0d859d5444c753b2284fdb03dad4850c:infra/keycloak/compose.keycloak.yml:generic-api-key:57
 3b12476336d4647248fe535604790d610fe5fb93:.gitleaksignore:generic-api-key:19
+
+# Firebase *client* API keys of the production project (web config, Flutter
+# firebase_options, and docs that quote them): public identifiers shipped in every
+# app build and restricted in the Google Cloud console, not credentials.
+035786f7dccbd886d32ec59abb46bf7882c57e4d:apps/web/.env.example:gcp-api-key:8
+035786f7dccbd886d32ec59abb46bf7882c57e4d:apps/web/.env.production:gcp-api-key:14
+035786f7dccbd886d32ec59abb46bf7882c57e4d:docs/superpowers/plans/2026-06-29-firebase-phone-auth.md:gcp-api-key:268
+1fca053355cc5f317a4dbbb4c135e45ae905595b:docs/superpowers/MEMORY.md:gcp-api-key:71
+65f0099025fb4374d6ed8d9070df6ba60db6bb3f:apps/client/lib/firebase_options.dart:gcp-api-key:50
+65f0099025fb4374d6ed8d9070df6ba60db6bb3f:apps/client/lib/firebase_options.dart:gcp-api-key:59
+65f0099025fb4374d6ed8d9070df6ba60db6bb3f:apps/client/lib/firebase_options.dart:gcp-api-key:67
+# CocoaPods Podfile.lock checksums of the Firebase pods — content hashes, not keys.
+0e6ad5e1979c4fba163936f0d562f59e7f0c5ffc:apps/client/ios/Podfile.lock:generic-api-key:273
+0e6ad5e1979c4fba163936f0d562f59e7f0c5ffc:apps/client/ios/Podfile.lock:generic-api-key:277
+0e6ad5e1979c4fba163936f0d562f59e7f0c5ffc:apps/client/ios/Podfile.lock:generic-api-key:278
+# Test fixtures and doc samples: the CI-only JWT secret, a fake TOTP seed, a fake
+# internal key, the base64 of "test-32-byte-key-for-compose-chk", and NestJS's
+# own README badge placeholder token. None is or was ever a real credential.
+339303b254011c14fd47d67725ec5201ee1330b3:apps/server/auth-service/src/modules/mfa/mfa-self.service.spec.ts:generic-api-key:19
+3a9fa614abeab07396ec084415c68a05aa45af66:apps/server/README.md:generic-api-key:5
+71655c4f3d04aacf0a3907ddd26c221e84f31c80:apps/server/chat-service/src/test/java/com/platform/chatservice/controller/InternalMeetingControllerTest.java:generic-api-key:40
+8f90a906f0d719969f096d8551570f182c82c3ab:docs/superpowers/plans/2026-06-22-p8-sso-oidc.md:generic-api-key:887
+b3f425e42721b565fc05667db693405c049d6c07:.github/workflows/ci.yml:generic-api-key:47
+b42c30d54049720eaa5e6596e87fa60b849c06af:docs/superpowers/plans/2026-06-21-p7-self-host-deployment-kit.md:generic-api-key:772
+b5acb23ad61ce132223d51e88be1010227b61f76:.github/workflows/deploy.yml:generic-api-key:55
+# Seed-data meeting slugs (the "key" field of a seeded meeting) in dev-only seed scripts.
+a0c42f4b1c689bb32f31f8ba9c76e6d96ada0c38:scripts/dev/seed-lumen/meetings-w46.js:generic-api-key:126
+a0c42f4b1c689bb32f31f8ba9c76e6d96ada0c38:scripts/dev/seed-lumen/meetings-w46.js:generic-api-key:159
+acba9eb5c2f3af44bf5619f5e98574ac53530150:scripts/dev/seed-lumen/meetings-nov.js:generic-api-key:492
