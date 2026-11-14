@@ -6,6 +6,7 @@ vi.mock('@/lib/hooks/use-conversation', () => ({ useConversation: () => h.conv }
 vi.mock('@/lib/media', () => ({ absoluteMediaUrl: (u: string) => `ABS(${u})` }))
 
 import { useWallpaper, WALLPAPER_EVENT } from '@/lib/hooks/use-wallpaper'
+import { THEME_CATEGORIES } from '@/components/chat/wallpaper-presets'
 
 const fire = (conversationId: string, value: string) =>
   act(() => { window.dispatchEvent(new CustomEvent(WALLPAPER_EVENT, { detail: { conversationId, value } })) })
@@ -28,6 +29,14 @@ describe('useWallpaper resolution', () => {
     expect(resolve('preset:midnight_glow').className).toContain('from-indigo-900/45')
     expect(resolve('preset:pure_dark').className).toBe('bg-[#050507] dark:bg-[#030303]')
     expect(resolve('preset:nope')).toEqual({ className: 'bg-background', isImage: false })
+  })
+
+  it('every preset offered by the picker resolves to its own class', () => {
+    for (const item of THEME_CATEGORIES.flatMap((c) => c.items)) {
+      const r = resolve(item.value)
+      expect(r.isImage).toBe(false)
+      expect(r.className).not.toBe('bg-background')
+    }
   })
 
   it('legacy flat keys resolve as presets, not URLs', () => {
