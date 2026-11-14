@@ -50,7 +50,7 @@ check_required_documented infra/keycloak/compose.keycloak.yml infra/keycloak/.en
 # ── 2. No development fallback in a production deployment ────────────────────
 # A loopback address, or the well-known local broker credentials, reached from a
 # file that only ever runs in production.
-for f in .github/workflows/deploy.yml infra/docker-compose/compose.mini.yml infra/docker-compose/compose.prod.yml; do
+for f in infra/docker-compose/compose.mini.yml infra/docker-compose/compose.prod.yml; do
   [ -f "$f" ] || continue
   # `|| 'value'` (Actions) and `:-value` (compose) are the two fallback forms.
   # grep -n prefixes "NN:", so the comment filter has to skip past it.

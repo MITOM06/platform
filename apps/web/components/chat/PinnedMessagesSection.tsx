@@ -42,11 +42,11 @@ function PinnedRow({
 
   // Resolve an actor id → display name for system codes that carry one
   // (mirror MessageBubble.tsx). Never leak raw ids — see
-  // .claude/rules/no-raw-system-data-in-ui.md.
+  // docs/engineering/no-raw-system-data-in-ui.md.
   const resolveName = useNameResolver(conversationId)
 
   // Never leak raw JSON/markdown/system codes — see
-  // .claude/rules/no-raw-system-data-in-ui.md. The shared preview humanizer maps
+  // docs/engineering/no-raw-system-data-in-ui.md. The shared preview humanizer maps
   // media/file → attachment label, meeting_summary → its label, ai → flattened
   // text, and system codes → humanized sentence.
   const displayContent = humanizeMessagePreview(pinned.content, pinned.type, t, {

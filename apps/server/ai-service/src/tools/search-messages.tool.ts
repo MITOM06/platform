@@ -66,7 +66,7 @@ export class SearchMessagesTool {
     const nameMap = new Map(userDocs.map((u) => [String(u['_id']), u['displayName'] as string]));
 
     // Never hand the model a raw id: it repeats it verbatim to the user
-    // (.claude/rules/no-raw-system-data-in-ui.md).
+    // (docs/engineering/no-raw-system-data-in-ui.md).
     const formatted = results.map((m) => ({
       content: m['content'],
       senderDisplayName: senderLabel(m['senderId'] as string, nameMap),

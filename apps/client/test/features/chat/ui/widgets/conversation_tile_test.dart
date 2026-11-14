@@ -1,7 +1,7 @@
 // Widget tests for ConversationTile (conversation list row): title
 // resolution, unread badge, mute/blocked icons and the last-message preview,
 // which must never show a raw system code, user id, upload URL or JSON
-// (`.claude/rules/no-raw-system-data-in-ui.md`).
+// (`docs/engineering/no-raw-system-data-in-ui.md`).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

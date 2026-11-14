@@ -150,6 +150,6 @@ dropped while idle (`consumers=0`) and AI goes silent with no client-side error 
 
 ## Reference
 
-- Coding rules: `.claude/rules/ai-service.md`
-- Bus contract + ports: root [`CLAUDE.md`](../../../CLAUDE.md)
+- Coding rules: `docs/engineering/ai-service.md`
+- Bus contract + ports: [`docs/architecture.md`](../../../docs/architecture.md)
 - Tracing across chat → queue → ai → Redis: [`docs/observability.md`](../../../docs/observability.md)

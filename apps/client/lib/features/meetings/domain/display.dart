@@ -1,5 +1,5 @@
 // Guards against rendering machine identifiers as names
-// (.claude/rules/no-raw-system-data-in-ui.md) — mirror of web
+// (docs/engineering/no-raw-system-data-in-ui.md) — mirror of web
 // `lib/chat/names.ts` + `lib/meetings/display.ts`.
 
 import 'meeting_models.dart';

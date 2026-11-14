@@ -127,7 +127,7 @@ export default function SecurityPage() {
       setDone(hasPassword ? 'changed' : 'set')
     } catch (e: unknown) {
       // Mapped by error `code`, never the raw English server text
-      // (.claude/rules/no-raw-system-data-in-ui.md). SSO_REQUIRED (passwords are
+      // (docs/engineering/no-raw-system-data-in-ui.md). SSO_REQUIRED (passwords are
       // off for an SSO-enforced domain) gets this screen's own wording.
       if (parseAuthError(e).code === 'SSO_REQUIRED') {
         setError(t('ssoPasswordDisabled'))

@@ -1,6 +1,6 @@
 // Pure-function tests for absoluteMediaUrl — resolves a possibly-relative media
 // path against the chat-service base. Mirror of web lib/media.ts
-// absoluteMediaUrl() (cross-platform parity, see .claude/rules/sync.md).
+// absoluteMediaUrl() (cross-platform parity, see docs/engineering/sync.md).
 
 import 'package:flutter_test/flutter_test.dart';
 

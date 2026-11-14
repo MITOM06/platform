@@ -1,5 +1,5 @@
 // Widget tests for PinnedMessageBar (chat header): preview is always
-// sanitized per `.claude/rules/no-raw-system-data-in-ui.md`, and the unpin
+// sanitized per `docs/engineering/no-raw-system-data-in-ui.md`, and the unpin
 // button only appears with permission.
 
 import 'package:flutter/material.dart';

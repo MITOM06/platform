@@ -37,5 +37,5 @@ This project applies the following controls:
 
 ## Known Limitations
 
-- Production traffic is served over TLS via Google Cloud Run (HTTPS/WSS). Local development uses plain HTTP/WS — terminate TLS at a reverse proxy (nginx/Caddy) if exposing locally.
+- Production traffic is served over TLS (HTTPS/WSS): Caddy terminates it on a self-hosted deployment, and the reference deployment sits behind a Cloudflare Tunnel. Local development uses plain HTTP/WS — terminate TLS at a reverse proxy (nginx/Caddy) if exposing locally.
 - End-to-end encryption is on the roadmap but not yet implemented.

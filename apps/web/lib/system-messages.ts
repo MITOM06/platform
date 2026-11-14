@@ -111,7 +111,7 @@ export function humanizeSystemMessage(
   if (!content) return content
 
   // JSON payloads (file/media message content or a meeting-summary) must never
-  // render raw (.claude/rules/no-raw-system-data-in-ui.md). Sniff the shape when
+  // render raw (docs/engineering/no-raw-system-data-in-ui.md). Sniff the shape when
   // no message type is available (e.g. conversation-list last-message, reply
   // quotes) and map to the localized label.
   const payloadLabel = jsonPayloadLabel(content, t)
@@ -216,7 +216,7 @@ export function flattenMarkdown(md: string): string {
  * Humanize any message for a compact preview (pinned bar/section,
  * conversation-list last-message, reply quotes). Never leaks raw JSON payloads,
  * markdown, `system.*` codes or upload URLs — see
- * .claude/rules/no-raw-system-data-in-ui.md. `type` is optional (the
+ * docs/engineering/no-raw-system-data-in-ui.md. `type` is optional (the
  * conversation-list last-message and reply quotes carry none); when absent the
  * content itself is sniffed via {@link humanizeSystemMessage}.
  */

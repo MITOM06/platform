@@ -41,7 +41,7 @@ export function ReplyBanner({
         {/* Humanized like the reply quote inside the bubble — replying to a system event,
             a file or an image otherwise printed the raw `system.*` code, the JSON payload or
             the /api/uploads URL straight into the composer
-            (.claude/rules/no-raw-system-data-in-ui.md). */}
+            (docs/engineering/no-raw-system-data-in-ui.md). */}
         <p className="truncate text-xs text-muted-foreground">
           {humanizeMessagePreview(replyingTo.content, replyingTo.type, t)}
         </p>

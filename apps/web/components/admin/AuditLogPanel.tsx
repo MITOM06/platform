@@ -16,7 +16,7 @@ const LIMIT = 20
  * Audit log view — paginated trail of privileged actions (GET /admin/audit).
  * Gated by VIEW_AUDIT_LOG in the shell nav + page wrapper. Every cell is
  * humanized: localized action labels, "System" for automated actions, target
- * names instead of ids (.claude/rules/no-raw-system-data-in-ui.md).
+ * names instead of ids (docs/engineering/no-raw-system-data-in-ui.md).
  */
 export function AuditLogPanel() {
   const t = useTranslations('admin')

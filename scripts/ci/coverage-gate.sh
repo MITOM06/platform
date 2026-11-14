@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Cổng coverage dạng "ratchet" cho PON (.claude/rules/test-gate.md).
+# Cổng coverage dạng "ratchet" cho PON (docs/engineering/test-gate.md).
 #
 # Đọc % dòng (lines) đã đo của một phần, so với ngưỡng trong scripts/ci/coverage-thresholds.txt:
 #   thấp hơn ngưỡng  → exit 1 (CI đỏ, không được làm tụt coverage)

@@ -22,7 +22,7 @@ A high-performance monorepo with four microservices, a Flutter mobile client, an
 
 > **New here?** [ONBOARDING.md](ONBOARDING.md) is the one page for getting this running and contributing to it — including *which branch to clone*, which is not `main`. Architecture diagrams live in [docs/architecture.md](docs/architecture.md); how environments are kept apart, in [docs/environments.md](docs/environments.md).
 >
-> **Product direction:** PON is evolving from a chat app into a **self-hosted, single-tenant-per-deployment B2B AI-assistant platform** (one deployment = one company). The vision, revised roadmap, and current build state live in [docs/superpowers/PON-ENTERPRISE-HANDOFF.md](docs/superpowers/PON-ENTERPRISE-HANDOFF.md).
+> **Product direction:** PON is evolving from a chat app into a **self-hosted, single-tenant-per-deployment B2B AI-assistant platform** (one deployment = one company). The vision, revised roadmap, and current build state live in [docs/roadmap.md](docs/roadmap.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
@@ -183,7 +183,7 @@ platform/
 │   ├── mini/up.sh                 # start the production host + Cloudflare Tunnel
 │   └── migrations/
 ├── docs/                          # api-spec, architecture, environments, observability,
-│                                  # decisions, roadmap, superpowers/ (specs, plans, handoffs)
+│                                  # decisions, roadmap, engineering/ (standards), runbooks/
 └── pnpm-workspace.yaml
 ```
 
@@ -245,13 +245,12 @@ See [docs/observability.md](docs/observability.md) for the full propagation prot
 
 ## ☁️ Self-host / Deploy Your Own
 
-Three deployment shapes, all from the same commit — they differ by configuration
+Two deployment shapes, all from the same commit — they differ by configuration
 only ([docs/environments.md](docs/environments.md)):
 
 | | Backend | Web |
 |---|---|---|
 | **This project today** | one host behind a Cloudflare Tunnel, `compose.mini.yml` — the four services + Qdrant + Caddy; Mongo/Redis/RabbitMQ stay managed (arm64 images built by `.github/workflows/build-mini-images.yml`) | Vercel, auto-deploy on push to `main` |
-| **Cloud Run** | `.github/workflows/deploy.yml` — still triggers on push to `main`, no longer the primary backend | Vercel |
 | **Self-host (a customer)** | `compose.prod.yml` — the whole stack, data included, behind Caddy on one domain | served by the same Caddy |
 
 **Deployment model (by design):** PON is **self-hosted, one deployment per company**. Each customer
@@ -317,7 +316,22 @@ Operational notes:
 - 🧭 **Model routing & caching:** short messages go to Haiku, mid-size to Sonnet, complex to Opus; prompt and tool-result caching cut cost.
 - 🛡️ **Cost & safety guards:** per-user request rate limiting (20 req/min, 3 concurrent by default), a monthly token quota with a usage screen, prompt-injection spotlighting on retrieved/untrusted content, and sensitive-action gating before destructive tools run.
 
-> Full build state and roadmap (P0–P8 enterprise foundation, connectors, group bot, self-host kit, SSO — all complete) live in [docs/superpowers/PON-ENTERPRISE-HANDOFF.md](docs/superpowers/PON-ENTERPRISE-HANDOFF.md).
+> Full build state and roadmap (P0–P8 enterprise foundation, connectors, group bot, self-host kit, SSO — all complete) live in [docs/roadmap.md](docs/roadmap.md) and [CHANGELOG.md](CHANGELOG.md).
+
+---
+
+## 🤖 How PON Is Built
+
+PON is developed with AI coding assistants (Claude Code). The owner sets the architecture,
+technology choices and acceptance criteria and reviews every change; the assistant writes most
+of the code. What keeps that honest is the same for any contributor, human or AI:
+
+- **Standards** in [`docs/engineering/`](docs/engineering/) — cross-platform sync, i18n, no raw
+  system data in the UI, clean-code limits, and the dev/main branch split.
+- **A test gate** — `scripts/test-all.sh` with a coverage ratchet that may only go up
+  ([`docs/engineering/test-gate.md`](docs/engineering/test-gate.md)); CI runs the same gate,
+  plus gitleaks, on every pull request.
+- **Review before merge** — merging to `main` deploys production, so nothing lands unreviewed.
 
 ---
 

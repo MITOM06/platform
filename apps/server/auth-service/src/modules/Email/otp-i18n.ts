@@ -1,6 +1,6 @@
 // Backend-side i18n for OTP emails.
 // Email content is rendered on the server, so client-side i18n (Flutter ARB /
-// next-intl) does NOT apply here — see .claude/rules/i18n.md "Backend" section.
+// next-intl) does NOT apply here — see docs/engineering/i18n.md "Backend" section.
 // This module is the single source of truth for localized OTP email strings.
 
 export const SUPPORTED_LOCALES = [

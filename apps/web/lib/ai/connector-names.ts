@@ -3,7 +3,7 @@
  *
  * Tool names are machine ids — `mcp__<provider>__<tool>` where `provider` is a
  * catalog id, a directory slug or `custom_<24hex>` — and must never reach the UI
- * (.claude/rules/no-raw-system-data-in-ui.md). Providers resolve to the name the
+ * (docs/engineering/no-raw-system-data-in-ui.md). Providers resolve to the name the
  * catalog / directory / custom-MCP list gives them; anything unknown becomes a
  * localized generic label chosen by the caller (`null` here).
  */

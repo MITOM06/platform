@@ -111,7 +111,7 @@ public class GlobalExceptionHandler {
    * Bad input that reached a controller without a typed exception (a null id, an unparseable
    * argument). Still a client error, so it keeps 400 — but the message is fixed text: Spring's own
    * wording ("The given id must not be null") is internal detail, and {@code
-   * .claude/rules/no-raw-system-data-in-ui.md} forbids it reaching a user-facing surface.
+   * docs/engineering/no-raw-system-data-in-ui.md} forbids it reaching a user-facing surface.
    *
    * <p>{@code IllegalArgumentException} ONLY. {@code IllegalStateException} belongs to {@link
    * #handleGeneric}: in this service it means a server-side fault, not bad input — {@code

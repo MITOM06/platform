@@ -105,7 +105,7 @@ export function MessageSearchPanel({ conversationId, onClose, onSelectMessage }:
               <p className="text-xs text-muted-foreground">{formatTime(msg.createdAt, locale)}</p>
               {/* Search hits are rendered from raw `content`, so a matching system event or
                   file message would otherwise print its code / JSON payload
-                  (.claude/rules/no-raw-system-data-in-ui.md). */}
+                  (docs/engineering/no-raw-system-data-in-ui.md). */}
               <p className="text-sm truncate">
                 {msg.recalled ? t('recalled') : humanizeMessagePreview(msg.content, msg.type, t)}
               </p>

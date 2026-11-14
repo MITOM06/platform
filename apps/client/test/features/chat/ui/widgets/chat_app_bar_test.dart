@@ -1,6 +1,6 @@
 // Widget tests for ChatScreenAppBar: title / subtitle resolution for DM,
 // group and AI conversations, presence text, and that a raw user id never
-// becomes the title (`.claude/rules/no-raw-system-data-in-ui.md`).
+// becomes the title (`docs/engineering/no-raw-system-data-in-ui.md`).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

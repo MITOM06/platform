@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Chạy test + coverage của PON giống CI (kể cả tsc của web, flutter analyze) rồi kiểm cổng coverage
-# (.claude/rules/test-gate.md).
+# (docs/engineering/test-gate.md).
 #
 #   bash scripts/test-all.sh                 # mọi phần
 #   bash scripts/test-all.sh auth web        # chỉ các phần đã sửa

@@ -30,7 +30,7 @@ jobs:
       - run: bash scripts/ci/check-env-leaks.sh
       # Blocks a promotion that drags local bring-up tooling, fake seed data or a
       # loosened iOS/Android network policy onto main. Warns elsewhere — `dev` is
-      # supposed to carry them. See .claude/rules/dev-local-only.md.
+      # supposed to carry them. See docs/engineering/dev-local-only.md.
       - run: bash scripts/ci/check-dev-only.sh
       # Promotion must be a *complete* configuration change: every variable a
       # deployment requires is in its example file, no production deployment
@@ -70,7 +70,7 @@ jobs:
         run: pnpm run build
       - name: Test
         run: pnpm exec jest --ci --coverage --coverageReporters=json-summary --coverageReporters=text-summary
-      # Cổng coverage ratchet (.claude/rules/test-gate.md): không được tụt dưới ngưỡng trong
+      # Cổng coverage ratchet (docs/engineering/test-gate.md): không được tụt dưới ngưỡng trong
       # scripts/ci/coverage-thresholds.txt.
       - name: Coverage gate
         run: bash ../../../scripts/ci/coverage-gate.sh auth
@@ -98,8 +98,7 @@ jobs:
         run: bash ../../../scripts/ci/coverage-gate.sh chat
 
   # ── NestJS Connector Service ──────────────────────────────────────────────
-  # deploy.yml has always tested this service before shipping it, but CI did not,
-  # so its 100+ tests never ran on a pull request — including the boot guards that
+  # Tested on every pull request: its 100+ tests once ran only at deploy time, never on a PR — including the boot guards that
   # decide whether production comes up with an open CORS policy.
   connector-service:
     name: Connector Service (NestJS)
@@ -119,7 +118,7 @@ jobs:
         run: pnpm run build
       - name: Test
         run: pnpm exec jest --ci --coverage --coverageReporters=json-summary --coverageReporters=text-summary
-      # Cổng coverage ratchet (.claude/rules/test-gate.md): không được tụt dưới ngưỡng trong
+      # Cổng coverage ratchet (docs/engineering/test-gate.md): không được tụt dưới ngưỡng trong
       # scripts/ci/coverage-thresholds.txt.
       - name: Coverage gate
         run: bash ../../../scripts/ci/coverage-gate.sh connector
@@ -143,7 +142,7 @@ jobs:
         run: pnpm run build
       - name: Test
         run: pnpm exec jest --ci --coverage --coverageReporters=json-summary --coverageReporters=text-summary
-      # Cổng coverage ratchet (.claude/rules/test-gate.md): không được tụt dưới ngưỡng trong
+      # Cổng coverage ratchet (docs/engineering/test-gate.md): không được tụt dưới ngưỡng trong
       # scripts/ci/coverage-thresholds.txt.
       - name: Coverage gate
         run: bash ../../../scripts/ci/coverage-gate.sh ai

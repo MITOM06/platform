@@ -12,7 +12,7 @@ import 'package:platform_client/core/theme/app_theme.dart';
 /// the Flutter ColorSchemes were both built from the mode-agnostic `ponAccent`
 /// (`#96435B`) — a value the palette table does not contain for either mode. The
 /// brand accent visibly differed between the two clients, which
-/// `.claude/rules/sync.md` treats as broken. These assertions fail if either
+/// `docs/engineering/sync.md` treats as broken. These assertions fail if either
 /// platform drifts off the table again.
 void main() {
   // The §2 table, transcribed. Keep in lockstep with globals.css.

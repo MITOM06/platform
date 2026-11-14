@@ -3,7 +3,7 @@
  * endpoint, through the client OpenRouter already uses, so the AI flows can be
  * tested without Claude credit. GEMINI_API_KEY set = every chat tier runs on
  * Gemini; empty = Claude, exactly as before. No Claude code path changes.
- * Stays on `dev` — never ship it to main (.claude/rules/dev-local-only.md).
+ * Stays on `dev` — never ship it to main (docs/engineering/dev-local-only.md).
  */
 
 /** Marks a Gemini model id; it contains '/' so routing hands it to the OpenAI-compatible client. */

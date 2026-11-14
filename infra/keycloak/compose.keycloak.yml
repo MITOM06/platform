@@ -1,5 +1,5 @@
 # Keycloak for production SSO — the company's identity provider, next to the
-# Mac mini stack. Runbook: docs/superpowers/runbooks/keycloak.md
+# Mac mini stack. Runbook: docs/runbooks/keycloak.md
 #
 #   cd infra/keycloak
 #   cp .env.keycloak.example .env.keycloak && $EDITOR .env.keycloak

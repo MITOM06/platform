@@ -9,7 +9,7 @@ runs.
 
 `main` is the deployed branch. `dev` is `main` plus the commits that make the app
 runnable on a laptop — bring-up script, seed data, localhost wiring — and those
-must never reach `main` (`.claude/rules/dev-local-only.md`, enforced by
+must never reach `main` (`docs/engineering/dev-local-only.md`, enforced by
 `scripts/ci/check-dev-only.sh`).
 
 Every change is **debugged and tested on `dev` first**, and goes to `main` only
@@ -44,10 +44,10 @@ commands is in [ONBOARDING.md § 5](ONBOARDING.md#5-tests-and-ci-gates).
 
 Two review rules that reject more PRs than anything else:
 
-- **Cross-platform sync** (`.claude/rules/sync.md`) — this is a messaging app; a
+- **Cross-platform sync** (`docs/engineering/sync.md`) — this is a messaging app; a
   feature that lands on web but not mobile, or the reverse, is a P1 bug. Read the
   mirror file before you write anything.
-- **No raw system data in the UI** (`.claude/rules/no-raw-system-data-in-ui.md`) —
+- **No raw system data in the UI** (`docs/engineering/no-raw-system-data-in-ui.md`) —
   no exception text, system message codes, user ids, storage URLs or JSON in
   anything a user can see. Humanize and localize at the source, on both clients.
 
@@ -57,7 +57,7 @@ Two review rules that reject more PRs than anything else:
 - Feature-based layout: `lib/features/<name>/{data,domain,ui}/`
 - Riverpod for all state — no `setState` in feature screens
 - Every UI string via `context.l10n.<key>`, and every new key added to **all seven**
-  `lib/l10n/app_*.arb` files (`.claude/rules/i18n.md`)
+  `lib/l10n/app_*.arb` files (`docs/engineering/i18n.md`)
 - `flutter analyze` must report 0 issues
 
 **Spring Boot (`apps/server/chat-service`)**
@@ -76,7 +76,7 @@ Two review rules that reject more PRs than anything else:
 - App Router only; Server Components by default, `'use client'` only when needed
 - TanStack Query for server data, Zustand for auth state, `useState` for UI state
 - All HTTP through `lib/api/axios.ts` instances — never raw `fetch` for API calls
-- Full rules: `.claude/rules/web.md`
+- Full rules: `docs/engineering/web.md`
 
 **Both clients**
 - Never hardcode a backend host. Read it from `AppConfig` (Flutter) or
@@ -91,4 +91,4 @@ Two review rules that reject more PRs than anything else:
 | NestJS / Spring service or controller | 500 |
 | ai-service files | 300 |
 
-Split rather than exceed — `.claude/rules/clean-code.md` describes how.
+Split rather than exceed — `docs/engineering/clean-code.md` describes how.

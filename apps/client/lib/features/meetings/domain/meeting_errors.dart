@@ -3,7 +3,7 @@
 // chat-service puts `{code, params}` at the top level of every error body (REST)
 // and in `meet.error` frames (STOMP). The English `message`/`error` text next to
 // it is diagnostics and never reaches the UI
-// (.claude/rules/no-raw-system-data-in-ui.md): unknown failures map to
+// (docs/engineering/no-raw-system-data-in-ui.md): unknown failures map to
 // `errGeneric`, never to `e.toString()`.
 
 import 'package:dio/dio.dart';

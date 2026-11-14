@@ -62,4 +62,4 @@ Swagger UI at `http://localhost:3003/api`.
   Google) use the REST adapter — same `mcp__<provider>__<tool>` naming, so ai-service and the
   clients need no change.
 
-See the design spec at `docs/superpowers/specs/2026-06-19-pon-mcp-connector-core-design.md`.
+Architecture overview: `docs/architecture.md`.

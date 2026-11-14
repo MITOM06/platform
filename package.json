@@ -13,16 +13,10 @@
     "dev": "concurrently -n \"AUTH,CHAT\" -c \"blue,green\" \"pnpm:auth\" \"pnpm:chat\"",
     "dev:web": "pnpm infra && concurrently -n \"AUTH,CHAT,WEB\" -c \"blue,green,cyan\" \"pnpm:auth\" \"pnpm:chat\" \"pnpm:web\"",
     "web": "pnpm --filter @platform/web dev",
-    "migrate:upload-refs": "mongosh \"$MONGODB_URI\" scripts/migrations/2026-11-05-upload-refs.js",
-    "tunnel": "pnpm exec ngrok http --url=donnie-readaptable-ai.ngrok-free.dev 4000"
+    "migrate:upload-refs": "mongosh \"$MONGODB_URI\" scripts/migrations/2026-11-05-upload-refs.js"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "localtunnel": "^2.0.2",
-    "ngrok": "5.0.0-beta.2"
-  },
-  "dependencies": {
-    "@aws-sdk/client-bedrock-runtime": "^3.1057.0"
+    "concurrently": "^8.2.2"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

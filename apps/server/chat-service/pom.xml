@@ -206,7 +206,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- JaCoCo: đo coverage dòng cho cổng test (scripts/ci/coverage-gate.sh, .claude/rules/test-gate.md).
+            <!-- JaCoCo: đo coverage dòng cho cổng test (scripts/ci/coverage-gate.sh, docs/engineering/test-gate.md).
                  prepare-agent gắn -javaagent qua ${argLine}; report ghi target/site/jacoco/jacoco.csv ở pha test. -->
             <plugin>
                 <groupId>org.jacoco</groupId>

@@ -26,7 +26,7 @@ Rollback is setting it back to `mesh`. Meetings always use LiveKit. chat-service
 reads `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` (32+ characters) and
 optionally `LIVEKIT_API_URL`; all blank means calls stay peer-to-peer and
 meetings report themselves unavailable. Runbooks:
-`docs/superpowers/runbooks/livekit.md`, `docs/superpowers/runbooks/self-host.md`.
+`docs/runbooks/livekit.md`, `docs/runbooks/self-host.md`.
 
 ## Enterprise SSO — OIDC
 
@@ -37,7 +37,7 @@ and Admin → SSO → *Enable SSO* in the workspace. Locally `scripts/dev/up.sh
 --sso` wires a throwaway Keycloak (`dev` only). On the Mac mini the IdP is
 `infra/keycloak/` (a separate stack, upgraded by hand) and `compose.mini.yml`
 derives `OIDC_REDIRECT_URI` from `PON_API_BASE`; blank `OIDC_ENABLED` keeps SSO
-off. Runbook: `docs/superpowers/runbooks/keycloak.md`.
+off. Runbook: `docs/runbooks/keycloak.md`.
 
 ## Push notifications — localized wording
 
@@ -159,7 +159,7 @@ half-configured:
 ## Promoting a change
 
 1. Cut `feat/x` from `main`, merge it into `dev` and debug/test it on the local
-   stack (`scripts/dev/up.sh --build`) — see `.claude/rules/dev-local-only.md`.
+   stack (`scripts/dev/up.sh --build`) — see `docs/engineering/dev-local-only.md`.
 2. Once it passes on `dev`, open the PR from `feat/x` (never from `dev`) into
    `main`; `git diff origin/main...feat/x --stat` must list only its files.
 3. `bash scripts/ci/check-env-leaks.sh && bash scripts/ci/check-dev-only.sh && bash scripts/ci/check-env-parity.sh`

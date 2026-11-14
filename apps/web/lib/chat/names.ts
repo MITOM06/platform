@@ -1,6 +1,6 @@
 /**
  * Guards against rendering machine identifiers as names
- * (.claude/rules/no-raw-system-data-in-ui.md): chat-service falls back to the raw
+ * (docs/engineering/no-raw-system-data-in-ui.md): chat-service falls back to the raw
  * user id when it cannot resolve a sender, and assistants use synthetic ids.
  */
 

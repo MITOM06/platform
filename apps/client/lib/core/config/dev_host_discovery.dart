@@ -34,7 +34,7 @@ typedef LocalAddressLookup = Future<List<String>> Function();
 ///
 /// Entirely inert unless `--dart-define=PON_DEV_DISCOVERY=true`, so production
 /// builds never probe anything. Lives on `dev` per
-/// `.claude/rules/dev-local-only.md` and must not be merged to main.
+/// `docs/engineering/dev-local-only.md` and must not be merged to main.
 class DevHostDiscovery {
   DevHostDiscovery._();
 
