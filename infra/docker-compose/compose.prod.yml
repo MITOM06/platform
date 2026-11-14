@@ -308,7 +308,7 @@ services:
     restart: unless-stopped
 
   # Media server for calls and meetings
-  # (docs/superpowers/specs/2026-10-05-calls-and-meetings-design.md).
+  # (docs/runbooks/livekit.md).
   # Host networking: WebRTC needs the host's real public IP and a wide UDP range;
   # publishing 10,000 ports through docker-proxy one by one is not workable.
   # Signalling reaches it through Caddy at rtc.${DOMAIN}; media goes straight to

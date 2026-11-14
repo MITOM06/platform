@@ -145,7 +145,7 @@ const UUID_RE = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{1
 
 /**
  * `fields` of a generic action → "label: value" rows. Anything malformed, empty
- * or that looks like a raw id is dropped (.claude/rules/no-raw-system-data-in-ui.md).
+ * or that looks like a raw id is dropped (docs/engineering/no-raw-system-data-in-ui.md).
  */
 function genericFieldLines(fields: unknown): ActionSummaryLine[] {
   if (!Array.isArray(fields)) return []

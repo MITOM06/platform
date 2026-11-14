@@ -145,7 +145,7 @@ theme them through tokens.
 | **Chat bubble — mine** | Accent fill, `primary-foreground` text, border `primary/30`. |
 | **Chat bubble — theirs / AI** | `muted/70` fill, `foreground` text, border `border/50`. AI replies add source chips and a trace panel below. |
 | **Avatar** | Circle; fallback initials on `primary` at 10% in accent text. Presence dot 10px `online-green` with a 2px `background` ring, bottom-right. |
-| **Toast** | `sonner`; text only, localized, never raw backend errors (see `.claude/rules/no-raw-system-data-in-ui.md`). |
+| **Toast** | `sonner`; text only, localized, never raw backend errors (see `docs/engineering/no-raw-system-data-in-ui.md`). |
 
 ## 7. Icons
 
@@ -177,11 +177,11 @@ stagger by 60ms, capped at 6 items. Everything is disabled under
 ## 9. Content
 
 - Seven languages (en, vi, zh, ja, ko, es, fr); no hardcoded UI strings
-  (`.claude/rules/i18n.md`).
+  (`docs/engineering/i18n.md`).
 - Sentence case. A button names its action ("Save changes"), and the toast repeats it
   ("Changes saved").
 - Never show ids, URLs, JSON or backend error text
-  (`.claude/rules/no-raw-system-data-in-ui.md`).
+  (`docs/engineering/no-raw-system-data-in-ui.md`).
 
 ## 10. Mobile sync status
 
@@ -239,6 +239,6 @@ font (use `Text.rich`, not `RichText`).
 ## 12. Changing the system
 
 1. Change the token on web first (`globals.css`), then mirror it in
-   `apps/client/lib/core/theme/app_theme.dart` in the same PR (`.claude/rules/sync.md`).
+   `apps/client/lib/core/theme/app_theme.dart` in the same PR (`docs/engineering/sync.md`).
 2. Update this file in that PR.
 3. Before merging, grep both apps for raw hex / `Colors.*` in the files you touched.

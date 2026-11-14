@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Enforces .claude/rules/dev-local-only.md: local bring-up tooling, fake data and
+# Enforces docs/engineering/dev-local-only.md: local bring-up tooling, fake data and
 # loosened platform policies live on `dev` and must never reach `main`.
 #
 # Most of them are scoped by construction — Android's cleartext switch sits in
@@ -58,7 +58,7 @@ fi
 if [ "$branch" = "main" ]; then
   printf '\033[31m✗ dev-only artefacts on main:\033[0m\n%s' "$found"
   cat <<'MSG'
-  These belong on `dev` only — see .claude/rules/dev-local-only.md. Features are
+  These belong on `dev` only — see docs/engineering/dev-local-only.md. Features are
   cut from main, tested on dev, then promoted by a PR from the feature branch
   (never from dev):
     git diff origin/main...feat/x --stat    # must list ONLY the feature's files

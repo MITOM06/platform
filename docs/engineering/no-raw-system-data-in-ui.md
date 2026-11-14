@@ -63,5 +63,5 @@ pinned previews, conversation list, banners, toasts, snackbars, dialogs, tooltip
 
 ## Cross-Platform
 
-Per `.claude/rules/sync.md`, any fix here must be applied to **both** web and mobile. A surface
+Per `docs/engineering/sync.md`, any fix here must be applied to **both** web and mobile. A surface
 that humanizes on web but leaks on mobile (or vice versa) is still a violation.

@@ -173,7 +173,7 @@ bool looksLikeRawId(String value) =>
 /// to raw `content`: a voice note or sticker pushed its `/api/uploads/<id>` URL, a group
 /// event pushed `system.nickname.changed:<userId>:<value>`, and a meeting summary pushed its
 /// JSON — onto the lock screen, where the user cannot even dismiss it by scrolling past
-/// (.claude/rules/no-raw-system-data-in-ui.md). Everything now goes through the same
+/// (docs/engineering/no-raw-system-data-in-ui.md). Everything now goes through the same
 /// sanitizer the reply quotes and the conversation list use. System events drop the
 /// `"<name>: "` prefix the way web does; their sentence names the actor ([senderId],
 /// resolved to [actorName]) when known, else it is the actor-less one.

@@ -5,7 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 
 /// Reusable presentation widgets for the workspace AI-settings panel
 /// (TASK-12). Kept in a separate file so the panel stays under the 400-line
-/// limit (.claude/rules/clean-code.md).
+/// limit (docs/engineering/clean-code.md).
 
 /// A connector allow-list, constrained to the workspace `connectorAllowList`
 /// (the AI list can only narrow that outer boundary).

@@ -1,6 +1,6 @@
 # Web (Next.js) — Rules
 
-> Applies to `apps/web/`. Read alongside `apps/web/CLAUDE.md`.
+> Applies to `apps/web/`.
 
 ## Next.js Patterns
 

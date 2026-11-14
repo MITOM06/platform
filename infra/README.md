@@ -21,7 +21,7 @@ infra/
     realm-pon.json       — realm imported on the first start (no users)
     .env.keycloak.example — template; copy to .env.keycloak (gitignored)
     check.sh             — asserts Keycloak and PON agree; check.test.sh tests it
-                           (runbook: docs/superpowers/runbooks/keycloak.md)
+                           (runbook: docs/runbooks/keycloak.md)
 ```
 
 ## Which compose file

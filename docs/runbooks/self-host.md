@@ -73,7 +73,7 @@ Without `PON_DOMAIN` the app targets the default Cloud Run hosting.
 - `localhost` TLS uses Caddy's internal CA (browser warning) — fine for testing.
 - Logs: `docker compose -f compose.prod.yml logs -f <service>`.
 - This kit is single-company by design. Multi-company scale-out (Helm, branding,
-  feature flags) is deferred — see `docs/superpowers/specs/2026-06-21-p7-self-host-deployment-kit-design.md` §8.
+  feature flags) is deferred.
 
 ## Cuộc gọi & Phòng họp (LiveKit)
 

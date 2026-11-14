@@ -6,7 +6,7 @@ import 'package:platform_client/features/chat/domain/conversations_realtime_hand
 import 'package:platform_client/features/chat/ui/widgets/reply_composer_bar.dart';
 import 'package:platform_client/l10n/app_localizations.dart';
 
-/// Regression tests for `.claude/rules/no-raw-system-data-in-ui.md`.
+/// Regression tests for `docs/engineering/no-raw-system-data-in-ui.md`.
 ///
 /// The reply composer and the push-notification body both rendered a message's raw `content`,
 /// so replying to (or being notified about) a system event, a voice note or a file printed

@@ -32,7 +32,7 @@ String authErrorToString(BuildContext context, DioException e) {
     // A plain-string `message` is NestJS's own English wording ("Unauthorized",
     // "Internal server error") or an unmapped backend sentence. Returning it put raw
     // English server text in front of the user whatever their language
-    // (.claude/rules/no-raw-system-data-in-ui.md); web's `parseAuthError` already falls
+    // (docs/engineering/no-raw-system-data-in-ui.md); web's `parseAuthError` already falls
     // through to GENERIC_ERROR here. Anything worth naming gets a `code` — add it to
     // `_codeToString` rather than reviving this passthrough.
   }

@@ -28,7 +28,7 @@ code style and PR rules, [CONTRIBUTING.md](CONTRIBUTING.md).
 on a laptop* — the bring-up script, seed data, test accounts, localhost wiring —
 lives on `dev` and must never reach `main`. `dev` is `main` plus those commits,
 and it only ever flows one way. The full rule is
-[`.claude/rules/dev-local-only.md`](.claude/rules/dev-local-only.md); CI enforces
+[`docs/engineering/dev-local-only.md`](docs/engineering/dev-local-only.md); CI enforces
 it (`scripts/ci/check-dev-only.sh`).
 
 So: clone, `git checkout dev`, and cut your feature branch from `dev`.
@@ -206,10 +206,10 @@ will hold you to:
 
 - **Cross-platform sync.** This is a messaging app: a feature that works on web
   but not mobile (or the reverse) is a P1 bug. Read the mirror file before you
-  start — [`.claude/rules/sync.md`](.claude/rules/sync.md) lists the pairs.
+  start — [`docs/engineering/sync.md`](docs/engineering/sync.md) lists the pairs.
 - **Never show raw system data.** No error text, message codes, user ids, URLs or
   JSON in the UI — humanize and localize at the source. See
-  [`.claude/rules/no-raw-system-data-in-ui.md`](.claude/rules/no-raw-system-data-in-ui.md).
+  [`docs/engineering/no-raw-system-data-in-ui.md`](docs/engineering/no-raw-system-data-in-ui.md).
 
 ---
 
@@ -274,24 +274,23 @@ Never render a raw code.
 
 **i18n.** Seven languages on mobile (`lib/l10n/app_*.arb` — add the key to *all*
 of them) and `messages/*.json` on web. No hardcoded UI strings; see
-[`.claude/rules/i18n.md`](.claude/rules/i18n.md).
+[`docs/engineering/i18n.md`](docs/engineering/i18n.md).
 
 **File length.** Flutter screens/widgets 400 lines, NestJS/Spring services and
 controllers 500 (ai-service 300). Split rather than exceed —
-[`.claude/rules/clean-code.md`](.claude/rules/clean-code.md).
+[`docs/engineering/clean-code.md`](docs/engineering/clean-code.md).
 
 **Where things live** — see the repository map in [README.md](README.md#-repository-structure).
 
 ---
 
-## 7. If you are an AI coding agent
+## 7. Engineering standards
 
-1. Read `CLAUDE.md` and the sub-service `CLAUDE.md` before touching code.
-2. The rules in `.claude/rules/` are not advisory — `sync.md`,
+1. The standards in `docs/engineering/` are not advisory — `sync.md`,
    `no-raw-system-data-in-ui.md`, `dev-local-only.md` and `i18n.md` each
    correspond to a class of bug that has shipped before.
-3. Never commit to `main` directly; never open a PR from `dev`.
-4. `apps/server/auth-service/` is fully editable
-   (`.claude/rules/auth-guard.md`).
-5. Current state and roadmap: [docs/roadmap.md](docs/roadmap.md) and
-   [docs/superpowers/PON-ENTERPRISE-HANDOFF.md](docs/superpowers/PON-ENTERPRISE-HANDOFF.md).
+2. Never commit to `main` directly; never open a PR from `dev`.
+3. Every change passes `scripts/test-all.sh` and its coverage gate
+   (`docs/engineering/test-gate.md`) before a PR is opened.
+4. Current state and roadmap: [docs/roadmap.md](docs/roadmap.md) and
+   [CHANGELOG.md](CHANGELOG.md).

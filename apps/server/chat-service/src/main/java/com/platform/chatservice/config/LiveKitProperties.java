@@ -13,7 +13,7 @@ import org.springframework.util.StringUtils;
  * {@code app.livekit.*}. When url, key or secret is blank LiveKit is off: calls stay on the P2P
  * mesh path and meetings report themselves unavailable.
  *
- * <p>Spec: {@code docs/superpowers/specs/2026-10-05-calls-and-meetings-design.md} §4.1.
+ * <p>Runbook: {@code docs/runbooks/livekit.md}.
  */
 @Component
 @ConfigurationProperties(prefix = "app.livekit")

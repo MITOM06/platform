@@ -105,5 +105,14 @@ org/
 # Local dev server logs (scripts/dev/up.sh) — dev-only, never committed
 .dev-logs/
 
-# Báo cáo coverage sinh khi chạy test (scripts/test-all.sh, .claude/rules/test-gate.md)
+# Báo cáo coverage sinh khi chạy test (scripts/test-all.sh, docs/engineering/test-gate.md)
 coverage/
+
+# AI coding-assistant working files (prompts, agent config, plans, session notes).
+# Kept locally by each developer; never published.
+CLAUDE.md
+**/CLAUDE.md
+.claude/
+docs/superpowers/
+docs/AI_WORKFLOW.md
+docs/archive/

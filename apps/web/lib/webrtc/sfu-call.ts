@@ -17,7 +17,7 @@ const store = () => useCallStore.getState()
  * 1-on-1 calls through LiveKit (server `CALL_TRANSPORT=sfu`). Same UX as the
  * mesh engine — ring, ringback, end reasons, call log — but the server rings
  * and LiveKit carries the media, so calls work across 4G / corporate NAT.
- * Contract: docs/superpowers/plans/2026-10-05-calls-on-livekit.md.
+ * Contract: docs/api-spec.md (Calls on LiveKit).
  * This class runs the call over STOMP; its room lives in SfuCallRoom.
  */
 export class SfuDirectCall {

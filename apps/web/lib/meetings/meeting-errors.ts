@@ -7,7 +7,7 @@ import { MEETING_LIMITS, type MeetingNote, type MeetingPerson } from '@/lib/api/
  *
  * chat-service puts `{ code, params }` at the top level of every error body (REST) and in
  * `meet.error` frames (STOMP). The English `message`/`error` text next to it is diagnostics
- * and never reaches the UI (.claude/rules/no-raw-system-data-in-ui.md): unknown failures map
+ * and never reaches the UI (docs/engineering/no-raw-system-data-in-ui.md): unknown failures map
  * to `errGeneric`, never to `err.message`.
  */
 

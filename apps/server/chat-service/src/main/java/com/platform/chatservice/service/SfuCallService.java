@@ -34,7 +34,7 @@ import org.springframework.stereotype.Service;
  * lifecycle itself stays in {@link CallService}; mesh sessions are never touched here. LiveKit
  * webhooks for {@code call_*} rooms land here and are the source of truth for who is in a call.
  *
- * <p>Contract: {@code docs/superpowers/plans/2026-10-05-calls-on-livekit.md}.
+ * <p>Contract: {@code docs/api-spec.md} (Calls on LiveKit).
  */
 @Slf4j
 @Service

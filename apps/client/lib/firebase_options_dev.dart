@@ -2,7 +2,7 @@
 // `flutterfire configure` writes) for the DEVELOPMENT project, used by
 // `--flavor dev` builds (lib/core/config/app_flavor.dart).
 // Dev-only: lives on the `dev` branch, never on `main`
-// (.claude/rules/dev-local-only.md). Regenerate:
+// (docs/engineering/dev-local-only.md). Regenerate:
 //   flutterfire configure --project=pon-dev-7aac2 --out=lib/firebase_options_dev.dart \
 //     --platforms=android,ios --android-package-name=com.platform.platform_client.dev \
 //     --ios-bundle-id=com.tranphuckhang.platformClient.dev

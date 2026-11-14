@@ -1,6 +1,6 @@
 // Backend-side i18n for invitation emails (invite-only onboarding).
 // Email content is rendered on the server, so client-side i18n does NOT apply
-// here — see .claude/rules/i18n.md "Backend" section. Locale parsing is shared
+// here — see docs/engineering/i18n.md "Backend" section. Locale parsing is shared
 // with the OTP email (otp-i18n.ts).
 
 import { normalizeLocale, SupportedLocale } from './otp-i18n';

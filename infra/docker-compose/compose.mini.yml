@@ -72,7 +72,7 @@ services:
       FIREBASE_SERVICE_ACCOUNT_BASE64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:-}
       # Enterprise SSO (OpenID Connect). Blank OIDC_ENABLED = no SSO button at
       # all, whatever the workspace switch says. The IdP can be infra/keycloak/
-      # (runbook docs/superpowers/runbooks/keycloak.md) or any OIDC provider.
+      # (runbook docs/runbooks/keycloak.md) or any OIDC provider.
       OIDC_ENABLED: ${OIDC_ENABLED:-}
       OIDC_ISSUER: ${OIDC_ISSUER:-}
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
@@ -122,7 +122,7 @@ services:
       ALLOWED_ORIGINS: ${WEB_ORIGIN:?required}
       BOTFACTORY_BASE_URL: ${BOTFACTORY_BASE_URL:-}
       BOTFACTORY_WORKER_TOKEN: ${BOTFACTORY_WORKER_TOKEN:-}
-      # LiveKit media host (infra/livekit/, runbook docs/superpowers/runbooks/livekit.md).
+      # LiveKit media host (infra/livekit/, runbook docs/runbooks/livekit.md).
       # Blank = calls stay peer-to-peer and meetings report unavailable.
       LIVEKIT_URL: ${LIVEKIT_URL:-}
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-}

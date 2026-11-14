@@ -14,7 +14,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * A group-call (mesh) session. chat-service is the writer/owner; ai-service reads the same
  * collection via its own Mongoose model for the AI-notetaker summary flow.
  *
- * <p>Contract: {@code docs/superpowers/specs/2026-06-22-track-a-group-call-contracts.md} §1.
+ * <p>Contract: {@code docs/api-spec.md} (Calls).
  */
 @Document(collection = "call_sessions")
 @CompoundIndexes({

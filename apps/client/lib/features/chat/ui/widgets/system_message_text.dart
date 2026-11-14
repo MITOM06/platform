@@ -18,7 +18,7 @@ bool isSystemSender(String senderId) =>
 /// Shared by the in-chat system bubble (full names via [resolveName]) and
 /// every preview surface (conversation list, reply quote, pinned bar,
 /// notifications) so they can never disagree or leak a raw code / user id
-/// (`.claude/rules/no-raw-system-data-in-ui.md`). Returns null for a code this
+/// (`docs/engineering/no-raw-system-data-in-ui.md`). Returns null for a code this
 /// client does not know — the caller decides how to label it.
 String? systemMessageText(
   AppLocalizations l10n,

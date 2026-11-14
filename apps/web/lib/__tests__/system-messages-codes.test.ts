@@ -1,7 +1,7 @@
 /**
  * Every `system.*` code, preview type and markdown shape must come out as a
  * localized sentence — never the code, a user id, an upload URL or raw markdown
- * (.claude/rules/no-raw-system-data-in-ui.md). Complements system-messages.test.ts.
+ * (docs/engineering/no-raw-system-data-in-ui.md). Complements system-messages.test.ts.
  */
 
 import { describe, it, expect } from 'vitest'

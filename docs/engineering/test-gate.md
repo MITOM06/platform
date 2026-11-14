@@ -1,6 +1,6 @@
 # Test Gate — chạy test + cổng coverage trước khi báo xong
 
-> Áp dụng cho MỌI thay đổi code trong repo này (mọi phiên Claude, mọi agent). Merge vào `main` = Mac mini tự
+> Áp dụng cho MỌI thay đổi code trong repo này, dù do người hay công cụ AI viết. Merge vào `main` = Mac mini tự
 > deploy production sau ~15 phút, và image chỉ được build khi CI xanh — nên test phải xanh **trước** khi mở PR.
 
 ## Luật
@@ -23,7 +23,7 @@
 5. **Ratchet:** ngưỡng ở `scripts/ci/coverage-thresholds.txt`. Khi cổng in "coverage đã tăng, nâng ngưỡng: x=NN" (NN = % làm tròn xuống − 1 điểm biên)
    ⇒ sửa ngưỡng lên trong cùng PR. **Chỉ được nâng, không hạ.** Mục tiêu dài hạn: backend 90 · web 70 · flutter 60.
 6. Test phát hiện bug thật mà không thuộc phạm vi task: không lén sửa — ghi `it.skip`/`skip:` kèm comment
-   `BUG: …` và báo lại cho Khang.
+   `BUG: …` và mở issue để maintainer xử lý.
 
 ## Cách cổng hoạt động
 
@@ -46,6 +46,6 @@
   (thiếu `*.g.dart` sẽ lỗi biên dịch hàng loạt). `test-all.sh` đã làm.
 - **chat-service:** Testcontainers cần Docker đang chạy.
 
-## Báo cáo khi xong task
+## Mô tả PR
 
 Ghi rõ: phần đã chạy, số test pass, coverage từng phần trước → sau, ngưỡng có nâng không.

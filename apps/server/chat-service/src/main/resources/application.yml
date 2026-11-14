@@ -96,7 +96,7 @@ app:
     worker-token: ${BOTFACTORY_WORKER_TOKEN:}
   livekit:
     # Media server for calls and meetings
-    # (docs/superpowers/specs/2026-10-05-calls-and-meetings-design.md).
+    # (docs/runbooks/livekit.md).
     # Blank url/key/secret = LiveKit off: calls stay P2P, meetings are unavailable.
     url: ${LIVEKIT_URL:}
     api-url: ${LIVEKIT_API_URL:}

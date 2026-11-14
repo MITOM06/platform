@@ -2,7 +2,7 @@
 // realtime STOMP events (read receipt, reaction, recall, edit, pinned) and the
 // reconcileNewMessage placeholder-swapping logic. These run with no Flutter /
 // STOMP / Dio dependencies. They guard the realtime pipeline that must stay in
-// sync with web (see .claude/rules/sync.md).
+// sync with web (see docs/engineering/sync.md).
 
 import 'package:flutter_test/flutter_test.dart';
 

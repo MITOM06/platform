@@ -15,7 +15,7 @@
 - Monorepo structure (pnpm)
 - Docker infra: MongoDB port 27018 + Redis
 - NestJS auth-service complete (JWT, OTP, refresh, brute force)
-- CLAUDE.md + AI workflow established
+- AI-assisted development workflow established (standards in `docs/engineering/`)
 
 ## Milestone 1 — Spring Boot Foundation ✅ DONE
 - Spring Boot 3 project (Maven, Spring Initializr)
@@ -51,7 +51,6 @@
 - UI improvements (Neon theme fixes)
 
 ## Phase 1 Polish (Sprints 12–24) ✅ COMPLETED
-*(Detailed sprint specs: `docs/archive/TODO-2026-07.md`)*
 - [x] **Sprint 12 ✅** Edit Message, Generic File Upload, Cursor-based Pagination, Link Preview
 - [x] **Sprint 13 ✅** Mention System, Message Search, True Unread Counts
 - [x] **Sprint 14 ✅** Public Channels, Pin/Forward Messages, Markdown Render

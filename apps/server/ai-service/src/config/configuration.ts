@@ -197,8 +197,7 @@ export default registerAs('config', () => ({
   },
   ai: {
     // Chat replies: 'api' (Anthropic API, default) or 'claude-cli' — the owner's
-    // Claude Code subscription through the Agent SDK, API as the fallback
-    // (docs/superpowers/specs/2026-11-01-ai-claude-cli-provider-design.md).
+    // Claude Code subscription through the Agent SDK, API as the fallback.
     provider: process.env.AI_PROVIDER === 'claude-cli' ? 'claude-cli' : 'api',
     claudeCli: {
       // From `claude setup-token`; unset = the credentials in <home>/.claude.

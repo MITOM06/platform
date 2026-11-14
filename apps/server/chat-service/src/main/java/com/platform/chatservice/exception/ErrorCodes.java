@@ -4,7 +4,7 @@ package com.platform.chatservice.exception;
  * Stable, machine-readable error codes returned as the top-level {@code code} field of an error
  * body (and of STOMP rejection events). Clients map these to localized strings — the {@code
  * message} field next to them is English diagnostic text and must never be shown to a user (see
- * {@code .claude/rules/no-raw-system-data-in-ui.md}).
+ * {@code docs/engineering/no-raw-system-data-in-ui.md}).
  */
 public final class ErrorCodes {
 
