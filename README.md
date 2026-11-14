@@ -20,7 +20,7 @@ A high-performance monorepo with four microservices, a Flutter mobile client, an
 
 </div>
 
-> **New here?** [ONBOARDING.md](ONBOARDING.md) is the one page for getting this running and contributing to it — including *which branch to clone*, which is not `main`. Architecture diagrams live in [docs/architecture.md](docs/architecture.md); how environments are kept apart, in [docs/environments.md](docs/environments.md).
+> **New here?** To evaluate or self-host PON, use `main` — see [Getting Started](#-getting-started). To contribute, [ONBOARDING.md](ONBOARDING.md) explains the development branch and workflow. Architecture diagrams live in [docs/architecture.md](docs/architecture.md); how environments are kept apart, in [docs/environments.md](docs/environments.md).
 >
 > **Product direction:** PON is evolving from a chat app into a **self-hosted, single-tenant-per-deployment B2B AI-assistant platform** (one deployment = one company). The vision, revised roadmap, and current build state live in [docs/roadmap.md](docs/roadmap.md) and [CHANGELOG.md](CHANGELOG.md).
 
@@ -191,13 +191,29 @@ platform/
 
 ## 🚀 Getting Started
 
-Full instructions — prerequisites, which branch to clone, what to ask the owner
-for, the feature workflow — are in **[ONBOARDING.md](ONBOARDING.md)**. The short
-version:
+### Evaluate or self-host (one company, one stack)
+
+`main` is the production branch: always deployable, no seed data or test accounts.
+
+```bash
+git clone https://github.com/MITOM06/platform.git && cd platform/infra/docker-compose
+./bootstrap.sh                                  # creates .env, generates missing secrets, validates
+docker compose -f compose.prod.yml up -d --build  # full stack incl. data stores + web behind Caddy
+```
+
+`bootstrap.sh` generates every internal secret and stops until the required values are set in `.env`:
+`DOMAIN`, `WORKSPACE_NAME`, `BOOTSTRAP_OWNER_EMAIL`, `ANTHROPIC_API_KEY`; then re-run it.
+Environments and their differences: [docs/environments.md](docs/environments.md).
+
+### Develop
+
+Contributors work on the `dev` branch (`main` + local-env commits: seed data, local bring-up). Full
+instructions — prerequisites, what to ask the owner for, the feature workflow — are in
+**[ONBOARDING.md](ONBOARDING.md)**. The short version:
 
 ```bash
 git clone https://github.com/MITOM06/platform.git && cd platform
-git checkout dev            # dev = main + the local-env commits; feature branches cut from here
+git checkout dev            # dev = main + the local-env commits
 pnpm install
 cp infra/docker-compose/.env.example     infra/docker-compose/.env
 cp apps/server/auth-service/.env.example apps/server/auth-service/.env

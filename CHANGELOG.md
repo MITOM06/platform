@@ -3,6 +3,29 @@
 All notable changes to PON. One version per promotion to `main`; web, mobile and the
 NestJS services share the product version (`apps/client/pubspec.yaml`, `apps/*/package.json`).
 
+## 1.6.2 — 2026-11-09
+
+Two branches tested on `dev`: `feat/delete-custom-role` and `fix/meeting-back-nav`. No dev-only commits.
+
+### New
+
+- **Delete a custom role** (Admin → Roles, web and mobile; auth-service `DELETE /admin/roles/:id`,
+  `MANAGE_ROLES`). Preset roles (Owner, Admin, Member) can't be deleted; a role still held by members,
+  offered by pending invitations or named by SSO mappings is refused with the counts (`ROLE_IN_USE`);
+  a non-Owner can't delete their own role or one with capabilities they don't hold. Audited as
+  `role.delete`. Error codes: `docs/auth-error-codes.md`.
+
+### Fixes
+
+- Mobile: the meetings list always has a back button. Reached after leaving a room, from the
+  pre-join "back to list" or from a deep link, it used to be alone on the stack with no way back to
+  the chats.
+- Meetings pre-join (web and mobile): a back control at the top of the full-screen page.
+
+### Known issue
+
+- iPhone app: the 1-on-1 call screen turns black (calls still connect, audio and video flow).
+
 ## 1.6.1 — 2026-11-06
 
 Quality release: one branch tested on `dev` (`fix/test-gate-bugs`, which contains `chore/test-gate`)
