@@ -98,8 +98,7 @@ jobs:
         run: bash ../../../scripts/ci/coverage-gate.sh chat
 
   # ── NestJS Connector Service ──────────────────────────────────────────────
-  # deploy.yml has always tested this service before shipping it, but CI did not,
-  # so its 100+ tests never ran on a pull request — including the boot guards that
+  # Tested on every pull request: its 100+ tests once ran only at deploy time, never on a PR — including the boot guards that
   # decide whether production comes up with an open CORS policy.
   connector-service:
     name: Connector Service (NestJS)

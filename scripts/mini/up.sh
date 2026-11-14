@@ -65,8 +65,7 @@ done
 if [ -n "$missing" ]; then
   red "✗ these are still blank in .env.mini:"
   printf '%s' "$missing"
-  echo "  They are the values deploy.yml fed Cloud Run — see the comments in"
-  echo "  .env.mini.example for where each one comes from."
+  echo "  See the comments in .env.mini.example for where each one comes from."
   exit 1
 fi
 

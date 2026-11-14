@@ -245,13 +245,12 @@ See [docs/observability.md](docs/observability.md) for the full propagation prot
 
 ## ☁️ Self-host / Deploy Your Own
 
-Three deployment shapes, all from the same commit — they differ by configuration
+Two deployment shapes, all from the same commit — they differ by configuration
 only ([docs/environments.md](docs/environments.md)):
 
 | | Backend | Web |
 |---|---|---|
 | **This project today** | one host behind a Cloudflare Tunnel, `compose.mini.yml` — the four services + Qdrant + Caddy; Mongo/Redis/RabbitMQ stay managed (arm64 images built by `.github/workflows/build-mini-images.yml`) | Vercel, auto-deploy on push to `main` |
-| **Cloud Run** | `.github/workflows/deploy.yml` — still triggers on push to `main`, no longer the primary backend | Vercel |
 | **Self-host (a customer)** | `compose.prod.yml` — the whole stack, data included, behind Caddy on one domain | served by the same Caddy |
 
 **Deployment model (by design):** PON is **self-hosted, one deployment per company**. Each customer

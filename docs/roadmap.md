@@ -51,7 +51,7 @@
 - UI improvements (Neon theme fixes)
 
 ## Phase 1 Polish (Sprints 12–24) ✅ COMPLETED
-*(See `TODO.md` for detailed specs)*
+*(Detailed sprint specs: `docs/archive/TODO-2026-07.md`)*
 - [x] **Sprint 12 ✅** Edit Message, Generic File Upload, Cursor-based Pagination, Link Preview
 - [x] **Sprint 13 ✅** Mention System, Message Search, True Unread Counts
 - [x] **Sprint 14 ✅** Public Channels, Pin/Forward Messages, Markdown Render
@@ -119,9 +119,9 @@
 
 ### Sprint P3-1 — CI/CD & Cloud Deployment ✅ DONE
 - [x] GitHub Actions CI/CD pipeline: lint → test → build → push Docker images to Artifact Registry → deploy
-- [x] Cloud deployment: all 3 backend services on Google Cloud Run (`asia-southeast1`)
+- [x] Cloud deployment: all 3 backend services on Google Cloud Run (`asia-southeast1`) — retired 2026-10-07; production now runs on a self-hosted host (`compose.mini.yml`) behind a Cloudflare Tunnel
 - [x] Environment management: all secrets via GitHub Secrets, injected at deploy time
-- [ ] Custom domain + SSL *(Cloud Run `.run.app` URLs have managed TLS; custom domain mapping pending)*
+- [x] Custom domain + SSL — TLS via Cloudflare Tunnel (reference deployment) or Caddy (self-host)
 
 ### Sprint P3-2 — Push Notifications (Real FCM) ✅ DONE
 - [x] Firebase Cloud Messaging: FCM token registration via `auth-service`

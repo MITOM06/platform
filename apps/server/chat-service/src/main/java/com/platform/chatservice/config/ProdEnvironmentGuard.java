@@ -54,7 +54,7 @@ public class ProdEnvironmentGuard {
           "Refusing to start the prod profile with development infrastructure addresses:\n  - "
               + String.join("\n  - ", problems)
               + "\nSet the environment variables above to the real backing services "
-              + "(see .github/workflows/deploy.yml and infra/docker-compose/compose.prod.yml).");
+              + "(see infra/docker-compose/compose.prod.yml).");
     }
     warnOnSuspiciousRabbitVhost();
     log.info("prod environment guard: all backing-service addresses look external");
