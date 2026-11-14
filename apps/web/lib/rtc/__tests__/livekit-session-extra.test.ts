@@ -106,8 +106,6 @@ function participant(identity: string, name: string, pubs: FakePub[] = [], extra
   return { identity, name, isLocal: false, ...extra, pubs,
     getTrackPublication: (s: string) => pubs.find((p) => p.source === s) }
 }
-const bob = participant('bob', 'Bob')
-const track = (kind: string) => ({ kind, mediaStreamTrack: { id: `${kind}-track` } })
 const pub = (source: string, isMuted = false): FakePub => ({ source, isMuted })
 
 let session: LiveKitSession
