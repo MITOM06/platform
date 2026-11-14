@@ -1,5 +1,5 @@
 # LiveKit on its own host — for deployments whose API host cannot take UDP
-# (the Mac mini behind Cloudflare Tunnel). Runbook: docs/superpowers/runbooks/livekit.md
+# (the Mac mini behind Cloudflare Tunnel). Runbook: docs/runbooks/livekit.md
 #
 #   cp .env.livekit.example .env.livekit   # fill it in
 #   docker compose -f compose.livekit.yml --env-file .env.livekit up -d

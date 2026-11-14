@@ -34,7 +34,7 @@ class EditComposerBar extends StatelessWidget {
                 ),
                 // Edit is gated to text messages, so this is normally plain text —
                 // sanitized anyway as defence in depth, the same as the reply composer
-                // (.claude/rules/no-raw-system-data-in-ui.md).
+                // (docs/engineering/no-raw-system-data-in-ui.md).
                 Text(
                   messagePreviewFromContent(context, preview.content),
                   maxLines: 1,

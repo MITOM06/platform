@@ -336,7 +336,7 @@ Response 204: No Content (Reverts to global default)
 ## 🧑‍💼 Personal Assistant Setup (`/api/assistant`)
 
 > The member's own "trợ lý riêng" — a personal assistant provisioned via the Bot Factory bridge
-> (see `docs/superpowers/BOTFACTORY-BRIDGE-DIRECTION.md`). Distinct from the company `@AI` bot.
+> Distinct from the company `@AI` bot.
 
 ### Get My Assistant
 ```http
@@ -541,9 +541,8 @@ Response 200: { "success": true }
 ## 📅 Meetings (`/api/meetings`)
 
 > Meet/Teams-style meeting rooms, always on LiveKit (room `meet_{meetingId}`, never sent to
-> clients). Plans: `docs/superpowers/plans/2026-10-07-meetings-mt1-mt2.md` and
-> `docs/superpowers/plans/2026-10-07-meetings-mt3.md` (in-room: hands, chat, notes, host commands —
-> their contract sections are binding for web/mobile). Creating a meeting needs the `HOST_MEETING` capability (JWT `perms`);
+> clients). The in-room contract (hands, chat, notes, host commands) below is binding for
+> web/mobile. Creating a meeting needs the `HOST_MEETING` capability (JWT `perms`);
 > joining, co-hosting and admitting do not. Times are ISO-8601 UTC; `null` fields are omitted.
 > Errors are `{ "error", "code", "statusCode", "params"? }` — never an internal message.
 
@@ -982,7 +981,7 @@ Signaling payloads use `WebRTCSignalDto`; transcript chunks use `CallTranscriptD
 
 ### Calls on LiveKit (`CALL_TRANSPORT=sfu`)
 
-Plan: `docs/superpowers/plans/2026-10-05-calls-on-livekit.md`. The server picks the media path
+The server picks the media path
 for the whole call; `mesh` (default) keeps the routes above unchanged.
 
 **REST**

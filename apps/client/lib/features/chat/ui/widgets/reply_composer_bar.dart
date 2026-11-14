@@ -35,7 +35,7 @@ class ReplyComposerBar extends StatelessWidget {
                 // Sanitized like [ReplyQuote] inside the bubble: replying to a system
                 // event, a file or an image otherwise printed the raw `system.*` code,
                 // the JSON payload or the /api/uploads URL into the composer
-                // (.claude/rules/no-raw-system-data-in-ui.md).
+                // (docs/engineering/no-raw-system-data-in-ui.md).
                 Text(
                   messagePreviewFromContent(context, preview.content),
                   maxLines: 1,

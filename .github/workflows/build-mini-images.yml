@@ -2,11 +2,6 @@
 # pull` instead of building. The mini is short on disk: building there means a
 # full pnpm store plus a Maven repo plus build cache (~30GB) for images that
 # total ~5GB.
-#
-# Deploy targets are deliberately split, not duplicated:
-#   deploy.yml               -> Cloud Run (x86, managed)
-#   build-mini-images.yml    -> GHCR (arm64, pulled by the mini)
-# Either can be disabled without touching the other.
 name: Build mini images (arm64 → GHCR)
 
 on:

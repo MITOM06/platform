@@ -8,7 +8,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./test/setup.ts'],
-    // Cổng coverage (.claude/rules/test-gate.md): `pnpm test:cov` ghi coverage/coverage-summary.json,
+    // Cổng coverage (docs/engineering/test-gate.md): `pnpm test:cov` ghi coverage/coverage-summary.json,
     // scripts/ci/coverage-gate.sh so với ngưỡng trong scripts/ci/coverage-thresholds.txt.
     coverage: {
       provider: 'v8',

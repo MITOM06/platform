@@ -230,7 +230,7 @@ class _NotificationTileState extends ConsumerState<_NotificationTile> {
   /// Localize a notification's title/body from its `type` (a stable code) so it
   /// renders in the user's language regardless of the language the backend
   /// stored it in. Falls back to the raw backend text only for SYSTEM/unknown
-  /// types. See .claude/rules/i18n.md + .claude/rules/no-raw-system-data-in-ui.md.
+  /// types. See docs/engineering/i18n.md + docs/engineering/no-raw-system-data-in-ui.md.
   ({String title, String body}) _localized(BuildContext context) {
     final n = widget.notification;
     final l = context.l10n;
@@ -344,7 +344,7 @@ class _NotificationTileState extends ConsumerState<_NotificationTile> {
 
   /// Locale-aware timestamp: same-day notifications show the time, older ones
   /// show the date. Uses `package:intl` so formatting follows the user locale
-  /// (no hardcoded patterns / strings — see .claude/rules/i18n.md).
+  /// (no hardcoded patterns / strings — see docs/engineering/i18n.md).
   String _relativeTime(BuildContext context, DateTime time) {
     final local = time.toLocal();
     final now = DateTime.now();

@@ -5836,7 +5836,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <ul>
           <li>Đăng ký + OTP email xác minh, quên/đặt lại mật khẩu, nhận lời mời (invitation accept), OIDC SSO chi tiết (oidc.service), MFA enroll (QR + backup codes), logout (revokeSession chính sid của token), đổi mật khẩu revoke thiết bị khác.</li>
           <li>Throttle: endpoint nhạy cảm 5 req/phút/IP, /auth/refresh giới hạn theo session. lastSeenAt chỉ ghi khi quá 60s. Khoá brute-force theo email đã normalize: MAX_FAILED_ATTEMPTS=5, LOCKOUT_DURATION=300s.</li>
-          <li>Doc lệch code: CLAUDE.md mô tả auth-service là &#39;JWT, OTP, refresh token, user search&#39; — không nhắc 2FA bắt buộc theo role, Require SSO, claims-stale; mã lỗi SessionStatus Java phải khớp tay với AuthCode TypeScript (không sinh tự động).</li>
+          <li>Doc lệch code: tài liệu dự án mô tả auth-service là &#39;JWT, OTP, refresh token, user search&#39; — không nhắc 2FA bắt buộc theo role, Require SSO, claims-stale; mã lỗi SessionStatus Java phải khớp tay với AuthCode TypeScript (không sinh tự động).</li>
         </ul>
       </div>
     </div>

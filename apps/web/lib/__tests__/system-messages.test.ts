@@ -1,5 +1,5 @@
 /**
- * Humanizers for system codes and previews (.claude/rules/no-raw-system-data-in-ui.md).
+ * Humanizers for system codes and previews (docs/engineering/no-raw-system-data-in-ui.md).
  * Mirrors Flutter's system-message parser — every code maps to a localized
  * sentence, never the code, a user id or a JSON payload.
  */

@@ -1,5 +1,5 @@
 // Widget tests for MessageBubble (+ its body/parts): every message kind the
-// bubble renders, and `.claude/rules/no-raw-system-data-in-ui.md` — a system
+// bubble renders, and `docs/engineering/no-raw-system-data-in-ui.md` — a system
 // code, user id, upload URL, JSON payload or AI sentinel must never be shown.
 
 import 'package:flutter/material.dart';

@@ -4,7 +4,7 @@ import type { CallFailureKey } from './call-end-notice'
 /**
  * chat-service call REST errors (`{error, code, statusCode}`, e.g. the room
  * token) → a `call.*` message key. The English `error` text next to the code
- * never reaches the UI (.claude/rules/no-raw-system-data-in-ui.md).
+ * never reaches the UI (docs/engineering/no-raw-system-data-in-ui.md).
  */
 const CODE_KEYS: Record<string, CallFailureKey> = {
   CALLS_UNAVAILABLE: 'errUnavailable',

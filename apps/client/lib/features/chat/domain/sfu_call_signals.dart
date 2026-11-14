@@ -14,7 +14,7 @@ import 'webrtc_service.dart';
 /// LiveKit (sfu) call control on `/user/queue/webrtc`: a 1-on-1 ring, ring
 /// cancels, declines, merges and answers (`call-accepted`, to the caller).
 /// Returns true when [signal] was one of them.
-/// Contract: docs/superpowers/plans/2026-10-05-calls-on-livekit.md.
+/// Contract: docs/api-spec.md (Calls on LiveKit).
 bool handleSfuCallSignal(Ref ref, Map<String, dynamic> signal) {
   final type = signal['type'] as String?;
   if (type == 'call-ring' && signal['kind'] == 'direct') {

@@ -24,7 +24,7 @@ type Translate = (key: string, values?: Record<string, string | number>) => stri
 /**
  * Humanize a pinned message for display (never leak raw `system.*` codes, user
  * ids, JSON file/meeting payloads or markdown — see
- * .claude/rules/no-raw-system-data-in-ui.md). Delegates to the shared preview
+ * docs/engineering/no-raw-system-data-in-ui.md). Delegates to the shared preview
  * humanizer, which maps media/file → attachment label, meeting_summary → its
  * label, ai → flattened text, and system codes → humanized sentence.
  */

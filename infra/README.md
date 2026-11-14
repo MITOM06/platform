@@ -21,7 +21,7 @@ infra/
     realm-pon.json       — realm imported on the first start (no users)
     .env.keycloak.example — template; copy to .env.keycloak (gitignored)
     check.sh             — asserts Keycloak and PON agree; check.test.sh tests it
-                           (runbook: docs/superpowers/runbooks/keycloak.md)
+                           (runbook: docs/runbooks/keycloak.md)
 ```
 
 ## Which compose file
@@ -97,9 +97,9 @@ workspace, the preset roles, and the Owner.
 
 ## Notes
 
-- The managed deployment (Cloud Run + Vercel) does **not** use these compose files; it is driven
-  by `.github/workflows/deploy.yml`, which sets its own environment. These files are for local
-  development and customer self-host.
+- `compose.yml` is local infrastructure for development, `compose.prod.yml` is the full customer
+  self-host stack, and `compose.mini.yml` is the reference production deployment (managed data
+  tier, images pulled from GHCR — see `.github/workflows/build-mini-images.yml`).
 - `ai.requests` is declared with a 30 s TTL and a dead-letter exchange by both chat-service and
   ai-service. The arguments must match on both sides — a queue left behind by an older build
   without them makes ai-service fail `QueueDeclare` with `406 PRECONDITION_FAILED` and

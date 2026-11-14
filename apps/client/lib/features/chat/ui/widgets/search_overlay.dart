@@ -184,7 +184,7 @@ class _SearchResultTile extends ConsumerWidget {
       ),
       // Search hits render raw `content`, so a matching system event or file message
       // would otherwise print its code / JSON payload
-      // (.claude/rules/no-raw-system-data-in-ui.md).
+      // (docs/engineering/no-raw-system-data-in-ui.md).
       title: Text(
         messagePreviewFromContent(context, message.content),
         maxLines: 2,

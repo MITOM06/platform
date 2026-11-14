@@ -52,7 +52,7 @@ function isPendingRequest(n: AppNotification, pendingRequesterIds: Set<string>):
  * one of the 7 UI languages renders correctly, regardless of the language the
  * backend happened to store the text in. Falls back to the raw backend title/
  * body only for SYSTEM / unknown types that carry no code-derived copy.
- * See .claude/rules/i18n.md and .claude/rules/no-raw-system-data-in-ui.md.
+ * See docs/engineering/i18n.md and docs/engineering/no-raw-system-data-in-ui.md.
  */
 function localizedNotification(
   n: AppNotification,

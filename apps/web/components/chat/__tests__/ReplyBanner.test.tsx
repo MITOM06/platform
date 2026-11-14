@@ -4,7 +4,7 @@
  * Both surfaces used to render a message's raw `content`, so replying to (or searching up) a
  * system event, a file message or an image printed `system.nickname.changed:<userId>:<value>`,
  * a `{"url":…}` payload or an `/api/uploads/<id>` path straight at the user. That is a P1 under
- * .claude/rules/no-raw-system-data-in-ui.md, and the reply quote *inside* the bubble had already
+ * docs/engineering/no-raw-system-data-in-ui.md, and the reply quote *inside* the bubble had already
  * been fixed — these two were the surfaces it was never applied to.
  */
 

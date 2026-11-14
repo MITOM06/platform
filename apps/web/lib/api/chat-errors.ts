@@ -5,7 +5,7 @@ import axios from 'axios'
  * auth-service, which share the top-level `{ code, params }` body shape).
  *
  * The `message` / `error` text next to the code is English diagnostics and must
- * never reach the UI (.claude/rules/no-raw-system-data-in-ui.md): every surface
+ * never reach the UI (docs/engineering/no-raw-system-data-in-ui.md): every surface
  * maps the code to a key of the `chat` namespace instead, and only falls back to
  * the caller's generic key when the failure is genuinely unknown.
  */
