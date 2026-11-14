@@ -35,9 +35,9 @@ import org.springframework.stereotype.Service;
  * Group-call (P2P mesh) business logic: session lifecycle, roster broadcast, ringing, mesh signal
  * relay, transcript buffering, and AI-summary kickoff.
  *
- * <p>Contract: {@code docs/api-spec.md} (Calls).
- * chat-service only PUBLISHES {@code call:summarize}; ai-service produces the summary and replies
- * on {@code call:summary:result} (handled by {@link CallSummaryListener}).
+ * <p>Contract: {@code docs/api-spec.md} (Calls). chat-service only PUBLISHES {@code
+ * call:summarize}; ai-service produces the summary and replies on {@code call:summary:result}
+ * (handled by {@link CallSummaryListener}).
  */
 @Service
 @RequiredArgsConstructor
