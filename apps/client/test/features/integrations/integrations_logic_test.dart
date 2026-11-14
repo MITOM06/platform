@@ -469,6 +469,41 @@ void main() {
       expect(a.calls('PATCH', '/directory/d1').single.data, {'name': 'L'});
     });
 
+    test('directory refresh / disconnect and custom discover go through',
+        () async {
+      final a = RouteAdapter({
+        'GET /directory': Reply(200, _directory),
+        'GET /connections': Reply(200, [_conn('l1', 'linear')]),
+        'DELETE /connections/l1': const Reply(200, {}),
+        'GET /catalog': Reply(200, _catalog),
+        'GET /custom-mcp': const Reply(200, []),
+        'POST /custom-mcp/discover': const Reply(200, {
+          'tools': [
+            {'name': 'search', 'description': 'Find things'}
+          ]
+        }),
+      });
+      final c = _container(a);
+      await c.read(authNotifierProvider.future);
+      await c.read(directoryProvider.future);
+      final n = c.read(directoryProvider.notifier);
+      await n.refresh();
+      expect(a.calls('GET', '/connections').length, greaterThanOrEqualTo(2));
+      // Let the invalidated list rebuild (as the UI does) before the next call.
+      await c.read(directoryProvider.future);
+
+      await c.read(directoryProvider.notifier).disconnect('l1');
+      expect(a.calls('DELETE', '/connections/l1'), hasLength(1));
+
+      await c.read(integrationsProvider.future);
+      final tools = await c.read(integrationsProvider.notifier).discoverCustom(
+          url: 'https://mcp.x', authType: ConnectorAuthType.apikey, credential: 'k');
+      expect(tools.single.name, 'search');
+      expect(tools.single.description, 'Find things');
+      expect(a.calls('POST', '/custom-mcp/discover').single.data,
+          {'url': 'https://mcp.x', 'authType': 'apikey', 'credential': 'k'});
+    });
+
     test('connectorNamesProvider maps slugs; empty names never become a label',
         () async {
       final a = RouteAdapter({

@@ -223,6 +223,90 @@ void main() {
     });
   });
 
+  group('edits reach quotes and pending-action cards', () {
+    MessageModel replyTo(String id, {bool recalled = false}) => MessageModel(
+          id: 'r-$id',
+          conversationId: 'c-1',
+          senderId: 'u2',
+          content: 'answer',
+          type: 'text',
+          readBy: const [],
+          createdAt: DateTime(2024, 1, 2),
+          replyToId: id,
+          replyPreview: ReplyPreview(
+              messageId: id, senderId: 'u1', content: 'old', recalled: recalled),
+        );
+
+    test('an edit rewrites the quote of the edited message', () {
+      final out = ChatStompReducers.applyEdit(
+        [replyTo('m1'), replyTo('m2'), _m('m1', content: 'old')],
+        MessageUpdateEvent(
+          conversationId: 'c-1',
+          messageId: 'm1',
+          content: 'new text',
+          editedAt: DateTime(2024, 1, 3),
+        ),
+      );
+      expect(out[0].replyPreview!.content, 'new text');
+      expect(out[0].replyPreview!.senderId, 'u1');
+      expect(out[1].replyPreview!.content, 'old'); // other quote untouched
+      expect(out[2].content, 'new text');
+      expect(out[2].isEdited, isTrue);
+    });
+
+    test('a recalled quote is not revived by a late edit', () {
+      final out = ChatStompReducers.applyEdit(
+        [replyTo('m1', recalled: true)],
+        MessageUpdateEvent(
+            conversationId: 'c-1',
+            messageId: 'm1',
+            content: 'x',
+            editedAt: DateTime(2024)),
+      );
+      expect(out.single.replyPreview!.recalled, isTrue);
+      expect(out.single.replyPreview!.content, 'old');
+    });
+
+    test('a status update replaces the cards, keeping the known requester', () {
+      final ai = _m('a1', type: 'ai').copyWith(pendingActions: const [
+        AiPendingAction(id: 'x', requesterId: 'me'),
+      ]);
+      final out = ChatStompReducers.applyEdit(
+        [ai],
+        const MessageUpdateEvent(
+          conversationId: 'c-1',
+          messageId: 'a1',
+          pendingActions: [
+            AiPendingAction(id: 'x', status: AiActionStatus.confirmed)
+          ],
+        ),
+      );
+      final a = out.single.pendingActions!.single;
+      expect(a.status, AiActionStatus.confirmed);
+      expect(a.requesterId, 'me');
+    });
+
+    test('a re-delivered message merges server cards into the existing copy',
+        () {
+      final existing = _m('m9', type: 'ai').copyWith(pendingActions: const [
+        AiPendingAction(id: 'x', requesterId: 'me'),
+      ]);
+      final incoming = _m('m9', type: 'ai', content: 'final').copyWith(
+          pendingActions: const [
+            AiPendingAction(id: 'x', status: AiActionStatus.failed)
+          ]);
+      final out = ChatStompReducers.reconcileNewMessage([existing], incoming);
+      expect(out.single.content, 'final');
+      expect(out.single.pendingActions!.single.status, AiActionStatus.failed);
+      expect(out.single.pendingActions!.single.requesterId, 'me');
+
+      // Without cards in the new copy the existing ones are kept.
+      final kept = ChatStompReducers.reconcileNewMessage(
+          [existing], _m('m9', type: 'ai', content: 'v2'));
+      expect(kept.single.pendingActions!.single.requesterId, 'me');
+    });
+  });
+
   group('buildPinned', () {
     test('builds pinned models from ids, dropping unknown ids in order', () {
       final msgs = [

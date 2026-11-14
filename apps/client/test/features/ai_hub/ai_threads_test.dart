@@ -135,6 +135,78 @@ void main() {
     });
     tearDown(() => container.dispose());
 
+    test('upsert replaces a known thread in place, inserts a new one on top',
+        () async {
+      await boot([_thread('a'), _thread('b')]);
+      final n = container.read(aiThreadsProvider.notifier);
+      n.upsert(_thread('b', name: 'Renamed'));
+      expect(ids(), ['a', 'b']);
+      expect(container.read(aiThreadsProvider).value![1].name, 'Renamed');
+      n.upsert(_thread('n'));
+      expect(ids(), ['n', 'a', 'b']);
+      expect(n.contains('n'), isTrue);
+      expect(n.contains('zz'), isFalse);
+    });
+
+    test('upsert ignores non-AI conversations', () async {
+      await boot([_thread('a')]);
+      container.read(aiThreadsProvider.notifier).upsert(ConversationModel.fromJson(
+          _json('x', participants: ['me', 'bob'])));
+      expect(ids(), ['a']);
+    });
+
+    test('upsert before the first load applies once loaded', () async {
+      final gate = Completer<List<ConversationModel>>();
+      when(() => aiRepo.list()).thenAnswer((_) => gate.future);
+      final sub = container.listen(aiThreadsProvider, (_, __) {});
+      addTearDown(sub.close);
+      container.read(aiThreadsProvider.notifier).upsert(_thread('early'));
+      gate.complete([_thread('a')]);
+      await container.read(aiThreadsProvider.future);
+      await _pump();
+      expect(ids(), ['early', 'a']);
+    });
+
+    test('drop removes locally; deleteOnServer only calls the server',
+        () async {
+      await boot([_thread('a'), _thread('b')]);
+      when(() => chatRepo.deleteConversation('a')).thenAnswer((_) async {});
+      final n = container.read(aiThreadsProvider.notifier);
+      await n.deleteOnServer('a');
+      verify(() => chatRepo.deleteConversation('a')).called(1);
+      expect(ids(), ['a', 'b']);
+      n.drop('a');
+      expect(ids(), ['b']);
+    });
+
+    test('personal update of a known thread merges in place', () async {
+      await boot([_thread('a'), _thread('b')]);
+      stomp.conv.add(ConversationUpdateEvent(
+          json: _json('b', name: 'Mine'), personal: true));
+      await _pump();
+      expect(ids(), ['a', 'b']);
+      expect(container.read(aiThreadsProvider).value![1].name, 'Mine');
+    });
+
+    test('shared update of an unknown AI thread refetches silently', () async {
+      await boot([_thread('a')]);
+      when(() => aiRepo.list())
+          .thenAnswer((_) async => [_thread('new'), _thread('a')]);
+      stomp.conv.add(
+          ConversationUpdateEvent(json: _json('new'), personal: false));
+      await _pump();
+      await _pump();
+      expect(ids(), ['new', 'a']);
+    });
+
+    test('update without participants is ignored', () async {
+      await boot([_thread('a')]);
+      stomp.conv.add(const ConversationUpdateEvent(
+          json: {'id': 'a', 'name': 'x'}, personal: true));
+      await _pump();
+      expect(container.read(aiThreadsProvider).value!.single.name, isNull);
+    });
+
     test('create puts the new thread on top', () async {
       await boot([_thread('a')]);
       when(() => aiRepo.create()).thenAnswer((_) async => _thread('n'));

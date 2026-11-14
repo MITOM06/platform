@@ -125,4 +125,24 @@ void main() {
       expect(s.cachedTitle('m2'), 'Planning');
     });
   });
+
+  group('withSettings', () {
+    test('patches the meeting everywhere it is cached', () {
+      final s = const MeetingsCacheState()
+          .put(a)
+          .setList(MeetingListScope.upcoming,
+              MeetingListData(rows: [a, c], hasNext: false));
+      const locked = MeetingSettings(locked: true, waitingRoom: false);
+      final next = s.withSettings('a', locked);
+      expect(next.byId['a']!.settings, locked);
+      expect(next.upcoming!.rows.first.settings, locked);
+      expect(next.upcoming!.rows.last.settings, MeetingSettings.defaults);
+      expect(s.byId['a']!.settings, MeetingSettings.defaults); // immutable
+    });
+
+    test('unknown meeting → same state', () {
+      const s = MeetingsCacheState();
+      expect(identical(s.withSettings('zz', const MeetingSettings()), s), isTrue);
+    });
+  });
 }

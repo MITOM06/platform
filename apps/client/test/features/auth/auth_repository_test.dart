@@ -341,4 +341,84 @@ void main() {
       expect(adapter.requests, hasLength(1));
     });
   });
+
+  group('profile + SSO info', () {
+    test('updateProfile sends only the given fields and caches the user',
+        () async {
+      adapter.routes['PATCH /api/users/me'] = const Reply(200, {
+        '_id': 'u1',
+        'email': 'mia@acme.com',
+        'displayName': 'Mia B',
+        'bio': 'hi',
+      });
+      final u = await repo.updateProfile(
+        displayName: 'Mia B',
+        avatarUrl: 'a.png',
+        bio: 'hi',
+        coverPhoto: 'c.png',
+        dateOfBirth: DateTime.utc(2000, 1, 2),
+        phoneNumber: '+84',
+        gender: 'female',
+        hideInfo: false,
+        showDateOfBirth: true,
+        showPhoneNumber: false,
+        showGender: true,
+      );
+      expect(adapter.calls('PATCH', '/api/users/me').single.data, {
+        'displayName': 'Mia B',
+        'avatarUrl': 'a.png',
+        'bio': 'hi',
+        'coverPhoto': 'c.png',
+        'dateOfBirth': '2000-01-02T00:00:00.000Z',
+        'phoneNumber': '+84',
+        'gender': 'female',
+        'hideInfo': false,
+        'showDateOfBirth': true,
+        'showPhoneNumber': false,
+        'showGender': true,
+      });
+      expect(u.displayName, 'Mia B');
+      // No session stored → the profile is not resurrected into storage.
+      expect((await _stored()).keys, ['other.secret']);
+    });
+
+    test('updateProfile refreshes the stored session user', () async {
+      FlutterSecureStorage.setMockInitialValues({
+        'user': jsonEncode({'_id': 'u1', 'email': 'mia@acme.com', 'displayName': 'Mia'}),
+      });
+      adapter.routes['PATCH /api/users/me'] = const Reply(
+          200, {'_id': 'u1', 'email': 'mia@acme.com', 'displayName': 'Mia B'});
+      await repo.updateProfile(displayName: 'Mia B');
+      final stored = jsonDecode((await _stored())['user']!) as Map;
+      expect(stored['displayName'], 'Mia B');
+    });
+
+    test('updateProfile with one field sends just that field', () async {
+      adapter.routes['PATCH /api/users/me'] = const Reply(
+          200, {'_id': 'u1', 'email': 'mia@acme.com', 'bio': 'x'});
+      await repo.updateProfile(bio: 'x');
+      expect(adapter.calls('PATCH', '/api/users/me').single.data, {'bio': 'x'});
+    });
+
+    test('getSsoInfo: parsed when available, disabled on any failure',
+        () async {
+      adapter.routes['GET /auth/sso/info'] = const Reply(200, {
+        'enabled': true,
+        'loginUrl': 'https://sso',
+        'buttonLabel': 'Acme SSO',
+      });
+      final info = await repo.getSsoInfo();
+      expect(info.enabled, isTrue);
+      expect(info.loginUrl, 'https://sso');
+
+      adapter.routes['GET /auth/sso/info'] = const Reply(500, {'code': 'X'});
+      final off = await repo.getSsoInfo();
+      expect(off.enabled, isFalse);
+    });
+
+    test('removeFcmToken without an access token does nothing', () async {
+      await repo.removeFcmToken('fcm', accessToken: null);
+      expect(adapter.requests, isEmpty);
+    });
+  });
 }

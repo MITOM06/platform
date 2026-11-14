@@ -93,4 +93,38 @@ void main() {
           AVAudioSessionCategory.ambient);
     });
   });
+
+  test('a failing audio player never breaks the call flow', () async {
+    final broken = _BrokenPlayer();
+    final s = CallSounds(broken, vibrate: () {});
+    await s.play(CallTone.ringback);
+    expect(broken.loops, 1);
+    // stop() swallows the player's error too.
+    await s.stop();
+    expect(broken.stops, 1);
+    // Same tone again after stop plays again (state was reset).
+    await s.play(CallTone.ringback);
+    expect(broken.loops, 2);
+    await s.stop();
+  });
+
+  test('stop with nothing playing does not touch the player', () async {
+    await sounds.stop();
+    expect(player.calls, isEmpty);
+  });
+}
+
+class _BrokenPlayer implements TonePlayer {
+  int loops = 0, stops = 0;
+  @override
+  Future<void> loop(CallTone tone, {bool speaker = false}) async {
+    loops++;
+    throw StateError('no audio device');
+  }
+
+  @override
+  Future<void> stop() async {
+    stops++;
+    throw StateError('no audio device');
+  }
 }
