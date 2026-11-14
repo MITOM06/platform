@@ -70,6 +70,17 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       FIREBASE_SERVICE_ACCOUNT_BASE64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:-}
+      # Enterprise SSO (OpenID Connect). Blank OIDC_ENABLED = no SSO button at
+      # all, whatever the workspace switch says. The IdP can be infra/keycloak/
+      # (runbook docs/superpowers/runbooks/keycloak.md) or any OIDC provider.
+      OIDC_ENABLED: ${OIDC_ENABLED:-}
+      OIDC_ISSUER: ${OIDC_ISSUER:-}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      OIDC_GROUPS_CLAIM: ${OIDC_GROUPS_CLAIM:-groups}
+      # Derived like GOOGLE_CALLBACK_URL: Caddy strips /api/auth and the route is
+      # /auth/oidc/callback. Register exactly this URL at the IdP.
+      OIDC_REDIRECT_URI: ${PON_API_BASE}/api/auth/auth/oidc/callback
     healthcheck:
       # 127.0.0.1, not localhost: in these images localhost resolves to ::1
       # first and the services listen on 0.0.0.0 (IPv4 only), so a `localhost`

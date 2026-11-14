@@ -1,0 +1,131 @@
+# Keycloak for production SSO — the company's identity provider, next to the
+# Mac mini stack. Runbook: docs/superpowers/runbooks/keycloak.md
+#
+#   cd infra/keycloak
+#   cp .env.keycloak.example .env.keycloak && $EDITOR .env.keycloak
+#   docker compose -f compose.keycloak.yml --env-file .env.keycloak up -d
+#
+# A separate stack, like infra/livekit/: scripts/mini/redeploy.sh follows main
+# every few minutes and recreates pon-mini, but an identity provider should only
+# change when someone means to change it. Bump the image here by hand.
+#
+# Ingress: no port is published. The pon-mini stack's cloudflared reaches
+# Keycloak over that stack's network (`pon-mini_app-net`, joined below), so
+# pon-mini has to be up first and the tunnel gets a second public hostname:
+# SSO_DOMAIN → HTTP → keycloak:8080. TLS ends at Cloudflare, exactly as for
+# the API hostname.
+#
+# This is NOT scripts/dev/keycloak/compose.sso.yml. That one is start-dev with
+# an in-container H2 database, admin/admin, a published client secret and test
+# users, and it lives on `dev` only. Nothing here is shared with it.
+name: pon-sso
+
+x-restart: &restart
+  restart: unless-stopped
+
+services:
+  # Keycloak's own database: users, groups, sessions, the realm. The only data
+  # this stack keeps, so it is the thing to back up (see the runbook).
+  keycloak-db:
+    image: postgres:16-alpine
+    <<: *restart
+    # A handful of users and sessions; Postgres idles far below this.
+    mem_limit: 256m
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KC_DB_PASSWORD:?set KC_DB_PASSWORD (openssl rand -hex 24)}
+    volumes:
+      - keycloak_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # Private network: only Keycloak talks to it, and it is not on pon-mini's.
+    networks: [sso-net]
+
+  keycloak:
+    # Same version as the dev IdP on `dev`, so what was tested there is what runs.
+    image: quay.io/keycloak/keycloak:26.7.5
+    <<: *restart
+    # Docker on the mini is one VM (~3.8 GiB) shared by every stack there (PON,
+    # marketlink, jarvis…). Without a limit the JVM sizes its heap from the
+    # whole VM (Keycloak's default: MaxRAMPercentage=70, Initial=50) and can
+    # starve chat-service. With 1g the heap tops out around 650 MB — plenty for
+    # one small realm. Raise both together if `docker stats` shows it pinned.
+    mem_limit: 1g
+    # `start` is production mode: strict hostname, no dev defaults, caches on.
+    # --import-realm creates the `pon` realm from realm-pon.json on the FIRST
+    # start only; an existing realm is never overwritten, so later changes are
+    # made in the admin console (or by exporting and re-importing on purpose).
+    command: ["start", "--import-realm"]
+    environment:
+      # Heap as a share of mem_limit above (Keycloak's defaults are 50/70).
+      JAVA_OPTS_KC_HEAP: "-XX:InitialRAMPercentage=25 -XX:MaxRAMPercentage=65"
+      KC_DB: postgres
+      # Host + database rather than one jdbc: URL — same connection, and the
+      # combined form trips gitleaks' generic-api-key rule ("keycloak-db:…").
+      KC_DB_URL_HOST: keycloak-db
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD:?required}
+      # The one public URL. Every link Keycloak builds (login page, issuer in
+      # tokens, emails) uses it, and PON's OIDC_ISSUER must be this + /realms/pon.
+      KC_HOSTNAME: https://${SSO_DOMAIN:?set SSO_DOMAIN to the tunnel hostname, e.g. sso.example.com}
+      # Plain HTTP inside: Cloudflare terminates TLS and cloudflared forwards
+      # X-Forwarded-For / X-Forwarded-Proto, which Keycloak trusts with this.
+      # Safe only because nothing but cloudflared can reach port 8080.
+      KC_HTTP_ENABLED: "true"
+      KC_HTTP_PORT: "8080"
+      KC_PROXY_HEADERS: xforwarded
+      # /health/ready on the management port (9000, not published) for the
+      # healthcheck below.
+      KC_HEALTH_ENABLED: "true"
+      # Temporary admin for the very first login only. The runbook has you
+      # create a personal admin and delete this account straight after.
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:?required}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:?required (openssl rand -base64 24)}
+      # Read by realm-pon.json as ${PON_...} placeholders during the first import.
+      PON_OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?must equal OIDC_CLIENT_SECRET in .env.mini}
+      PON_OIDC_REDIRECT_URI: ${PON_API_BASE:?same value as .env.mini}/api/auth/auth/oidc/callback
+      PON_WEB_ORIGIN: ${WEB_ORIGIN:?same value as .env.mini}
+      PON_SMTP_HOST: ${KC_SMTP_HOST:?required for "Forgot password?" and email verification}
+      PON_SMTP_PORT: ${KC_SMTP_PORT:-587}
+      PON_SMTP_USER: ${KC_SMTP_USER:?required}
+      PON_SMTP_PASSWORD: ${KC_SMTP_PASSWORD:?required}
+      PON_SMTP_FROM: ${KC_SMTP_FROM:?required}
+    volumes:
+      - ./realm-pon.json:/opt/keycloak/data/import/realm-pon.json:ro
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    healthcheck:
+      # The image has no curl or wget; bash's /dev/tcp is enough for one GET.
+      test:
+        - CMD
+        - bash
+        - -c
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/9000 &&
+          printf 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 &&
+          grep -q '"status": *"UP"' <&3
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    networks:
+      sso-net:
+      pon-mini:
+        # The name the tunnel's public hostname points at: HTTP → keycloak:8080.
+        aliases: [keycloak]
+
+networks:
+  sso-net:
+  # Created by the pon-mini stack (compose.mini.yml, project `pon-mini`).
+  pon-mini:
+    name: pon-mini_app-net
+    external: true
+
+volumes:
+  keycloak_db:

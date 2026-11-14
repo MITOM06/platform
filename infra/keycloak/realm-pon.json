@@ -1,0 +1,87 @@
+{
+  "realm": "pon",
+  "displayName": "PON",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "editUsernameAllowed": false,
+  "resetPasswordAllowed": true,
+  "verifyEmail": true,
+  "rememberMe": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "failureFactor": 5,
+  "waitIncrementSeconds": 60,
+  "maxFailureWaitSeconds": 900,
+  "maxDeltaTimeSeconds": 43200,
+  "minimumQuickLoginWaitSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "passwordPolicy": "length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1) and notUsername and notEmail and passwordHistory(3)",
+  "eventsEnabled": true,
+  "eventsExpiration": 2592000,
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": false,
+  "internationalizationEnabled": true,
+  "supportedLocales": ["en", "vi", "zh-Hans", "ja", "ko", "es", "fr"],
+  "defaultLocale": "en",
+  "smtpServer": {
+    "host": "${PON_SMTP_HOST}",
+    "port": "${PON_SMTP_PORT}",
+    "from": "${PON_SMTP_FROM}",
+    "fromDisplayName": "PON",
+    "auth": "true",
+    "user": "${PON_SMTP_USER}",
+    "password": "${PON_SMTP_PASSWORD}",
+    "starttls": "true",
+    "ssl": "false"
+  },
+  "groups": [
+    { "name": "staff", "path": "/staff" },
+    { "name": "admins", "path": "/admins" }
+  ],
+  "clients": [
+    {
+      "clientId": "pon-auth",
+      "name": "PON auth-service",
+      "description": "Confidential client used by PON's auth-service for OIDC SSO. Secret = OIDC_CLIENT_SECRET in .env.mini.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${PON_OIDC_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "consentRequired": false,
+      "frontchannelLogout": false,
+      "rootUrl": "${PON_WEB_ORIGIN}",
+      "baseUrl": "/",
+      "redirectUris": ["${PON_OIDC_REDIRECT_URI}"],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${PON_WEB_ORIGIN}/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "groups",
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ]
+}
