@@ -1,5 +1,5 @@
 /** SfuGroupCall used directly (the façade suite drives it through groupCallManager). */
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { AxiosError, type AxiosResponse } from 'axios'
 
 const m = vi.hoisted(() => {
@@ -32,7 +32,7 @@ import { useCallStore } from '@/lib/store/call.store'
 import type { GroupCallHooks } from '../call-hooks'
 
 const initial = useCallStore.getState()
-let hooks: GroupCallHooks & { onJoinError: ReturnType<typeof vi.fn> }
+let hooks: GroupCallHooks & { onJoinError: Mock<(n: string) => void> }
 const last = () => m.FakeSession.all.at(-1)!
 
 beforeEach(() => {
